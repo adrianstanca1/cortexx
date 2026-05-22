@@ -1,0 +1,45 @@
+import { NextRequest, NextResponse } from 'next/server'
+import { prisma } from '@/lib/db'
+
+export async function GET(req: NextRequest) {
+  try {
+    const { searchParams } = new URL(req.url)
+    const projectId = searchParams.get('projectId')
+    const assignments = await prisma.assignment.findMany({
+      where: { ...(projectId && { projectId }) },
+      include: { member: true, project: true },
+    })
+    return NextResponse.json(assignments)
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Failed to fetch assignments' }, { status: 500 })
+  }
+}
+
+export async function POST(req: NextRequest) {
+  try {
+    const body = await req.json()
+    if (!body.projectId || !body.memberId) {
+      return NextResponse.json({ error: 'projectId and memberId required' }, { status: 400 })
+    }
+    const existing = await prisma.assignment.findUnique({
+      where: { projectId_memberId: { projectId: body.projectId, memberId: body.memberId } },
+    })
+    if (existing) {
+      return NextResponse.json({ error: 'Already assigned' }, { status: 409 })
+    }
+    const assignment = await prisma.assignment.create({
+      data: {
+        projectId: body.projectId,
+        memberId: body.memberId,
+        role: body.role || null,
+        onSite: body.onSite ?? false,
+      },
+      include: { member: true },
+    })
+    return NextResponse.json(assignment, { status: 201 })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Failed to create assignment' }, { status: 500 })
+  }
+}

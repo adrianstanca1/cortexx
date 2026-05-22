@@ -1,0 +1,24 @@
+# Dependencies
+node_modules/
+
+# Next.js
+.next/
+out/
+
+# Environment
+.env
+.env.local
+.env.*.local
+
+# Database
+*.db
+*.sqlite
+
+# OS
+.DS_Store
+
+# Debug
+npm-debug.log*
+
+# Prisma
+prisma/migrations/dev.db

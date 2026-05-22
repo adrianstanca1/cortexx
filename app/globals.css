@@ -1,0 +1,97 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg0: #06101e;
+  --bg1: #0c1a2e;
+  --bg2: #152641;
+  --bg3: #1a2f4e;
+  --blue: #2563eb;
+  --blueL: #60a5fa;
+  --green: #10b981;
+  --amber: #f59e0b;
+  --red: #ef4444;
+  --purple: #8b5cf6;
+  --cyan: #06b6d4;
+  --t1: #eef3fa;
+  --t2: #8ea8c5;
+  --t3: #52749a;
+  --hair: rgba(255,255,255,0.07);
+  --hairMid: rgba(255,255,255,0.13);
+  --font-system: -apple-system, "SF Pro Text", system-ui, sans-serif;
+}
+
+* {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  background-color: var(--bg0);
+  color: var(--t1);
+  font-family: var(--font-system);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+}
+
+/* Hide scrollbars globally */
+* {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+*::-webkit-scrollbar {
+  display: none;
+}
+
+/* Custom utilities */
+.hair-border {
+  border-color: rgba(255,255,255,0.07);
+}
+
+.hair-mid-border {
+  border-color: rgba(255,255,255,0.13);
+}
+
+@layer utilities {
+  .bg-hair {
+    background-color: rgba(255,255,255,0.07);
+  }
+  .bg-hair-mid {
+    background-color: rgba(255,255,255,0.13);
+  }
+  .border-hair {
+    border-color: rgba(255,255,255,0.07);
+  }
+  .border-hair-mid {
+    border-color: rgba(255,255,255,0.13);
+  }
+  .text-t1 {
+    color: #eef3fa;
+  }
+  .text-t2 {
+    color: #8ea8c5;
+  }
+  .text-t3 {
+    color: #52749a;
+  }
+}
+
+/* Safe area for mobile notch */
+.safe-top {
+  padding-top: env(safe-area-inset-top, 0px);
+}
+.safe-bottom {
+  padding-bottom: env(safe-area-inset-bottom, 16px);
+}
+
+/* Prevent tap highlight on mobile */
+button, a {
+  -webkit-tap-highlight-color: transparent;
+}

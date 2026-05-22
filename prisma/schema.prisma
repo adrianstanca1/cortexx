@@ -1,0 +1,126 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model Project {
+  id          String   @id @default(cuid())
+  name        String
+  address     String
+  postcode    String
+  status      String   @default("active") // active, snagging, quoting, complete
+  progress    Int      @default(0)
+  clientName  String   @default("")
+  budget      Float    @default(0)
+  spent       Float    @default(0)
+  lat         Float    @default(51.5)
+  lng         Float    @default(-0.1)
+  startDate   DateTime?
+  endDate     DateTime?
+  onSiteCount Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tasks       Task[]
+  assignments Assignment[]
+  invoices    Invoice[]
+  activities  Activity[]
+  timeEntries TimeEntry[]
+  documents   Document[]
+}
+
+model Task {
+  id          String    @id @default(cuid())
+  title       String
+  description String?
+  dueDate     DateTime?
+  dueTime     String?
+  status      String    @default("todo") // todo, in_progress, done
+  priority    String    @default("medium") // low, medium, high, critical
+  category    String?
+  projectId   String?
+  assigneeId  String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project?  @relation(fields: [projectId], references: [id])
+  assignee    TeamMember? @relation(fields: [assigneeId], references: [id])
+}
+
+model TeamMember {
+  id          String   @id @default(cuid())
+  name        String
+  role        String
+  email       String?
+  phone       String?
+  avatarColor String   @default("#2563eb")
+  dailyRate   Float    @default(0)
+  onSite      Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  tasks       Task[]
+  assignments Assignment[]
+  timeEntries TimeEntry[]
+}
+
+model Assignment {
+  id        String     @id @default(cuid())
+  projectId String
+  memberId  String
+  role      String?
+  onSite    Boolean    @default(false)
+  project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  member    TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  @@unique([projectId, memberId])
+}
+
+model Invoice {
+  id         String   @id @default(cuid())
+  number     String   @unique
+  projectId  String?
+  clientName String
+  amount     Float
+  status     String   @default("sent") // draft, sent, paid, overdue
+  issuedDate DateTime @default(now())
+  dueDate    DateTime
+  paidDate   DateTime?
+  notes      String?
+  project    Project? @relation(fields: [projectId], references: [id])
+  createdAt  DateTime @default(now())
+}
+
+model TimeEntry {
+  id        String     @id @default(cuid())
+  memberId  String
+  projectId String?
+  date      DateTime
+  hours     Float
+  week      Int
+  year      Int
+  approved  Boolean    @default(false)
+  member    TeamMember @relation(fields: [memberId], references: [id])
+  project   Project?   @relation(fields: [projectId], references: [id])
+}
+
+model Activity {
+  id        String   @id @default(cuid())
+  projectId String?
+  actorName String
+  actorType String   @default("human") // human, ai
+  action    String
+  detail    String?
+  iconType  String   @default("check")
+  createdAt DateTime @default(now())
+  project   Project? @relation(fields: [projectId], references: [id])
+}
+
+model Document {
+  id        String   @id @default(cuid())
+  projectId String?
+  type      String   // rams, report, photo
+  name      String
+  expiresAt DateTime?
+  createdAt DateTime @default(now())
+  project   Project? @relation(fields: [projectId], references: [id])
+}
