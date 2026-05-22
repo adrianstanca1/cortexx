@@ -1,0 +1,23 @@
+name: Diagnose Site
+on:
+  workflow_dispatch:
+jobs:
+  diagnose:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Check site from GitHub runners
+        env:
+          API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          echo "=== DNS ==="
+          nslookup cortexbuildpro.com
+          echo "=== HTTP test ==="
+          curl -sv --max-time 15 https://cortexbuildpro.com/ 2>&1 | head -50
+          echo "=== API test ==="
+          curl -s --max-time 15 https://cortexbuildpro.com/api/dashboard 2>&1
+          echo "=== Deployment logs ==="
+          echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}' \
+            | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+          echo "=== Deployment list ==="
+          echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}' \
+            | npx hostinger-api-mcp@latest --stdio 2>/dev/null
