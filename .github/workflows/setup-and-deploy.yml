@@ -1,0 +1,177 @@
+name: Setup Database & Deploy
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [main]
+
+jobs:
+  setup-db-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Railway CLI
+        run: npm install -g @railway/cli
+
+      - name: Create or get Railway PostgreSQL database
+        id: railway-db
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          # Check if project already exists
+          PROJECTS=$(railway projects --json 2>/dev/null || echo "[]")
+          PROJECT_ID=$(echo "$PROJECTS" | python3 -c "
+          import json,sys
+          projects = json.load(sys.stdin)
+          for p in projects:
+              if p.get('name') == 'cortexx-db':
+                  print(p['id'])
+                  break
+          " 2>/dev/null || echo "")
+
+          if [ -z "$PROJECT_ID" ]; then
+            echo "Creating new Railway project..."
+            PROJECT_JSON=$(railway project create --name cortexx-db --json 2>/dev/null || echo "{}")
+            PROJECT_ID=$(echo "$PROJECT_JSON" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
+          fi
+
+          if [ -z "$PROJECT_ID" ]; then
+            echo "Trying Railway GraphQL API..."
+            RESULT=$(curl -s -X POST https://backboard.railway.app/graphql/v2 \
+              -H "Authorization: Bearer $RAILWAY_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d '{
+                "query": "mutation { projectCreate(input: { name: \"cortexx-db\" }) { id environments { edges { node { id name } } } } }"
+              }')
+            echo "Railway response: $RESULT"
+            PROJECT_ID=$(echo "$RESULT" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          print(d.get('data',{}).get('projectCreate',{}).get('id',''))
+          " 2>/dev/null || echo "")
+            ENV_ID=$(echo "$RESULT" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          envs=d.get('data',{}).get('projectCreate',{}).get('environments',{}).get('edges',[])
+          print(envs[0]['node']['id'] if envs else '')
+          " 2>/dev/null || echo "")
+          fi
+
+          echo "project_id=$PROJECT_ID" >> $GITHUB_OUTPUT
+          echo "Project ID: $PROJECT_ID"
+
+      - name: Provision PostgreSQL on Railway
+        id: railway-pg
+        env:
+          RAILWAY_TOKEN: ${{ secrets.RAILWAY_TOKEN }}
+        run: |
+          PROJECT_ID="${{ steps.railway-db.outputs.project_id }}"
+          if [ -z "$PROJECT_ID" ]; then
+            echo "No project ID — skipping Railway, will use SQLite fallback"
+            echo "database_url=file:./cortexx.db" >> $GITHUB_OUTPUT
+            echo "use_sqlite=true" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          # Add PostgreSQL plugin to project
+          RESULT=$(curl -s -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{
+              \"query\": \"mutation { serviceCreate(input: { projectId: \\\"$PROJECT_ID\\\", source: { image: \\\"ghcr.io/railwayapp-templates/postgres:latest\\\" } }) { id } }\"
+            }")
+          echo "PG provision response: $RESULT"
+
+          # Get DATABASE_URL from Railway variables
+          sleep 15
+          VARS=$(curl -s -X POST https://backboard.railway.app/graphql/v2 \
+            -H "Authorization: Bearer $RAILWAY_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"query\": \"{ project(id: \\\"$PROJECT_ID\\\") { services { edges { node { variables { edges { node { name value } } } } } } } }\"}")
+          echo "Vars response: $VARS"
+
+          DB_URL=$(echo "$VARS" | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          services=d.get('data',{}).get('project',{}).get('services',{}).get('edges',[])
+          for svc in services:
+              for var in svc['node'].get('variables',{}).get('edges',[]):
+                  if var['node']['name'] == 'DATABASE_URL':
+                      print(var['node']['value'])
+                      exit()
+          " 2>/dev/null || echo "")
+
+          if [ -z "$DB_URL" ]; then
+            echo "Could not get DATABASE_URL from Railway, using SQLite"
+            echo "database_url=file:./cortexx.db" >> $GITHUB_OUTPUT
+            echo "use_sqlite=true" >> $GITHUB_OUTPUT
+          else
+            echo "database_url=$DB_URL" >> $GITHUB_OUTPUT
+            echo "use_sqlite=false" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Patch Prisma schema if using SQLite
+        if: steps.railway-pg.outputs.use_sqlite == 'true'
+        run: |
+          sed -i 's/provider = "postgresql"/provider = "sqlite"/' prisma/schema.prisma
+          echo "Switched Prisma to SQLite"
+          cat prisma/schema.prisma | head -10
+
+      - name: Write .env.production
+        run: |
+          echo "DATABASE_URL=${{ steps.railway-pg.outputs.database_url }}" > .env.production
+          echo "NODE_ENV=production" >> .env.production
+          echo "Written .env.production with DATABASE_URL"
+
+      - name: Store DATABASE_URL as GitHub secret for future deploys
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          DB_URL="${{ steps.railway-pg.outputs.database_url }}"
+          if [ -n "$DB_URL" ]; then
+            gh secret set DATABASE_URL --repo ${{ github.repository }} --body "$DB_URL" || true
+          fi
+
+      - name: Create deployment archive
+        run: |
+          zip -r deploy.zip . \
+            --exclude "*.git*" \
+            --exclude "node_modules/*" \
+            --exclude ".next/*" \
+            --exclude "deploy.zip"
+          echo "Archive: $(du -sh deploy.zip)"
+
+      - name: Deploy to Hostinger
+        env:
+          API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_deployJsApplication","arguments":{"domain":"cortexbuildpro.com","archivePath":"./deploy.zip","removeArchive":true}}}' \
+            | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+
+      - name: Wait for build and check deployment
+        env:
+          API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          echo "Waiting 30s for Hostinger to build..."
+          sleep 30
+          echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}' \
+            | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+
+      - name: Seed the database
+        run: |
+          sleep 15
+          echo "Seeding production database..."
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST https://cortexbuildpro.com/api/seed)
+          echo "Seed response: HTTP $STATUS"
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ]; then
+            echo "✓ Database seeded successfully"
+          else
+            echo "⚠ Seed returned $STATUS — app may still be starting up"
+          fi
