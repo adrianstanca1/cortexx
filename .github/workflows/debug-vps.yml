@@ -1,4 +1,4 @@
-name: Debug VPS state
+name: Debug VPS deploy
 on:
   workflow_dispatch:
 jobs:
@@ -15,46 +15,48 @@ jobs:
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
 
-      - name: Inspect VPS contents
+      - name: Inspect deploy state
         run: |
           {
-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE_SCRIPT'
-              echo "=== OS ==="
-              cat /etc/os-release | head -3
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+              echo "=== /opt/cortexx state ==="
+              ls -la /opt/cortexx/ 2>/dev/null | head -20
               echo ""
-              echo "=== What's running ==="
-              ss -tlnp 2>/dev/null | head -20 || netstat -tlnp 2>/dev/null | head -20
+              echo "=== .env.production (masked) ==="
+              if [ -f /opt/cortexx/.env.production ]; then
+                grep -v PASSWORD /opt/cortexx/.env.production | sed 's|cortexx:[^@]*@|cortexx:****@|'
+              else
+                echo "MISSING"
+              fi
               echo ""
-              echo "=== Docker containers ==="
-              docker ps 2>/dev/null | head -20 || echo "No docker"
+              echo "=== Test DB connection from host ==="
+              if [ -f /opt/cortexx/.env.production ]; then
+                URL=$(grep DATABASE_URL /opt/cortexx/.env.production | cut -d= -f2-)
+                # Test psql with timeout
+                timeout 10 docker exec $(docker ps --format '{{.Names}}' | grep -i postgres | head -1) psql "$URL" -c "SELECT 1;" 2>&1 | head -5
+              fi
               echo ""
-              echo "=== Existing installs ==="
-              for cmd in node npm psql nginx pm2 git docker; do
-                if command -v $cmd >/dev/null 2>&1; then
-                  echo "$cmd: $(command -v $cmd) | $($cmd --version 2>&1 | head -1)"
-                else
-                  echo "$cmd: NOT installed"
-                fi
-              done
+              echo "=== pm2 list ==="
+              pm2 list 2>&1 | head -20
               echo ""
-              echo "=== Web roots / nginx sites ==="
-              ls -la /etc/nginx/sites-enabled/ 2>/dev/null | head -10
-              ls /var/www/ 2>/dev/null
+              echo "=== pm2 logs cortexx (last 80 lines) ==="
+              pm2 logs cortexx --lines 80 --nostream 2>&1 | tail -80
               echo ""
-              echo "=== Coolify / current app ==="
-              ls /opt/ 2>/dev/null | head -10
-              systemctl list-units --type=service --state=running 2>/dev/null | grep -iE "coolify|app|cortex|node" | head -10
+              echo "=== last build output ==="
+              cat /opt/cortexx/.next/build-manifest.json 2>/dev/null | head -3 || echo "No build manifest — build never succeeded"
               echo ""
-              echo "=== Disk free ==="
-              df -h / 2>/dev/null
+              echo "=== free memory ==="
+              free -h
               echo ""
-              echo "=== Last apt errors ==="
-              tail -20 /var/log/apt/term.log 2>/dev/null || echo "No apt log"
-          REMOTE_SCRIPT
-          } > vps_state.txt 2>&1
-          cat vps_state.txt
+              echo "=== node/npm/pm2 versions ==="
+              node -v 2>&1
+              npm -v 2>&1
+              pm2 -v 2>&1
+          REMOTE
+          } > debug.txt 2>&1
+          cat debug.txt
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add vps_state.txt
-          git commit -m "chore: vps state inspection [skip ci]" || true
+          git add debug.txt
+          git commit -m "chore: deploy debug [skip ci]" || true
           git push || true
