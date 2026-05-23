@@ -33,16 +33,18 @@ export default function ProjectsPage() {
 
   useModalEffects(showModal, () => setShowModal(false))
 
-  const load = () => {
-    fetch('/api/projects')
+  const [statusFilter, setStatusFilter] = useState<string>('all')
+  const [showArchived, setShowArchived] = useState(false)
+
+  const load = (includeArchived = false) => {
+    const url = includeArchived ? '/api/projects?include=only-archived' : '/api/projects'
+    fetch(url)
       .then(r => { if (!r.ok) throw new Error('Failed to load projects'); return r.json() })
       .then(d => { setProjects(d.projects || d); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
   }
 
-  useEffect(() => { load() }, [])
-
-  const [statusFilter, setStatusFilter] = useState<string>('all')
+  useEffect(() => { load(showArchived) }, [showArchived])
 
   const filtered = projects.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -112,13 +114,19 @@ export default function ProjectsPage() {
           <IcSearch size={16} color="#52749a" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search projects…" style={{ background: 'none', border: 'none', outline: 'none', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, flex: 1 }} />
         </div>
-        {/* Status filter chips */}
+        {/* Status filter chips + Archived toggle */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginTop: 10 }}>
           {[{ id: 'all', label: 'All', count: projects.length }, { id: 'active', label: 'Active', count: stats.active }, { id: 'snagging', label: 'Snagging', count: stats.snagging }, { id: 'quoting', label: 'Quoting', count: stats.quoting }, { id: 'complete', label: 'Done', count: projects.filter(p => p.status === 'complete').length }].map(f => (
             <button key={f.id} onClick={() => setStatusFilter(f.id)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: statusFilter === f.id ? (f.id === 'all' ? '#f59e0b' : `${statusColor[f.id] || '#f59e0b'}`) : 'rgba(255,255,255,0.06)', color: statusFilter === f.id ? '#fff' : '#52749a', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: statusFilter === f.id ? 700 : 400, cursor: 'pointer' }}>
               {f.label} {f.count > 0 && <span style={{ opacity: 0.8 }}>· {f.count}</span>}
             </button>
           ))}
+          <button
+            onClick={() => setShowArchived(v => !v)}
+            style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: '1px dashed rgba(82,116,154,0.5)', background: showArchived ? 'rgba(82,116,154,0.2)' : 'transparent', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: showArchived ? 700 : 400, cursor: 'pointer' }}
+          >
+            {showArchived ? '← Active' : 'Archived'}
+          </button>
         </div>
       </div>
 
