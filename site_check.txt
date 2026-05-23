@@ -1,8 +1,0 @@
-=== Deployment list ===
-{"jsonrpc":"2.0","id":1,"error":{"code":-32603,"message":"API returned status 401: {\"message\":\"Unauthenticated.\",\"correlation_id\":\"a1d819c6-8b50-4b8e-b413-6e2f1a24f74b\"}"}}
-
-=== Build logs ===
-{"jsonrpc":"2.0","id":2,"error":{"code":-32603,"message":"buildUuid is required and must be a string"}}
-
-=== Website list ===
-{"result":{"content":[{"type":"text","text":"{\"message\":\"Unauthenticated.\",\"correlation_id\":\"a1d819cb-2409-4104-8cf3-7eae1476aa8b\"}"}]},"jsonrpc":"2.0","id":3}

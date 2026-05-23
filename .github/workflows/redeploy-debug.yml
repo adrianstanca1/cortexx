@@ -1,0 +1,58 @@
+name: Redeploy with full logs
+on:
+  workflow_dispatch:
+jobs:
+  redeploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Verify token first
+        env:
+          API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          echo "Token length: ${#API_TOKEN}"
+          echo "Token prefix: ${API_TOKEN:0:5}..."
+          echo ""
+          echo "=== Try direct API call ==="
+          curl -sv -H "Authorization: Bearer $API_TOKEN" \
+            https://developers.hostinger.com/api/hosting/v1/websites 2>&1 | head -40 || true
+
+      - name: Save full results
+        if: always()
+        env:
+          API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          {
+            echo "=== Token info ==="
+            echo "Length: ${#API_TOKEN}"
+            echo "Prefix: ${API_TOKEN:0:8}..."
+            echo ""
+            echo "=== Direct API: /websites ==="
+            curl -s -w "\nHTTP_CODE: %{http_code}\n" -H "Authorization: Bearer $API_TOKEN" \
+              "https://developers.hostinger.com/api/hosting/v1/websites" 2>&1 | head -30
+            echo ""
+            echo "=== Direct API: /websites?domain=cortexbuildpro.com ==="
+            curl -s -w "\nHTTP_CODE: %{http_code}\n" -H "Authorization: Bearer $API_TOKEN" \
+              "https://developers.hostinger.com/api/hosting/v1/websites?domain=cortexbuildpro.com" 2>&1 | head -30
+            echo ""
+            echo "=== Direct API: /api/orders ==="
+            curl -s -w "\nHTTP_CODE: %{http_code}\n" -H "Authorization: Bearer $API_TOKEN" \
+              "https://developers.hostinger.com/api/v1/orders" 2>&1 | head -30
+            echo ""
+            echo "=== MCP: hosting_listOrdersV1 (raw, with stderr) ==="
+            echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listOrdersV1","arguments":{}}}' \
+              | timeout 25 npx hostinger-api-mcp@latest --stdio 2>&1 | head -40
+          } > diag.txt
+          cat diag.txt
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add diag.txt
+          git commit -m "chore: redeploy debug results [skip ci]" || true
+          git push || true
