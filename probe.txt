@@ -1,18 +1,29 @@
 Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
-=== PATH ===
-/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/games:/usr/local/games:/snap/bin
+=== docker dirs ===
+ls: cannot access '/var/lib/docker': No such file or directory
 
-=== which docker (login shell) ===
-bash: line 1: type: docker: not found
-bash: line 1: docker: command not found
+=== postgresql ===
+ls: cannot access '/var/lib/postgresql': No such file or directory
+bash: line 7: psql: command not found
 
-=== find /usr* /opt -name docker ===
+=== port 5432 listener ===
 
-=== systemctl status ===
-inactive
-not-found
+=== services ===
+  nginx.service               loaded active running A high performance web server and a reverse proxy server
 
-=== dpkg --list docker* ===
+=== pm2 ===
+/usr/bin/pm2
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 
-=== running containers (try via socket if exec works) ===
-ls: cannot access '/var/run/docker.sock': No such file or directory
+=== node ===
+/usr/bin/node
+v20.20.2
+
+=== /opt ===
+total 16
+drwxr-xr-x  4 root root 4096 May 23 19:49 .
+drwxr-xr-x 23 root root 4096 May 23 19:30 ..
+drwxr-xr-x 11 root root 4096 May 23 19:49 cortexx
+drwxr-xr-x  2 root root 4096 May 23 18:43 cortexx-backups
