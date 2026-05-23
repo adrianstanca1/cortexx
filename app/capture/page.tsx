@@ -25,8 +25,11 @@ function CaptureContent() {
   const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [showProjectPicker, setShowProjectPicker] = useState(false)
   const [recentSelect, setRecentSelect] = useState<string | null>(null)
+  const [recording, setRecording] = useState(false)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const fileTypeRef = useRef<'photo' | 'receipt' | null>(null)
+  const mediaRecorderRef = useRef<MediaRecorder | null>(null)
+  const audioChunksRef = useRef<Blob[]>([])
 
   useEffect(() => {
     fetch('/api/projects')
@@ -62,10 +65,22 @@ function CaptureContent() {
     setTimeout(() => setErrorMsg(null), 3000)
   }, [])
 
+  const uploadFile = useCallback(async (file: File | Blob, filename: string) => {
+    const fd = new FormData()
+    fd.append('file', file, filename)
+    const res = await fetch('/api/uploads', { method: 'POST', body: fd })
+    if (!res.ok) {
+      const err = (await res.json().catch(() => ({}))) as { error?: string }
+      throw new Error(err.error || 'Upload failed')
+    }
+    return res.json() as Promise<{ url: string; name: string; size: number; mimeType: string }>
+  }, [])
+
   const onFileSelected = useCallback(async (file: File) => {
     const type = fileTypeRef.current
     if (!type || !file) return
     try {
+      const uploaded = await uploadFile(file, file.name)
       const res = await fetch('/api/documents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -73,9 +88,12 @@ function CaptureContent() {
           name: file.name,
           type,
           projectId: activeProject?.id || null,
+          url: uploaded.url,
+          size: uploaded.size,
+          mimeType: uploaded.mimeType,
         }),
       })
-      if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Upload failed')
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Save failed')
       await logActivity(
         type === 'photo' ? 'uploaded a progress photo' : 'logged a receipt',
         type === 'photo' ? 'camera' : 'receipt',
@@ -84,7 +102,81 @@ function CaptureContent() {
     } catch (e) {
       failWith(e instanceof Error ? e.message : 'Failed')
     }
-  }, [activeProject, logActivity, finishWith, failWith])
+  }, [activeProject, logActivity, finishWith, failWith, uploadFile])
+
+  const finishVoiceRfi = useCallback(async (audioUrl: string | null) => {
+    const title = `RFI: ${activeProject?.name || 'site'}`
+    const description = audioUrl
+      ? `Voice RFI raised from capture page.\nAudio: ${audioUrl}\n(Transcription pending.)`
+      : 'Voice RFI raised from capture page (audio capture unavailable on this device).'
+    const res = await fetch('/api/tasks', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        title,
+        description,
+        priority: 'high',
+        projectId: activeProject?.id || null,
+      }),
+    })
+    if (!res.ok) throw new Error('Failed to create RFI task')
+    await logActivity('raised a Voice RFI', 'mic', audioUrl ? 'audio attached' : null)
+    finishWith('RFI task created')
+  }, [activeProject, logActivity, finishWith])
+
+  const stopRecording = useCallback(() => {
+    const rec = mediaRecorderRef.current
+    if (rec && rec.state !== 'inactive') rec.stop()
+  }, [])
+
+  const startVoiceRfi = useCallback(async () => {
+    if (typeof window === 'undefined' || !navigator.mediaDevices?.getUserMedia || typeof MediaRecorder === 'undefined') {
+      // No mic API — fall back to creating the RFI task with no audio
+      try { await finishVoiceRfi(null) } catch (e) { failWith(e instanceof Error ? e.message : 'Failed') }
+      return
+    }
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({ audio: true })
+      const rec = new MediaRecorder(stream)
+      audioChunksRef.current = []
+      rec.ondataavailable = e => { if (e.data.size > 0) audioChunksRef.current.push(e.data) }
+      rec.onstop = async () => {
+        stream.getTracks().forEach(t => t.stop())
+        setRecording(false)
+        const blob = new Blob(audioChunksRef.current, { type: rec.mimeType || 'audio/webm' })
+        try {
+          let audioUrl: string | null = null
+          if (blob.size > 0) {
+            const uploaded = await uploadFile(blob, `voice-${Date.now()}.webm`)
+            audioUrl = uploaded.url
+            if (activeProject?.id) {
+              await fetch('/api/documents', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  name: `Voice RFI ${new Date().toLocaleString('en-GB')}`,
+                  type: 'audio',
+                  projectId: activeProject.id,
+                  url: uploaded.url,
+                  size: uploaded.size,
+                  mimeType: uploaded.mimeType,
+                }),
+              }).catch(() => {})
+            }
+          }
+          await finishVoiceRfi(audioUrl)
+        } catch (e) {
+          failWith(e instanceof Error ? e.message : 'Failed')
+        }
+      }
+      mediaRecorderRef.current = rec
+      rec.start()
+      setRecording(true)
+    } catch {
+      // Permission denied / no device — degrade to task-only RFI
+      try { await finishVoiceRfi(null) } catch (e) { failWith(e instanceof Error ? e.message : 'Failed') }
+    }
+  }, [activeProject, finishVoiceRfi, failWith, uploadFile])
 
   const handleAction = useCallback(async (id: string) => {
     setSelected(id)
@@ -97,21 +189,12 @@ function CaptureContent() {
         return // wait for onChange
       }
       if (id === 'voice') {
-        // Create a high-priority task instead of recording audio (no storage backend yet)
-        const title = `RFI: ${activeProject?.name || 'site'}`
-        const res = await fetch('/api/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title,
-            description: 'Voice RFI raised from capture page (audio TBD)',
-            priority: 'high',
-            projectId: activeProject?.id || null,
-          }),
-        })
-        if (!res.ok) throw new Error('Failed to create RFI task')
-        await logActivity('raised a Voice RFI', 'mic')
-        finishWith('RFI task created')
+        // If already recording, stop and let the recorder onstop handler finish the flow.
+        if (recording) {
+          stopRecording()
+          return
+        }
+        await startVoiceRfi()
         return
       }
       if (id === 'incident') {
@@ -244,22 +327,31 @@ function CaptureContent() {
                 {errorMsg}
               </div>
             )}
-            {actions.map(action => (
-              <button key={action.id} onClick={() => handleAction(action.id)} disabled={selected === action.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 18px', borderRadius: 18, background: selected === action.id ? `${action.color}22` : 'rgba(255,255,255,0.04)', border: `1.5px solid ${selected === action.id ? action.color : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', transform: selected === action.id ? 'scale(0.98)' : 'scale(1)' }}>
-                <div style={{ width: 52, height: 52, borderRadius: 16, background: `${action.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
-                  <action.Icon size={24} color={action.color} />
-                </div>
-                <div>
-                  <p style={{ fontSize: 16, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)', letterSpacing: '-0.01em' }}>{action.label}</p>
-                  <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginTop: 2 }}>{action.sub}</p>
-                </div>
-                {selected === action.id && (
-                  <div style={{ marginLeft: 'auto' }}>
-                    <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${action.color}`, borderTopColor: 'transparent', animation: 'spin 0.6s linear infinite' }} />
+            {actions.map(action => {
+              const isVoiceRecording = action.id === 'voice' && recording
+              const isSelected = selected === action.id
+              // While recording voice, keep the button tappable so the user can stop.
+              const disabled = isSelected && !isVoiceRecording
+              const sub = isVoiceRecording ? 'Recording… tap to stop' : action.sub
+              return (
+                <button key={action.id} onClick={() => handleAction(action.id)} disabled={disabled} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 18px', borderRadius: 18, background: isSelected ? `${action.color}22` : 'rgba(255,255,255,0.04)', border: `1.5px solid ${isSelected ? action.color : 'rgba(255,255,255,0.08)'}`, cursor: disabled ? 'default' : 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', transform: isSelected ? 'scale(0.98)' : 'scale(1)' }}>
+                  <div style={{ width: 52, height: 52, borderRadius: 16, background: `${action.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                    <action.Icon size={24} color={action.color} />
                   </div>
-                )}
-              </button>
-            ))}
+                  <div>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)', letterSpacing: '-0.01em' }}>{action.label}</p>
+                    <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginTop: 2 }}>{sub}</p>
+                  </div>
+                  {isVoiceRecording ? (
+                    <div style={{ marginLeft: 'auto', width: 14, height: 14, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s ease-in-out infinite' }} />
+                  ) : isSelected ? (
+                    <div style={{ marginLeft: 'auto' }}>
+                      <div style={{ width: 20, height: 20, borderRadius: '50%', border: `2px solid ${action.color}`, borderTopColor: 'transparent', animation: 'spin 0.6s linear infinite' }} />
+                    </div>
+                  ) : null}
+                </button>
+              )
+            })}
 
             <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '4px 0' }} />
 
@@ -272,7 +364,7 @@ function CaptureContent() {
         )}
       </div>
 
-      <style>{`@keyframes spin { to { transform: rotate(360deg); } }`}</style>
+      <style>{`@keyframes spin { to { transform: rotate(360deg); } } @keyframes pulse { 0%,100% { opacity: 1; } 50% { opacity: 0.35; } }`}</style>
     </div>
   )
 }

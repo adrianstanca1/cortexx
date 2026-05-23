@@ -51,6 +51,9 @@ export async function POST(req: NextRequest) {
         type: body.type.trim(),
         projectId: body.projectId || null,
         expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
+        url: typeof body.url === 'string' && body.url ? body.url : null,
+        size: Number.isFinite(body.size) ? Math.floor(body.size) : null,
+        mimeType: typeof body.mimeType === 'string' && body.mimeType ? body.mimeType : null,
       },
       include: { project: true },
     })

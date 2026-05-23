@@ -73,10 +73,10 @@ and planned. Maintained alongside the codebase, not in a separate tracker.
 
 | # | Issue | Severity | Notes |
 |---|---|---|---|
-| 1 | Capture page only stores file metadata, not bytes | Medium | Document model has `url` field but no upload backend yet. Photos selected via file input are logged as activity only. Needs an `/api/uploads` POST with S3 (or local) storage. |
-| 2 | Voice RFI not actually transcribed | Medium | Creates a high-priority task with description "Voice RFI raised from capture page (audio TBD)". AI transcription is a v1.1 feature. |
-| 3 | Module stubs don't surface their "coming soon" status in the apps hub | Low | All 24 stubs are tappable and routable. They open a roadmap-style page. Consider greying out non-shipped modules in the apps grid. |
-| 4 | Pages are client-rendered (`'use client'`) and don't show data in static HTML | Low | This is by design (auth-gated, real-time) but it means social previews and pre-render snapshots are skeletons. Could move some to server components later. |
+| 1 | ~~Capture page only stores file metadata, not bytes~~ | ✅ Fixed | `/api/uploads` POST writes to `UPLOAD_DIR` (default `./uploads`, prod = `/var/lib/cortexx/uploads`); `/api/uploads/[name]` streams it back (auth-gated). `Document` has `url`/`size`/`mimeType`. `/capture` uploads then creates the doc; `/documents` shows thumbnails for images. 25 MB cap, MIME allowlist. |
+| 2 | Voice RFI: audio captured, transcription still pending | Partial | `/capture?type=voice` now uses MediaRecorder to record, uploads the blob, attaches the URL to the RFI task description (and as an `audio` document on the project). Whisper-style transcription still needs an API key — parked for v1.1. |
+| 3 | ~~Module stubs don't surface their "coming soon" status~~ | ✅ Fixed | `/apps` greys non-shipped modules (opacity 0.55) and renders a "SOON" pip. Real-data badges suppressed on coming-soon items so users don't expect data behind them. |
+| 4 | Client-rendered pages → weak social previews | Partial | Root layout now exports `openGraph` + `twitter` metadata using `NEXT_PUBLIC_SITE_URL`, so unfurls work even for client-rendered routes. Full server-component refactor stays an open architecture decision (post-v1.5). |
 
 ## 🏗 Architecture decisions
 

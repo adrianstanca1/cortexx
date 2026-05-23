@@ -6,15 +6,33 @@ import AuthedShell from '@/components/ui/AuthedShell'
 import SWRegister from '@/components/ui/SWRegister'
 import './globals.css'
 
+const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://cortexbuildpro.com'
+const DESCRIPTION = 'Mobile-first construction management for UK SMEs — projects, tasks, capture, invoices, and a real-time site view.'
+
 export const metadata: Metadata = {
-  title: 'Cortexx — CortexBuild',
-  description: 'Mobile-first construction management',
+  metadataBase: new URL(SITE_URL),
+  title: { default: 'Cortexx — CortexBuild', template: '%s · Cortexx' },
+  description: DESCRIPTION,
   manifest: '/manifest.json',
   applicationName: 'Cortexx',
   appleWebApp: {
     capable: true,
     title: 'Cortexx',
     statusBarStyle: 'black-translucent',
+  },
+  openGraph: {
+    type: 'website',
+    siteName: 'Cortexx',
+    title: 'Cortexx — CortexBuild',
+    description: DESCRIPTION,
+    url: SITE_URL,
+    images: [{ url: '/icon-512.png', width: 512, height: 512, alt: 'Cortexx' }],
+  },
+  twitter: {
+    card: 'summary',
+    title: 'Cortexx — CortexBuild',
+    description: DESCRIPTION,
+    images: ['/icon-512.png'],
   },
   icons: {
     icon: [
