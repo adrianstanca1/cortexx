@@ -5,19 +5,45 @@ jobs:
   diagnose:
     runs-on: ubuntu-latest
     steps:
-      - name: Check site from GitHub runners
+      - uses: actions/checkout@v4
+
+      - name: Check site and get deployment info
         env:
           API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
         run: |
           echo "=== DNS ==="
           nslookup cortexbuildpro.com
-          echo "=== HTTP test ==="
-          curl -sv --max-time 15 https://cortexbuildpro.com/ 2>&1 | head -50
-          echo "=== API test ==="
-          curl -s --max-time 15 https://cortexbuildpro.com/api/dashboard 2>&1
-          echo "=== Deployment logs ==="
-          echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}' \
-            | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+          echo ""
+          echo "=== HTTPS test ==="
+          curl -sv --max-time 15 https://cortexbuildpro.com/ 2>&1 | head -60 || true
+          echo ""
+          echo "=== API /dashboard ==="
+          curl -s --max-time 15 https://cortexbuildpro.com/api/dashboard 2>&1 | head -300 || true
+          echo ""
           echo "=== Deployment list ==="
-          echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}' \
+          echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}' \
             | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+          echo ""
+          echo "=== Build logs ==="
+          echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}' \
+            | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+
+      - name: Save results as artifact
+        if: always()
+        run: |
+          {
+            echo "=== DNS ==="
+            nslookup cortexbuildpro.com 2>/dev/null || true
+            echo "=== HTTP STATUS ==="
+            curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 10 https://cortexbuildpro.com/ 2>/dev/null || echo "connection failed"
+            echo ""
+            echo "=== /api/dashboard response ==="
+            curl -s --max-time 10 https://cortexbuildpro.com/api/dashboard 2>/dev/null || echo "no response"
+          } > site_check.txt
+          cat site_check.txt
+
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: site-check
+          path: site_check.txt
