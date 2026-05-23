@@ -2,6 +2,17 @@ name: Deploy to Hostinger VPS
 
 on:
   workflow_dispatch:
+  push:
+    branches: [main]
+    paths-ignore:
+      - 'README.md'
+      - 'docs/**'
+      - '.github/workflows/health-monitor.yml'
+      - '.github/workflows/ci.yml'
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
 
 jobs:
   deploy:
@@ -20,49 +31,156 @@ jobs:
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo SSH_OK && uname -a'
 
-      - name: Install missing tools (without touching existing stack)
+      - name: Install missing tools
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
             set -e
             export DEBIAN_FRONTEND=noninteractive
-
-            # Only install what's missing — NEVER touch Postgres (in Docker), MySQL (in Docker),
-            # or existing nginx configs.
-            need_install=()
-
-            command -v node >/dev/null 2>&1 || need_install+=(nodejs)
-            command -v git >/dev/null 2>&1 || need_install+=(git)
-            command -v nginx >/dev/null 2>&1 || need_install+=(nginx)
-
-            if [ "${#need_install[@]}" -gt 0 ]; then
-              echo "Installing: ${need_install[*]}"
-              # Add Node.js 20 repo only if node missing
-              if [[ " ${need_install[*]} " == *" nodejs "* ]]; then
+            need=()
+            command -v node >/dev/null 2>&1 || need+=(nodejs)
+            command -v git >/dev/null 2>&1 || need+=(git)
+            command -v nginx >/dev/null 2>&1 || need+=(nginx)
+            command -v gzip >/dev/null 2>&1 || need+=(gzip)
+            if [ ${#need[@]} -gt 0 ]; then
+              if [[ " ${need[*]} " == *" nodejs "* ]]; then
                 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
               fi
               apt-get update -qq
-              apt-get install -y "${need_install[@]}"
-            else
-              echo "All base tools present"
+              apt-get install -y "${need[@]}"
             fi
-
             command -v pm2 >/dev/null 2>&1 || npm install -g pm2
-            echo "Node: $(node -v) | npm: $(npm -v) | pm2: $(pm2 -v)"
+            echo "Node: $(node -v) | pm2: $(pm2 -v)"
           REMOTE
 
-      - name: Deploy Cortexx app on port 3010 with SQLite
+      - name: Resolve Postgres container + provision DB
+        id: db
+        env:
+          API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          # Generate a deterministic password (per-deploy, but stable within deploy)
+          DB_PASS=$(openssl rand -hex 16)
+          echo "::add-mask::$DB_PASS"
+
+          # Find container bound to host:5432 and its internal IP — that bypasses the
+          # localhost docker-proxy ambiguity from before.
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 "bash -s '$DB_PASS'" << 'REMOTE'
+            set -e
+            DB_PASS=$1
+
+            # Find container bound to host:5432
+            PG_CONTAINER=""
+            for c in $(docker ps --format '{{.Names}}'); do
+              if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
+                PG_CONTAINER="$c"; break
+              fi
+            done
+            if [ -z "$PG_CONTAINER" ]; then
+              echo "ERROR: No container is bound to host:5432"
+              docker ps --format '{{.Names}}: {{.Image}} :: {{.Ports}}'
+              exit 1
+            fi
+            echo "$PG_CONTAINER" > /tmp/cortexx_pg_container
+            PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
+            echo "$PG_IP" > /tmp/cortexx_pg_ip
+            echo "Container: $PG_CONTAINER | Internal IP: $PG_IP"
+
+            PG_SUPER=$(docker inspect "$PG_CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep ^POSTGRES_USER= | cut -d= -f2)
+            PG_SUPER=${PG_SUPER:-postgres}
+
+            # Create or update cortexx user and database (idempotent)
+            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -tc \
+              "SELECT 1 FROM pg_user WHERE usename='cortexx'" | grep -q 1 || \
+              docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c \
+                "CREATE USER cortexx WITH PASSWORD '$DB_PASS';"
+            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c \
+              "ALTER USER cortexx WITH PASSWORD '$DB_PASS';"
+            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -tc \
+              "SELECT 1 FROM pg_database WHERE datname='cortexx'" | grep -q 1 || \
+              docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c \
+                "CREATE DATABASE cortexx OWNER cortexx;"
+            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c \
+              "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;"
+
+            # Save the password where the deploy script can read it (not in env, not in logs)
+            echo "$DB_PASS" > /opt/cortexx-db-password
+            chmod 600 /opt/cortexx-db-password
+            echo "DB ready"
+          REMOTE
+
+      - name: Backup database (pre-deploy)
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+            set -e
+            mkdir -p /opt/cortexx-backups
+            PG_CONTAINER=$(cat /tmp/cortexx_pg_container 2>/dev/null || echo "")
+            if [ -z "$PG_CONTAINER" ]; then
+              echo "No PG container info — skipping backup"
+              exit 0
+            fi
+            STAMP=$(date -u +%Y%m%d-%H%M%S)
+            OUT="/opt/cortexx-backups/cortexx-$STAMP.sql.gz"
+            if docker exec "$PG_CONTAINER" pg_dump -U cortexx cortexx 2>/dev/null | gzip > "$OUT"; then
+              SIZE=$(du -h "$OUT" | cut -f1)
+              echo "✓ Backup: $OUT ($SIZE)"
+            else
+              echo "⚠ pg_dump failed (DB may be empty on first deploy)"
+              rm -f "$OUT"
+            fi
+            # Prune backups older than 30 days
+            find /opt/cortexx-backups -name '*.sql.gz' -mtime +30 -delete
+            echo "Backups currently kept:"
+            ls -la /opt/cortexx-backups/ 2>/dev/null | tail -10
+          REMOTE
+
+      - name: Install nightly backup cron
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+            set -e
+            cat > /etc/cron.daily/cortexx-backup << 'CRON'
+          #!/usr/bin/env bash
+          set -e
+          PG_CONTAINER=$(docker ps --format '{{.Names}}' | while read n; do
+            if docker port "$n" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then echo "$n"; break; fi
+          done)
+          [ -z "$PG_CONTAINER" ] && exit 0
+          mkdir -p /opt/cortexx-backups
+          OUT="/opt/cortexx-backups/cortexx-$(date -u +%Y%m%d-%H%M%S).sql.gz"
+          docker exec "$PG_CONTAINER" pg_dump -U cortexx cortexx 2>/dev/null | gzip > "$OUT" || rm -f "$OUT"
+          find /opt/cortexx-backups -name '*.sql.gz' -mtime +30 -delete
+          CRON
+            chmod +x /etc/cron.daily/cortexx-backup
+            echo "✓ Nightly backup cron installed"
+          REMOTE
+
+      - name: Deploy Cortexx app (Postgres, migrations)
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
+            NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            ADMIN_EMAIL="$ADMIN_EMAIL" \
+            ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            SEED_TOKEN="$SEED_TOKEN" \
+            "bash -s" << 'REMOTE'
             set -e
             APP_DIR=/opt/cortexx
             APP_PORT=3010
 
-            echo "=== Clone/update repo ==="
+            DB_PASS=$(cat /opt/cortexx-db-password 2>/dev/null)
+            PG_IP=$(cat /tmp/cortexx_pg_ip 2>/dev/null)
+            if [ -z "$DB_PASS" ] || [ -z "$PG_IP" ]; then
+              echo "ERROR: Missing DB password or Postgres IP"
+              exit 1
+            fi
+            DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"
+
             if [ -d $APP_DIR/.git ]; then
               cd $APP_DIR
               git fetch origin
               git reset --hard origin/main
-              # Wipe stale build / node_modules to avoid version drift
               rm -rf $APP_DIR/.next $APP_DIR/node_modules
             else
               rm -rf $APP_DIR
@@ -70,16 +188,16 @@ jobs:
               cd $APP_DIR
             fi
 
-            echo "=== Switching Prisma provider to SQLite for prod ==="
-            # SQLite avoids the Docker Postgres container ambiguity and port conflicts
-            # on this multi-app VPS. All schema features (relations, indexes, cuid)
-            # are SQLite-compatible.
-            sed -i 's/provider = "postgresql"/provider = "sqlite"/' prisma/schema.prisma
-
             cat > $APP_DIR/.env.production << ENV
-          DATABASE_URL=file:./prod.db
+          DATABASE_URL=$DB_URL
+          NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+          NEXTAUTH_URL=https://cortexbuildpro.com
           NODE_ENV=production
           PORT=$APP_PORT
+          ALLOW_SEED=true
+          SEED_TOKEN=$SEED_TOKEN
+          ADMIN_EMAIL=$ADMIN_EMAIL
+          ADMIN_PASSWORD=$ADMIN_PASSWORD
           ENV
             chmod 600 $APP_DIR/.env.production
 
@@ -87,17 +205,27 @@ jobs:
             cd $APP_DIR
             npm ci --include=dev
 
-            echo "=== Prisma generate + push (creates SQLite file) ==="
-            DATABASE_URL=file:./prod.db npx prisma generate
-            DATABASE_URL=file:./prod.db npx prisma db push --accept-data-loss
+            echo "=== Prisma generate ==="
+            DATABASE_URL="$DB_URL" npx prisma generate
+
+            echo "=== Prisma migrate deploy (safe — no data loss) ==="
+            DATABASE_URL="$DB_URL" npx prisma migrate deploy
+
+            echo "=== Seed (idempotent: only seeds demo data if project count is 0) ==="
+            DATABASE_URL="$DB_URL" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+              npx prisma db seed || echo "Seed skipped or non-fatal"
 
             echo "=== Build ==="
-            DATABASE_URL=file:./prod.db npm run build
+            DATABASE_URL="$DB_URL" NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+              NEXTAUTH_URL=https://cortexbuildpro.com npm run build
 
-            echo "=== Start/restart with pm2 ==="
-            pm2 delete cortexx 2>/dev/null || true
+            echo "=== Start/reload pm2 (graceful — keeps SSE connections alive) ==="
             cd $APP_DIR
-            DATABASE_URL=file:./prod.db PORT=$APP_PORT pm2 start npm --name cortexx --update-env -- start
+            if pm2 describe cortexx >/dev/null 2>&1; then
+              pm2 reload cortexx --update-env
+            else
+              PORT=$APP_PORT pm2 start npm --name cortexx --update-env -- start
+            fi
             pm2 save
             (pm2 startup systemd -u root --hp /root 2>&1 | grep "sudo " | bash) || true
 
@@ -106,78 +234,74 @@ jobs:
             pm2 list 2>&1 | grep cortexx
             echo "=== Local test ==="
             curl -s -o /dev/null -w "App on :$APP_PORT → HTTP %{http_code}\n" http://localhost:$APP_PORT/
-            curl -s --max-time 5 http://localhost:$APP_PORT/api/health | head -c 200
+            curl -s --max-time 5 http://localhost:$APP_PORT/api/health
             echo ""
           REMOTE
 
-      - name: Configure nginx for cortexbuildpro.com only
+      - name: Configure nginx for cortexbuildpro.com
         run: |
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
             set -e
 
             BACKUP=/root/nginx-backup-$(date +%s)
             mkdir -p $BACKUP
-            echo "=== Backup dir: $BACKUP ==="
 
-            # Find every site config (symlink OR real file) that has
-            # 'cortexbuildpro.com' or 'www.cortexbuildpro.com' as a bare server_name.
-            # We match: server_name has 'cortexbuildpro.com' preceded by space/start
-            # and followed by space/semicolon — so 'api.cortexbuildpro.com' won't match.
-            echo "=== Existing sites-enabled before cleanup ==="
-            ls /etc/nginx/sites-enabled/
-
+            # Remove any sites-enabled config that has cortexbuildpro.com or www. as a
+            # bare server_name (preserves subdomain configs like api.cortexbuildpro.com).
             for f in /etc/nginx/sites-enabled/*; do
               [ -e "$f" ] || continue
               [ "$(basename $f)" = "cortexx" ] && continue
-
               SRC=$(readlink -f "$f" 2>/dev/null || echo "$f")
-              # Extract every domain name listed in any server_name directive
-              # (handles multi-line, multi-domain, etc.). Strip leading spaces, trailing semicolon.
               DOMAINS=$(awk '
                 /^\s*server_name/ { in_sn=1; gsub(/^\s*server_name\s*/, ""); }
                 in_sn {
                   if (match($0, /;/)) { gsub(/;.*/, ""); in_sn=0; }
                   print
                 }' "$SRC" 2>/dev/null | tr -s ' \t\n' '\n' | sed '/^$/d')
-
-              # Match if any extracted domain is exactly cortexbuildpro.com or www.cortexbuildpro.com
               MATCH=""
               for d in $DOMAINS; do
                 if [ "$d" = "cortexbuildpro.com" ] || [ "$d" = "www.cortexbuildpro.com" ]; then
                   MATCH=1; break
                 fi
               done
-
               if [ -n "$MATCH" ]; then
                 cp "$SRC" "$BACKUP/$(basename $f).bak" 2>/dev/null || true
-                echo "Removing $f — server_name includes cortexbuildpro.com (domains: $(echo $DOMAINS | tr '\n' ' '))"
+                echo "Removing $f (was serving cortexbuildpro.com)"
                 rm "$f"
               fi
             done
 
-            echo "=== sites-enabled after cleanup ==="
-            ls /etc/nginx/sites-enabled/
-
-            # Check for an existing SSL cert for cortexbuildpro.com root
-            SSL_FULLCHAIN=""
-            SSL_PRIVKEY=""
-            if [ -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
-              SSL_FULLCHAIN=/etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem
-              SSL_PRIVKEY=/etc/letsencrypt/live/cortexbuildpro.com/privkey.pem
-              echo "Existing cert found"
-            fi
-            echo "SSL_FULLCHAIN=$SSL_FULLCHAIN"
-
             mkdir -p /var/www/html
+
+            HAVE_CERT=""
+            [ -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ] && HAVE_CERT=1
+
             cat > /etc/nginx/sites-available/cortexx << 'NGINX'
           server {
               listen 80;
               listen [::]:80;
               server_name cortexbuildpro.com www.cortexbuildpro.com;
 
+              client_max_body_size 25m;
+              gzip on;
+              gzip_types text/plain application/json application/javascript text/css application/xml image/svg+xml;
+              gzip_min_length 1024;
+
               location /.well-known/acme-challenge/ {
                   root /var/www/html;
                   try_files $uri =404;
+              }
+
+              location /api/events/ {
+                  proxy_pass http://127.0.0.1:3010;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_buffering off;
+                  proxy_cache off;
+                  proxy_read_timeout 1h;
+                  chunked_transfer_encoding off;
               }
 
               location / {
@@ -193,100 +317,24 @@ jobs:
                   proxy_read_timeout 90s;
                   proxy_buffering off;
               }
-
-              location /api/events/ {
-                  proxy_pass http://127.0.0.1:3010;
-                  proxy_http_version 1.1;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_buffering off;
-                  proxy_cache off;
-                  proxy_read_timeout 1h;
-                  chunked_transfer_encoding off;
-              }
           }
           NGINX
 
-            if [ -n "$SSL_FULLCHAIN" ]; then
-              cat >> /etc/nginx/sites-available/cortexx << NGINX_HTTPS
-          server {
-              listen 443 ssl http2;
-              listen [::]:443 ssl http2;
-              server_name cortexbuildpro.com www.cortexbuildpro.com;
-
-              ssl_certificate $SSL_FULLCHAIN;
-              ssl_certificate_key $SSL_PRIVKEY;
-              ssl_protocols TLSv1.2 TLSv1.3;
-              ssl_ciphers HIGH:!aNULL:!MD5;
-
-              location / {
-                  proxy_pass http://127.0.0.1:3010;
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade \$http_upgrade;
-                  proxy_set_header Connection 'upgrade';
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-For \$proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-                  proxy_cache_bypass \$http_upgrade;
-                  proxy_read_timeout 90s;
-                  proxy_buffering off;
-              }
-
-              location /api/events/ {
-                  proxy_pass http://127.0.0.1:3010;
-                  proxy_http_version 1.1;
-                  proxy_set_header Host \$host;
-                  proxy_set_header X-Real-IP \$remote_addr;
-                  proxy_set_header X-Forwarded-Proto \$scheme;
-                  proxy_buffering off;
-                  proxy_cache off;
-                  proxy_read_timeout 1h;
-                  chunked_transfer_encoding off;
-              }
-          }
-          NGINX_HTTPS
-              echo "Including HTTPS server block"
-            fi
-
             ln -sf /etc/nginx/sites-available/cortexx /etc/nginx/sites-enabled/cortexx
-            echo "=== Testing nginx config ==="
             nginx -t
-            echo "=== Reloading nginx ==="
             systemctl reload nginx
-            echo "Other enabled sites (preserved):"
-            ls /etc/nginx/sites-enabled/
-          REMOTE
+            echo "✓ HTTP block active; HTTPS will be added after cert provisioned"
 
-      - name: Provision SSL cert via certbot (if not exists)
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-            set -e
+            # Provision cert if missing
+            if [ -z "$HAVE_CERT" ]; then
+              command -v certbot >/dev/null 2>&1 || apt-get install -y certbot python3-certbot-nginx >/dev/null
+              certbot certonly --webroot -w /var/www/html \
+                -d cortexbuildpro.com -d www.cortexbuildpro.com \
+                --non-interactive --agree-tos -m admin@cortexbuildpro.com --no-eff-email 2>&1 | tail -10 || true
+            fi
+
             if [ -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
-              echo "Cert already exists, skipping certbot"
-              exit 0
-            fi
-            # Install certbot if missing
-            command -v certbot >/dev/null 2>&1 || apt-get install -y certbot python3-certbot-nginx >/dev/null
-            # Use webroot challenge (nginx is serving /var/www/html for /.well-known/acme-challenge/)
-            certbot certonly --webroot -w /var/www/html \
-              -d cortexbuildpro.com -d www.cortexbuildpro.com \
-              --non-interactive --agree-tos -m admin@cortexbuildpro.com \
-              --no-eff-email 2>&1 | tail -20
-            ls /etc/letsencrypt/live/cortexbuildpro.com/ 2>&1 || echo "Cert dir missing after certbot"
-          REMOTE
-
-      - name: Add HTTPS block and reload
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-            set -e
-            if [ ! -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
-              echo "No cert — leaving HTTP-only config"
-              exit 0
-            fi
-
-            cat >> /etc/nginx/sites-available/cortexx << 'NGINX_HTTPS'
+              cat >> /etc/nginx/sites-available/cortexx << 'NGINX_HTTPS'
 
           server {
               listen 443 ssl http2;
@@ -299,6 +347,23 @@ jobs:
               ssl_ciphers HIGH:!aNULL:!MD5;
               ssl_session_cache shared:SSL:10m;
 
+              client_max_body_size 25m;
+              gzip on;
+              gzip_types text/plain application/json application/javascript text/css application/xml image/svg+xml;
+              gzip_min_length 1024;
+
+              location /api/events/ {
+                  proxy_pass http://127.0.0.1:3010;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_buffering off;
+                  proxy_cache off;
+                  proxy_read_timeout 1h;
+                  chunked_transfer_encoding off;
+              }
+
               location / {
                   proxy_pass http://127.0.0.1:3010;
                   proxy_http_version 1.1;
@@ -312,48 +377,26 @@ jobs:
                   proxy_read_timeout 90s;
                   proxy_buffering off;
               }
-
-              location /api/events/ {
-                  proxy_pass http://127.0.0.1:3010;
-                  proxy_http_version 1.1;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_buffering off;
-                  proxy_cache off;
-                  proxy_read_timeout 1h;
-                  chunked_transfer_encoding off;
-              }
           }
           NGINX_HTTPS
+              nginx -t
+              systemctl reload nginx
+              echo "✓ HTTPS block added"
 
-            nginx -t
-            systemctl reload nginx
-            echo "HTTPS block added and nginx reloaded"
+              # Ensure auto-renewal is on
+              systemctl enable --now certbot.timer 2>/dev/null || true
+            fi
           REMOTE
 
       - name: Verify deployment
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'curl -s -o /dev/null -w "Local 3010: HTTP %{http_code}\n" http://localhost:3010/'
+          sleep 5
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
+            'curl -s -o /dev/null -w "Local 3010: HTTP %{http_code}\n" http://localhost:3010/'
+          echo "=== Public ==="
+          curl -s -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.com/
+          curl -s -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.com/api/health
+          curl -s -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.com/login
+          echo "=== Health body ==="
+          curl -s --max-time 10 https://cortexbuildpro.com/api/health
           echo ""
-          sleep 4
-          echo "=== Public HTTPS ==="
-          curl -s -o /dev/null -w "https://cortexbuildpro.com → HTTP %{http_code}\n" https://cortexbuildpro.com/
-          echo "=== Sample HTML ==="
-          curl -sL --max-time 10 https://cortexbuildpro.com/ | head -c 400 || true
-          echo ""
-          echo "=== /api/health ==="
-          curl -s --max-time 10 https://cortexbuildpro.com/api/health | head -c 300
-
-      - name: Seed database
-        run: |
-          sleep 8
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST https://cortexbuildpro.com/api/seed)
-          echo "Seed: HTTP $STATUS"
-          if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ]; then
-            curl -s https://cortexbuildpro.com/api/dashboard | python3 -c "
-          import json,sys
-          d=json.load(sys.stdin)
-          print(f'Projects: {len(d.get(\"projects\",[]))}, Tasks: {len(d.get(\"tasks\",[]))}, Team: {len(d.get(\"team\",[]))}')
-          "
-          fi

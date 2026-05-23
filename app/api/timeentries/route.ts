@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,6 +16,8 @@ function isoWeek(date: Date): { week: number; year: number } {
 }
 
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const { searchParams } = new URL(req.url)
     const memberId = searchParams.get('memberId')
@@ -54,6 +57,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const body = await req.json()
     if (!body.memberId) {
@@ -69,6 +74,10 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Hours cannot exceed 24 per entry' }, { status: 400 })
     }
     const date = new Date(body.date)
+    if (isNaN(date.getTime())) {
+      return NextResponse.json({ error: 'Invalid date' }, { status: 400 })
+    }
+    // Always derive week/year server-side from the date (don't trust client overrides)
     const { week, year } = isoWeek(date)
     const entry = await prisma.timeEntry.create({
       data: {
@@ -76,8 +85,8 @@ export async function POST(req: NextRequest) {
         projectId: body.projectId || null,
         date,
         hours: Number(body.hours),
-        week: body.week ?? week,
-        year: body.year ?? year,
+        week,
+        year,
         approved: body.approved ?? false,
       },
       include: { member: true, project: true },

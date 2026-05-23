@@ -1,17 +1,21 @@
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const now = new Date()
     const weekStart = new Date(now)
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
     weekStart.setHours(0, 0, 0, 0)
 
-    const [projects, tasks, team, invoices, activities, timeEntries] = await Promise.all([
+    // Run all queries in parallel — including hoursPerMember
+    const [projects, tasks, team, invoices, activities, timeEntries, hoursPerMember] = await Promise.all([
       prisma.project.findMany({
         include: {
           _count: { select: { tasks: true, assignments: true } },
@@ -44,6 +48,11 @@ export async function GET() {
       prisma.timeEntry.findMany({
         where: { date: { gte: weekStart } },
       }),
+      prisma.timeEntry.groupBy({
+        by: ['memberId'],
+        where: { date: { gte: weekStart } },
+        _sum: { hours: true },
+      }),
     ])
 
     const activeSites = projects.filter((p) => p.status === 'active').length
@@ -55,11 +64,6 @@ export async function GET() {
       .reduce((sum, i) => sum + i.amount, 0)
     const hoursThisWeek = timeEntries.reduce((sum, e) => sum + e.hours, 0)
 
-    const hoursPerMember = await prisma.timeEntry.groupBy({
-      by: ['memberId'],
-      where: { date: { gte: weekStart } },
-      _sum: { hours: true },
-    })
     const hoursMap = Object.fromEntries(hoursPerMember.map(h => [h.memberId, h._sum.hours || 0]))
     const teamWithHours = team.map(member => ({ ...member, hoursThisWeek: hoursMap[member.id] || 0 }))
 

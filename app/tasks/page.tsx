@@ -10,18 +10,19 @@ import Toast from '@/components/ui/Toast'
 import { useModalEffects } from '@/lib/useModalEffects'
 import type { Task } from '@/lib/types'
 
+// Semantic priority colors: critical=red, high=orange, medium=blue, low=gray
 const priorityColor: Record<string, string> = {
-  low: '#10b981',
-  medium: '#f59e0b',
-  high: '#ef4444',
   critical: '#ef4444',
+  high: '#f59e0b',
+  medium: '#2563eb',
+  low: '#52749a',
 }
 
 const priorityBg: Record<string, string> = {
-  low: 'rgba(16,185,129,0.06)',
-  medium: 'rgba(245,158,11,0.06)',
-  high: 'rgba(239,68,68,0.06)',
-  critical: 'rgba(239,68,68,0.1)',
+  critical: 'rgba(239,68,68,0.10)',
+  high: 'rgba(245,158,11,0.08)',
+  medium: 'rgba(37,99,235,0.06)',
+  low: 'rgba(82,116,154,0.06)',
 }
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'] as const

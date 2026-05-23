@@ -1,14 +1,25 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/requireAuth'
+
+export const dynamic = 'force-dynamic'
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const body = await req.json()
+    if (body.title !== undefined && !String(body.title).trim()) {
+      return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
+    }
+    if (body.dueTime !== undefined && body.dueTime !== null && !/^\d{2}:\d{2}$/.test(String(body.dueTime))) {
+      return NextResponse.json({ error: 'dueTime must be HH:MM' }, { status: 400 })
+    }
     const task = await prisma.task.update({
       where: { id: params.id },
       data: {
-        ...(body.title !== undefined && { title: body.title }),
-        ...(body.description !== undefined && { description: body.description }),
+        ...(body.title !== undefined && { title: String(body.title).trim() }),
+        ...(body.description !== undefined && { description: body.description ? String(body.description).trim() : null }),
         ...(body.status !== undefined && { status: body.status }),
         ...(body.priority !== undefined && { priority: body.priority }),
         ...(body.dueDate !== undefined && { dueDate: body.dueDate ? new Date(body.dueDate) : null }),
@@ -20,7 +31,6 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
       include: { project: true, assignee: true },
     })
 
-    // Auto-recalculate project progress when task status changes
     const projectId = task.projectId
     if (body.status !== undefined && projectId) {
       const allTasks = await prisma.task.findMany({ where: { projectId }, select: { status: true } })
@@ -38,6 +48,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     await prisma.task.delete({ where: { id: params.id } })
     return NextResponse.json({ success: true })

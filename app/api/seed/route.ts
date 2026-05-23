@@ -1,7 +1,19 @@
-import { NextResponse } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
-export async function POST() {
+export const dynamic = 'force-dynamic'
+
+export async function POST(req: NextRequest) {
+  // Gate: requires ALLOW_SEED=true env var AND a matching Bearer token
+  if (process.env.ALLOW_SEED !== 'true') {
+    return NextResponse.json({ error: 'Seed endpoint disabled' }, { status: 403 })
+  }
+  const token = process.env.SEED_TOKEN
+  const auth = req.headers.get('authorization') || ''
+  if (!token || auth !== `Bearer ${token}`) {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+
   try {
     // Clean up
     await prisma.activity.deleteMany()

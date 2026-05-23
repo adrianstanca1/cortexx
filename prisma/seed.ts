@@ -1,500 +1,126 @@
+/* eslint-disable no-console */
 import { PrismaClient } from '@prisma/client'
+import bcrypt from 'bcryptjs'
 
 const prisma = new PrismaClient()
 
 async function main() {
-  // Clean existing data
-  await prisma.activity.deleteMany()
-  await prisma.document.deleteMany()
-  await prisma.timeEntry.deleteMany()
-  await prisma.invoice.deleteMany()
-  await prisma.assignment.deleteMany()
-  await prisma.task.deleteMany()
-  await prisma.project.deleteMany()
-  await prisma.teamMember.deleteMany()
+  // 1. Ensure an admin user exists (idempotent)
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@cortexbuildpro.com'
+  const adminPass = process.env.ADMIN_PASSWORD || 'changeme-please-1234'
+  const adminName = process.env.ADMIN_NAME || 'Admin'
 
-  // Create team members
-  const tom = await prisma.teamMember.create({
-    data: {
-      name: 'Tom Reilly',
-      role: 'Site Manager',
-      email: 'tom.reilly@cortexx.co.uk',
-      phone: '07700 900123',
-      avatarColor: '#2563eb',
-      dailyRate: 280,
-      onSite: true,
-    },
-  })
+  const existing = await prisma.user.findUnique({ where: { email: adminEmail } })
+  if (!existing) {
+    const passwordHash = await bcrypt.hash(adminPass, 12)
+    await prisma.user.create({
+      data: { email: adminEmail, name: adminName, passwordHash, role: 'admin' },
+    })
+    console.log(`✓ Created admin user: ${adminEmail}`)
+  } else {
+    console.log(`✓ Admin user ${adminEmail} already exists`)
+  }
 
-  const aisha = await prisma.teamMember.create({
-    data: {
-      name: 'Aisha Begum',
-      role: 'Electrician',
-      email: 'aisha.begum@cortexx.co.uk',
-      phone: '07700 900456',
-      avatarColor: '#8b5cf6',
-      dailyRate: 240,
-      onSite: true,
-    },
-  })
+  // 2. Demo data — only seed if there are no projects yet (preserves existing user data)
+  const projectCount = await prisma.project.count()
+  if (projectCount > 0) {
+    console.log(`✓ ${projectCount} projects already exist — skipping demo data`)
+    return
+  }
 
-  const jack = await prisma.teamMember.create({
-    data: {
-      name: 'Jack Moore',
-      role: 'Plasterer',
-      email: 'jack.moore@cortexx.co.uk',
-      phone: '07700 900789',
-      avatarColor: '#10b981',
-      dailyRate: 220,
-      onSite: false,
-    },
-  })
-
-  const sara = await prisma.teamMember.create({
-    data: {
-      name: 'Sara Khan',
-      role: 'Labourer',
-      email: 'sara.khan@cortexx.co.uk',
-      phone: '07700 900321',
-      avatarColor: '#f59e0b',
-      dailyRate: 160,
-      onSite: true,
-    },
-  })
-
-  const mike = await prisma.teamMember.create({
-    data: {
-      name: 'Mike Davis',
-      role: 'Plumber',
-      email: 'mike.davis@cortexx.co.uk',
-      phone: '07700 900654',
-      avatarColor: '#06b6d4',
-      dailyRate: 260,
-      onSite: false,
-    },
-  })
-
-  const priya = await prisma.teamMember.create({
-    data: {
-      name: 'Priya Sharma',
-      role: 'Surveyor',
-      email: 'priya.sharma@cortexx.co.uk',
-      phone: '07700 900987',
-      avatarColor: '#ef4444',
-      dailyRate: 300,
-      onSite: false,
-    },
-  })
-
-  // Create projects
-  const camden = await prisma.project.create({
-    data: {
-      name: 'Camden Mews Refurb',
-      address: '14 Camden Mews, London',
-      postcode: 'NW1 9AH',
-      status: 'active',
-      progress: 68,
-      clientName: 'Mr & Mrs Harrison',
-      budget: 85000,
-      spent: 57800,
-      lat: 51.5403,
-      lng: -0.1421,
-      startDate: new Date('2024-01-08'),
-      endDate: new Date('2024-04-30'),
-      onSiteCount: 3,
-    },
-  })
-
-  const hackney = await prisma.project.create({
-    data: {
-      name: 'Hackney Loft',
-      address: '7 Mare Street, London',
-      postcode: 'E8 3RH',
-      status: 'active',
-      progress: 22,
-      clientName: 'Ms Chen',
-      budget: 62000,
-      spent: 13640,
-      lat: 51.5453,
-      lng: -0.0553,
-      startDate: new Date('2024-02-19'),
-      endDate: new Date('2024-06-28'),
-      onSiteCount: 2,
-    },
-  })
-
-  const brixton = await prisma.project.create({
-    data: {
-      name: 'Brixton Shopfront',
-      address: '42 Coldharbour Lane, London',
-      postcode: 'SE5 9NR',
-      status: 'snagging',
-      progress: 90,
-      clientName: 'Brixton Foods Ltd',
-      budget: 34000,
-      spent: 30600,
-      lat: 51.4651,
-      lng: -0.1148,
-      startDate: new Date('2023-11-06'),
-      endDate: new Date('2024-02-29'),
-      onSiteCount: 1,
-    },
-  })
-
-  const islington = await prisma.project.create({
-    data: {
-      name: 'Islington Extension',
-      address: '89 Upper Street, London',
-      postcode: 'N1 0NP',
-      status: 'quoting',
-      progress: 0,
-      clientName: 'The Williams Family',
-      budget: 48000,
-      spent: 0,
-      lat: 51.5362,
-      lng: -0.1033,
-      startDate: null,
-      endDate: null,
-      onSiteCount: 0,
-    },
-  })
-
-  // Assignments
-  await prisma.assignment.createMany({
-    data: [
-      { projectId: camden.id, memberId: tom.id, role: 'Site Manager', onSite: true },
-      { projectId: camden.id, memberId: aisha.id, role: 'Electrician', onSite: true },
-      { projectId: camden.id, memberId: sara.id, role: 'Labourer', onSite: true },
-      { projectId: hackney.id, memberId: jack.id, role: 'Plasterer', onSite: false },
-      { projectId: hackney.id, memberId: mike.id, role: 'Plumber', onSite: false },
-      { projectId: brixton.id, memberId: priya.id, role: 'Surveyor', onSite: false },
-    ],
-  })
-
-  // Tasks
+  console.log('… Seeding demo data')
   const now = new Date()
-  const tomorrow = new Date(now.getTime() + 86400000)
-  const yesterday = new Date(now.getTime() - 86400000)
-  const nextWeek = new Date(now.getTime() + 7 * 86400000)
+  const actTime = (h: number) => new Date(now.getTime() - h * 3600000)
 
-  await prisma.task.createMany({
-    data: [
-      {
-        title: 'First fix electrical sign-off',
-        description: 'Inspector to sign off all first fix wiring before plastering commences',
-        dueDate: tomorrow,
-        dueTime: '09:00',
-        status: 'todo',
-        priority: 'critical',
-        category: 'Inspection',
-        projectId: camden.id,
-        assigneeId: tom.id,
-      },
-      {
-        title: 'Plaster living room walls',
-        description: 'Apply two coats, allow 48h drying time',
-        dueDate: tomorrow,
-        dueTime: '07:30',
-        status: 'in_progress',
-        priority: 'high',
-        category: 'Plastering',
-        projectId: camden.id,
-        assigneeId: jack.id,
-      },
-      {
-        title: 'Order kitchen units',
-        description: 'Confirm spec with client and place order with Howdens',
-        dueDate: yesterday,
-        dueTime: '12:00',
-        status: 'todo',
-        priority: 'high',
-        category: 'Procurement',
-        projectId: camden.id,
-        assigneeId: tom.id,
-      },
-      {
-        title: 'Fix bathroom tile grouting',
-        description: 'Re-grout areas flagged in snagging report',
-        dueDate: nextWeek,
-        dueTime: '08:00',
-        status: 'todo',
-        priority: 'medium',
-        category: 'Snagging',
-        projectId: brixton.id,
-        assigneeId: mike.id,
-      },
-      {
-        title: 'Loft hatch installation',
-        description: 'Install fire-rated loft hatch and ladder',
-        dueDate: nextWeek,
-        dueTime: '10:00',
-        status: 'todo',
-        priority: 'medium',
-        category: 'Joinery',
-        projectId: hackney.id,
-        assigneeId: jack.id,
-      },
-      {
-        title: 'Submit planning drawings',
-        description: 'Final drawings to be submitted to Islington planning portal',
-        dueDate: new Date(now.getTime() + 3 * 86400000),
-        dueTime: '17:00',
-        status: 'in_progress',
-        priority: 'high',
-        category: 'Planning',
-        projectId: islington.id,
-        assigneeId: priya.id,
-      },
-      {
-        title: 'COSHH assessment update',
-        description: 'Update COSHH register with new materials',
-        dueDate: now,
-        dueTime: '16:00',
-        status: 'todo',
-        priority: 'low',
-        category: 'H&S',
-        projectId: camden.id,
-        assigneeId: tom.id,
-      },
-      {
-        title: 'Final snag walkthrough',
-        description: 'Walk-through with client to confirm all items resolved',
-        dueDate: new Date(now.getTime() + 5 * 86400000),
-        dueTime: '14:00',
-        status: 'todo',
-        priority: 'high',
-        category: 'Snagging',
-        projectId: brixton.id,
-        assigneeId: priya.id,
-      },
-    ],
-  })
+  const tom = await prisma.teamMember.create({ data: { name: 'Tom Reilly', role: 'Site Manager', email: 'tom@cortexx.co.uk', phone: '07700 900123', avatarColor: '#2563eb', dailyRate: 280, onSite: true } })
+  const aisha = await prisma.teamMember.create({ data: { name: 'Aisha Begum', role: 'Electrician', email: 'aisha@cortexx.co.uk', phone: '07700 900456', avatarColor: '#f59e0b', dailyRate: 240, onSite: true } })
+  const jack = await prisma.teamMember.create({ data: { name: 'Jack Moore', role: 'Plasterer', email: 'jack@cortexx.co.uk', phone: '07700 900789', avatarColor: '#10b981', dailyRate: 220, onSite: false } })
+  const sara = await prisma.teamMember.create({ data: { name: 'Sara Khan', role: 'Labourer', email: 'sara@cortexx.co.uk', phone: '07700 900321', avatarColor: '#8b5cf6', dailyRate: 160, onSite: true } })
+  const mike = await prisma.teamMember.create({ data: { name: 'Mike Davis', role: 'Plumber', email: 'mike@cortexx.co.uk', phone: '07700 900654', avatarColor: '#06b6d4', dailyRate: 260, onSite: false } })
+  const priya = await prisma.teamMember.create({ data: { name: 'Priya Sharma', role: 'Surveyor', email: 'priya@cortexx.co.uk', phone: '07700 900987', avatarColor: '#ef4444', dailyRate: 300, onSite: false } })
 
-  // Invoices
-  await prisma.invoice.createMany({
-    data: [
-      {
-        number: 'INV-2024-001',
-        projectId: camden.id,
-        clientName: 'Mr & Mrs Harrison',
-        amount: 28500,
-        status: 'paid',
-        issuedDate: new Date('2024-01-15'),
-        dueDate: new Date('2024-02-15'),
-        paidDate: new Date('2024-02-10'),
-        notes: 'Stage 1 payment - groundworks complete',
-      },
-      {
-        number: 'INV-2024-002',
-        projectId: camden.id,
-        clientName: 'Mr & Mrs Harrison',
-        amount: 18500,
-        status: 'sent',
-        issuedDate: new Date('2024-02-20'),
-        dueDate: new Date('2024-03-20'),
-        notes: 'Stage 2 payment - first fix complete',
-      },
-      {
-        number: 'INV-2024-003',
-        projectId: hackney.id,
-        clientName: 'Ms Chen',
-        amount: 9200,
-        status: 'overdue',
-        issuedDate: new Date('2024-02-01'),
-        dueDate: new Date('2024-03-01'),
-        notes: 'Initial payment - surveys and groundwork',
-      },
-      {
-        number: 'INV-2024-004',
-        projectId: brixton.id,
-        clientName: 'Brixton Foods Ltd',
-        amount: 15800,
-        status: 'paid',
-        issuedDate: new Date('2024-01-10'),
-        dueDate: new Date('2024-02-10'),
-        paidDate: new Date('2024-02-08'),
-        notes: 'Stage 1 - shopfront installation',
-      },
-      {
-        number: 'INV-2024-005',
-        projectId: brixton.id,
-        clientName: 'Brixton Foods Ltd',
-        amount: 14800,
-        status: 'sent',
-        issuedDate: new Date('2024-03-01'),
-        dueDate: new Date('2024-03-31'),
-        notes: 'Stage 2 - interior fit-out',
-      },
-    ],
-  })
+  const camden = await prisma.project.create({ data: { name: 'Camden Mews Refurb', address: '12 Camden Mews', postcode: 'NW1 8AF', status: 'active', progress: 68, clientName: 'J. Patterson', budget: 85000, spent: 57800, lat: 51.5388, lng: -0.1426, onSiteCount: 4, startDate: new Date('2026-02-01'), endDate: new Date('2026-08-10') } })
+  const hackney = await prisma.project.create({ data: { name: 'Hackney Loft', address: '47 Dalston Lane', postcode: 'E8 3DF', status: 'active', progress: 22, clientName: 'E. Lin', budget: 65000, spent: 14300, lat: 51.5477, lng: -0.0758, onSiteCount: 2, startDate: new Date('2026-03-15'), endDate: new Date('2026-10-30') } })
+  const brixton = await prisma.project.create({ data: { name: 'Brixton Shopfront', address: '221 Coldharbour Lane', postcode: 'SW9 8RU', status: 'snagging', progress: 90, clientName: 'Tonic Café Ltd', budget: 32000, spent: 29500, lat: 51.4613, lng: -0.1169, onSiteCount: 3, startDate: new Date('2026-01-10'), endDate: new Date('2026-06-28') } })
+  const islington = await prisma.project.create({ data: { name: 'Islington Extension', address: '9 Barnsbury Street', postcode: 'N1 1PN', status: 'quoting', progress: 0, clientName: 'M. Okonkwo', budget: 0, spent: 0, lat: 51.5378, lng: -0.1067, onSiteCount: 0 } })
 
-  // Activities
-  const activityTime = (hoursAgo: number) =>
-    new Date(now.getTime() - hoursAgo * 3600000)
+  await prisma.assignment.createMany({ data: [
+    { projectId: camden.id, memberId: tom.id, role: 'Site Manager', onSite: true },
+    { projectId: camden.id, memberId: aisha.id, role: 'Electrician', onSite: true },
+    { projectId: camden.id, memberId: jack.id, role: 'Plasterer', onSite: false },
+    { projectId: camden.id, memberId: sara.id, role: 'Labourer', onSite: true },
+    { projectId: hackney.id, memberId: mike.id, role: 'Plumber', onSite: false },
+    { projectId: hackney.id, memberId: sara.id, role: 'Labourer', onSite: false },
+    { projectId: brixton.id, memberId: jack.id, role: 'Plasterer', onSite: true },
+    { projectId: brixton.id, memberId: mike.id, role: 'Plumber', onSite: true },
+    { projectId: brixton.id, memberId: aisha.id, role: 'Electrician', onSite: true },
+    { projectId: islington.id, memberId: priya.id, role: 'Surveyor', onSite: false },
+  ]})
 
-  await prisma.activity.createMany({
-    data: [
-      {
-        projectId: camden.id,
-        actorName: 'Tom Reilly',
-        actorType: 'human',
-        action: 'Checked in on site',
-        detail: 'Camden Mews — 07:42',
-        iconType: 'check',
-        createdAt: activityTime(1),
-      },
-      {
-        projectId: camden.id,
-        actorName: 'Cortex AI',
-        actorType: 'ai',
-        action: 'Flagged schedule risk',
-        detail: 'Kitchen delivery may push completion by 5 days',
-        iconType: 'alert',
-        createdAt: activityTime(2),
-      },
-      {
-        projectId: hackney.id,
-        actorName: 'Aisha Begum',
-        actorType: 'human',
-        action: 'Uploaded RAMS document',
-        detail: 'Electrical first fix RAMS v2',
-        iconType: 'doc',
-        createdAt: activityTime(3),
-      },
-      {
-        projectId: brixton.id,
-        actorName: 'Priya Sharma',
-        actorType: 'human',
-        action: 'Completed snag item',
-        detail: 'Skirting board gap sealed — item #14',
-        iconType: 'check',
-        createdAt: activityTime(5),
-      },
-      {
-        projectId: camden.id,
-        actorName: 'Cortex AI',
-        actorType: 'ai',
-        action: 'Generated progress report',
-        detail: 'Camden Mews — week 8 summary ready',
-        iconType: 'spark',
-        createdAt: activityTime(6),
-      },
-      {
-        projectId: hackney.id,
-        actorName: 'Jack Moore',
-        actorType: 'human',
-        action: 'Logged 8h on site',
-        detail: 'Hackney Loft — plastering bedroom 2',
-        iconType: 'clock',
-        createdAt: activityTime(10),
-      },
-      {
-        projectId: camden.id,
-        actorName: 'Sara Khan',
-        actorType: 'human',
-        action: 'Submitted expense receipt',
-        detail: '£234 — materials from Screwfix',
-        iconType: 'receipt',
-        createdAt: activityTime(12),
-      },
-      {
-        projectId: islington.id,
-        actorName: 'Cortex AI',
-        actorType: 'ai',
-        action: 'Quote analysis complete',
-        detail: 'Islington Extension — 3 supplier quotes compared',
-        iconType: 'spark',
-        createdAt: activityTime(18),
-      },
-      {
-        projectId: brixton.id,
-        actorName: 'Mike Davis',
-        actorType: 'human',
-        action: 'Marked task complete',
-        detail: 'Rerouted soil pipe — done',
-        iconType: 'check',
-        createdAt: activityTime(22),
-      },
-      {
-        projectId: camden.id,
-        actorName: 'Tom Reilly',
-        actorType: 'human',
-        action: 'Added site photo',
-        detail: 'Camden Mews — ground floor progress',
-        iconType: 'camera',
-        createdAt: activityTime(26),
-      },
-    ],
-  })
+  const today = new Date(); today.setHours(0, 0, 0, 0)
+  await prisma.task.createMany({ data: [
+    { title: 'Camden Mews — first fix sign-off', description: 'Walk through with Aisha', dueDate: today, dueTime: '10:00', status: 'in_progress', priority: 'critical', category: 'Inspection', projectId: camden.id, assigneeId: tom.id },
+    { title: "Approve Tom's timesheet", description: 'Wk 17 · 42.5h', dueDate: today, dueTime: '11:30', status: 'todo', priority: 'high', category: 'Admin', projectId: camden.id, assigneeId: tom.id },
+    { title: 'Sign Camden RAMS', description: 'Expires Saturday', dueDate: new Date(today.getTime() + 2 * 86400000), dueTime: '15:00', status: 'todo', priority: 'critical', category: 'Safety', projectId: camden.id, assigneeId: tom.id },
+    { title: 'Reconcile 3 receipts', description: 'Travis Perkins · Selco · B&Q', dueDate: today, dueTime: '17:00', status: 'todo', priority: 'medium', category: 'Finance', projectId: camden.id, assigneeId: tom.id },
+    { title: 'Plasterboard ground floor', description: 'Started 08:30', dueDate: today, dueTime: '16:00', status: 'in_progress', priority: 'high', category: 'Construction', projectId: camden.id, assigneeId: jack.id },
+    { title: 'First-fix electrics — kitchen', description: 'Aisha in progress', dueDate: today, dueTime: '17:00', status: 'in_progress', priority: 'high', category: 'Electrical', projectId: camden.id, assigneeId: aisha.id },
+    { title: 'Hackney Loft — structural drawings review', description: 'Confirm beam sizes', dueDate: new Date(today.getTime() + 3 * 86400000), status: 'todo', priority: 'high', category: 'Planning', projectId: hackney.id, assigneeId: priya.id },
+    { title: 'Brixton snagging list — final items', description: '7 items remain', dueDate: new Date(today.getTime() + 86400000), status: 'todo', priority: 'critical', category: 'Snagging', projectId: brixton.id, assigneeId: jack.id },
+  ]})
 
-  // Time entries (current week)
-  const weekStart = new Date(now)
-  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
-  const currentWeek = Math.ceil((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / (7 * 86400000))
+  await prisma.invoice.createMany({ data: [
+    { number: 'INV-2042', projectId: camden.id, clientName: 'J. Patterson', amount: 8420, status: 'sent', issuedDate: new Date(now.getTime() - 3 * 86400000), dueDate: new Date(now.getTime() + 27 * 86400000) },
+    { number: 'INV-2039', projectId: brixton.id, clientName: 'Tonic Café Ltd', amount: 3890, status: 'overdue', issuedDate: new Date(now.getTime() - 28 * 86400000), dueDate: new Date(now.getTime() - 14 * 86400000) },
+    { number: 'INV-2041', projectId: hackney.id, clientName: 'E. Lin', amount: 1900, status: 'sent', issuedDate: new Date(now.getTime() - 12 * 86400000), dueDate: new Date(now.getTime() + 18 * 86400000) },
+    { number: 'INV-2038', projectId: camden.id, clientName: 'J. Patterson', amount: 18500, status: 'paid', issuedDate: new Date(now.getTime() - 45 * 86400000), dueDate: new Date(now.getTime() - 15 * 86400000), paidDate: new Date(now.getTime() - 18 * 86400000) },
+    { number: 'INV-2037', projectId: hackney.id, clientName: 'E. Lin', amount: 12300, status: 'paid', issuedDate: new Date(now.getTime() - 60 * 86400000), dueDate: new Date(now.getTime() - 30 * 86400000), paidDate: new Date(now.getTime() - 32 * 86400000) },
+  ]})
 
-  await prisma.timeEntry.createMany({
-    data: [
-      { memberId: tom.id, projectId: camden.id, date: weekStart, hours: 8, week: currentWeek, year: now.getFullYear(), approved: true },
-      { memberId: aisha.id, projectId: camden.id, date: weekStart, hours: 8, week: currentWeek, year: now.getFullYear(), approved: true },
-      { memberId: sara.id, projectId: camden.id, date: weekStart, hours: 7.5, week: currentWeek, year: now.getFullYear(), approved: false },
-      { memberId: jack.id, projectId: hackney.id, date: weekStart, hours: 8, week: currentWeek, year: now.getFullYear(), approved: true },
-      { memberId: mike.id, projectId: brixton.id, date: weekStart, hours: 6, week: currentWeek, year: now.getFullYear(), approved: false },
-      { memberId: priya.id, projectId: islington.id, date: weekStart, hours: 4, week: currentWeek, year: now.getFullYear(), approved: true },
-    ],
-  })
+  const weekStart = new Date(now); weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1); weekStart.setHours(0, 0, 0, 0)
+  // ISO week
+  const d = new Date(Date.UTC(weekStart.getFullYear(), weekStart.getMonth(), weekStart.getDate()))
+  d.setUTCDate(d.getUTCDate() + 4 - (d.getUTCDay() || 7))
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  const wk = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  const yr = d.getUTCFullYear()
 
-  // Documents
-  const twoDaysFromNow = new Date(now.getTime() + 2 * 86400000)
-  const threeMonthsFromNow = new Date(now.getTime() + 90 * 86400000)
+  await prisma.timeEntry.createMany({ data: [
+    { memberId: tom.id, projectId: camden.id, date: weekStart, hours: 8, week: wk, year: yr, approved: false },
+    { memberId: aisha.id, projectId: camden.id, date: weekStart, hours: 8, week: wk, year: yr, approved: true },
+    { memberId: jack.id, projectId: camden.id, date: weekStart, hours: 8, week: wk, year: yr, approved: false },
+    { memberId: sara.id, projectId: camden.id, date: weekStart, hours: 8, week: wk, year: yr, approved: false },
+    { memberId: mike.id, projectId: hackney.id, date: weekStart, hours: 6, week: wk, year: yr, approved: true },
+    { memberId: priya.id, projectId: islington.id, date: weekStart, hours: 4, week: wk, year: yr, approved: true },
+  ]})
 
-  await prisma.document.createMany({
-    data: [
-      {
-        projectId: camden.id,
-        type: 'rams',
-        name: 'Camden Mews RAMS v3',
-        expiresAt: twoDaysFromNow,
-        createdAt: new Date('2024-01-10'),
-      },
-      {
-        projectId: camden.id,
-        type: 'report',
-        name: 'Week 8 Progress Report',
-        expiresAt: null,
-        createdAt: activityTime(6),
-      },
-      {
-        projectId: hackney.id,
-        type: 'rams',
-        name: 'Hackney Loft RAMS v1',
-        expiresAt: threeMonthsFromNow,
-        createdAt: new Date('2024-02-20'),
-      },
-      {
-        projectId: brixton.id,
-        type: 'report',
-        name: 'Snagging Report Final',
-        expiresAt: null,
-        createdAt: new Date('2024-03-01'),
-      },
-      {
-        projectId: camden.id,
-        type: 'photo',
-        name: 'Ground floor progress — 14 Mar',
-        expiresAt: null,
-        createdAt: activityTime(26),
-      },
-    ],
-  })
+  await prisma.document.createMany({ data: [
+    { projectId: camden.id, type: 'rams', name: 'Camden Mews RAMS v3', expiresAt: new Date(now.getTime() + 2 * 86400000) },
+    { projectId: camden.id, type: 'report', name: 'Camden Progress Report — Wk 16' },
+    { projectId: hackney.id, type: 'rams', name: 'Hackney Loft RAMS v1', expiresAt: new Date(now.getTime() + 30 * 86400000) },
+    { projectId: brixton.id, type: 'report', name: 'Brixton Snagging List v4' },
+  ]})
 
-  console.log('✅ Seed complete')
+  await prisma.activity.createMany({ data: [
+    { projectId: camden.id, actorName: 'Tom Reilly', actorType: 'human', action: 'uploaded 4 site photos', detail: 'Camden Mews — ground floor progress', iconType: 'camera', createdAt: actTime(0.2) },
+    { projectId: null, actorName: 'Cortex AI', actorType: 'ai', action: 'flagged margin slip on Brixton', detail: '−1.2% vs quote — labour overrun', iconType: 'spark', createdAt: actTime(1) },
+    { projectId: camden.id, actorName: 'Aisha Begum', actorType: 'human', action: 'completed first-fix electrics — kitchen', detail: 'Camden Mews', iconType: 'check', createdAt: actTime(2) },
+    { projectId: camden.id, actorName: 'Tom Reilly', actorType: 'human', action: 'checked in on site', detail: 'Camden Mews · GPS logged', iconType: 'pin', createdAt: actTime(3) },
+    { projectId: brixton.id, actorName: 'Jack Moore', actorType: 'human', action: 'submitted snagging photos', detail: 'Brixton Shopfront — 7 items', iconType: 'camera', createdAt: actTime(5) },
+    { projectId: null, actorName: 'Cortex AI', actorType: 'ai', action: 'auto-scanned 3 receipts', detail: 'Travis Perkins · Selco · B&Q', iconType: 'receipt', createdAt: actTime(6) },
+    { projectId: hackney.id, actorName: 'Mike Davis', actorType: 'human', action: 'completed rough plumbing', detail: 'Hackney Loft — bathroom zone', iconType: 'check', createdAt: actTime(8) },
+    { projectId: camden.id, actorName: 'Sara Khan', actorType: 'human', action: 'ordered skip swap', detail: 'Camden Mews — collection 14:00', iconType: 'truck', createdAt: actTime(9) },
+    { projectId: null, actorName: 'Cortex AI', actorType: 'ai', action: 'sent payment reminder', detail: 'INV-2039 Tonic Café · 14 days overdue', iconType: 'receipt', createdAt: actTime(24) },
+    { projectId: islington.id, actorName: 'Priya Sharma', actorType: 'human', action: 'submitted quote', detail: 'Islington Extension — £48,500', iconType: 'doc', createdAt: actTime(48) },
+  ]})
+
+  console.log('✓ Demo data seeded')
 }
 
 main()
-  .catch((e) => {
+  .then(() => prisma.$disconnect())
+  .catch(async (e) => {
     console.error(e)
-    process.exit(1)
-  })
-  .finally(async () => {
     await prisma.$disconnect()
+    process.exit(1)
   })

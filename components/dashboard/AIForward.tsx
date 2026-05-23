@@ -2,6 +2,7 @@
 
 import { useState, useRef } from 'react'
 import { IcBot, IcSpark, IcSend, IcCheck, IcClock } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface AIForwardProps {
@@ -17,7 +18,7 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
   const [aiLoading, setAiLoading] = useState(false)
   const inputRef = useRef<HTMLInputElement>(null)
 
-  const activities = data?.activities || []
+  const { activities } = useRealtimeActivity(data?.activities || [])
   const invoices = data?.invoices || []
   const tasks = data?.tasks || []
   const now = Date.now()

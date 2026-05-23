@@ -1,28 +1,16 @@
 'use client'
 
-import { Suspense, useState, useEffect } from 'react'
+import { Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { IcCamera, IcMic, IcReceipt, IcAlert, IcCheck, IcX, IcPin } from '@/components/ui/Icons'
 import type { Project } from '@/lib/types'
 
 const actions = [
   { id: 'photo', label: 'Progress Photo', sub: 'Capture site progress', Icon: IcCamera, color: '#2563eb' },
-  { id: 'voice', label: 'Voice RFI', sub: 'Record a request or query', Icon: IcMic, color: '#8b5cf6' },
+  { id: 'voice', label: 'Voice RFI', sub: 'Log a request as a high-priority task', Icon: IcMic, color: '#8b5cf6' },
   { id: 'receipt', label: 'Receipt', sub: 'Snap and upload an expense', Icon: IcReceipt, color: '#10b981' },
   { id: 'incident', label: 'Incident', sub: 'Report a site incident', Icon: IcAlert, color: '#ef4444' },
 ]
-
-const actionLabels: Record<string, string> = {
-  photo: 'uploaded a progress photo',
-  voice: 'recorded a Voice RFI',
-  receipt: 'logged a receipt',
-  incident: 'reported an incident',
-  checkin: 'checked in to site',
-}
-
-const actionIcons: Record<string, string> = {
-  photo: 'camera', voice: 'mic', receipt: 'receipt', incident: 'alert', checkin: 'check',
-}
 
 function CaptureContent() {
   const router = useRouter()
@@ -31,9 +19,14 @@ function CaptureContent() {
 
   const [selected, setSelected] = useState<string | null>(preselect)
   const [done, setDone] = useState(false)
+  const [doneMsg, setDoneMsg] = useState('Captured!')
+  const [errorMsg, setErrorMsg] = useState<string | null>(null)
   const [projects, setProjects] = useState<Project[]>([])
   const [activeProject, setActiveProject] = useState<Project | null>(null)
   const [showProjectPicker, setShowProjectPicker] = useState(false)
+  const [recentSelect, setRecentSelect] = useState<string | null>(null)
+  const fileInputRef = useRef<HTMLInputElement>(null)
+  const fileTypeRef = useRef<'photo' | 'receipt' | null>(null)
 
   useEffect(() => {
     fetch('/api/projects')
@@ -47,50 +40,154 @@ function CaptureContent() {
       .catch(() => {})
   }, [])
 
-  // Auto-trigger if type pre-selected
-  useEffect(() => {
-    if (preselect && preselect !== 'checkin' && !done) {
-      handleAction(preselect)
-    }
-  // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [preselect])
-
-  const handleAction = async (id: string) => {
-    setSelected(id)
+  const logActivity = useCallback(async (action: string, iconType: string, detail?: string | null) => {
     try {
       await fetch('/api/activity', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          projectId: activeProject?.id || null,
-          actorName: 'You',
-          actorType: 'human',
-          action: actionLabels[id] || id,
-          detail: activeProject?.name || null,
-          iconType: actionIcons[id] || 'check',
-        }),
+        body: JSON.stringify({ projectId: activeProject?.id || null, action, iconType, detail: detail ?? activeProject?.name ?? null }),
       })
     } catch { /* non-critical */ }
-    setTimeout(() => {
-      setDone(true)
-      setTimeout(() => router.push('/dashboard'), 1200)
-    }, 600)
-  }
+  }, [activeProject])
+
+  const finishWith = useCallback((msg: string) => {
+    setDoneMsg(msg)
+    setDone(true)
+    setTimeout(() => router.push('/dashboard'), 1200)
+  }, [router])
+
+  const failWith = useCallback((err: string) => {
+    setErrorMsg(err)
+    setSelected(null)
+    setTimeout(() => setErrorMsg(null), 3000)
+  }, [])
+
+  const onFileSelected = useCallback(async (file: File) => {
+    const type = fileTypeRef.current
+    if (!type || !file) return
+    try {
+      const res = await fetch('/api/documents', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          name: file.name,
+          type,
+          projectId: activeProject?.id || null,
+        }),
+      })
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Upload failed')
+      await logActivity(
+        type === 'photo' ? 'uploaded a progress photo' : 'logged a receipt',
+        type === 'photo' ? 'camera' : 'receipt',
+      )
+      finishWith(type === 'photo' ? 'Photo logged' : 'Receipt logged')
+    } catch (e) {
+      failWith(e instanceof Error ? e.message : 'Failed')
+    }
+  }, [activeProject, logActivity, finishWith, failWith])
+
+  const handleAction = useCallback(async (id: string) => {
+    setSelected(id)
+    setErrorMsg(null)
+    try {
+      if (id === 'photo' || id === 'receipt') {
+        // Open file picker — uses device camera on mobile
+        fileTypeRef.current = id
+        fileInputRef.current?.click()
+        return // wait for onChange
+      }
+      if (id === 'voice') {
+        // Create a high-priority task instead of recording audio (no storage backend yet)
+        const title = `RFI: ${activeProject?.name || 'site'}`
+        const res = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            description: 'Voice RFI raised from capture page (audio TBD)',
+            priority: 'high',
+            projectId: activeProject?.id || null,
+          }),
+        })
+        if (!res.ok) throw new Error('Failed to create RFI task')
+        await logActivity('raised a Voice RFI', 'mic', activeProject?.name)
+        finishWith('RFI task created')
+        return
+      }
+      if (id === 'incident') {
+        const title = `Incident: ${activeProject?.name || 'site'}`
+        const res = await fetch('/api/tasks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            title,
+            description: 'Site incident — investigate and document',
+            priority: 'critical',
+            projectId: activeProject?.id || null,
+          }),
+        })
+        if (!res.ok) throw new Error('Failed to log incident')
+        await logActivity('reported an incident', 'alert', activeProject?.name)
+        finishWith('Incident logged')
+        return
+      }
+      if (id === 'checkin') {
+        if (activeProject) {
+          // Bump onSiteCount and log activity
+          await fetch(`/api/projects/${activeProject.id}`, {
+            method: 'PUT',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ onSiteCount: (activeProject.onSiteCount || 0) + 1 }),
+          }).catch(() => {})
+        }
+        await logActivity('checked in on site', 'pin', activeProject?.name + ' · GPS logged')
+        finishWith('Checked in')
+        return
+      }
+      // fallback
+      await logActivity(id, 'check')
+      finishWith('Logged')
+    } catch (e) {
+      failWith(e instanceof Error ? e.message : 'Failed')
+    }
+  }, [activeProject, logActivity, finishWith, failWith])
+
+  // Auto-trigger if type pre-selected
+  useEffect(() => {
+    if (preselect && !done && projects.length > 0) {
+      handleAction(preselect)
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [preselect, projects.length])
 
   return (
     <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+      {/* Hidden file input — drives photo + receipt actions */}
+      <input
+        ref={fileInputRef}
+        type="file"
+        accept="image/*"
+        capture="environment"
+        style={{ display: 'none' }}
+        onChange={e => {
+          const f = e.target.files?.[0]
+          if (f) onFileSelected(f)
+          e.target.value = ''
+        }}
+      />
+
       {/* Header */}
       <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)', letterSpacing: '-0.02em' }}>Capture</h1>
-          <button onClick={() => setShowProjectPicker(!showProjectPicker)} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+          <button onClick={() => setShowProjectPicker(!showProjectPicker)} aria-label="Change project" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
             <IcPin size={11} color="#52749a" />
             <span style={{ fontSize: 12, color: activeProject ? '#8ea8c5' : '#52749a', fontFamily: 'var(--font-system)' }}>
               {activeProject?.name || 'Select project'}
             </span>
           </button>
         </div>
-        <button onClick={() => router.back()} style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+        <button onClick={() => router.back()} aria-label="Close capture" style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <IcX size={18} color="#8ea8c5" />
         </button>
       </div>
@@ -99,7 +196,29 @@ function CaptureContent() {
       {showProjectPicker && projects.length > 0 && (
         <div style={{ margin: '8px 20px 0', background: '#152641', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
           {projects.map(p => (
-            <button key={p.id} onClick={() => { setActiveProject(p); setShowProjectPicker(false) }} style={{ width: '100%', padding: '12px 16px', background: p.id === activeProject?.id ? 'rgba(245,158,11,0.1)' : 'none', border: 'none', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'space-between', textAlign: 'left' }}>
+            <button
+              key={p.id}
+              onClick={() => {
+                setActiveProject(p)
+                setRecentSelect(p.id)
+                setTimeout(() => { setShowProjectPicker(false); setRecentSelect(null) }, 200)
+              }}
+              style={{
+                width: '100%',
+                padding: '12px 16px',
+                background: recentSelect === p.id
+                  ? 'rgba(245,158,11,0.25)'
+                  : p.id === activeProject?.id ? 'rgba(245,158,11,0.1)' : 'none',
+                border: 'none',
+                borderBottom: '1px solid rgba(255,255,255,0.05)',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'space-between',
+                textAlign: 'left',
+                transition: 'background 0.15s',
+              }}
+            >
               <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa' }}>{p.name}</span>
               {p.id === activeProject?.id && <IcCheck size={14} color="#f59e0b" />}
             </button>
@@ -114,14 +233,19 @@ function CaptureContent() {
             <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(16,185,129,0.15)', border: '2px solid #10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <IcCheck size={32} color="#10b981" />
             </div>
-            <p style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)' }}>Captured!</p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)' }}>{doneMsg}</p>
             <p style={{ fontSize: 13, color: '#52749a', fontFamily: 'var(--font-system)' }}>Logged to {activeProject?.name || 'project'}…</p>
           </div>
         ) : (
           <>
             <p style={{ fontSize: 14, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginBottom: 4 }}>What are you capturing?</p>
+            {errorMsg && (
+              <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>
+                {errorMsg}
+              </div>
+            )}
             {actions.map(action => (
-              <button key={action.id} onClick={() => handleAction(action.id)} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 18px', borderRadius: 18, background: selected === action.id ? `${action.color}22` : 'rgba(255,255,255,0.04)', border: `1.5px solid ${selected === action.id ? action.color : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', transform: selected === action.id ? 'scale(0.98)' : 'scale(1)' }}>
+              <button key={action.id} onClick={() => handleAction(action.id)} disabled={selected === action.id} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 18px', borderRadius: 18, background: selected === action.id ? `${action.color}22` : 'rgba(255,255,255,0.04)', border: `1.5px solid ${selected === action.id ? action.color : 'rgba(255,255,255,0.08)'}`, cursor: 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', transform: selected === action.id ? 'scale(0.98)' : 'scale(1)' }}>
                 <div style={{ width: 52, height: 52, borderRadius: 16, background: `${action.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                   <action.Icon size={24} color={action.color} />
                 </div>
@@ -139,7 +263,7 @@ function CaptureContent() {
 
             <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '4px 0' }} />
 
-            <button onClick={() => handleAction('checkin')} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '16px 0', borderRadius: 16, background: 'linear-gradient(135deg, #f59e0b, #f59e0bcc)', border: 'none', cursor: 'pointer', width: '100%', boxShadow: '0 4px 16px rgba(245,158,11,0.3)' }}>
+            <button onClick={() => handleAction('checkin')} disabled={!activeProject || selected === 'checkin'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '16px 0', borderRadius: 16, background: 'linear-gradient(135deg, #f59e0b, #f59e0bcc)', border: 'none', cursor: activeProject ? 'pointer' : 'not-allowed', width: '100%', boxShadow: '0 4px 16px rgba(245,158,11,0.3)', opacity: activeProject ? 1 : 0.5 }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-system)' }}>
                 Check In to {activeProject?.name || 'Site'}
               </span>

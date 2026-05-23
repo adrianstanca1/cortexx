@@ -1,22 +1,34 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
+import { requireAuth, actorName } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
+const MAX_TAKE = 100
+
+export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
+
   try {
-    const projects = await prisma.project.findMany({
-      include: {
-        _count: { select: { tasks: true, assignments: true } },
-        assignments: {
-          include: { member: true },
-          take: 8,
+    const { searchParams } = new URL(req.url)
+    const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
+    const skip = parseInt(searchParams.get('skip') || '0') || 0
+
+    const [projects, total] = await Promise.all([
+      prisma.project.findMany({
+        include: {
+          _count: { select: { tasks: true, assignments: true } },
+          assignments: { include: { member: true }, take: 8 },
         },
-      },
-      orderBy: { updatedAt: 'desc' },
-    })
-    return NextResponse.json({ projects })
+        orderBy: { updatedAt: 'desc' },
+        take,
+        skip,
+      }),
+      prisma.project.count(),
+    ])
+    return NextResponse.json({ projects, total, hasMore: skip + projects.length < total })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Failed to fetch projects' }, { status: 500 })
@@ -24,6 +36,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
+
   try {
     const body = await req.json()
     if (!body.name?.trim()) {
@@ -58,7 +73,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId: project.id,
-        actorName: 'You',
+        actorName: actorName(auth),
         actorType: 'human',
         action: `created project ${project.name}`,
         iconType: 'pin',
