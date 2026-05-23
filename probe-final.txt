@@ -1,0 +1,31 @@
+Probed: Sat May 23 12:43:23 UTC 2026
+
+HTTP/2 200 
+server: nginx
+date: Sat, 23 May 2026 12:43:24 GMT
+
+{
+    "status": "ok",
+    "checks": {
+        "database": {
+            "ok": true,
+            "ms": 11
+        },
+        "disk": {
+            "ok": true,
+            "free_gb": 246.44
+        },
+        "memory": {
+            "ok": true,
+            "rss_mb": 119.1
+        },
+        "app": {
+            "ok": true,
+            "ms": 11
+        }
+    },
+
+HTTP/2 200 
+server: nginx
+date: Sat, 23 May 2026 12:43:25 GMT
+
