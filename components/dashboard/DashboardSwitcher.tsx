@@ -3,8 +3,10 @@
 import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
+import Link from 'next/link'
 import { useDashboardData } from '@/lib/useDashboardData'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
+import { IcSearch } from '@/components/ui/Icons'
 import type { DashboardData } from '@/lib/types'
 
 const ActionFirst = dynamic(() => import('./ActionFirst'), { ssr: false })
@@ -69,8 +71,9 @@ export default function DashboardSwitcher() {
       <div style={{
         overflowX: 'auto',
         display: 'flex',
+        alignItems: 'center',
         gap: 6,
-        padding: '12px 16px 8px',
+        padding: '12px 56px 8px 16px',
         background: 'rgba(6,16,30,0.95)',
         backdropFilter: 'blur(12px)',
         borderBottom: '0.5px solid rgba(255,255,255,0.07)',
@@ -79,6 +82,24 @@ export default function DashboardSwitcher() {
         zIndex: 20,
         flexShrink: 0,
       }}>
+        <Link
+          href="/search"
+          aria-label="Search workspace"
+          style={{
+            flexShrink: 0,
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            width: 34,
+            height: 34,
+            borderRadius: 10,
+            background: 'rgba(255,255,255,0.06)',
+            border: '0.5px solid rgba(255,255,255,0.07)',
+            marginRight: 4,
+          }}
+        >
+          <IcSearch size={16} color="#8ea8c5" />
+        </Link>
         {variants.map(v => {
           const isActive = v.id === active
           return (
