@@ -1,5 +1,6 @@
 'use client'
 
+import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { IcWeather, IcCheck, IcPin, IcWrench, IcTruck, IcHardhat, IcClock, IcArrowRight } from '../ui/Icons'
 import type { DashboardData } from '@/lib/types'
@@ -31,6 +32,41 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
   const onSiteTotal = data?.projects?.reduce((s, p) => s + (p.onSiteCount || 0), 0) ?? 0
   const owed = data?.stats?.owed ?? 0
   const owedLabel = owed >= 1000 ? `£${Math.round(owed / 1000)}k` : owed > 0 ? `£${owed}` : '£0'
+
+  const [checkingIn, setCheckingIn] = useState(false)
+  const [toast, setToast] = useState<string | null>(null)
+
+  const handleCheckIn = async () => {
+    if (!nextTask?.projectId || checkingIn) return
+    setCheckingIn(true)
+    try {
+      // Bump the project's on-site count
+      await fetch(`/api/projects/${nextTask.projectId}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ onSiteCount: ((data?.projects?.find(p => p.id === nextTask.projectId)?.onSiteCount) || 0) + 1 }),
+      })
+      // Log activity
+      await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: nextTask.projectId,
+          action: 'checked in on site',
+          iconType: 'pin',
+          actorType: 'human',
+          detail: 'GPS logged',
+        }),
+      })
+      setToast(`Checked in to ${nextTask.project?.name || 'site'}`)
+      setTimeout(() => setToast(null), 2500)
+    } catch {
+      setToast('Check-in failed')
+      setTimeout(() => setToast(null), 2500)
+    } finally {
+      setCheckingIn(false)
+    }
+  }
 
   return (
     <div style={{ padding: '0 0 100px' }}>
@@ -71,10 +107,11 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
               </p>
               <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
                 <button
-                  onClick={() => router.push('/capture')}
-                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, background: accent, border: 'none', fontSize: 14, fontWeight: 600, color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-system)', boxShadow: `0 4px 12px ${accent}55` }}
+                  onClick={handleCheckIn}
+                  disabled={checkingIn || !nextTask?.projectId}
+                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, background: accent, border: 'none', fontSize: 14, fontWeight: 600, color: '#fff', cursor: checkingIn ? 'wait' : 'pointer', fontFamily: 'var(--font-system)', boxShadow: `0 4px 12px ${accent}55`, opacity: checkingIn ? 0.7 : 1 }}
                 >
-                  Check In
+                  {checkingIn ? 'Checking in…' : 'Check In'}
                 </button>
                 <button
                   onClick={() => nextTask.projectId && router.push(`/projects/${nextTask.projectId}`)}
@@ -139,6 +176,15 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
           ))}
         </div>
       </div>
+
+      {toast && (
+        <div role="status" aria-live="polite" style={{
+          position: 'fixed', left: 12, right: 12, bottom: 'calc(100px + env(safe-area-inset-bottom, 0px))', zIndex: 130,
+          background: 'rgba(16,185,129,0.95)', color: '#fff', padding: '12px 16px', borderRadius: 12,
+          fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, textAlign: 'center',
+          boxShadow: '0 8px 24px rgba(0,0,0,0.4)',
+        }}>{toast}</div>
+      )}
     </div>
   )
 }
