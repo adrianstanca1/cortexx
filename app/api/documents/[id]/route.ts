@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireAuth, actorName } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -52,7 +52,19 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
+    const doc = await prisma.document.findUnique({ where: { id: params.id }, select: { name: true, projectId: true } })
     await prisma.document.delete({ where: { id: params.id } })
+    if (doc) {
+      prisma.activity.create({
+        data: {
+          projectId: doc.projectId,
+          actorName: actorName(auth),
+          actorType: 'human',
+          action: `deleted document: ${doc.name}`,
+          iconType: 'trash',
+        },
+      }).catch(() => {})
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error(error)

@@ -25,7 +25,7 @@ export default function MobileHeader({
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'space-between',
-        padding: '16px 20px 12px 60px',
+        padding: '16px 56px 12px 60px',
         background: 'rgba(6,16,30,0.95)',
         backdropFilter: 'blur(12px)',
         WebkitBackdropFilter: 'blur(12px)',
