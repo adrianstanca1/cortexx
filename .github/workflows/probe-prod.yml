@@ -13,7 +13,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Resync DB password + restart
+      - name: Resync DB
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
@@ -28,30 +28,26 @@ jobs:
             ADMIN_EMAIL="$ADMIN_EMAIL" \
             ADMIN_PASSWORD="$ADMIN_PASSWORD" \
             SEED_TOKEN="$SEED_TOKEN" \
-            'bash -s' > probe-fix.txt 2>&1 << 'REMOTE'
-            set -uo pipefail
-            APP_DIR=/opt/cortexx
-            APP_PORT=3010
-
-            PG_CONTAINER=""
-            for c in $(docker ps --format '{{.Names}}'); do
-              if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
-                PG_CONTAINER="$c"; break
-              fi
-            done
-            PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
-            echo "Container=$PG_CONTAINER IP=$PG_IP"
-
-            PG_SUPER=$(docker inspect "$PG_CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep ^POSTGRES_USER= | cut -d= -f2 || true)
-            PG_SUPER=${PG_SUPER:-postgres}
-            echo "PG_SUPER=$PG_SUPER"
-
-            ALTER_OUT=$(docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c "ALTER USER cortexx WITH PASSWORD '$NEW_PASS';" 2>&1)
-            echo "ALTER: $ALTER_OUT"
-
-            VERIFY=$(docker exec -i "$PG_CONTAINER" psql "postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>&1)
-            echo "Auth verify: $VERIFY"
-
+            'bash -sx' > probe-fix.txt 2>&1 << 'REMOTE'
+          APP_DIR=/opt/cortexx
+          APP_PORT=3010
+          PG_CONTAINER=""
+          for c in $(docker ps --format '{{.Names}}'); do
+            if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
+              PG_CONTAINER="$c"; break
+            fi
+          done
+          PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
+          echo "Container=$PG_CONTAINER IP=$PG_IP"
+          for SUPER in postgres cortexbuild root admin; do
+            TEST=$(docker exec -i "$PG_CONTAINER" psql -U "$SUPER" -c "SELECT 1" 2>&1)
+            echo "psql -U $SUPER => $TEST"
+          done
+          ALTER=$(docker exec -i "$PG_CONTAINER" psql -U postgres -c "ALTER USER cortexx WITH PASSWORD '$NEW_PASS';" 2>&1)
+          echo "ALTER: $ALTER"
+          VERIFY=$(docker exec -i "$PG_CONTAINER" psql "postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>&1)
+          echo "VERIFY: $VERIFY"
+          if echo "$VERIFY" | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
             cat > $APP_DIR/.env.production << ENV
           DATABASE_URL=postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx
           NEXTAUTH_SECRET=$NEXTAUTH_SECRET
@@ -64,24 +60,25 @@ jobs:
           ADMIN_PASSWORD=$ADMIN_PASSWORD
           ENV
             chmod 600 $APP_DIR/.env.production
-            echo ".env rewritten"
-
-            pm2 delete cortexx 2>&1 | head -2
+            echo ".env written"
+            pm2 delete cortexx 2>&1 | head -1
             cd $APP_DIR
-            PORT=$APP_PORT pm2 start npm --name cortexx -- start 2>&1 | head -3
-            sleep 7
-            pm2 save 2>&1 | head -3
-
-            echo
-            echo "=== /api/health ==="
+            PORT=$APP_PORT pm2 start npm --name cortexx -- start 2>&1 | head -2
+            sleep 8
+            pm2 save 2>&1 | head -1
+            echo "=== HEALTH ==="
             curl -s http://localhost:3010/api/health
+          else
+            echo "DB AUTH FAILED — bailing"
+          fi
           REMOTE
           cat probe-fix.txt
       - name: Commit
+        if: always()
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@cortexx.local"
           git add probe-fix.txt
-          git commit -m "DB resync [skip ci]" || true
+          git commit -m "DB resync attempt [skip ci]" || true
           git pull --rebase origin main
           git push
