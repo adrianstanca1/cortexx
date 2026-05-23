@@ -192,15 +192,15 @@ model Activity {
 }
 
 model Comment {
-  id        String   @id @default(cuid())
-  taskId    String?
-  projectId String?
-  authorId  String
+  id         String   @id @default(cuid())
+  taskId     String?
+  projectId  String?
+  authorId   String
   authorName String
-  body      String
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
-  task      Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  body       String
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  task       Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
 
   @@index([taskId, createdAt])
   @@index([projectId, createdAt])
