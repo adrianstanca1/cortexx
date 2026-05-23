@@ -83,6 +83,7 @@ model Project {
   activities  Activity[]
   timeEntries TimeEntry[]
   documents   Document[]
+  comments    Comment[]
 
   @@index([status])
   @@index([updatedAt])
@@ -201,6 +202,7 @@ model Comment {
   createdAt  DateTime @default(now())
   updatedAt  DateTime @updatedAt
   task       Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@index([taskId, createdAt])
   @@index([projectId, createdAt])
