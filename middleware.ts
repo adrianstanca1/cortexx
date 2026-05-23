@@ -7,6 +7,8 @@ const PUBLIC_PATHS = new Set<string>([
   '/register',
   '/manifest.json',
   '/favicon.ico',
+  '/sw.js',
+  '/offline.html',
 ])
 const PUBLIC_API_PREFIXES = ['/api/auth/', '/api/health', '/api/seed']
 
