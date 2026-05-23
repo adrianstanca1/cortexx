@@ -1,0 +1,332 @@
+name: Deploy to Hostinger VPS
+
+on:
+  workflow_dispatch:
+
+jobs:
+  setup-ssh:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    outputs:
+      ssh_ready: ${{ steps.attach.outputs.ssh_ready }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Generate SSH keypair if not in repo
+        id: keygen
+        run: |
+          if [ -n "${{ secrets.VPS_SSH_PRIVATE_KEY }}" ]; then
+            echo "Existing key found in secrets"
+            echo "key_exists=true" >> $GITHUB_OUTPUT
+            mkdir -p ~/.ssh
+            echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+            chmod 600 ~/.ssh/cortexx_deploy
+          else
+            echo "Generating new keypair"
+            ssh-keygen -t ed25519 -C "cortexx-deploy@github-actions" -f ~/.ssh/cortexx_deploy -N ""
+            chmod 600 ~/.ssh/cortexx_deploy
+            echo "key_exists=false" >> $GITHUB_OUTPUT
+          fi
+          echo "public_key=$(cat ~/.ssh/cortexx_deploy.pub)" >> $GITHUB_OUTPUT
+
+      - name: Save private key as GitHub secret (first time)
+        if: steps.keygen.outputs.key_exists == 'false'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          PRIV=$(cat ~/.ssh/cortexx_deploy)
+          gh secret set VPS_SSH_PRIVATE_KEY --repo ${{ github.repository }} --body "$PRIV"
+
+      - name: Attach SSH key to VPS via Hostinger API
+        id: attach
+        env:
+          API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+          VPS_ID: 1262179
+          PUBLIC_KEY: ${{ steps.keygen.outputs.public_key }}
+        run: |
+          # First, check if key already exists
+          EXISTING_KEYS=$(curl -s -H "Authorization: Bearer $API_TOKEN" \
+            "https://developers.hostinger.com/api/vps/v1/public-keys")
+          echo "Existing keys: $EXISTING_KEYS"
+
+          KEY_NAME="cortexx-deploy-gh"
+          EXISTING_KEY_ID=$(echo "$EXISTING_KEYS" | python3 -c "
+          import json,sys
+          data=json.load(sys.stdin)
+          keys=data if isinstance(data, list) else data.get('data', [])
+          for k in keys:
+              if k.get('name') == '$KEY_NAME':
+                  print(k['id'])
+                  break
+          " 2>/dev/null || echo "")
+
+          if [ -z "$EXISTING_KEY_ID" ]; then
+            echo "Creating new key..."
+            CREATE=$(curl -s -X POST -H "Authorization: Bearer $API_TOKEN" \
+              -H "Content-Type: application/json" \
+              -d "{\"name\":\"$KEY_NAME\",\"key\":\"$PUBLIC_KEY\"}" \
+              "https://developers.hostinger.com/api/vps/v1/public-keys")
+            echo "Create response: $CREATE"
+            KEY_ID=$(echo "$CREATE" | python3 -c "import json,sys; print(json.load(sys.stdin).get('id',''))" 2>/dev/null || echo "")
+          else
+            KEY_ID=$EXISTING_KEY_ID
+            echo "Using existing key id: $KEY_ID"
+          fi
+
+          if [ -z "$KEY_ID" ]; then
+            echo "Failed to create or find key"
+            exit 1
+          fi
+
+          # Attach key to VPS
+          echo "Attaching key $KEY_ID to VPS $VPS_ID..."
+          ATTACH=$(curl -s -X POST -H "Authorization: Bearer $API_TOKEN" \
+            -H "Content-Type: application/json" \
+            -d "{\"ids\":[$KEY_ID]}" \
+            "https://developers.hostinger.com/api/vps/v1/virtual-machines/$VPS_ID/public-keys/attach")
+          echo "Attach response: $ATTACH"
+
+          # Verify SSH connection works
+          mkdir -p ~/.ssh
+          ssh-keyscan -H 72.62.132.43 >> ~/.ssh/known_hosts 2>/dev/null || true
+          echo "Waiting 30s for key to propagate..."
+          sleep 30
+
+          # Test SSH connection
+          if ssh -o StrictHostKeyChecking=accept-new -o ConnectTimeout=10 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo "SSH works"' 2>&1; then
+            echo "ssh_ready=true" >> $GITHUB_OUTPUT
+          else
+            echo "ssh_ready=false" >> $GITHUB_OUTPUT
+            echo "SSH connection failed — key may need more time to propagate, or the VPS needs the key added manually"
+          fi
+
+  deploy:
+    needs: setup-ssh
+    runs-on: ubuntu-latest
+    if: needs.setup-ssh.outputs.ssh_ready == 'true'
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+          ssh-keyscan -H 72.62.132.43 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Install prerequisites on VPS
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE_SCRIPT'
+            set -e
+            echo "=== Updating apt ==="
+            export DEBIAN_FRONTEND=noninteractive
+            apt-get update -qq
+
+            echo "=== Installing Node.js 20 if missing ==="
+            if ! command -v node &>/dev/null || [ "$(node -v | cut -d. -f1)" != "v20" ]; then
+              curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
+              apt-get install -y nodejs
+            fi
+
+            echo "=== Installing PostgreSQL if missing ==="
+            if ! command -v psql &>/dev/null; then
+              apt-get install -y postgresql postgresql-contrib
+              systemctl enable --now postgresql
+            fi
+
+            echo "=== Installing pm2 if missing ==="
+            if ! command -v pm2 &>/dev/null; then
+              npm install -g pm2
+            fi
+
+            echo "=== Installing nginx if missing ==="
+            if ! command -v nginx &>/dev/null; then
+              apt-get install -y nginx
+              systemctl enable --now nginx
+            fi
+
+            echo "=== Installing git if missing ==="
+            command -v git &>/dev/null || apt-get install -y git
+
+            echo "=== Setting up cortexx database ==="
+            sudo -u postgres psql -tc "SELECT 1 FROM pg_database WHERE datname='cortexx'" | grep -q 1 || \
+              sudo -u postgres createdb cortexx
+            sudo -u postgres psql -tc "SELECT 1 FROM pg_user WHERE usename='cortexx'" | grep -q 1 || \
+              sudo -u postgres psql -c "CREATE USER cortexx WITH PASSWORD 'cortexx_$(openssl rand -hex 12)';"
+            sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;"
+            sudo -u postgres psql -d cortexx -c "GRANT ALL ON SCHEMA public TO cortexx;"
+
+            echo "=== Versions ==="
+            node -v
+            psql --version
+            pm2 -v
+            nginx -v 2>&1
+          REMOTE_SCRIPT
+
+      - name: Deploy app to VPS
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE_SCRIPT'
+            set -e
+            APP_DIR=/opt/cortexx
+
+            # Get or set the database password (idempotent)
+            if [ -f $APP_DIR/.env.production ]; then
+              DB_PASS=$(grep -oP 'cortexx:\K[^@]+' $APP_DIR/.env.production || echo "")
+            fi
+            if [ -z "$DB_PASS" ]; then
+              DB_PASS=$(openssl rand -hex 16)
+              sudo -u postgres psql -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';"
+            fi
+
+            echo "=== Cloning/updating repo ==="
+            if [ -d $APP_DIR/.git ]; then
+              cd $APP_DIR
+              git fetch origin
+              git reset --hard origin/main
+            else
+              rm -rf $APP_DIR
+              git clone https://github.com/adrianstanca1/cortexx.git $APP_DIR
+              cd $APP_DIR
+            fi
+
+            echo "=== Writing .env.production ==="
+            cat > $APP_DIR/.env.production << ENV
+          DATABASE_URL=postgresql://cortexx:$DB_PASS@localhost:5432/cortexx
+          NODE_ENV=production
+          PORT=3000
+          ENV
+            chmod 600 $APP_DIR/.env.production
+
+            echo "=== Installing dependencies ==="
+            cd $APP_DIR
+            npm ci --include=dev
+
+            echo "=== Generating Prisma client and pushing schema ==="
+            npx prisma generate
+            npx prisma db push --accept-data-loss
+
+            echo "=== Building Next.js ==="
+            npm run build
+
+            echo "=== Starting/restarting app with pm2 ==="
+            pm2 delete cortexx 2>/dev/null || true
+            cd $APP_DIR
+            pm2 start "npm start" --name cortexx --update-env
+            pm2 save
+            pm2 startup systemd -u root --hp /root | grep "sudo" | bash || true
+
+            echo "=== Status ==="
+            pm2 status
+            sleep 5
+            curl -s -o /dev/null -w "App on :3000 → HTTP %{http_code}" http://localhost:3000/
+          REMOTE_SCRIPT
+
+      - name: Configure nginx
+        run: |
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE_SCRIPT'
+            set -e
+            echo "=== Backing up existing nginx config ==="
+            mkdir -p /root/nginx-backup-$(date +%s)
+            cp -r /etc/nginx/sites-available/* /root/nginx-backup-$(date +%s)/ 2>/dev/null || true
+
+            echo "=== Disabling existing sites ==="
+            rm -f /etc/nginx/sites-enabled/*
+
+            echo "=== Writing Cortexx nginx config ==="
+            cat > /etc/nginx/sites-available/cortexx << 'NGINX'
+          server {
+              listen 80;
+              listen [::]:80;
+              server_name cortexbuildpro.com www.cortexbuildpro.com;
+
+              # ACME challenge for Let's Encrypt
+              location /.well-known/acme-challenge/ {
+                  root /var/www/html;
+              }
+
+              location / {
+                  proxy_pass http://127.0.0.1:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_cache_bypass $http_upgrade;
+                  proxy_read_timeout 60s;
+              }
+          }
+          NGINX
+
+            ln -sf /etc/nginx/sites-available/cortexx /etc/nginx/sites-enabled/cortexx
+
+            # Try to preserve HTTPS config if certs exist
+            if [ -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
+              echo "=== Adding HTTPS server block ==="
+              cat >> /etc/nginx/sites-available/cortexx << 'NGINX_HTTPS'
+
+          server {
+              listen 443 ssl http2;
+              listen [::]:443 ssl http2;
+              server_name cortexbuildpro.com www.cortexbuildpro.com;
+
+              ssl_certificate /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/cortexbuildpro.com/privkey.pem;
+              ssl_protocols TLSv1.2 TLSv1.3;
+              ssl_ciphers HIGH:!aNULL:!MD5;
+
+              location / {
+                  proxy_pass http://127.0.0.1:3000;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_cache_bypass $http_upgrade;
+                  proxy_read_timeout 60s;
+              }
+          }
+          NGINX_HTTPS
+            fi
+
+            echo "=== Testing nginx config ==="
+            nginx -t
+
+            echo "=== Reloading nginx ==="
+            systemctl reload nginx || systemctl restart nginx
+
+            echo "=== Status ==="
+            systemctl status nginx --no-pager | head -10
+          REMOTE_SCRIPT
+
+      - name: Verify deployment
+        run: |
+          echo "=== HTTP from VPS perspective ==="
+          ssh -o StrictHostKeyChecking=accept-new -i ~/.ssh/cortexx_deploy root@72.62.132.43 'curl -s -o /dev/null -w "Local app: HTTP %{http_code}\n" http://localhost:3000/'
+          echo ""
+          echo "=== HTTP from GitHub Actions ==="
+          sleep 5
+          curl -s -o /dev/null -w "HTTPS: HTTP %{http_code}\n" https://cortexbuildpro.com/
+          curl -s -o /dev/null -w "HTTP: HTTP %{http_code}\n" http://cortexbuildpro.com/
+          curl -s --max-time 10 https://cortexbuildpro.com/ | head -c 300
+          echo ""
+          echo "=== API test ==="
+          curl -s --max-time 10 https://cortexbuildpro.com/api/dashboard | head -c 300
+
+      - name: Seed database
+        run: |
+          sleep 8
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" -X POST https://cortexbuildpro.com/api/seed)
+          echo "Seed: HTTP $STATUS"
+          if [ "$STATUS" = "200" ] || [ "$STATUS" = "201" ]; then
+            echo "✓ Database seeded"
+            curl -s https://cortexbuildpro.com/api/dashboard | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          print(f'Projects: {len(d.get(\"projects\",[]))}, Tasks: {len(d.get(\"tasks\",[]))}, Team: {len(d.get(\"team\",[]))}')
+          " 2>/dev/null
+          fi
