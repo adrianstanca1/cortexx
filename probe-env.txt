@@ -1,0 +1,67 @@
+Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
+=== .env.production (masked passwords) ===
+DATABASE_URL=postgresql://cortexx:f1d8b2c9b2a018fd9c81a519b8a11e22@172.18.0.6:5432/cortexx
+NEXTAUTH_SECRET=<masked>
+NEXTAUTH_URL=https://cortexbuildpro.com
+NODE_ENV=production
+PORT=3010
+ALLOW_SEED=true
+SEED_TOKEN=<masked>
+ADMIN_EMAIL=admin@cortexbuildpro.com
+ADMIN_PASSWORD=<masked>
+
+=== leading bytes (hex) of DATABASE_URL line ===
+00000000: 4441 5441 4241 5345 5f55 524c 3d70 6f73  DATABASE_URL=pos
+00000010: 7467 7265 7371 6c3a 2f2f 636f 7274 6578  tgresql://cortex
+00000020: 783a 6631 6438 6232 6339 6232 6130 3138  x:f1d8b2c9b2a018
+00000030: 6664 3963 3831 6135 3139 6238 6131 3165  fd9c81a519b8a11e
+00000040: 3232 4031 3732 2e31 382e 302e 363a 3534  22@172.18.0.6:54
+00000050: 3332 2f63 6f72 7465 7878 0a              32/cortexx.
+
+=== curl localhost:3010/api/health ===
+{"status":"degraded","checks":{"database":{"ok":false,"ms":1,"error":"\nInvalid `prisma.$queryRaw()` invocation:\n\n\nerror: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"},"disk":{"ok":true,"free_gb":246.41},"memory":{"ok":true,"rss_mb":117.2},"app":{"ok":true,"ms":2}},"uptime":489.70364987,"version":"0.1.0","timestamp":"2026-05-23T12:24:23.059Z"}
+=== pm2 cortexx logs (last 40) ===
+[TAILING] Tailing last 40 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 40 lines:
+/root/.pm2/logs/cortexx-out.log last 40 lines:
+15|cortexx |  7 |   url      = env("DATABASE_URL")
+15|cortexx |    | 
+15|cortexx | 
+15|cortexx | Validation Error Count: 1
+15|cortexx | prisma:error 
+15|cortexx | Invalid `prisma.$queryRaw()` invocation:
+15|cortexx | 
+15|cortexx | 
+15|cortexx | error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+15|cortexx |   -->  schema.prisma:7
+15|cortexx |    | 
+15|cortexx |  6 |   provider = "postgresql"
+15|cortexx |  7 |   url      = env("DATABASE_URL")
+15|cortexx |    | 
+15|cortexx | 
+15|cortexx | Validation Error Count: 1
+15|cortexx | prisma:error 
+15|cortexx | Invalid `prisma.$queryRaw()` invocation:
+15|cortexx | 
+15|cortexx | 
+15|cortexx | error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+15|cortexx |   -->  schema.prisma:7
+15|cortexx |    | 
+15|cortexx |  6 |   provider = "postgresql"
+15|cortexx |  7 |   url      = env("DATABASE_URL")
+15|cortexx |    | 
+15|cortexx | 
+15|cortexx | Validation Error Count: 1
+15|cortexx | prisma:error 
+15|cortexx | Invalid `prisma.$queryRaw()` invocation:
+15|cortexx | 
+15|cortexx | 
+15|cortexx | error: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.
+15|cortexx |   -->  schema.prisma:7
+15|cortexx |    | 
+15|cortexx |  6 |   provider = "postgresql"
+15|cortexx |  7 |   url      = env("DATABASE_URL")
+15|cortexx |    | 
+15|cortexx | 
+15|cortexx | Validation Error Count: 1
+
