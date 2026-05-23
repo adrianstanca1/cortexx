@@ -39,8 +39,25 @@ jobs:
             echo "=== HTTP STATUS ==="
             curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 10 https://cortexbuildpro.com/ 2>/dev/null || echo "connection failed"
             echo ""
-            echo "=== /api/dashboard response ==="
-            curl -s --max-time 10 https://cortexbuildpro.com/api/dashboard 2>/dev/null || echo "no response"
+            echo "=== Root page (first 500 chars) ==="
+            curl -sL --max-time 10 https://cortexbuildpro.com/ 2>/dev/null | head -c 500 || echo "no response"
+            echo ""
+            echo "=== /api/dashboard ==="
+            curl -sL --max-time 10 https://cortexbuildpro.com/api/dashboard 2>/dev/null | head -c 500 || echo "no response"
+            echo ""
+            echo "=== /api/projects ==="
+            curl -sL --max-time 10 https://cortexbuildpro.com/api/projects 2>/dev/null | head -c 300 || echo "no response"
+            echo ""
+            echo "=== Response headers for / ==="
+            curl -sI --max-time 10 https://cortexbuildpro.com/ 2>/dev/null | head -20 || echo "no headers"
+            echo ""
+            echo "=== Hostinger deployment list ==="
+            echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}' \
+              | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+            echo ""
+            echo "=== Hostinger build logs ==="
+            echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}' \
+              | npx hostinger-api-mcp@latest --stdio 2>/dev/null
           } > site_check.txt
           cat site_check.txt
 
