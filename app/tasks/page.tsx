@@ -27,6 +27,8 @@ const priorityBg: Record<string, string> = {
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'] as const
 
+const CATEGORIES = ['', 'Inspection', 'Admin', 'Safety', 'Finance', 'Construction', 'Electrical', 'Planning', 'Snagging', 'Plumbing', 'Other'] as const
+
 const filters = [
   { id: 'all', label: 'All' },
   { id: 'today', label: 'Today' },
@@ -44,12 +46,12 @@ export default function TasksPage() {
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
   const [team, setTeam] = useState<{ id: string; name: string; avatarColor: string }[]>([])
   const [form, setForm] = useState({
-    title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '',
+    title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '', category: '',
   })
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [search, setSearch] = useState('')
   const [editTarget, setEditTarget] = useState<Task | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '' })
+  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '', category: '' })
   const [savingEdit, setSavingEdit] = useState(false)
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -100,6 +102,7 @@ export default function TasksPage() {
           dueTime: form.dueTime || null,
           projectId: form.projectId || null,
           assigneeId: form.assigneeId || null,
+          category: form.category || null,
           status: 'todo',
         }),
       })
@@ -107,7 +110,7 @@ export default function TasksPage() {
       const newTask = await res.json()
       setTasks(prev => [newTask, ...prev])
       setShowModal(false)
-      setForm({ title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '' })
+      setForm({ title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '', category: '' })
       setToast({ msg: 'Task created' })
     } catch {
       setToast({ msg: 'Failed to create task', type: 'error' })
@@ -189,6 +192,7 @@ export default function TasksPage() {
       dueTime: task.dueTime || '',
       projectId: task.projectId || '',
       assigneeId: task.assigneeId || '',
+      category: task.category || '',
     })
     if (projects.length === 0) {
       fetch('/api/projects').then(r => r.json()).then(d => {
@@ -218,6 +222,7 @@ export default function TasksPage() {
           dueTime: editForm.dueTime || null,
           projectId: editForm.projectId || null,
           assigneeId: editForm.assigneeId || null,
+          category: editForm.category || null,
         }),
       })
       if (!res.ok) throw new Error('Failed')
@@ -557,6 +562,13 @@ export default function TasksPage() {
               </select>
             </div>
 
+            <div>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
+              <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={selectStyle}>
+                {CATEGORIES.map(c => <option key={c || 'none'} value={c}>{c || 'None'}</option>)}
+              </select>
+            </div>
+
             <button onClick={createTask} disabled={saving || !form.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1 }}>
               {saving ? 'Creating…' : 'Create task'}
             </button>
@@ -619,6 +631,13 @@ export default function TasksPage() {
               <select value={editForm.assigneeId} onChange={e => setEditForm(p => ({ ...p, assigneeId: e.target.value }))} style={selectStyle}>
                 <option value="">Unassigned</option>
                 {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+              </select>
+            </div>
+
+            <div>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
+              <select value={editForm.category} onChange={e => setEditForm(p => ({ ...p, category: e.target.value }))} style={selectStyle}>
+                {CATEGORIES.map(c => <option key={c || 'none'} value={c}>{c || 'None'}</option>)}
               </select>
             </div>
 
