@@ -90,44 +90,81 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
         </div>
       </div>
 
-      {/* Hero card */}
-      <div style={{ padding: '16px 20px 0' }}>
-        <div style={{ borderRadius: 20, background: `linear-gradient(135deg, #1a2f4e 0%, #152641 50%, rgba(37,99,235,0.15) 100%)`, border: `1px solid ${accent}33`, padding: '20px', position: 'relative', overflow: 'hidden' }}>
-          <div style={{ position: 'absolute', top: -40, right: -40, width: 120, height: 120, borderRadius: '50%', background: `${accent}22`, filter: 'blur(30px)' }} />
-          {nextTask ? (
-            <>
-              <span style={{ fontSize: 10, fontWeight: 700, color: accent, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>
-                Next up · {nextTask.priority} priority
-              </span>
-              <h3 style={{ fontSize: 19, fontWeight: 700, color: '#eef3fa', marginTop: 8, letterSpacing: '-0.02em', fontFamily: 'var(--font-system)' }}>
-                {nextTask.title}
-              </h3>
-              <p style={{ fontSize: 13, color: '#8ea8c5', marginTop: 4, fontFamily: 'var(--font-system)' }}>
-                {nextTask.project?.name || 'Unassigned'}{nextTask.assignee ? ` · ${nextTask.assignee.name}` : ''}
-              </p>
-              <div style={{ display: 'flex', gap: 10, marginTop: 16 }}>
-                <button
-                  onClick={handleCheckIn}
-                  disabled={checkingIn || !nextTask?.projectId}
-                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, background: accent, border: 'none', fontSize: 14, fontWeight: 600, color: '#fff', cursor: checkingIn ? 'wait' : 'pointer', fontFamily: 'var(--font-system)', boxShadow: `0 4px 12px ${accent}55`, opacity: checkingIn ? 0.7 : 1 }}
-                >
-                  {checkingIn ? 'Checking in…' : 'Check In'}
-                </button>
-                <button
-                  onClick={() => nextTask.projectId && router.push(`/projects/${nextTask.projectId}`)}
-                  style={{ flex: 1, padding: '11px 0', borderRadius: 12, background: 'rgba(255,255,255,0.08)', border: '1px solid rgba(255,255,255,0.12)', fontSize: 14, fontWeight: 600, color: '#8ea8c5', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
-                >
-                  <IcPin size={14} color="#8ea8c5" /> View
-                </button>
-              </div>
-            </>
-          ) : (
-            <>
-              <span style={{ fontSize: 10, fontWeight: 700, color: accent, letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>All clear</span>
-              <h3 style={{ fontSize: 19, fontWeight: 700, color: '#eef3fa', marginTop: 8, letterSpacing: '-0.02em', fontFamily: 'var(--font-system)' }}>No urgent tasks today</h3>
-              <p style={{ fontSize: 13, color: '#8ea8c5', marginTop: 4, fontFamily: 'var(--font-system)' }}>All sites running smoothly</p>
-            </>
-          )}
+      {/* Hero card — vibrant accent→purple gradient per design */}
+      <div style={{ padding: '4px 16px 12px' }}>
+        <div style={{
+          background: nextTask
+            ? `linear-gradient(135deg, ${accent}, ${accent}aa 60%, #8b5cf6aa)`
+            : `linear-gradient(135deg, #10b981, #10b981aa 60%, #06b6d4aa)`,
+          borderRadius: 20,
+          padding: 18,
+          position: 'relative',
+          overflow: 'hidden',
+          boxShadow: `0 12px 32px ${accent}44`,
+        }}>
+          {/* Decorative blurred circle */}
+          <div style={{ position: 'absolute', right: -40, top: -40, width: 160, height: 160, borderRadius: 80, background: 'rgba(255,255,255,0.08)' }} />
+          <div style={{ position: 'relative' }}>
+            {nextTask ? (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 3, background: '#fff', boxShadow: '0 0 8px #fff' }} />
+                  <span style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'rgba(255,255,255,0.95)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    NEXT UP · {nextTask.priority} priority
+                  </span>
+                </div>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 4 }}>
+                  {nextTask.title}
+                </div>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
+                  {nextTask.project?.name || 'Unassigned'}{nextTask.assignee ? ` · ${nextTask.assignee.name}` : ''}
+                </div>
+                <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+                  <button
+                    onClick={handleCheckIn}
+                    disabled={checkingIn || !nextTask?.projectId}
+                    style={{
+                      flex: 1, background: '#fff', color: accent,
+                      border: 'none', borderRadius: 11, padding: '11px 12px',
+                      fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700,
+                      cursor: checkingIn ? 'wait' : 'pointer',
+                      display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
+                      opacity: checkingIn ? 0.7 : 1,
+                    }}
+                  >
+                    <IcPin size={15} color={accent} /> {checkingIn ? 'Checking in…' : 'Check in'}
+                  </button>
+                  <button
+                    onClick={() => nextTask.projectId && router.push(`/projects/${nextTask.projectId}`)}
+                    style={{
+                      background: 'rgba(255,255,255,0.18)', color: '#fff',
+                      border: '0.5px solid rgba(255,255,255,0.35)', borderRadius: 11,
+                      padding: '11px 14px',
+                      fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600,
+                      cursor: 'pointer',
+                    }}
+                  >
+                    View
+                  </button>
+                </div>
+              </>
+            ) : (
+              <>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: 3, background: '#fff', boxShadow: '0 0 8px #fff' }} />
+                  <span style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'rgba(255,255,255,0.95)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
+                    ALL CLEAR
+                  </span>
+                </div>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 4 }}>
+                  No urgent tasks today
+                </div>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>
+                  All sites running smoothly
+                </div>
+              </>
+            )}
+          </div>
         </div>
       </div>
 
