@@ -211,8 +211,11 @@ model Comment {
 model Document {
   id        String    @id @default(cuid())
   projectId String?
-  type      String // rams, report, photo, receipt
+  type      String // rams, report, photo, receipt, audio
   name      String
+  url       String?
+  size      Int?
+  mimeType  String?
   expiresAt DateTime?
   createdAt DateTime  @default(now())
   project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
