@@ -2,7 +2,8 @@
 
 import { useRouter } from 'next/navigation'
 import Avatar from '../ui/Avatar'
-import { IcBot, IcSpark, IcAlert, IcTrend } from '../ui/Icons'
+import ProgressBar from '../ui/ProgressBar'
+import { IcSpark, IcAlert, IcTrend, IcReceipt, IcClock, IcArrowRight } from '../ui/Icons'
 import type { DashboardData } from '@/lib/types'
 
 interface BentoProps {
@@ -10,125 +11,189 @@ interface BentoProps {
   data?: DashboardData | null
 }
 
-export default function Bento({ accent = '#f59e0b', data }: BentoProps) {
+/**
+ * Variant 4 — Bento: modular grid, glanceable.
+ * Matches project/lib/dashboards.jsx DashV4_Bento.
+ */
+export default function Bento({ accent = '#2563eb', data }: BentoProps) {
   const router = useRouter()
 
   const projects = data?.projects || []
   const activeProject = projects.find(p => p.status === 'active') || projects[0]
-  const onSiteTeam = (data?.team || []).filter(m => m.onSite).slice(0, 3)
+  const onSiteAvatars = (data?.team || []).filter(m => m.onSite).slice(0, 4)
   const cashflow = data?.stats?.cashflow ?? 0
+  const cashflowDelta = Math.round(cashflow * 0.2) // mock weekly delta in absence of historical data
   const owed = data?.stats?.owed ?? 0
   const hoursThisWeek = data?.stats?.hoursThisWeek ?? 0
   const overdueInvoices = (data?.invoices || []).filter(i => i.status === 'overdue')
-  const criticalTasks = (data?.tasks || []).filter(t => t.priority === 'critical' || t.priority === 'high').slice(0, 3)
+  const criticalTasks = (data?.tasks || []).filter(t => t.priority === 'critical' || t.priority === 'high').slice(0, 2)
 
   const cashLabel = cashflow >= 1000 ? `£${(cashflow / 1000).toFixed(1)}k` : cashflow > 0 ? `£${cashflow}` : '£0'
-  const owedLabel = owed >= 1000 ? `£${Math.round(owed / 1000)}k` : owed > 0 ? `£${owed}` : '£0'
+  const owedLabel = owed >= 1000 ? `£${(owed / 1000).toFixed(1)}k` : owed > 0 ? `£${owed}` : '£0'
 
   const alerts = [
-    ...overdueInvoices.map(i => ({ text: `Invoice ${i.number} overdue`, color: '#ef4444' })),
-    ...criticalTasks.map(t => ({ text: t.title, color: '#f59e0b' })),
+    ...overdueInvoices.slice(0, 2).map(i => ({ t: `Invoice ${i.number} overdue`, s: i.project?.name || 'Invoice', c: '#ef4444', I: IcAlert })),
+    ...criticalTasks.map(t => ({ t: t.title, s: t.project?.name || 'Task', c: '#f59e0b', I: IcAlert })),
   ].slice(0, 3)
 
+  const SF = 'var(--font-system)'
+  const SFMono = 'ui-monospace, "SF Mono", "JetBrains Mono", monospace'
+  const purple = '#8b5cf6'
+
   return (
-    <div style={{ padding: '16px 16px 100px', display: 'flex', flexDirection: 'column', gap: 10 }}>
-      {/* Active site card */}
-      {activeProject && (
-        <div onClick={() => router.push(`/projects/${activeProject.id}`)} style={{ borderRadius: 20, background: 'linear-gradient(135deg, #1a2f4e, #152641)', border: '1px solid rgba(255,255,255,0.1)', padding: '18px 18px', cursor: 'pointer' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
-            <div>
-              <span style={{ fontSize: 10, fontWeight: 700, color: '#10b981', letterSpacing: '0.1em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>
-                ● {activeProject.status === 'active' ? 'Active site' : activeProject.status}
-              </span>
-              <h3 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.02em', marginTop: 4, fontFamily: 'var(--font-system)' }}>{activeProject.name}</h3>
-              <p style={{ fontSize: 12, color: '#8ea8c5', marginTop: 2, fontFamily: 'var(--font-system)' }}>
-                {activeProject.clientName} · {activeProject.progress}% complete
-              </p>
+    <div style={{ padding: '8px 0 100px' }}>
+      {/* Header */}
+      <div style={{ padding: '8px 20px 12px' }}>
+        <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Dashboard</div>
+        <div style={{ fontFamily: SF, fontSize: 13, color: '#8ea8c5', marginTop: 2 }}>{activeProject?.clientName || 'Cortexx'}</div>
+      </div>
+
+      <div style={{ padding: '4px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        {/* Big — Active site (full width) */}
+        {activeProject && (
+          <div
+            onClick={() => router.push(`/projects/${activeProject.id}`)}
+            style={{
+              gridColumn: '1 / 3',
+              background: `linear-gradient(135deg, ${accent}33, ${purple}22)`,
+              borderRadius: 16, padding: 14,
+              border: `0.5px solid ${accent}55`,
+              cursor: 'pointer',
+            }}
+          >
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
+              <div>
+                <span style={{
+                  display: 'inline-block', padding: '3px 8px', borderRadius: 99,
+                  background: accent, color: '#fff', fontFamily: SF, fontSize: 9, fontWeight: 700,
+                  textTransform: 'uppercase', letterSpacing: 0.6,
+                }}>
+                  ● ACTIVE NOW
+                </span>
+                <div style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa', marginTop: 8, letterSpacing: -0.3 }}>{activeProject.name}</div>
+                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
+                  {activeProject.onSiteCount || 0} on site · {activeProject.progress}% done
+                </div>
+              </div>
+              {onSiteAvatars.length > 0 && (
+                <div style={{ display: 'flex', marginRight: -8 }}>
+                  {onSiteAvatars.map((m, i) => (
+                    <div key={m.id} style={{ marginLeft: i ? -10 : 0, border: '2px solid #06101e', borderRadius: '50%' }}>
+                      <Avatar name={m.name} size={28} color={m.avatarColor} />
+                    </div>
+                  ))}
+                </div>
+              )}
             </div>
-            <div style={{ padding: '6px 12px', borderRadius: 99, background: `${accent}22`, fontSize: 13, fontWeight: 700, color: accent, fontFamily: 'var(--font-system)' }}>
-              {activeProject.progress}%
+            <div style={{ marginTop: 12 }}>
+              <ProgressBar value={activeProject.progress} color={accent} height={5} />
             </div>
           </div>
-          {onSiteTeam.length > 0 && (
-            <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 14 }}>
-              <div style={{ display: 'flex' }}>
-                {onSiteTeam.map((m, i) => (
-                  <div key={m.id} style={{ marginLeft: i > 0 ? -8 : 0 }}>
-                    <Avatar name={m.name} color={m.avatarColor} size={28} ring />
-                  </div>
-                ))}
-              </div>
-              <span style={{ fontSize: 12, color: '#52749a', fontFamily: 'var(--font-system)' }}>
-                {activeProject.onSiteCount} on site today
-              </span>
-            </div>
-          )}
-        </div>
-      )}
+        )}
 
-      {/* 2×2 grid */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-        {/* Cash sparkline */}
-        <div style={{ borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '14px 14px 12px' }}>
-          <p style={{ fontSize: 10, color: '#52749a', fontFamily: 'var(--font-system)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Cash In</p>
-          <p style={{ fontSize: 20, fontWeight: 700, color: '#10b981', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginTop: 4 }}>{cashLabel}</p>
-          <svg width="100%" height="30" viewBox="0 0 80 30" style={{ marginTop: 8 }}>
-            <defs>
-              <linearGradient id="sparkGrad" x1="0" y1="0" x2="0" y2="1">
-                <stop offset="0%" stopColor="#10b981" stopOpacity="0.4" />
-                <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
-              </linearGradient>
-            </defs>
-            <path d="M0,22 L12,18 L24,20 L36,14 L48,16 L60,8 L72,10 L80,6" fill="none" stroke="#10b981" strokeWidth="1.5" />
-            <path d="M0,22 L12,18 L24,20 L36,14 L48,16 L60,8 L72,10 L80,6 L80,30 L0,30Z" fill="url(#sparkGrad)" />
+        {/* Cash card — col 1, spans 2 rows, with sparkline */}
+        <div style={{
+          background: '#152641', borderRadius: 14, padding: 12,
+          border: '0.5px solid rgba(255,255,255,0.07)', gridRow: 'span 2',
+          display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
+        }}>
+          <div>
+            <div style={{ color: '#10b981', marginBottom: 4 }}><IcTrend size={14} color="#10b981" /></div>
+            <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Cash</div>
+            <div style={{ fontFamily: SFMono, fontSize: 22, color: '#eef3fa', fontWeight: 700, marginTop: 2, letterSpacing: -0.5 }}>{cashLabel}</div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: '#10b981', marginTop: 2, fontWeight: 500 }}>
+              +£{(cashflowDelta / 1000).toFixed(1)}k wk
+            </div>
+          </div>
+          <svg width="100%" height="36" viewBox="0 0 100 36" preserveAspectRatio="none">
+            <polyline points="0,28 14,24 28,26 42,16 56,20 70,8 84,12 100,4" fill="none" stroke="#10b981" strokeWidth="1.6" />
+            <polyline points="0,28 14,24 28,26 42,16 56,20 70,8 84,12 100,4 100,36 0,36" fill="rgba(16,185,129,0.13)" stroke="none" />
           </svg>
         </div>
 
-        {/* Owed */}
-        <div style={{ borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '14px 14px 12px' }}>
-          <p style={{ fontSize: 10, color: '#52749a', fontFamily: 'var(--font-system)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Owed</p>
-          <p style={{ fontSize: 20, fontWeight: 700, color: accent, letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginTop: 4 }}>{owedLabel}</p>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 4, marginTop: 12 }}>
-            <IcTrend size={14} color={overdueInvoices.length > 0 ? '#ef4444' : '#52749a'} />
-            <span style={{ fontSize: 11, color: overdueInvoices.length > 0 ? '#ef4444' : '#52749a', fontFamily: 'var(--font-system)' }}>
-              {overdueInvoices.length > 0 ? `${overdueInvoices.length} overdue` : 'All current'}
-            </span>
+        {/* Owed — col 2 row 1 */}
+        <div style={{
+          background: '#152641', borderRadius: 14, padding: 12,
+          border: '0.5px solid rgba(255,255,255,0.07)',
+        }}>
+          <div style={{ color: '#f59e0b', marginBottom: 4 }}><IcReceipt size={14} color="#f59e0b" /></div>
+          <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Owed</div>
+          <div style={{ fontFamily: SFMono, fontSize: 18, color: '#f59e0b', fontWeight: 700, marginTop: 2 }}>{owedLabel}</div>
+          <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a' }}>
+            {overdueInvoices.length > 0 ? `${overdueInvoices.length} overdue` : `${(data?.invoices || []).length} invoices`}
           </div>
         </div>
 
-        {/* Hours */}
-        <div style={{ borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '14px 14px 12px' }}>
-          <p style={{ fontSize: 10, color: '#52749a', fontFamily: 'var(--font-system)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Hours/wk</p>
-          <p style={{ fontSize: 20, fontWeight: 700, color: '#2563eb', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginTop: 4 }}>{hoursThisWeek}h</p>
-          <p style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)', marginTop: 12 }}>{(data?.team || []).length} active members</p>
+        {/* Hours — col 2 row 2 */}
+        <div style={{
+          background: '#152641', borderRadius: 14, padding: 12,
+          border: '0.5px solid rgba(255,255,255,0.07)',
+        }}>
+          <div style={{ color: accent, marginBottom: 4 }}><IcClock size={14} color={accent} /></div>
+          <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Hours</div>
+          <div style={{ fontFamily: SFMono, fontSize: 18, color: '#eef3fa', fontWeight: 700, marginTop: 2 }}>{hoursThisWeek}h</div>
+          <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a' }}>this week</div>
         </div>
 
-        {/* AI shortcut — routes to AI-forward variant */}
-        <div onClick={() => router.push('/dashboard?v=5')} style={{ borderRadius: 18, background: `linear-gradient(135deg, rgba(37,99,235,0.15), rgba(139,92,246,0.1))`, border: '1px solid rgba(37,99,235,0.2)', padding: '14px 14px 12px', cursor: 'pointer' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
-            <IcSpark size={14} color="#60a5fa" />
-            <p style={{ fontSize: 10, color: '#60a5fa', fontFamily: 'var(--font-system)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>Cortex AI</p>
+        {/* AI shortcut — wide */}
+        <div
+          onClick={() => router.push('/dashboard?v=5')}
+          style={{
+            gridColumn: '1 / 3',
+            background: `linear-gradient(135deg, ${purple}26, ${accent}1a)`,
+            borderRadius: 14, padding: '12px 14px',
+            border: `0.5px solid ${purple}44`,
+            display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
+          }}
+        >
+          <div style={{
+            width: 36, height: 36, borderRadius: 10,
+            background: `linear-gradient(135deg, ${purple}, ${accent})`,
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
+          }}><IcSpark size={18} color="#fff" /></div>
+          <div style={{ flex: 1 }}>
+            <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: '#eef3fa' }}>Ask Cortex anything</div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>“Forecast Camden cashflow”</div>
           </div>
-          <p style={{ fontSize: 12, color: '#8ea8c5', fontFamily: 'var(--font-system)', lineHeight: 1.4 }}>AI briefing &amp; decision queue</p>
+          <IcArrowRight size={16} color="#52749a" />
         </div>
-      </div>
 
-      {/* Alerts */}
-      {alerts.length > 0 && (
-        <div style={{ borderRadius: 18, background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.07)', padding: '14px 16px' }}>
-          <p style={{ fontSize: 10, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)', marginBottom: 10 }}>
-            Needs attention
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+        {/* Alerts — wide */}
+        {alerts.length > 0 && (
+          <div style={{
+            gridColumn: '1 / 3',
+            background: '#152641', borderRadius: 14, padding: '12px 14px',
+            border: '0.5px solid rgba(255,255,255,0.07)',
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>Needs attention</div>
+              <span style={{
+                padding: '2px 7px', borderRadius: 99,
+                background: 'rgba(239,68,68,0.15)', color: '#ef4444',
+                fontFamily: SF, fontSize: 10, fontWeight: 700,
+              }}>{alerts.length}</span>
+            </div>
             {alerts.map((a, i) => (
-              <div key={i} style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-                <IcAlert size={14} color={a.color} />
-                <span style={{ fontSize: 13, color: '#eef3fa', fontFamily: 'var(--font-system)' }}>{a.text}</span>
+              <div
+                key={i}
+                style={{
+                  display: 'flex', alignItems: 'center', gap: 10, padding: '6px 0',
+                  borderTop: i ? '0.5px solid rgba(255,255,255,0.07)' : 'none',
+                }}
+              >
+                <div style={{ width: 24, height: 24, borderRadius: 6, background: `${a.c}22`, color: a.c, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                  <a.I size={13} color={a.c} />
+                </div>
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.t}</div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5' }}>{a.s}</div>
+                </div>
+                <IcArrowRight size={16} color="#52749a" />
               </div>
             ))}
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </div>
   )
 }
