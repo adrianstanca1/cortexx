@@ -1,0 +1,19 @@
+=== HTTP status per page ===
+/ → 000
+/dashboard → 000
+/projects → 000
+/tasks → 000
+/team → 000
+/capture → 000
+/api/health → 000
+/api/dashboard → 000
+
+=== /api/health body ===
+
+
+=== /api/dashboard body (first 500 chars) ===
+
+
+=== /dashboard HTML title (looking for 'Cortexx' or other) ===
+
+=== Response headers for /api/health ===
