@@ -13,7 +13,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Fix DB password (using cortexbuild as superuser)
+      - name: Fix DB
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
@@ -35,13 +35,12 @@ jobs:
           PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
           echo "PG_IP=$PG_IP"
 
-          # cortexbuild is the superuser per probe
-          ALTER=$(docker exec -i "$PG_CONTAINER" psql -U cortexbuild -c "ALTER USER cortexx WITH PASSWORD '$NEW_PASS';" 2>&1)
-          echo "ALTER: $ALTER"
+          # NOTE: drop -i, use < /dev/null to avoid sharing SSH stdin
+          ALTER=$(docker exec "$PG_CONTAINER" psql -U cortexbuild -c "ALTER USER cortexx WITH PASSWORD '$NEW_PASS';" < /dev/null 2>&1)
+          echo "ALTER exit=$?: $ALTER"
 
-          # Verify direct auth
-          VERIFY=$(docker exec -i "$PG_CONTAINER" psql "postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>&1)
-          echo "VERIFY: $VERIFY"
+          VERIFY=$(docker exec "$PG_CONTAINER" psql "postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" < /dev/null 2>&1)
+          echo "VERIFY exit=$?: $VERIFY"
 
           if echo "$VERIFY" | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
             cat > $APP_DIR/.env.production << ENV
@@ -57,18 +56,18 @@ jobs:
           ENV
             chmod 600 $APP_DIR/.env.production
             echo ".env written ($(wc -c < $APP_DIR/.env.production) bytes)"
-
             pm2 delete cortexx 2>&1 | head -1
             cd $APP_DIR
             PORT=$APP_PORT pm2 start npm --name cortexx -- start 2>&1 | head -3
             sleep 8
             pm2 save 2>&1 | head -1
-
-            echo
             echo "=== HEALTH ==="
             curl -s http://localhost:3010/api/health
+            echo
+            echo "=== test login API ==="
+            curl -s -o /dev/null -w "/api/auth/csrf → %{http_code}\n" http://localhost:3010/api/auth/csrf
           else
-            echo "DB AUTH FAILED — bailing without restart"
+            echo "DB AUTH FAILED"
           fi
           REMOTE
           cat probe-fix.txt
@@ -78,6 +77,6 @@ jobs:
           git config user.name "probe-bot"
           git config user.email "probe@cortexx.local"
           git add probe-fix.txt
-          git commit -m "DB resync (correct superuser) [skip ci]" || true
+          git commit -m "DB resync result [skip ci]" || true
           git pull --rebase origin main
           git push
