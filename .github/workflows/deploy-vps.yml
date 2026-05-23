@@ -61,41 +61,48 @@ jobs:
             set -e
             DB_PASS=$1
 
-            # Find a running Postgres container
-            PG_CONTAINER=$(docker ps --filter "expose=5432" --format '{{.ID}}' | head -1)
+            # Find the container actually bound to host port 5432
+            PG_CONTAINER=""
+            for c in $(docker ps --format '{{.Names}}'); do
+              if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
+                PG_CONTAINER="$c"
+                break
+              fi
+            done
             if [ -z "$PG_CONTAINER" ]; then
-              PG_CONTAINER=$(docker ps --format '{{.Names}}' | grep -i postgres | head -1)
-            fi
-            if [ -z "$PG_CONTAINER" ]; then
-              echo "No Postgres container found"
-              docker ps --format '{{.Names}}: {{.Image}}'
+              echo "No container bound to host:5432. Listing postgres-like containers:"
+              docker ps --format '{{.Names}}: {{.Image}} :: {{.Ports}}' | grep -iE "postgres|5432"
               exit 1
             fi
-            echo "Using Postgres container: $PG_CONTAINER"
+            echo "Container bound to host:5432 is: $PG_CONTAINER"
+            docker inspect "$PG_CONTAINER" --format 'Image: {{.Config.Image}}'
 
-            # Get the superuser from env (most likely POSTGRES_USER or "postgres")
-            PG_SUPER=$(docker inspect $PG_CONTAINER --format '{{range .Config.Env}}{{println .}}{{end}}' | grep ^POSTGRES_USER= | cut -d= -f2)
+            # Read superuser from container env
+            PG_SUPER=$(docker inspect "$PG_CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep ^POSTGRES_USER= | cut -d= -f2)
             PG_SUPER=${PG_SUPER:-postgres}
             echo "Superuser: $PG_SUPER"
 
-            # Create user + db (idempotent)
-            docker exec -i $PG_CONTAINER psql -U "$PG_SUPER" -tc \
+            # Create user + db inside the *correct* container (idempotent)
+            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -tc \
               "SELECT 1 FROM pg_user WHERE usename='cortexx'" | grep -q 1 || \
-              docker exec -i $PG_CONTAINER psql -U "$PG_SUPER" -c \
+              docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c \
                 "CREATE USER cortexx WITH PASSWORD '$DB_PASS';"
 
-            docker exec -i $PG_CONTAINER psql -U "$PG_SUPER" -c \
+            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c \
               "ALTER USER cortexx WITH PASSWORD '$DB_PASS';"
 
-            docker exec -i $PG_CONTAINER psql -U "$PG_SUPER" -tc \
+            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -tc \
               "SELECT 1 FROM pg_database WHERE datname='cortexx'" | grep -q 1 || \
-              docker exec -i $PG_CONTAINER psql -U "$PG_SUPER" -c \
+              docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c \
                 "CREATE DATABASE cortexx OWNER cortexx;"
 
-            docker exec -i $PG_CONTAINER psql -U "$PG_SUPER" -c \
+            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c \
               "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;"
 
-            echo "Database 'cortexx' ready"
+            # Verify connection from the host using the localhost binding
+            apt-get install -y postgresql-client >/dev/null 2>&1 || true
+            PGPASSWORD="$DB_PASS" psql -h localhost -p 5432 -U cortexx -d cortexx -c "SELECT 1;" 2>&1 | head -5
+            echo "Database 'cortexx' ready and reachable from host"
           REMOTE
 
       - name: Deploy Cortexx app on port 3010
