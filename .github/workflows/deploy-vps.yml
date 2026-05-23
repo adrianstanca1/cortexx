@@ -72,54 +72,50 @@ jobs:
             exit 1
           fi
 
-      - name: Try key auth, fall back to password if needed
+      - name: Establish SSH access
         env:
           API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
           VPS_ID: 1262179
-          ROOT_PASS: ${{ secrets.VPS_ROOT_PASSWORD }}
         run: |
-          sudo apt-get install -y sshpass >/dev/null 2>&1
-
-          echo "=== Try existing key auth (might already work) ==="
+          echo "=== First, try existing key (in case it's already installed) ==="
           for i in 1 2 3; do
             if ssh -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo SSH_OK' 2>&1 | grep -q SSH_OK; then
-              echo "✓ Key auth works"
+              echo "✓ Key auth already works"
+              exit 0
+            fi
+            sleep 3
+          done
+
+          echo "=== Key not synced to VPS yet — restarting VPS to trigger sync ==="
+          # Hostinger only installs attached keys to authorized_keys on VM boot.
+          # Restarting forces a fresh boot which re-reads the attached keys.
+          RESTART=$(curl -s -X POST -H "Authorization: Bearer $API_TOKEN" \
+            "https://developers.hostinger.com/api/vps/v1/virtual-machines/$VPS_ID/restart")
+          echo "Restart response: $RESTART"
+
+          echo "=== Waiting for VPS to come back up (max 3 min) ==="
+          for i in $(seq 1 18); do
+            sleep 10
+            if timeout 5 bash -c "</dev/tcp/72.62.132.43/22" 2>/dev/null; then
+              echo "Port 22 open after $((i*10))s"
+              break
+            fi
+            echo "Attempt $i/18: port 22 not yet open"
+          done
+
+          echo "=== Trying key auth post-restart (max 90s) ==="
+          for i in $(seq 1 18); do
+            if ssh -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo SSH_OK' 2>&1 | grep -q SSH_OK; then
+              echo "✓ Key auth works after $((i*5))s"
               exit 0
             fi
             sleep 5
           done
 
-          echo "=== Key auth failed, setting root password via API ==="
-          SET_PASS=$(curl -s -X PUT -H "Authorization: Bearer $API_TOKEN" \
-            -H "Content-Type: application/json" \
-            -d "{\"password\":\"$ROOT_PASS\"}" \
-            "https://developers.hostinger.com/api/vps/v1/virtual-machines/$VPS_ID/root-password")
-          echo "Set password response: $SET_PASS"
-
-          echo "Waiting 20s for password to apply..."
-          sleep 20
-
-          echo "=== Trying password auth ==="
-          for i in 1 2 3 4 5 6; do
-            if sshpass -p "$ROOT_PASS" ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no -o ConnectTimeout=10 root@72.62.132.43 'echo PASS_OK' 2>&1 | grep -q PASS_OK; then
-              echo "✓ Password auth works"
-
-              echo "=== Installing our SSH key in authorized_keys ==="
-              PUBKEY="${{ secrets.VPS_SSH_PUBLIC_KEY }}"
-              sshpass -p "$ROOT_PASS" ssh -o StrictHostKeyChecking=no -o PreferredAuthentications=password -o PubkeyAuthentication=no root@72.62.132.43 "mkdir -p /root/.ssh && grep -qxF '$PUBKEY' /root/.ssh/authorized_keys 2>/dev/null || echo '$PUBKEY' >> /root/.ssh/authorized_keys && chmod 600 /root/.ssh/authorized_keys"
-
-              echo "=== Verify key auth now works ==="
-              if ssh -o StrictHostKeyChecking=no -o BatchMode=yes -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo KEY_NOW_OK' 2>&1 | grep -q KEY_NOW_OK; then
-                echo "✓ Key auth now works"
-                exit 0
-              fi
-              echo "Will continue with password auth"
-              exit 0
-            fi
-            echo "Password attempt $i/6 failed, waiting 15s..."
-            sleep 15
-          done
-          echo "Both key and password auth failed"
+          echo "✗ SSH still not working after restart. Manual intervention required."
+          echo "The user needs to SSH in with their existing 'cortexbuildpro' or 'Clawd' key and add:"
+          echo "${{ secrets.VPS_SSH_PUBLIC_KEY }}"
+          echo "to /root/.ssh/authorized_keys"
           exit 1
 
       - name: Install prerequisites on VPS
