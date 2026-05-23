@@ -1,0 +1,27 @@
+=== HTTP status per page ===
+/ → 307
+/dashboard → 200
+/projects → 200
+/tasks → 200
+/team → 200
+/capture → 200
+/api/health → 200
+/api/dashboard → 200
+
+=== /api/health body ===
+{"status":"ok","checks":{"database":{"ok":true,"ms":1},"app":{"ok":true,"ms":1}},"uptime":47.30038363,"version":"0.1.0","timestamp":"2026-05-23T01:52:29.965Z"}
+
+=== /api/dashboard body (first 500 chars) ===
+{"projects":[{"id":"cmphp0yfr00092pg01gzfohiv","name":"Islington Extension","address":"9 Barnsbury Street","postcode":"N1 1PN","status":"quoting","progress":0,"clientName":"M. Okonkwo","budget":0,"spent":0,"lat":51.5378,"lng":-0.1067,"startDate":null,"endDate":null,"onSiteCount":0,"createdAt":"2026-05-23T01:52:08.535Z","updatedAt":"2026-05-23T01:52:08.535Z","_count":{"tasks":0,"assignments":1},"assignments":[]},{"id":"cmphp0yfo00082pg0dsqviutx","name":"Brixton Shopfront","address":"221 Coldharbo
+
+=== /dashboard HTML title (looking for 'Cortexx' or other) ===
+<title>Cortexx — CortexBuild</title>
+
+=== Response headers for /api/health ===
+HTTP/2 200 
+server: nginx
+date: Sat, 23 May 2026 01:52:30 GMT
+content-type: application/json
+vary: Accept-Encoding
+vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch
+
