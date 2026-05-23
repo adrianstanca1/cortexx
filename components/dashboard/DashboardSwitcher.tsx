@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useDashboardData } from '@/lib/useDashboardData'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import { IcSearch, IcDoc } from '@/components/ui/Icons'
+import { IcSearch, IcDoc, IcBell } from '@/components/ui/Icons'
 import type { DashboardData } from '@/lib/types'
 
 const ActionFirst = dynamic(() => import('./ActionFirst'), { ssr: false })
@@ -68,6 +68,17 @@ export default function DashboardSwitcher() {
     return 'v1'
   })
   const { data, loading, error } = useDashboardData()
+  const [inboxCount, setInboxCount] = useState(0)
+
+  useEffect(() => {
+    fetch('/api/inbox').then(r => r.ok ? r.json() : null).then(d => { if (d) setInboxCount(d.total || 0) }).catch(() => {})
+    const i = setInterval(() => {
+      if (document.visibilityState === 'visible') {
+        fetch('/api/inbox').then(r => r.ok ? r.json() : null).then(d => { if (d) setInboxCount(d.total || 0) }).catch(() => {})
+      }
+    }, 60000)
+    return () => clearInterval(i)
+  }, [])
 
   useEffect(() => {
     if (vParam) {
@@ -105,9 +116,21 @@ export default function DashboardSwitcher() {
         <Link
           href="/documents"
           aria-label="Documents"
-          style={{ ...iconBtnStyle, marginRight: 4 }}
+          style={iconBtnStyle}
         >
           <IcDoc size={16} color="#8ea8c5" />
+        </Link>
+        <Link
+          href="/inbox"
+          aria-label={inboxCount > 0 ? `Inbox (${inboxCount})` : 'Inbox'}
+          style={{ ...iconBtnStyle, marginRight: 4, position: 'relative' }}
+        >
+          <IcBell size={16} color={inboxCount > 0 ? '#f59e0b' : '#8ea8c5'} />
+          {inboxCount > 0 && (
+            <span style={{ position: 'absolute', top: -4, right: -4, background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 700, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-system)', border: '2px solid #06101e', boxSizing: 'content-box' }}>
+              {inboxCount > 99 ? '99+' : inboxCount}
+            </span>
+          )}
         </Link>
         {variants.map(v => {
           const isActive = v.id === active
