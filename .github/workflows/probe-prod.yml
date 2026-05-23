@@ -8,30 +8,32 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: External smoke test
+        with:
+          fetch-depth: 0
+      - name: External smoke
         run: |
           {
-            echo "=== /login ==="
+            echo "Probed: $(date -u)"
+            echo
             curl -sI https://cortexbuildpro.com/login | head -3
             echo
-            echo "=== /api/health ==="
-            curl -s https://cortexbuildpro.com/api/health | python3 -m json.tool | head -15
+            curl -s https://cortexbuildpro.com/api/health | python3 -m json.tool 2>&1 | head -20
             echo
-            echo "=== /sw.js ==="
             curl -sI https://cortexbuildpro.com/sw.js | head -3
             echo
-            echo "=== /manifest.json ==="
-            curl -s https://cortexbuildpro.com/manifest.json | python3 -m json.tool | head -10
-            echo
-            echo "=== build id ==="
             curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -oE '"buildId":"[^"]*"' | head -1
           } > probe-final.txt 2>&1
-          cat probe-final.txt
-      - name: Commit
+      - name: Commit (retry-on-conflict)
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@cortexx.local"
-          git add probe-final.txt
-          git commit -m "external final probe [skip ci]" || true
-          git pull --rebase origin main
-          git push
+          for attempt in 1 2 3 4 5; do
+            git add probe-final.txt
+            git commit -m "external final probe [skip ci]" 2>/dev/null || true
+            git pull --rebase origin main 2>&1 | tail -2 || true
+            if git push 2>&1 | tail -1; then
+              break
+            fi
+            echo "push retry $attempt"
+            sleep $((attempt * 3))
+          done
