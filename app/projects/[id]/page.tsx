@@ -27,6 +27,7 @@ export default function ProjectDetailPage() {
   const router = useRouter()
   const [project, setProject] = useState<Project | null>(null)
   const [allTeam, setAllTeam] = useState<TeamMember[]>([])
+  const [recentComments, setRecentComments] = useState<Array<{ id: string; authorName: string; body: string; createdAt: string; task: { id: string; title: string } | null }>>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('overview')
@@ -89,6 +90,10 @@ export default function ProjectDetailPage() {
       .then(r => { if (!r.ok) throw new Error('Project not found'); return r.json() })
       .then(d => { setProject(d.project || d); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
+    fetch(`/api/projects/${id}/comments?take=5`)
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.comments) setRecentComments(d.comments) })
+      .catch(() => {})
   }, [id])
 
   useEffect(() => { load() }, [load])
@@ -546,6 +551,25 @@ export default function ProjectDetailPage() {
                         <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5' }}><span style={{ color: '#eef3fa', fontWeight: 600 }}>{act.actorName}</span> {act.action}</span>
                       </div>
                       <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', flexShrink: 0 }}>{new Date(act.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            )}
+            {recentComments.length > 0 && (
+              <div style={{ marginTop: 16 }}>
+                <p style={{ ...labelStyle, marginBottom: 8 }}>Recent comments</p>
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                  {recentComments.map(c => (
+                    <div key={c.id} style={{ background: '#152641', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.05)' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
+                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, color: '#eef3fa' }}>{c.authorName}</span>
+                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a' }}>{new Date(c.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                      </div>
+                      <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: 0, lineHeight: 1.4 }}>{c.body}</p>
+                      {c.task && (
+                        <p style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', marginTop: 4 }}>on: {c.task.title}</p>
+                      )}
                     </div>
                   ))}
                 </div>
