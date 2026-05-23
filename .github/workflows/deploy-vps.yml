@@ -18,6 +18,8 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     steps:
       - uses: actions/checkout@v4
 
@@ -69,6 +71,8 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
+          # Workflow-scoped token; valid for the run; can read the repo it owns.
+          GH_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
           # Generate per-deploy DB password (rotated automatically — admin user is recreated by seed)
           DB_PASS=$(openssl rand -hex 16)
@@ -81,6 +85,7 @@ jobs:
             ADMIN_EMAIL="$ADMIN_EMAIL" \
             ADMIN_PASSWORD="$ADMIN_PASSWORD" \
             SEED_TOKEN="$SEED_TOKEN" \
+            GH_PAT="$GH_PAT" \
             'bash -s' << 'REMOTE'
             set -euo pipefail
             APP_DIR=/opt/cortexx
@@ -170,16 +175,22 @@ jobs:
             # ─── 5. Build URL and clone/update repo ───────────────────────
             DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"
 
+            # The repo is private — use a PAT for authenticated git operations.
+            AUTH_URL="https://x-access-token:${GH_PAT}@github.com/adrianstanca1/cortexx.git"
+
             if [ -d $APP_DIR/.git ]; then
               cd $APP_DIR
+              git remote set-url origin "$AUTH_URL"
               git fetch origin
               git reset --hard origin/main
               rm -rf $APP_DIR/.next $APP_DIR/node_modules
             else
               rm -rf $APP_DIR
-              git clone https://github.com/adrianstanca1/cortexx.git $APP_DIR
+              git clone "$AUTH_URL" $APP_DIR
               cd $APP_DIR
             fi
+            # Sanitize the remote URL after fetch so the token isn't persisted on disk
+            git remote set-url origin "https://github.com/adrianstanca1/cortexx.git"
 
             cat > $APP_DIR/.env.production << ENV
           DATABASE_URL=$DB_URL
