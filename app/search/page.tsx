@@ -86,6 +86,14 @@ export default function SearchPage() {
           </p>
         )}
 
+        {q && results && results.total === 0 && !loading && (
+          <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)' }}>
+            <div style={{ fontSize: 48, marginBottom: 8 }}>🔍</div>
+            <p style={{ fontSize: 14, color: '#eef3fa' }}>No matches for &ldquo;{q}&rdquo;</p>
+            <p style={{ fontSize: 12, marginTop: 4 }}>Try a different keyword or a project name.</p>
+          </div>
+        )}
+
         {results && results.projects.length > 0 && (
           <Section title="Projects" count={results.projects.length}>
             {results.projects.map(p => (
