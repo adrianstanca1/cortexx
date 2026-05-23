@@ -78,8 +78,8 @@ ls: cannot access '/opt/cortexx/app/(auth)/login/': No such file or directory
  Code metrics value 
 ┌────────────────────────┬───────────┐
 │ Heap Size              │ 13.19 MiB │
-│ Heap Usage             │ 90.05 %   │
-│ Used Heap Size         │ 11.88 MiB │
+│ Heap Usage             │ 85.75 %   │
+│ Used Heap Size         │ 11.31 MiB │
 │ Active requests        │ 0         │
 
 === curl localhost ===
