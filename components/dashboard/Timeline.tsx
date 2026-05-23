@@ -45,13 +45,19 @@ export default function Timeline({ accent = '#f59e0b', data }: TimelineProps) {
     )
   }
 
+  const today = new Date().toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric', month: 'short' })
+  const nowCount = events.filter(e => e.isNow).length
+
   return (
-    <div style={{ padding: '20px 20px 100px' }}>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
-        <p style={{ fontSize: 11, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>
-          Recent activity
-        </p>
-        <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+    <div style={{ padding: '8px 20px 100px' }}>
+      <div style={{ padding: '8px 0 18px' }}>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8 }}>
+          <div style={{ fontFamily: 'var(--font-system)', fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Today</div>
+          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+        </div>
+        <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', marginTop: 2 }}>
+          {today} · {events.length} event{events.length === 1 ? '' : 's'}{nowCount > 0 ? ` · ${nowCount} now` : ''}
+        </div>
       </div>
       <div style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', left: 42, top: 10, bottom: 10, width: 1, background: 'rgba(255,255,255,0.07)' }} />
