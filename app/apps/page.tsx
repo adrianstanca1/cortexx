@@ -15,6 +15,7 @@ interface ModuleItem {
   Icon: React.ComponentType<{ size?: number; color?: string }>
   color: string
   ai?: boolean
+  comingSoon?: boolean
   badgeKey?: 'inbox' | 'rfis' | 'snags' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages'
 }
 
@@ -45,53 +46,53 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Inbox & comms',
     items: [
       { href: '/inbox',    label: 'Inbox',      Icon: IcBell,   color: '#2563eb', badgeKey: 'inbox' },
-      { href: '/messages', label: 'Messages',   Icon: IcBell,   color: '#06b6d4', badgeKey: 'messages' },
-      { href: '/rfis',     label: 'RFIs',       Icon: IcAlert,  color: '#f59e0b', badgeKey: 'rfis' },
-      { href: '/ask',      label: 'Ask Cortex', Icon: IcSpark,  color: '#8b5cf6', ai: true },
+      { href: '/messages', label: 'Messages',   Icon: IcBell,   color: '#06b6d4', badgeKey: 'messages', comingSoon: true },
+      { href: '/rfis',     label: 'RFIs',       Icon: IcAlert,  color: '#f59e0b', badgeKey: 'rfis', comingSoon: true },
+      { href: '/ask',      label: 'Ask Cortex', Icon: IcSpark,  color: '#8b5cf6', ai: true, comingSoon: true },
     ],
   },
   {
     title: 'Sales & CRM',
     items: [
-      { href: '/leads',     label: 'Leads',       Icon: IcArrowRight, color: '#06b6d4', badgeKey: 'leads' },
-      { href: '/customers', label: 'Customers',   Icon: IcTeam,       color: '#2563eb' },
-      { href: '/quotes',    label: 'Quotes',      Icon: IcDoc,        color: '#06b6d4' },
-      { href: '/client-view', label: 'Client view', Icon: IcLayers,   color: '#10b981' },
+      { href: '/leads',     label: 'Leads',       Icon: IcArrowRight, color: '#06b6d4', badgeKey: 'leads', comingSoon: true },
+      { href: '/customers', label: 'Customers',   Icon: IcTeam,       color: '#2563eb', comingSoon: true },
+      { href: '/quotes',    label: 'Quotes',      Icon: IcDoc,        color: '#06b6d4', comingSoon: true },
+      { href: '/client-view', label: 'Client view', Icon: IcLayers,   color: '#10b981', comingSoon: true },
     ],
   },
   {
     title: 'Project & site',
     items: [
       { href: '/projects',           label: 'Timeline',   Icon: IcLayers,   color: '#2563eb' },
-      { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4' },
-      { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981' },
-      { href: '/photos',             label: 'Photos',     Icon: IcCamera,   color: '#8b5cf6' },
-      { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb' },
+      { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4', comingSoon: true },
+      { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981', comingSoon: true },
+      { href: '/photos',             label: 'Photos',     Icon: IcCamera,   color: '#8b5cf6', comingSoon: true },
+      { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb', comingSoon: true },
       { href: '/documents',          label: 'Documents',  Icon: IcDoc,      color: '#ef4444' },
-      { href: '/snags',              label: 'Snags',      Icon: IcAlert,    color: '#ef4444', badgeKey: 'snags' },
-      { href: '/variations',         label: 'Variations', Icon: IcWrench,   color: '#8b5cf6', badgeKey: 'variations' },
+      { href: '/snags',              label: 'Snags',      Icon: IcAlert,    color: '#ef4444', badgeKey: 'snags', comingSoon: true },
+      { href: '/variations',         label: 'Variations', Icon: IcWrench,   color: '#8b5cf6', badgeKey: 'variations', comingSoon: true },
     ],
   },
   {
     title: 'Money & ops',
     items: [
       { href: '/reports',     label: 'Money',        Icon: IcReceipt, color: '#10b981' },
-      { href: '/pos',         label: 'POs',          Icon: IcDoc,     color: '#f59e0b', badgeKey: 'pos' },
-      { href: '/sub-invoices',label: 'Sub invoices', Icon: IcDoc,     color: '#f59e0b', badgeKey: 'subinvoices' },
-      { href: '/materials',   label: 'Materials',    Icon: IcWrench,  color: '#f59e0b', badgeKey: 'materials' },
-      { href: '/subs',        label: 'Subs',         Icon: IcTeam,    color: '#2563eb' },
-      { href: '/equipment',   label: 'Equipment',    Icon: IcWrench,  color: '#52749a' },
-      { href: '/cost-catalog',label: 'Cost catalog', Icon: IcLayers,  color: '#06b6d4' },
-      { href: '/mileage',     label: 'Mileage',      Icon: IcTruck,   color: '#06b6d4' },
+      { href: '/pos',         label: 'POs',          Icon: IcDoc,     color: '#f59e0b', badgeKey: 'pos', comingSoon: true },
+      { href: '/sub-invoices',label: 'Sub invoices', Icon: IcDoc,     color: '#f59e0b', badgeKey: 'subinvoices', comingSoon: true },
+      { href: '/materials',   label: 'Materials',    Icon: IcWrench,  color: '#f59e0b', badgeKey: 'materials', comingSoon: true },
+      { href: '/subs',        label: 'Subs',         Icon: IcTeam,    color: '#2563eb', comingSoon: true },
+      { href: '/equipment',   label: 'Equipment',    Icon: IcWrench,  color: '#52749a', comingSoon: true },
+      { href: '/cost-catalog',label: 'Cost catalog', Icon: IcLayers,  color: '#06b6d4', comingSoon: true },
+      { href: '/mileage',     label: 'Mileage',      Icon: IcTruck,   color: '#06b6d4', comingSoon: true },
     ],
   },
   {
     title: 'People & time',
     items: [
-      { href: '/timesheets',    label: 'Timesheets',    Icon: IcClock,   color: '#8b5cf6', badgeKey: 'timesheets' },
-      { href: '/check-in',      label: 'Check in/out',  Icon: IcPin,     color: '#10b981' },
-      { href: '/live-status',   label: 'Live status',   Icon: IcPin,     color: '#06b6d4' },
-      { href: '/training',      label: 'Training',      Icon: IcHardhat, color: '#f59e0b', badgeKey: 'training' },
+      { href: '/timesheets',    label: 'Timesheets',    Icon: IcClock,   color: '#8b5cf6', badgeKey: 'timesheets', comingSoon: true },
+      { href: '/check-in',      label: 'Check in/out',  Icon: IcPin,     color: '#10b981', comingSoon: true },
+      { href: '/live-status',   label: 'Live status',   Icon: IcPin,     color: '#06b6d4', comingSoon: true },
+      { href: '/training',      label: 'Training',      Icon: IcHardhat, color: '#f59e0b', badgeKey: 'training', comingSoon: true },
     ],
   },
 ]
@@ -196,10 +197,13 @@ export default function AppsPage() {
             }}>
               {section.items.map(m => {
                 const badge = m.badgeKey ? badges[m.badgeKey] : undefined
+                const soon = m.comingSoon === true
+                const showBadge = badge !== undefined && badge > 0 && !soon
                 return (
                   <Link
                     key={m.href}
                     href={m.href}
+                    aria-label={soon ? `${m.label} (coming soon)` : m.label}
                     style={{
                       position: 'relative',
                       background: '#0c1a2e', borderRadius: 12,
@@ -208,9 +212,10 @@ export default function AppsPage() {
                       textDecoration: 'none', color: '#eef3fa',
                       border: '0.5px solid rgba(255,255,255,0.05)',
                       minHeight: 76,
+                      opacity: soon ? 0.55 : 1,
                     }}
                   >
-                    {badge !== undefined && badge > 0 && (
+                    {showBadge && (
                       <span style={{
                         position: 'absolute', top: 6, right: 6,
                         background: '#ef4444', color: '#fff',
@@ -218,11 +223,19 @@ export default function AppsPage() {
                         padding: '1px 5px', borderRadius: 99, minWidth: 16, textAlign: 'center',
                       }}>{badge}</span>
                     )}
-                    {m.ai && (
+                    {m.ai && !soon && (
                       <span style={{
                         position: 'absolute', top: 6, right: 6,
                         fontSize: 9, fontWeight: 700, color: '#8b5cf6', fontFamily: 'var(--font-system)',
                       }}>AI</span>
+                    )}
+                    {soon && (
+                      <span style={{
+                        position: 'absolute', top: 6, right: 6,
+                        fontSize: 8, fontWeight: 700, color: '#f59e0b',
+                        fontFamily: 'var(--font-system)', letterSpacing: '0.06em',
+                        background: 'rgba(245,158,11,0.12)', padding: '1px 5px', borderRadius: 4,
+                      }}>SOON</span>
                     )}
                     <div style={{
                       width: 36, height: 36, borderRadius: 10,
