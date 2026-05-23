@@ -55,6 +55,50 @@ export default function TasksPage() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [selectMode, setSelectMode] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
+  const [bulkSaving, setBulkSaving] = useState(false)
+
+  const toggleSelected = (id: string) => {
+    setSelectedIds(prev => {
+      const next = new Set(prev)
+      if (next.has(id)) next.delete(id); else next.add(id)
+      return next
+    })
+  }
+
+  const exitSelectMode = () => {
+    setSelectMode(false)
+    setSelectedIds(new Set())
+  }
+
+  const bulk = async (action: 'complete' | 'reopen' | 'delete') => {
+    if (selectedIds.size === 0) return
+    if (action === 'delete' && !window.confirm(`Delete ${selectedIds.size} task${selectedIds.size === 1 ? '' : 's'}?`)) return
+    setBulkSaving(true)
+    const ids = Array.from(selectedIds)
+    try {
+      const res = await fetch('/api/tasks/bulk', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ action, ids }),
+      })
+      if (!res.ok) throw new Error('Failed')
+      const data = await res.json()
+      if (action === 'delete') {
+        setTasks(prev => prev.filter(t => !ids.includes(t.id)))
+      } else {
+        const newStatus = action === 'complete' ? 'done' : 'todo'
+        setTasks(prev => prev.map(t => ids.includes(t.id) ? { ...t, status: newStatus } : t))
+      }
+      setToast({ msg: `${data.updated} task${data.updated === 1 ? '' : 's'} ${action === 'delete' ? 'deleted' : action === 'complete' ? 'completed' : 'reopened'}` })
+      exitSelectMode()
+    } catch {
+      setToast({ msg: 'Bulk action failed', type: 'error' })
+    } finally {
+      setBulkSaving(false)
+    }
+  }
 
   useModalEffects(showModal, () => setShowModal(false))
   useModalEffects(!!editTarget, () => setEditTarget(null))
@@ -261,8 +305,16 @@ export default function TasksPage() {
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
       <MobileHeader
         title="Tasks"
-        subtitle={`${tasks.filter((t) => t.status !== 'done').length} remaining`}
+        subtitle={selectMode ? `${selectedIds.size} selected` : `${tasks.filter((t) => t.status !== 'done').length} remaining`}
         notifCount={overdueCount}
+        rightSlot={
+          <button
+            onClick={() => { if (selectMode) exitSelectMode(); else setSelectMode(true) }}
+            style={{ background: selectMode ? '#f59e0b' : 'rgba(255,255,255,0.07)', color: selectMode ? '#fff' : '#8ea8c5', border: 'none', borderRadius: 10, padding: '7px 12px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+          >
+            {selectMode ? 'Done' : 'Select'}
+          </button>
+        }
       />
 
       {/* Search bar */}
@@ -359,6 +411,7 @@ export default function TasksPage() {
             const isOverdue = task.dueDate && new Date(task.dueDate) < today && !isDone
             const pColor = priorityColor[task.priority] || '#f59e0b'
 
+            const isSelected = selectedIds.has(task.id)
             return (
               <div
                 key={task.id}
@@ -367,12 +420,12 @@ export default function TasksPage() {
                   gap: 12,
                   padding: '12px 14px',
                   borderRadius: 16,
-                  background: isDone ? 'rgba(255,255,255,0.02)' : (priorityBg[task.priority] || 'rgba(255,255,255,0.04)'),
-                  border: `1px solid ${isDone ? 'rgba(255,255,255,0.05)' : `${pColor}33`}`,
+                  background: isSelected ? 'rgba(245,158,11,0.12)' : (isDone ? 'rgba(255,255,255,0.02)' : (priorityBg[task.priority] || 'rgba(255,255,255,0.04)')),
+                  border: `1px solid ${isSelected ? '#f59e0b' : (isDone ? 'rgba(255,255,255,0.05)' : `${pColor}33`)}`,
                   cursor: 'pointer',
-                  opacity: isDone ? 0.6 : 1,
+                  opacity: isDone && !isSelected ? 0.6 : 1,
                 }}
-                onClick={() => toggleTask(task)}
+                onClick={() => selectMode ? toggleSelected(task.id) : toggleTask(task)}
               >
                 <div
                   style={{
@@ -460,6 +513,15 @@ export default function TasksPage() {
           })
         )}
       </div>
+
+      {selectMode && selectedIds.size > 0 && (
+        <div style={{ position: 'fixed', bottom: 76, left: '50%', transform: 'translateX(-50%)', maxWidth: 480, width: 'calc(100% - 24px)', background: 'rgba(12,26,46,0.98)', backdropFilter: 'blur(12px)', borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(245,158,11,0.3)', zIndex: 90, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
+          <span style={{ flex: 1, fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', fontWeight: 600 }}>{selectedIds.size} selected</span>
+          <button onClick={() => bulk('complete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Done</button>
+          <button onClick={() => bulk('reopen')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Reopen</button>
+          <button onClick={() => bulk('delete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Delete</button>
+        </div>
+      )}
 
       <button
         onClick={openModal}
