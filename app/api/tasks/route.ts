@@ -21,7 +21,7 @@ export async function GET(req: NextRequest) {
     const [tasks, total] = await Promise.all([
       prisma.task.findMany({
         where,
-        include: { project: true, assignee: true },
+        include: { project: true, assignee: true, _count: { select: { comments: true } } },
         orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }],
         take,
         skip,

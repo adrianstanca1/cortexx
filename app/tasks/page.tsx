@@ -480,6 +480,11 @@ export default function TasksPage() {
                         </span>
                       </div>
                     )}
+                    {task._count && task._count.comments && task._count.comments > 0 && (
+                      <span aria-label={`${task._count.comments} comments`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#8ea8c5', fontFamily: 'var(--font-system)' }}>
+                        💬 {task._count.comments}
+                      </span>
+                    )}
                   </div>
                 </div>
 
