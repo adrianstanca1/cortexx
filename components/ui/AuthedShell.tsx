@@ -6,6 +6,7 @@ import { usePathname } from 'next/navigation'
 import UserMenu from './UserMenu'
 import QuickActions from './QuickActions'
 import DrawerMenu from './DrawerMenu'
+import InstallHint from './InstallHint'
 import { IcMenu } from './Icons'
 
 /**
@@ -49,6 +50,7 @@ export default function AuthedShell() {
       <DrawerMenu open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       <UserMenu />
       <QuickActions />
+      <InstallHint />
     </>
   )
 }
