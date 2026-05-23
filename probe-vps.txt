@@ -1,27 +1,30 @@
 Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
 === git HEAD in /opt/cortexx ===
-3ff4ab1 Add export const dynamic = 'force-dynamic' to GET API routes
-b32d2d8 chore: seed result [skip ci]
-13f9cc8 Re-seed workflow
+dc0d2cd Add force-deploy workflow for verbose tracing [skip ci]
+481fac7 probe-vps: result [skip ci]
+987a926 probe-vps: result [skip ci]
 
 === .next exists? ===
-total 512
-drwxr-xr-x  6 root root   4096 May 23 01:51 .
-drwxr-xr-x 11 root root   4096 May 23 01:51 ..
--rw-r--r--  1 root root     21 May 23 01:51 BUILD_ID
--rw-r--r--  1 root root   3182 May 23 01:51 app-build-manifest.json
+total 888
+drwxr-xr-x  6 root root   4096 May 23 12:16 .
+drwxr-xr-x 12 root root   4096 May 23 12:15 ..
+-rw-r--r--  1 root root     21 May 23 12:16 BUILD_ID
+-rw-r--r--  1 root root   8626 May 23 12:15 app-build-manifest.json
 
 === .next/BUILD_ID ===
-w_fmPttmsun8birlpaShE
+0fzsQd3LggMIMEXAUpaco
 === public/sw.js + offline.html ===
-ls: cannot access '/opt/cortexx/public/sw.js': No such file or directory
-ls: cannot access '/opt/cortexx/public/offline.html': No such file or directory
+-rw-r--r-- 1 root root 1536 May 23 12:15 /opt/cortexx/public/offline.html
+-rw-r--r-- 1 root root 2703 May 23 12:15 /opt/cortexx/public/sw.js
 
 === app/not-found.tsx ===
-ls: cannot access '/opt/cortexx/app/not-found.tsx': No such file or directory
+-rw-r--r-- 1 root root 1246 May 23 12:15 /opt/cortexx/app/not-found.tsx
 
 === app/(auth)/login dir ===
-ls: cannot access '/opt/cortexx/app/(auth)/login/': No such file or directory
+total 12
+drwxr-xr-x 2 root root 4096 May 23 12:15 .
+drwxr-xr-x 4 root root 4096 May 23 12:15 ..
+-rw-r--r-- 1 root root 3845 May 23 12:15 page.tsx
 
 === pm2 processes ===
 ┌────┬─────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
@@ -30,13 +33,13 @@ ls: cannot access '/opt/cortexx/app/(auth)/login/': No such file or directory
 │ 5  │ buildtrack-api              │ default     │ 1.0.0   │ fork    │ 6999     │ 11h    │ 3    │ online    │ 0%       │ 192.7mb  │ root     │ disabled │
 │ 0  │ buildtrack-web              │ default     │ 16.3.0… │ cluster │ 1368     │ 11h    │ 0    │ online    │ 0%       │ 120.2mb  │ root     │ disabled │
 │ 6  │ constructai-web             │ default     │ N/A     │ fork    │ 1413     │ 11h    │ 0    │ online    │ 0%       │ 81.5mb   │ root     │ disabled │
-│ 4  │ cortexbuild-field           │ default     │ N/A     │ fork    │ 1399     │ 11h    │ 0    │ online    │ 0%       │ 96.3mb   │ root     │ disabled │
+│ 4  │ cortexbuild-field           │ default     │ N/A     │ fork    │ 1399     │ 11h    │ 0    │ online    │ 0%       │ 96.4mb   │ root     │ disabled │
 │ 3  │ cortexbuild-platform-api    │ default     │ N/A     │ fork    │ 1391     │ 11h    │ 0    │ online    │ 0%       │ 80.8mb   │ root     │ disabled │
 │ 1  │ cortexbuild-platform-web    │ default     │ 2.0.0   │ fork    │ 1369     │ 11h    │ 0    │ online    │ 0%       │ 95.8mb   │ root     │ disabled │
 │ 7  │ cortexbuild-ultimate-api    │ default     │ 1.0.0   │ fork    │ 882815   │ 5h     │ 169… │ online    │ 0%       │ 253.9mb  │ root     │ disabled │
 │ 2  │ cortexbuild-unified-api     │ default     │ 1.0.0   │ fork    │ 1382     │ 11h    │ 0    │ online    │ 0%       │ 76.0mb   │ root     │ disabled │
-│ 8  │ cortexbuild-web-api         │ default     │ 1.0.0   │ fork    │ 1419     │ 11h    │ 0    │ online    │ 0%       │ 124.0mb  │ root     │ disabled │
-│ 15 │ cortexx                     │ default     │ N/A     │ fork    │ 153319   │ 10h    │ 0    │ online    │ 0%       │ 74.9mb   │ root     │ disabled │
+│ 8  │ cortexbuild-web-api         │ default     │ 1.0.0   │ fork    │ 1419     │ 11h    │ 0    │ online    │ 0%       │ 124.1mb  │ root     │ disabled │
+│ 15 │ cortexx                     │ default     │ N/A     │ fork    │ 1473440  │ 2m     │ 1    │ online    │ 0%       │ 76.2mb   │ root     │ disabled │
 │ 9  │ unified-dashboard           │ default     │ N/A     │ fork    │ 1652     │ 11h    │ 0    │ online    │ 0%       │ 56.4mb   │ root     │ disabled │
 └────┴─────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 
@@ -47,8 +50,8 @@ ls: cannot access '/opt/cortexx/app/(auth)/login/': No such file or directory
 │ name              │ cortexx                           │
 │ namespace         │ default                           │
 │ version           │ N/A                               │
-│ restarts          │ 0                                 │
-│ uptime            │ 10h                               │
+│ restarts          │ 1                                 │
+│ uptime            │ 2m                                │
 │ script path       │ /usr/bin/npm                      │
 │ script args       │ start                             │
 │ error log path    │ /root/.pm2/logs/cortexx-error.log │
@@ -63,7 +66,7 @@ ls: cannot access '/opt/cortexx/app/(auth)/login/': No such file or directory
 │ node env          │ N/A                               │
 │ watch & reload    │ ✘                                 │
 │ unstable restarts │ 0                                 │
-│ created at        │ 2026-05-23T01:51:42.517Z          │
+│ created at        │ 2026-05-23T12:16:12.898Z          │
 └───────────────────┴───────────────────────────────────┘
  Actions available 
 ┌────────────────────────┐
@@ -77,16 +80,16 @@ ls: cannot access '/opt/cortexx/app/(auth)/login/': No such file or directory
 
  Code metrics value 
 ┌────────────────────────┬───────────┐
-│ Heap Size              │ 13.19 MiB │
-│ Heap Usage             │ 85.75 %   │
-│ Used Heap Size         │ 11.31 MiB │
+│ Heap Size              │ 11.94 MiB │
+│ Heap Usage             │ 83.33 %   │
+│ Used Heap Size         │ 9.95 MiB  │
 │ Active requests        │ 0         │
 
 === curl localhost ===
-localhost:3010/login → 404
-localhost:3010/sw.js → 404
-localhost:3010/dashboard → 200
-localhost:3010/api/health → 200
+localhost:3010/login → 200
+localhost:3010/sw.js → 200
+localhost:3010/dashboard → 307
+localhost:3010/api/health → 503
 
 === nginx config for cortexbuildpro ===
 server {
