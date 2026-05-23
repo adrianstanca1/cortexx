@@ -53,18 +53,17 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   if (auth instanceof NextResponse) return auth
   try {
     const doc = await prisma.document.findUnique({ where: { id: params.id }, select: { name: true, projectId: true } })
+    if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     await prisma.document.delete({ where: { id: params.id } })
-    if (doc) {
-      prisma.activity.create({
-        data: {
-          projectId: doc.projectId,
-          actorName: actorName(auth),
-          actorType: 'human',
-          action: `deleted document: ${doc.name}`,
-          iconType: 'trash',
-        },
-      }).catch(() => {})
-    }
+    prisma.activity.create({
+      data: {
+        projectId: doc.projectId,
+        actorName: actorName(auth),
+        actorType: 'human',
+        action: `deleted document: ${doc.name}`,
+        iconType: 'trash',
+      },
+    }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error(error)

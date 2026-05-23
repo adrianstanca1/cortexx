@@ -72,18 +72,17 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   if (auth instanceof NextResponse) return auth
   try {
     const project = await prisma.project.findUnique({ where: { id: params.id }, select: { name: true } })
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     await prisma.project.delete({ where: { id: params.id } })
-    if (project) {
-      prisma.activity.create({
-        data: {
-          projectId: null,
-          actorName: actorName(auth),
-          actorType: 'human',
-          action: `deleted project: ${project.name}`,
-          iconType: 'trash',
-        },
-      }).catch(() => {})
-    }
+    prisma.activity.create({
+      data: {
+        projectId: null,
+        actorName: actorName(auth),
+        actorType: 'human',
+        action: `deleted project: ${project.name}`,
+        iconType: 'trash',
+      },
+    }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error(error)
