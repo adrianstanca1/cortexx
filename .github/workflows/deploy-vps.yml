@@ -58,8 +58,19 @@ jobs:
           ATTACH=$(curl -s -X POST -H "Authorization: Bearer $API_TOKEN" \
             -H "Content-Type: application/json" \
             -d "{\"ids\":[$KEY_ID]}" \
-            "https://developers.hostinger.com/api/vps/v1/virtual-machines/$VPS_ID/public-keys/attach")
+            "https://developers.hostinger.com/api/vps/v1/public-keys/attach/$VPS_ID")
           echo "Attach: $ATTACH"
+
+          # Verify the key is actually attached
+          ATTACHED=$(curl -s -H "Authorization: Bearer $API_TOKEN" \
+            "https://developers.hostinger.com/api/vps/v1/virtual-machines/$VPS_ID/public-keys")
+          echo "Now attached: $ATTACHED"
+          if echo "$ATTACHED" | grep -q "\"id\":$KEY_ID"; then
+            echo "✓ Key attached successfully"
+          else
+            echo "✗ Key not in attached list — attach may have failed"
+            exit 1
+          fi
 
       - name: Wait for SSH to be ready
         run: |
