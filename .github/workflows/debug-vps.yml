@@ -9,33 +9,53 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Inspect VPS key state
+      - name: Setup
+        run: |
+          sudo apt-get install -y sshpass openssh-client >/dev/null 2>&1
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+
+      - name: Inspect VPS state and try connections
         env:
           API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+          ROOT_PASS: ${{ secrets.VPS_ROOT_PASSWORD }}
         run: |
           {
-            echo "=== Account public keys ==="
+            echo "=== Most recent VPS actions ==="
             curl -s -H "Authorization: Bearer $API_TOKEN" \
-              "https://developers.hostinger.com/api/vps/v1/public-keys"
+              "https://developers.hostinger.com/api/vps/v1/virtual-machines/1262179/actions?per_page=5" \
+              | python3 -m json.tool 2>&1 | head -30
+
             echo ""
-            echo ""
-            echo "=== VPS 1262179 attached keys ==="
+            echo "=== Attached keys ==="
             curl -s -H "Authorization: Bearer $API_TOKEN" \
-              "https://developers.hostinger.com/api/vps/v1/virtual-machines/1262179/public-keys"
+              "https://developers.hostinger.com/api/vps/v1/virtual-machines/1262179/public-keys" \
+              | python3 -m json.tool 2>&1 | head -20
+
             echo ""
+            echo "=== Port 22 reachable? ==="
+            timeout 5 bash -c "</dev/tcp/72.62.132.43/22" && echo "Port 22 OPEN" || echo "Port 22 CLOSED/BLOCKED"
+
             echo ""
-            echo "=== VPS recent actions ==="
-            curl -s -H "Authorization: Bearer $API_TOKEN" \
-              "https://developers.hostinger.com/api/vps/v1/virtual-machines/1262179/actions?per_page=10"
+            echo "=== SSH banner ==="
+            timeout 5 ssh-keyscan -t rsa,ed25519 72.62.132.43 2>&1 | head -3
+
             echo ""
+            echo "=== SSH verbose with key (no retries) ==="
+            ssh -o StrictHostKeyChecking=no -o BatchMode=yes -o ConnectTimeout=10 -vv \
+              -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo OK' 2>&1 | grep -E "Authentications|Offering|Authenticated|Permission|debug1" | head -20
+
             echo ""
-            echo "=== VPS detail ==="
-            curl -s -H "Authorization: Bearer $API_TOKEN" \
-              "https://developers.hostinger.com/api/vps/v1/virtual-machines/1262179" | python3 -m json.tool 2>&1 | head -40
-          } > vps_debug.txt
-          cat vps_debug.txt
+            echo "=== Password auth attempt ==="
+            sshpass -p "$ROOT_PASS" ssh -o StrictHostKeyChecking=no \
+              -o PreferredAuthentications=password -o PubkeyAuthentication=no \
+              -o ConnectTimeout=10 -vv \
+              root@72.62.132.43 'echo PASS_OK' 2>&1 | grep -E "Authentications|Offering|Authenticated|Permission|debug1.*method" | head -10
+          } > debug.txt
+          cat debug.txt
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add vps_debug.txt
-          git commit -m "chore: vps debug results [skip ci]" || true
+          git add debug.txt
+          git commit -m "chore: debug results [skip ci]" || true
           git push || true
