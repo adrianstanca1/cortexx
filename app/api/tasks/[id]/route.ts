@@ -4,6 +4,22 @@ import { requireAuth, actorName } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
+  try {
+    const task = await prisma.task.findUnique({
+      where: { id: params.id },
+      include: { project: true, assignee: true, _count: { select: { comments: true } } },
+    })
+    if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+    return NextResponse.json(task)
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Failed to fetch task' }, { status: 500 })
+  }
+}
+
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
@@ -52,18 +68,17 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
   if (auth instanceof NextResponse) return auth
   try {
     const task = await prisma.task.findUnique({ where: { id: params.id }, select: { title: true, projectId: true } })
+    if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     await prisma.task.delete({ where: { id: params.id } })
-    if (task) {
-      prisma.activity.create({
-        data: {
-          projectId: task.projectId,
-          actorName: actorName(auth),
-          actorType: 'human',
-          action: `deleted task: ${task.title}`,
-          iconType: 'trash',
-        },
-      }).catch(() => {})
-    }
+    prisma.activity.create({
+      data: {
+        projectId: task.projectId,
+        actorName: actorName(auth),
+        actorType: 'human',
+        action: `deleted task: ${task.title}`,
+        iconType: 'trash',
+      },
+    }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error(error)

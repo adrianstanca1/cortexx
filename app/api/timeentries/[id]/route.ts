@@ -39,18 +39,17 @@ export async function DELETE(_req: NextRequest, { params }: { params: { id: stri
       where: { id: params.id },
       select: { hours: true, projectId: true, member: { select: { name: true } } },
     })
+    if (!entry) return NextResponse.json({ error: 'Time entry not found' }, { status: 404 })
     await prisma.timeEntry.delete({ where: { id: params.id } })
-    if (entry) {
-      prisma.activity.create({
-        data: {
-          projectId: entry.projectId,
-          actorName: actorName(auth),
-          actorType: 'human',
-          action: `deleted ${entry.hours}h time entry for ${entry.member?.name || 'member'}`,
-          iconType: 'trash',
-        },
-      }).catch(() => {})
-    }
+    prisma.activity.create({
+      data: {
+        projectId: entry.projectId,
+        actorName: actorName(auth),
+        actorType: 'human',
+        action: `deleted ${entry.hours}h time entry for ${entry.member?.name || 'member'}`,
+        iconType: 'trash',
+      },
+    }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error(error)
