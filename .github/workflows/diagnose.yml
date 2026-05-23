@@ -9,38 +9,20 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check Hostinger deployment status
+      - name: Run all diagnostics and save to file
         env:
           API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
-        timeout-minutes: 2
-        run: |
-          echo "=== Deployment list ==="
-          timeout 30 sh -c 'echo '"'"'{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}'"'"' | API_TOKEN=$API_TOKEN npx hostinger-api-mcp@latest --stdio 2>/dev/null' || echo "TIMED_OUT"
-          echo ""
-          echo "=== Build logs ==="
-          timeout 30 sh -c 'echo '"'"'{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}'"'"' | API_TOKEN=$API_TOKEN npx hostinger-api-mcp@latest --stdio 2>/dev/null' || echo "TIMED_OUT"
-          echo ""
-          echo "=== Website list ==="
-          timeout 30 sh -c 'echo '"'"'{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"hosting_listWebsitesV1","arguments":{}}}'"'"' | API_TOKEN=$API_TOKEN npx hostinger-api-mcp@latest --stdio 2>/dev/null' || echo "TIMED_OUT"
-
-      - name: Save results as artifact
-        if: always()
+        timeout-minutes: 3
         run: |
           {
-            echo "=== HTTP STATUS ==="
-            curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 10 https://cortexbuildpro.com/ 2>/dev/null || echo "failed"
+            echo "=== Deployment list ==="
+            echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}' | timeout 25 npx hostinger-api-mcp@latest --stdio 2>/dev/null || echo "TIMED_OUT"
             echo ""
-            echo "=== Response headers ==="
-            curl -sI --max-time 10 https://cortexbuildpro.com/ 2>/dev/null | head -15
+            echo "=== Build logs ==="
+            echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}' | timeout 25 npx hostinger-api-mcp@latest --stdio 2>/dev/null || echo "TIMED_OUT"
             echo ""
-            echo "=== Root page HTML ==="
-            curl -sL --max-time 10 https://cortexbuildpro.com/ 2>/dev/null | head -c 800
-            echo ""
-            echo "=== /api/projects ==="
-            curl -sL --max-time 10 https://cortexbuildpro.com/api/projects 2>/dev/null | head -c 500
-            echo ""
-            echo "=== /api/dashboard ==="
-            curl -sL --max-time 10 https://cortexbuildpro.com/api/dashboard 2>/dev/null | head -c 500
+            echo "=== Website list ==="
+            echo '{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"hosting_listWebsitesV1","arguments":{}}}' | timeout 25 npx hostinger-api-mcp@latest --stdio 2>/dev/null || echo "TIMED_OUT"
           } > site_check.txt
           cat site_check.txt
 
