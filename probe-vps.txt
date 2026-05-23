@@ -1,0 +1,131 @@
+Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
+=== git HEAD in /opt/cortexx ===
+3ff4ab1 Add export const dynamic = 'force-dynamic' to GET API routes
+b32d2d8 chore: seed result [skip ci]
+13f9cc8 Re-seed workflow
+
+=== .next exists? ===
+total 512
+drwxr-xr-x  6 root root   4096 May 23 01:51 .
+drwxr-xr-x 11 root root   4096 May 23 01:51 ..
+-rw-r--r--  1 root root     21 May 23 01:51 BUILD_ID
+-rw-r--r--  1 root root   3182 May 23 01:51 app-build-manifest.json
+
+=== .next/BUILD_ID ===
+w_fmPttmsun8birlpaShE
+=== public/sw.js + offline.html ===
+ls: cannot access '/opt/cortexx/public/sw.js': No such file or directory
+ls: cannot access '/opt/cortexx/public/offline.html': No such file or directory
+
+=== app/not-found.tsx ===
+ls: cannot access '/opt/cortexx/app/not-found.tsx': No such file or directory
+
+=== app/(auth)/login dir ===
+ls: cannot access '/opt/cortexx/app/(auth)/login/': No such file or directory
+
+=== pm2 processes ===
+┌────┬─────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name                        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+├────┼─────────────────────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
+│ 5  │ buildtrack-api              │ default     │ 1.0.0   │ fork    │ 6999     │ 11h    │ 3    │ online    │ 0%       │ 192.7mb  │ root     │ disabled │
+│ 0  │ buildtrack-web              │ default     │ 16.3.0… │ cluster │ 1368     │ 11h    │ 0    │ online    │ 0%       │ 120.2mb  │ root     │ disabled │
+│ 6  │ constructai-web             │ default     │ N/A     │ fork    │ 1413     │ 11h    │ 0    │ online    │ 0%       │ 81.5mb   │ root     │ disabled │
+│ 4  │ cortexbuild-field           │ default     │ N/A     │ fork    │ 1399     │ 11h    │ 0    │ online    │ 0%       │ 96.3mb   │ root     │ disabled │
+│ 3  │ cortexbuild-platform-api    │ default     │ N/A     │ fork    │ 1391     │ 11h    │ 0    │ online    │ 0%       │ 80.8mb   │ root     │ disabled │
+│ 1  │ cortexbuild-platform-web    │ default     │ 2.0.0   │ fork    │ 1369     │ 11h    │ 0    │ online    │ 0%       │ 95.8mb   │ root     │ disabled │
+│ 7  │ cortexbuild-ultimate-api    │ default     │ 1.0.0   │ fork    │ 882815   │ 5h     │ 169… │ online    │ 0%       │ 253.9mb  │ root     │ disabled │
+│ 2  │ cortexbuild-unified-api     │ default     │ 1.0.0   │ fork    │ 1382     │ 11h    │ 0    │ online    │ 0%       │ 76.0mb   │ root     │ disabled │
+│ 8  │ cortexbuild-web-api         │ default     │ 1.0.0   │ fork    │ 1419     │ 11h    │ 0    │ online    │ 0%       │ 124.0mb  │ root     │ disabled │
+│ 15 │ cortexx                     │ default     │ N/A     │ fork    │ 153319   │ 10h    │ 0    │ online    │ 0%       │ 74.9mb   │ root     │ disabled │
+│ 9  │ unified-dashboard           │ default     │ N/A     │ fork    │ 1652     │ 11h    │ 0    │ online    │ 0%       │ 56.4mb   │ root     │ disabled │
+└────┴─────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
+
+=== pm2 process detail ===
+ Describing process with id 15 - name cortexx 
+┌───────────────────┬───────────────────────────────────┐
+│ status            │ online                            │
+│ name              │ cortexx                           │
+│ namespace         │ default                           │
+│ version           │ N/A                               │
+│ restarts          │ 0                                 │
+│ uptime            │ 10h                               │
+│ script path       │ /usr/bin/npm                      │
+│ script args       │ start                             │
+│ error log path    │ /root/.pm2/logs/cortexx-error.log │
+│ out log path      │ /root/.pm2/logs/cortexx-out.log   │
+│ pid path          │ /root/.pm2/pids/cortexx-15.pid    │
+│ interpreter       │ /usr/bin/node                     │
+│ interpreter args  │ N/A                               │
+│ script id         │ 15                                │
+│ exec cwd          │ /opt/cortexx                      │
+│ exec mode         │ fork_mode                         │
+│ node.js version   │ 24.15.0                           │
+│ node env          │ N/A                               │
+│ watch & reload    │ ✘                                 │
+│ unstable restarts │ 0                                 │
+│ created at        │ 2026-05-23T01:51:42.517Z          │
+└───────────────────┴───────────────────────────────────┘
+ Actions available 
+┌────────────────────────┐
+│ km:heapdump            │
+│ km:cpu:profiling:start │
+│ km:cpu:profiling:stop  │
+│ km:heap:sampling:start │
+│ km:heap:sampling:stop  │
+└────────────────────────┘
+ Trigger via: pm2 trigger cortexx <action_name>
+
+ Code metrics value 
+┌────────────────────────┬───────────┐
+│ Heap Size              │ 13.19 MiB │
+│ Heap Usage             │ 90.05 %   │
+│ Used Heap Size         │ 11.88 MiB │
+│ Active requests        │ 0         │
+
+=== curl localhost ===
+localhost:3010/login → 404
+localhost:3010/sw.js → 404
+localhost:3010/dashboard → 200
+localhost:3010/api/health → 200
+
+=== nginx config for cortexbuildpro ===
+server {
+    listen 80;
+    listen [::]:80;
+    server_name cortexbuildpro.com www.cortexbuildpro.com;
+
+    client_max_body_size 25m;
+    gzip on;
+    gzip_types text/plain application/json application/javascript text/css application/xml image/svg+xml;
+    gzip_min_length 1024;
+
+    location /.well-known/acme-challenge/ {
+        root /var/www/html;
+        try_files $uri =404;
+    }
+
+    location /api/events/ {
+        proxy_pass http://127.0.0.1:3010;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_buffering off;
+        proxy_cache off;
+        proxy_read_timeout 1h;
+        chunked_transfer_encoding off;
+    }
+
+    location / {
+        proxy_pass http://127.0.0.1:3010;
+        proxy_http_version 1.1;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection 'upgrade';
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_cache_bypass $http_upgrade;
+        proxy_read_timeout 90s;
+        proxy_buffering off;
+    }
