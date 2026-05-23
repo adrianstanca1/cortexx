@@ -13,27 +13,41 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Inspect .env + DB
+      - name: Inspect pm2 env + fix
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' > probe-env.txt 2>&1 << 'REMOTE'
-            echo "=== .env.production (masked passwords) ==="
-            sed 's/PASSWORD=.*/PASSWORD=<masked>/; s/SECRET=.*/SECRET=<masked>/; s/SEED_TOKEN=.*/SEED_TOKEN=<masked>/' /opt/cortexx/.env.production 2>&1
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' > probe-pm2.txt 2>&1 << 'REMOTE'
+            PID=$(pm2 jlist | python3 -c "import json,sys; [print(p['pid']) for p in json.load(sys.stdin) if p['name']=='cortexx']")
+            echo "cortexx PID=$PID"
             echo
-            echo "=== leading bytes (hex) of DATABASE_URL line ==="
-            grep DATABASE_URL /opt/cortexx/.env.production | head -c 200 | xxd
+            echo "=== process env (DATABASE_URL etc) ==="
+            if [ -n "$PID" ] && [ -d /proc/$PID ]; then
+              tr '\0' '\n' < /proc/$PID/environ | grep -E "DATABASE_URL|NEXTAUTH_SECRET|NODE_ENV|PORT" | head -10
+            fi
             echo
-            echo "=== curl localhost:3010/api/health ==="
+            echo "=== fix attempt: delete pm2 cortexx and re-start fresh ==="
+            cd /opt/cortexx
+            pm2 delete cortexx 2>&1 | head -3
+            PORT=3010 pm2 start npm --name cortexx -- start 2>&1 | head -10
+            sleep 6
+            echo
+            echo "=== new PID ==="
+            NEWPID=$(pm2 jlist | python3 -c "import json,sys; [print(p['pid']) for p in json.load(sys.stdin) if p['name']=='cortexx']")
+            echo "PID=$NEWPID"
+            echo
+            echo "=== after restart env ==="
+            if [ -d /proc/$NEWPID ]; then
+              tr '\0' '\n' < /proc/$NEWPID/environ | grep -E "DATABASE_URL|NEXTAUTH_SECRET|NODE_ENV|PORT" | head -10
+            fi
+            echo
+            echo "=== /api/health after restart ==="
             curl -s http://localhost:3010/api/health
-            echo
-            echo "=== pm2 cortexx logs (last 40) ==="
-            pm2 logs cortexx --lines 40 --nostream 2>&1 | tail -50
           REMOTE
-          cat probe-env.txt
+          cat probe-pm2.txt
       - name: Commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@cortexx.local"
-          git add probe-env.txt
-          git commit -m "probe-env [skip ci]" || true
+          git add probe-pm2.txt
+          git commit -m "probe-pm2 [skip ci]" || true
           git pull --rebase origin main
           git push
