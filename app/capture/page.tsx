@@ -45,7 +45,7 @@ function CaptureContent() {
       await fetch('/api/activity', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId: activeProject?.id || null, action, iconType, detail: detail ?? activeProject?.name ?? null }),
+        body: JSON.stringify({ projectId: activeProject?.id || null, action, iconType, detail: detail ?? null }),
       })
     } catch { /* non-critical */ }
   }, [activeProject])
@@ -110,7 +110,7 @@ function CaptureContent() {
           }),
         })
         if (!res.ok) throw new Error('Failed to create RFI task')
-        await logActivity('raised a Voice RFI', 'mic', activeProject?.name)
+        await logActivity('raised a Voice RFI', 'mic')
         finishWith('RFI task created')
         return
       }
@@ -127,7 +127,7 @@ function CaptureContent() {
           }),
         })
         if (!res.ok) throw new Error('Failed to log incident')
-        await logActivity('reported an incident', 'alert', activeProject?.name)
+        await logActivity('reported an incident', 'alert')
         finishWith('Incident logged')
         return
       }
@@ -140,7 +140,7 @@ function CaptureContent() {
             body: JSON.stringify({ onSiteCount: (activeProject.onSiteCount || 0) + 1 }),
           }).catch(() => {})
         }
-        await logActivity('checked in on site', 'pin', activeProject?.name + ' · GPS logged')
+        await logActivity('checked in on site', 'pin', 'GPS logged')
         finishWith('Checked in')
         return
       }
