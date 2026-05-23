@@ -1,6 +1,6 @@
 'use client'
 
-import { IcTrend, IcTrendDown, IcArrowRight } from '../ui/Icons'
+import { IcTrend, IcArrowUp, IcArrowRight } from '../ui/Icons'
 import type { DashboardData } from '@/lib/types'
 
 interface MoneyProps {
@@ -8,131 +8,146 @@ interface MoneyProps {
   data?: DashboardData | null
 }
 
-export default function Money({ accent = '#f59e0b', data }: MoneyProps) {
+/**
+ * Variant 8 — Books: cashflow first.
+ * Matches project/lib/dashboards-v2.jsx DashV8_Money.
+ */
+export default function Money({ accent = '#10b981', data }: MoneyProps) {
   const invoices = data?.invoices || []
   const cashflow = data?.stats?.cashflow ?? 0
   const owed = data?.stats?.owed ?? 0
-
   const outstanding = invoices.filter(i => i.status !== 'paid' && i.status !== 'cancelled')
   const totalSpent = data?.projects?.reduce((s, p) => s + p.spent, 0) ?? 0
+  const net = cashflow - totalSpent
 
-  const cashLabel = cashflow >= 1000 ? `+£${(cashflow / 1000).toFixed(1)}k` : cashflow > 0 ? `+£${cashflow}` : '£0'
+  // Week-of-year (ISO-ish)
+  const now = new Date()
+  const start = new Date(now.getFullYear(), 0, 1)
+  const wk = Math.ceil(((now.getTime() - start.getTime()) / 86400000 + start.getDay() + 1) / 7)
+  const monthName = now.toLocaleDateString('en-GB', { month: 'long' })
+  const daysLeft = new Date(now.getFullYear(), now.getMonth() + 1, 0).getDate() - now.getDate()
+
+  const fmt = (v: number) => v >= 1000 ? `£${(v / 1000).toFixed(1)}k` : `£${v}`
+  const netLabel = `${net >= 0 ? '+' : '-'}£${(Math.abs(net) / 1000).toFixed(1)}k`
   const paidCount = invoices.filter(i => i.status === 'paid').length
 
+  const SF = 'var(--font-system)'
+  const SFMono = 'ui-monospace, "SF Mono", "JetBrains Mono", monospace'
+
   return (
-    <div style={{ padding: '20px 20px 100px' }}>
-      {/* Big hero number */}
-      <div style={{ textAlign: 'center', marginBottom: 20 }}>
-        <p style={{ fontSize: 12, color: '#52749a', fontFamily: 'var(--font-system)', letterSpacing: '0.06em', textTransform: 'uppercase' }}>
-          Cash in · this period
-        </p>
-        <h2 style={{ fontSize: 48, fontWeight: 800, color: '#10b981', letterSpacing: '-0.05em', fontFamily: 'var(--font-system)', lineHeight: 1, marginTop: 8 }}>
-          {cashLabel}
-        </h2>
-        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, marginTop: 6 }}>
-          <IcTrend size={14} color="#10b981" />
-          <span style={{ fontSize: 12, color: '#10b981', fontFamily: 'var(--font-system)' }}>{paidCount} invoice{paidCount !== 1 ? 's' : ''} paid</span>
-        </div>
+    <div style={{ padding: '8px 0 100px' }}>
+      {/* Header */}
+      <div style={{ padding: '8px 20px 12px' }}>
+        <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Books</div>
+        <div style={{ fontFamily: SF, fontSize: 13, color: '#8ea8c5', marginTop: 2 }}>Wk {wk} · CIS aware</div>
       </div>
 
-      {/* Sparkline chart — from real paid invoices by week */}
-      {(() => {
-        const now = new Date()
-        const weeks = [3, 2, 1, 0].map(weeksAgo => {
-          const weekStart = new Date(now)
-          weekStart.setDate(weekStart.getDate() - weekStart.getDay() - weeksAgo * 7)
-          weekStart.setHours(0, 0, 0, 0)
-          const weekEnd = new Date(weekStart)
-          weekEnd.setDate(weekEnd.getDate() + 7)
-          return invoices
-            .filter(i => i.status === 'paid' && new Date(i.issuedDate) >= weekStart && new Date(i.issuedDate) < weekEnd)
-            .reduce((s, i) => s + i.amount, 0)
-        })
-        const maxVal = Math.max(...weeks, 1)
-        const pts = weeks.map((v, i) => ({ x: i * 100, y: 55 - Math.round((v / maxVal) * 48) }))
-        const linePath = pts.map((p, i) => `${i === 0 ? 'M' : 'L'}${p.x},${p.y}`).join(' ')
-        const areaPath = `${linePath} L300,60 L0,60Z`
-        const weekLabels = [3, 2, 1, 0].map(w => {
-          const d = new Date(now)
-          d.setDate(d.getDate() - d.getDay() - w * 7)
-          return `W${d.getDate()}/${d.getMonth() + 1}`
-        })
-        return (
-          <div style={{ borderRadius: 18, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', padding: '16px 16px 8px', marginBottom: 14 }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 10 }}>
-              {weekLabels.map((w) => (
-                <span key={w} style={{ fontSize: 10, color: '#52749a', fontFamily: 'var(--font-system)' }}>{w}</span>
-              ))}
-            </div>
-            <svg width="100%" height="60" viewBox="0 0 300 60">
+      {/* Big money number */}
+      <div style={{ padding: '8px 20px 16px' }}>
+        <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>
+          Net cashflow · {monthName}
+        </div>
+        <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginTop: 6 }}>
+          <span style={{
+            fontFamily: SFMono, fontSize: 48, fontWeight: 700,
+            color: net >= 0 ? '#eef3fa' : '#ef4444',
+            letterSpacing: -1.5, lineHeight: 1,
+          }}>{netLabel}</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 8, fontFamily: SF, fontSize: 13, color: '#10b981', fontWeight: 500 }}>
+          <IcTrend size={14} color="#10b981" />
+          <span>{paidCount} invoice{paidCount === 1 ? '' : 's'} paid</span>
+          <span style={{ color: '#52749a', marginLeft: 4 }}>· {daysLeft} day{daysLeft === 1 ? '' : 's'} left</span>
+        </div>
+
+        {/* Sparkline — real data from paid invoices over last 12 weeks */}
+        {(() => {
+          const weeks = Array.from({ length: 12 }, (_, i) => {
+            const weeksAgo = 11 - i
+            const start = new Date(now)
+            start.setDate(start.getDate() - start.getDay() - weeksAgo * 7)
+            start.setHours(0, 0, 0, 0)
+            const end = new Date(start)
+            end.setDate(end.getDate() + 7)
+            return invoices
+              .filter(iv => iv.status === 'paid' && new Date(iv.issuedDate) >= start && new Date(iv.issuedDate) < end)
+              .reduce((s, iv) => s + iv.amount, 0)
+          })
+          const max = Math.max(...weeks, 1)
+          const pts = weeks.map((v, i) => `${(i / 11) * 320},${60 - (v / max) * 50}`).join(' ')
+          return (
+            <svg width="100%" height="80" viewBox="0 0 320 80" style={{ marginTop: 14 }} preserveAspectRatio="none">
               <defs>
-                <linearGradient id="moneyGrad" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="0%" stopColor="#10b981" stopOpacity="0.3" />
-                  <stop offset="100%" stopColor="#10b981" stopOpacity="0" />
+                <linearGradient id="sparkfill" x1="0" x2="0" y1="0" y2="1">
+                  <stop offset="0%" stopColor={accent} stopOpacity="0.4" />
+                  <stop offset="100%" stopColor={accent} stopOpacity="0" />
                 </linearGradient>
               </defs>
-              <path d={linePath} fill="none" stroke="#10b981" strokeWidth="2" strokeLinejoin="round" />
-              <path d={areaPath} fill="url(#moneyGrad)" />
-              {pts.map((p, i) => (
-                <circle key={i} cx={p.x} cy={p.y} r="3" fill="#10b981" />
-              ))}
+              {[0, 20, 40, 60].map(y => <line key={y} x1="0" x2="320" y1={y} y2={y} stroke="rgba(255,255,255,0.07)" strokeWidth="0.5" />)}
+              <polyline points={pts} fill="none" stroke={accent} strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" />
+              <polyline points={`${pts} 320,80 0,80`} fill="url(#sparkfill)" stroke="none" />
+              <circle cx="320" cy={60 - (weeks[11] / max) * 50} r="4" fill={accent} />
+              <circle cx="320" cy={60 - (weeks[11] / max) * 50} r="8" fill={accent} opacity="0.3" />
             </svg>
-          </div>
-        )
-      })()}
+          )
+        })()}
+      </div>
 
-      {/* IN / OUT split */}
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 20 }}>
-        <div style={{ padding: '16px', borderRadius: 16, background: 'rgba(16,185,129,0.08)', border: '1px solid rgba(16,185,129,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <IcTrend size={14} color="#10b981" />
-            <span style={{ fontSize: 11, color: '#10b981', fontFamily: 'var(--font-system)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>IN</span>
+      {/* In / Out split */}
+      <div style={{ padding: '0 16px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+        <div style={{ background: 'rgba(16,185,129,0.10)', border: '0.5px solid rgba(16,185,129,0.33)', borderRadius: 14, padding: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5 }}>IN</div>
+            <span style={{ color: '#10b981' }}><IcArrowUp size={14} color="#10b981" /></span>
           </div>
-          <p style={{ fontSize: 22, fontWeight: 700, color: '#10b981', fontFamily: 'var(--font-system)', letterSpacing: '-0.03em' }}>
-            £{cashflow.toLocaleString()}
-          </p>
-          <p style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)', marginTop: 4 }}>
-            {paidCount} payment{paidCount !== 1 ? 's' : ''} received
-          </p>
+          <div style={{ fontFamily: SFMono, fontSize: 22, fontWeight: 700, color: '#eef3fa', marginTop: 4, letterSpacing: -0.5 }}>{fmt(cashflow)}</div>
+          <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>
+            {paidCount} invoice{paidCount === 1 ? '' : 's'} paid
+          </div>
         </div>
-        <div style={{ padding: '16px', borderRadius: 16, background: 'rgba(239,68,68,0.08)', border: '1px solid rgba(239,68,68,0.2)' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 8 }}>
-            <IcTrendDown size={14} color="#ef4444" />
-            <span style={{ fontSize: 11, color: '#ef4444', fontFamily: 'var(--font-system)', letterSpacing: '0.04em', textTransform: 'uppercase' }}>OUT</span>
+        <div style={{ background: 'rgba(239,68,68,0.10)', border: '0.5px solid rgba(239,68,68,0.33)', borderRadius: 14, padding: 12 }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#ef4444', textTransform: 'uppercase', letterSpacing: 0.5 }}>OUT</div>
+            <span style={{ color: '#ef4444', transform: 'rotate(180deg)', display: 'inline-flex' }}><IcArrowUp size={14} color="#ef4444" /></span>
           </div>
-          <p style={{ fontSize: 22, fontWeight: 700, color: '#ef4444', fontFamily: 'var(--font-system)', letterSpacing: '-0.03em' }}>
-            £{totalSpent.toLocaleString()}
-          </p>
-          <p style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)', marginTop: 4 }}>Labour + materials</p>
+          <div style={{ fontFamily: SFMono, fontSize: 22, fontWeight: 700, color: '#eef3fa', marginTop: 4, letterSpacing: -0.5 }}>{fmt(totalSpent)}</div>
+          <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>materials + wages</div>
         </div>
       </div>
 
-      {/* Outstanding invoices */}
+      {/* Outstanding */}
       {outstanding.length > 0 && (
         <>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)', marginBottom: 10 }}>
-            Outstanding invoices
-          </p>
-          <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {outstanding.map((inv) => {
-              const due = new Date(inv.dueDate)
-              const today = new Date()
-              const daysUntil = Math.round((due.getTime() - today.getTime()) / 86400000)
+          <div style={{ padding: '0 20px 8px', display: 'flex', justifyContent: 'space-between', alignItems: 'baseline' }}>
+            <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 700, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+              Outstanding · {fmt(owed)}
+            </span>
+          </div>
+          <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {outstanding.map(iv => {
+              const due = new Date(iv.dueDate)
+              const days = Math.round((due.getTime() - now.getTime()) / 86400000)
+              const col = iv.status === 'overdue' ? '#ef4444' : days <= 3 ? '#f59e0b' : '#eef3fa'
+              const daysLabel = days < 0 ? `${Math.abs(days)}d late` : days === 0 ? 'today' : `${days}d`
               return (
-                <div key={inv.id} style={{ display: 'flex', alignItems: 'center', padding: '12px 14px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', gap: 12 }}>
-                  <div style={{ flex: 1 }}>
-                    <p style={{ fontSize: 13, fontWeight: 600, color: '#eef3fa', fontFamily: 'var(--font-system)' }}>{inv.project?.name || inv.clientName}</p>
-                    <p style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)', marginTop: 1 }}>
-                      {inv.number}{daysUntil < 0 ? ` · ${Math.abs(daysUntil)}d overdue` : daysUntil === 0 ? ' · due today' : ` · due in ${daysUntil}d`}
-                    </p>
+                <div
+                  key={iv.id}
+                  style={{
+                    background: '#152641', borderRadius: 10, padding: '10px 12px',
+                    border: '0.5px solid rgba(255,255,255,0.07)',
+                    display: 'flex', alignItems: 'center', gap: 12,
+                  }}
+                >
+                  <div style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: col }} />
+                  <div style={{ flex: 1, minWidth: 0 }}>
+                    <div style={{ fontFamily: SFMono, fontSize: 11, color: '#8ea8c5', fontWeight: 600 }}>{iv.number}</div>
+                    <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa', fontWeight: 500, marginTop: 1 }}>
+                      {iv.project?.name || iv.clientName}
+                    </div>
                   </div>
                   <div style={{ textAlign: 'right' }}>
-                    <p style={{ fontSize: 14, fontWeight: 700, color: inv.status === 'overdue' ? '#ef4444' : inv.status === 'sent' ? accent : '#52749a', fontFamily: 'var(--font-system)' }}>
-                      £{inv.amount.toLocaleString()}
-                    </p>
-                    <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', color: inv.status === 'overdue' ? '#ef4444' : inv.status === 'sent' ? '#2563eb' : '#52749a', fontFamily: 'var(--font-system)' }}>
-                      {inv.status}
-                    </span>
+                    <div style={{ fontFamily: SFMono, fontSize: 14, color: col, fontWeight: 700 }}>£{iv.amount.toLocaleString()}</div>
+                    <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', marginTop: 1 }}>{daysLabel}</div>
                   </div>
                   <IcArrowRight size={14} color="#52749a" />
                 </div>
