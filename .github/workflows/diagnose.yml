@@ -34,30 +34,20 @@ jobs:
         if: always()
         run: |
           {
-            echo "=== DNS ==="
-            nslookup cortexbuildpro.com 2>/dev/null || true
             echo "=== HTTP STATUS ==="
-            curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 10 https://cortexbuildpro.com/ 2>/dev/null || echo "connection failed"
+            curl -s -o /dev/null -w "HTTP %{http_code}" --max-time 10 https://cortexbuildpro.com/ 2>/dev/null || echo "failed"
             echo ""
-            echo "=== Root page (first 500 chars) ==="
-            curl -sL --max-time 10 https://cortexbuildpro.com/ 2>/dev/null | head -c 500 || echo "no response"
+            echo "=== Response headers ==="
+            curl -sI --max-time 10 https://cortexbuildpro.com/ 2>/dev/null | head -15
             echo ""
-            echo "=== /api/dashboard ==="
-            curl -sL --max-time 10 https://cortexbuildpro.com/api/dashboard 2>/dev/null | head -c 500 || echo "no response"
+            echo "=== Root page HTML ==="
+            curl -sL --max-time 10 https://cortexbuildpro.com/ 2>/dev/null | head -c 800
             echo ""
             echo "=== /api/projects ==="
-            curl -sL --max-time 10 https://cortexbuildpro.com/api/projects 2>/dev/null | head -c 300 || echo "no response"
+            curl -sL --max-time 10 https://cortexbuildpro.com/api/projects 2>/dev/null | head -c 500
             echo ""
-            echo "=== Response headers for / ==="
-            curl -sI --max-time 10 https://cortexbuildpro.com/ 2>/dev/null | head -20 || echo "no headers"
-            echo ""
-            echo "=== Hostinger deployment list ==="
-            echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}' \
-              | npx hostinger-api-mcp@latest --stdio 2>/dev/null
-            echo ""
-            echo "=== Hostinger build logs ==="
-            echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}' \
-              | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+            echo "=== /api/dashboard ==="
+            curl -sL --max-time 10 https://cortexbuildpro.com/api/dashboard 2>/dev/null | head -c 500
           } > site_check.txt
           cat site_check.txt
 
