@@ -13,7 +13,7 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Resync DB
+      - name: Fix DB password (using cortexbuild as superuser)
         env:
           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
@@ -28,25 +28,21 @@ jobs:
             ADMIN_EMAIL="$ADMIN_EMAIL" \
             ADMIN_PASSWORD="$ADMIN_PASSWORD" \
             SEED_TOKEN="$SEED_TOKEN" \
-            'bash -sx' > probe-fix.txt 2>&1 << 'REMOTE'
+            'bash -s' > probe-fix.txt 2>&1 << 'REMOTE'
           APP_DIR=/opt/cortexx
           APP_PORT=3010
-          PG_CONTAINER=""
-          for c in $(docker ps --format '{{.Names}}'); do
-            if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
-              PG_CONTAINER="$c"; break
-            fi
-          done
+          PG_CONTAINER="cortexbuild-db"
           PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
-          echo "Container=$PG_CONTAINER IP=$PG_IP"
-          for SUPER in postgres cortexbuild root admin; do
-            TEST=$(docker exec -i "$PG_CONTAINER" psql -U "$SUPER" -c "SELECT 1" 2>&1)
-            echo "psql -U $SUPER => $TEST"
-          done
-          ALTER=$(docker exec -i "$PG_CONTAINER" psql -U postgres -c "ALTER USER cortexx WITH PASSWORD '$NEW_PASS';" 2>&1)
+          echo "PG_IP=$PG_IP"
+
+          # cortexbuild is the superuser per probe
+          ALTER=$(docker exec -i "$PG_CONTAINER" psql -U cortexbuild -c "ALTER USER cortexx WITH PASSWORD '$NEW_PASS';" 2>&1)
           echo "ALTER: $ALTER"
+
+          # Verify direct auth
           VERIFY=$(docker exec -i "$PG_CONTAINER" psql "postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>&1)
           echo "VERIFY: $VERIFY"
+
           if echo "$VERIFY" | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
             cat > $APP_DIR/.env.production << ENV
           DATABASE_URL=postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx
@@ -60,16 +56,19 @@ jobs:
           ADMIN_PASSWORD=$ADMIN_PASSWORD
           ENV
             chmod 600 $APP_DIR/.env.production
-            echo ".env written"
+            echo ".env written ($(wc -c < $APP_DIR/.env.production) bytes)"
+
             pm2 delete cortexx 2>&1 | head -1
             cd $APP_DIR
-            PORT=$APP_PORT pm2 start npm --name cortexx -- start 2>&1 | head -2
+            PORT=$APP_PORT pm2 start npm --name cortexx -- start 2>&1 | head -3
             sleep 8
             pm2 save 2>&1 | head -1
+
+            echo
             echo "=== HEALTH ==="
             curl -s http://localhost:3010/api/health
           else
-            echo "DB AUTH FAILED — bailing"
+            echo "DB AUTH FAILED — bailing without restart"
           fi
           REMOTE
           cat probe-fix.txt
@@ -79,6 +78,6 @@ jobs:
           git config user.name "probe-bot"
           git config user.email "probe@cortexx.local"
           git add probe-fix.txt
-          git commit -m "DB resync attempt [skip ci]" || true
+          git commit -m "DB resync (correct superuser) [skip ci]" || true
           git pull --rebase origin main
           git push
