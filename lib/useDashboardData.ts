@@ -19,10 +19,17 @@ export function useDashboardData() {
 
   useEffect(() => {
     fetchData()
-    // Refetch when tab regains focus (user returns from another tab/app)
+    // Refetch when tab regains focus
     const onVisibility = () => { if (document.visibilityState === 'visible') fetchData() }
     document.addEventListener('visibilitychange', onVisibility)
-    return () => document.removeEventListener('visibilitychange', onVisibility)
+    // Background poll every 30s while tab is visible (no extra cost when hidden)
+    const interval = setInterval(() => {
+      if (document.visibilityState === 'visible') fetchData()
+    }, 30000)
+    return () => {
+      document.removeEventListener('visibilitychange', onVisibility)
+      clearInterval(interval)
+    }
   }, [fetchData])
 
   return { data, loading, error, refetch: fetchData }
