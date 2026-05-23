@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { prisma } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 // ISO 8601 week number — week containing Thursday is week 1
 function isoWeek(date: Date): { week: number; year: number } {
