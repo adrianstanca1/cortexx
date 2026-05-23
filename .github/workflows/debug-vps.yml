@@ -1,4 +1,4 @@
-name: Debug VPS state
+name: Debug nginx configs
 on:
   workflow_dispatch:
 jobs:
@@ -13,41 +13,25 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Check nginx + app state
+      - name: Show config contents
         run: |
           {
             ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-              echo "=== nginx -t ==="
-              nginx -t 2>&1
-              echo ""
-              echo "=== nginx running? ==="
-              systemctl is-active nginx
-              systemctl status nginx --no-pager | head -15
-              echo ""
-              echo "=== Cortexx pm2 process ==="
-              pm2 list 2>&1 | grep -E "cortexx|status"
-              echo ""
-              echo "=== Cortexx pm2 logs (last 30) ==="
-              pm2 logs cortexx --lines 30 --nostream 2>&1 | tail -30
-              echo ""
-              echo "=== Local port 3010 test ==="
-              curl -s -o /dev/null -w "  / → %{http_code}\n" --max-time 5 http://localhost:3010/
-              curl -s --max-time 5 http://localhost:3010/api/health
-              echo ""
-              echo ""
-              echo "=== sites-enabled now ==="
-              ls /etc/nginx/sites-enabled/
-              echo ""
-              echo "=== Our cortexx nginx config (first 60 lines) ==="
-              head -60 /etc/nginx/sites-available/cortexx
-              echo ""
-              echo "=== ss ports 80/443 ==="
-              ss -tlnp 2>/dev/null | grep -E ":80 |:443 " || netstat -tlnp 2>/dev/null | grep -E ":80 |:443 "
+              for f in cortexbuild-field.conf cortexbuild-web.conf buildtrack.conf; do
+                echo "=== /etc/nginx/sites-enabled/$f (first 25 lines) ==="
+                head -25 "/etc/nginx/sites-enabled/$f" 2>/dev/null || echo "Not found"
+                echo ""
+                echo "--- server_name lines in $f ---"
+                grep -n "server_name" "/etc/nginx/sites-enabled/$f" 2>/dev/null
+                echo ""
+              done
+              echo "=== nginx active config for cortexbuildpro.com ==="
+              nginx -T 2>/dev/null | awk '/server\s*{/,/^}/' | grep -B 2 -A 20 'cortexbuildpro' | head -80
           REMOTE
-          } > vps_debug.txt 2>&1
-          cat vps_debug.txt
+          } > nginx_configs.txt 2>&1
+          cat nginx_configs.txt
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add vps_debug.txt
-          git commit -m "chore: vps state [skip ci]" || true
+          git add nginx_configs.txt
+          git commit -m "chore: nginx configs [skip ci]" || true
           git push || true
