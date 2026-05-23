@@ -43,12 +43,12 @@ export default function TasksPage() {
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
   const [team, setTeam] = useState<{ id: string; name: string; avatarColor: string }[]>([])
   const [form, setForm] = useState({
-    title: '', description: '', priority: 'medium', dueDate: '', projectId: '', assigneeId: '',
+    title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '',
   })
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [search, setSearch] = useState('')
   const [editTarget, setEditTarget] = useState<Task | null>(null)
-  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', dueDate: '', projectId: '', assigneeId: '' })
+  const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '' })
   const [savingEdit, setSavingEdit] = useState(false)
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
@@ -96,6 +96,7 @@ export default function TasksPage() {
           description: form.description.trim() || null,
           priority: form.priority,
           dueDate: form.dueDate || null,
+          dueTime: form.dueTime || null,
           projectId: form.projectId || null,
           assigneeId: form.assigneeId || null,
           status: 'todo',
@@ -105,7 +106,7 @@ export default function TasksPage() {
       const newTask = await res.json()
       setTasks(prev => [newTask, ...prev])
       setShowModal(false)
-      setForm({ title: '', description: '', priority: 'medium', dueDate: '', projectId: '', assigneeId: '' })
+      setForm({ title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '' })
       setToast({ msg: 'Task created' })
     } catch {
       setToast({ msg: 'Failed to create task', type: 'error' })
@@ -184,6 +185,7 @@ export default function TasksPage() {
       description: task.description || '',
       priority: task.priority,
       dueDate: task.dueDate ? new Date(task.dueDate).toISOString().split('T')[0] : '',
+      dueTime: task.dueTime || '',
       projectId: task.projectId || '',
       assigneeId: task.assigneeId || '',
     })
@@ -212,6 +214,7 @@ export default function TasksPage() {
           description: editForm.description.trim() || null,
           priority: editForm.priority,
           dueDate: editForm.dueDate || null,
+          dueTime: editForm.dueTime || null,
           projectId: editForm.projectId || null,
           assigneeId: editForm.assigneeId || null,
         }),
@@ -513,15 +516,26 @@ export default function TasksPage() {
               </div>
             </div>
 
-            {/* Due date */}
-            <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
-              <input
-                type="date"
-                value={form.dueDate}
-                onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
-                style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }}
-              />
+            {/* Due date & time */}
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div>
+                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
+                <input
+                  type="date"
+                  value={form.dueDate}
+                  onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
+                  style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }}
+                />
+              </div>
+              <div>
+                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
+                <input
+                  type="time"
+                  value={form.dueTime}
+                  onChange={e => setForm(p => ({ ...p, dueTime: e.target.value }))}
+                  style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }}
+                />
+              </div>
             </div>
 
             {/* Project */}
@@ -580,9 +594,15 @@ export default function TasksPage() {
               </div>
             </div>
 
-            <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
-              <input type="date" value={editForm.dueDate} onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+              <div>
+                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
+                <input type="date" value={editForm.dueDate} onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+              </div>
+              <div>
+                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
+                <input type="time" value={editForm.dueTime} onChange={e => setEditForm(p => ({ ...p, dueTime: e.target.value }))} style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+              </div>
             </div>
 
             <div>
