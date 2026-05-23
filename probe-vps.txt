@@ -33,13 +33,13 @@ drwxr-xr-x 4 root root 4096 May 23 12:15 ..
 │ 5  │ buildtrack-api              │ default     │ 1.0.0   │ fork    │ 6999     │ 11h    │ 3    │ online    │ 0%       │ 192.7mb  │ root     │ disabled │
 │ 0  │ buildtrack-web              │ default     │ 16.3.0… │ cluster │ 1368     │ 11h    │ 0    │ online    │ 0%       │ 120.4mb  │ root     │ disabled │
 │ 6  │ constructai-web             │ default     │ N/A     │ fork    │ 1413     │ 11h    │ 0    │ online    │ 0%       │ 81.5mb   │ root     │ disabled │
-│ 4  │ cortexbuild-field           │ default     │ N/A     │ fork    │ 1399     │ 11h    │ 0    │ online    │ 0%       │ 96.4mb   │ root     │ disabled │
+│ 4  │ cortexbuild-field           │ default     │ N/A     │ fork    │ 1399     │ 11h    │ 0    │ online    │ 0%       │ 96.5mb   │ root     │ disabled │
 │ 3  │ cortexbuild-platform-api    │ default     │ N/A     │ fork    │ 1391     │ 11h    │ 0    │ online    │ 0%       │ 80.8mb   │ root     │ disabled │
 │ 1  │ cortexbuild-platform-web    │ default     │ 2.0.0   │ fork    │ 1369     │ 11h    │ 0    │ online    │ 0%       │ 95.8mb   │ root     │ disabled │
 │ 7  │ cortexbuild-ultimate-api    │ default     │ 1.0.0   │ fork    │ 882815   │ 6h     │ 169… │ online    │ 0%       │ 253.9mb  │ root     │ disabled │
 │ 2  │ cortexbuild-unified-api     │ default     │ 1.0.0   │ fork    │ 1382     │ 11h    │ 0    │ online    │ 0%       │ 76.0mb   │ root     │ disabled │
 │ 8  │ cortexbuild-web-api         │ default     │ 1.0.0   │ fork    │ 1419     │ 11h    │ 0    │ online    │ 0%       │ 124.1mb  │ root     │ disabled │
-│ 15 │ cortexx                     │ default     │ N/A     │ fork    │ 1473440  │ 4m     │ 1    │ online    │ 0%       │ 76.4mb   │ root     │ disabled │
+│ 15 │ cortexx                     │ default     │ N/A     │ fork    │ 1473440  │ 4m     │ 1    │ online    │ 0%       │ 76.5mb   │ root     │ disabled │
 │ 9  │ unified-dashboard           │ default     │ N/A     │ fork    │ 1652     │ 11h    │ 0    │ online    │ 0%       │ 56.4mb   │ root     │ disabled │
 └────┴─────────────────────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
 
@@ -81,8 +81,8 @@ drwxr-xr-x 4 root root 4096 May 23 12:15 ..
  Code metrics value 
 ┌────────────────────────┬───────────┐
 │ Heap Size              │ 11.94 MiB │
-│ Heap Usage             │ 83.45 %   │
-│ Used Heap Size         │ 9.96 MiB  │
+│ Heap Usage             │ 84.92 %   │
+│ Used Heap Size         │ 10.14 MiB │
 │ Active requests        │ 0         │
 
 === curl localhost ===
