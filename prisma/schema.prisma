@@ -30,6 +30,9 @@ model Project {
   activities  Activity[]
   timeEntries TimeEntry[]
   documents   Document[]
+
+  @@index([status])
+  @@index([updatedAt])
 }
 
 model Task {
@@ -47,6 +50,11 @@ model Task {
   updatedAt   DateTime  @updatedAt
   project     Project?  @relation(fields: [projectId], references: [id])
   assignee    TeamMember? @relation(fields: [assigneeId], references: [id])
+
+  @@index([projectId, status])
+  @@index([assigneeId, status])
+  @@index([dueDate])
+  @@index([status, priority])
 }
 
 model TeamMember {
@@ -88,6 +96,9 @@ model Invoice {
   notes      String?
   project    Project? @relation(fields: [projectId], references: [id])
   createdAt  DateTime @default(now())
+
+  @@index([projectId, status])
+  @@index([status, dueDate])
 }
 
 model TimeEntry {
@@ -101,6 +112,10 @@ model TimeEntry {
   approved  Boolean    @default(false)
   member    TeamMember @relation(fields: [memberId], references: [id])
   project   Project?   @relation(fields: [projectId], references: [id])
+
+  @@index([memberId, date])
+  @@index([projectId, date])
+  @@index([week, year])
 }
 
 model Activity {
@@ -113,6 +128,9 @@ model Activity {
   iconType  String   @default("check")
   createdAt DateTime @default(now())
   project   Project? @relation(fields: [projectId], references: [id])
+
+  @@index([projectId, createdAt])
+  @@index([createdAt])
 }
 
 model Document {
@@ -123,4 +141,7 @@ model Document {
   expiresAt DateTime?
   createdAt DateTime @default(now())
   project   Project? @relation(fields: [projectId], references: [id])
+
+  @@index([projectId])
+  @@index([expiresAt])
 }
