@@ -14,8 +14,18 @@ export async function GET() {
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
     weekStart.setHours(0, 0, 0, 0)
 
-    // Run all queries in parallel — including hoursPerMember
-    const [projects, tasks, team, invoices, activities, timeEntries, hoursPerMember] = await Promise.all([
+    // Run all queries in parallel. Use groupBy / aggregate for sums instead of
+    // fetching full rows just to reduce.
+    const [
+      projects,
+      tasks,
+      team,
+      recentInvoices,
+      activities,
+      hoursThisWeekAgg,
+      hoursPerMember,
+      invoiceTotalsByStatus,
+    ] = await Promise.all([
       prisma.project.findMany({
         where: { archivedAt: null },
         include: {
@@ -36,6 +46,7 @@ export async function GET() {
           _count: { select: { timeEntries: true } },
         },
       }),
+      // Only fetch the 5 most-recent invoices we actually display
       prisma.invoice.findMany({
         include: { project: true },
         orderBy: { createdAt: 'desc' },
@@ -46,33 +57,42 @@ export async function GET() {
         orderBy: { createdAt: 'desc' },
         take: 10,
       }),
-      prisma.timeEntry.findMany({
+      // Sum hours this week without fetching every row (was iterating all
+      // timeEntries just to reduce on .hours)
+      prisma.timeEntry.aggregate({
         where: { date: { gte: weekStart } },
+        _sum: { hours: true },
       }),
       prisma.timeEntry.groupBy({
         by: ['memberId'],
         where: { date: { gte: weekStart } },
         _sum: { hours: true },
       }),
+      // Compute owed / cashflow across ALL invoices, not just the 5 displayed
+      // (previously these sums only ran on recentInvoices — a correctness bug)
+      prisma.invoice.groupBy({
+        by: ['status'],
+        _sum: { amount: true },
+      }),
     ])
 
     const activeSites = projects.filter((p) => p.status === 'active').length
-    const owed = invoices
-      .filter((i) => i.status === 'sent' || i.status === 'overdue')
-      .reduce((sum, i) => sum + i.amount, 0)
-    const cashflow = invoices
-      .filter((i) => i.status === 'paid')
-      .reduce((sum, i) => sum + i.amount, 0)
-    const hoursThisWeek = timeEntries.reduce((sum, e) => sum + e.hours, 0)
+    const owed = invoiceTotalsByStatus
+      .filter((r) => r.status === 'sent' || r.status === 'overdue')
+      .reduce((sum, r) => sum + (r._sum.amount ?? 0), 0)
+    const cashflow = invoiceTotalsByStatus
+      .filter((r) => r.status === 'paid')
+      .reduce((sum, r) => sum + (r._sum.amount ?? 0), 0)
+    const hoursThisWeek = hoursThisWeekAgg._sum.hours ?? 0
 
-    const hoursMap = Object.fromEntries(hoursPerMember.map(h => [h.memberId, h._sum.hours || 0]))
-    const teamWithHours = team.map(member => ({ ...member, hoursThisWeek: hoursMap[member.id] || 0 }))
+    const hoursMap = Object.fromEntries(hoursPerMember.map((h) => [h.memberId, h._sum.hours || 0]))
+    const teamWithHours = team.map((member) => ({ ...member, hoursThisWeek: hoursMap[member.id] || 0 }))
 
     return NextResponse.json({
       projects,
       tasks,
       team: teamWithHours,
-      invoices,
+      invoices: recentInvoices,
       activities,
       stats: { cashflow, owed, hoursThisWeek, activeSites },
     })
