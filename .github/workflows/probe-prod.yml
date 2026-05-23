@@ -4,24 +4,39 @@ on:
 jobs:
   probe:
     runs-on: ubuntu-latest
+    permissions:
+      contents: write
     steps:
-      - name: Fetch and report
+      - uses: actions/checkout@v4
+      - name: Probe production
         run: |
           {
-            echo '## Production probe'
+            echo '# Production probe'
+            echo "Probed at: $(date -u +%FT%TZ)"
             echo
-            echo '### Login page HEAD'
-            curl -sI https://cortexbuildpro.com/login | head -10 | sed 's/^/    /'
+            echo '## /login HEAD'
+            curl -sI https://cortexbuildpro.com/login | head -10
             echo
-            echo '### Build IDs from login HTML'
-            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -oE '"buildId":"[^"]*"' | head -5 | sed 's/^/    /'
+            echo '## /sw.js (first 30 lines)'
+            curl -s https://cortexbuildpro.com/sw.js | head -30
             echo
-            echo '### Service worker'
-            curl -s https://cortexbuildpro.com/sw.js | head -5 | sed 's/^/    /'
+            echo '## /manifest.json'
+            curl -s https://cortexbuildpro.com/manifest.json
             echo
-            echo '### Manifest'
-            curl -s https://cortexbuildpro.com/manifest.json | head -3 | sed 's/^/    /'
             echo
-            echo '### /_next/static chunks referenced in /login HTML'
-            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -oE '/_next/static/chunks/[a-zA-Z0-9_-]*\.js' | sort -u | head -10 | sed 's/^/    /'
-          } >> $GITHUB_STEP_SUMMARY
+            echo '## /login HTML — chunks referenced'
+            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -oE '/_next/static/chunks/[a-zA-Z0-9_/-]*\.js' | sort -u | head -15
+            echo
+            echo '## build id'
+            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -oE '"buildId":"[^"]*"' | head -3
+            echo
+            echo '## QuickActions text presence on /login page'
+            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -c "Quick actions" || true
+          } > probe-result.txt
+      - name: Commit + push
+        run: |
+          git config user.name "probe-bot"
+          git config user.email "probe@cortexx.local"
+          git add probe-result.txt
+          git commit -m "probe-prod: result [skip ci]" || echo "nothing to commit"
+          git push
