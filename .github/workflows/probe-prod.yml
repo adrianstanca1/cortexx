@@ -8,103 +8,30 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: Setup SSH
+      - name: External smoke test
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
-          chmod 600 ~/.ssh/cortexx_deploy
-      - name: Create DB, run migrations, restart
-        env:
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
-        run: |
-          NEW_PASS=$(openssl rand -hex 16)
-          echo "::add-mask::$NEW_PASS"
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
-            NEW_PASS="$NEW_PASS" \
-            NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
-            ADMIN_EMAIL="$ADMIN_EMAIL" \
-            ADMIN_PASSWORD="$ADMIN_PASSWORD" \
-            SEED_TOKEN="$SEED_TOKEN" \
-            'bash -s' > probe-fix.txt 2>&1 << 'REMOTE'
-          APP_DIR=/opt/cortexx
-          APP_PORT=3010
-          PG_CONTAINER="cortexbuild-db"
-          PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
-          echo "PG_IP=$PG_IP"
-
-          # Check what databases exist
-          echo "=== existing databases ==="
-          docker exec "$PG_CONTAINER" psql -U cortexbuild -l < /dev/null 2>&1 | head -20
-
-          # Check what roles exist
-          echo "=== roles ==="
-          docker exec "$PG_CONTAINER" psql -U cortexbuild -c "\du" < /dev/null 2>&1 | head -10
-
-          # Ensure user exists with right password
-          docker exec "$PG_CONTAINER" psql -U cortexbuild -c "ALTER USER cortexx WITH PASSWORD '$NEW_PASS';" < /dev/null 2>&1 | head -3
-
-          # Create db if missing
-          HAS_DB=$(docker exec "$PG_CONTAINER" psql -U cortexbuild -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" < /dev/null 2>&1)
-          echo "HAS_DB=[$HAS_DB]"
-          if [ "$HAS_DB" != "1" ]; then
-            docker exec "$PG_CONTAINER" psql -U cortexbuild -c "CREATE DATABASE cortexx OWNER cortexx;" < /dev/null 2>&1
-            echo "Created cortexx DB"
-          fi
-          docker exec "$PG_CONTAINER" psql -U cortexbuild -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;" < /dev/null 2>&1 | head -1
-
-          # Verify auth + db
-          VERIFY=$(docker exec "$PG_CONTAINER" psql "postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" < /dev/null 2>&1)
-          echo "VERIFY: $VERIFY"
-
-          if ! echo "$VERIFY" | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
-            echo "VERIFY FAILED — bailing"
-            exit 1
-          fi
-
-          # Write env
-          cat > $APP_DIR/.env.production << ENV
-          DATABASE_URL=postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx
-          NEXTAUTH_SECRET=$NEXTAUTH_SECRET
-          NEXTAUTH_URL=https://cortexbuildpro.com
-          NODE_ENV=production
-          PORT=$APP_PORT
-          ALLOW_SEED=true
-          SEED_TOKEN=$SEED_TOKEN
-          ADMIN_EMAIL=$ADMIN_EMAIL
-          ADMIN_PASSWORD=$ADMIN_PASSWORD
-          ENV
-          chmod 600 $APP_DIR/.env.production
-          echo ".env written"
-
-          # Run migrations
-          cd $APP_DIR
-          DB_URL="postgresql://cortexx:$NEW_PASS@$PG_IP:5432/cortexx"
-          DATABASE_URL="$DB_URL" npx prisma migrate deploy 2>&1 | tail -15
-
-          # Seed
-          DATABASE_URL="$DB_URL" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" \
-            npx prisma db seed 2>&1 | tail -10 || echo "Seed skipped"
-
-          # Restart pm2
-          pm2 delete cortexx 2>&1 | head -1
-          PORT=$APP_PORT pm2 start npm --name cortexx -- start 2>&1 | head -3
-          sleep 10
-          pm2 save 2>&1 | head -1
-
-          echo
-          echo "=== HEALTH ==="
-          curl -s http://localhost:3010/api/health
-          REMOTE
-          cat probe-fix.txt
+          {
+            echo "=== /login ==="
+            curl -sI https://cortexbuildpro.com/login | head -3
+            echo
+            echo "=== /api/health ==="
+            curl -s https://cortexbuildpro.com/api/health | python3 -m json.tool | head -15
+            echo
+            echo "=== /sw.js ==="
+            curl -sI https://cortexbuildpro.com/sw.js | head -3
+            echo
+            echo "=== /manifest.json ==="
+            curl -s https://cortexbuildpro.com/manifest.json | python3 -m json.tool | head -10
+            echo
+            echo "=== build id ==="
+            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -oE '"buildId":"[^"]*"' | head -1
+          } > probe-final.txt 2>&1
+          cat probe-final.txt
       - name: Commit
-        if: always()
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@cortexx.local"
-          git add probe-fix.txt
-          git commit -m "DB rebuild result [skip ci]" || true
+          git add probe-final.txt
+          git commit -m "external final probe [skip ci]" || true
           git pull --rebase origin main
           git push
