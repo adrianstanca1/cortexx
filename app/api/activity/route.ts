@@ -1,5 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
+
 import { prisma } from '@/lib/db'
+
+export const dynamic = 'force-dynamic'
 
 // Strip control characters and limit length to prevent storage abuse
 function sanitize(s: string, maxLen = 500): string {
