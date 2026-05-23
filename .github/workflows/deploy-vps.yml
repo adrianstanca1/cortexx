@@ -128,15 +128,29 @@ jobs:
 
             for f in /etc/nginx/sites-enabled/*; do
               [ -e "$f" ] || continue
-              # Resolve symlinks to actual content for grepping
+              [ "$(basename $f)" = "cortexx" ] && continue
+
               SRC=$(readlink -f "$f" 2>/dev/null || echo "$f")
-              if grep -E "server_name[^;]*(^|[[:space:]])(www\.)?cortexbuildpro\.com([[:space:]]|;|$)" "$SRC" >/dev/null 2>&1; then
-                # Don't remove the cortexx config we just created
-                if [ "$(basename $f)" = "cortexx" ]; then
-                  continue
+              # Extract every domain name listed in any server_name directive
+              # (handles multi-line, multi-domain, etc.). Strip leading spaces, trailing semicolon.
+              DOMAINS=$(awk '
+                /^\s*server_name/ { in_sn=1; gsub(/^\s*server_name\s*/, ""); }
+                in_sn {
+                  if (match($0, /;/)) { gsub(/;.*/, ""); in_sn=0; }
+                  print
+                }' "$SRC" 2>/dev/null | tr -s ' \t\n' '\n' | sed '/^$/d')
+
+              # Match if any extracted domain is exactly cortexbuildpro.com or www.cortexbuildpro.com
+              MATCH=""
+              for d in $DOMAINS; do
+                if [ "$d" = "cortexbuildpro.com" ] || [ "$d" = "www.cortexbuildpro.com" ]; then
+                  MATCH=1; break
                 fi
+              done
+
+              if [ -n "$MATCH" ]; then
                 cp "$SRC" "$BACKUP/$(basename $f).bak" 2>/dev/null || true
-                echo "Removing (was serving cortexbuildpro.com): $f"
+                echo "Removing $f — server_name includes cortexbuildpro.com (domains: $(echo $DOMAINS | tr '\n' ' '))"
                 rm "$f"
               fi
             done
