@@ -97,27 +97,56 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
 
   return (
     <div style={{ padding: '16px 20px 100px' }}>
-      {/* Morning briefing card */}
-      <div style={{ borderRadius: 20, background: 'linear-gradient(135deg, rgba(37,99,235,0.2) 0%, rgba(139,92,246,0.15) 100%)', border: '1px solid rgba(96,165,250,0.25)', padding: '20px', marginBottom: 16, position: 'relative', overflow: 'hidden' }}>
-        <div style={{ position: 'absolute', top: -30, right: -30, width: 100, height: 100, borderRadius: '50%', background: 'rgba(96,165,250,0.1)', filter: 'blur(20px)' }} />
-        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 }}>
-          <div style={{ width: 36, height: 36, borderRadius: 12, background: 'rgba(37,99,235,0.3)', border: '1px solid rgba(96,165,250,0.3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-            <IcBot size={18} color="#60a5fa" />
+      {/* Agent card — Morning briefing per Claude design */}
+      <div style={{
+        background: '#152641', borderRadius: 18, padding: 16,
+        border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 16,
+        position: 'relative', overflow: 'hidden',
+      }}>
+        <div style={{
+          position: 'absolute', top: -30, right: -30, width: 140, height: 140, borderRadius: 70,
+          background: `radial-gradient(circle, ${accent}55, transparent 70%)`, filter: 'blur(20px)',
+        }} />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12, position: 'relative' }}>
+          <div style={{
+            width: 40, height: 40, borderRadius: 12,
+            background: `linear-gradient(135deg, ${accent}, #2563eb)`,
+            color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center',
+            boxShadow: `0 4px 16px ${accent}55`,
+          }}>
+            <IcSpark size={20} color="#fff" />
           </div>
           <div>
-            <p style={{ fontSize: 13, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)' }}>Cortex Morning Briefing</p>
-            <p style={{ fontSize: 11, color: '#60a5fa', fontFamily: 'var(--font-system)' }}>Updated just now</p>
+            <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, color: '#eef3fa' }}>Morning briefing</div>
+            <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#10b981', fontWeight: 500 }}>● Updated just now</div>
           </div>
         </div>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {briefings.length > 0 ? briefings.map((b, i) => (
-            <div key={i} style={{ display: 'flex', gap: 8, alignItems: 'flex-start' }}>
-              <span style={{ marginTop: 2, display: 'inline-flex' }}><IcSpark size={12} color="#60a5fa" /></span>
-              <p style={{ fontSize: 13, color: '#c7daf5', fontFamily: 'var(--font-system)', lineHeight: 1.4, flex: 1 }}>{b}</p>
-            </div>
-          )) : (
-            <p style={{ fontSize: 13, color: '#c7daf5', fontFamily: 'var(--font-system)' }}>All sites running smoothly today.</p>
+        <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: '#eef3fa', lineHeight: 1.5, position: 'relative' }}>
+          {briefings.length > 0 ? (
+            <>
+              {briefings[0]}
+              {allDecisions.length > 0 && (
+                <> · I flagged <strong style={{ color: '#f59e0b' }}>{allDecisions.length} thing{allDecisions.length === 1 ? '' : 's'}</strong> needing your decision today.</>
+              )}
+            </>
+          ) : (
+            <>All <strong style={{ color: '#10b981' }}>{(data?.projects || []).filter(p => p.status === 'active').length} sites</strong> running smoothly. Nothing flagged today.</>
           )}
+        </div>
+        <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12, position: 'relative' }}>
+          {[
+            { l: 'Show me', primary: true, onClick: () => inputRef.current?.focus() },
+            { l: 'Read out loud', onClick: () => { if ('speechSynthesis' in window && briefings[0]) { const u = new SpeechSynthesisUtterance(briefings[0]); speechSynthesis.speak(u) } } },
+            { l: 'Skip today', onClick: () => { /* no-op for now */ } },
+          ].map((b, i) => (
+            <button key={i} onClick={b.onClick} style={{
+              background: b.primary ? accent : 'transparent',
+              color: b.primary ? '#fff' : '#60a5fa',
+              border: b.primary ? 'none' : '0.5px solid rgba(255,255,255,0.13)',
+              borderRadius: 16, padding: '6px 12px',
+              fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer',
+            }}>{b.l}</button>
+          ))}
         </div>
       </div>
 
