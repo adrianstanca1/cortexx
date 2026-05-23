@@ -15,6 +15,9 @@ interface Doc {
   createdAt: string
   projectId: string | null
   project?: { id: string; name: string } | null
+  url?: string | null
+  size?: number | null
+  mimeType?: string | null
 }
 
 const EXPIRY_WARN_DAYS = 7
@@ -143,11 +146,23 @@ export default function DocumentsPage() {
               const exp = d.expiresAt ? new Date(d.expiresAt).getTime() : null
               const expiring = exp !== null && exp < now + EXPIRY_WARN_DAYS * 86400000
               const expired = exp !== null && exp < now
+              const isImage = d.mimeType?.startsWith('image/')
               return (
                 <div key={d.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
-                  <IcDoc size={20} color={expired ? '#ef4444' : expiring ? '#f59e0b' : '#52749a'} />
+                  {isImage && d.url ? (
+                    /* eslint-disable-next-line @next/next/no-img-element */
+                    <a href={d.url} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
+                      <img src={d.url} alt="" width={36} height={36} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', display: 'block' }} />
+                    </a>
+                  ) : (
+                    <IcDoc size={20} color={expired ? '#ef4444' : expiring ? '#f59e0b' : '#52749a'} />
+                  )}
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: '#eef3fa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
+                    {d.url ? (
+                      <a href={d.url} target="_blank" rel="noreferrer" style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: '#eef3fa', textDecoration: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{d.name}</a>
+                    ) : (
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: '#eef3fa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
+                    )}
                     <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>
                       <span style={{ textTransform: 'capitalize' }}>{d.type}</span>
                       {d.project && <> · <Link href={`/projects/${d.project.id}`} style={{ color: '#8ea8c5', textDecoration: 'none' }}>{d.project.name}</Link></>}
