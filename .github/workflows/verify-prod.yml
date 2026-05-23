@@ -1,0 +1,45 @@
+name: Verify production
+on:
+  workflow_dispatch:
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Capture live site state
+        run: |
+          {
+            echo "=== HTTP status for each page ==="
+            for path in / /dashboard "/dashboard?v=7" /projects /tasks /team /capture; do
+              CODE=$(curl -s -o /dev/null -w "%{http_code}" --max-time 10 "https://cortexbuildpro.com$path")
+              echo "$path → $CODE"
+            done
+            echo ""
+            echo "=== /api/health ==="
+            curl -s --max-time 10 https://cortexbuildpro.com/api/health
+            echo ""
+            echo "=== /api/dashboard summary ==="
+            curl -s --max-time 10 https://cortexbuildpro.com/api/dashboard | python3 -c "
+          import json,sys
+          d=json.load(sys.stdin)
+          print(f'projects: {len(d.get(\"projects\",[]))}')
+          print(f'tasks:    {len(d.get(\"tasks\",[]))}')
+          print(f'team:     {len(d.get(\"team\",[]))}')
+          print(f'activities: {len(d.get(\"activities\",[]))}')
+          print(f'stats: {d.get(\"stats\",{})}')
+            "
+            echo ""
+            echo "=== Root page HTML (first 400 chars) ==="
+            curl -sL --max-time 10 https://cortexbuildpro.com/dashboard | head -c 400
+            echo ""
+            echo "=== Response headers ==="
+            curl -sI --max-time 10 https://cortexbuildpro.com/api/dashboard | head -10
+          } > verify.txt 2>&1
+          cat verify.txt
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add verify.txt
+          git commit -m "chore: verify production [skip ci]" || true
+          git push || true
