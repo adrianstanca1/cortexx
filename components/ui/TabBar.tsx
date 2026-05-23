@@ -2,7 +2,7 @@
 
 import Link from 'next/link'
 import { usePathname } from 'next/navigation'
-import { IcDashboard, IcProjects, IcTasks, IcTeam, IcPlus } from './Icons'
+import { IcDashboard, IcProjects, IcTasks, IcTeam } from './Icons'
 
 interface TabBarProps {
   accent?: string
@@ -11,7 +11,7 @@ interface TabBarProps {
 const tabs = [
   { href: '/dashboard', label: 'Dashboard', Icon: IcDashboard },
   { href: '/projects', label: 'Projects', Icon: IcProjects },
-  { href: '/capture', label: '', Icon: IcPlus, isFab: true },
+  { href: '#fab-spacer', label: '', Icon: IcDashboard, isFabSpacer: true },
   { href: '/tasks', label: 'Tasks', Icon: IcTasks },
   { href: '/team', label: 'Team', Icon: IcTeam },
 ]
@@ -21,6 +21,7 @@ export default function TabBar({ accent = '#f59e0b' }: TabBarProps) {
 
   return (
     <nav
+      aria-label="Primary"
       style={{
         position: 'fixed',
         bottom: 0,
@@ -45,35 +46,17 @@ export default function TabBar({ accent = '#f59e0b' }: TabBarProps) {
           height: 64,
         }}
       >
-        {tabs.map(({ href, label, Icon, isFab }) => {
-          const isActive = pathname.startsWith(href) && !isFab
-          if (isFab) {
-            return (
-              <Link
-                key={href}
-                href={href}
-                style={{
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  width: 52,
-                  height: 52,
-                  borderRadius: '50%',
-                  background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-                  boxShadow: `0 0 20px ${accent}66, 0 4px 12px rgba(0,0,0,0.4)`,
-                  marginBottom: 14,
-                  flexShrink: 0,
-                  transition: 'transform 0.15s, box-shadow 0.15s',
-                }}
-              >
-                <IcPlus size={24} color="#fff" />
-              </Link>
-            )
+        {tabs.map(({ href, label, Icon, isFabSpacer }) => {
+          if (isFabSpacer) {
+            // Reserve space for the floating QuickActions FAB
+            return <div key="fab-spacer" style={{ width: 60, flexShrink: 0 }} aria-hidden="true" />
           }
+          const isActive = pathname.startsWith(href)
           return (
             <Link
               key={href}
               href={href}
+              aria-current={isActive ? 'page' : undefined}
               style={{
                 display: 'flex',
                 flexDirection: 'column',
@@ -85,10 +68,7 @@ export default function TabBar({ accent = '#f59e0b' }: TabBarProps) {
                 transition: 'opacity 0.15s',
               }}
             >
-              <Icon
-                size={22}
-                color={isActive ? accent : '#52749a'}
-              />
+              <Icon size={22} color={isActive ? accent : '#52749a'} />
               <span
                 style={{
                   fontSize: 10,

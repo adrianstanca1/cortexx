@@ -76,6 +76,12 @@ export default function TeamPage() {
       .catch(() => setTsLoading(false))
   }, [tab])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1') {
+      setShowModal(true)
+    }
+  }, [])
+
   const onSiteCount = team.filter(m => m.onSite).length
   const pendingCount = timesheets.filter(t => !t.approved).length
 
