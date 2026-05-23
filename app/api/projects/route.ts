@@ -14,7 +14,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
-    const skip = parseInt(searchParams.get('skip') || '0') || 0
+    const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
     const include = searchParams.get('include') // 'archived' to include, 'only-archived' to show only archived
     const where = include === 'archived' ? {} : include === 'only-archived' ? { archivedAt: { not: null } } : { archivedAt: null }
 
@@ -46,6 +46,9 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     if (!body.name?.trim()) {
       return NextResponse.json({ error: 'Project name is required' }, { status: 400 })
+    }
+    if (!body.postcode?.trim()) {
+      return NextResponse.json({ error: 'Postcode is required' }, { status: 400 })
     }
     if (body.startDate && body.endDate && new Date(body.endDate) < new Date(body.startDate)) {
       return NextResponse.json({ error: 'End date must be on or after start date' }, { status: 400 })

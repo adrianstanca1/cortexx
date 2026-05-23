@@ -28,8 +28,11 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     if (body.title !== undefined && !String(body.title).trim()) {
       return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
     }
-    if (body.dueTime !== undefined && body.dueTime !== null && !/^\d{2}:\d{2}$/.test(String(body.dueTime))) {
-      return NextResponse.json({ error: 'dueTime must be HH:MM' }, { status: 400 })
+    if (body.dueTime !== undefined && body.dueTime !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(body.dueTime))) {
+      return NextResponse.json({ error: 'dueTime must be HH:MM (00:00–23:59)' }, { status: 400 })
+    }
+    if (body.dueDate !== undefined && body.dueDate !== null && isNaN(Date.parse(String(body.dueDate)))) {
+      return NextResponse.json({ error: 'dueDate must be a valid date' }, { status: 400 })
     }
     const task = await prisma.task.update({
       where: { id: params.id },
