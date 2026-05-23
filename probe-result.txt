@@ -1,9 +1,9 @@
-Probed at: Sat May 23 12:22:27 UTC 2026
+Probed at: Sat May 23 12:23:37 UTC 2026
 
 === /login HEAD ===
 HTTP/2 200 
 server: nginx
-date: Sat, 23 May 2026 12:22:28 GMT
+date: Sat, 23 May 2026 12:23:37 GMT
 content-type: text/html; charset=utf-8
 vary: Accept-Encoding
 vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch, Accept-Encoding
@@ -13,14 +13,14 @@ cache-control: private, no-cache, no-store, max-age=0, must-revalidate
 === /dashboard HEAD ===
 HTTP/2 307 
 server: nginx
-date: Sat, 23 May 2026 12:22:28 GMT
+date: Sat, 23 May 2026 12:23:38 GMT
 location: /login?callbackUrl=%2Fdashboard
 
 
 === /sw.js HEAD ===
 HTTP/2 200 
 server: nginx
-date: Sat, 23 May 2026 12:22:29 GMT
+date: Sat, 23 May 2026 12:23:38 GMT
 content-type: application/javascript; charset=UTF-8
 content-length: 2703
 
@@ -66,16 +66,16 @@ content-length: 2703
         },
         "memory": {
             "ok": true,
-            "rss_mb": 114.3
+            "rss_mb": 116.8
         },
         "app": {
             "ok": true,
             "ms": 1
         }
     },
-    "uptime": 377.357595664,
+    "uptime": 446.873609763,
     "version": "0.1.0",
-    "timestamp": "2026-05-23T12:22:30.712Z"
+    "timestamp": "2026-05-23T12:23:40.229Z"
 }
 
 === /login HTML build id ===
