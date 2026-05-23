@@ -42,8 +42,11 @@ jobs:
           } > site_check.txt
           cat site_check.txt
 
-      - uses: actions/upload-artifact@v4
+      - name: Commit results back to repo
         if: always()
-        with:
-          name: site-check
-          path: site_check.txt
+        run: |
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add site_check.txt
+          git commit -m "chore: diagnostic results [skip ci]" || true
+          git push || true
