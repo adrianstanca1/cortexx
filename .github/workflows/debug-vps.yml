@@ -13,54 +13,99 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Inspect deploy state
+
+      - name: Try deploy step manually with full tracing
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
         run: |
+          echo "Local NEXTAUTH_SECRET length: ${#NEXTAUTH_SECRET}"
+          echo "Local ADMIN_EMAIL: $ADMIN_EMAIL"
+          echo "Local ADMIN_PASSWORD length: ${#ADMIN_PASSWORD}"
+          echo "Local SEED_TOKEN length: ${#SEED_TOKEN}"
+          echo ""
+          # Run deploy step verbatim, capturing everything
           {
+            echo "=== Remote env check ==="
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
+              NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+              ADMIN_EMAIL="$ADMIN_EMAIL" \
+              ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+              SEED_TOKEN="$SEED_TOKEN" \
+              'bash -s' << 'REMOTE'
+              echo "Remote env vars (length only):"
+              echo "  NEXTAUTH_SECRET: ${#NEXTAUTH_SECRET}"
+              echo "  ADMIN_EMAIL: $ADMIN_EMAIL"
+              echo "  ADMIN_PASSWORD: ${#ADMIN_PASSWORD}"
+              echo "  SEED_TOKEN: ${#SEED_TOKEN}"
+          REMOTE
+            echo ""
+            echo "=== Pre-check files ==="
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
+              'ls -la /opt/cortexx-db-password /tmp/cortexx_pg_ip /tmp/cortexx_pg_container 2>&1'
+            echo ""
+            echo "=== Postgres DB check ==="
             ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-              echo "=== /opt/cortexx state ==="
-              ls -la /opt/cortexx/ 2>/dev/null | head -20
-              echo ""
-              echo "=== .env.production (sanitized) ==="
-              if [ -f /opt/cortexx/.env.production ]; then
-                grep -v PASSWORD /opt/cortexx/.env.production | sed -E 's/(SECRET|TOKEN|PASS|PASSWORD)=.*$/\1=***/' | sed -E 's/cortexx:[^@]*@/cortexx:***@/'
-              else
-                echo "MISSING"
-              fi
-              echo ""
-              echo "=== Latest npm error log (if any) ==="
-              find /root/.npm/_logs -name "*.log" -mmin -120 -exec ls -la {} \; 2>/dev/null | tail -3
-              echo ""
-              latest=$(find /root/.npm/_logs -name "*.log" -mmin -120 2>/dev/null | sort | tail -1)
-              if [ -n "$latest" ]; then
-                echo "Tail of $latest:"
-                tail -40 "$latest"
-              fi
-              echo ""
-              echo "=== Build state ==="
-              ls /opt/cortexx/.next 2>/dev/null | head -5 || echo "no .next"
-              echo ""
-              echo "=== pm2 status ==="
-              pm2 list 2>&1 | grep -E "cortexx|status"
-              pm2 logs cortexx --lines 50 --nostream 2>&1 | tail -50
-              echo ""
-              echo "=== Database state ==="
-              PG_CONTAINER=""
-              for c in $(docker ps --format '{{.Names}}'); do
-                if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
-                  PG_CONTAINER="$c"; break
-                fi
-              done
-              echo "PG container: $PG_CONTAINER"
-              if [ -n "$PG_CONTAINER" ]; then
-                docker exec -i "$PG_CONTAINER" psql -U postgres -d cortexx -c "\dt" 2>&1 | head -20
-                echo ""
-                docker exec -i "$PG_CONTAINER" psql -U postgres -d cortexx -c 'SELECT COUNT(*) FROM "Project";' 2>&1 | head -5
+              DB_PASS=$(cat /opt/cortexx-db-password 2>/dev/null)
+              PG_IP=$(cat /tmp/cortexx_pg_ip 2>/dev/null)
+              PG_CONTAINER=$(cat /tmp/cortexx_pg_container 2>/dev/null)
+              echo "DB_PASS length: ${#DB_PASS}"
+              echo "PG_IP: $PG_IP"
+              echo "PG_CONTAINER: $PG_CONTAINER"
+              if [ -n "$DB_PASS" ] && [ -n "$PG_IP" ]; then
+                echo "Test connection:"
+                docker exec -i "$PG_CONTAINER" psql -U cortexx -d cortexx -h "$PG_IP" -c "SELECT 1;" 2>&1 | head -5
               fi
           REMOTE
-          } > vps_debug.txt 2>&1
-          cat vps_debug.txt
+            echo ""
+            echo "=== Try deploy step ==="
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
+              NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+              ADMIN_EMAIL="$ADMIN_EMAIL" \
+              ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+              SEED_TOKEN="$SEED_TOKEN" \
+              'bash -s' << 'REMOTE' 2>&1 || true
+              set -ex
+              APP_DIR=/opt/cortexx
+              APP_PORT=3010
+              DB_PASS=$(cat /opt/cortexx-db-password 2>/dev/null)
+              PG_IP=$(cat /tmp/cortexx_pg_ip 2>/dev/null)
+              if [ -z "$DB_PASS" ] || [ -z "$PG_IP" ]; then
+                echo "ERROR: Missing DB password or Postgres IP"
+                exit 1
+              fi
+              DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"
+              echo "DB_URL set"
+
+              cd $APP_DIR
+              git fetch origin 2>&1 | tail -3
+              git reset --hard origin/main 2>&1 | tail -3
+              rm -rf $APP_DIR/.next $APP_DIR/node_modules
+
+              echo "Writing .env.production"
+              cat > $APP_DIR/.env.production << ENV
+          DATABASE_URL=$DB_URL
+          NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+          NEXTAUTH_URL=https://cortexbuildpro.com
+          NODE_ENV=production
+          PORT=$APP_PORT
+          ALLOW_SEED=true
+          SEED_TOKEN=$SEED_TOKEN
+          ADMIN_EMAIL=$ADMIN_EMAIL
+          ADMIN_PASSWORD=$ADMIN_PASSWORD
+          ENV
+              chmod 600 $APP_DIR/.env.production
+              echo ".env.production size: $(wc -c < $APP_DIR/.env.production) bytes"
+
+              echo "Running npm ci..."
+              npm ci --include=dev 2>&1 | tail -15
+              echo "npm ci exit: $?"
+          REMOTE
+          } 2>&1 | tee debug.txt
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add vps_debug.txt
-          git commit -m "chore: vps debug [skip ci]" || true
+          git add debug.txt
+          git commit -m "chore: deploy debug [skip ci]" || true
           git push || true
