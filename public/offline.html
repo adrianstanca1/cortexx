@@ -1,0 +1,27 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+  <title>Offline — Cortexx</title>
+  <link rel="apple-touch-icon" href="/apple-touch-icon.png" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#06101e" />
+  <style>
+    html, body { background:#06101e; color:#eef3fa; font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif; margin:0; min-height:100dvh; display:flex; align-items:center; justify-content:center; padding:24px; box-sizing:border-box }
+    .wrap { text-align:center; max-width:320px }
+    .ring { width:64px; height:64px; border-radius:50%; border:2px solid #f59e0b; background:rgba(245,158,11,0.15); display:flex; align-items:center; justify-content:center; margin:0 auto 16px; color:#f59e0b; font-size:28px; font-weight:700; font-family:ui-monospace,monospace }
+    h1 { font-size:20px; font-weight:700; letter-spacing:-0.02em; margin:0 0 8px }
+    p  { font-size:13px; color:#8ea8c5; margin:0 0 20px; line-height:1.5 }
+    button { background:#f59e0b; color:#fff; border:none; border-radius:12px; padding:12px 24px; font-size:14px; font-weight:700; cursor:pointer; font-family:inherit }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="ring">x</div>
+    <h1>You're offline</h1>
+    <p>Cortexx can't reach the network right now. Reconnect and tap retry.</p>
+    <button onclick="location.reload()">Retry</button>
+  </div>
+</body>
+</html>

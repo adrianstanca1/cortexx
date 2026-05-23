@@ -3,6 +3,7 @@ import { getServerSession } from 'next-auth'
 import { authOptions } from '@/lib/auth'
 import SessionProviderClient from '@/components/SessionProviderClient'
 import AuthedShell from '@/components/ui/AuthedShell'
+import SWRegister from '@/components/ui/SWRegister'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -68,6 +69,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
             {children}
           </div>
           <AuthedShell />
+          <SWRegister />
         </SessionProviderClient>
       </body>
     </html>
