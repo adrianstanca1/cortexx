@@ -536,28 +536,6 @@ export default function TasksPage() {
         </div>
       )}
 
-      <button
-        onClick={openModal}
-        style={{
-          position: 'fixed',
-          bottom: 88,
-          right: 20,
-          width: 52,
-          height: 52,
-          borderRadius: '50%',
-          background: '#f59e0b',
-          border: 'none',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          boxShadow: '0 4px 16px rgba(245,158,11,0.4)',
-          zIndex: 50,
-        }}
-      >
-        <IcPlus size={22} color="#fff" />
-      </button>
-
       <TabBar accent="#f59e0b" />
 
       {/* New task modal */}
