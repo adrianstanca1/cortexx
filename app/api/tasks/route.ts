@@ -15,7 +15,7 @@ export async function GET(req: NextRequest) {
     const projectId = searchParams.get('projectId')
     const status = searchParams.get('status')
     const take = Math.min(parseInt(searchParams.get('take') || '100') || 100, MAX_TAKE)
-    const skip = parseInt(searchParams.get('skip') || '0') || 0
+    const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
 
     const where = { ...(projectId && { projectId }), ...(status && { status }) }
     const [tasks, total] = await Promise.all([
@@ -43,8 +43,11 @@ export async function POST(req: NextRequest) {
     if (!body.title?.trim()) {
       return NextResponse.json({ error: 'Task title is required' }, { status: 400 })
     }
-    if (body.dueTime && !/^\d{2}:\d{2}$/.test(String(body.dueTime))) {
-      return NextResponse.json({ error: 'dueTime must be HH:MM' }, { status: 400 })
+    if (body.dueTime && !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(body.dueTime))) {
+      return NextResponse.json({ error: 'dueTime must be HH:MM (00:00–23:59)' }, { status: 400 })
+    }
+    if (body.dueDate && isNaN(Date.parse(String(body.dueDate)))) {
+      return NextResponse.json({ error: 'dueDate must be a valid date' }, { status: 400 })
     }
     const task = await prisma.task.create({
       data: {

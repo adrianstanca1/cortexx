@@ -18,7 +18,7 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const take = Math.min(parseInt(searchParams.get('take') || '20') || 20, MAX_TAKE)
-    const skip = parseInt(searchParams.get('skip') || '0') || 0
+    const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
     const projectId = searchParams.get('projectId')
     const actorType = searchParams.get('actorType') // 'human' | 'ai'
     const search = searchParams.get('q')?.trim()
