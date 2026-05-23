@@ -1,0 +1,22 @@
+version: 2
+updates:
+  - package-ecosystem: "npm"
+    directory: "/"
+    schedule:
+      interval: "weekly"
+      day: "monday"
+    open-pull-requests-limit: 5
+    groups:
+      prisma:
+        patterns: ["@prisma/*", "prisma"]
+      next:
+        patterns: ["next", "react", "react-dom"]
+      types:
+        patterns: ["@types/*"]
+      dev:
+        dependency-type: "development"
+
+  - package-ecosystem: "github-actions"
+    directory: "/"
+    schedule:
+      interval: "weekly"

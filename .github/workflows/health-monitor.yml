@@ -1,0 +1,59 @@
+name: Health Monitor
+
+on:
+  schedule:
+    - cron: '*/15 * * * *' # every 15 minutes
+  workflow_dispatch:
+
+jobs:
+  health:
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - name: Check production health
+        id: check
+        run: |
+          set +e
+          RESPONSE=$(curl -s --max-time 15 https://cortexbuildpro.com/api/health)
+          STATUS=$(curl -s -o /dev/null --max-time 15 -w "%{http_code}" https://cortexbuildpro.com/api/health)
+          echo "HTTP $STATUS"
+          echo "Response: $RESPONSE"
+          echo "status_code=$STATUS" >> $GITHUB_OUTPUT
+          echo "response=$RESPONSE" >> $GITHUB_OUTPUT
+
+          # Check each main page
+          for path in / /dashboard /projects /tasks /team; do
+            CODE=$(curl -s -o /dev/null --max-time 15 -w "%{http_code}" "https://cortexbuildpro.com$path")
+            echo "$path → $CODE"
+            if [ "$CODE" != "200" ] && [ "$CODE" != "307" ] && [ "$CODE" != "308" ]; then
+              echo "::warning::Page $path returned $CODE"
+            fi
+          done
+
+      - name: Open issue if production is down
+        if: steps.check.outputs.status_code != '200'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          # Only file one issue at a time
+          EXISTING=$(gh issue list --repo ${{ github.repository }} --label "outage" --state open --json number --jq '.[0].number' || echo "")
+          if [ -z "$EXISTING" ]; then
+            gh issue create --repo ${{ github.repository }} \
+              --title "🔴 Production health check failed" \
+              --body "Health endpoint returned HTTP ${{ steps.check.outputs.status_code }}.\n\nResponse: ${{ steps.check.outputs.response }}\n\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
+              --label "outage" || true
+          else
+            gh issue comment $EXISTING --body "Still failing at $(date -u +%Y-%m-%dT%H:%M:%SZ) — HTTP ${{ steps.check.outputs.status_code }}" || true
+          fi
+
+      - name: Auto-close outage issue if healthy
+        if: steps.check.outputs.status_code == '200'
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          EXISTING=$(gh issue list --repo ${{ github.repository }} --label "outage" --state open --json number --jq '.[0].number' || echo "")
+          if [ -n "$EXISTING" ]; then
+            gh issue comment $EXISTING --body "✓ Service recovered at $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
+            gh issue close $EXISTING || true
+          fi
