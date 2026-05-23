@@ -1,0 +1,28 @@
+=== HTTP STATUS ===
+HTTP 200
+=== Response headers ===
+HTTP/2 200 
+server: nginx
+date: Sat, 23 May 2026 00:09:57 GMT
+content-type: text/html
+content-length: 21152
+last-modified: Thu, 21 May 2026 00:21:56 GMT
+vary: Accept-Encoding
+etag: "6a0e5024-52a0"
+strict-transport-security: max-age=31536000; includeSubDomains
+x-content-type-options: nosniff
+x-frame-options: DENY
+referrer-policy: strict-origin-when-cross-origin
+permissions-policy: geolocation=(self), microphone=(self), camera=()
+content-security-policy: default-src 'self'; script-src 'self' 'sha256-thmj0Wb0MX78imz4X05y22AHOgc19xjD3Rs4pc9q5uA='; style-src 'self' 'unsafe-inline'; img-src 'self' data: https:; font-src 'self' data:; connect-src 'self' https://field.cortexbuildpro.com; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'
+accept-ranges: bytes
+
+=== Root page HTML ===
+<!DOCTYPE html><html  lang="en"><head><meta charSet="utf-8"/><meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no"/><meta http-equiv="X-UA-Compatible" content="IE=edge"/><title>CortexBuild Field — AI Construction Management</title><meta name="description" content="The construction-site app for UK companies that ship. Capture defects, run permits to work, file daily reports, and chase invoices — even with the signal halfway down the mast."/><style id="expo-reset">#root,body,html{height:100%}body{overflow:hidden}#root{display:flex}</style><style id="react-native-stylesheet">[stylesheet-group="0"]{}
+body{margin:0;}
+button::-moz-focus-inner,input::-moz-focus-inner{border:0;padding:0;}
+html{-ms-text-size-adjust:100%;-webkit-text-size-adjust:100%;-webkit-tap-h
+=== /api/projects ===
+{"message":"No token provided"}
+=== /api/dashboard ===
+{"message":"No token provided"}
