@@ -28,16 +28,18 @@ jobs:
           chmod 600 ~/.ssh/cortexx_deploy
           ssh-keyscan -H 72.62.132.43 >> ~/.ssh/known_hosts 2>/dev/null || true
 
-      - name: Verify SSH access (retry up to 4 times)
+      - name: Verify SSH access (retry up to 8 times)
         run: |
-          for attempt in 1 2 3 4; do
+          for attempt in 1 2 3 4 5 6 7 8; do
             if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo SSH_OK && uname -a' 2>&1; then
               exit 0
             fi
-            echo "SSH attempt $attempt failed, waiting $((attempt * 5))s"
-            sleep $((attempt * 5))
+            # Linear backoff: 5, 10, 15, 20, 25, 30, 35 (total ≤140s)
+            wait=$((attempt * 5))
+            echo "SSH attempt $attempt failed, waiting ${wait}s"
+            sleep $wait
           done
-          echo "SSH connection failed after 4 attempts"
+          echo "SSH connection failed after 8 attempts"
           exit 1
 
       - name: Install missing tools
