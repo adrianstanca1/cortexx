@@ -466,6 +466,7 @@ export default function ProjectDetailPage() {
             <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>{project.clientName}{project.postcode ? ` · ${project.postcode}` : ''}</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
+            <Link href={`/projects/${id}/gallery`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(37,99,235,0.1)', border: '0.5px solid rgba(37,99,235,0.2)', color: '#2563eb', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Gallery</Link>
             <button onClick={() => { setEditForm({ status: project.status, progress: project.progress.toString(), budget: project.budget.toString(), name: project.name, clientName: project.clientName, startDate: project.startDate?.split('T')[0] || '', endDate: project.endDate?.split('T')[0] || '' }); setConfirmDeleteProject(false); setShowEditModal(true) }} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.1)', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer' }}>Edit</button>
             <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 28, fontWeight: 700, color: sc }}>{project.progress}<span style={{ fontSize: 14, color: '#52749a' }}>%</span></div>
           </div>
@@ -679,6 +680,9 @@ export default function ProjectDetailPage() {
                       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: ic, fontWeight: 700 }}>£{inv.amount.toLocaleString()}</div>
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: ic, marginTop: 1, textTransform: 'capitalize', fontWeight: 600 }}>{inv.status} →</div>
                     </div>
+                    <a href={`/api/invoices/${inv.id}/print`} target="_blank" rel="noopener" aria-label="Print invoice" style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, textDecoration: 'none', fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#2563eb' }}>
+                      PDF
+                    </a>
                     <button onClick={() => openEditInvoice(inv)} style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                       <IcEdit size={12} color="#f59e0b" />
                     </button>

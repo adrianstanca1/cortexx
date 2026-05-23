@@ -42,6 +42,7 @@ export interface Task {
   updatedAt: string
   project?: Project | null
   assignee?: TeamMember | null
+  _count?: { comments?: number }
 }
 
 export interface TeamMember {
