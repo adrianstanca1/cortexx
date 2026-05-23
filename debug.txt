@@ -1,0 +1,89 @@
+=== Most recent VPS actions ===
+{
+    "data": [
+        {
+            "id": 95447661,
+            "name": "ct_set_rootpasswd",
+            "state": "success",
+            "created_at": "2026-05-22T21:35:07Z",
+            "updated_at": "2026-05-22T21:35:08Z"
+        },
+        {
+            "id": 94585262,
+            "name": "backup_create",
+            "state": "success",
+            "created_at": "2026-05-17T21:15:30Z",
+            "updated_at": "2026-05-17T22:38:52Z"
+        },
+        {
+            "id": 94262168,
+            "name": "ct_restart",
+            "state": "success",
+            "created_at": "2026-05-15T20:22:14Z",
+            "updated_at": "2026-05-15T20:22:23Z"
+        },
+        {
+            "id": 94255758,
+            "name": "ct_set_rootpasswd",
+            "state": "success",
+            "created_at": "2026-05-15T18:38:23Z",
+            "updated_at": "2026-05-15T18:38:24Z"
+        },
+
+=== Attached keys ===
+{
+    "data": [
+        {
+            "id": 508769,
+            "name": "cortexx-deploy-gh",
+            "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHD/dPmonbAZXY2OLX46U5rOq9+XlO9+NPUWm+kfybEr cortexx-deploy@gh-actions"
+        },
+        {
+            "id": 417165,
+            "name": "Clawd",
+            "key": "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJpq1LE8bqxeMN89XIiqESppOmDwsSHBk0d2NmRhSCDg node@642f61c4ec6c"
+        },
+        {
+            "id": 402507,
+            "name": "cortexbuildpro",
+            "key": "ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAACAQCqvXeMFeYnWQxDBxHcR7FyN3O/3pGfND6Vy9vpveXUQnczeQoDMdBjGGfces5A9BOZ2RMwqgy+l0juPsolxPatk8pzDi0F+AlG0vcxeQ3UkUsRkNKHmAs498/a46w0cwsHlpQ5TBjq6Cypmuc1to85rtJZPKDv75pR6utWVBNJEMm3aJTPMFWf8hbT2H+PzStYSBgYTEgfK7+r4LsnerjJtPY3lzUMdzh2va0Cn9CYs5MQPoQNN6KmzLgzUTDkoW+l/zszkkxcmNt/8fS6rfmhVlZNRH0w7vIElM9RaHTqShNn/MMQrsJHr8XzVqGJBv7FrKht0euNZLOa9o4n/wzhVtTi53sirZ8qVj03w7gLI0or5mBDr5aQFRFx+ek7yMO5dT9feTlSK51a1Wr+ohIklTNIEkuOMpkNk1mqOM+3tlss4Ppkv5O5g/70y0qP0pfQBTx8nRCzV9QWnld6jJ19zjQK6WDG63brUkIyp75xLP4abp9Cqye93Da9QG3eFQGkFrMoQrmvwjQBl+89qu5GhlMqjP5LL1XRop/q9D6R5ALbhrkCCgqa7/dPgNpGg4gbWiFhyInkVbtjiLIjnnf1WQhom+Q6zQyPcJbzzTcO4M87Qv/RaMD3aprr6wl1F/1Pa/zl3lX+x/aDAXupKV45qMCA34X/KtuTbZRthhYI2Q== adrian.stanca1@gmail.com"
+        }
+    ],
+    "meta": {
+        "current_page": 1,
+
+=== Port 22 reachable? ===
+Port 22 OPEN
+
+=== SSH banner ===
+# 72.62.132.43:22 SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.16
+# 72.62.132.43:22 SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.16
+72.62.132.43 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIHrmfrEVboBXFvFMGE6B8QDZ+SZG7nnU7iizNkcZYmhc
+
+=== SSH verbose with key (no retries) ===
+debug1: Reading configuration data /etc/ssh/ssh_config
+debug1: /etc/ssh/ssh_config line 19: include /etc/ssh/ssh_config.d/*.conf matched no files
+debug1: /etc/ssh/ssh_config line 21: Applying options for *
+debug1: Connecting to 72.62.132.43 [72.62.132.43] port 22.
+debug1: fd 3 clearing O_NONBLOCK
+debug1: Connection established.
+debug1: identity file /home/runner/.ssh/cortexx_deploy type 3
+debug1: identity file /home/runner/.ssh/cortexx_deploy-cert type -1
+debug1: Local version string SSH-2.0-OpenSSH_9.6p1 Ubuntu-3ubuntu13.16
+debug1: Remote protocol version 2.0, remote software version OpenSSH_9.6p1 Ubuntu-3ubuntu13.16
+debug1: compat_banner: match: OpenSSH_9.6p1 Ubuntu-3ubuntu13.16 pat OpenSSH* compat 0x04000000
+debug1: Authenticating to 72.62.132.43:22 as 'root'
+debug1: load_hostkeys: fopen /home/runner/.ssh/known_hosts: No such file or directory
+debug1: load_hostkeys: fopen /home/runner/.ssh/known_hosts2: No such file or directory
+debug1: load_hostkeys: fopen /etc/ssh/ssh_known_hosts2: No such file or directory
+debug1: SSH2_MSG_KEXINIT sent
+debug1: SSH2_MSG_KEXINIT received
+debug1: kex: algorithm: sntrup761x25519-sha512@openssh.com
+debug1: kex: host key algorithm: ssh-ed25519
+debug1: kex: server->client cipher: chacha20-poly1305@openssh.com MAC: <implicit> compression: none
+
+=== Password auth attempt ===
+debug1: Authentications that can continue: publickey,password
+debug1: Next authentication method: password
+debug1: Authentications that can continue: publickey,password
+Permission denied, please try again.
