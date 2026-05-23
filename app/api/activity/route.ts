@@ -19,15 +19,31 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const take = Math.min(parseInt(searchParams.get('take') || '20') || 20, MAX_TAKE)
     const skip = parseInt(searchParams.get('skip') || '0') || 0
+    const projectId = searchParams.get('projectId')
+    const actorType = searchParams.get('actorType') // 'human' | 'ai'
+    const search = searchParams.get('q')?.trim()
+
+    const where = {
+      ...(projectId && { projectId }),
+      ...(actorType && { actorType }),
+      ...(search && {
+        OR: [
+          { action: { contains: search, mode: 'insensitive' as const } },
+          { detail: { contains: search, mode: 'insensitive' as const } },
+          { actorName: { contains: search, mode: 'insensitive' as const } },
+        ],
+      }),
+    }
 
     const [activities, total] = await Promise.all([
       prisma.activity.findMany({
+        where,
         include: { project: true },
         orderBy: { createdAt: 'desc' },
         take,
         skip,
       }),
-      prisma.activity.count(),
+      prisma.activity.count({ where }),
     ])
     return NextResponse.json({ activities, total, hasMore: skip + activities.length < total })
   } catch (error) {

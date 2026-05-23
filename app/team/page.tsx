@@ -294,10 +294,31 @@ export default function TeamPage() {
             </button>
           </div>
           {pendingCount > 0 && (
-            <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', marginBottom: 4 }}>
-              <p style={{ fontSize: 12, color: '#f59e0b', fontFamily: 'var(--font-system)', fontWeight: 600 }}>
+            <div style={{ padding: '12px 14px', borderRadius: 14, background: 'rgba(245,158,11,0.08)', border: '1px solid rgba(245,158,11,0.2)', marginBottom: 4, display: 'flex', alignItems: 'center', gap: 10 }}>
+              <p style={{ flex: 1, fontSize: 12, color: '#f59e0b', fontFamily: 'var(--font-system)', fontWeight: 600 }}>
                 {pendingCount} timesheet{pendingCount !== 1 ? 's' : ''} pending approval
               </p>
+              <button
+                onClick={async () => {
+                  if (!window.confirm(`Approve all ${pendingCount} timesheet${pendingCount !== 1 ? 's' : ''} for this week?`)) return
+                  // Get current ISO week/year via first entry, or fall back
+                  const sample = timesheets.find(t => !t.approved)?.entries[0]
+                  if (!sample) return
+                  const res = await fetch('/api/timeentries').then(r => r.json())
+                  await fetch('/api/timeentries/bulk', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ action: 'approve', week: res.week, year: res.year }),
+                  })
+                  // Refresh
+                  const fresh = await fetch('/api/timeentries').then(r => r.json())
+                  setTimesheets(fresh.byMember || [])
+                  setToast({ msg: 'All timesheets approved' })
+                }}
+                style={{ padding: '6px 12px', borderRadius: 8, background: '#f59e0b', border: 'none', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-system)' }}
+              >
+                Approve all
+              </button>
             </div>
           )}
           {tsLoading ? (
