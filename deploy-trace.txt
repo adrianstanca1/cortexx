@@ -1,0 +1,229 @@
+Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
++ set -uo pipefail
++ APP_DIR=/opt/cortexx
++ APP_PORT=3010
+++ date -u
+=== START Sat May 23 12:15:27 UTC 2026 ===
+envs: DB_PASS=32c NEXTAUTH_SECRET=48c
+
+=== before-state ===
++ echo '=== START Sat May 23 12:15:27 UTC 2026 ==='
++ echo 'envs: DB_PASS=32c NEXTAUTH_SECRET=48c'
++ echo
++ echo '=== before-state ==='
++ cd /opt/cortexx
++ git log --oneline -1
+3ff4ab1 Add export const dynamic = 'force-dynamic' to GET API routes
++ cat .next/BUILD_ID
+w_fmPttmsun8birlpaShE
+=== git fetch + reset ===
++ echo
++ echo '=== git fetch + reset ==='
++ git fetch origin
+From https://github.com/adrianstanca1/cortexx
+   3ff4ab1..dc0d2cd  main       -> origin/main
+fetch exit=0
++ echo 'fetch exit=0'
++ git log --oneline origin/main -1
+dc0d2cd Add force-deploy workflow for verbose tracing [skip ci]
++ git reset --hard origin/main
+HEAD is now at dc0d2cd Add force-deploy workflow for verbose tracing [skip ci]
+reset exit=0
+dc0d2cd Add force-deploy workflow for verbose tracing [skip ci]
+
+=== rm -rf .next + node_modules ===
++ echo 'reset exit=0'
++ git log --oneline -1
++ echo
++ echo '=== rm -rf .next + node_modules ==='
++ rm -rf /opt/cortexx/.next /opt/cortexx/node_modules
+rm exit=0
++ echo 'rm exit=0'
++ ls -la /opt/cortexx/.next
++ head -3
+ls: cannot access '/opt/cortexx/.next': No such file or directory
+
+=== check PG container ===
++ echo
++ echo '=== check PG container ==='
++ PG_CONTAINER=
+++ docker ps --format '{{.Names}}'
++ for c in $(docker ps --format '{{.Names}}')
++ docker port invoicesmart-backend
++ grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'
++ for c in $(docker ps --format '{{.Names}}')
++ docker port cortexbuild-api
++ grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'
++ for c in $(docker ps --format '{{.Names}}')
++ docker port cortexbuild-mysql
++ grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'
++ for c in $(docker ps --format '{{.Names}}')
++ docker port cortexbuild-postgres
++ grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'
++ for c in $(docker ps --format '{{.Names}}')
++ grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'
++ docker port cortexbuild-minio
++ for c in $(docker ps --format '{{.Names}}')
++ docker port cortexbuild-db
++ grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'
++ PG_CONTAINER=cortexbuild-db
++ break
+PG_CONTAINER=cortexbuild-db
++ echo PG_CONTAINER=cortexbuild-db
+++ docker inspect cortexbuild-db --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}'
+++ awk '{print $1}'
+PG_IP=172.18.0.6
+DB_URL set: 77c
+
+=== write .env.production ===
++ PG_IP=172.18.0.6
++ echo PG_IP=172.18.0.6
++ DB_URL=postgresql://cortexx:f1d8b2c9b2a018fd9c81a519b8a11e22@172.18.0.6:5432/cortexx
++ echo 'DB_URL set: 77c'
++ echo
++ echo '=== write .env.production ==='
++ cat
++ chmod 600 /opt/cortexx/.env.production
+++ wc -c
+.env.production written: 363 bytes
+
+=== npm ci (no pipe-tail) ===
++ echo '.env.production written: 363 bytes'
++ echo
++ echo '=== npm ci (no pipe-tail) ==='
++ cd /opt/cortexx
++ npm ci --include=dev
++ NCI=0
++ echo 'npm ci exit=0'
+npm ci exit=0
++ tail -10 /tmp/npm-ci.log
+
+30 packages are looking for funding
+  run `npm fund` for details
+
+4 vulnerabilities (3 moderate, 1 high)
+
+To address all issues (including breaking changes), run:
+  npm audit fix --force
+
+Run `npm audit` for details.
+
+=== prisma generate ===
++ echo
++ echo '=== prisma generate ==='
++ DATABASE_URL=postgresql://cortexx:f1d8b2c9b2a018fd9c81a519b8a11e22@172.18.0.6:5432/cortexx
++ npx prisma generate
+prisma generate exit=0
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Want to turn off tips and other hints? https://pris.ly/tip-4-nohints
+
+
+=== prisma migrate deploy ===
++ PG=0
++ echo 'prisma generate exit=0'
++ tail -5 /tmp/prisma-gen.log
++ echo
++ echo '=== prisma migrate deploy ==='
++ DATABASE_URL=postgresql://cortexx:f1d8b2c9b2a018fd9c81a519b8a11e22@172.18.0.6:5432/cortexx
++ npx prisma migrate deploy
+prisma migrate exit=1
++ PM=1
++ echo 'prisma migrate exit=1'
++ tail -10 /tmp/prisma-mig.log
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "cortexx", schema "public" at "172.18.0.6:5432"
+
+Error: P1000: Authentication failed against database server at `172.18.0.6`, the provided database credentials for `cortexx` are not valid.
+
+Please make sure to provide valid database credentials for the database server at `172.18.0.6`.
+
+=== npm run build (CRITICAL) ===
++ echo
++ echo '=== npm run build (CRITICAL) ==='
++ DATABASE_URL=postgresql://cortexx:f1d8b2c9b2a018fd9c81a519b8a11e22@172.18.0.6:5432/cortexx
++ NEXTAUTH_SECRET=SWHMv3JSrdNOtRck6UL4SrBKbJ6DzrmSjKIRQSpQoSR3J3CB
++ NEXTAUTH_URL=https://cortexbuildpro.com
++ npm run build
+npm run build exit=0
+--- build.log tail ---
++ BUILD=0
++ echo 'npm run build exit=0'
++ echo '--- build.log tail ---'
++ tail -30 /tmp/build.log
+├ ƒ /api/team/[id]                       0 B                0 B
+├ ƒ /api/timeentries                     0 B                0 B
+├ ƒ /api/timeentries/[id]                0 B                0 B
+├ ƒ /api/timeentries/bulk                0 B                0 B
+├ ƒ /capture                             3.03 kB        92.6 kB
+├ ƒ /dashboard                           4.04 kB         102 kB
+├ ƒ /documents                           3.81 kB         102 kB
+├ ƒ /inbox                               2.44 kB         101 kB
+├ ƒ /login                               1.33 kB         107 kB
+├ ƒ /projects                            5.05 kB         103 kB
+├ ƒ /projects/[id]                       10.5 kB         109 kB
+├ ƒ /projects/[id]/board                 3.15 kB         101 kB
+├ ƒ /projects/[id]/gallery               2.36 kB         101 kB
+├ ƒ /register                            1.49 kB         108 kB
+├ ƒ /reports                             2.68 kB         101 kB
+├ ƒ /search                              3.12 kB         101 kB
+├ ƒ /settings                            2.33 kB         110 kB
+├ ƒ /tasks                               7.65 kB         116 kB
+├ ƒ /team                                6.38 kB         105 kB
+└ ƒ /team/[id]                           3.08 kB         101 kB
++ First Load JS shared by all            87.6 kB
+  ├ chunks/117-0b734d6a07bf79c2.js       31.7 kB
+  ├ chunks/fd9d1056-b6edf2a6367e3325.js  53.6 kB
+  └ other shared chunks (total)          2.2 kB
+
+
+ƒ Middleware                             47.8 kB
+
+ƒ  (Dynamic)  server-rendered on demand
+
+--- end build.log ---
+
+=== .next state after build ===
++ echo '--- end build.log ---'
++ echo
++ echo '=== .next state after build ==='
++ ls -la /opt/cortexx/.next
++ head -5
+total 888
+drwxr-xr-x  6 root root   4096 May 23 12:16 .
+drwxr-xr-x 12 root root   4096 May 23 12:15 ..
+-rw-r--r--  1 root root     21 May 23 12:16 BUILD_ID
+-rw-r--r--  1 root root   8626 May 23 12:15 app-build-manifest.json
+0fzsQd3LggMIMEXAUpaco
++ cat /opt/cortexx/.next/BUILD_ID
++ echo
+=== pm2 reload ===
++ echo '=== pm2 reload ==='
++ pm2 reload cortexx --update-env
+[PM2] Applying action reloadProcessId on app [cortexx](ids: [ 15 ])
+[PM2] [cortexx](15) ✓
+pm2 reload exit=0
++ PM2=0
++ echo 'pm2 reload exit=0'
++ pm2 describe cortexx
++ head -5
++ grep -E 'restarts|uptime|status'
+│ status            │ online                            │
+│ restarts          │ 1                                 │
+│ uptime            │ 0s                                │
+│ unstable restarts │ 0                                 │
+
++ echo
++ sleep 5
+=== final curl ===
++ echo '=== final curl ==='
++ curl -s -o /dev/null -w 'localhost:3010/login → %{http_code}\n' http://localhost:3010/login
+localhost:3010/login → 200
++ curl -s -o /dev/null -w 'localhost:3010/sw.js → %{http_code}\n' http://localhost:3010/sw.js
+localhost:3010/sw.js → 200
+
++ echo
+=== END Sat May 23 12:16:18 UTC 2026 ===
+++ date -u
++ echo '=== END Sat May 23 12:16:18 UTC 2026 ==='
