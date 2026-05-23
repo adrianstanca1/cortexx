@@ -158,48 +158,17 @@ jobs:
             echo "=== sites-enabled after cleanup ==="
             ls /etc/nginx/sites-enabled/
 
-            # Find the SSL cert path for cortexbuildpro.com — could be at multiple paths
+            # Check for an existing SSL cert for cortexbuildpro.com root
             SSL_FULLCHAIN=""
             SSL_PRIVKEY=""
-
-            # 1. Check standard location
             if [ -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
               SSL_FULLCHAIN=/etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem
               SSL_PRIVKEY=/etc/letsencrypt/live/cortexbuildpro.com/privkey.pem
+              echo "Existing cert found"
             fi
-
-            # 2. Extract from backed-up old config if not found
-            if [ -z "$SSL_FULLCHAIN" ] && [ -d "$BACKUP" ]; then
-              for bkp in $BACKUP/*.bak; do
-                [ -f "$bkp" ] || continue
-                # Parse `ssl_certificate ...;` lines
-                CERT=$(grep -E "^\s*ssl_certificate\s" "$bkp" | head -1 | sed -E 's/.*ssl_certificate\s+([^;[:space:]]+).*/\1/' | tr -d ';')
-                KEY=$(grep -E "^\s*ssl_certificate_key\s" "$bkp" | head -1 | sed -E 's/.*ssl_certificate_key\s+([^;[:space:]]+).*/\1/' | tr -d ';')
-                if [ -n "$CERT" ] && [ -f "$CERT" ] && [ -f "$KEY" ]; then
-                  SSL_FULLCHAIN="$CERT"
-                  SSL_PRIVKEY="$KEY"
-                  echo "Found SSL cert from backup ($bkp): $CERT"
-                  break
-                fi
-              done
-            fi
-
-            # 3. Fallback: scan /etc/letsencrypt/live/ for any cortexbuildpro cert
-            if [ -z "$SSL_FULLCHAIN" ]; then
-              for d in /etc/letsencrypt/live/*cortexbuildpro*; do
-                [ -d "$d" ] || continue
-                if [ -f "$d/fullchain.pem" ]; then
-                  SSL_FULLCHAIN="$d/fullchain.pem"
-                  SSL_PRIVKEY="$d/privkey.pem"
-                  echo "Fallback SSL cert: $SSL_FULLCHAIN"
-                  break
-                fi
-              done
-            fi
-
             echo "SSL_FULLCHAIN=$SSL_FULLCHAIN"
-            echo "SSL_PRIVKEY=$SSL_PRIVKEY"
 
+            mkdir -p /var/www/html
             cat > /etc/nginx/sites-available/cortexx << 'NGINX'
           server {
               listen 80;
@@ -208,6 +177,7 @@ jobs:
 
               location /.well-known/acme-challenge/ {
                   root /var/www/html;
+                  try_files $uri =404;
               }
 
               location / {
@@ -224,7 +194,6 @@ jobs:
                   proxy_buffering off;
               }
 
-              # SSE keep-alive support
               location /api/events/ {
                   proxy_pass http://127.0.0.1:3010;
                   proxy_http_version 1.1;
@@ -288,6 +257,79 @@ jobs:
             systemctl reload nginx
             echo "Other enabled sites (preserved):"
             ls /etc/nginx/sites-enabled/
+          REMOTE
+
+      - name: Provision SSL cert via certbot (if not exists)
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+            set -e
+            if [ -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
+              echo "Cert already exists, skipping certbot"
+              exit 0
+            fi
+            # Install certbot if missing
+            command -v certbot >/dev/null 2>&1 || apt-get install -y certbot python3-certbot-nginx >/dev/null
+            # Use webroot challenge (nginx is serving /var/www/html for /.well-known/acme-challenge/)
+            certbot certonly --webroot -w /var/www/html \
+              -d cortexbuildpro.com -d www.cortexbuildpro.com \
+              --non-interactive --agree-tos -m admin@cortexbuildpro.com \
+              --no-eff-email 2>&1 | tail -20
+            ls /etc/letsencrypt/live/cortexbuildpro.com/ 2>&1 || echo "Cert dir missing after certbot"
+          REMOTE
+
+      - name: Add HTTPS block and reload
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+            set -e
+            if [ ! -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
+              echo "No cert — leaving HTTP-only config"
+              exit 0
+            fi
+
+            cat >> /etc/nginx/sites-available/cortexx << 'NGINX_HTTPS'
+
+          server {
+              listen 443 ssl http2;
+              listen [::]:443 ssl http2;
+              server_name cortexbuildpro.com www.cortexbuildpro.com;
+
+              ssl_certificate /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem;
+              ssl_certificate_key /etc/letsencrypt/live/cortexbuildpro.com/privkey.pem;
+              ssl_protocols TLSv1.2 TLSv1.3;
+              ssl_ciphers HIGH:!aNULL:!MD5;
+              ssl_session_cache shared:SSL:10m;
+
+              location / {
+                  proxy_pass http://127.0.0.1:3010;
+                  proxy_http_version 1.1;
+                  proxy_set_header Upgrade $http_upgrade;
+                  proxy_set_header Connection 'upgrade';
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_cache_bypass $http_upgrade;
+                  proxy_read_timeout 90s;
+                  proxy_buffering off;
+              }
+
+              location /api/events/ {
+                  proxy_pass http://127.0.0.1:3010;
+                  proxy_http_version 1.1;
+                  proxy_set_header Host $host;
+                  proxy_set_header X-Real-IP $remote_addr;
+                  proxy_set_header X-Forwarded-Proto $scheme;
+                  proxy_buffering off;
+                  proxy_cache off;
+                  proxy_read_timeout 1h;
+                  chunked_transfer_encoding off;
+              }
+          }
+          NGINX_HTTPS
+
+            nginx -t
+            systemctl reload nginx
+            echo "HTTPS block added and nginx reloaded"
           REMOTE
 
       - name: Verify deployment
