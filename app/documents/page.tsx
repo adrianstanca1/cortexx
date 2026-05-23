@@ -46,6 +46,12 @@ export default function DocumentsPage() {
 
   useEffect(() => { load() }, [load])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1') {
+      setShowModal(true)
+    }
+  }, [])
+
   const create = async () => {
     if (!form.name.trim()) return
     setSaving(true)

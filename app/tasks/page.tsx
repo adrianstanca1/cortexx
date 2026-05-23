@@ -117,6 +117,13 @@ export default function TasksPage() {
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 
+  useEffect(() => {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1') {
+      openModal()
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [])
+
   const openModal = () => {
     setShowModal(true)
     if (projects.length === 0) {
