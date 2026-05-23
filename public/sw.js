@@ -20,8 +20,16 @@ const PRECACHE = [
 
 self.addEventListener('install', (event) => {
   event.waitUntil(
-    caches.open(STATIC_CACHE).then((c) => c.addAll(PRECACHE)).then(() => self.skipWaiting())
+    caches.open(STATIC_CACHE).then((c) => c.addAll(PRECACHE))
   )
+  // Don't auto-skipWaiting — let SWRegister prompt the user. We still
+  // honour an explicit SKIP_WAITING message below for the "Reload" tap.
+})
+
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting()
+  }
 })
 
 self.addEventListener('activate', (event) => {
