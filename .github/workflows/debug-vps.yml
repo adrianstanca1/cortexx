@@ -1,4 +1,4 @@
-name: Debug nginx configs
+name: Debug VPS
 on:
   workflow_dispatch:
 jobs:
@@ -13,25 +13,54 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Show config contents
+      - name: Inspect deploy state
         run: |
           {
             ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-              for f in cortexbuild-field.conf cortexbuild-web.conf buildtrack.conf; do
-                echo "=== /etc/nginx/sites-enabled/$f (first 25 lines) ==="
-                head -25 "/etc/nginx/sites-enabled/$f" 2>/dev/null || echo "Not found"
-                echo ""
-                echo "--- server_name lines in $f ---"
-                grep -n "server_name" "/etc/nginx/sites-enabled/$f" 2>/dev/null
-                echo ""
+              echo "=== /opt/cortexx state ==="
+              ls -la /opt/cortexx/ 2>/dev/null | head -20
+              echo ""
+              echo "=== .env.production (sanitized) ==="
+              if [ -f /opt/cortexx/.env.production ]; then
+                grep -v PASSWORD /opt/cortexx/.env.production | sed -E 's/(SECRET|TOKEN|PASS|PASSWORD)=.*$/\1=***/' | sed -E 's/cortexx:[^@]*@/cortexx:***@/'
+              else
+                echo "MISSING"
+              fi
+              echo ""
+              echo "=== Latest npm error log (if any) ==="
+              find /root/.npm/_logs -name "*.log" -mmin -120 -exec ls -la {} \; 2>/dev/null | tail -3
+              echo ""
+              latest=$(find /root/.npm/_logs -name "*.log" -mmin -120 2>/dev/null | sort | tail -1)
+              if [ -n "$latest" ]; then
+                echo "Tail of $latest:"
+                tail -40 "$latest"
+              fi
+              echo ""
+              echo "=== Build state ==="
+              ls /opt/cortexx/.next 2>/dev/null | head -5 || echo "no .next"
+              echo ""
+              echo "=== pm2 status ==="
+              pm2 list 2>&1 | grep -E "cortexx|status"
+              pm2 logs cortexx --lines 50 --nostream 2>&1 | tail -50
+              echo ""
+              echo "=== Database state ==="
+              PG_CONTAINER=""
+              for c in $(docker ps --format '{{.Names}}'); do
+                if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
+                  PG_CONTAINER="$c"; break
+                fi
               done
-              echo "=== nginx active config for cortexbuildpro.com ==="
-              nginx -T 2>/dev/null | awk '/server\s*{/,/^}/' | grep -B 2 -A 20 'cortexbuildpro' | head -80
+              echo "PG container: $PG_CONTAINER"
+              if [ -n "$PG_CONTAINER" ]; then
+                docker exec -i "$PG_CONTAINER" psql -U postgres -d cortexx -c "\dt" 2>&1 | head -20
+                echo ""
+                docker exec -i "$PG_CONTAINER" psql -U postgres -d cortexx -c 'SELECT COUNT(*) FROM "Project";' 2>&1 | head -5
+              fi
           REMOTE
-          } > nginx_configs.txt 2>&1
-          cat nginx_configs.txt
+          } > vps_debug.txt 2>&1
+          cat vps_debug.txt
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add nginx_configs.txt
-          git commit -m "chore: nginx configs [skip ci]" || true
+          git add vps_debug.txt
+          git commit -m "chore: vps debug [skip ci]" || true
           git push || true
