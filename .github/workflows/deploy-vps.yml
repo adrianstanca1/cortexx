@@ -54,6 +54,7 @@ jobs:
             command -v git >/dev/null 2>&1 || need+=(git)
             command -v nginx >/dev/null 2>&1 || need+=(nginx)
             command -v gzip >/dev/null 2>&1 || need+=(gzip)
+            command -v psql >/dev/null 2>&1 || need+=(postgresql postgresql-contrib)
             if [ ${#need[@]} -gt 0 ]; then
               if [[ " ${need[*]} " == *" nodejs "* ]]; then
                 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -62,7 +63,8 @@ jobs:
               apt-get install -y "${need[@]}"
             fi
             command -v pm2 >/dev/null 2>&1 || npm install -g pm2
-            echo "Node: $(node -v) | pm2: $(pm2 -v)"
+            systemctl enable --now postgresql 2>/dev/null || true
+            echo "Node: $(node -v) | pm2: $(pm2 -v) | psql: $(psql --version 2>&1 | head -1)"
           REMOTE
 
       - name: Provision DB, backup, deploy app
@@ -93,40 +95,15 @@ jobs:
             BACKUP_DIR=/opt/cortexx-backups
             mkdir -p $BACKUP_DIR
 
-            # ─── 1. Find Postgres container ───────────────────────────────
-            PG_CONTAINER=""
-            for c in $(docker ps --format '{{.Names}}'); do
-              if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
-                PG_CONTAINER="$c"; break
-              fi
-            done
-            if [ -z "$PG_CONTAINER" ]; then
-              echo "ERROR: No container is bound to host:5432"
-              docker ps --format '{{.Names}}: {{.Image}} :: {{.Ports}}' >&2
-              exit 1
-            fi
-            PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
-            # Detect superuser. Try POSTGRES_USER env first; then probe candidates
-            # (some containers don't set POSTGRES_USER but still use a non-postgres
-            # superuser — e.g. cortexbuild on our cortexbuild-db).
-            PG_SUPER=$(docker inspect "$PG_CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep ^POSTGRES_USER= | cut -d= -f2 || true)
-            if [ -z "$PG_SUPER" ] || ! docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "SELECT 1" </dev/null >/dev/null 2>&1; then
-              for cand in postgres cortexbuild cortexx admin root; do
-                if docker exec "$PG_CONTAINER" psql -U "$cand" -c "SELECT 1" </dev/null >/dev/null 2>&1; then
-                  PG_SUPER="$cand"; break
-                fi
-              done
-            fi
-            if [ -z "$PG_SUPER" ]; then
-              echo "✗ Could not find a working Postgres superuser"
-              exit 1
-            fi
-            echo "Container=$PG_CONTAINER IP=$PG_IP SUPER=$PG_SUPER"
+            # ─── 1. System Postgres (no docker) ───────────────────────────
+            PG_IP=127.0.0.1
+            echo "Using system PostgreSQL on $PG_IP:5432"
+            psql --version 2>&1 | head -1
 
             # ─── 2. Backup BEFORE any DB changes ──────────────────────────
             STAMP=$(date -u +%Y%m%d-%H%M%S)
             OUT="$BACKUP_DIR/cortexx-$STAMP.sql.gz"
-            if docker exec "$PG_CONTAINER" pg_dump -U cortexx cortexx 2>/dev/null | gzip > "$OUT"; then
+            if sudo -u postgres pg_dump cortexx 2>/dev/null | gzip > "$OUT" && [ -s "$OUT" ]; then
               echo "✓ Backup: $OUT ($(du -h "$OUT" | cut -f1))"
             else
               echo "⚠ pg_dump skipped (DB may be empty / new)"
@@ -135,23 +112,22 @@ jobs:
             find "$BACKUP_DIR" -name '*.sql.gz' -mtime +30 -delete 2>/dev/null || true
 
             # ─── 3. Create/update user + database (idempotent) ────────────
-            # NOTE: drop -i flag from docker exec. -i consumes the SSH heredoc
-            # stdin and silently corrupts subsequent commands.
-            HAS_USER=$(docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -tAc "SELECT 1 FROM pg_user WHERE usename='cortexx'" </dev/null 2>/dev/null || echo "")
+            # Superuser is the OS 'postgres' user via peer auth on local socket.
+            HAS_USER=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_user WHERE usename='cortexx'" 2>/dev/null || echo "")
             if [ "$HAS_USER" != "1" ]; then
-              docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "CREATE USER cortexx WITH PASSWORD '$DB_PASS';" </dev/null
+              sudo -u postgres psql -c "CREATE USER cortexx WITH PASSWORD '$DB_PASS';"
               echo "✓ Created user cortexx"
             fi
-            docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';" </dev/null >/dev/null
-            HAS_DB=$(docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" </dev/null 2>/dev/null || echo "")
+            sudo -u postgres psql -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';" >/dev/null
+            HAS_DB=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" 2>/dev/null || echo "")
             if [ "$HAS_DB" != "1" ]; then
-              docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "CREATE DATABASE cortexx OWNER cortexx;" </dev/null
+              sudo -u postgres psql -c "CREATE DATABASE cortexx OWNER cortexx;"
               echo "✓ Created database cortexx"
             fi
-            docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;" </dev/null >/dev/null
+            sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;" >/dev/null
 
-            # Verify auth actually works before proceeding — catches silent failures
-            if ! docker exec "$PG_CONTAINER" psql "postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" </dev/null 2>/dev/null | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
+            # Verify auth actually works before proceeding
+            if ! PGPASSWORD="$DB_PASS" psql "postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>/dev/null | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
               echo "✗ DB auth verification failed — credentials are not actually working"
               exit 1
             fi
@@ -161,13 +137,9 @@ jobs:
             cat > /etc/cron.daily/cortexx-backup << 'CRON'
           #!/usr/bin/env bash
           set -e
-          PG_CONTAINER=$(docker ps --format '{{.Names}}' | while read n; do
-            if docker port "$n" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then echo "$n"; break; fi
-          done)
-          [ -z "$PG_CONTAINER" ] && exit 0
           mkdir -p /opt/cortexx-backups
           OUT="/opt/cortexx-backups/cortexx-$(date -u +%Y%m%d-%H%M%S).sql.gz"
-          docker exec "$PG_CONTAINER" pg_dump -U cortexx cortexx 2>/dev/null | gzip > "$OUT" || rm -f "$OUT"
+          sudo -u postgres pg_dump cortexx 2>/dev/null | gzip > "$OUT" || rm -f "$OUT"
           find /opt/cortexx-backups -name '*.sql.gz' -mtime +30 -delete
           CRON
             chmod +x /etc/cron.daily/cortexx-backup
