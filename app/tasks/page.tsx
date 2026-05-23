@@ -7,6 +7,7 @@ import Avatar from '@/components/ui/Avatar'
 import Pill from '@/components/ui/Pill'
 import { IcCheck, IcClock, IcPlus, IcX, IcSearch, IcTrash, IcEdit } from '@/components/ui/Icons'
 import Toast from '@/components/ui/Toast'
+import CommentsThread from '@/components/ui/CommentsThread'
 import { useModalEffects } from '@/lib/useModalEffects'
 import type { Task } from '@/lib/types'
 
@@ -709,6 +710,10 @@ export default function TasksPage() {
             <button onClick={saveEdit} disabled={savingEdit || !editForm.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.title.trim() ? 0.5 : 1 }}>
               {savingEdit ? 'Saving…' : 'Save changes'}
             </button>
+
+            <div style={{ borderTop: '1px solid rgba(255,255,255,0.07)', paddingTop: 14, marginTop: 8 }}>
+              <CommentsThread taskId={editTarget.id} />
+            </div>
           </div>
         </div>
       )}
