@@ -2,6 +2,7 @@
 
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
+import { usePathname } from 'next/navigation'
 import Link from 'next/link'
 import { IcX, IcSearch, IcClock, IcReceipt, IcDoc, IcBell, IcDashboard, IcProjects, IcTasks, IcTeam, IcCamera, IcSpark, IcSettings } from './Icons'
 
@@ -30,7 +31,9 @@ const SECONDARY: MenuItem[] = [
 
 export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
   const { data: session } = useSession()
+  const pathname = usePathname()
   const [inboxCount, setInboxCount] = useState(0)
+  const isActive = (href: string) => pathname === href || (href !== '/dashboard' && pathname?.startsWith(href + '/'))
 
   useEffect(() => {
     if (!open) return
@@ -106,7 +109,7 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
         {/* Primary nav */}
         <nav style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
           <p style={menuLabel}>Main</p>
-          {PRIMARY.map(item => <DrawerLink key={item.href} item={item} onClick={onClose} />)}
+          {PRIMARY.map(item => <DrawerLink key={item.href} item={item} onClick={onClose} active={isActive(item.href)} />)}
         </nav>
 
         {/* Secondary nav */}
@@ -117,13 +120,14 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
               key={item.href}
               item={item}
               onClick={onClose}
+              active={isActive(item.href)}
               badge={item.href === '/inbox' && inboxCount > 0 ? String(inboxCount) : undefined}
             />
           ))}
         </nav>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <DrawerLink item={{ href: '/settings', label: 'Settings', Icon: IcSettings, color: '#8ea8c5' }} onClick={onClose} />
+          <DrawerLink item={{ href: '/settings', label: 'Settings', Icon: IcSettings, color: '#8ea8c5' }} onClick={onClose} active={isActive('/settings')} />
           <button
             onClick={() => { onClose(); signOut({ callbackUrl: '/login' }) }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'none', border: 'none', borderRadius: 10, cursor: 'pointer', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, textAlign: 'left', width: '100%' }}
@@ -140,11 +144,13 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
   )
 }
 
-function DrawerLink({ item, onClick, badge }: { item: MenuItem; onClick: () => void; badge?: string }) {
+function DrawerLink({ item, onClick, badge, active }: { item: MenuItem; onClick: () => void; badge?: string; active?: boolean }) {
+  const activeBg = active ? `${item.color || '#52749a'}1f` : 'transparent'
   return (
     <Link
       href={item.href}
       onClick={onClick}
+      aria-current={active ? 'page' : undefined}
       style={{
         display: 'flex',
         alignItems: 'center',
@@ -155,10 +161,14 @@ function DrawerLink({ item, onClick, badge }: { item: MenuItem; onClick: () => v
         color: '#eef3fa',
         fontFamily: 'var(--font-system)',
         fontSize: 14,
+        fontWeight: active ? 600 : 400,
+        background: activeBg,
+        borderLeft: active ? `3px solid ${item.color || '#f59e0b'}` : '3px solid transparent',
+        paddingLeft: 9,
         transition: 'background 0.15s',
       }}
-      onMouseEnter={e => { (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}
-      onMouseLeave={e => { (e.currentTarget as HTMLElement).style.background = 'transparent' }}
+      onMouseEnter={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'rgba(255,255,255,0.05)' }}
+      onMouseLeave={e => { if (!active) (e.currentTarget as HTMLElement).style.background = 'transparent' }}
     >
       <span style={{ width: 28, height: 28, borderRadius: 8, background: `${item.color || '#52749a'}22`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
         <item.Icon size={15} color={item.color || '#8ea8c5'} />
