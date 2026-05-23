@@ -7,6 +7,7 @@ import Avatar from '@/components/ui/Avatar'
 import Pill from '@/components/ui/Pill'
 import { IcCheck, IcClock, IcPlus, IcX, IcSearch, IcTrash, IcEdit } from '@/components/ui/Icons'
 import Toast from '@/components/ui/Toast'
+import { useModalEffects } from '@/lib/useModalEffects'
 import type { Task } from '@/lib/types'
 
 const priorityColor: Record<string, string> = {
@@ -51,6 +52,9 @@ export default function TasksPage() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+
+  useModalEffects(showModal, () => setShowModal(false))
+  useModalEffects(!!editTarget, () => setEditTarget(null))
 
   useEffect(() => {
     fetch('/api/tasks')

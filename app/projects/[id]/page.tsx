@@ -7,6 +7,7 @@ import TabBar from '@/components/ui/TabBar'
 import Avatar from '@/components/ui/Avatar'
 import Toast from '@/components/ui/Toast'
 import { IcChevL, IcCheck, IcClock, IcDoc, IcPlus, IcX, IcTrash, IcEdit } from '@/components/ui/Icons'
+import { useModalEffects } from '@/lib/useModalEffects'
 import type { Project, Task, Invoice, TeamMember } from '@/lib/types'
 
 const statusColor: Record<string, string> = { active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: '#52749a' }
@@ -64,6 +65,13 @@ export default function ProjectDetailPage() {
   const [assignForm, setAssignForm] = useState({ memberId: '', role: '' })
 
   const showToast = (msg: string, type: 'success' | 'error' = 'success') => setToast({ msg, type })
+
+  useModalEffects(showTaskModal, () => setShowTaskModal(false))
+  useModalEffects(showInvoiceModal, () => setShowInvoiceModal(false))
+  useModalEffects(showEditModal, () => setShowEditModal(false))
+  useModalEffects(showEditInvoiceModal, () => { setShowEditInvoiceModal(false); setEditInvoice(null) })
+  useModalEffects(showDocModal, () => setShowDocModal(false))
+  useModalEffects(showAssignModal, () => setShowAssignModal(false))
 
   const logActivity = async (action: string, iconType = 'check') => {
     try {

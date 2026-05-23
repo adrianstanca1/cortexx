@@ -6,6 +6,7 @@ import TabBar from '@/components/ui/TabBar'
 import Avatar from '@/components/ui/Avatar'
 import { IcSearch, IcPlus, IcChevR, IcX } from '@/components/ui/Icons'
 import Toast from '@/components/ui/Toast'
+import { useModalEffects } from '@/lib/useModalEffects'
 import type { Project } from '@/lib/types'
 
 const statusColor: Record<string, string> = {
@@ -29,6 +30,8 @@ export default function ProjectsPage() {
     name: '', clientName: '', address: '', postcode: '',
     status: 'active', budget: '', startDate: '', endDate: '',
   })
+
+  useModalEffects(showModal, () => setShowModal(false))
 
   const load = () => {
     fetch('/api/projects')

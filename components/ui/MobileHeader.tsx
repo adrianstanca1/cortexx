@@ -66,6 +66,7 @@ export default function MobileHeader({
         {onSearch && (
           <button
             onClick={onSearch}
+            aria-label="Search"
             style={{
               width: 36,
               height: 36,
@@ -81,37 +82,40 @@ export default function MobileHeader({
             <IcSearch size={18} color="#8ea8c5" />
           </button>
         )}
-        <button
-          onClick={onNotif}
-          style={{
-            width: 36,
-            height: 36,
-            borderRadius: 10,
-            background: 'rgba(255,255,255,0.07)',
-            border: 'none',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            position: 'relative',
-          }}
-        >
-          <IcBell size={18} color="#8ea8c5" />
-          {notifCount > 0 && (
-            <span
-              style={{
-                position: 'absolute',
-                top: 6,
-                right: 6,
-                width: 8,
-                height: 8,
-                borderRadius: '50%',
-                background: '#ef4444',
-                border: '1.5px solid #06101e',
-              }}
-            />
-          )}
-        </button>
+        {onNotif && (
+          <button
+            onClick={onNotif}
+            aria-label={notifCount > 0 ? `${notifCount} unread notifications` : 'Notifications'}
+            style={{
+              width: 36,
+              height: 36,
+              borderRadius: 10,
+              background: 'rgba(255,255,255,0.07)',
+              border: 'none',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              cursor: 'pointer',
+              position: 'relative',
+            }}
+          >
+            <IcBell size={18} color="#8ea8c5" />
+            {notifCount > 0 && (
+              <span
+                style={{
+                  position: 'absolute',
+                  top: 6,
+                  right: 6,
+                  width: 8,
+                  height: 8,
+                  borderRadius: '50%',
+                  background: '#ef4444',
+                  border: '1.5px solid #06101e',
+                }}
+              />
+            )}
+          </button>
+        )}
       </div>
     </header>
   )

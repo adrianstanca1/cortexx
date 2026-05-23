@@ -6,6 +6,7 @@ import MobileHeader from '@/components/ui/MobileHeader'
 import Avatar from '@/components/ui/Avatar'
 import { IcCheck, IcClock, IcPlus, IcX, IcEdit } from '@/components/ui/Icons'
 import Toast from '@/components/ui/Toast'
+import { useModalEffects } from '@/lib/useModalEffects'
 import type { TeamMember } from '@/lib/types'
 
 const AVATAR_COLORS = ['#2563eb', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16']
@@ -39,6 +40,10 @@ export default function TeamPage() {
   const [savingHours, setSavingHours] = useState(false)
   const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
+
+  useModalEffects(showModal, () => setShowModal(false))
+  useModalEffects(showEditModal, () => { setShowEditModal(false); setEditTarget(null) })
+  useModalEffects(showHoursModal, () => setShowHoursModal(false))
 
   const inputStyle: React.CSSProperties = {
     width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)',
