@@ -19,6 +19,8 @@ and planned. Maintained alongside the codebase, not in a separate tracker.
 | **Realtime** | SSE `/api/events/stream` with reconnect, `useRealtimeActivity` hook, live indicator dot in Timeline + Stories. |
 | **PWA** | Full icon set (192/512/maskable + apple-touch 152/167/180), 6 iPhone splash screens, manifest with shortcuts, service worker `cortexx-v2` with offline fallback + auto-update prompt, iOS Add-to-Home-Screen install hint. |
 | **Apps hub** | `/apps` route — modules grid matching the design's "CAPTURE + ALL APPS" layout, 9 CAPTURE actions with AI labels, 24 modules grouped by category, real-time badges. |
+| **Snags** | `/snags` — real defect register: `Snag` model + migration, full CRUD (`/api/snags`, `/api/snags/[id]`), status pipeline (open → in_progress → closed), priority + due date, optional photo attachment via the uploads backend, per-project filtering, activity events on raise/close. Drives the `/apps` snag badge. |
+| **Photos** | `/photos` — project-filterable photo gallery built on the uploads backend. Adds an upload action that creates a `type=photo` `Document`; renders a 3-column grid with per-tile project chip; opens full-size in a new tab. |
 | **A11y** | `aria-label` on icon-only buttons, `aria-current=page` on active nav, focus-trap on modals, Escape-to-close on bottom sheets, screen-reader-friendly toasts. |
 | **Performance** | `dueTime`/`dueDate`/`skip`/`hours`/`progress` validation hardened, 4 graceful-404 endpoints, dashboard `groupBy` aggregates, static asset cache headers (30d for icons, immutable for `/_next/static`), CI build cache. |
 | **Deploy reliability** | Hardened deploy script: SSH retry 8x, hard-fail on build error, `pm2 delete + start` (fresh env), `/api/health` gate, system Postgres via apt (no docker dependency), authenticated git clone via workflow `GITHUB_TOKEN`. |
@@ -49,9 +51,9 @@ and planned. Maintained alongside the codebase, not in a separate tracker.
 ### v1.3 — Site operations
 - `/schedule` — Gantt-style program across all projects, resource view, slippage
 - `/site-diary` — auto-compiled from check-ins + activity, weather, PDF export
-- `/photos` — geo-tagged, AI tagging, compare-over-time, PDF album export
+- ~~`/photos`~~ — ✅ shipped (gallery + uploads). AI tagging + compare-over-time still planned.
 - `/drawings` — versioned with pinned RFIs/snags, rev compare, markup
-- `/snags` — defect register with photo → AI defect detection
+- ~~`/snags`~~ — ✅ shipped (CRUD + status + photo). AI defect detection still planned.
 - `/variations` — change orders with cost/time impact + client approval
 
 ### v1.4 — Money & ops
