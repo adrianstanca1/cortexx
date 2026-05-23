@@ -8,41 +8,32 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-      - name: External HTTP probe
+      - name: Setup SSH
         run: |
-          {
-            echo "Probed at: $(date -u)"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+      - name: Inspect .env + DB
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' > probe-env.txt 2>&1 << 'REMOTE'
+            echo "=== .env.production (masked passwords) ==="
+            sed 's/PASSWORD=.*/PASSWORD=<masked>/; s/SECRET=.*/SECRET=<masked>/; s/SEED_TOKEN=.*/SEED_TOKEN=<masked>/' /opt/cortexx/.env.production 2>&1
             echo
-            echo '=== /login HEAD ==='
-            curl -sI https://cortexbuildpro.com/login | head -8
+            echo "=== leading bytes (hex) of DATABASE_URL line ==="
+            grep DATABASE_URL /opt/cortexx/.env.production | head -c 200 | xxd
             echo
-            echo '=== /dashboard HEAD ==='
-            curl -sI https://cortexbuildpro.com/dashboard | head -8
+            echo "=== curl localhost:3010/api/health ==="
+            curl -s http://localhost:3010/api/health
             echo
-            echo '=== /sw.js HEAD ==='
-            curl -sI https://cortexbuildpro.com/sw.js | head -5
-            echo
-            echo '=== /sw.js first 3 lines ==='
-            curl -s https://cortexbuildpro.com/sw.js | head -3
-            echo
-            echo '=== /manifest.json (parsed) ==='
-            curl -s https://cortexbuildpro.com/manifest.json | python3 -m json.tool 2>&1 | head -20
-            echo
-            echo '=== /api/health ==='
-            curl -s https://cortexbuildpro.com/api/health | python3 -m json.tool 2>&1 | head -25
-            echo
-            echo '=== /login HTML build id ==='
-            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -oE '"buildId":"[^"]*"' | head -2
-            echo
-            echo '=== /dashboard HTML build id (follows redirect to /login) ==='
-            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/dashboard | grep -oE '"buildId":"[^"]*"' | head -2
-          } > probe-result.txt 2>&1
-          cat probe-result.txt
+            echo "=== pm2 cortexx logs (last 40) ==="
+            pm2 logs cortexx --lines 40 --nostream 2>&1 | tail -50
+          REMOTE
+          cat probe-env.txt
       - name: Commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@cortexx.local"
-          git add probe-result.txt
-          git commit -m "external probe [skip ci]" || true
-          git pull --rebase origin main 2>&1 | tail -2
+          git add probe-env.txt
+          git commit -m "probe-env [skip ci]" || true
+          git pull --rebase origin main
           git push
