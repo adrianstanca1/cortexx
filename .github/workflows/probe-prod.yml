@@ -13,40 +13,34 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Inspect last deploy state
+      - name: Manual clone test
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' > probe-deploy.txt 2>&1 << 'REMOTE'
-            echo "=== git HEAD ==="
-            cd /opt/cortexx && git log --oneline -3
-            echo
-            echo "=== build log tail ==="
-            tail -30 /tmp/cortexx-build.log 2>/dev/null
-            echo
-            echo "=== npm-ci log tail ==="
-            tail -20 /tmp/cortexx-npm-ci.log 2>/dev/null
-            echo
-            echo "=== prisma-mig log tail ==="
-            tail -10 /tmp/cortexx-prisma-mig.log 2>/dev/null
-            echo
-            echo "=== seed log tail ==="
-            tail -10 /tmp/cortexx-seed.log 2>/dev/null
-            echo
-            echo "=== pm2 status ==="
-            pm2 list 2>&1 | grep cortexx
-            echo
-            echo "=== /api/health ==="
-            curl -s --max-time 5 http://localhost:3010/api/health | head -c 500
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -sx' > probe-clone.txt 2>&1 << 'REMOTE'
+            set -uo pipefail
+            APP_DIR=/opt/cortexx
+            echo "=== state of /opt/cortexx ==="
+            ls -la /opt/ | grep -i cortex
+            echo "=== disk space ==="
+            df -h /opt | tail -3
+            echo "=== try git clone ==="
+            rm -rf $APP_DIR
+            git clone --verbose https://github.com/adrianstanca1/cortexx.git $APP_DIR 2>&1 | tail -25
+            CLONE_RC=$?
+            echo "clone exit: $CLONE_RC"
+            echo "=== contents ==="
+            ls -la $APP_DIR 2>&1 | head -10
+            cd $APP_DIR 2>/dev/null && git log --oneline -3 2>&1 || echo "no repo"
           REMOTE
-          cat probe-deploy.txt
+          cat probe-clone.txt
       - name: Commit
         if: always()
         run: |
           git config user.name probe-bot
           git config user.email probe@cortexx.local
-          git add probe-deploy.txt
-          git commit -m "probe: deploy state [skip ci]" || true
+          git add probe-clone.txt
+          git commit -m "probe: clone test [skip ci]" || true
           for i in 1 2 3 4 5; do
-            git pull --rebase origin main 2>&1 | tail -2
+            git pull --rebase origin main 2>&1 | tail -1
             git push origin main 2>&1 | tail -1 && break
             sleep $((i * 2))
           done
