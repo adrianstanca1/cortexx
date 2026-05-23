@@ -24,6 +24,20 @@ export default class ErrorBoundary extends React.Component<Props, State> {
 
   componentDidCatch(error: Error, info: React.ErrorInfo) {
     console.error('ErrorBoundary caught:', error, info)
+    // Best-effort: report to backend. Swallow failures so we don't double-error.
+    if (typeof window !== 'undefined') {
+      fetch('/api/errors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: error.message,
+          stack: error.stack,
+          componentStack: info.componentStack,
+          url: window.location.href,
+        }),
+        keepalive: true,
+      }).catch(() => {})
+    }
   }
 
   reset = () => this.setState({ hasError: false, error: null })
