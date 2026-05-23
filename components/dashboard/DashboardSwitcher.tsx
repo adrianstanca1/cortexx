@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useDashboardData } from '@/lib/useDashboardData'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import { IcSearch } from '@/components/ui/Icons'
+import { IcSearch, IcDoc } from '@/components/ui/Icons'
 import type { DashboardData } from '@/lib/types'
 
 const ActionFirst = dynamic(() => import('./ActionFirst'), { ssr: false })
@@ -38,6 +38,19 @@ const variants = [
 ]
 
 const accent = '#f59e0b'
+
+const iconBtnStyle: React.CSSProperties = {
+  flexShrink: 0,
+  display: 'flex',
+  alignItems: 'center',
+  justifyContent: 'center',
+  width: 34,
+  height: 34,
+  borderRadius: 10,
+  background: 'rgba(255,255,255,0.06)',
+  border: '0.5px solid rgba(255,255,255,0.07)',
+  marginRight: 2,
+}
 
 interface CompProps {
   accent?: string
@@ -85,20 +98,16 @@ export default function DashboardSwitcher() {
         <Link
           href="/search"
           aria-label="Search workspace"
-          style={{
-            flexShrink: 0,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            width: 34,
-            height: 34,
-            borderRadius: 10,
-            background: 'rgba(255,255,255,0.06)',
-            border: '0.5px solid rgba(255,255,255,0.07)',
-            marginRight: 4,
-          }}
+          style={iconBtnStyle}
         >
           <IcSearch size={16} color="#8ea8c5" />
+        </Link>
+        <Link
+          href="/documents"
+          aria-label="Documents"
+          style={{ ...iconBtnStyle, marginRight: 4 }}
+        >
+          <IcDoc size={16} color="#8ea8c5" />
         </Link>
         {variants.map(v => {
           const isActive = v.id === active
