@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const now = new Date()
     const weekStart = new Date(now)
@@ -32,6 +35,8 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const body = await req.json()
     if (!body.name?.trim()) {

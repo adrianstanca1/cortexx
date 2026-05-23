@@ -1,4 +1,7 @@
 import type { Metadata, Viewport } from 'next'
+import { getServerSession } from 'next-auth'
+import { authOptions } from '@/lib/auth'
+import SessionProviderClient from '@/components/SessionProviderClient'
 import './globals.css'
 
 export const metadata: Metadata = {
@@ -16,7 +19,8 @@ export const viewport: Viewport = {
   themeColor: '#06101e',
 }
 
-export default function RootLayout({ children }: { children: React.ReactNode }) {
+export default async function RootLayout({ children }: { children: React.ReactNode }) {
+  const session = await getServerSession(authOptions)
   return (
     <html lang="en" style={{ background: '#06101e' }}>
       <head>
@@ -25,18 +29,20 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <meta name="mobile-web-app-capable" content="yes" />
       </head>
       <body style={{ background: '#06101e', minHeight: '100dvh', overflowX: 'hidden' }}>
-        <div
-          id="app-root"
-          style={{
-            maxWidth: '480px',
-            margin: '0 auto',
-            minHeight: '100dvh',
-            position: 'relative',
-            background: '#06101e',
-          }}
-        >
-          {children}
-        </div>
+        <SessionProviderClient session={session}>
+          <div
+            id="app-root"
+            style={{
+              maxWidth: '480px',
+              margin: '0 auto',
+              minHeight: '100dvh',
+              position: 'relative',
+              background: '#06101e',
+            }}
+          >
+            {children}
+          </div>
+        </SessionProviderClient>
       </body>
     </html>
   )

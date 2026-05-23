@@ -2,24 +2,34 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
+import { requireAuth } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
+const MAX_TAKE = 100
+
 export async function GET(req: NextRequest) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
     const status = searchParams.get('status')
+    const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
+    const skip = parseInt(searchParams.get('skip') || '0') || 0
 
-    const invoices = await prisma.invoice.findMany({
-      where: {
-        ...(projectId && { projectId }),
-        ...(status && { status }),
-      },
-      include: { project: true },
-      orderBy: [{ status: 'asc' }, { dueDate: 'asc' }],
-    })
-    return NextResponse.json({ invoices })
+    const where = { ...(projectId && { projectId }), ...(status && { status }) }
+    const [invoices, total] = await Promise.all([
+      prisma.invoice.findMany({
+        where,
+        include: { project: true },
+        orderBy: [{ status: 'asc' }, { dueDate: 'asc' }],
+        take,
+        skip,
+      }),
+      prisma.invoice.count({ where }),
+    ])
+    return NextResponse.json({ invoices, total, hasMore: skip + invoices.length < total })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Failed to fetch invoices' }, { status: 500 })
@@ -27,6 +37,8 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const body = await req.json()
     if (!body.number?.trim()) {

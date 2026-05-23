@@ -7,7 +7,7 @@ on:
     branches: [main]
 
 jobs:
-  typecheck:
+  typecheck-and-build:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -17,30 +17,24 @@ jobs:
           cache: 'npm'
       - run: npm ci
       - run: npx prisma generate
+      - name: Prisma schema format check
+        run: npx prisma format --check
       - name: TypeScript check
         run: npx tsc --noEmit
-
-  build:
-    runs-on: ubuntu-latest
-    steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
-        with:
-          node-version: '20'
-          cache: 'npm'
-      - run: npm ci
-      - run: npx prisma generate
       - name: Build
         env:
           DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
+          NEXTAUTH_SECRET: ci-build-placeholder-secret-not-used-at-runtime
+          NEXTAUTH_URL: http://localhost:3000
         run: npm run build
 
   audit:
     runs-on: ubuntu-latest
+    continue-on-error: true
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
           node-version: '20'
-      - name: Security audit
-        run: npm audit --audit-level=high --production || echo "::warning::Audit found issues (non-blocking)"
+      - name: Security audit (high+)
+        run: npm audit --audit-level=high --production || echo "::warning::Audit found high-severity issues"

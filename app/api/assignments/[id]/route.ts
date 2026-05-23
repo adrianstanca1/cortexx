@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth, actorName } from '@/lib/requireAuth'
+
+export const dynamic = 'force-dynamic'
 
 export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const body = await req.json()
     const assignment = await prisma.assignment.update({
@@ -20,8 +25,25 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
+    const existing = await prisma.assignment.findUnique({
+      where: { id: params.id },
+      include: { member: { select: { name: true } } },
+    })
     await prisma.assignment.delete({ where: { id: params.id } })
+    if (existing) {
+      prisma.activity.create({
+        data: {
+          projectId: existing.projectId,
+          actorName: actorName(auth),
+          actorType: 'human',
+          action: `unassigned ${existing.member.name} from project`,
+          iconType: 'hardhat',
+        },
+      }).catch(() => {})
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error(error)

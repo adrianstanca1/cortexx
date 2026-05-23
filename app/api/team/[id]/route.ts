@@ -1,7 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { requireAuth, actorName } from '@/lib/requireAuth'
+
+export const dynamic = 'force-dynamic'
 
 export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const member = await prisma.teamMember.findUnique({
       where: { id: params.id },
@@ -19,6 +24,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 }
 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
     const body = await req.json()
     if (body.dailyRate !== undefined && (isNaN(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
@@ -50,8 +57,22 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
 }
 
 export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
   try {
+    const member = await prisma.teamMember.findUnique({ where: { id: params.id }, select: { name: true } })
     await prisma.teamMember.delete({ where: { id: params.id } })
+    if (member) {
+      prisma.activity.create({
+        data: {
+          projectId: null,
+          actorName: actorName(auth),
+          actorType: 'human',
+          action: `removed ${member.name} from team`,
+          iconType: 'hardhat',
+        },
+      }).catch(() => {})
+    }
     return NextResponse.json({ success: true })
   } catch (error) {
     console.error(error)
