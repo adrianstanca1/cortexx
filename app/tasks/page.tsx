@@ -431,6 +431,9 @@ export default function TasksPage() {
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   <Pill label={task.priority} />
+                  {task.category && (
+                    <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: '#8ea8c5', fontFamily: 'var(--font-system)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{task.category}</span>
+                  )}
                   {task.assignee && (
                     <Avatar name={task.assignee.name} color={task.assignee.avatarColor} size={22} />
                   )}
