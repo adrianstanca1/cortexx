@@ -13,20 +13,69 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Test authed clone
+      - name: Trace deploy step-by-step
         env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
           GH_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          echo "GH_PAT on runner: len=${#GH_PAT}"
+          DB_PASS=$(openssl rand -hex 16)
+          echo "::add-mask::$DB_PASS"
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
-            GH_PAT="$GH_PAT" 'bash -s' > probe.txt 2>&1 << 'REMOTE'
-            echo "GH_PAT len on VPS: ${#GH_PAT}"
-            echo "first 8: ${GH_PAT:0:8}..."
-            cd /tmp && rm -rf cortexx-test
-            git clone "https://x-access-token:${GH_PAT}@github.com/adrianstanca1/cortexx.git" cortexx-test 2>&1 | tail -8
-            echo "clone exit: $?"
-            ls cortexx-test 2>&1 | head -5
-            rm -rf cortexx-test
+            DB_PASS="$DB_PASS" GH_PAT="$GH_PAT" \
+            NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            SEED_TOKEN="$SEED_TOKEN" \
+            'bash -s' > probe.txt 2>&1 << 'REMOTE'
+            set -uo pipefail
+            APP_DIR=/opt/cortexx
+
+            echo "=== STEP 1 find PG ==="
+            PG_CONTAINER=""
+            for c in $(docker ps --format '{{.Names}}'); do
+              if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
+                PG_CONTAINER="$c"; break
+              fi
+            done
+            echo "PG_CONTAINER=$PG_CONTAINER"
+            PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
+            echo "PG_IP=$PG_IP"
+
+            echo "=== STEP 2 PG_SUPER detect ==="
+            PG_SUPER=$(docker inspect "$PG_CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep ^POSTGRES_USER= | cut -d= -f2 || true)
+            if [ -z "$PG_SUPER" ] || ! docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "SELECT 1" </dev/null >/dev/null 2>&1; then
+              for cand in postgres cortexbuild cortexx admin root; do
+                if docker exec "$PG_CONTAINER" psql -U "$cand" -c "SELECT 1" </dev/null >/dev/null 2>&1; then
+                  PG_SUPER="$cand"; break
+                fi
+              done
+            fi
+            echo "PG_SUPER=$PG_SUPER"
+
+            echo "=== STEP 3 DB setup ==="
+            HAS_USER=$(docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -tAc "SELECT 1 FROM pg_user WHERE usename='cortexx'" </dev/null 2>/dev/null || echo "")
+            echo "HAS_USER=$HAS_USER"
+            ALTER_OUT=$(docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';" </dev/null 2>&1)
+            echo "ALTER: $ALTER_OUT"
+            HAS_DB=$(docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" </dev/null 2>/dev/null || echo "")
+            echo "HAS_DB=$HAS_DB"
+            if [ "$HAS_DB" != "1" ]; then
+              CD=$(docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "CREATE DATABASE cortexx OWNER cortexx;" </dev/null 2>&1)
+              echo "CREATE DB: $CD"
+            fi
+
+            echo "=== STEP 4 verify ==="
+            VERIFY=$(docker exec "$PG_CONTAINER" psql "postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" </dev/null 2>&1)
+            echo "VERIFY: $VERIFY"
+
+            echo "=== STEP 5 clone ==="
+            AUTH_URL="https://x-access-token:${GH_PAT}@github.com/adrianstanca1/cortexx.git"
+            rm -rf $APP_DIR
+            git clone "$AUTH_URL" $APP_DIR 2>&1 | tail -5
+            echo "clone rc=$?"
+            ls -la $APP_DIR 2>&1 | head -3
           REMOTE
           cat probe.txt
       - name: Commit
@@ -35,7 +84,7 @@ jobs:
           git config user.name probe-bot
           git config user.email probe@cortexx.local
           git add probe.txt
-          git commit -m "probe authed clone [skip ci]" || true
+          git commit -m "trace [skip ci]" || true
           for i in 1 2 3 4 5; do
             git pull --rebase origin main 2>&1 | tail -1
             git push origin main 2>&1 | tail -1 && break
