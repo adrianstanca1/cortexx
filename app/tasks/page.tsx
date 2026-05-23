@@ -49,6 +49,8 @@ export default function TasksPage() {
   const [editTarget, setEditTarget] = useState<Task | null>(null)
   const [editForm, setEditForm] = useState({ title: '', description: '', priority: 'medium', dueDate: '', projectId: '', assigneeId: '' })
   const [savingEdit, setSavingEdit] = useState(false)
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
+  const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/tasks')
@@ -132,6 +134,8 @@ export default function TasksPage() {
   })
 
   const toggleTask = async (task: Task) => {
+    if (togglingIds.has(task.id)) return
+    setTogglingIds(prev => new Set(prev).add(task.id))
     const newStatus = task.status === 'done' ? 'todo' : 'done'
     setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)))
     try {
@@ -144,11 +148,20 @@ export default function TasksPage() {
     } catch {
       setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: task.status } : t)))
       setToast({ msg: 'Failed to update task', type: 'error' })
+    } finally {
+      setTogglingIds(prev => { const next = new Set(prev); next.delete(task.id); return next })
     }
   }
 
   const deleteTask = async (e: React.MouseEvent, task: Task) => {
     e.stopPropagation()
+    // Two-step confirmation: first click arms, second confirms within 3s
+    if (confirmDeleteId !== task.id) {
+      setConfirmDeleteId(task.id)
+      setTimeout(() => setConfirmDeleteId(curr => curr === task.id ? null : curr), 3000)
+      return
+    }
+    setConfirmDeleteId(null)
     try {
       const res = await fetch(`/api/tasks/${task.id}`, { method: 'DELETE' })
       if (!res.ok) throw new Error('Failed')
@@ -411,15 +424,18 @@ export default function TasksPage() {
                   <div style={{ display: 'flex', gap: 4 }}>
                     <button
                       onClick={(e) => openEditModal(e, task)}
+                      aria-label="Edit task"
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, opacity: 0.4, display: 'flex' }}
                     >
                       <IcEdit size={13} color="#8ea8c5" />
                     </button>
                     <button
                       onClick={(e) => deleteTask(e, task)}
-                      style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, opacity: 0.4, display: 'flex' }}
+                      aria-label={confirmDeleteId === task.id ? 'Confirm delete task' : 'Delete task'}
+                      style={{ background: confirmDeleteId === task.id ? 'rgba(239,68,68,0.2)' : 'none', borderRadius: 4, border: 'none', cursor: 'pointer', padding: confirmDeleteId === task.id ? '2px 6px' : 2, opacity: confirmDeleteId === task.id ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: 4 }}
                     >
                       <IcTrash size={13} color="#ef4444" />
+                      {confirmDeleteId === task.id && <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', fontFamily: 'var(--font-system)' }}>Sure?</span>}
                     </button>
                   </div>
                 </div>

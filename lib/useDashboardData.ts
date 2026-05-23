@@ -1,5 +1,5 @@
 'use client'
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import type { DashboardData } from './types'
 
 export function useDashboardData() {
@@ -7,15 +7,23 @@ export function useDashboardData() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
 
-  useEffect(() => {
+  const fetchData = useCallback(() => {
     fetch('/api/dashboard')
       .then(r => {
         if (!r.ok) throw new Error('Failed to load dashboard data')
         return r.json()
       })
-      .then(d => { setData(d); setLoading(false) })
+      .then(d => { setData(d); setError(null); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
   }, [])
 
-  return { data, loading, error }
+  useEffect(() => {
+    fetchData()
+    // Refetch when tab regains focus (user returns from another tab/app)
+    const onVisibility = () => { if (document.visibilityState === 'visible') fetchData() }
+    document.addEventListener('visibilitychange', onVisibility)
+    return () => document.removeEventListener('visibilitychange', onVisibility)
+  }, [fetchData])
+
+  return { data, loading, error, refetch: fetchData }
 }

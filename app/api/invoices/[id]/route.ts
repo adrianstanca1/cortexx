@@ -4,6 +4,9 @@ import { prisma } from '@/lib/db'
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
+    if (body.amount !== undefined && (isNaN(Number(body.amount)) || Number(body.amount) <= 0)) {
+      return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 })
+    }
     const invoice = await prisma.invoice.update({
       where: { id: params.id },
       data: {

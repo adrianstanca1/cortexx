@@ -17,6 +17,7 @@ const invoiceNextStatus: Record<string, string> = { draft: 'sent', sent: 'paid',
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'] as const
 const STATUSES = ['active', 'quoting', 'snagging', 'complete'] as const
+const DOCUMENT_EXPIRY_WARNING_DAYS = 7
 
 type TabId = 'overview' | 'tasks' | 'team' | 'finance'
 
@@ -75,7 +76,7 @@ export default function ProjectDetailPage() {
   }
 
   const load = useCallback(() => {
-    if (!id) return
+    if (!id) { setLoading(false); setError('Invalid project ID'); return }
     fetch(`/api/projects/${id}`)
       .then(r => { if (!r.ok) throw new Error('Project not found'); return r.json() })
       .then(d => { setProject(d.project || d); setLoading(false) })
@@ -205,20 +206,28 @@ export default function ProjectDetailPage() {
   }
 
   const saveEditInvoice = async () => {
-    if (!editInvoice || !editInvoiceForm.amount) return
+    if (!editInvoice) return
+    const amt = parseFloat(editInvoiceForm.amount)
+    if (isNaN(amt) || amt <= 0) {
+      showToast('Amount must be a positive number', 'error')
+      return
+    }
     setSavingEditInvoice(true)
     try {
       const res = await fetch(`/api/invoices/${editInvoice.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          amount: parseFloat(editInvoiceForm.amount),
+          amount: amt,
           dueDate: editInvoiceForm.dueDate || null,
           clientName: editInvoiceForm.clientName || null,
           notes: editInvoiceForm.notes || null,
         }),
       })
-      if (!res.ok) throw new Error('Failed')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed')
+      }
       const updated = await res.json()
       setProject(prev => {
         if (!prev) return prev
@@ -229,12 +238,17 @@ export default function ProjectDetailPage() {
       setShowEditInvoiceModal(false)
       setEditInvoice(null)
       showToast('Invoice updated')
-    } catch { showToast('Failed to update invoice', 'error') }
+    } catch (e) { showToast(e instanceof Error ? e.message : 'Failed to update invoice', 'error') }
     finally { setSavingEditInvoice(false) }
   }
 
   const createInvoice = async () => {
     if (!invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate) return
+    const amt = parseFloat(invoiceForm.amount)
+    if (isNaN(amt) || amt <= 0) {
+      showToast('Amount must be a positive number', 'error')
+      return
+    }
     setSavingInvoice(true)
     try {
       const res = await fetch('/api/invoices', {
@@ -243,20 +257,23 @@ export default function ProjectDetailPage() {
         body: JSON.stringify({
           number: invoiceForm.number.trim(),
           clientName: invoiceForm.clientName.trim() || project.clientName,
-          amount: parseFloat(invoiceForm.amount),
+          amount: amt,
           dueDate: invoiceForm.dueDate,
           status: invoiceForm.status,
           projectId: id,
         }),
       })
-      if (!res.ok) throw new Error('Failed')
+      if (!res.ok) {
+        const errData = await res.json().catch(() => ({}))
+        throw new Error(errData.error || 'Failed')
+      }
       const newInvoice = await res.json()
       setProject(prev => prev ? { ...prev, invoices: [...(prev.invoices || []), newInvoice] } : prev)
       setShowInvoiceModal(false)
       setInvoiceForm({ number: '', clientName: '', amount: '', dueDate: '', status: 'draft' })
       showToast('Invoice created')
       logActivity(`created invoice ${invoiceForm.number.trim()}`, 'receipt')
-    } catch { showToast('Failed to create invoice', 'error') }
+    } catch (e) { showToast(e instanceof Error ? e.message : 'Failed to create invoice', 'error') }
     finally { setSavingInvoice(false) }
   }
 
@@ -365,6 +382,12 @@ export default function ProjectDetailPage() {
   }
 
   const toggleAssignmentOnSite = async (assignmentId: string, currentOnSite: boolean) => {
+    // Optimistic update with rollback on failure
+    setProject(prev => {
+      if (!prev) return prev
+      const updatedAssignments = prev.assignments?.map(a => a.id === assignmentId ? { ...a, onSite: !currentOnSite } : a) || []
+      return { ...prev, assignments: updatedAssignments, onSiteCount: updatedAssignments.filter(a => a.onSite).length }
+    })
     try {
       const res = await fetch(`/api/assignments/${assignmentId}`, {
         method: 'PATCH',
@@ -372,14 +395,15 @@ export default function ProjectDetailPage() {
         body: JSON.stringify({ onSite: !currentOnSite }),
       })
       if (!res.ok) throw new Error('Failed')
-      setProject(prev => prev ? {
-        ...prev,
-        assignments: prev.assignments?.map(a => a.id === assignmentId ? { ...a, onSite: !currentOnSite } : a),
-        onSiteCount: prev.assignments
-          ? prev.assignments.filter(a => a.id === assignmentId ? !currentOnSite : a.onSite).length
-          : prev.onSiteCount,
-      } : prev)
-    } catch { showToast('Failed to update on-site status', 'error') }
+    } catch {
+      // Rollback on failure
+      setProject(prev => {
+        if (!prev) return prev
+        const rolledBack = prev.assignments?.map(a => a.id === assignmentId ? { ...a, onSite: currentOnSite } : a) || []
+        return { ...prev, assignments: rolledBack, onSiteCount: rolledBack.filter(a => a.onSite).length }
+      })
+      showToast('Failed to update on-site status', 'error')
+    }
   }
 
   const inputStyle: React.CSSProperties = {
@@ -460,7 +484,7 @@ export default function ProjectDetailPage() {
               {project.documents && project.documents.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {project.documents.map(doc => {
-                    const expiring = doc.expiresAt && new Date(doc.expiresAt) < new Date(Date.now() + 7*86400000)
+                    const expiring = doc.expiresAt && new Date(doc.expiresAt) < new Date(Date.now() + DOCUMENT_EXPIRY_WARNING_DAYS * 86400000)
                     return (
                       <div key={doc.id} style={{ background: '#152641', borderRadius: 10, padding: '10px 12px', border: `0.5px solid ${expiring ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', gap: 10 }}>
                         <IcDoc size={16} color={expiring ? '#ef4444' : '#52749a'} />

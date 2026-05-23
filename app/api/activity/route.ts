@@ -1,6 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+// Strip control characters and limit length to prevent storage abuse
+function sanitize(s: string, maxLen = 500): string {
+  return String(s).replace(/[\x00-\x1F\x7F]/g, '').trim().slice(0, maxLen)
+}
+
 export async function GET() {
   try {
     const activities = await prisma.activity.findMany({
@@ -8,7 +13,7 @@ export async function GET() {
       orderBy: { createdAt: 'desc' },
       take: 20,
     })
-    return NextResponse.json(activities)
+    return NextResponse.json({ activities })
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Failed to fetch activity' }, { status: 500 })
@@ -18,16 +23,16 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   try {
     const body = await req.json()
-    if (!body.actorName || !body.action) {
+    if (!body.actorName?.trim() || !body.action?.trim()) {
       return NextResponse.json({ error: 'actorName and action are required' }, { status: 400 })
     }
     const activity = await prisma.activity.create({
       data: {
         projectId: body.projectId || null,
-        actorName: body.actorName,
+        actorName: sanitize(body.actorName, 100),
         actorType: body.actorType || 'human',
-        action: body.action,
-        detail: body.detail || null,
+        action: sanitize(body.action, 200),
+        detail: body.detail ? sanitize(body.detail) : null,
         iconType: body.iconType || 'check',
       },
       include: { project: true },

@@ -28,14 +28,15 @@ export async function POST(req: NextRequest) {
     if (existing) {
       return NextResponse.json({ error: 'Already assigned' }, { status: 409 })
     }
+    const role = body.role ? String(body.role).trim().slice(0, 50) : null
     const assignment = await prisma.assignment.create({
       data: {
         projectId: body.projectId,
         memberId: body.memberId,
-        role: body.role || null,
+        role: role || null,
         onSite: body.onSite ?? false,
       },
-      include: { member: true },
+      include: { member: true, project: true },
     })
     return NextResponse.json(assignment, { status: 201 })
   } catch (error) {

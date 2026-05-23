@@ -37,6 +37,9 @@ export async function POST(req: NextRequest) {
     if (!body.role?.trim()) {
       return NextResponse.json({ error: 'Role is required' }, { status: 400 })
     }
+    if (body.dailyRate !== undefined && body.dailyRate !== null && body.dailyRate !== '' && (isNaN(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
+      return NextResponse.json({ error: 'Daily rate must be a non-negative number' }, { status: 400 })
+    }
     const member = await prisma.teamMember.create({
       data: {
         name: body.name.trim(),
@@ -44,7 +47,7 @@ export async function POST(req: NextRequest) {
         email: body.email?.trim() || null,
         phone: body.phone?.trim() || null,
         avatarColor: body.avatarColor || '#2563eb',
-        dailyRate: body.dailyRate || 0,
+        dailyRate: body.dailyRate ? Number(body.dailyRate) : 0,
         onSite: body.onSite || false,
       },
     })

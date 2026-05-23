@@ -37,6 +37,7 @@ export default function TeamPage() {
   const [savingEdit, setSavingEdit] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState(false)
   const [savingHours, setSavingHours] = useState(false)
+  const [togglingIds, setTogglingIds] = useState<Set<string>>(new Set())
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
 
   const inputStyle: React.CSSProperties = {
@@ -75,19 +76,26 @@ export default function TeamPage() {
   const approveAll = async (memberId: string, entries: TimesheetEntry['entries']) => {
     setApproving(memberId)
     try {
-      await Promise.all(
-        entries.filter(e => !e.approved).map(e =>
+      const pending = entries.filter(e => !e.approved)
+      const results = await Promise.allSettled(
+        pending.map(e =>
           fetch(`/api/timeentries/${e.id}`, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ approved: true }),
-          })
+          }).then(r => { if (!r.ok) throw new Error('API error'); return r })
         )
       )
+      const failed = results.filter(r => r.status === 'rejected').length
+      const succeeded = results.length - failed
+      const succeededIds = new Set(pending.filter((_, i) => results[i].status === 'fulfilled').map(e => e.id))
       setTimesheets(prev => prev.map(t =>
-        t.member.id === memberId ? { ...t, approved: true, entries: t.entries.map(e => ({ ...e, approved: true })) } : t
+        t.member.id === memberId
+          ? { ...t, entries: t.entries.map(e => succeededIds.has(e.id) ? { ...e, approved: true } : e), approved: t.entries.every(e => e.approved || succeededIds.has(e.id)) }
+          : t
       ))
-      setToast({ msg: 'Timesheet approved' })
+      if (failed === 0) setToast({ msg: 'Timesheet approved' })
+      else setToast({ msg: `Approved ${succeeded}, ${failed} failed`, type: 'error' })
     } catch { setToast({ msg: 'Failed to approve', type: 'error' }) }
     finally { setApproving(null) }
   }
@@ -172,17 +180,22 @@ export default function TeamPage() {
   }
 
   const toggleOnSite = async (member: TeamMember) => {
-    setTeam(prev => prev.map(m => m.id === member.id ? { ...m, onSite: !m.onSite } : m))
+    if (togglingIds.has(member.id)) return
+    setTogglingIds(prev => new Set(prev).add(member.id))
+    const originalOnSite = member.onSite
+    setTeam(prev => prev.map(m => m.id === member.id ? { ...m, onSite: !originalOnSite } : m))
     try {
       const res = await fetch(`/api/team/${member.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ onSite: !member.onSite }),
+        body: JSON.stringify({ onSite: !originalOnSite }),
       })
       if (!res.ok) throw new Error('Failed')
     } catch {
-      setTeam(prev => prev.map(m => m.id === member.id ? { ...m, onSite: member.onSite } : m))
+      setTeam(prev => prev.map(m => m.id === member.id ? { ...m, onSite: originalOnSite } : m))
       setToast({ msg: 'Failed to update on-site status', type: 'error' })
+    } finally {
+      setTogglingIds(prev => { const next = new Set(prev); next.delete(member.id); return next })
     }
   }
 

@@ -1,17 +1,26 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 
+// ISO 8601 week number — week containing Thursday is week 1
+function isoWeek(date: Date): { week: number; year: number } {
+  const d = new Date(Date.UTC(date.getFullYear(), date.getMonth(), date.getDate()))
+  const dayNum = d.getUTCDay() || 7
+  d.setUTCDate(d.getUTCDate() + 4 - dayNum)
+  const yearStart = new Date(Date.UTC(d.getUTCFullYear(), 0, 1))
+  const week = Math.ceil(((d.getTime() - yearStart.getTime()) / 86400000 + 1) / 7)
+  return { week, year: d.getUTCFullYear() }
+}
+
 export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const memberId = searchParams.get('memberId')
-    const week = searchParams.get('week')
-    const year = searchParams.get('year')
+    const weekParam = searchParams.get('week')
+    const yearParam = searchParams.get('year')
 
-    const now = new Date()
-    const dayOfYear = Math.floor((now.getTime() - new Date(now.getFullYear(), 0, 1).getTime()) / 86400000)
-    const currentWeek = week ? parseInt(week) : Math.ceil((dayOfYear + new Date(now.getFullYear(), 0, 1).getDay() + 1) / 7)
-    const currentYear = year ? parseInt(year) : now.getFullYear()
+    const nowIso = isoWeek(new Date())
+    const currentWeek = weekParam ? parseInt(weekParam) : nowIso.week
+    const currentYear = yearParam ? parseInt(yearParam) : nowIso.year
 
     const entries = await prisma.timeEntry.findMany({
       where: {
@@ -51,20 +60,21 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'date is required' }, { status: 400 })
     }
     if (body.hours === undefined || body.hours === null || isNaN(Number(body.hours)) || Number(body.hours) <= 0) {
-      return NextResponse.json({ error: 'Valid positive hours value is required' }, { status: 400 })
+      return NextResponse.json({ error: 'Hours must be a positive number' }, { status: 400 })
+    }
+    if (Number(body.hours) > 24) {
+      return NextResponse.json({ error: 'Hours cannot exceed 24 per entry' }, { status: 400 })
     }
     const date = new Date(body.date)
-    // ISO week number calculation
-    const dayOfYear = Math.floor((date.getTime() - new Date(date.getFullYear(), 0, 1).getTime()) / 86400000)
-    const week = body.week ?? Math.ceil((dayOfYear + new Date(date.getFullYear(), 0, 1).getDay() + 1) / 7)
+    const { week, year } = isoWeek(date)
     const entry = await prisma.timeEntry.create({
       data: {
         memberId: body.memberId,
         projectId: body.projectId || null,
         date,
         hours: Number(body.hours),
-        week,
-        year: date.getFullYear(),
+        week: body.week ?? week,
+        year: body.year ?? year,
         approved: body.approved ?? false,
       },
       include: { member: true, project: true },

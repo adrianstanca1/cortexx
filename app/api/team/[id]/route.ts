@@ -21,15 +21,24 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   try {
     const body = await req.json()
+    if (body.dailyRate !== undefined && (isNaN(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
+      return NextResponse.json({ error: 'Daily rate must be a non-negative number' }, { status: 400 })
+    }
+    if (body.name !== undefined && !body.name?.trim()) {
+      return NextResponse.json({ error: 'Name cannot be empty' }, { status: 400 })
+    }
+    if (body.role !== undefined && !body.role?.trim()) {
+      return NextResponse.json({ error: 'Role cannot be empty' }, { status: 400 })
+    }
     const member = await prisma.teamMember.update({
       where: { id: params.id },
       data: {
-        ...(body.name !== undefined && { name: body.name }),
-        ...(body.role !== undefined && { role: body.role }),
-        ...(body.email !== undefined && { email: body.email }),
-        ...(body.phone !== undefined && { phone: body.phone }),
+        ...(body.name !== undefined && { name: body.name.trim() }),
+        ...(body.role !== undefined && { role: body.role.trim() }),
+        ...(body.email !== undefined && { email: body.email?.trim() || null }),
+        ...(body.phone !== undefined && { phone: body.phone?.trim() || null }),
         ...(body.avatarColor !== undefined && { avatarColor: body.avatarColor }),
-        ...(body.dailyRate !== undefined && { dailyRate: body.dailyRate }),
+        ...(body.dailyRate !== undefined && { dailyRate: Number(body.dailyRate) }),
         ...(body.onSite !== undefined && { onSite: body.onSite }),
       },
     })
