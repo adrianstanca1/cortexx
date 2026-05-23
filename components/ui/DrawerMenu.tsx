@@ -3,7 +3,7 @@
 import { useState, useEffect } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import Link from 'next/link'
-import { IcX, IcSearch, IcClock, IcReceipt, IcDoc, IcBell, IcDashboard, IcProjects, IcTasks, IcTeam, IcCamera, IcSpark } from './Icons'
+import { IcX, IcSearch, IcClock, IcReceipt, IcDoc, IcBell, IcDashboard, IcProjects, IcTasks, IcTeam, IcCamera, IcSpark, IcSettings } from './Icons'
 
 interface MenuItem {
   href: string
@@ -123,7 +123,7 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
         </nav>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <DrawerLink item={{ href: '/settings', label: 'Settings', Icon: IcDashboard, color: '#8ea8c5' }} onClick={onClose} />
+          <DrawerLink item={{ href: '/settings', label: 'Settings', Icon: IcSettings, color: '#8ea8c5' }} onClick={onClose} />
           <button
             onClick={() => { onClose(); signOut({ callbackUrl: '/login' }) }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'none', border: 'none', borderRadius: 10, cursor: 'pointer', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, textAlign: 'left', width: '100%' }}

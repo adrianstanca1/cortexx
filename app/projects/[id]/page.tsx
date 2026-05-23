@@ -446,7 +446,7 @@ export default function ProjectDetailPage() {
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
       {/* Header */}
-      <div style={{ padding: '20px 20px 0', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)', paddingBottom: 12 }}>
+      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/projects" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
           <IcChevL size={18} color="#52749a" />
           <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Projects</span>
