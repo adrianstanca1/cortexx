@@ -260,6 +260,8 @@ export default function TeamPage() {
             [1, 2, 3, 4].map(i => <div key={i} style={{ height: 80, borderRadius: 16, background: 'rgba(255,255,255,0.04)' }} />)
           ) : error ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14 }}>{error}</div>
+          ) : team.length === 0 ? (
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 14 }}>No team members yet. Tap + to add one.</div>
           ) : (
             team.map(member => (
               <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 16, background: member.onSite ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid ${member.onSite ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
