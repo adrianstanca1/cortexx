@@ -357,12 +357,7 @@ export default function TeamPage() {
         </div>
       )}
 
-      {/* Add member FAB */}
-      <button onClick={() => setShowModal(true)} style={{ position: 'fixed', bottom: 88, right: 20, width: 52, height: 52, borderRadius: '50%', background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', boxShadow: '0 4px 16px rgba(245,158,11,0.4)', zIndex: 50 }}>
-        <IcPlus size={22} color="#fff" />
-      </button>
-
-      {/* Add member modal */}
+      {/* Add member modal (opened via QuickActions or '?new=1' deep-link) */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
