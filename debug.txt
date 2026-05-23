@@ -1,0 +1,12 @@
+=== Remote env check ===
+Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
+Remote env vars (length only):
+  NEXTAUTH_SECRET: 48
+  ADMIN_EMAIL: admin@cortexbuildpro.com
+  ADMIN_PASSWORD: 24
+  SEED_TOKEN: 32
+
+=== Pre-check files ===
+ls: cannot access '/opt/cortexx-db-password': No such file or directory
+ls: cannot access '/tmp/cortexx_pg_ip': No such file or directory
+ls: cannot access '/tmp/cortexx_pg_container': No such file or directory
