@@ -21,6 +21,8 @@ const Stories = dynamic(() => import('./Stories'), { ssr: false })
 const Rings = dynamic(() => import('./Rings'), { ssr: false })
 const SiteMap = dynamic(() => import('./SiteMap'), { ssr: false })
 const Focus = dynamic(() => import('./Focus'), { ssr: false })
+const Broadsheet = dynamic(() => import('./Broadsheet'), { ssr: false })
+const SiteNotice = dynamic(() => import('./SiteNotice'), { ssr: false })
 
 const variants = [
   { id: 'v1',  label: '01', sub: 'Action-first',  Comp: ActionFirst },
@@ -35,6 +37,8 @@ const variants = [
   { id: 'v10', label: '10', sub: 'Rings',         Comp: Rings },
   { id: 'v11', label: '11', sub: 'Map',           Comp: SiteMap },
   { id: 'v12', label: '12', sub: 'Focus',         Comp: Focus },
+  { id: 'v14', label: '14', sub: 'Broadsheet',    Comp: Broadsheet },
+  { id: 'v15', label: '15', sub: 'Site notice',   Comp: SiteNotice },
 ]
 
 const accent = '#f59e0b'
