@@ -177,7 +177,7 @@ function CaptureContent() {
       />
 
       {/* Header */}
-      <div style={{ padding: '16px 20px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ padding: '16px 20px 16px 60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)', letterSpacing: '-0.02em' }}>Capture</h1>
           <button onClick={() => setShowProjectPicker(!showProjectPicker)} aria-label="Change project" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>

@@ -97,7 +97,7 @@ export default function DashboardSwitcher() {
         display: 'flex',
         alignItems: 'center',
         gap: 6,
-        padding: '12px 56px 8px 16px',
+        padding: '12px 56px 8px 60px',
         background: 'rgba(6,16,30,0.95)',
         backdropFilter: 'blur(12px)',
         borderBottom: '0.5px solid rgba(255,255,255,0.07)',

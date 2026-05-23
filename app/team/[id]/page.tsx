@@ -46,7 +46,7 @@ export default function MemberDetailPage() {
 
   return (
     <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 0', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)' }}>
+      <div style={{ padding: '20px 20px 0 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)' }}>
         <Link href="/team" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
           <IcChevL size={18} color="#52749a" />
           <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Team</span>

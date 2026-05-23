@@ -73,7 +73,7 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', padding: '20px', paddingBottom: 100 }}>
+    <div style={{ background: '#06101e', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
       <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
         <IcChevL size={18} color="#52749a" />
         <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Back</span>
