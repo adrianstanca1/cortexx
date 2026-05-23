@@ -6,7 +6,7 @@ import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useDashboardData } from '@/lib/useDashboardData'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
-import { IcSearch, IcDoc, IcBell } from '@/components/ui/Icons'
+import { IcSearch, IcDoc, IcBell, IcReceipt } from '@/components/ui/Icons'
 import type { DashboardData } from '@/lib/types'
 
 const ActionFirst = dynamic(() => import('./ActionFirst'), { ssr: false })
@@ -112,6 +112,13 @@ export default function DashboardSwitcher() {
           style={iconBtnStyle}
         >
           <IcSearch size={16} color="#8ea8c5" />
+        </Link>
+        <Link
+          href="/reports"
+          aria-label="Reports"
+          style={iconBtnStyle}
+        >
+          <IcReceipt size={16} color="#8ea8c5" />
         </Link>
         <Link
           href="/documents"
