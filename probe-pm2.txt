@@ -1,14 +1,12 @@
 Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
-cortexx PID=1473440
+cortexx PID=1501450
 
 === process env (DATABASE_URL etc) ===
 PORT=3010
-DATABASE_URL=file:./prod.db
-NEXTAUTH_SECRET=SWHMv3JSrdNOtRck6UL4SrBKbJ6DzrmSjKIRQSpQoSR3J3CB
 
 === fix attempt: delete pm2 cortexx and re-start fresh ===
-[PM2] Applying action deleteProcessId on app [cortexx](ids: [ 15 ])
-[PM2] [cortexx](15) ✓
+[PM2] Applying action deleteProcessId on app [cortexx](ids: [ 16 ])
+[PM2] [cortexx](16) ✓
 ┌────┬─────────────────────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 [PM2] Starting /usr/bin/npm in fork_mode (1 instance)
 [PM2] Done.
@@ -22,10 +20,10 @@ NEXTAUTH_SECRET=SWHMv3JSrdNOtRck6UL4SrBKbJ6DzrmSjKIRQSpQoSR3J3CB
 │ 3  │ cortexbuild-platform-api    │ default     │ N/A     │ fork    │ 1391     │ 11h    │ 0    │ online    │ 0%       │ 80.8mb   │ root     │ disabled │
 
 === new PID ===
-PID=1501450
+PID=1504404
 
 === after restart env ===
 PORT=3010
 
 === /api/health after restart ===
-{"status":"degraded","checks":{"database":{"ok":false,"ms":109,"error":"\nInvalid `prisma.$queryRaw()` invocation:\n\n\nAuthentication failed against database server at `172.18.0.6`, the provided database credentials for `cortexx` are not valid.\n\nPlease make sure to provide valid database credentials for the database server at `172.18.0.6`."},"disk":{"ok":true,"free_gb":246.41},"memory":{"ok":true,"rss_mb":119},"app":{"ok":true,"ms":109}},"uptime":6.343715472,"version":"0.1.0","timestamp":"2026-05-23T12:26:35.358Z"}
+{"status":"degraded","checks":{"database":{"ok":false,"ms":78,"error":"\nInvalid `prisma.$queryRaw()` invocation:\n\n\nAuthentication failed against database server at `172.18.0.6`, the provided database credentials for `cortexx` are not valid.\n\nPlease make sure to provide valid database credentials for the database server at `172.18.0.6`."},"disk":{"ok":true,"free_gb":246.41},"memory":{"ok":true,"rss_mb":118.5},"app":{"ok":true,"ms":79}},"uptime":6.312781608,"version":"0.1.0","timestamp":"2026-05-23T12:28:01.962Z"}
