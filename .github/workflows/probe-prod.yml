@@ -1,0 +1,20 @@
+name: Probe production
+on:
+  workflow_dispatch:
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Fetch /dashboard HTML + find QuickActions chunk
+        run: |
+          echo "=== HEAD https://cortexbuildpro.com/ ==="
+          curl -sI https://cortexbuildpro.com/ | head -10
+          echo
+          echo "=== GET /dashboard (follow redirects to /login) ==="
+          curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/dashboard | head -100
+          echo
+          echo "=== /sw.js content ==="
+          curl -s https://cortexbuildpro.com/sw.js | head -10
+          echo
+          echo "=== /manifest.json ==="
+          curl -s https://cortexbuildpro.com/manifest.json
