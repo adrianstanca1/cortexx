@@ -144,13 +144,47 @@ jobs:
             echo "=== sites-enabled after cleanup ==="
             ls /etc/nginx/sites-enabled/
 
-            # Inherit SSL cert path from existing config (if any) — search backup
+            # Find the SSL cert path for cortexbuildpro.com — could be at multiple paths
             SSL_FULLCHAIN=""
             SSL_PRIVKEY=""
+
+            # 1. Check standard location
             if [ -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
               SSL_FULLCHAIN=/etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem
               SSL_PRIVKEY=/etc/letsencrypt/live/cortexbuildpro.com/privkey.pem
             fi
+
+            # 2. Extract from backed-up old config if not found
+            if [ -z "$SSL_FULLCHAIN" ] && [ -d "$BACKUP" ]; then
+              for bkp in $BACKUP/*.bak; do
+                [ -f "$bkp" ] || continue
+                # Parse `ssl_certificate ...;` lines
+                CERT=$(grep -E "^\s*ssl_certificate\s" "$bkp" | head -1 | sed -E 's/.*ssl_certificate\s+([^;[:space:]]+).*/\1/' | tr -d ';')
+                KEY=$(grep -E "^\s*ssl_certificate_key\s" "$bkp" | head -1 | sed -E 's/.*ssl_certificate_key\s+([^;[:space:]]+).*/\1/' | tr -d ';')
+                if [ -n "$CERT" ] && [ -f "$CERT" ] && [ -f "$KEY" ]; then
+                  SSL_FULLCHAIN="$CERT"
+                  SSL_PRIVKEY="$KEY"
+                  echo "Found SSL cert from backup ($bkp): $CERT"
+                  break
+                fi
+              done
+            fi
+
+            # 3. Fallback: scan /etc/letsencrypt/live/ for any cortexbuildpro cert
+            if [ -z "$SSL_FULLCHAIN" ]; then
+              for d in /etc/letsencrypt/live/*cortexbuildpro*; do
+                [ -d "$d" ] || continue
+                if [ -f "$d/fullchain.pem" ]; then
+                  SSL_FULLCHAIN="$d/fullchain.pem"
+                  SSL_PRIVKEY="$d/privkey.pem"
+                  echo "Fallback SSL cert: $SSL_FULLCHAIN"
+                  break
+                fi
+              done
+            fi
+
+            echo "SSL_FULLCHAIN=$SSL_FULLCHAIN"
+            echo "SSL_PRIVKEY=$SSL_PRIVKEY"
 
             cat > /etc/nginx/sites-available/cortexx << 'NGINX'
           server {
