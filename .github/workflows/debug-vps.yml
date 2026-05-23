@@ -1,4 +1,4 @@
-name: Debug VPS nginx
+name: Debug VPS state
 on:
   workflow_dispatch:
 jobs:
@@ -13,41 +13,41 @@ jobs:
           mkdir -p ~/.ssh
           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
           chmod 600 ~/.ssh/cortexx_deploy
-      - name: Inspect nginx routing for cortexbuildpro.com
+      - name: Check nginx + app state
         run: |
           {
             ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-              echo "=== sites-enabled (active) ==="
-              ls -la /etc/nginx/sites-enabled/
+              echo "=== nginx -t ==="
+              nginx -t 2>&1
               echo ""
-              echo "=== All configs that mention cortexbuildpro ==="
-              grep -lr "cortexbuildpro" /etc/nginx/sites-available/ /etc/nginx/sites-enabled/ /etc/nginx/conf.d/ 2>/dev/null | sort -u
+              echo "=== nginx running? ==="
+              systemctl is-active nginx
+              systemctl status nginx --no-pager | head -15
               echo ""
-              echo "=== nginx -T | grep cortexbuildpro and server_name ==="
-              nginx -T 2>/dev/null | grep -E "server_name|cortexbuildpro|listen" | head -30
+              echo "=== Cortexx pm2 process ==="
+              pm2 list 2>&1 | grep -E "cortexx|status"
               echo ""
-              echo "=== Test localhost:3010 (our Next.js app) ==="
-              curl -s -o /dev/null -w "  / → %{http_code}\n" http://localhost:3010/
-              curl -s -o /dev/null -w "  /api/health → %{http_code}\n" http://localhost:3010/api/health
-              curl -s --max-time 5 http://localhost:3010/api/health | head -c 200
+              echo "=== Cortexx pm2 logs (last 30) ==="
+              pm2 logs cortexx --lines 30 --nostream 2>&1 | tail -30
               echo ""
-              echo ""
-              echo "=== Test what nginx routes cortexbuildpro.com to ==="
-              curl -s -H "Host: cortexbuildpro.com" -o /dev/null -w "  port 80: %{http_code}\n" http://localhost/
-              curl -s -k -H "Host: cortexbuildpro.com" -o /dev/null -w "  port 443: %{http_code}\n" https://localhost/
-              curl -s -k -H "Host: cortexbuildpro.com" --max-time 5 https://localhost/api/health | head -c 200
+              echo "=== Local port 3010 test ==="
+              curl -s -o /dev/null -w "  / → %{http_code}\n" --max-time 5 http://localhost:3010/
+              curl -s --max-time 5 http://localhost:3010/api/health
               echo ""
               echo ""
-              echo "=== pm2 list ==="
-              pm2 list 2>&1 | grep -E "cortexx|cortexbuild-web"
+              echo "=== sites-enabled now ==="
+              ls /etc/nginx/sites-enabled/
               echo ""
-              echo "=== /etc/nginx/sites-available/cortexx (our config) ==="
-              head -40 /etc/nginx/sites-available/cortexx 2>/dev/null || echo "MISSING"
+              echo "=== Our cortexx nginx config (first 60 lines) ==="
+              head -60 /etc/nginx/sites-available/cortexx
+              echo ""
+              echo "=== ss ports 80/443 ==="
+              ss -tlnp 2>/dev/null | grep -E ":80 |:443 " || netstat -tlnp 2>/dev/null | grep -E ":80 |:443 "
           REMOTE
-          } > nginx_debug.txt 2>&1
-          cat nginx_debug.txt
+          } > vps_debug.txt 2>&1
+          cat vps_debug.txt
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
-          git add nginx_debug.txt
-          git commit -m "chore: nginx debug [skip ci]" || true
+          git add vps_debug.txt
+          git commit -m "chore: vps state [skip ci]" || true
           git push || true
