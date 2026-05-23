@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import { useDashboardData } from '@/lib/useDashboardData'
+import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import type { DashboardData } from '@/lib/types'
 
 const ActionFirst = dynamic(() => import('./ActionFirst'), { ssr: false })
@@ -84,6 +85,8 @@ export default function DashboardSwitcher() {
             <button
               key={v.id}
               onClick={() => setActive(v.id)}
+              aria-label={`Switch to ${v.sub} dashboard variant`}
+              aria-pressed={isActive}
               style={{
                 flexShrink: 0,
                 display: 'flex',
@@ -112,7 +115,9 @@ export default function DashboardSwitcher() {
         ) : error ? (
           <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14 }}>{error}</div>
         ) : (
-          <Comp accent={accent} data={data} />
+          <ErrorBoundary key={active}>
+            <Comp accent={accent} data={data} />
+          </ErrorBoundary>
         )}
       </div>
     </div>
