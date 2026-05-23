@@ -1,9 +1,9 @@
 Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
 === nginx -t ===
-2026/05/23 01:40:48 [warn] 120908#120908: protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/cortexx:38
-2026/05/23 01:40:48 [warn] 120908#120908: protocol options redefined for [::]:443 in /etc/nginx/sites-enabled/cortexx:39
-2026/05/23 01:40:48 [warn] 120908#120908: protocol options redefined for [::]:443 in /etc/nginx/sites-enabled/invoice.cortexbuildpro.com:28
-2026/05/23 01:40:48 [warn] 120908#120908: protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/invoice.cortexbuildpro.com:29
+2026/05/23 01:42:11 [warn] 124629#124629: protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/cortexx:38
+2026/05/23 01:42:11 [warn] 124629#124629: protocol options redefined for [::]:443 in /etc/nginx/sites-enabled/cortexx:39
+2026/05/23 01:42:11 [warn] 124629#124629: protocol options redefined for [::]:443 in /etc/nginx/sites-enabled/invoice.cortexbuildpro.com:28
+2026/05/23 01:42:11 [warn] 124629#124629: protocol options redefined for 0.0.0.0:443 in /etc/nginx/sites-enabled/invoice.cortexbuildpro.com:29
 nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
 nginx: configuration file /etc/nginx/nginx.conf test is successful
 
@@ -11,7 +11,7 @@ nginx: configuration file /etc/nginx/nginx.conf test is successful
 active
 ● nginx.service - A high performance web server and a reverse proxy server
      Loaded: loaded (/usr/lib/systemd/system/nginx.service; enabled; preset: enabled)
-     Active: active (running) since Sat 2026-05-23 01:04:16 UTC; 36min ago
+     Active: active (running) since Sat 2026-05-23 01:04:16 UTC; 37min ago
        Docs: man:nginx(8)
     Process: 116124 ExecReload=/usr/sbin/nginx -g daemon on; master_process on; -s reload (code=exited, status=0/SUCCESS)
    Main PID: 966 (nginx)
@@ -27,7 +27,7 @@ active
 
 === Cortexx pm2 process ===
 │ id │ name                        │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
-│ 13 │ cortexx                     │ default     │ N/A     │ fork    │ 115344   │ 92s    │ 0    │ online    │ 0%       │ 74.9mb   │ root     │ disabled │
+│ 13 │ cortexx                     │ default     │ N/A     │ fork    │ 115344   │ 2m     │ 0    │ online    │ 0%       │ 75.8mb   │ root     │ disabled │
 
 === Cortexx pm2 logs (last 30) ===
 13|cortexx |  ✓ Starting...
