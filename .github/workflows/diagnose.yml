@@ -9,26 +9,19 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Check site and get deployment info
+      - name: Check Hostinger deployment status
         env:
           API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        timeout-minutes: 2
         run: |
-          echo "=== DNS ==="
-          nslookup cortexbuildpro.com
-          echo ""
-          echo "=== HTTPS test ==="
-          curl -sv --max-time 15 https://cortexbuildpro.com/ 2>&1 | head -60 || true
-          echo ""
-          echo "=== API /dashboard ==="
-          curl -s --max-time 15 https://cortexbuildpro.com/api/dashboard 2>&1 | head -300 || true
-          echo ""
           echo "=== Deployment list ==="
-          echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}' \
-            | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+          timeout 30 sh -c 'echo '"'"'{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listJsDeployments","arguments":{"domain":"cortexbuildpro.com"}}}'"'"' | API_TOKEN=$API_TOKEN npx hostinger-api-mcp@latest --stdio 2>/dev/null' || echo "TIMED_OUT"
           echo ""
           echo "=== Build logs ==="
-          echo '{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}' \
-            | npx hostinger-api-mcp@latest --stdio 2>/dev/null
+          timeout 30 sh -c 'echo '"'"'{"jsonrpc":"2.0","id":2,"method":"tools/call","params":{"name":"hosting_showJsDeploymentLogs","arguments":{"domain":"cortexbuildpro.com"}}}'"'"' | API_TOKEN=$API_TOKEN npx hostinger-api-mcp@latest --stdio 2>/dev/null' || echo "TIMED_OUT"
+          echo ""
+          echo "=== Website list ==="
+          timeout 30 sh -c 'echo '"'"'{"jsonrpc":"2.0","id":3,"method":"tools/call","params":{"name":"hosting_listWebsitesV1","arguments":{}}}'"'"' | API_TOKEN=$API_TOKEN npx hostinger-api-mcp@latest --stdio 2>/dev/null' || echo "TIMED_OUT"
 
       - name: Save results as artifact
         if: always()
