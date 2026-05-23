@@ -1,0 +1,28 @@
+=== HTTP status per page ===
+/ → 307
+/dashboard → 200
+/projects → 200
+/tasks → 200
+/team → 200
+/capture → 200
+/api/health → 200
+/api/dashboard → 200
+
+=== /api/health body ===
+{"status":"ok","checks":{"database":{"ok":true,"ms":3},"app":{"ok":true,"ms":3}},"uptime":1.184385109,"version":"0.1.0","timestamp":"2026-05-23T01:46:28.550Z"}
+
+=== /api/dashboard body (first 500 chars) ===
+{"projects":[],"tasks":[],"team":[],"invoices":[],"activities":[],"stats":{"cashflow":0,"owed":0,"hoursThisWeek":0,"activeSites":0}}
+
+=== /dashboard HTML title (looking for 'Cortexx' or other) ===
+<title>Cortexx — CortexBuild</title>
+
+=== Response headers for /api/health ===
+HTTP/2 200 
+server: nginx
+date: Sat, 23 May 2026 01:47:43 GMT
+content-type: application/json
+vary: Accept-Encoding
+vary: RSC, Next-Router-State-Tree, Next-Router-Prefetch
+x-nextjs-cache: HIT
+
