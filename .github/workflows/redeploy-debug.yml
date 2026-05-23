@@ -24,35 +24,30 @@ jobs:
           curl -sv -H "Authorization: Bearer $API_TOKEN" \
             https://developers.hostinger.com/api/hosting/v1/websites 2>&1 | head -40 || true
 
-      - name: Save full results
+      - name: Inspect Hostinger account
         if: always()
         env:
           API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
         run: |
           {
-            echo "=== Token info ==="
-            echo "Length: ${#API_TOKEN}"
-            echo "Prefix: ${API_TOKEN:0:8}..."
+            echo "=== Hosting orders ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" "https://developers.hostinger.com/api/hosting/v1/orders" 2>&1
             echo ""
-            echo "=== Direct API: /websites ==="
-            curl -s -w "\nHTTP_CODE: %{http_code}\n" -H "Authorization: Bearer $API_TOKEN" \
-              "https://developers.hostinger.com/api/hosting/v1/websites" 2>&1 | head -30
+            echo "=== Domain list ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" "https://developers.hostinger.com/api/domains/v1/portfolio" 2>&1
             echo ""
-            echo "=== Direct API: /websites?domain=cortexbuildpro.com ==="
-            curl -s -w "\nHTTP_CODE: %{http_code}\n" -H "Authorization: Bearer $API_TOKEN" \
-              "https://developers.hostinger.com/api/hosting/v1/websites?domain=cortexbuildpro.com" 2>&1 | head -30
+            echo "=== VPS list ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" "https://developers.hostinger.com/api/vps/v1/virtual-machines" 2>&1
             echo ""
-            echo "=== Direct API: /api/orders ==="
-            curl -s -w "\nHTTP_CODE: %{http_code}\n" -H "Authorization: Bearer $API_TOKEN" \
-              "https://developers.hostinger.com/api/v1/orders" 2>&1 | head -30
+            echo "=== Subscriptions ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" "https://developers.hostinger.com/api/billing/v1/subscriptions" 2>&1
             echo ""
-            echo "=== MCP: hosting_listOrdersV1 (raw, with stderr) ==="
-            echo '{"jsonrpc":"2.0","id":1,"method":"tools/call","params":{"name":"hosting_listOrdersV1","arguments":{}}}' \
-              | timeout 25 npx hostinger-api-mcp@latest --stdio 2>&1 | head -40
+            echo "=== Datacenters ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" "https://developers.hostinger.com/api/hosting/v1/datacenters" 2>&1
           } > diag.txt
           cat diag.txt
           git config user.email "actions@github.com"
           git config user.name "GitHub Actions"
           git add diag.txt
-          git commit -m "chore: redeploy debug results [skip ci]" || true
+          git commit -m "chore: account inspect results [skip ci]" || true
           git push || true
