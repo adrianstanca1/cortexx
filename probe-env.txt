@@ -19,7 +19,7 @@ ADMIN_PASSWORD=<masked>
 00000050: 3332 2f63 6f72 7465 7878 0a              32/cortexx.
 
 === curl localhost:3010/api/health ===
-{"status":"degraded","checks":{"database":{"ok":false,"ms":1,"error":"\nInvalid `prisma.$queryRaw()` invocation:\n\n\nerror: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"},"disk":{"ok":true,"free_gb":246.41},"memory":{"ok":true,"rss_mb":117.2},"app":{"ok":true,"ms":2}},"uptime":489.70364987,"version":"0.1.0","timestamp":"2026-05-23T12:24:23.059Z"}
+{"status":"degraded","checks":{"database":{"ok":false,"ms":2,"error":"\nInvalid `prisma.$queryRaw()` invocation:\n\n\nerror: Error validating datasource `db`: the URL must start with the protocol `postgresql://` or `postgres://`.\n  -->  schema.prisma:7\n   | \n 6 |   provider = \"postgresql\"\n 7 |   url      = env(\"DATABASE_URL\")\n   | \n\nValidation Error Count: 1"},"disk":{"ok":true,"free_gb":246.41},"memory":{"ok":true,"rss_mb":117.2},"app":{"ok":true,"ms":2}},"uptime":557.517415914,"version":"0.1.0","timestamp":"2026-05-23T12:25:30.872Z"}
 === pm2 cortexx logs (last 40) ===
 [TAILING] Tailing last 40 lines for [cortexx] process (change the value with --lines option)
 /root/.pm2/logs/cortexx-error.log last 40 lines:
