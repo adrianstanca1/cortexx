@@ -6,44 +6,21 @@ on:
 jobs:
   setup-ssh:
     runs-on: ubuntu-latest
-    permissions:
-      contents: write
     outputs:
       ssh_ready: ${{ steps.attach.outputs.ssh_ready }}
     steps:
-      - uses: actions/checkout@v4
-
-      - name: Generate SSH keypair if not in repo
-        id: keygen
+      - name: Setup SSH key from secrets
         run: |
-          if [ -n "${{ secrets.VPS_SSH_PRIVATE_KEY }}" ]; then
-            echo "Existing key found in secrets"
-            echo "key_exists=true" >> $GITHUB_OUTPUT
-            mkdir -p ~/.ssh
-            echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
-            chmod 600 ~/.ssh/cortexx_deploy
-          else
-            echo "Generating new keypair"
-            ssh-keygen -t ed25519 -C "cortexx-deploy@github-actions" -f ~/.ssh/cortexx_deploy -N ""
-            chmod 600 ~/.ssh/cortexx_deploy
-            echo "key_exists=false" >> $GITHUB_OUTPUT
-          fi
-          echo "public_key=$(cat ~/.ssh/cortexx_deploy.pub)" >> $GITHUB_OUTPUT
-
-      - name: Save private key as GitHub secret (first time)
-        if: steps.keygen.outputs.key_exists == 'false'
-        env:
-          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          PRIV=$(cat ~/.ssh/cortexx_deploy)
-          gh secret set VPS_SSH_PRIVATE_KEY --repo ${{ github.repository }} --body "$PRIV"
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
 
       - name: Attach SSH key to VPS via Hostinger API
         id: attach
         env:
           API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
           VPS_ID: 1262179
-          PUBLIC_KEY: ${{ steps.keygen.outputs.public_key }}
+          PUBLIC_KEY: ${{ secrets.VPS_SSH_PUBLIC_KEY }}
         run: |
           # First, check if key already exists
           EXISTING_KEYS=$(curl -s -H "Authorization: Bearer $API_TOKEN" \
