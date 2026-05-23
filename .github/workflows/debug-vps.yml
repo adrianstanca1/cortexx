@@ -1,0 +1,41 @@
+name: Debug VPS SSH
+on:
+  workflow_dispatch:
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Inspect VPS key state
+        env:
+          API_TOKEN: ${{ secrets.HOSTINGER_API_TOKEN }}
+        run: |
+          {
+            echo "=== Account public keys ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" \
+              "https://developers.hostinger.com/api/vps/v1/public-keys"
+            echo ""
+            echo ""
+            echo "=== VPS 1262179 attached keys ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" \
+              "https://developers.hostinger.com/api/vps/v1/virtual-machines/1262179/public-keys"
+            echo ""
+            echo ""
+            echo "=== VPS recent actions ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" \
+              "https://developers.hostinger.com/api/vps/v1/virtual-machines/1262179/actions?per_page=10"
+            echo ""
+            echo ""
+            echo "=== VPS detail ==="
+            curl -s -H "Authorization: Bearer $API_TOKEN" \
+              "https://developers.hostinger.com/api/vps/v1/virtual-machines/1262179" | python3 -m json.tool 2>&1 | head -40
+          } > vps_debug.txt
+          cat vps_debug.txt
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add vps_debug.txt
+          git commit -m "chore: vps debug results [skip ci]" || true
+          git push || true
