@@ -319,6 +319,23 @@ export default function ProjectDetailPage() {
     } catch { showToast('Failed to delete project', 'error') }
   }
 
+  const archiveProject = async () => {
+    try {
+      const res = await fetch(`/api/projects/${id}/archive`, { method: 'POST' })
+      if (!res.ok) throw new Error('Failed')
+      router.push('/projects')
+    } catch { showToast('Failed to archive project', 'error') }
+  }
+
+  const unarchiveProject = async () => {
+    try {
+      const res = await fetch(`/api/projects/${id}/archive`, { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed')
+      load()
+      showToast('Project restored')
+    } catch { showToast('Failed to restore project', 'error') }
+  }
+
   const createDocument = async () => {
     if (!docForm.name.trim()) return
     setSavingDoc(true)
@@ -806,14 +823,25 @@ export default function ProjectDetailPage() {
             <button onClick={saveEdit} disabled={savingEdit} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit ? 0.5 : 1 }}>
               {savingEdit ? 'Saving…' : 'Save changes'}
             </button>
+
+            {project.archivedAt ? (
+              <button onClick={unarchiveProject} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                Restore from archive
+              </button>
+            ) : (
+              <button onClick={archiveProject} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(82,116,154,0.1)', border: '1px solid rgba(82,116,154,0.3)', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                Archive project (recoverable)
+              </button>
+            )}
+
             {confirmDeleteProject ? (
               <div style={{ display: 'flex', gap: 8 }}>
                 <button onClick={() => setConfirmDeleteProject(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                <button onClick={deleteProject} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Delete project</button>
+                <button onClick={deleteProject} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Delete forever</button>
               </div>
             ) : (
               <button onClick={() => setConfirmDeleteProject(true)} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
-                Delete project
+                Delete permanently
               </button>
             )}
           </div>

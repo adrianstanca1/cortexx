@@ -13,6 +13,7 @@ export interface Project {
   startDate: string | null
   endDate: string | null
   onSiteCount: number
+  archivedAt?: string | null
   createdAt: string
   updatedAt: string
   _count?: {
