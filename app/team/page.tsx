@@ -1,6 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
+import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import MobileHeader from '@/components/ui/MobileHeader'
 import Avatar from '@/components/ui/Avatar'
@@ -260,7 +261,7 @@ export default function TeamPage() {
                   <Avatar name={member.name} color={member.avatarColor} size={44} />
                   {member.onSite && <div style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: '50%', background: '#10b981', border: '2px solid #06101e' }} />}
                 </div>
-                <div onClick={() => toggleOnSite(member)} style={{ flex: 1, cursor: 'pointer' }}>
+                <Link href={`/team/${member.id}`} style={{ flex: 1, textDecoration: 'none' }}>
                   <p style={{ fontSize: 15, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)', letterSpacing: '-0.01em' }}>{member.name}</p>
                   <p style={{ fontSize: 12, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginTop: 1 }}>{member.role}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
@@ -271,7 +272,7 @@ export default function TeamPage() {
                       <span style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)' }}>£{member.dailyRate}/day</span>
                     </>}
                   </div>
-                </div>
+                </Link>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   {member.onSite && <span style={{ fontSize: 9, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.15)', padding: '3px 8px', borderRadius: 99, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>On site</span>}
                   <button onClick={() => openEditModal(member)} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
