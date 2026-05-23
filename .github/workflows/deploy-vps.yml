@@ -101,8 +101,21 @@ jobs:
               exit 1
             fi
             PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' | awk '{print $1}')
+            # Detect superuser. Try POSTGRES_USER env first; then probe candidates
+            # (some containers don't set POSTGRES_USER but still use a non-postgres
+            # superuser — e.g. cortexbuild on our cortexbuild-db).
             PG_SUPER=$(docker inspect "$PG_CONTAINER" --format '{{range .Config.Env}}{{println .}}{{end}}' | grep ^POSTGRES_USER= | cut -d= -f2 || true)
-            PG_SUPER=${PG_SUPER:-postgres}
+            if [ -z "$PG_SUPER" ] || ! docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "SELECT 1" </dev/null >/dev/null 2>&1; then
+              for cand in postgres cortexbuild cortexx admin root; do
+                if docker exec "$PG_CONTAINER" psql -U "$cand" -c "SELECT 1" </dev/null >/dev/null 2>&1; then
+                  PG_SUPER="$cand"; break
+                fi
+              done
+            fi
+            if [ -z "$PG_SUPER" ]; then
+              echo "✗ Could not find a working Postgres superuser"
+              exit 1
+            fi
             echo "Container=$PG_CONTAINER IP=$PG_IP SUPER=$PG_SUPER"
 
             # ─── 2. Backup BEFORE any DB changes ──────────────────────────
@@ -117,18 +130,26 @@ jobs:
             find "$BACKUP_DIR" -name '*.sql.gz' -mtime +30 -delete 2>/dev/null || true
 
             # ─── 3. Create/update user + database (idempotent) ────────────
-            HAS_USER=$(docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -tAc "SELECT 1 FROM pg_user WHERE usename='cortexx'" 2>/dev/null || echo "")
+            # NOTE: drop -i flag from docker exec. -i consumes the SSH heredoc
+            # stdin and silently corrupts subsequent commands.
+            HAS_USER=$(docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -tAc "SELECT 1 FROM pg_user WHERE usename='cortexx'" </dev/null 2>/dev/null || echo "")
             if [ "$HAS_USER" != "1" ]; then
-              docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c "CREATE USER cortexx WITH PASSWORD '$DB_PASS';"
+              docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "CREATE USER cortexx WITH PASSWORD '$DB_PASS';" </dev/null
               echo "✓ Created user cortexx"
             fi
-            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';" >/dev/null
-            HAS_DB=$(docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" 2>/dev/null || echo "")
+            docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';" </dev/null >/dev/null
+            HAS_DB=$(docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" </dev/null 2>/dev/null || echo "")
             if [ "$HAS_DB" != "1" ]; then
-              docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c "CREATE DATABASE cortexx OWNER cortexx;"
+              docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "CREATE DATABASE cortexx OWNER cortexx;" </dev/null
               echo "✓ Created database cortexx"
             fi
-            docker exec -i "$PG_CONTAINER" psql -U "$PG_SUPER" -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;" >/dev/null
+            docker exec "$PG_CONTAINER" psql -U "$PG_SUPER" -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;" </dev/null >/dev/null
+
+            # Verify auth actually works before proceeding — catches silent failures
+            if ! docker exec "$PG_CONTAINER" psql "postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" </dev/null 2>/dev/null | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
+              echo "✗ DB auth verification failed — credentials are not actually working"
+              exit 1
+            fi
             echo "✓ DB ready"
 
             # ─── 4. Nightly backup cron (idempotent) ──────────────────────
@@ -176,20 +197,34 @@ jobs:
 
             # ─── 6. Install + migrate + seed + build ──────────────────────
             cd $APP_DIR
-            npm ci --include=dev 2>&1 | tail -5
-            DATABASE_URL="$DB_URL" npx prisma generate 2>&1 | tail -3
-            DATABASE_URL="$DB_URL" npx prisma migrate deploy 2>&1 | tail -10
+            # NOTE: redirect to log files instead of piping to tail — pipefail can
+            # mask failures in some shell modes, and we need the script to abort
+            # loudly on real errors.
+            npm ci --include=dev > /tmp/cortexx-npm-ci.log 2>&1
+            tail -5 /tmp/cortexx-npm-ci.log
+            DATABASE_URL="$DB_URL" npx prisma generate > /tmp/cortexx-prisma-gen.log 2>&1
+            tail -3 /tmp/cortexx-prisma-gen.log
+            DATABASE_URL="$DB_URL" npx prisma migrate deploy > /tmp/cortexx-prisma-mig.log 2>&1
+            tail -10 /tmp/cortexx-prisma-mig.log
             DATABASE_URL="$DB_URL" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" \
-              npx prisma db seed 2>&1 | tail -8 || echo "Seed skipped"
+              npx prisma db seed > /tmp/cortexx-seed.log 2>&1 || echo "Seed skipped"
+            tail -8 /tmp/cortexx-seed.log
             DATABASE_URL="$DB_URL" NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
-              NEXTAUTH_URL=https://cortexbuildpro.com npm run build 2>&1 | tail -10
-
-            # ─── 7. Restart pm2 (graceful reload keeps SSE open) ──────────
-            if pm2 describe cortexx >/dev/null 2>&1; then
-              pm2 reload cortexx --update-env
-            else
-              PORT=$APP_PORT pm2 start npm --name cortexx --update-env -- start
+              NEXTAUTH_URL=https://cortexbuildpro.com npm run build > /tmp/cortexx-build.log 2>&1
+            BUILD_RC=$?
+            tail -10 /tmp/cortexx-build.log
+            if [ "$BUILD_RC" -ne 0 ]; then
+              echo "✗ npm run build failed with exit $BUILD_RC — aborting deploy"
+              exit "$BUILD_RC"
             fi
+
+            # ─── 7. Restart pm2 (DELETE + start, not reload) ──────────────
+            # `pm2 reload --update-env` keeps stale env baked in (we saw this:
+            # an old DATABASE_URL=file:./prod.db survived for 10+ hours across
+            # multiple "successful" deploys). Delete + start guarantees fresh
+            # env from .env.production.
+            pm2 delete cortexx 2>/dev/null || true
+            PORT=$APP_PORT pm2 start npm --name cortexx -- start
             pm2 save
             (pm2 startup systemd -u root --hp /root 2>&1 | grep "sudo " | bash) || true
 
@@ -197,6 +232,21 @@ jobs:
             curl -s -o /dev/null -w "App on :$APP_PORT → HTTP %{http_code}\n" http://localhost:$APP_PORT/
             curl -s --max-time 5 http://localhost:$APP_PORT/api/health
             echo ""
+
+            # ─── 8. Hard verification: code commit + build id ─────────────
+            DEPLOYED_SHA=$(cd $APP_DIR && git rev-parse HEAD)
+            DEPLOYED_BUILD_ID=$(cat $APP_DIR/.next/BUILD_ID 2>/dev/null)
+            echo "✓ Deployed git HEAD: $DEPLOYED_SHA"
+            echo "✓ Deployed BUILD_ID: $DEPLOYED_BUILD_ID"
+
+            # ─── 9. Healthcheck must report ok ────────────────────────────
+            HEALTH=$(curl -s --max-time 10 http://localhost:$APP_PORT/api/health)
+            if ! echo "$HEALTH" | grep -q '"status":"ok"'; then
+              echo "✗ Healthcheck did not return ok — production may be broken"
+              echo "$HEALTH"
+              exit 1
+            fi
+            echo "✓ Healthcheck OK"
           REMOTE
 
       - name: Configure nginx for cortexbuildpro.com
