@@ -1,0 +1,161 @@
+name: Force deploy (verbose)
+on:
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+
+      - name: Force-deploy with full tracing
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
+        run: |
+          DB_PASS=$(openssl rand -hex 16)
+          echo "::add-mask::$DB_PASS"
+
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
+            DB_PASS="$DB_PASS" \
+            NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+            ADMIN_EMAIL="$ADMIN_EMAIL" \
+            ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+            SEED_TOKEN="$SEED_TOKEN" \
+            'bash -s' > deploy-trace.txt 2>&1 << 'REMOTE'
+            set -x  # echo every command
+            set -uo pipefail  # NOT -e initially so we capture all failures
+            APP_DIR=/opt/cortexx
+            APP_PORT=3010
+
+            echo "=== START $(date -u) ==="
+            echo "envs: DB_PASS=${#DB_PASS}c NEXTAUTH_SECRET=${#NEXTAUTH_SECRET}c"
+            echo
+
+            echo "=== before-state ==="
+            cd $APP_DIR
+            git log --oneline -1 2>&1
+            cat .next/BUILD_ID 2>&1
+            echo
+
+            echo "=== git fetch + reset ==="
+            git fetch origin 2>&1
+            echo "fetch exit=$?"
+            git log --oneline origin/main -1 2>&1
+            git reset --hard origin/main 2>&1
+            echo "reset exit=$?"
+            git log --oneline -1 2>&1
+            echo
+
+            echo "=== rm -rf .next + node_modules ==="
+            rm -rf $APP_DIR/.next $APP_DIR/node_modules 2>&1
+            echo "rm exit=$?"
+            ls -la $APP_DIR/.next 2>&1 | head -3
+            echo
+
+            echo "=== check PG container ==="
+            PG_CONTAINER=""
+            for c in $(docker ps --format '{{.Names}}'); do
+              if docker port "$c" 2>/dev/null | grep -qE '5432/tcp -> (0\.0\.0\.0|::):5432'; then
+                PG_CONTAINER="$c"; break
+              fi
+            done
+            echo "PG_CONTAINER=$PG_CONTAINER"
+            PG_IP=$(docker inspect "$PG_CONTAINER" --format '{{range .NetworkSettings.Networks}}{{.IPAddress}} {{end}}' 2>/dev/null | awk '{print $1}')
+            echo "PG_IP=$PG_IP"
+            DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"
+            echo "DB_URL set: ${#DB_URL}c"
+            echo
+
+            echo "=== write .env.production ==="
+            cat > $APP_DIR/.env.production << ENV
+          DATABASE_URL=$DB_URL
+          NEXTAUTH_SECRET=$NEXTAUTH_SECRET
+          NEXTAUTH_URL=https://cortexbuildpro.com
+          NODE_ENV=production
+          PORT=$APP_PORT
+          ALLOW_SEED=true
+          SEED_TOKEN=$SEED_TOKEN
+          ADMIN_EMAIL=$ADMIN_EMAIL
+          ADMIN_PASSWORD=$ADMIN_PASSWORD
+          ENV
+            chmod 600 $APP_DIR/.env.production
+            echo ".env.production written: $(wc -c < $APP_DIR/.env.production) bytes"
+            echo
+
+            echo "=== npm ci (no pipe-tail) ==="
+            cd $APP_DIR
+            npm ci --include=dev > /tmp/npm-ci.log 2>&1
+            NCI=$?
+            echo "npm ci exit=$NCI"
+            tail -10 /tmp/npm-ci.log
+            echo
+
+            echo "=== prisma generate ==="
+            DATABASE_URL="$DB_URL" npx prisma generate > /tmp/prisma-gen.log 2>&1
+            PG=$?
+            echo "prisma generate exit=$PG"
+            tail -5 /tmp/prisma-gen.log
+            echo
+
+            echo "=== prisma migrate deploy ==="
+            DATABASE_URL="$DB_URL" npx prisma migrate deploy > /tmp/prisma-mig.log 2>&1
+            PM=$?
+            echo "prisma migrate exit=$PM"
+            tail -10 /tmp/prisma-mig.log
+            echo
+
+            echo "=== npm run build (CRITICAL) ==="
+            DATABASE_URL="$DB_URL" NEXTAUTH_SECRET="$NEXTAUTH_SECRET" NEXTAUTH_URL=https://cortexbuildpro.com \
+              npm run build > /tmp/build.log 2>&1
+            BUILD=$?
+            echo "npm run build exit=$BUILD"
+            echo "--- build.log tail ---"
+            tail -30 /tmp/build.log
+            echo "--- end build.log ---"
+            echo
+
+            echo "=== .next state after build ==="
+            ls -la $APP_DIR/.next 2>&1 | head -5
+            cat $APP_DIR/.next/BUILD_ID 2>&1
+            echo
+
+            echo "=== pm2 reload ==="
+            pm2 reload cortexx --update-env 2>&1
+            PM2=$?
+            echo "pm2 reload exit=$PM2"
+            pm2 describe cortexx 2>&1 | grep -E "restarts|uptime|status" | head -5
+            echo
+
+            sleep 5
+            echo "=== final curl ==="
+            curl -s -o /dev/null -w "localhost:$APP_PORT/login → %{http_code}\n" http://localhost:$APP_PORT/login
+            curl -s -o /dev/null -w "localhost:$APP_PORT/sw.js → %{http_code}\n" http://localhost:$APP_PORT/sw.js
+            echo
+
+            echo "=== END $(date -u) ==="
+          REMOTE
+          cat deploy-trace.txt
+
+      - name: Commit trace
+        if: always()
+        run: |
+          git config user.name "deploy-bot"
+          git config user.email "deploy@cortexx.local"
+          git add deploy-trace.txt
+          git commit -m "force-deploy trace [skip ci]" || true
+          git pull --rebase origin main
+          git push
