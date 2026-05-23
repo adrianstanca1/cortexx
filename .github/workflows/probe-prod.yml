@@ -8,56 +8,41 @@ jobs:
       contents: write
     steps:
       - uses: actions/checkout@v4
-        with:
-          ref: main
-          fetch-depth: 0
-      - name: Setup SSH
+      - name: External HTTP probe
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
-          chmod 600 ~/.ssh/cortexx_deploy
-      - name: Inspect VPS state
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' > probe-vps.txt 2>&1 << 'REMOTE'
-            echo "=== git HEAD in /opt/cortexx ==="
-            cd /opt/cortexx && git log --oneline -3 2>&1 | head -5
+          {
+            echo "Probed at: $(date -u)"
             echo
-            echo "=== .next exists? ==="
-            ls -la /opt/cortexx/.next 2>&1 | head -5
+            echo '=== /login HEAD ==='
+            curl -sI https://cortexbuildpro.com/login | head -8
             echo
-            echo "=== .next/BUILD_ID ==="
-            cat /opt/cortexx/.next/BUILD_ID 2>&1
+            echo '=== /dashboard HEAD ==='
+            curl -sI https://cortexbuildpro.com/dashboard | head -8
             echo
-            echo "=== public/sw.js + offline.html ==="
-            ls -la /opt/cortexx/public/sw.js /opt/cortexx/public/offline.html 2>&1
+            echo '=== /sw.js HEAD ==='
+            curl -sI https://cortexbuildpro.com/sw.js | head -5
             echo
-            echo "=== app/not-found.tsx ==="
-            ls -la /opt/cortexx/app/not-found.tsx 2>&1
+            echo '=== /sw.js first 3 lines ==='
+            curl -s https://cortexbuildpro.com/sw.js | head -3
             echo
-            echo "=== app/(auth)/login dir ==="
-            ls -la "/opt/cortexx/app/(auth)/login/" 2>&1
+            echo '=== /manifest.json (parsed) ==='
+            curl -s https://cortexbuildpro.com/manifest.json | python3 -m json.tool 2>&1 | head -20
             echo
-            echo "=== pm2 processes ==="
-            pm2 list 2>&1 | head -20
+            echo '=== /api/health ==='
+            curl -s https://cortexbuildpro.com/api/health | python3 -m json.tool 2>&1 | head -25
             echo
-            echo "=== pm2 process detail ==="
-            pm2 describe cortexx 2>&1 | head -40
+            echo '=== /login HTML build id ==='
+            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/login | grep -oE '"buildId":"[^"]*"' | head -2
             echo
-            echo "=== curl localhost ==="
-            curl -s -o /dev/null -w "localhost:3010/login → %{http_code}\n" http://localhost:3010/login
-            curl -s -o /dev/null -w "localhost:3010/sw.js → %{http_code}\n" http://localhost:3010/sw.js
-            curl -s -o /dev/null -w "localhost:3010/dashboard → %{http_code}\n" http://localhost:3010/dashboard
-            curl -s -o /dev/null -w "localhost:3010/api/health → %{http_code}\n" http://localhost:3010/api/health
-            echo
-            echo "=== nginx config for cortexbuildpro ==="
-            cat /etc/nginx/sites-enabled/cortexx 2>&1 | head -40
-          REMOTE
-          cat probe-vps.txt
-      - name: Commit findings
+            echo '=== /dashboard HTML build id (follows redirect to /login) ==='
+            curl -sL -A "Mozilla/5.0" https://cortexbuildpro.com/dashboard | grep -oE '"buildId":"[^"]*"' | head -2
+          } > probe-result.txt 2>&1
+          cat probe-result.txt
+      - name: Commit
         run: |
           git config user.name "probe-bot"
           git config user.email "probe@cortexx.local"
-          git add probe-vps.txt
-          git commit -m "probe-vps: result [skip ci]" || echo "nothing to commit"
-          git pull --rebase origin main
+          git add probe-result.txt
+          git commit -m "external probe [skip ci]" || true
+          git pull --rebase origin main 2>&1 | tail -2
           git push
