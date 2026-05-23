@@ -1,0 +1,31 @@
+=== Token info ===
+Length: 48
+Prefix: 35QdLLyK...
+
+=== Direct API: /websites ===
+{"data":[],"meta":{"current_page":1,"per_page":25,"total":0}}
+HTTP_CODE: 200
+
+=== Direct API: /websites?domain=cortexbuildpro.com ===
+{"data":[],"meta":{"current_page":1,"per_page":25,"total":0}}
+HTTP_CODE: 200
+
+=== Direct API: /api/orders ===
+{
+    "message": "The route api/v1/orders could not be found.",
+    "correlation_id": "a1d821ef-7540-4d85-b588-86e64c9fde70"
+}
+HTTP_CODE: 404
+
+=== MCP: hosting_listOrdersV1 (raw, with stderr) ===
+npm warn exec The following package was not found and will be installed: hostinger-api-mcp@0.2.2
+Initialized 118 tools
+MCP Server starting on stdio transport
+Registered 118 tools
+[INFO] MCP Server with stdio transport started successfully with 118 tools
+[DEBUG] Handling CallTool request: {"name":"hosting_listOrdersV1","params":{}}
+[INFO] Executing tool: hosting_listOrdersV1
+[DEBUG] API Request: GET https://developers.hostinger.com/api/hosting/v1/orders
+[DEBUG] Request config:: {"url":"https://developers.hostinger.com/api/hosting/v1/orders","method":"get","params":{},"headers":["User-Agent","Authorization"]}
+[DEBUG] Response status: 200
+{"result":{"content":[{"type":"text","text":"{\"data\":[],\"meta\":{\"current_page\":1,\"per_page\":25,\"total\":0}}"}]},"jsonrpc":"2.0","id":1}
