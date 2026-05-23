@@ -17,6 +17,7 @@ export async function GET() {
     // Run all queries in parallel — including hoursPerMember
     const [projects, tasks, team, invoices, activities, timeEntries, hoursPerMember] = await Promise.all([
       prisma.project.findMany({
+        where: { archivedAt: null },
         include: {
           _count: { select: { tasks: true, assignments: true } },
           assignments: { include: { member: true }, where: { onSite: true }, take: 4 },

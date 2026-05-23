@@ -15,9 +15,12 @@ export async function GET(req: NextRequest) {
     const { searchParams } = new URL(req.url)
     const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
     const skip = parseInt(searchParams.get('skip') || '0') || 0
+    const include = searchParams.get('include') // 'archived' to include, 'only-archived' to show only archived
+    const where = include === 'archived' ? {} : include === 'only-archived' ? { archivedAt: { not: null } } : { archivedAt: null }
 
     const [projects, total] = await Promise.all([
       prisma.project.findMany({
+        where,
         include: {
           _count: { select: { tasks: true, assignments: true } },
           assignments: { include: { member: true }, take: 8 },
@@ -26,7 +29,7 @@ export async function GET(req: NextRequest) {
         take,
         skip,
       }),
-      prisma.project.count(),
+      prisma.project.count({ where }),
     ])
     return NextResponse.json({ projects, total, hasMore: skip + projects.length < total })
   } catch (error) {
