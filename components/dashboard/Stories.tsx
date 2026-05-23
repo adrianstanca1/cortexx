@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import Avatar from '../ui/Avatar'
 import { IcCamera, IcSpark, IcCheck } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface StoriesProps {
@@ -17,7 +18,7 @@ const statusColors: Record<string, string> = {
 export default function Stories({ accent = '#8b5cf6', data }: StoriesProps) {
   const router = useRouter()
   const projects = data?.projects || []
-  const activities = data?.activities || []
+  const { activities, connected } = useRealtimeActivity(data?.activities || [])
   const featured = projects[0]
   const activeCount = projects.filter(p => p.status === 'active').length
 
@@ -98,8 +99,9 @@ export default function Stories({ accent = '#8b5cf6', data }: StoriesProps) {
       )}
 
       {/* Activity feed */}
-      <div style={{ padding: '0 20px 8px' }}>
+      <div style={{ padding: '0 20px 8px', display: 'flex', alignItems: 'center', gap: 8 }}>
         <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: 0.6 }}>Activity feed</p>
+        <span title={connected ? 'Live' : 'Reconnecting…'} style={{ width: 6, height: 6, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 6px #10b98166' : 'none' }} />
       </div>
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {activities.map((a) => {

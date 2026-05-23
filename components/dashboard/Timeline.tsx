@@ -1,6 +1,7 @@
 'use client'
 
 import { IcPin, IcWrench, IcCheck, IcClock, IcTruck, IcHardhat, IcCamera } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface TimelineProps {
@@ -24,7 +25,7 @@ const colorForActor = (actorType: string) => {
 }
 
 export default function Timeline({ accent = '#f59e0b', data }: TimelineProps) {
-  const activities = data?.activities || []
+  const { activities, connected } = useRealtimeActivity(data?.activities || [])
 
   const events = activities.map((a, i) => ({
     time: new Date(a.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' }),
@@ -46,9 +47,12 @@ export default function Timeline({ accent = '#f59e0b', data }: TimelineProps) {
 
   return (
     <div style={{ padding: '20px 20px 100px' }}>
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)', marginBottom: 20 }}>
-        Recent activity
-      </p>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 20 }}>
+        <p style={{ fontSize: 11, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>
+          Recent activity
+        </p>
+        <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+      </div>
       <div style={{ position: 'relative' }}>
         <div style={{ position: 'absolute', left: 42, top: 10, bottom: 10, width: 1, background: 'rgba(255,255,255,0.07)' }} />
         <div style={{ display: 'flex', flexDirection: 'column', gap: 0 }}>
