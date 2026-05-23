@@ -1,10 +1,22 @@
 Warning: Permanently added '72.62.132.43' (ED25519) to the list of known hosts.
-GH_PAT len on VPS: 40
-first 8: ghs_Bt4d...
-Cloning into 'cortexx-test'...
-clone exit: 0
-app
-components
-lib
-middleware.ts
-next-env.d.ts
+=== STEP 1 find PG ===
+PG_CONTAINER=
+bash: line 6: docker: command not found
+bash: line 12: docker: command not found
+PG_IP=
+=== STEP 2 PG_SUPER detect ===
+bash: line 16: docker: command not found
+PG_SUPER=
+=== STEP 3 DB setup ===
+HAS_USER=
+ALTER: bash: line 29: docker: command not found
+HAS_DB=
+CREATE DB: bash: line 34: docker: command not found
+=== STEP 4 verify ===
+VERIFY: bash: line 39: docker: command not found
+=== STEP 5 clone ===
+Cloning into '/opt/cortexx'...
+clone rc=0
+total 164
+drwxr-xr-x 11 root root  4096 May 23 19:49 .
+drwxr-xr-x  4 root root  4096 May 23 19:49 ..
