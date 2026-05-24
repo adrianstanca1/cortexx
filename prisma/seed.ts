@@ -9,16 +9,47 @@ async function main() {
   const adminPass = process.env.ADMIN_PASSWORD || 'changeme-please-1234'
   const adminName = process.env.ADMIN_NAME || 'Admin'
 
-  const existing = await prisma.user.findUnique({ where: { email: adminEmail } })
-  if (!existing) {
+  let admin = await prisma.user.findUnique({ where: { email: adminEmail } })
+  if (!admin) {
     const passwordHash = await bcrypt.hash(adminPass, 12)
-    await prisma.user.create({
+    admin = await prisma.user.create({
       data: { email: adminEmail, name: adminName, passwordHash, role: 'admin' },
     })
     console.log(`✓ Created admin user: ${adminEmail}`)
   } else {
     console.log(`✓ Admin user ${adminEmail} already exists`)
   }
+
+  // 1b. Ensure the default organization exists + admin is the owner.
+  // Idempotent: re-running won't create duplicates.
+  const defaultSlug = process.env.DEFAULT_ORG_SLUG || 'cortexbuildpro'
+  const defaultOrgName = process.env.DEFAULT_ORG_NAME || 'Cortexbuild Pro'
+  let org = await prisma.organization.findUnique({ where: { slug: defaultSlug } })
+  if (!org) {
+    org = await prisma.organization.create({
+      data: { slug: defaultSlug, name: defaultOrgName, plan: 'pro' },
+    })
+    console.log(`✓ Created default organization: ${defaultSlug}`)
+  } else {
+    console.log(`✓ Organization ${defaultSlug} already exists`)
+  }
+
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId: admin.id, organizationId: org.id } },
+  })
+  if (!membership) {
+    await prisma.userOrganization.create({
+      data: { userId: admin.id, organizationId: org.id, role: 'owner' },
+    })
+    console.log(`✓ Linked ${adminEmail} as owner of ${defaultSlug}`)
+  }
+
+  // Default notification preferences (also idempotent)
+  await prisma.notificationPreference.upsert({
+    where: { userId: admin.id },
+    create: { userId: admin.id },
+    update: {},
+  })
 
   // 2. Demo data — only seed if there are no projects yet (preserves existing user data)
   const projectCount = await prisma.project.count()

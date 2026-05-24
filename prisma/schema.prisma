@@ -10,18 +10,23 @@ datasource db {
 // ─── Auth models (NextAuth + Prisma adapter) ───────────────────────────────
 
 model User {
-  id                String             @id @default(cuid())
-  name              String?
-  email             String             @unique
-  passwordHash      String?
-  emailVerified     DateTime?
-  image             String?
-  role              String             @default("member") // member, admin
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  accounts          Account[]
-  sessions          Session[]
-  pushSubscriptions PushSubscription[]
+  id                     String                  @id @default(cuid())
+  name                   String?
+  email                  String                  @unique
+  passwordHash           String?
+  emailVerified          DateTime?
+  image                  String?
+  role                   String                  @default("member") // legacy app-level role; per-org role lives on UserOrganization
+  totpSecret             String? // encrypted TOTP secret for 2FA
+  totpEnabledAt          DateTime?
+  totpBackupCodes        Json? // hashed backup codes
+  createdAt              DateTime                @default(now())
+  updatedAt              DateTime                @updatedAt
+  accounts               Account[]
+  sessions               Session[]
+  pushSubscriptions      PushSubscription[]
+  organizations          UserOrganization[]
+  notificationPreference NotificationPreference?
 }
 
 model Account {
@@ -897,4 +902,91 @@ model PushSubscription {
   user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
 
   @@index([userId])
+}
+
+// ─── Multi-tenancy ─────────────────────────────────────────────────────────
+// Phase 1 of the v1.0 SaaS plan. New tables are fully additive — existing
+// routes ignore them until the codemod adds organizationId filters in a
+// follow-up migration. See docs/v1-completion-plan.md.
+
+model Organization {
+  id                   String               @id @default(cuid())
+  slug                 String               @unique
+  name                 String
+  plan                 String               @default("trial") // trial / starter / pro / enterprise
+  subscriptionStatus   String               @default("active") // active / past_due / cancelled
+  trialEndsAt          DateTime?
+  stripeCustomerId     String?              @unique
+  stripeSubscriptionId String?              @unique
+  brandingLogoUrl      String?
+  brandingAccent       String?
+  createdAt            DateTime             @default(now())
+  updatedAt            DateTime             @updatedAt
+  members              UserOrganization[]
+  invites              OrganizationInvite[]
+  auditEvents          AuditEvent[]
+}
+
+model UserOrganization {
+  id             String       @id @default(cuid())
+  userId         String
+  organizationId String
+  role           String       @default("member") // owner / admin / member / viewer
+  joinedAt       DateTime     @default(now())
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, organizationId])
+  @@index([userId])
+  @@index([organizationId])
+}
+
+model OrganizationInvite {
+  id             String       @id @default(cuid())
+  organizationId String
+  email          String
+  role           String       @default("member")
+  token          String       @unique
+  expiresAt      DateTime
+  acceptedAt     DateTime?
+  invitedById    String?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId])
+  @@index([email])
+}
+
+model AuditEvent {
+  id             String       @id @default(cuid())
+  organizationId String
+  userId         String?
+  action         String // "project.delete", "invoice.update", etc.
+  resourceType   String
+  resourceId     String
+  metadata       Json?
+  ipAddress      String?
+  userAgent      String?
+  createdAt      DateTime     @default(now())
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([organizationId, createdAt])
+  @@index([userId, createdAt])
+  @@index([resourceType, resourceId])
+}
+
+model NotificationPreference {
+  id                 String   @id @default(cuid())
+  userId             String   @unique
+  tasksPush          Boolean  @default(true)
+  tasksEmail         Boolean  @default(false)
+  safetyPush         Boolean  @default(true)
+  safetyEmail        Boolean  @default(true)
+  invoicesPush       Boolean  @default(true)
+  invoicesEmail      Boolean  @default(true)
+  announcementsPush  Boolean  @default(true)
+  announcementsEmail Boolean  @default(false)
+  weeklyDigest       Boolean  @default(true)
+  updatedAt          DateTime @updatedAt
+  user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
 }
