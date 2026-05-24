@@ -4,6 +4,22 @@ import { requireAuth, actorName } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
+  try {
+    const invoice = await prisma.invoice.findUnique({
+      where: { id: params.id },
+      include: { project: true },
+    })
+    if (!invoice) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    return NextResponse.json({ invoice })
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Failed to fetch invoice' }, { status: 500 })
+  }
+}
+
 async function recalcSpent(projectId: string) {
   const paidInvoices = await prisma.invoice.findMany({
     where: { projectId, status: 'paid' },

@@ -4,6 +4,22 @@ import { requireAuth, actorName } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
+export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
+  try {
+    const entry = await prisma.timeEntry.findUnique({
+      where: { id: params.id },
+      include: { member: true, project: true },
+    })
+    if (!entry) return NextResponse.json({ error: 'Time entry not found' }, { status: 404 })
+    return NextResponse.json(entry)
+  } catch (error) {
+    console.error(error)
+    return NextResponse.json({ error: 'Failed to fetch time entry' }, { status: 500 })
+  }
+}
+
 export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
