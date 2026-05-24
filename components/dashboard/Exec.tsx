@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import type { DashboardData } from '@/lib/types'
 import { IcBell, IcTrend, IcCheck, IcHardhat } from '@/components/ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 
 interface ExecProps {
   accent?: string
@@ -34,6 +35,7 @@ const T = {
  */
 export default function Exec({ data }: ExecProps) {
   const router = useRouter()
+  const { connected } = useRealtimeActivity(data?.activities || [])
   const [openSnags, setOpenSnags] = useState(0)
   const [pendingTS, setPendingTS] = useState(0)
   const [inboxCount, setInboxCount] = useState(0)
@@ -106,7 +108,10 @@ export default function Exec({ data }: ExecProps) {
     <div style={{ background: T.bg, minHeight: '100%', display: 'flex', flexDirection: 'column' }}>
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', padding: '14px 16px 4px' }}>
         <div>
-          <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: T.t1, letterSpacing: -0.4 }}>Executive</div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: T.t1, letterSpacing: -0.4 }}>Executive</div>
+            <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : T.t3, boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+          </div>
           <div style={{ fontFamily: SF, fontSize: 12, color: T.t2, marginTop: 2 }}>{dateStr} · Wk {week}</div>
         </div>
         <button
