@@ -29,6 +29,8 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
       - name: Prisma schema format check
         run: npx prisma format --check
+      - name: Lint
+        run: npm run lint
       - name: TypeScript check
         run: npx tsc --noEmit
       - name: Unit tests
