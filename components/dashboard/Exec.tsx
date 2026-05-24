@@ -71,7 +71,7 @@ export default function Exec({ data }: ExecProps) {
     .filter(i => i.paidDate && new Date(i.paidDate) >= weekStart)
     .reduce((s, i) => s + (i.amount || 0), 0)
   const revenueTarget = 80_000
-  const revenuePct = Math.min(100, Math.round((revenueThisWeek / revenueTarget) * 100))
+  const revenuePct = Math.max(0, Math.min(100, Math.round((revenueThisWeek / revenueTarget) * 100)))
 
   const tasks = data?.tasks || []
   const dueTasks = tasks.filter(t => t.dueDate)
