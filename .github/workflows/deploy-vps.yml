@@ -379,9 +379,9 @@ jobs:
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
             'curl -s -o /dev/null -w "Local 3010: HTTP %{http_code}\n" http://localhost:3010/'
           echo "=== Public ==="
-          curl -s --max-time 20 -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.com/ || echo "HTTPS root: connection error (SSL may still be provisioning)"
-          curl -s --max-time 20 -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.com/api/health || echo "HTTPS health: connection error"
-          curl -s --max-time 20 -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.com/login || echo "HTTPS login: connection error"
+          curl -s -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.com/
+          curl -s -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.com/api/health
+          curl -s -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.com/login
           echo "=== Health body ==="
-          curl -s --max-time 20 https://cortexbuildpro.com/api/health || echo "Health check via HTTPS failed — app is still running on port 3010"
+          curl -s --max-time 10 https://cortexbuildpro.com/api/health
           echo ""
