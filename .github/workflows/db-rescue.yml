@@ -19,6 +19,7 @@ on:
           - inspect           # list all _prisma_migrations rows
           - clear-stuck       # delete rows where finished_at IS NULL
           - clear-all         # nuclear: empty _prisma_migrations entirely (re-applies everything)
+          - resync-password   # rotate DB password AND update .env.production atomically, then pm2 reload
 
 jobs:
   rescue:
@@ -53,6 +54,39 @@ jobs:
               clear-all)
                 echo "=== ⚠️  WIPING _prisma_migrations ENTIRELY ==="
                 sudo -u postgres psql cortexx -c "TRUNCATE _prisma_migrations"
+                ;;
+              resync-password)
+                echo "=== Resyncing DB password with .env.production ==="
+                NEW_PASS=$(openssl rand -hex 16)
+                sudo -u postgres psql -c "ALTER USER cortexx WITH PASSWORD '$NEW_PASS';"
+                echo "✓ Rotated DB password"
+                if [ -f /opt/cortexx/.env.production ]; then
+                  cp /opt/cortexx/.env.production /opt/cortexx/.env.production.bak
+                  # Replace the DATABASE_URL line atomically
+                  sed -i "s|^DATABASE_URL=.*|DATABASE_URL=postgresql://cortexx:${NEW_PASS}@127.0.0.1:5432/cortexx|" /opt/cortexx/.env.production
+                  echo "✓ Updated .env.production"
+                  # Verify match
+                  EXTRACTED=$(grep -oP 'DATABASE_URL=postgresql://cortexx:\K[^@]+' /opt/cortexx/.env.production)
+                  if [ "$EXTRACTED" = "$NEW_PASS" ]; then
+                    echo "✓ Verified: .env.production has the new password"
+                  else
+                    echo "✗ Mismatch after sed — .env.production was not updated correctly"
+                    exit 1
+                  fi
+                  # Verify connection works
+                  if PGPASSWORD="$NEW_PASS" psql "postgresql://cortexx:$NEW_PASS@127.0.0.1:5432/cortexx" -tAc "SELECT 1" 2>&1 | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
+                    echo "✓ Connection test passed"
+                  else
+                    echo "✗ Connection test failed — DB password didn't apply"
+                    exit 1
+                  fi
+                  # Reload pm2 so it picks up the new password
+                  pm2 reload cortexx --update-env 2>&1 | tail -5 || pm2 restart cortexx 2>&1 | tail -5
+                  echo "✓ pm2 reloaded"
+                else
+                  echo "✗ /opt/cortexx/.env.production not found"
+                  exit 1
+                fi
                 ;;
               *)
                 echo "Unknown action: $ACTION"
