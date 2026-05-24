@@ -98,6 +98,11 @@ export default function ProjectDetailPage() {
 
   useEffect(() => { load() }, [load])
 
+  // Captured once via useState's lazy initializer (runs exactly once) so
+  // daysLeft + document-expiry threshold are stable across re-renders.
+  // Must sit above the early returns below — rules-of-hooks.
+  const [now] = useState(() => Date.now())
+
   if (loading) return <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#52749a', fontFamily: 'var(--font-system)' }}>Loading…</div>
   if (error || !project) return (
     <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
@@ -112,7 +117,8 @@ export default function ProjectDetailPage() {
   const doneTasks = project.tasks?.filter(t => t.status === 'done') || []
   const totalInvoiced = project.invoices?.reduce((s, i) => s + i.amount, 0) || 0
   const paid = project.invoices?.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0) || 0
-  const daysLeft = project.endDate ? Math.ceil((new Date(project.endDate).getTime() - Date.now()) / 86400000) : null
+  const daysLeft = project.endDate ? Math.ceil((new Date(project.endDate).getTime() - now) / 86400000) : null
+  const documentExpiryThreshold = now + DOCUMENT_EXPIRY_WARNING_DAYS * 86400000
 
   const tabs: { id: TabId; label: string }[] = [
     { id: 'overview', label: 'Overview' },
@@ -516,7 +522,7 @@ export default function ProjectDetailPage() {
               {project.documents && project.documents.length > 0 ? (
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {project.documents.map(doc => {
-                    const expiring = doc.expiresAt && new Date(doc.expiresAt) < new Date(Date.now() + DOCUMENT_EXPIRY_WARNING_DAYS * 86400000)
+                    const expiring = doc.expiresAt && new Date(doc.expiresAt).getTime() < documentExpiryThreshold
                     return (
                       <div key={doc.id} style={{ background: '#152641', borderRadius: 10, padding: '10px 12px', border: `0.5px solid ${expiring ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', gap: 10 }}>
                         <IcDoc size={16} color={expiring ? '#ef4444' : '#52749a'} />

@@ -85,6 +85,10 @@ export default function PermitsPage() {
 
   useEffect(() => { load() }, [load])
 
+  // "Expiring within 24h" threshold captured once via useState's lazy
+  // initializer (guaranteed to run exactly once).
+  const [expiringSoonThreshold] = useState(() => Date.now() + 1000 * 60 * 60 * 24)
+
   const openAdd = () => {
     setForm({ projectId: projects[0]?.id || '', title: '', type: 'general', riskLevel: 'medium', location: '', issuedTo: '', validFrom: '', validTo: '', conditions: '' })
     setShowModal(true)
@@ -167,7 +171,7 @@ export default function PermitsPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
         {permits.map(p => (
-          <div key={p.id} style={{ background: '#152641', border: `0.5px solid ${p.status === 'active' && p.validTo && new Date(p.validTo) < new Date(Date.now() + 1000 * 60 * 60 * 24) ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
+          <div key={p.id} style={{ background: '#152641', border: `0.5px solid ${p.status === 'active' && p.validTo && new Date(p.validTo).getTime() < expiringSoonThreshold ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
