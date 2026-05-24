@@ -22,7 +22,9 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
   const activeProject = projects.find(p => p.status === 'active') || projects[0]
   const onSiteAvatars = (data?.team || []).filter(m => m.onSite).slice(0, 4)
   const cashflow = data?.stats?.cashflow ?? 0
-  const cashflowDelta = Math.round(cashflow * 0.2) // mock weekly delta in absence of historical data
+  // Real weekly labour cost: hours this week × avg hourly rate (daily rate ÷ 8)
+  const avgDailyRate = (data?.team || []).reduce((s: number, m: { dailyRate?: number }) => s + (m.dailyRate ?? 0), 0) / Math.max((data?.team || []).length, 1)
+  const cashflowDelta = Math.round((data?.stats?.hoursThisWeek ?? 0) * (avgDailyRate / 8))
   const owed = data?.stats?.owed ?? 0
   const hoursThisWeek = data?.stats?.hoursThisWeek ?? 0
   const overdueInvoices = (data?.invoices || []).filter(i => i.status === 'overdue')
@@ -102,7 +104,7 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
             <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Cash</div>
             <div style={{ fontFamily: SFMono, fontSize: 22, color: '#eef3fa', fontWeight: 700, marginTop: 2, letterSpacing: -0.5 }}>{cashLabel}</div>
             <div style={{ fontFamily: SF, fontSize: 11, color: '#10b981', marginTop: 2, fontWeight: 500 }}>
-              +£{(cashflowDelta / 1000).toFixed(1)}k wk
+              {cashflowDelta > 0 ? `£${cashflowDelta >= 1000 ? (cashflowDelta / 1000).toFixed(1) + 'k' : cashflowDelta} labour wk` : 'No hours this week'}
             </div>
           </div>
           <svg width="100%" height="36" viewBox="0 0 100 36" preserveAspectRatio="none">
@@ -153,7 +155,7 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
           }}><IcSpark size={18} color="#fff" /></div>
           <div style={{ flex: 1 }}>
             <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: '#eef3fa' }}>Ask Cortex anything</div>
-            <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>“Forecast Camden cashflow”</div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>Ask about budgets, tasks, or site status</div>
           </div>
           <IcArrowRight size={16} color="#52749a" />
         </div>
