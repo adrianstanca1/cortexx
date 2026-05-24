@@ -1,0 +1,65 @@
+name: DB Rescue (manual)
+
+# Emergency manual workflow for clearing stuck Prisma migration state on
+# production. Workflow_dispatch only — never auto-runs.
+#
+# Use when the main deploy keeps failing with "found pending failed
+# migration" or similar Prisma migration errors. Runs raw psql commands
+# against the cortexx DB to inspect + reset Prisma's migration tracker.
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: "What to do"
+        required: true
+        default: "inspect"
+        type: choice
+        options:
+          - inspect           # list all _prisma_migrations rows
+          - clear-stuck       # delete rows where finished_at IS NULL
+          - clear-all         # nuclear: empty _prisma_migrations entirely (re-applies everything)
+
+jobs:
+  rescue:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+
+      - name: Run rescue action
+        run: |
+          ACTION="${{ inputs.action }}"
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
+            ACTION="$ACTION" 'bash -s' << 'REMOTE'
+            set -e
+            echo "=== Pre-state ==="
+            sudo -u postgres psql cortexx -c "SELECT migration_name, started_at, finished_at, rolled_back_at FROM _prisma_migrations ORDER BY started_at DESC LIMIT 20" || echo "(table not found)"
+
+            case "$ACTION" in
+              inspect)
+                echo "=== Done (inspect-only) ==="
+                ;;
+              clear-stuck)
+                echo "=== Clearing stuck migrations ==="
+                sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL"
+                echo "=== Post-state ==="
+                sudo -u postgres psql cortexx -c "SELECT migration_name, finished_at FROM _prisma_migrations ORDER BY started_at DESC LIMIT 10"
+                ;;
+              clear-all)
+                echo "=== ⚠️  WIPING _prisma_migrations ENTIRELY ==="
+                sudo -u postgres psql cortexx -c "TRUNCATE _prisma_migrations"
+                ;;
+              *)
+                echo "Unknown action: $ACTION"
+                exit 1
+                ;;
+            esac
+
+            echo "=== Long-running queries on cortexx DB ==="
+            sudo -u postgres psql -c "SELECT pid, now()-query_start AS runtime, state, LEFT(query, 80) FROM pg_stat_activity WHERE datname = 'cortexx' AND state != 'idle' ORDER BY query_start ASC" || true
+          REMOTE
