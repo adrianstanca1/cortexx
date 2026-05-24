@@ -9,7 +9,7 @@ and planned. Maintained alongside the codebase, not in a separate tracker.
 |---|---|
 | **Foundation** | Next.js 14 App Router, Postgres + Prisma, NextAuth credentials, 4 migrations, idempotent seed, ErrorBoundary, themed 404 + loading, error reporting to `/api/errors`. |
 | **Mobile shell** | 5-tab TabBar (Dashboard / Projects / + / Tasks / Team), hamburger DrawerMenu with active-page highlight, QuickActions bottom-sheet from + FAB (6 actions), UserMenu, AuthedShell wrapper. |
-| **12 dashboards** | ActionFirst, StatusBoard, Calm, Bento, AIForward, Field, Timeline, Money/Books, Stories, Rings, SiteMap, Focus — all matching the Claude design (gradient hero, blueprint SVG, accent palette, etc). |
+| **15 dashboards** | ActionFirst, StatusBoard, Calm, Bento, AIForward, Field, Timeline, Money/Books, Stories, Rings, SiteMap, Focus, **Executive** (v13, cash-first KPI grid for the founder seat), **Broadsheet** (v14, newspaper aesthetic), **Site notice** (v15, hazard-tape construction noticeboard) — all matching the Claude design (gradient hero, blueprint SVG, accent palette, etc). |
 | **Project surfaces** | List + filters (active/archived), detail with Overview/Tasks/Team/Finance tabs, Kanban board, gallery, archive (soft-delete + restore). |
 | **Task surfaces** | List + search + filters, bulk select (complete/reopen/delete), category badges, comments + count, due-time picker, edit modal, optimistic toggles. |
 | **Team surfaces** | List with empty-state CTA, per-member profile, edit modal, hours tracking. |
