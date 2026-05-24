@@ -15,7 +15,8 @@ function parseDate(v: unknown): Date | null | undefined {
   return isNaN(d.getTime()) ? undefined : d
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
@@ -68,7 +69,8 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {

@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic'
 const ALLOWED_STATUS = new Set(['open', 'answered', 'closed'])
 const ALLOWED_PRIORITY = new Set(['low', 'medium', 'high'])
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   const rfi = await prisma.rfi.findUnique({
@@ -18,7 +19,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ rfi })
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
@@ -87,7 +89,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {

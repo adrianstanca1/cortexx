@@ -1,4 +1,5 @@
 import type { Metadata } from 'next'
+import Link from 'next/link'
 import LegalShell from '@/components/legal/LegalShell'
 
 export const metadata: Metadata = {
@@ -17,11 +18,11 @@ export default function SupportPage() {
           <div className="t">Email us</div>
           <div className="s">support@cortexbuild.app</div>
         </a>
-        <a className="card" href="/">
+        <Link className="card" href="/">
           <div className="ico">🚀</div>
           <div className="t">Open the app</div>
           <div className="s">cortexbuildpro.com</div>
-        </a>
+        </Link>
       </div>
 
       <h2>Common questions</h2>
