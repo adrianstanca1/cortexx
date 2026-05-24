@@ -93,6 +93,7 @@ model Project {
   siteCheckIns  SiteCheckIn[]
   pos           PurchaseOrder[]
   subInvoices   SubInvoice[]
+  drawings      Drawing[]
 
   @@index([status])
   @@index([updatedAt])
@@ -604,4 +605,39 @@ model SubInvoice {
   @@unique([subcontractorId, number])
   @@index([subcontractorId, status])
   @@index([status, invoiceDate])
+}
+
+model Drawing {
+  id         String            @id @default(cuid())
+  projectId  String
+  number     String
+  title      String
+  discipline String? // architectural, structural, electrical, mechanical, plumbing, civil
+  status     String            @default("draft") // draft, approved, superseded, archived
+  notes      String?
+  archivedAt DateTime?
+  createdAt  DateTime          @default(now())
+  updatedAt  DateTime          @updatedAt
+  project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revisions  DrawingRevision[]
+
+  @@unique([projectId, number])
+  @@index([projectId, status])
+  @@index([discipline])
+}
+
+model DrawingRevision {
+  id         String   @id @default(cuid())
+  drawingId  String
+  revision   String // e.g. "A", "B", "P01", "T01"
+  fileUrl    String?
+  fileName   String?
+  fileSize   Int?
+  mimeType   String?
+  notes      String?
+  uploadedAt DateTime @default(now())
+  drawing    Drawing  @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+
+  @@unique([drawingId, revision])
+  @@index([drawingId, uploadedAt])
 }
