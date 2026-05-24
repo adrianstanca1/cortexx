@@ -4,16 +4,42 @@ This folder wraps the existing Cortexx web app as a native iOS application using
 
 > **You will need a Mac** with Xcode 15.4 or newer to build and submit. Everything below assumes macOS.
 
-> ## ⚠️ Heads-up: this scaffold targets the static PWA build
+> ## Two build modes
 >
-> This scaffold was originally built for **`cortexx-pwa`** — the sibling repo that ships Cortexx as a single static `Cortexx.html` file. `scripts/build-web.mjs` copies that file into `ios/www/index.html`, which is then bundled into the iOS app.
+> `capacitor.config.ts` and `scripts/build-web.mjs` both consult the
+> `CAPACITOR_SERVER_URL` env var to pick the distribution mode.
 >
-> This codebase (the Next.js app) doesn't have a static `Cortexx.html`. To produce a build that works on an iPhone offline, you have **two options**:
+> ### 🌐 Cloud mode (recommended for TestFlight)
 >
-> 1. **Static-export Next.js** — add `output: 'export'` to `next.config.js`, run `next build`, then point `webDir` at `out/`. This works for client-rendered pages but breaks any route that uses `force-dynamic` or server actions — and the bulk of `/api/*` does. Practical for marketing/demo only.
-> 2. **Point Capacitor at the deployed URL** — uncomment the `server.url` block in `capacitor.config.ts` and set it to `https://cortexbuildpro.com`. The native shell loads the live web app every launch; offline mode is gone but the entire backend works. This is the path of least resistance for shipping a TestFlight beta.
+> ```bash
+> CAPACITOR_SERVER_URL=https://cortexbuildpro.com npm run build:web
+> npx cap sync ios
+> npx cap open ios   # then Archive in Xcode
+> ```
 >
-> Mixing the two (a small offline shell that hands off to the cloud) is on the roadmap once the Auth flow is mobile-friendly.
+> `server.url` is added to the Capacitor config, `ios/www/` gets a tiny
+> placeholder `index.html`, and the WKWebView loads the live Next.js
+> app on every launch. The full backend works — auth, Postgres, SSE,
+> Ollama `/ask`, whisper.cpp `/api/transcribe`, PDF endpoints. Always
+> up to date. Online-only.
+>
+> ### 📦 Offline mode (single-file PWA bundle)
+>
+> ```bash
+> npm run build:web        # CAPACITOR_SERVER_URL unset
+> npx cap sync ios
+> npx cap open ios
+> ```
+>
+> Copies `public/legacy/` (the consolidated single-file PWA, formerly
+> the standalone `cortexx-pwa` repo) into `ios/www/`. The bundle is
+> self-contained — works on aeroplane mode, no backend. State lives in
+> `localStorage` / `IndexedDB` inside the WebView. The build script
+> also patches `index.html` to disable the service worker (the WKWebView
+> serves files from the bundle directly).
+>
+> Mix-and-match (small offline shell that hands off to the cloud) is
+> the natural next step once the Auth flow is mobile-friendly.
 
 ---
 

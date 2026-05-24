@@ -1,5 +1,16 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
+// CAPACITOR_SERVER_URL toggles the two distribution modes:
+//   - unset  → offline bundle. webDir = www/ (legacy static PWA copied by
+//              scripts/build-web.mjs). Works on aeroplane, no backend.
+//   - set    → cloud mode. WKWebView loads `${URL}` on every launch and the
+//              full Next.js backend (auth, Postgres, SSE, Ollama, whisper.cpp,
+//              PDF endpoints) runs server-side. Recommended for TestFlight.
+//
+// Example for TestFlight:
+//   CAPACITOR_SERVER_URL=https://cortexbuildpro.com npm run build:web
+const SERVER_URL = process.env.CAPACITOR_SERVER_URL;
+
 const config: CapacitorConfig = {
   // App ID — reverse-DNS format. Change to your registered Apple bundle id.
   appId: 'app.cortexbuild.cortexx',
@@ -11,9 +22,13 @@ const config: CapacitorConfig = {
   // → index.html during build:web (see scripts/build-web.mjs).
   webDir: 'www',
 
-  // For the live-reload dev loop, point at the served URL of your dev box.
-  // Leave commented out for production builds — the bundle ships offline.
-  // server: { url: 'http://192.168.1.50:5500', cleartext: true },
+  ...(SERVER_URL ? {
+    server: {
+      url: SERVER_URL,
+      // Allow http:// for local dev boxes; https:// production stays secure.
+      cleartext: SERVER_URL.startsWith('http://'),
+    },
+  } : {}),
 
   ios: {
     contentInset: 'always',
