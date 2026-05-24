@@ -119,7 +119,7 @@ export default function AppsPage() {
     // Pull real counts; tolerant of missing endpoints
     Promise.all([
       fetch('/api/inbox').then(r => r.ok ? r.json() : null).catch(() => null),
-      fetch('/api/timeentries?approved=false').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/timeentries?approved=false&allWeeks=true').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/snags?status=open&take=1').then(r => r.ok ? r.json() : null).catch(() => null),
     ]).then(([inbox, timesheets, snags]) => {
       setBadges({
