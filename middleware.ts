@@ -10,7 +10,7 @@ const PUBLIC_PATHS = new Set<string>([
   '/sw.js',
   '/offline.html',
 ])
-const PUBLIC_API_PREFIXES = ['/api/auth/', '/api/health']
+const PUBLIC_API_PREFIXES = ['/api/auth/', '/api/health', '/api/client/']
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true
@@ -18,6 +18,7 @@ function isPublic(pathname: string): boolean {
   if (pathname.startsWith('/_next/')) return true
   if (pathname.startsWith('/static/')) return true
   if (pathname.startsWith('/legacy/')) return true // marketing + legacy PWA bundle
+  if (pathname.startsWith('/client/')) return true // public per-project share portal (token-gated by the route)
   return false
 }
 

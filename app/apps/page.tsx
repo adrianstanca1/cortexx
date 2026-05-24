@@ -16,7 +16,7 @@ interface ModuleItem {
   color: string
   ai?: boolean
   comingSoon?: boolean
-  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages'
+  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'drawings' | 'schedule'
 }
 
 interface CaptureAction {
@@ -57,17 +57,17 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/leads',     label: 'Leads',       Icon: IcArrowRight, color: '#06b6d4', badgeKey: 'leads' },
       { href: '/customers', label: 'Customers',   Icon: IcTeam,       color: '#2563eb' },
       { href: '/quotes',    label: 'Quotes',      Icon: IcDoc,        color: '#06b6d4' },
-      { href: '/client-view', label: 'Client view', Icon: IcLayers,   color: '#10b981', comingSoon: true },
+      { href: '/client-view', label: 'Client view', Icon: IcLayers,   color: '#10b981' },
     ],
   },
   {
     title: 'Project & site',
     items: [
       { href: '/projects',           label: 'Timeline',   Icon: IcLayers,   color: '#2563eb' },
-      { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4', comingSoon: true },
+      { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4', badgeKey: 'schedule' },
       { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981' },
       { href: '/photos',             label: 'Photos',     Icon: IcCamera,   color: '#8b5cf6' },
-      { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb', comingSoon: true },
+      { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb', badgeKey: 'drawings' },
       { href: '/documents',          label: 'Documents',  Icon: IcDoc,      color: '#ef4444' },
       { href: '/snags',              label: 'Snags',      Icon: IcAlert,    color: '#ef4444', badgeKey: 'snags' },
       { href: '/observations',       label: 'Observations', Icon: IcCheck,  color: '#22c55e', badgeKey: 'observations' },
@@ -111,6 +111,8 @@ interface BadgeData {
   training?: number
   leads?: number
   messages?: number
+  drawings?: number
+  schedule?: number
 }
 
 export default function AppsPage() {
@@ -128,7 +130,15 @@ export default function AppsPage() {
       fetch('/api/observations?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/variations?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/leads?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads]) => {
+      fetch('/api/drawings?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/milestones').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads, drawings, milestones]) => {
+      // schedule badge: count of milestones that are slipped or planned-end is in the past and not complete.
+      const now = new Date()
+      const slipped = Array.isArray(milestones?.milestones)
+        ? milestones.milestones.filter((m: { status: string; plannedEnd: string }) =>
+            m.status === 'slipped' || (m.status !== 'complete' && new Date(m.plannedEnd) < now)).length
+        : 0
       setBadges({
         inbox: inbox?.total ?? 0,
         rfis: rfis?.openCount ?? 0,
@@ -138,6 +148,8 @@ export default function AppsPage() {
         timesheets: Array.isArray(timesheets?.entries) ? timesheets.entries.length : 0,
         training: (training?.counts?.expired ?? 0) + (training?.counts?.expiring ?? 0),
         leads: leads?.openCount ?? 0,
+        drawings: drawings?.total ?? 0,
+        schedule: slipped,
       })
     })
   }, [])

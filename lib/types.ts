@@ -149,6 +149,37 @@ export interface Snag {
   project?: { id: string; name: string } | null
 }
 
+export interface Drawing {
+  id: string
+  projectId: string
+  number: string | null
+  title: string
+  discipline: 'arch' | 'struct' | 'mep' | 'civil' | 'fire' | 'other'
+  revision: string
+  fileUrl: string | null
+  uploadedBy: string | null
+  notes: string | null
+  isSuperseded: boolean
+  supersededAt: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
+}
+
+export interface Milestone {
+  id: string
+  projectId: string
+  title: string
+  plannedStart: string
+  plannedEnd: string
+  actualEnd: string | null
+  status: 'planned' | 'in_progress' | 'complete' | 'slipped'
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string; status: string } | null
+}
+
 export interface DashboardStats {
   cashflow: number
   owed: number

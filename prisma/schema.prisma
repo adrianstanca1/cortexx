@@ -75,6 +75,8 @@ model Project {
   endDate       DateTime?
   onSiteCount   Int             @default(0)
   archivedAt    DateTime?
+  clientToken       String?     @unique
+  clientViewEnabled Boolean     @default(false)
   createdAt     DateTime        @default(now())
   updatedAt     DateTime        @updatedAt
   tasks         Task[]
@@ -92,6 +94,8 @@ model Project {
   siteCheckIns  SiteCheckIn[]
   pos           PurchaseOrder[]
   subInvoices   SubInvoice[]
+  drawings      Drawing[]
+  milestones    Milestone[]
 
   @@index([status])
   @@index([updatedAt])
@@ -603,4 +607,44 @@ model SubInvoice {
   @@unique([subcontractorId, number])
   @@index([subcontractorId, status])
   @@index([status, invoiceDate])
+}
+
+model Drawing {
+  id           String    @id @default(cuid())
+  projectId    String
+  number       String?
+  title        String
+  discipline   String    @default("arch") // arch, struct, mep, civil, fire, other
+  revision     String    @default("C01")
+  fileUrl      String?
+  uploadedBy   String?
+  notes        String?
+  isSuperseded Boolean   @default(false)
+  supersededAt DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, number, revision])
+  @@index([projectId, discipline])
+  @@index([projectId, isSuperseded])
+  @@index([discipline])
+}
+
+model Milestone {
+  id           String    @id @default(cuid())
+  projectId    String
+  title        String
+  plannedStart DateTime
+  plannedEnd   DateTime
+  actualEnd    DateTime?
+  status       String    @default("planned") // planned, in_progress, complete, slipped
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, plannedStart])
+  @@index([plannedEnd])
+  @@index([status])
 }
