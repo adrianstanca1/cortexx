@@ -90,3 +90,14 @@ jobs:
         with:
           name: vps-diagnostic
           path: /tmp/diag-out/diagnostic.txt
+
+      - name: Commit diagnostic to repo
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BASE_SHA=$(gh api "repos/${{ github.repository }}/git/refs/heads/main" -q '.object.sha')
+          BLOB_SHA=$(jq -Rsn --rawfile content /tmp/diag-out/diagnostic.txt '{content: $content, encoding: "utf-8"}' | gh api --method POST "repos/${{ github.repository }}/git/blobs" --input - -q '.sha')
+          TREE_SHA=$(jq -n --arg base "$BASE_SHA" --arg blob "$BLOB_SHA" '{base_tree: $base, tree: [{path: "ops/last-diagnostic.txt", mode: "100644", type: "blob", sha: $blob}]}' | gh api --method POST "repos/${{ github.repository }}/git/trees" --input - -q '.sha')
+          COMMIT_SHA=$(jq -n --arg tree "$TREE_SHA" --arg parent "$BASE_SHA" '{message: "ops: latest deploy diagnostic [skip ci]", tree: $tree, parents: [$parent]}' | gh api --method POST "repos/${{ github.repository }}/git/commits" --input - -q '.sha')
+          gh api --method PATCH "repos/${{ github.repository }}/git/refs/heads/main" -f sha="$COMMIT_SHA"
+          echo "✓ Committed diagnostic: $COMMIT_SHA"
