@@ -134,6 +134,20 @@ export default function OrganizationSettingsPage() {
         {activeOrg.slug} · You are {activeOrg.role}
       </p>
 
+      {/* Billing */}
+      <BillingSection organizationId={activeOrg.id} canManage={canManage} />
+
+      {/* Quick links */}
+      {canManage && (
+        <Link
+          href="/settings/audit-log"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginBottom: 16, background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+        >
+          <span>Audit log</span>
+          <span style={{ color: '#52749a' }}>→</span>
+        </Link>
+      )}
+
       {/* Members */}
       <section style={sectionStyle}>
         <div style={labelStyle}>Team members ({members.length})</div>
@@ -264,3 +278,104 @@ const inputStyle: React.CSSProperties = {
 
 // Suppress unused-var lint for RANK (kept for future role-sort use)
 void RANK
+
+const PLANS = [
+  { key: 'starter', name: 'Starter', price: '£29/mo', features: ['5 users', '10 projects', '5 GB'] },
+  { key: 'pro', name: 'Pro', price: '£79/mo', features: ['20 users', '50 projects', '50 GB', 'AI tools'] },
+  { key: 'enterprise', name: 'Enterprise', price: 'Contact us', features: ['Unlimited users', 'SAML SSO', 'Audit log retention'] },
+]
+
+function BillingSection({ organizationId, canManage }: { organizationId: string; canManage: boolean }) {
+  const [busy, setBusy] = useState<string | null>(null)
+  const [msg, setMsg] = useState<string | null>(null)
+
+  const startCheckout = async (planKey: string) => {
+    setBusy(planKey)
+    setMsg(null)
+    try {
+      const res = await fetch('/api/billing/checkout', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organizationId, plan: planKey }),
+      })
+      const data = await res.json()
+      if (!res.ok) {
+        if (data.code === 'STRIPE_NOT_CONFIGURED') {
+          setMsg('Billing isn\'t configured yet. Ask an admin to set the Stripe env vars.')
+        } else if (data.code === 'PRICE_NOT_SET') {
+          setMsg(`Stripe price id for ${planKey} not configured.`)
+        } else {
+          setMsg(data.error || 'Checkout failed')
+        }
+        return
+      }
+      if (data.url) window.location.href = data.url
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  const openPortal = async () => {
+    setBusy('portal')
+    setMsg(null)
+    try {
+      const res = await fetch('/api/billing/portal', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ organizationId }),
+      })
+      const data = await res.json()
+      if (!res.ok) { setMsg(data.error || 'Failed'); return }
+      if (data.url) window.location.href = data.url
+    } catch (e) {
+      setMsg(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setBusy(null)
+    }
+  }
+
+  return (
+    <section style={sectionStyle}>
+      <div style={labelStyle}>Plan &amp; billing</div>
+      <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: '8px 0 12px' }}>
+        Start free, upgrade when you&apos;re ready. Cancel anytime.
+      </p>
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8 }}>
+        {PLANS.map(plan => (
+          <div key={plan.key} style={{ background: '#1a2f4e', borderRadius: 10, padding: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, color: '#eef3fa' }}>{plan.name}</div>
+            <div style={{ fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, color: '#f59e0b', margin: '4px 0 8px' }}>{plan.price}</div>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5' }}>
+              {plan.features.map(f => <li key={f} style={{ marginBottom: 2 }}>• {f}</li>)}
+            </ul>
+            {canManage && plan.key !== 'enterprise' && (
+              <button
+                onClick={() => startCheckout(plan.key)}
+                disabled={!!busy}
+                style={{ width: '100%', marginTop: 10, padding: '8px 0', borderRadius: 8, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+              >
+                {busy === plan.key ? '…' : 'Choose'}
+              </button>
+            )}
+          </div>
+        ))}
+      </div>
+      {canManage && (
+        <button
+          onClick={openPortal}
+          disabled={!!busy}
+          style={{ marginTop: 12, padding: '8px 14px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+        >
+          {busy === 'portal' ? 'Opening…' : 'Manage current subscription'}
+        </button>
+      )}
+      {msg && (
+        <div role="status" style={{ marginTop: 10, fontFamily: 'var(--font-system)', fontSize: 12, color: '#f59e0b' }}>
+          {msg}
+        </div>
+      )}
+    </section>
+  )
+}
