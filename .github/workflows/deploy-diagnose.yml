@@ -75,3 +75,18 @@ jobs:
             echo "$OUT"
             echo '```'
           } >> $GITHUB_STEP_SUMMARY
+
+          # Also surface as job log (echo) so it's readable via the API.
+          echo "===== DIAGNOSTIC OUTPUT START ====="
+          echo "$OUT"
+          echo "===== DIAGNOSTIC OUTPUT END ====="
+
+          # And save as an artifact for download.
+          mkdir -p /tmp/diag-out
+          echo "$OUT" > /tmp/diag-out/diagnostic.txt
+
+      - name: Upload diagnostic as artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: vps-diagnostic
+          path: /tmp/diag-out/diagnostic.txt
