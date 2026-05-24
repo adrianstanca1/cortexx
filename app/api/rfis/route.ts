@@ -69,7 +69,10 @@ export async function POST(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
       select: { number: true },
     })
-    const lastNum = last ? parseInt(last.number.split('-').pop() || '0') : 0
+    // Use Number.isFinite to guard against parseInt returning NaN on a
+    // malformed RFI number (e.g. legacy import or hand-edited DB row).
+    const parsed = last ? parseInt(last.number.split('-').pop() || '0', 10) : 0
+    const lastNum = Number.isFinite(parsed) ? parsed : 0
     const number = `RFI-${String(lastNum + 1).padStart(3, '0')}`
 
     const rfi = await prisma.rfi.create({
