@@ -69,7 +69,12 @@ export function sanitizePromptValue(s: string, maxLen = 80): string {
     .slice(0, maxLen)
 }
 
-export async function chat(messages: ChatMessage[]): Promise<LlmResponse> {
+export interface ChatOptions {
+  /** Request strict JSON output. Ollama enforces this server-side via grammar. */
+  json?: boolean
+}
+
+export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Promise<LlmResponse> {
   const url = `${OLLAMA_BASE_URL.replace(/\/+$/, '')}/api/chat`
   const controller = new AbortController()
   const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
@@ -82,6 +87,7 @@ export async function chat(messages: ChatMessage[]): Promise<LlmResponse> {
         model: OLLAMA_MODEL,
         messages,
         stream: false,
+        ...(opts.json ? { format: 'json' } : {}),
         // Bound wall time per request. Ollama doesn't honour upstream
         // cancellation in non-stream mode, so capping num_predict is the
         // only way to stop a long generation from holding the model slot

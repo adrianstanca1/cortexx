@@ -69,6 +69,11 @@ export default function QuotesPage() {
     terms: '',
     items: [blankItem()],
   })
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiBrief, setAiBrief] = useState('')
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiNotes, setAiNotes] = useState<string | null>(null)
 
   useModalEffects(showAdd || activeQuote !== null, () => { setShowAdd(false); setActiveQuote(null) })
 
@@ -104,6 +109,51 @@ export default function QuotesPage() {
   const addItem = () => setForm(prev => ({ ...prev, items: [...prev.items, blankItem()] }))
   const removeItem = (idx: number) => setForm(prev => ({ ...prev, items: prev.items.filter((_, i) => i !== idx) }))
 
+  const draftWithAi = async () => {
+    const brief = aiBrief.trim()
+    if (brief.length < 10) {
+      setAiError('Brief needs at least 10 characters')
+      return
+    }
+    setAiBusy(true)
+    setAiError(null)
+    setAiNotes(null)
+    try {
+      const res = await fetch('/api/quotes/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          brief,
+          customerName: form.customerName || customers.find(c => c.id === form.customerId)?.name || '',
+        }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || 'Failed to draft')
+      const items: LineItem[] = (json.items || []).map((it: { description: string; quantity: number; unit: string; unitPrice: number }) => ({
+        description: it.description,
+        quantity: it.quantity,
+        unit: it.unit,
+        unitPrice: it.unitPrice,
+        total: it.quantity * it.unitPrice,
+      }))
+      if (items.length === 0) throw new Error('Model returned no usable items')
+      setForm(p => ({
+        ...p,
+        items,
+        // Use the first 60 chars of the brief as a sensible default title if the user hasn't entered one yet.
+        title: p.title || brief.slice(0, 60).replace(/\s+\S*$/, ''),
+      }))
+      setAiNotes(json.notes || null)
+      setAiOpen(false)
+      setAiBrief('')
+      setToast({ msg: `Drafted ${items.length} item${items.length === 1 ? '' : 's'} — review before saving` })
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : 'Failed to draft')
+    } finally {
+      setAiBusy(false)
+    }
+  }
+
   const create = async () => {
     if (!form.title.trim() || (!form.customerId && !form.customerName.trim())) return
     setSaving(true)
@@ -125,6 +175,7 @@ export default function QuotesPage() {
       if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Failed')
       setShowAdd(false)
       setForm({ title: '', description: '', customerId: '', customerName: '', vatRate: '20', validUntil: '', terms: '', items: [blankItem()] })
+      setAiOpen(false); setAiBrief(''); setAiError(null); setAiNotes(null)
       load()
       setToast({ msg: 'Quote drafted' })
     } catch (e) {
@@ -252,6 +303,79 @@ export default function QuotesPage() {
             </div>
 
             <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Quote title" style={inputStyle} />
+
+            {/* AI-draft toggle + panel */}
+            {!aiOpen ? (
+              <button
+                onClick={() => { setAiOpen(true); setAiError(null) }}
+                type="button"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.10))',
+                  border: '0.5px dashed rgba(139,92,246,0.5)',
+                  color: '#c4b5fd',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  fontFamily: SF,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                }}
+              >
+                <span>✨ Draft items with AI from a brief</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, opacity: 0.7 }}>local LLM</span>
+              </button>
+            ) : (
+              <div style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.35)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: '#c4b5fd' }}>✨ Draft with AI</span>
+                  <button onClick={() => { setAiOpen(false); setAiError(null) }} aria-label="Close" type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                    <IcX size={14} color="#8ea8c5" />
+                  </button>
+                </div>
+                <textarea
+                  value={aiBrief}
+                  onChange={e => setAiBrief(e.target.value)}
+                  placeholder="e.g. Single-storey rear extension, 25m², open-plan kitchen-diner. Foundations, blockwork, roof, 2 rooflights, internal finishes."
+                  rows={3}
+                  maxLength={800}
+                  style={{ ...inputStyle, fontFamily: SF, fontSize: 12, resize: 'vertical', minHeight: 60 }}
+                />
+                {aiError && (
+                  <div style={{ fontFamily: SF, fontSize: 11, color: '#ef4444' }}>{aiError}</div>
+                )}
+                <button
+                  onClick={draftWithAi}
+                  disabled={aiBusy || aiBrief.trim().length < 10}
+                  type="button"
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: 10,
+                    background: '#8b5cf6',
+                    border: 'none',
+                    color: '#fff',
+                    fontFamily: SF,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: aiBusy || aiBrief.trim().length < 10 ? 'not-allowed' : 'pointer',
+                    opacity: aiBusy || aiBrief.trim().length < 10 ? 0.5 : 1,
+                  }}
+                >
+                  {aiBusy ? 'Drafting (10–30s)…' : 'Generate line items'}
+                </button>
+                <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5' }}>
+                  AI suggests realistic UK construction line items. Always review prices and quantities before sending.
+                </div>
+              </div>
+            )}
+            {aiNotes && !aiOpen && (
+              <div style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.25)', borderRadius: 10, padding: '8px 12px', fontFamily: SF, fontSize: 11, color: '#c4b5fd' }}>
+                <span style={{ fontWeight: 700 }}>AI note: </span>{aiNotes}
+              </div>
+            )}
 
             <div>
               <label style={labelStyle}>Customer</label>
