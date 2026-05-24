@@ -1,0 +1,17 @@
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
+
+# Build / deploy
+node_modules/
+# dist/ is the compiled JS bundle — DO NOT ignore it
+.netlify/
+.vercel/
+
+# Cortexx
+screenshots/
+*.log
+.env
+.env.local

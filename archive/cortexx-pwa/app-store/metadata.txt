@@ -1,0 +1,144 @@
+================================================================
+Cortexx — App Store Connect listing copy (ready to paste)
+Last updated: 2026-05-23
+================================================================
+
+----------------------------------------------------------------
+APP NAME (30 chars max)
+----------------------------------------------------------------
+Cortexx — Construction OS
+
+----------------------------------------------------------------
+SUBTITLE (30 chars max)
+----------------------------------------------------------------
+AI ops for UK contractors
+
+----------------------------------------------------------------
+PROMOTIONAL TEXT (170 chars max — editable without resubmission)
+----------------------------------------------------------------
+The AI-powered ops platform built for UK SMB contractors. Quotes, projects, CIS-aware accounting, RAMS, snags and site diary — all in one app.
+
+----------------------------------------------------------------
+DESCRIPTION (4000 chars max)
+----------------------------------------------------------------
+Cortexx is the construction OS that thinks with you. Built for UK SMB contractors — sole traders, refurb specialists, fit-out crews, small main contractors — it replaces the spreadsheets, paper files and disconnected apps you're juggling now.
+
+CORTEX AI — your AI ops manager
+Ask anything: "what's my cashflow this week", "draft a chase email for INV-2039", "what should I order tomorrow", "summarise today's site diary for the client". Cortex sees your live data and answers in plain UK English.
+
+WHAT'S INSIDE
+• Projects — phases, progress, margin, photos
+• AI Quote Estimator — describe a job, get a fully itemised quote
+• Invoices & chases — auto-draft polite chase emails
+• CIS-aware accounting — deductions calculated correctly
+• RAMS, Permits, Inspections — UK-specific safety stack
+• Photo → Snag with vision AI — point your camera at a defect, get a snag filed
+• Receipt scanning — vision OCR pulls vendor, amount, VAT, date
+• Site diary — daily logs with weather, crew, photos, AI summary for the client
+• Team — CSCS tracking, training matrix, certificate expiry alerts
+• Timesheets with CIS flag
+• RFIs and document control
+• Variations / change orders
+• Mileage tracking (HMRC-compliant)
+• Customer & lead pipeline
+• Voice memos with AI transcription
+• Drawings viewer
+• Client portal
+• Apprentice tracker, holiday, payroll, carbon, waste
+
+WORKS OFFLINE
+All your data lives on your device. No subscription required to keep using what you've already created. We back you up to the cloud if you want; we don't lock you in.
+
+PRIVACY-FIRST
+Cortexx is local-first. Your project data, photos and financial records stay on your phone until you choose to sync. We don't track you across apps and we never sell your data.
+
+15 DASHBOARD LAYOUTS
+From "Action-first" for site managers to "Executive at-a-glance" for owners, swap layouts to match how you actually think about your business.
+
+Made in the UK. Built by builders.
+
+----------------------------------------------------------------
+KEYWORDS (100 chars, comma-separated, no spaces)
+----------------------------------------------------------------
+construction,builder,contractor,CIS,UK,RAMS,quotes,invoices,site,trades,SMB,subbie,refurb,snag,diary
+
+----------------------------------------------------------------
+WHAT'S NEW IN THIS VERSION (4000 chars max)
+----------------------------------------------------------------
+First public release.
+Welcome to Cortexx 1.0 — the AI construction OS for UK SMB contractors.
+
+----------------------------------------------------------------
+SUPPORT URL
+----------------------------------------------------------------
+https://cortexbuildpro.com/support
+
+----------------------------------------------------------------
+MARKETING URL (optional)
+----------------------------------------------------------------
+https://cortexbuildpro.com
+
+----------------------------------------------------------------
+PRIVACY POLICY URL (required)
+----------------------------------------------------------------
+https://cortexbuildpro.com/privacy
+
+----------------------------------------------------------------
+COPYRIGHT
+----------------------------------------------------------------
+© 2026 CortexBuild Ltd
+
+----------------------------------------------------------------
+CATEGORY
+----------------------------------------------------------------
+Primary:   Business
+Secondary: Productivity
+
+----------------------------------------------------------------
+AGE RATING — 4+
+----------------------------------------------------------------
+No restricted content. Answer "None" to every question in the App Store Connect
+age rating questionnaire.
+
+----------------------------------------------------------------
+APP REVIEW INFORMATION
+----------------------------------------------------------------
+Contact First Name:     Adrian
+Contact Last Name:      Stanca
+Contact Phone:          [your phone]
+Contact Email:          adrian@cortexbuild.app
+Demo Account Username:  [n/a — no sign-in required, sample workspace loads on first launch]
+Demo Account Password:  [n/a]
+
+Notes for the reviewer:
+
+Cortexx is a local-first business app for UK construction SMBs. There is no
+account creation required to use the app — on first launch, a sample workspace
+loads automatically with realistic seed data so the reviewer can explore every
+feature without signing up.
+
+All AI features (Cortex AI chat, AI quote estimator, receipt OCR, photo-to-snag,
+voice transcription) call Anthropic's Claude via a server-side proxy. No
+third-party API keys are embedded in the app.
+
+The app supports iOS 14+ and is portrait-only on iPhone, multi-orientation
+on iPad. It uses standard iOS permissions for camera (receipt/photo capture),
+microphone (voice memos), photo library (attaching existing photos), and
+location (site check-in, mileage). Each permission is requested in-context
+with a clear rationale, and the app continues to function without any of them.
+
+No external login is needed for the reviewer. Just open the app, accept
+onboarding, and explore.
+
+----------------------------------------------------------------
+PRICING
+----------------------------------------------------------------
+Price:        Free
+Availability: United Kingdom (add more territories later)
+Pre-orders:   Off
+
+----------------------------------------------------------------
+ENCRYPTION EXPORT COMPLIANCE
+----------------------------------------------------------------
+ITSAppUsesNonExemptEncryption = NO
+(we only use Apple's standard TLS and platform crypto; no proprietary crypto)
