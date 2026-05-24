@@ -84,15 +84,15 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/subs',        label: 'Subs',         Icon: IcTeam,    color: '#2563eb', comingSoon: true },
       { href: '/equipment',   label: 'Equipment',    Icon: IcWrench,  color: '#52749a', comingSoon: true },
       { href: '/cost-catalog',label: 'Cost catalog', Icon: IcLayers,  color: '#06b6d4', comingSoon: true },
-      { href: '/mileage',     label: 'Mileage',      Icon: IcTruck,   color: '#06b6d4', comingSoon: true },
+      { href: '/mileage',     label: 'Mileage',      Icon: IcTruck,   color: '#06b6d4' },
     ],
   },
   {
     title: 'People & time',
     items: [
       { href: '/timesheets',    label: 'Timesheets',    Icon: IcClock,   color: '#8b5cf6', badgeKey: 'timesheets' },
-      { href: '/check-in',      label: 'Check in/out',  Icon: IcPin,     color: '#10b981', comingSoon: true },
-      { href: '/live-status',   label: 'Live status',   Icon: IcPin,     color: '#06b6d4', comingSoon: true },
+      { href: '/check-in',      label: 'Check in/out',  Icon: IcPin,     color: '#10b981' },
+      { href: '/live-status',   label: 'Live status',   Icon: IcPin,     color: '#06b6d4' },
       { href: '/training',      label: 'Training',      Icon: IcHardhat, color: '#f59e0b', badgeKey: 'training' },
     ],
   },
