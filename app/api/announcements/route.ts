@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { sendPush } from '@/lib/push'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,6 +76,19 @@ export async function POST(req: NextRequest) {
         iconType: type === 'safety' ? 'alert' : 'bell',
       },
     }).catch(() => {})
+
+    // Workspace-wide push for safety + urgent announcements — best effort.
+    // General + update types stay in-app to avoid notification fatigue.
+    if (type === 'safety' || type === 'urgent') {
+      sendPush({
+        payload: {
+          title: type === 'safety' ? `⚠️ Safety: ${ann.title}` : `📣 ${ann.title}`,
+          body: bodyText.slice(0, 160),
+          url: '/messages',
+          tag: `ann-${ann.id}`,
+        },
+      }).catch(() => {})
+    }
 
     return NextResponse.json(ann, { status: 201 })
   } catch (error) {

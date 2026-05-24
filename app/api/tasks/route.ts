@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { sendPush } from '@/lib/push'
 
 export const dynamic = 'force-dynamic'
 
@@ -74,6 +75,26 @@ export async function POST(req: NextRequest) {
         },
       }).catch(() => {})
     }
+
+    // Notify the assignee if they have a matching User (matched on email) and
+    // an active push subscription. Best effort — never blocks the response.
+    if (task.assignee?.email && (task.priority === 'critical' || task.priority === 'high' || task.dueDate)) {
+      prisma.user.findUnique({ where: { email: task.assignee.email }, select: { id: true } })
+        .then(user => {
+          if (!user) return
+          return sendPush({
+            userId: user.id,
+            payload: {
+              title: `📋 ${task.priority === 'critical' ? 'Urgent task' : 'New task'}`,
+              body: `${task.title}${task.project?.name ? ` · ${task.project.name}` : ''}`,
+              url: '/tasks',
+              tag: `task-${task.id}`,
+            },
+          })
+        })
+        .catch(() => {})
+    }
+
     return NextResponse.json(task, { status: 201 })
   } catch (error) {
     console.error(error)
