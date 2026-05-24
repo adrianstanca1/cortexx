@@ -21,51 +21,57 @@ jobs:
 
       - name: Run diagnostic
         run: |
+          # Write the remote script to a file (no heredoc indentation traps)
+          cat > /tmp/diag.sh << 'SCRIPT'
+          set +e
+          echo "=== uptime ==="
+          uptime
+          echo
+          echo "=== disk free ==="
+          df -h /opt /var/lib/postgresql 2>/dev/null
+          echo
+          echo "=== memory ==="
+          free -h
+          echo
+          echo "=== postgres service ==="
+          systemctl is-active postgresql && echo OK || echo FAILED
+          echo
+          echo "=== postgres active queries on cortexx ==="
+          sudo -u postgres psql -tAc "SELECT pid, state, query_start, LEFT(query, 100) FROM pg_stat_activity WHERE datname = 'cortexx' AND state != 'idle'" 2>&1 | head -20
+          echo
+          echo "=== _prisma_migrations ==="
+          sudo -u postgres psql cortexx -c "SELECT migration_name, started_at, finished_at, rolled_back_at FROM _prisma_migrations ORDER BY started_at DESC LIMIT 15" 2>&1 | head -40
+          echo
+          echo "=== table count ==="
+          sudo -u postgres psql cortexx -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>&1
+          echo
+          echo "=== Organization rows ==="
+          sudo -u postgres psql cortexx -c "SELECT id, slug, name, plan FROM \"Organization\" LIMIT 5" 2>&1
+          echo
+          echo "=== Project.organizationId present? ==="
+          sudo -u postgres psql cortexx -tAc "SELECT column_name, is_nullable FROM information_schema.columns WHERE table_name = 'Project' AND column_name = 'organizationId'" 2>&1
+          echo
+          echo "=== pg_dump --schema-only line count ==="
+          time sudo -u postgres pg_dump cortexx --schema-only 2>&1 | wc -l
+          echo
+          echo "=== git ==="
+          cd /opt/cortexx && git log --oneline -3 2>&1
+          echo
+          echo "=== node version ==="
+          node -v
+          echo
+          echo "=== pm2 ==="
+          pm2 list 2>&1 | head -20
+          SCRIPT
+
+          # Copy + execute on VPS, capture output
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy /tmp/diag.sh root@72.62.132.43:/tmp/diag.sh
+          OUT=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash /tmp/diag.sh' 2>&1 || true)
+
           {
             echo "## VPS Deploy Diagnostic"
             echo ""
             echo '```'
-            ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE' 2>&1 || true
-            set +e  # don't abort — we want to see every step's result
-            echo "=== uptime ==="
-            uptime
-            echo ""
-            echo "=== disk free ==="
-            df -h /opt /var/lib/postgresql 2>/dev/null
-            echo ""
-            echo "=== memory ==="
-            free -h
-            echo ""
-            echo "=== postgres service ==="
-            systemctl is-active postgresql && echo "OK" || echo "FAILED"
-            echo ""
-            echo "=== postgres connections ==="
-            sudo -u postgres psql -tAc "SELECT pid, state, query_start, LEFT(query, 100) FROM pg_stat_activity WHERE datname = 'cortexx' AND state != 'idle'" 2>&1 | head -20
-            echo ""
-            echo "=== _prisma_migrations table ==="
-            sudo -u postgres psql cortexx -c "SELECT migration_name, started_at, finished_at, rolled_back_at FROM _prisma_migrations ORDER BY started_at DESC LIMIT 15" 2>&1 | head -30
-            echo ""
-            echo "=== tables ==="
-            sudo -u postgres psql cortexx -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>&1
-            echo ""
-            echo "=== Organization table check ==="
-            sudo -u postgres psql cortexx -c "SELECT COUNT(*) FROM \"Organization\"" 2>&1
-            sudo -u postgres psql cortexx -c "SELECT id, slug, name FROM \"Organization\" LIMIT 5" 2>&1
-            echo ""
-            echo "=== Has Project.organizationId column? ==="
-            sudo -u postgres psql cortexx -tAc "SELECT column_name FROM information_schema.columns WHERE table_name = 'Project' AND column_name = 'organizationId'" 2>&1
-            echo ""
-            echo "=== pg_dump of cortexx test ==="
-            time sudo -u postgres pg_dump cortexx --schema-only 2>&1 | wc -l
-            echo ""
-            echo "=== /opt/cortexx git status ==="
-            cd /opt/cortexx && git log --oneline -3 2>&1
-            echo ""
-            echo "=== node version ==="
-            node -v
-            echo ""
-            echo "=== pm2 ==="
-            pm2 list 2>&1 | head -20
-          REMOTE
+            echo "$OUT"
             echo '```'
           } >> $GITHUB_STEP_SUMMARY
