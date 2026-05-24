@@ -106,6 +106,32 @@ export default function SettingsPage() {
     } finally { setPushBusy(false) }
   }, [])
 
+  // ─── Notification preferences ───
+  interface PrefsState {
+    tasksPush: boolean; tasksEmail: boolean
+    safetyPush: boolean; safetyEmail: boolean
+    invoicesPush: boolean; invoicesEmail: boolean
+    announcementsPush: boolean; announcementsEmail: boolean
+    weeklyDigest: boolean
+  }
+  const [prefs, setPrefs] = useState<PrefsState | null>(null)
+  useEffect(() => {
+    fetch('/api/notifications/preferences')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => { if (d?.preferences) setPrefs(d.preferences) })
+      .catch(() => {})
+  }, [])
+
+  const togglePref = useCallback(async (field: keyof PrefsState, value: boolean) => {
+    if (!prefs) return
+    setPrefs({ ...prefs, [field]: value })
+    await fetch('/api/notifications/preferences', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ [field]: value }),
+    }).catch(() => {})
+  }, [prefs])
+
   const [name, setName] = useState('')
   const [savingName, setSavingName] = useState(false)
   const [nameMsg, setNameMsg] = useState<string | null>(null)
@@ -361,6 +387,56 @@ export default function SettingsPage() {
           </div>
         )}
       </section>
+
+      {/* Notification preferences */}
+      {prefs && (
+        <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+          <div style={labelStyle}>What to notify me about</div>
+          <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: '8px 0 12px', lineHeight: 1.5 }}>
+            Pick the categories you want each channel for. Push is per device (above); email goes to {session?.user?.email}.
+          </p>
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 70px', gap: '8px 12px', alignItems: 'center', fontFamily: 'var(--font-system)', fontSize: 12 }}>
+            <div></div>
+            <div style={{ color: '#52749a', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Push</div>
+            <div style={{ color: '#52749a', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Email</div>
+
+            {([
+              ['Tasks assigned to me', 'tasksPush', 'tasksEmail'],
+              ['Safety incidents', 'safetyPush', 'safetyEmail'],
+              ['Overdue invoices', 'invoicesPush', 'invoicesEmail'],
+              ['Announcements', 'announcementsPush', 'announcementsEmail'],
+            ] as const).map(([label, pushKey, emailKey]) => (
+              <>
+                <div key={`l-${pushKey}`} style={{ color: '#eef3fa' }}>{label}</div>
+                <input
+                  key={`p-${pushKey}`}
+                  type="checkbox"
+                  checked={prefs[pushKey]}
+                  onChange={e => togglePref(pushKey, e.target.checked)}
+                  style={{ justifySelf: 'center', cursor: 'pointer', accentColor: '#2563eb', width: 18, height: 18 }}
+                />
+                <input
+                  key={`e-${emailKey}`}
+                  type="checkbox"
+                  checked={prefs[emailKey]}
+                  onChange={e => togglePref(emailKey, e.target.checked)}
+                  style={{ justifySelf: 'center', cursor: 'pointer', accentColor: '#2563eb', width: 18, height: 18 }}
+                />
+              </>
+            ))}
+
+            <div style={{ color: '#eef3fa', gridColumn: '1 / -1', marginTop: 10, paddingTop: 10, borderTop: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+              <span>Weekly digest email</span>
+              <input
+                type="checkbox"
+                checked={prefs.weeklyDigest}
+                onChange={e => togglePref('weeklyDigest', e.target.checked)}
+                style={{ cursor: 'pointer', accentColor: '#2563eb', width: 18, height: 18 }}
+              />
+            </div>
+          </div>
+        </section>
+      )}
 
       <section style={{ marginTop: 24 }}>
         <button
