@@ -134,6 +134,8 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
           )}
         </div>
         <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12, position: 'relative' }}>
+          {/* The arrow functions below close over inputRef but only execute on click; the React-19 'refs' rule is over-eager here. */}
+          {/* eslint-disable-next-line react-hooks/refs */}
           {[
             { l: 'Show me', primary: true, onClick: () => inputRef.current?.focus() },
             { l: 'Read out loud', onClick: () => { if ('speechSynthesis' in window && briefings[0]) { const u = new SpeechSynthesisUtterance(briefings[0]); speechSynthesis.speak(u) } } },

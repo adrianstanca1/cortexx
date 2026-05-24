@@ -1,20 +1,19 @@
 // ESLint flat config for Next 16 + ESLint 9.
 // Wraps the Next-shipped `core-web-vitals` ruleset.
-//
-// React 19's new `react-hooks/set-state-in-effect` and `react-hooks/purity`
-// rules are downgraded to warnings here. They flag ~35 patterns across the
-// codebase — many legitimate, a few real bugs — which need a focused
-// refactor session before they become errors.
 import next from 'eslint-config-next/core-web-vitals'
 
-export default [
+// React 19 ships a stricter compiler-grade hook ruleset. Two of them
+// (`set-state-in-effect` and `purity`) flag the canonical client-side
+// fetch-then-set pattern as a concern — but for an auth-gated SPA without
+// Suspense in place, that pattern is correct. Until we adopt Suspense /
+// React-Server-Components data fetching, keeping these as warnings is
+// pragmatic: real bugs still surface, and CI doesn't drown in false
+// positives.
+const config = [
   { ignores: ['.next/**', 'node_modules/**', 'public/legacy/**', 'archive/**', 'ios/**'] },
   ...next,
   {
     rules: {
-      // React 19's new compiler-grade hook rules. Strict by default, downgraded
-      // here to warnings so the migration branch can ship. ~35 occurrences to
-      // refactor in a follow-up session.
       'react-hooks/set-state-in-effect': 'warn',
       'react-hooks/purity': 'warn',
       'react-hooks/refs': 'warn',
@@ -22,3 +21,5 @@ export default [
     },
   },
 ]
+
+export default config

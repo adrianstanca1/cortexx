@@ -62,7 +62,6 @@ export function isLlmEmpty(err: unknown): err is LlmEmptyResponseError {
  */
 export function sanitizePromptValue(s: string, maxLen = 80): string {
   return s
-    // eslint-disable-next-line no-control-regex
     .replace(/[\x00-\x1f\x7f]/g, ' ')
     .replace(/\s+/g, ' ')
     .trim()
