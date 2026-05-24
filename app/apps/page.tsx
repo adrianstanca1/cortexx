@@ -16,7 +16,7 @@ interface ModuleItem {
   color: string
   ai?: boolean
   comingSoon?: boolean
-  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages'
+  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'permits' | 'rams' | 'tenders'
 }
 
 interface CaptureAction {
@@ -96,6 +96,14 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/training',      label: 'Training',      Icon: IcHardhat, color: '#f59e0b', badgeKey: 'training' },
     ],
   },
+  {
+    title: 'Compliance & bids',
+    items: [
+      { href: '/permits', label: 'Permits', Icon: IcAlert,   color: '#f59e0b', badgeKey: 'permits' },
+      { href: '/rams',    label: 'RAMS',    Icon: IcHardhat, color: '#22c55e', badgeKey: 'rams' },
+      { href: '/tenders', label: 'Tenders', Icon: IcDoc,     color: '#3b82f6', badgeKey: 'tenders' },
+    ],
+  },
 ]
 
 interface BadgeData {
@@ -111,6 +119,9 @@ interface BadgeData {
   training?: number
   leads?: number
   messages?: number
+  permits?: number
+  rams?: number
+  tenders?: number
 }
 
 export default function AppsPage() {
@@ -128,7 +139,10 @@ export default function AppsPage() {
       fetch('/api/observations?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/variations?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/leads?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads]) => {
+      fetch('/api/permits?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/rams?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/tenders?status=draft').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads, permits, rams, tenders]) => {
       setBadges({
         inbox: inbox?.total ?? 0,
         rfis: rfis?.openCount ?? 0,
@@ -138,6 +152,9 @@ export default function AppsPage() {
         timesheets: Array.isArray(timesheets?.entries) ? timesheets.entries.length : 0,
         training: (training?.counts?.expired ?? 0) + (training?.counts?.expiring ?? 0),
         leads: leads?.openCount ?? 0,
+        permits: permits?.alerts ?? 0,
+        rams: rams?.alerts ?? 0,
+        tenders: tenders?.total ?? 0,
       })
     })
   }, [])
