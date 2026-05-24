@@ -1,0 +1,186 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+  <!-- ── Bundle identity ─────────────────────────────────────────── -->
+  <key>CFBundleIdentifier</key>
+  <string>$(PRODUCT_BUNDLE_IDENTIFIER)</string>
+  <key>CFBundleName</key>
+  <string>$(PRODUCT_NAME)</string>
+  <key>CFBundleDisplayName</key>
+  <string>Cortexx</string>
+  <key>CFBundleVersion</key>
+  <string>$(CURRENT_PROJECT_VERSION)</string>
+  <key>CFBundleShortVersionString</key>
+  <string>$(MARKETING_VERSION)</string>
+  <key>CFBundlePackageType</key>
+  <string>APPL</string>
+  <key>CFBundleExecutable</key>
+  <string>$(EXECUTABLE_NAME)</string>
+  <key>CFBundleInfoDictionaryVersion</key>
+  <string>6.0</string>
+  <key>CFBundleDevelopmentRegion</key>
+  <string>en-GB</string>
+  <key>CFBundleLocalizations</key>
+  <array>
+    <string>en</string>
+    <string>en-GB</string>
+  </array>
+
+  <!-- ── Icons ───────────────────────────────────────────────────── -->
+  <key>CFBundleIcons</key>
+  <dict>
+    <key>CFBundlePrimaryIcon</key>
+    <dict>
+      <key>CFBundleIconFiles</key>
+      <array>
+        <string>AppIcon</string>
+      </array>
+      <key>UIPrerenderedIcon</key>
+      <false/>
+    </dict>
+  </dict>
+  <key>CFBundleIcons~ipad</key>
+  <dict>
+    <key>CFBundlePrimaryIcon</key>
+    <dict>
+      <key>CFBundleIconFiles</key>
+      <array>
+        <string>AppIcon</string>
+      </array>
+    </dict>
+  </dict>
+
+  <!-- ── Orientations ────────────────────────────────────────────── -->
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+  </array>
+  <key>UISupportedInterfaceOrientations~ipad</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+  </array>
+
+  <!-- ── Status bar ──────────────────────────────────────────────── -->
+  <key>UIStatusBarStyle</key>
+  <string>UIStatusBarStyleLightContent</string>
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <false/>
+  <key>UIStatusBarHidden</key>
+  <false/>
+
+  <!-- ── Launch screen ───────────────────────────────────────────── -->
+  <key>UILaunchStoryboardName</key>
+  <string>LaunchScreen</string>
+
+  <!-- ── Scenes (iOS 13+) ─────────────────────────────────────────── -->
+  <key>UIApplicationSceneManifest</key>
+  <dict>
+    <key>UIApplicationSupportsMultipleScenes</key>
+    <false/>
+    <key>UISceneConfigurations</key>
+    <dict>
+      <key>UIWindowSceneSessionRoleApplication</key>
+      <array>
+        <dict>
+          <key>UISceneConfigurationName</key>
+          <string>Default Configuration</string>
+          <key>UISceneDelegateClassName</key>
+          <string>$(PRODUCT_MODULE_NAME).SceneDelegate</string>
+        </dict>
+      </array>
+    </dict>
+  </dict>
+
+  <!-- ── Background modes ────────────────────────────────────────── -->
+  <key>UIBackgroundModes</key>
+  <array>
+    <string>remote-notification</string>
+    <string>fetch</string>
+    <string>location</string>
+  </array>
+
+  <!-- ── URL schemes — deep links (cortexx://) ───────────────────── -->
+  <key>CFBundleURLTypes</key>
+  <array>
+    <dict>
+      <key>CFBundleURLName</key>
+      <string>app.cortexbuild.cortexx</string>
+      <key>CFBundleURLSchemes</key>
+      <array>
+        <string>cortexx</string>
+      </array>
+    </dict>
+  </array>
+
+  <!-- ── Universal Links (Associated Domains) ────────────────────── -->
+  <!-- Configured in .entitlements; domain: cortexbuildpro.com -->
+
+  <!-- ── Encryption export compliance ───────────────────────────── -->
+  <key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
+
+  <!-- ── App Transport Security ──────────────────────────────────── -->
+  <key>NSAppTransportSecurity</key>
+  <dict>
+    <key>NSAllowsArbitraryLoads</key>
+    <false/>
+    <!-- Allow the Capacitor dev server on localhost during development -->
+    <key>NSExceptionDomains</key>
+    <dict>
+      <key>localhost</key>
+      <dict>
+        <key>NSExceptionAllowsInsecureHTTPLoads</key>
+        <true/>
+        <key>NSIncludesSubdomains</key>
+        <true/>
+      </dict>
+    </dict>
+  </dict>
+
+  <!-- ── Permission usage descriptions ───────────────────────────── -->
+  <key>NSCameraUsageDescription</key>
+  <string>Cortexx uses the camera so you can scan receipts, photograph site progress, capture snag evidence, and attach photos to incident reports.</string>
+
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>Cortexx needs access to your photos so you can attach existing site photos to projects, snags, RFIs and incident reports.</string>
+
+  <key>NSPhotoLibraryAddUsageDescription</key>
+  <string>Cortexx saves annotated photos, quote PDFs and report exports to your Photos library.</string>
+
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Cortexx records voice memos so you can dictate tasks, site notes and meeting minutes hands-free on site.</string>
+
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>Cortexx uses your location to verify site check-ins, geotag site photos and calculate HMRC-allowable mileage between job sites.</string>
+
+  <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+  <string>Cortexx uses your location in the background to automatically log mileage between job sites for HMRC.</string>
+
+  <key>NSContactsUsageDescription</key>
+  <string>Cortexx can read your Contacts so you can attach a customer to a project without re-typing their details.</string>
+
+  <key>NSCalendarsUsageDescription</key>
+  <string>Cortexx can add inspections, site visits and material delivery slots to your calendar.</string>
+
+  <key>NSFaceIDUsageDescription</key>
+  <string>Cortexx can use Face ID to unlock the app so financial and CIS data stays private.</string>
+
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Cortexx can discover thermal label printers, site Wi-Fi cameras and other devices on the local network.</string>
+
+  <key>NSSpeechRecognitionUsageDescription</key>
+  <string>Cortexx uses speech recognition to transcribe your voice memos into text notes and tasks.</string>
+
+  <key>NSBluetoothAlwaysUsageDescription</key>
+  <string>Cortexx can connect to Bluetooth thermal printers for on-site label and receipt printing.</string>
+
+  <key>NSBluetoothPeripheralUsageDescription</key>
+  <string>Cortexx can connect to Bluetooth thermal printers for on-site label and receipt printing.</string>
+
+</dict>
+</plist>

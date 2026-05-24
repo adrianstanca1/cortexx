@@ -33,7 +33,9 @@ and planned. Maintained alongside the codebase, not in a separate tracker.
 | **24 module stubs → real implementations** | All 24 modules have stub pages with planned-capability lists. Implementation incremental per module — see "Planned releases" below. |
 | **Service worker update prompt** | Shipping reload-toast when a new SW is waiting. UX is in place; surface this more prominently next release. |
 | **Real-time dashboard cross-tab sync** | SSE feeds the activity list; broader cross-tab BroadcastChannel sync (mirror of PWA approach) not yet wired. |
-| **iOS PWA polish** | Splash screens + install hint shipped. Native Capacitor wrap not started (would let us submit to App Store — see "Parked"). |
+| **iOS native shell (Capacitor 6)** | Scaffold absorbed from cortexx-pwa into `ios/` — Capacitor 6 with camera/geolocation/voice-recorder/haptics/local+push notifications plugins wired, splash + status-bar themed `#06101e`, `PrivacyInfo.xcprivacy`, GitHub Actions iOS workflow in `ios/ci/`. App Store submission pack (icons, screenshots-generator, copy, SUBMISSION.md) in `app-store/`. Build adapter for Next.js (`next export` → `ios/www`) still TODO — see `ios/README.md` §1. |
+| **Legal pages** | `/privacy`, `/terms`, `/support` ported as Next.js server components from the cortexx-pwa standalone HTML. Shared `LegalShell` keeps the visual language consistent. |
+| **cortexx-pwa consolidation** | The sibling static-PWA repo's source is now in this codebase. Single-file PWA → `public/legacy/` (served at `/legacy/`, scoped SW so it doesn't fight the Next.js SW). The full `dist/` (60+ Babel-transpiled JS bundles: dashboards, screens-phase\*, app-main, boot, tokens, lib helpers) is included as the porting reference. PWA docs (DEPLOY_NOW, SHIP_READY, SHIP_TO_APP_STORE, PERF_PHASE_81, etc.) under `docs/pwa/`. Two repos collapsed into one. |
 
 ## 🗺 Planned releases
 
@@ -93,7 +95,7 @@ and planned. Maintained alongside the codebase, not in a separate tracker.
 
 | Item | Why parked |
 |---|---|
-| **iOS native build (Capacitor wrap)** | Out of scope for the web product. The cortexx-pwa sibling project has the Capacitor scaffold; cortexx (this repo) stays web-only for now. |
+| ~~**iOS native build (Capacitor wrap)**~~ | ✅ Unblocked — Capacitor 6 scaffold + App Store submission pack now live in this repo (`ios/`, `app-store/`). Last-mile work: adapt `ios/scripts/build-web.mjs` to run `next export` (or point Capacitor at the deployed `cortexbuildpro.com` via `server.url`) instead of copying the standalone PWA HTML. |
 | **Push notifications** | Requires VAPID keys + service worker `push` event handling + per-user subscription storage. Useful once `/messages` ships. |
 | **Multi-tenancy** | Currently single-tenant. The data model has no `organizationId`. If we want multi-tenant we'll need a migration and a row-level-security pass. |
 | **Cortex AI agent** | The `/ask` route is a stub. Real implementation needs prompt construction with workspace context, citations, and a usage-quota layer. |
