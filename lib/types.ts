@@ -233,6 +233,57 @@ export interface Rams {
   project?: { id: string; name: string } | null
 }
 
+export interface Inspection {
+  id: string
+  projectId: string
+  title: string
+  type: 'general' | 'safety' | 'quality' | 'scaffold' | 'electrical'
+  status: 'draft' | 'in_progress' | 'passed' | 'failed'
+  checklistItems: Array<{ id: string; label: string; result?: 'pass' | 'fail' | 'na'; note?: string }>
+  overallResult: 'pass' | 'fail' | null
+  conductedBy: string | null
+  scheduledAt: string | null
+  completedAt: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
+}
+
+export interface Meeting {
+  id: string
+  projectId: string | null
+  title: string
+  location: string | null
+  scheduledAt: string
+  durationMin: number
+  attendees: string | null
+  minutes: string | null
+  actionItems: Array<{ id: string; title: string; assignee?: string; dueDate?: string; done?: boolean }>
+  status: 'scheduled' | 'completed' | 'cancelled'
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
+}
+
+export interface Risk {
+  id: string
+  projectId: string
+  title: string
+  category: 'operational' | 'financial' | 'schedule' | 'safety' | 'quality' | 'environmental'
+  likelihood: number
+  impact: number
+  score: number
+  mitigation: string | null
+  owner: string | null
+  status: 'open' | 'mitigated' | 'accepted' | 'closed'
+  reviewBy: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
+}
+
 export interface DashboardStats {
   cashflow: number
   owed: number
