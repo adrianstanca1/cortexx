@@ -180,6 +180,59 @@ export interface Milestone {
   project?: { id: string; name: string; status: string } | null
 }
 
+export interface Permit {
+  id: string
+  projectId: string
+  title: string
+  type: 'hot_work' | 'confined_space' | 'excavation' | 'working_at_height' | 'electrical' | 'general'
+  status: 'draft' | 'active' | 'expired' | 'cancelled'
+  riskLevel: 'low' | 'medium' | 'high' | 'critical'
+  location: string | null
+  issuedBy: string | null
+  issuedTo: string | null
+  validFrom: string | null
+  validTo: string | null
+  conditions: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
+}
+
+export interface Tender {
+  id: string
+  projectId: string | null
+  title: string
+  clientName: string | null
+  status: 'draft' | 'submitted' | 'won' | 'lost' | 'withdrawn'
+  totalValue: number
+  deadline: string | null
+  submittedAt: string | null
+  decidedAt: string | null
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
+}
+
+export interface Rams {
+  id: string
+  projectId: string
+  title: string
+  type: 'rams' | 'risk_assessment' | 'method_statement'
+  hazards: string | null
+  controls: string | null
+  ppe: string | null
+  reviewBy: string | null
+  signedBy: string | null
+  signedAt: string | null
+  status: 'draft' | 'active' | 'expired' | 'archived'
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
+}
+
 export interface DashboardStats {
   cashflow: number
   owed: number

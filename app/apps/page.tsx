@@ -16,7 +16,7 @@ interface ModuleItem {
   color: string
   ai?: boolean
   comingSoon?: boolean
-  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'drawings' | 'schedule'
+  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'drawings' | 'schedule' | 'permits' | 'rams' | 'tenders'
 }
 
 interface CaptureAction {
@@ -96,6 +96,14 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/training',      label: 'Training',      Icon: IcHardhat, color: '#f59e0b', badgeKey: 'training' },
     ],
   },
+  {
+    title: 'Compliance & bids',
+    items: [
+      { href: '/permits',  label: 'Permits',  Icon: IcAlert,   color: '#f59e0b', badgeKey: 'permits' },
+      { href: '/rams',     label: 'RAMS',     Icon: IcHardhat, color: '#22c55e', badgeKey: 'rams' },
+      { href: '/tenders',  label: 'Tenders',  Icon: IcDoc,     color: '#3b82f6', badgeKey: 'tenders' },
+    ],
+  },
 ]
 
 interface BadgeData {
@@ -113,6 +121,9 @@ interface BadgeData {
   messages?: number
   drawings?: number
   schedule?: number
+  permits?: number
+  rams?: number
+  tenders?: number
 }
 
 export default function AppsPage() {
@@ -132,7 +143,10 @@ export default function AppsPage() {
       fetch('/api/leads?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/drawings?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/milestones').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads, drawings, milestones]) => {
+      fetch('/api/permits').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/rams').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/tenders?status=draft').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads, drawings, milestones, permits, rams, tenders]) => {
       // schedule badge: count of milestones that are slipped or planned-end is in the past and not complete.
       const now = new Date()
       const slipped = Array.isArray(milestones?.milestones)
@@ -150,6 +164,9 @@ export default function AppsPage() {
         leads: leads?.openCount ?? 0,
         drawings: drawings?.total ?? 0,
         schedule: slipped,
+        permits: permits?.expiringSoon ?? 0,
+        rams: rams?.dueForReview ?? 0,
+        tenders: tenders?.draftCount ?? 0,
       })
     })
   }, [])
