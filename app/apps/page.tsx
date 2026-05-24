@@ -16,7 +16,7 @@ interface ModuleItem {
   color: string
   ai?: boolean
   comingSoon?: boolean
-  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages'
+  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages'
 }
 
 interface CaptureAction {
@@ -70,7 +70,8 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb', comingSoon: true },
       { href: '/documents',          label: 'Documents',  Icon: IcDoc,      color: '#ef4444' },
       { href: '/snags',              label: 'Snags',      Icon: IcAlert,    color: '#ef4444', badgeKey: 'snags' },
-      { href: '/variations',         label: 'Variations', Icon: IcWrench,   color: '#8b5cf6', badgeKey: 'variations', comingSoon: true },
+      { href: '/observations',       label: 'Observations', Icon: IcCheck,  color: '#22c55e', badgeKey: 'observations' },
+      { href: '/variations',         label: 'Variations', Icon: IcWrench,   color: '#8b5cf6', badgeKey: 'variations' },
     ],
   },
   {
@@ -101,6 +102,7 @@ interface BadgeData {
   inbox?: number
   rfis?: number
   snags?: number
+  observations?: number
   variations?: number
   pos?: number
   subinvoices?: number
@@ -123,11 +125,15 @@ export default function AppsPage() {
       fetch('/api/snags?status=open&take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/rfis?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/training').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets, snags, rfis, training]) => {
+      fetch('/api/observations?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/variations?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations]) => {
       setBadges({
         inbox: inbox?.total ?? 0,
         rfis: rfis?.openCount ?? 0,
         snags: snags?.openCount ?? 0,
+        observations: observations?.unsafeOpenCount ?? 0,
+        variations: variations?.pendingCount ?? 0,
         timesheets: Array.isArray(timesheets?.entries) ? timesheets.entries.length : 0,
         training: (training?.counts?.expired ?? 0) + (training?.counts?.expiring ?? 0),
       })
