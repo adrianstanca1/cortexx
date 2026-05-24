@@ -69,7 +69,8 @@ export async function POST(req: NextRequest) {
         orderBy: { createdAt: 'desc' },
         select: { number: true },
       })
-      const lastNum = last ? parseInt((last.number.match(/(\d+)$/)?.[1]) || '0') : 0
+      const parsed = last ? parseInt((last.number.match(/(\d+)$/)?.[1]) || '0', 10) : 0
+      const lastNum = Number.isFinite(parsed) ? parsed : 0
       number = `DWG-${String(lastNum + 1).padStart(3, '0')}`
     }
 
