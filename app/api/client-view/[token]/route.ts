@@ -12,7 +12,7 @@ export const dynamic = 'force-dynamic'
  * margin), open snag count (not titles), public-safe activity summary,
  * photo previews.
  *
- * Bypassed by middleware (see middleware.ts isPublic /api/client-view/).
+ * Bypassed by the edge proxy (see proxy.ts isPublic /api/client-view/).
  */
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
   const params = await paramsP
