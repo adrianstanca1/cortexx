@@ -1,6 +1,6 @@
-import NextAuth from 'next-auth'
-import { authOptions } from '@/lib/auth'
+// Auth.js v5: handlers are constructed in lib/auth.ts. We re-export them
+// as the route's GET/POST.
+import { handlers } from '@/lib/auth'
 
-const handler = NextAuth(authOptions)
-
-export { handler as GET, handler as POST }
+export const dynamic = 'force-dynamic'
+export const { GET, POST } = handlers

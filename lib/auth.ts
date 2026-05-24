@@ -1,23 +1,26 @@
-import type { NextAuthOptions } from 'next-auth'
-import CredentialsProvider from 'next-auth/providers/credentials'
+import NextAuth, { type NextAuthConfig } from 'next-auth'
+import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 
-export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(prisma) as NextAuthOptions['adapter'],
+// Auth.js v5 (next-auth@beta) — config object + destructured exports
+// pattern. See https://authjs.dev/getting-started/migrating-to-v5
+export const authConfig: NextAuthConfig = {
+  adapter: PrismaAdapter(prisma),
   session: { strategy: 'jwt', maxAge: 30 * 24 * 60 * 60 }, // 30 days
   pages: { signIn: '/login' },
+  trustHost: true,
   providers: [
-    CredentialsProvider({
+    Credentials({
       name: 'credentials',
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
       },
       async authorize(credentials) {
-        const email = credentials?.email?.trim().toLowerCase()
-        const password = credentials?.password
+        const email = typeof credentials?.email === 'string' ? credentials.email.trim().toLowerCase() : ''
+        const password = typeof credentials?.password === 'string' ? credentials.password : ''
         if (!email || !password) return null
         const user = await prisma.user.findUnique({ where: { email } })
         if (!user || !user.passwordHash) return null
@@ -44,3 +47,5 @@ export const authOptions: NextAuthOptions = {
     },
   },
 }
+
+export const { handlers, auth, signIn, signOut } = NextAuth(authConfig)
