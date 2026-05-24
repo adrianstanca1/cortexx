@@ -13,10 +13,14 @@ export async function GET(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
+    const type = searchParams.get('type')
     const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
     const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
 
-    const where = { ...(projectId && { projectId }) }
+    const where = {
+      ...(projectId && { projectId }),
+      ...(type && { type }),
+    }
     const [documents, total] = await Promise.all([
       prisma.document.findMany({
         where,

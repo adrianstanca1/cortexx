@@ -66,10 +66,10 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/projects',           label: 'Timeline',   Icon: IcLayers,   color: '#2563eb' },
       { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4', comingSoon: true },
       { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981', comingSoon: true },
-      { href: '/photos',             label: 'Photos',     Icon: IcCamera,   color: '#8b5cf6', comingSoon: true },
+      { href: '/photos',             label: 'Photos',     Icon: IcCamera,   color: '#8b5cf6' },
       { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb', comingSoon: true },
       { href: '/documents',          label: 'Documents',  Icon: IcDoc,      color: '#ef4444' },
-      { href: '/snags',              label: 'Snags',      Icon: IcAlert,    color: '#ef4444', badgeKey: 'snags', comingSoon: true },
+      { href: '/snags',              label: 'Snags',      Icon: IcAlert,    color: '#ef4444', badgeKey: 'snags' },
       { href: '/variations',         label: 'Variations', Icon: IcWrench,   color: '#8b5cf6', badgeKey: 'variations', comingSoon: true },
     ],
   },
@@ -120,11 +120,12 @@ export default function AppsPage() {
     Promise.all([
       fetch('/api/inbox').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/timeentries?approved=false').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets]) => {
+      fetch('/api/snags?status=open&take=1').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags]) => {
       setBadges({
         inbox: inbox?.total ?? 0,
         rfis: inbox?.overdueTasks?.filter((t: { priority?: string }) => t?.priority === 'critical').length ?? 0,
-        snags: 0,
+        snags: snags?.openCount ?? 0,
         timesheets: Array.isArray(timesheets?.entries) ? timesheets.entries.length : 0,
       })
     })

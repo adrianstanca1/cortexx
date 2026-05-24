@@ -84,6 +84,7 @@ model Project {
   timeEntries TimeEntry[]
   documents   Document[]
   comments    Comment[]
+  snags       Snag[]
 
   @@index([status])
   @@index([updatedAt])
@@ -222,4 +223,25 @@ model Document {
 
   @@index([projectId])
   @@index([expiresAt])
+  @@index([type])
+}
+
+model Snag {
+  id          String    @id @default(cuid())
+  projectId   String
+  title       String
+  description String?
+  location    String?
+  status      String    @default("open") // open, in_progress, closed
+  priority    String    @default("medium") // low, medium, high, critical
+  photoUrl    String?
+  dueDate     DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([status, priority])
+  @@index([dueDate])
 }
