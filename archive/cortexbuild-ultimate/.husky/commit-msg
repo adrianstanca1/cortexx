@@ -1,0 +1,32 @@
+#!/usr/bin/env bash
+# Enforces Conventional Commits format: type(scope): description
+# Types: feat, fix, docs, chore, refactor, test, ci, perf, build, revert
+# Scope is optional, description must start lowercase
+
+commit_msg=$(cat "$1")
+
+# Skip merge commits
+if echo "$commit_msg" | grep -q "^Merge "; then
+  exit 0
+fi
+
+# Check conventional commit format
+if ! echo "$commit_msg" | grep -qE "^(feat|fix|docs|chore|refactor|test|ci|perf|build|revert)(\(.+\))?: [a-z]"; then
+  echo ""
+  echo "❌ Invalid commit message format."
+  echo ""
+  echo "Expected: type(scope): description"
+  echo "  - type: feat, fix, docs, chore, refactor, test, ci, perf, build, revert"
+  echo "  - scope: optional, in parentheses (e.g., security, auth, api)"
+  echo "  - description: must start with lowercase letter"
+  echo ""
+  echo "Examples:"
+  echo "  fix(auth): resolve JWT token expiration issue"
+  echo "  feat(api): add bulk export endpoint"
+  echo "  docs(session): record deployment status"
+  echo ""
+  echo "Your message: $commit_msg"
+  exit 1
+fi
+
+echo "✅ Commit message format valid"

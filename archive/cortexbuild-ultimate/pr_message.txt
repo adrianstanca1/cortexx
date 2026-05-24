@@ -1,0 +1,15 @@
+test(utils): add test coverage for estimateBase64Size in image-utils
+
+🎯 **What:**
+Added unit tests for the `estimateBase64Size` utility function in `server/lib/utils/image-utils.ts` to ensure edge cases and boundary conditions are handled properly. Also corrected a mathematical bug in the implementation where base64 padding resulted in incorrect byte estimations.
+
+📊 **Coverage:**
+The tests now cover:
+- Empty strings returning 0.
+- Base64 strings with no padding.
+- Base64 strings with 1 padding character.
+- Base64 strings with 2 padding characters.
+- Larger base64 payloads to verify scalability of the sizing formula.
+
+✨ **Result:**
+The function correctly accounts for padding characters, eliminating off-by-one or off-by-two length errors. The test suite is now robust against regressions for string size estimations.

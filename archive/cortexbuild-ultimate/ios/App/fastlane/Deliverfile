@@ -1,0 +1,17 @@
+# Configuration for `fastlane deliver` (App Store metadata upload)
+app_identifier "com.cortexbuildpro.app"
+username ENV["FASTLANE_USER"] || "admin@cortexbuildpro.com"
+
+# Don't auto-submit when uploading metadata
+submit_for_review false
+
+# Skip screenshot upload until they're captured
+skip_screenshots true
+
+# Use the directory created by 'fastlane deliver init' or by hand
+metadata_path "./metadata"
+
+# When you're ready, run:
+#   fastlane deliver --skip_binary_upload --skip_screenshots
+# That uploads the metadata text. Add screenshots later via:
+#   fastlane deliver --skip_binary_upload --skip_metadata

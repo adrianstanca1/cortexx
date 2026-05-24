@@ -1,0 +1,47 @@
+{
+  "expo": {
+    "name": "CortexBuild Pro",
+    "slug": "cortexbuildpro",
+    "description": "Construction management SaaS platform for contractors, foremen, and safety officers.",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "automatic",
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.cortexbuildpro.ios",
+      "buildNumber": "1.0.0",
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
+    },
+    "android": {
+      "package": "com.cortexbuildpro.android",
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "predictiveBackGestureEnabled": false
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "eas": {
+        "projectId": "1629c21c-58d4-4a51-85bf-4b4733df2278"
+      }
+    },
+    "owner": "adrianstanca",
+    "plugins": [
+      "expo-font",
+      "expo-router",
+      "expo-secure-store"
+    ]
+  }
+}

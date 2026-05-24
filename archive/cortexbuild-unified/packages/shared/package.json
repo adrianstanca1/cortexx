@@ -1,0 +1,15 @@
+{
+  "name": "@cortexbuild/shared",
+  "version": "1.0.0",
+  "type": "module",
+  "main": "./index.ts",
+  "scripts": {
+    "check": "tsc --noEmit"
+  },
+  "dependencies": {
+    "zod": "^3.25.76"
+  },
+  "devDependencies": {
+    "typescript": "^5.9.3"
+  }
+}

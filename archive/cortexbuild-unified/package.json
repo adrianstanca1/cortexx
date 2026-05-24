@@ -1,0 +1,29 @@
+{
+  "name": "cortexbuild-unified",
+  "version": "1.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev:server": "pnpm --filter server dev",
+    "build": "pnpm --filter server build",
+    "deploy": "bash deploy.sh",
+    "test": "pnpm --filter server test",
+    "lint": "pnpm --filter server lint",
+    "db:generate": "cd packages/server && pnpm exec drizzle-kit generate",
+    "db:migrate": "cd packages/server && pnpm exec drizzle-kit migrate"
+  },
+  "devDependencies": {
+    "@eslint/js": "^10.0.1",
+    "eslint": "^9.26.0",
+    "globals": "^17.6.0",
+    "prettier": "^3.5.3",
+    "tsx": "^4.19.3",
+    "typescript": "^5.9.3",
+    "typescript-eslint": "^8.59.3"
+  },
+  "engines": {
+    "node": ">=22.0.0",
+    "pnpm": ">=11.0.0"
+  },
+  "packageManager": "pnpm@11.1.1"
+}

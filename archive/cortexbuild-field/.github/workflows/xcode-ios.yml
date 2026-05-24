@@ -1,0 +1,78 @@
+name: Xcode iOS Build (Compile-Only Smoke Test)
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+  push:
+    branches:
+      - main
+    paths:
+      - 'app/**'
+      - 'assets/**'
+      - 'package.json'
+      - 'app.config.ts'
+      - '.github/workflows/xcode-ios.yml'
+
+jobs:
+  build:
+    name: Compile iOS (Unsigned)
+    runs-on: macos-15
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Prebuild iOS project
+        run: npx expo prebuild --platform ios --clean
+
+      - name: Select Xcode
+        run: |
+          sudo xcode-select -s /Applications/Xcode_16.2.app
+          xcodebuild -version
+
+      - name: Accept license & install iOS platform
+        run: |
+          sudo xcodebuild -license accept 2>/dev/null || true
+          sudo xcodebuild -runFirstLaunch 2>/dev/null || true
+          xcodebuild -downloadPlatform iOS -buildVersion 18.2 2>/dev/null || xcodebuild -downloadPlatform iOS 2>/dev/null || true
+
+      - name: Discover workspace & scheme
+        id: discover
+        run: |
+          WORKSPACE=$(find ios -name "*.xcworkspace" -maxdepth 1 | head -1)
+          echo "workspace=$WORKSPACE" >> $GITHUB_OUTPUT
+          SCHEME=$(xcodebuild -list -workspace "$WORKSPACE" 2>&1 | awk '/Schemes:/{getline; gsub(/^[ \t]+/, ""); print; exit}')
+          echo "scheme=$SCHEME" >> $GITHUB_OUTPUT
+          echo "Using workspace: $WORKSPACE"
+          echo "Using scheme: $SCHEME"
+
+      - name: Build (unsigned — smoke test)
+        run: |
+          xcodebuild build \
+            -workspace "${{ steps.discover.outputs.workspace }}" \
+            -scheme "${{ steps.discover.outputs.scheme }}" \
+            -configuration Release \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            | xcbeautify
+
+      - name: Notify
+        if: always()
+        run: |
+          STATUS=$([[ "${{ job.status }}" == "success" ]] && echo "✅" || echo "❌")
+          echo "$STATUS cortexbuild-field iOS compile check: ${{ job.status }}"

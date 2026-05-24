@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Support — CortexBuild</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f172a;
+      color: #cbd5e1;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    header {
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      padding: 1rem 1.5rem;
+    }
+
+    header a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    header a:hover { color: #60a5fa; }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-top: 2.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    p { margin-bottom: 1rem; }
+
+    ul {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+
+    ul li { margin-bottom: 0.4rem; }
+
+    a { color: #3b82f6; }
+    a:hover { color: #60a5fa; }
+
+    .contact-card {
+      background: #1e293b;
+      border: 1px solid #334155;
+      border-radius: 8px;
+      padding: 1.5rem;
+      margin: 1.5rem 0;
+    }
+
+    .contact-card p { margin-bottom: 0.5rem; }
+    .contact-card p:last-child { margin-bottom: 0; }
+
+    .badge {
+      display: inline-block;
+      background: #3b82f6;
+      color: #fff;
+      font-size: 0.75rem;
+      font-weight: 600;
+      padding: 0.15rem 0.55rem;
+      border-radius: 99px;
+      vertical-align: middle;
+      margin-left: 0.4rem;
+    }
+
+    details {
+      border: 1px solid #1e293b;
+      border-radius: 6px;
+      margin-bottom: 0.75rem;
+      background: #0f172a;
+    }
+
+    details[open] {
+      background: #111827;
+    }
+
+    summary {
+      cursor: pointer;
+      padding: 0.9rem 1rem;
+      font-weight: 500;
+      color: #e2e8f0;
+      list-style: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    summary::before {
+      content: "▶";
+      font-size: 0.65rem;
+      color: #3b82f6;
+      transition: transform 0.15s;
+      flex-shrink: 0;
+    }
+
+    details[open] summary::before {
+      transform: rotate(90deg);
+    }
+
+    summary::-webkit-details-marker { display: none; }
+
+    .faq-body {
+      padding: 0 1rem 1rem 2.1rem;
+      color: #94a3b8;
+      font-size: 0.95rem;
+    }
+
+    .faq-body p { margin-bottom: 0.6rem; }
+    .faq-body p:last-child { margin-bottom: 0; }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-top: 1px solid #1e293b;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    footer a { color: #3b82f6; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="https://www.cortexbuildpro.com">&#8592; CortexBuild</a>
+</header>
+
+<div class="container">
+  <h1>Support</h1>
+  <p class="meta">We're here to help — typical response within 1 business day</p>
+
+  <h2>Contact Us</h2>
+
+  <div class="contact-card">
+    <p><strong>Email support</strong></p>
+    <p>
+      <a href="mailto:support@cortexbuildpro.com">support@cortexbuildpro.com</a>
+      <span class="badge">1 business day</span>
+    </p>
+    <p style="margin-top:0.75rem; font-size:0.9rem; color:#64748b;">
+      Please include your account email, a description of the issue, and (if applicable)
+      the name of the project or feature involved. Screenshots help us triage faster.
+    </p>
+  </div>
+
+  <p>
+    Found a bug? You can also
+    <a href="https://github.com/cortexbuildpro" target="_blank" rel="noopener">open an issue on GitHub</a>
+    or email us at the address above.
+  </p>
+
+  <h2>Frequently Asked Questions</h2>
+
+  <details>
+    <summary>Does CortexBuild work offline?</summary>
+    <div class="faq-body">
+      <p>
+        Yes — the mobile app caches your active projects locally so you can view timesheets,
+        submit daily reports, and take photos without an internet connection.
+      </p>
+      <p>
+        Changes made offline are queued and automatically synced to the server the next time
+        your device has connectivity. A sync indicator in the top bar shows you when unsynced
+        data is pending.
+      </p>
+      <p>
+        Note: creating new projects, inviting team members, and processing payments require
+        an active connection.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>How does GPS clock-in work?</summary>
+    <div class="faq-body">
+      <p>
+        When you tap <strong>Clock In</strong>, the app reads your device's current GPS
+        coordinates and checks whether you are within the geofence radius (default 200 m)
+        set for that job site by your project administrator.
+      </p>
+      <p>
+        If you are outside the geofence, the clock-in is flagged — your administrator will
+        see a warning on the timesheet. The clock-in is still recorded; the flag is for
+        review purposes only.
+      </p>
+      <p>
+        Location is accessed <em>only at the moment you clock in or out</em> — we do not
+        track your location continuously. You can review or change the app's location
+        permission in iOS Settings &gt; CortexBuild.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>How do I set up or reset Multi-Factor Authentication (MFA)?</summary>
+    <div class="faq-body">
+      <p>
+        Go to <strong>Account &gt; Security &gt; Two-Factor Authentication</strong> in the
+        web app. We support authenticator apps (e.g. Google Authenticator, Authy) via TOTP.
+      </p>
+      <p>
+        To reset MFA (e.g. if you lost your phone), contact us at
+        <a href="mailto:support@cortexbuildpro.com">support@cortexbuildpro.com</a>
+        from your registered email address. After identity verification we will disable MFA
+        on your account so you can re-enrol.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>How does Stripe billing work? Can I cancel at any time?</summary>
+    <div class="faq-body">
+      <p>
+        Subscriptions are billed monthly or annually via
+        <a href="https://stripe.com" target="_blank" rel="noopener">Stripe</a>.
+        Your card is charged automatically at the start of each billing period.
+      </p>
+      <p>
+        You can cancel at any time from <strong>Account &gt; Billing</strong>. Cancellation
+        takes effect at the end of the current billing period — you retain full access until
+        then. We do not offer partial-period refunds except where required by law.
+      </p>
+      <p>
+        To update your payment method or download invoices, go to
+        <strong>Account &gt; Billing &gt; Manage Subscription</strong>, which opens the
+        Stripe customer portal.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>How do I delete my account?</summary>
+    <div class="faq-body">
+      <p>
+        You can request account deletion by emailing
+        <a href="mailto:admin@cortexbuildpro.com">admin@cortexbuildpro.com</a>
+        from your registered address with the subject line
+        <em>"Account deletion request"</em>.
+      </p>
+      <p>
+        We will confirm deletion within 5 business days. Your project data, timesheets, and
+        personal information will be permanently removed within 30 days of the request.
+        Database backups containing your data are purged after 90 days.
+      </p>
+      <p>
+        Note: if you are an organisation admin, you must first transfer or remove all team
+        members before your account can be deleted.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>How do I export my data?</summary>
+    <div class="faq-body">
+      <p>
+        Under UK GDPR you have the right to receive a copy of your data in a
+        machine-readable format.
+      </p>
+      <p>
+        To request a data export, email
+        <a href="mailto:admin@cortexbuildpro.com">admin@cortexbuildpro.com</a>
+        from your registered address. We will prepare a JSON/CSV export of your account
+        data, project records, timesheets, and daily reports and deliver it within
+        30 days.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>I signed in with Google or Microsoft — can I switch to a password?</summary>
+    <div class="faq-body">
+      <p>
+        Yes. Go to <strong>Account &gt; Security &gt; Sign-in Methods</strong> and select
+        <em>Add password</em>. Once you set a password you can use either method.
+      </p>
+      <p>
+        If you want to <em>unlink</em> an OAuth provider, make sure you have a password set
+        first (to avoid being locked out), then remove the provider from the same settings page.
+      </p>
+    </div>
+  </details>
+
+  <details>
+    <summary>Push notifications stopped working on my iPhone. What should I check?</summary>
+    <div class="faq-body">
+      <p>Try the following steps in order:</p>
+      <ul>
+        <li>iOS Settings &gt; CortexBuild &gt; Notifications — ensure "Allow Notifications" is on</li>
+        <li>iOS Settings &gt; Focus / Do Not Disturb — check no mode is suppressing alerts</li>
+        <li>In the app, go to <strong>Account &gt; Notifications</strong> and toggle your
+            notification preferences off and back on to re-register your device token</li>
+        <li>Sign out of the app fully and sign back in — this forces a fresh token registration</li>
+      </ul>
+      <p>
+        If notifications are still not working after these steps, email us at
+        <a href="mailto:support@cortexbuildpro.com">support@cortexbuildpro.com</a>
+        with your device model and iOS version.
+      </p>
+    </div>
+  </details>
+
+  <h2>Privacy</h2>
+  <p>
+    For questions about how we handle your personal data, please see our
+    <a href="/privacy.html">Privacy Policy</a> or email
+    <a href="mailto:admin@cortexbuildpro.com">admin@cortexbuildpro.com</a>.
+  </p>
+</div>
+
+<footer>
+  &copy; 2026 CortexBuild &mdash;
+  <a href="https://www.cortexbuildpro.com">Back to app</a> &mdash;
+  <a href="/privacy.html">Privacy Policy</a>
+</footer>
+
+</body>
+</html>

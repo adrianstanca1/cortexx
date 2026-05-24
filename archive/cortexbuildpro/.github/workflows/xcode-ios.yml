@@ -1,0 +1,213 @@
+name: Xcode iOS Build & Submit
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'src/**'
+      - 'assets/**'
+      - 'package*.json'
+      - 'eas.json'
+      - 'app.json'
+      - '.github/workflows/xcode-ios.yml'
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version number (e.g. 1.0.0)'
+        required: false
+        default: ''
+
+concurrency:
+  group: xcode-ios-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build-and-submit:
+    name: Prebuild & Submit to App Store
+    runs-on: macos-15
+    timeout-minutes: 60
+    env:
+      ASC_KEY_ID: ${{ secrets.ASC_KEY_ID }}
+      ASC_ISSUER_ID: ${{ secrets.ASC_ISSUER_ID }}
+      ASC_PRIVATE_KEY: ${{ secrets.ASC_PRIVATE_KEY }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Setup CocoaPods
+        run: sudo gem install cocoapods
+
+      - name: Select Xcode 26.3
+        run: |
+          echo "Available Xcode versions:"
+          ls /Applications/ | grep Xcode | sort
+          echo ""
+          echo "Selecting Xcode 26.3 explicitly..."
+          sudo xcode-select -s "/Applications/Xcode_26.3.app/Contents/Developer"
+          xcodebuild -version
+          xcrun --sdk iphoneos --show-sdk-version
+          xcrun --sdk iphoneos --show-sdk-build-version
+
+      - name: Prebuild iOS project
+        run: |
+          npx expo prebuild --platform ios --clean
+          cd ios && pod install
+
+      - name: Bump build number
+        run: |
+          BUILD_NUMBER=$(git rev-list --count HEAD)
+          echo "BUILD_NUMBER=$BUILD_NUMBER"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/CortexBuildPro/Info.plist || \
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $BUILD_NUMBER" ios/CortexBuildPro/Supporting/Expo.plist
+
+      - name: Generate iOS App Icons
+        run: |
+          SRC="ios/CortexBuildPro/Images.xcassets/AppIcon.appiconset/App-Icon-1024x1024@1x.png"
+          OUT="ios/CortexBuildPro/Images.xcassets/AppIcon.appiconset"
+          mkdir -p "$OUT"
+          for spec in "20:2" "20:3" "29:2" "29:3" "40:2" "40:3" "60:2" "60:3"; do
+            bs=${spec%%:*}; sc=${spec##*:}; px=$((bs*sc))
+            sips -z $px $px "$SRC" --out "$OUT/App-Icon-${bs}x${bs}@${sc}x.png"
+          done
+          for spec in "20:1" "20:2" "29:1" "29:2" "40:1" "40:2" "76:1" "76:2"; do
+            bs=${spec%%:*}; sc=${spec##*:}; px=$((bs*sc))
+            sips -z $px $px "$SRC" --out "$OUT/App-Icon-${bs}x${bs}@${sc}x.png"
+          done
+          sips -z 167 167 "$SRC" --out "$OUT/App-Icon-83.5x83.5@2x.png"
+          /usr/libexec/PlistBuddy -c "Set :CFBundleIconName AppIcon" ios/CortexBuildPro/Info.plist || \
+          /usr/libexec/PlistBuddy -c "Add :CFBundleIconName string AppIcon" ios/CortexBuildPro/Info.plist
+          cat > "$OUT/Contents.json" << 'JSON'
+          {"images":[
+            {"size":"20x20","idiom":"iphone","scale":"2x","filename":"App-Icon-20x20@2x.png"},
+            {"size":"20x20","idiom":"iphone","scale":"3x","filename":"App-Icon-20x20@3x.png"},
+            {"size":"29x29","idiom":"iphone","scale":"2x","filename":"App-Icon-29x29@2x.png"},
+            {"size":"29x29","idiom":"iphone","scale":"3x","filename":"App-Icon-29x29@3x.png"},
+            {"size":"40x40","idiom":"iphone","scale":"2x","filename":"App-Icon-40x40@2x.png"},
+            {"size":"40x40","idiom":"iphone","scale":"3x","filename":"App-Icon-40x40@3x.png"},
+            {"size":"60x60","idiom":"iphone","scale":"2x","filename":"App-Icon-60x60@2x.png"},
+            {"size":"60x60","idiom":"iphone","scale":"3x","filename":"App-Icon-60x60@3x.png"},
+            {"size":"20x20","idiom":"ipad","scale":"1x","filename":"App-Icon-20x20@1x.png"},
+            {"size":"20x20","idiom":"ipad","scale":"2x","filename":"App-Icon-20x20@2x.png"},
+            {"size":"29x29","idiom":"ipad","scale":"1x","filename":"App-Icon-29x29@1x.png"},
+            {"size":"29x29","idiom":"ipad","scale":"2x","filename":"App-Icon-29x29@2x.png"},
+            {"size":"40x40","idiom":"ipad","scale":"1x","filename":"App-Icon-40x40@1x.png"},
+            {"size":"40x40","idiom":"ipad","scale":"2x","filename":"App-Icon-40x40@2x.png"},
+            {"size":"76x76","idiom":"ipad","scale":"1x","filename":"App-Icon-76x76@1x.png"},
+            {"size":"76x76","idiom":"ipad","scale":"2x","filename":"App-Icon-76x76@2x.png"},
+            {"size":"83.5x83.5","idiom":"ipad","scale":"2x","filename":"App-Icon-83.5x83.5@2x.png"},
+            {"size":"1024x1024","idiom":"ios-marketing","scale":"1x","filename":"App-Icon-1024x1024@1x.png"}
+          ],"info":{"version":1,"author":"xcode"}}
+          JSON
+
+      - name: Setup signing (manual)
+        id: signing
+        continue-on-error: true
+        run: bash scripts/setup-signing.sh
+        env:
+          IOS_DISTRIBUTION_P12: ${{ secrets.IOS_DISTRIBUTION_P12 }}
+          IOS_P12_PASSWORD: ${{ secrets.IOS_P12_PASSWORD }}
+          IOS_PROVISIONING_PROFILE: ${{ secrets.IOS_PROVISIONING_PROFILE }}
+
+      - name: Skip if signing not configured
+        if: steps.signing.outcome == 'failure'
+        run: |
+          echo "::warning::iOS signing failed — skipping build. Update IOS_P12_PASSWORD secret to fix."
+          exit 0
+
+      - name: Write ASC API key (for altool upload)
+        run: |
+          mkdir -p ~/.appstoreconnect/private_keys
+          printf '%s' "$ASC_PRIVATE_KEY" > ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+          chmod 600 ~/.appstoreconnect/private_keys/AuthKey_$ASC_KEY_ID.p8
+
+      - name: Build unsigned archive
+        if: steps.signing.outcome != 'failure'
+        run: |
+          mkdir -p build
+          xcodebuild archive \
+            -workspace ios/CortexBuildPro.xcworkspace \
+            -scheme CortexBuildPro \
+            -configuration Release \
+            -destination "generic/platform=iOS" \
+            -archivePath "build/CortexBuildPro.xcarchive" \
+            CODE_SIGNING_ALLOWED=NO \
+            COMPILER_INDEX_STORE_ENABLE=NO
+
+      - name: Export signed IPA (manual)
+        if: steps.signing.outcome != 'failure'
+        run: |
+          cat > build/ExportOptions.plist << PLIST
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>app-store-connect</string>
+            <key>teamID</key>
+            <string>4G3G5MX9BH</string>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>stripSwiftSymbols</key>
+            <true/>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${PROFILE_BUNDLE_ID}</key>
+              <string>${PROFILE_NAME}</string>
+            </dict>
+            <key>signingCertificate</key>
+            <string>${SIGNING_IDENTITY}</string>
+          </dict>
+          </plist>
+          PLIST
+
+          xcodebuild -exportArchive \
+            -archivePath "build/CortexBuildPro.xcarchive" \
+            -exportPath "build/CortexBuildPro.ipa" \
+            -exportOptionsPlist build/ExportOptions.plist
+
+      - name: Upload to App Store
+        if: steps.signing.outcome != 'failure'
+        run: |
+          IPA_PATH=$(find build/CortexBuildPro.ipa -name "*.ipa" -type f | head -1)
+          echo "Uploading: $IPA_PATH"
+          ls -la "$IPA_PATH" 2>/dev/null || true
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$IPA_PATH" \
+            --apiKey "$ASC_KEY_ID" \
+            --apiIssuer "$ASC_ISSUER_ID"
+
+      - name: Upload artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: CortexBuildPro-IPA
+          path: build/CortexBuildPro.ipa/*.ipa
+          retention-days: 7
+
+      - name: Cleanup
+        if: always()
+        run: |
+          security delete-keychain "${KEYCHAIN_PATH}" 2>/dev/null || true
+          rm -rf ~/.appstoreconnect/private_keys || true
+          if [ -n "${PROFILE_UUID:-}" ]; then
+            rm -f "$HOME/Library/MobileDevice/Provisioning Profiles/${PROFILE_UUID}.mobileprovision" || true
+          fi

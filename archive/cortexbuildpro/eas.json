@@ -1,0 +1,41 @@
+{
+  "cli": {
+    "version": ">= 16.0.1",
+    "appVersionSource": "remote"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "autoIncrement": true
+    },
+    "preview": {
+      "distribution": "internal",
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://buildtrack.cortexbuildpro.com",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH",
+        "EXPO_PUBLIC_API_URL": "https://buildtrack.cortexbuildpro.com/api"
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "env": {
+        "EXPO_PUBLIC_SUPABASE_URL": "https://buildtrack.cortexbuildpro.com",
+        "EXPO_PUBLIC_SUPABASE_ANON_KEY": "sb_publishable_ACJWlzQHlZjBrEguHvfOxg_3BJgxAaH",
+        "EXPO_PUBLIC_API_URL": "https://buildtrack.cortexbuildpro.com/api"
+      }
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "Adrian.stanca1@gmail.com",
+        "appleTeamId": "4G3G5MX9BH",
+        "ascAppId": "6768035036",
+        "ascApiKeyPath": "./AuthKey_S7PSXPJ963.p8",
+        "ascApiKeyId": "S7PSXPJ963",
+        "ascApiKeyIssuerId": "4e694aa4-8cbc-4de4-bdf2-0ace72694564"
+      }
+    }
+  }
+}

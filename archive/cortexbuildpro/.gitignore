@@ -1,0 +1,63 @@
+# Learn more https://docs.github.com/en/get-started/getting-started-with-git/ignoring-files
+
+# dependencies
+node_modules/
+
+# Expo
+.expo/
+dist/
+web-build/
+expo-env.d.ts
+
+# Native
+.kotlin/
+*.orig.*
+*.jks
+*.p8
+*.p12
+*.key
+*.mobileprovision
+
+# Metro
+.metro-health-check*
+
+# debug
+npm-debug.*
+yarn-debug.*
+yarn-error.*
+
+# macOS
+.DS_Store
+*.pem
+
+# local env files
+.env
+.env.*
+!.env.example
+
+# typescript
+*.tsbuildinfo
+
+# generated native folders
+/ios
+/android
+
+# Apple App Store Connect API key — never commit
+AuthKey_*.p8
+*.p8
+
+# EAS local credentials cache
+.eas/
+credentials.json
+
+# Build artifacts
+build/
+coverage/
+
+# App Store Connect API credentials — never commit
+AuthKey_*.p8
+credentials.json
+.fastlane/credentials/
+*.mobileprovision
+*.cer
+*.p12

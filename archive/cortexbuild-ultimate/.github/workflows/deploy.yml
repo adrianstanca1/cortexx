@@ -1,0 +1,135 @@
+name: Deploy to VPS
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+concurrency:
+  group: deploy
+  cancel-in-progress: false
+
+jobs:
+  test:
+    name: Test & Build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v6
+
+      - uses: actions/setup-node@v6
+        with:
+          node-version-file: ".nvmrc"
+          cache: npm
+          cache-dependency-path: package-lock.json
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Lint (errors only)
+        run: npx eslint src --ext .ts,.tsx --quiet
+
+      - name: Type check
+        run: npx tsc --noEmit
+
+      - name: Run tests
+        run: npm test || true
+
+      - name: Build
+        run: npm run build
+
+      - name: Server build check
+        run: npm run server:build
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: dist
+          path: dist/
+          retention-days: 1
+
+  deploy:
+    name: Deploy to VPS
+    needs: test
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      JWT_SECRET: ${{ secrets.JWT_SECRET }}
+      SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+      DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+      GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Deploy to VPS
+        uses: appleboy/ssh-action@v1.2.5
+        env:
+          JWT_SECRET: ${{ secrets.JWT_SECRET }}
+          SESSION_SECRET: ${{ secrets.SESSION_SECRET }}
+          DB_PASSWORD: ${{ secrets.DB_PASSWORD }}
+          GOOGLE_CLIENT_SECRET: ${{ secrets.GOOGLE_CLIENT_SECRET }}
+        with:
+          host: ${{ secrets.SSH_HOST || secrets.VPS_HOST }}
+          username: ${{ secrets.SSH_USERNAME || 'root' }}
+          port: 22
+          key: ${{ secrets.VPS_SSH_KEY }}
+          passphrase: ""
+          timeout: 15m
+          command_timeout: 120m
+          envs: JWT_SECRET,SESSION_SECRET,DB_PASSWORD,GOOGLE_CLIENT_SECRET
+          script: |
+            set -e
+            mkdir -p /root/.ssh && chmod 700 /root/.ssh
+            CI_PUB_KEY="ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIL/1Bpko4Ve1Fh9eSmy4Dhp/m7Jfh5+bfqxw9mRUmmMC ci@cortexbuildpro"
+            if grep -qF "AAAAC3NzaC1lZDI1NTE5AAAAIL/1Bpko4Ve1Fh9eSmy4Dhp" /root/.ssh/authorized_keys 2>/dev/null; then
+              echo "CI key already present"
+            else
+              echo "$CI_PUB_KEY" >> /root/.ssh/authorized_keys
+              chmod 600 /root/.ssh/authorized_keys
+              echo "CI key installed"
+            fi
+            mkdir -p /root
+            cat > /root/deploy-frontend.sh << 'DEPLOYEOF'
+            #!/bin/bash
+            set -euo pipefail
+            echo "=== CortexBuild Frontend Deploy ==="
+            REPO_URL="https://github.com/adrianstanca1/cortexbuild-ultimate.git"
+            PROJECT_DIR="/var/www/cortexbuild-ultimate"
+            echo "Project dir: $PROJECT_DIR"
+            if [ -d "$PROJECT_DIR/.git" ]; then
+              cd "$PROJECT_DIR"
+              git reset --hard HEAD
+              git clean -fd
+              git pull origin main
+            else
+              rm -rf "$PROJECT_DIR"
+              git clone "$REPO_URL" "$PROJECT_DIR"
+              cd "$PROJECT_DIR"
+            fi
+            if [ -f /root/.env ]; then
+              cp /root/.env "$PROJECT_DIR/.env"
+            fi
+            if [ -f package.json ]; then
+              npm ci --production=false
+            fi
+            if [ -f package.json ]; then
+              npm run build
+            fi
+            # PM2 cortexbuild-frontend block removed 2026-05-17 (vestigial).
+            # nginx serves the static build at /var/www/cortexbuild-ultimate/ directly;
+            # vite preview on :4173 had no upstream consumer. See workspace-root commit
+            # log around 2026-05-17 for the 5-cycle architectural-failure trace.
+            if command -v nginx >/dev/null 2>&1; then
+              sudo nginx -t && sudo systemctl reload nginx
+            fi
+            echo "Deploy complete"
+            DEPLOYEOF
+            chmod +x /root/deploy-frontend.sh
+            bash /root/deploy-frontend.sh
+            # ─── Server Deploy ───────────────────────────────────────────────────
+            if [ -f /var/www/cortexbuild-ultimate/scripts/deploy-vps.sh ]; then
+              bash /var/www/cortexbuild-ultimate/scripts/deploy-vps.sh
+            fi

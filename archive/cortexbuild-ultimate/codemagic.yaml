@@ -1,0 +1,160 @@
+workflows:
+  ios-testflight:
+    name: iOS TestFlight Distribution
+    max_build_duration: 60
+    instance_type: mac_mini_m2
+
+    environment:
+      node: "20"
+      xcode: 16.2
+      vars:
+        BUNDLE_ID: com.cortexbuildpro.app
+        APP_NAME: CortexBuild
+      groups:
+        - apple_credentials
+      ios_signing:
+        distribution_type: app_store
+        bundle_identifier: com.cortexbuildpro.app
+
+    triggering:
+      events: [push]
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: true
+
+    scripts:
+      - name: Install Node dependencies
+        script: npm ci --legacy-peer-deps
+
+      - name: Build web assets
+        script: npm run build
+        environment:
+          NODE_ENV: production
+
+      - name: Capacitor sync
+        script: npx cap sync ios
+
+      - name: Resolve Swift packages
+        script: |
+          set -euo pipefail
+          cd ios/App
+          xcodebuild -resolvePackageDependencies \
+            -project App.xcodeproj \
+            -scheme App
+
+      - name: Increment build number
+        script: |
+          set -euo pipefail
+          cd ios/App
+          set +e
+          OUT=$(app-store-connect get-latest-testflight-build-number "$BUNDLE_ID" 2>&1)
+          STATUS=$?
+          set -e
+          if [ "$STATUS" -ne 0 ]; then
+            echo "app-store-connect get-latest-testflight-build-number failed (exit $STATUS):" >&2
+            echo "$OUT" >&2
+            exit 1
+          fi
+          LATEST="$OUT"
+          if [ -z "$LATEST" ]; then LATEST=0; fi
+          agvtool new-version -all $((LATEST + 1))
+
+      - name: Archive for App Store
+        script: |
+          set -o pipefail
+          cd ios/App
+          xcodebuild \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Release \
+            -sdk iphoneos \
+            -archivePath ./build/CortexBuild.xcarchive \
+            archive \
+            | xcpretty
+
+      - name: Patch ExportOptions team ID
+        script: |
+          set -euo pipefail
+          cd ios/App
+          TEAM="${TEAM_ID:-}"
+          if [ -z "$TEAM" ]; then
+            echo "TEAM_ID is not set (add Team ID to apple_credentials group in Codemagic)." >&2
+            exit 1
+          fi
+          sed -i.bak "s/__TEAM_ID__/${TEAM}/g" ExportOptions.plist
+          rm -f ExportOptions.plist.bak
+
+      - name: Export IPA
+        script: |
+          set -o pipefail
+          cd ios/App
+          xcodebuild \
+            -exportArchive \
+            -archivePath ./build/CortexBuild.xcarchive \
+            -exportOptionsPlist ./ExportOptions.plist \
+            -exportPath ./build \
+            | xcpretty
+
+    artifacts:
+      - ios/App/build/**/*.ipa
+      - ios/App/build/**/*.dSYM.zip
+
+    publishing:
+      app_store_connect:
+        api_key: $APP_STORE_CONNECT_API_KEY_KEY_ID
+        issuer_id: $APP_STORE_CONNECT_API_KEY_ISSUER_ID
+        key: $APP_STORE_CONNECT_API_KEY_PRIVATE_KEY
+        submit_to_testflight: true
+        submit_to_app_store: false
+      email:
+        recipients:
+          - admin@cortexbuildpro.com
+        notify:
+          success: true
+          failure: true
+
+  ios-simulator:
+    name: iOS Simulator Build (PR check)
+    max_build_duration: 30
+    instance_type: mac_mini_m2
+
+    triggering:
+      events: [pull_request]
+      branch_patterns:
+        - pattern: main
+          include: true
+          source: false
+
+    environment:
+      node: "20"
+      xcode: 16.2
+
+    scripts:
+      - name: Install dependencies
+        script: npm ci --legacy-peer-deps
+
+      - name: Build web assets
+        script: npm run build
+        environment:
+          NODE_ENV: production
+
+      - name: Capacitor sync
+        script: npx cap sync ios
+
+      - name: Build for simulator
+        script: |
+          set -o pipefail
+          cd ios/App
+          xcodebuild \
+            -project App.xcodeproj \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -derivedDataPath ./DerivedData \
+            CODE_SIGNING_ALLOWED=NO \
+            | xcpretty
+
+    artifacts:
+      - ios/App/DerivedData/**/Build/Products/Debug-iphonesimulator/App.app

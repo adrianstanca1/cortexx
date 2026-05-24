@@ -1,0 +1,25 @@
+# Dependencies
+node_modules/
+
+# Environment & secrets
+.env
+.env.*
+!.env.example
+
+# Scripts & dev helpers
+scripts/
+test/
+test-unified-ai.js
+
+# Documentation
+doc/
+
+# IDE & OS
+.git/
+.gitignore
+*.md
+.DS_Store
+
+# Debug/test artifacts
+*.log
+npm-debug.log*

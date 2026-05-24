@@ -1,0 +1,282 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Privacy Policy — CortexBuild</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      background: #0f172a;
+      color: #cbd5e1;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      font-size: 16px;
+      line-height: 1.7;
+    }
+
+    header {
+      background: #0f172a;
+      border-bottom: 1px solid #1e293b;
+      padding: 1rem 1.5rem;
+    }
+
+    header a {
+      color: #3b82f6;
+      text-decoration: none;
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+
+    header a:hover { color: #60a5fa; }
+
+    .container {
+      max-width: 720px;
+      margin: 0 auto;
+      padding: 2.5rem 1.5rem 4rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+      font-weight: 700;
+      color: #f1f5f9;
+      margin-bottom: 0.5rem;
+    }
+
+    .meta {
+      font-size: 0.875rem;
+      color: #64748b;
+      margin-bottom: 2.5rem;
+    }
+
+    h2 {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: #e2e8f0;
+      margin-top: 2.5rem;
+      margin-bottom: 0.75rem;
+      padding-bottom: 0.4rem;
+      border-bottom: 1px solid #1e293b;
+    }
+
+    p { margin-bottom: 1rem; }
+
+    ul {
+      margin: 0.5rem 0 1rem 1.5rem;
+    }
+
+    ul li { margin-bottom: 0.4rem; }
+
+    a { color: #3b82f6; }
+    a:hover { color: #60a5fa; }
+
+    .highlight {
+      background: #1e293b;
+      border-left: 3px solid #3b82f6;
+      padding: 0.9rem 1.1rem;
+      border-radius: 4px;
+      margin: 1.25rem 0;
+      font-size: 0.95rem;
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem 1.5rem;
+      border-top: 1px solid #1e293b;
+      font-size: 0.85rem;
+      color: #475569;
+    }
+
+    footer a { color: #3b82f6; }
+  </style>
+</head>
+<body>
+
+<header>
+  <a href="https://www.cortexbuildpro.com">&#8592; CortexBuild</a>
+</header>
+
+<div class="container">
+  <h1>Privacy Policy</h1>
+  <p class="meta">Last updated: 26 April 2026</p>
+
+  <p>
+    CortexBuild ("we", "us", "our") operates the CortexBuild web application and iOS mobile application
+    (collectively, the "Service"). This Privacy Policy explains what personal data we collect, why we
+    collect it, how we use it, who we share it with, and the rights available to you under the
+    UK General Data Protection Regulation (UK GDPR) and the Data Protection Act 2018.
+  </p>
+  <p>
+    By creating an account or using the Service you agree to the practices described in this policy.
+  </p>
+
+  <h2>1. Who We Are</h2>
+  <p>
+    The data controller for the Service is <strong>CortexBuild</strong>,
+    reachable at <a href="mailto:admin@cortexbuildpro.com">admin@cortexbuildpro.com</a>.
+    Our servers are located on a VPS hosted at <strong>cortexbuildpro.com</strong> running
+    PostgreSQL and Redis.
+  </p>
+
+  <h2>2. Data We Collect</h2>
+
+  <p>We collect the following categories of personal data:</p>
+
+  <p><strong>Account data</strong></p>
+  <ul>
+    <li>Full name and email address (provided at sign-up or via Google / Microsoft OAuth)</li>
+    <li>OAuth provider user identifiers (Google, Microsoft)</li>
+    <li>Password hash (when using email/password sign-in; never stored in plain text)</li>
+    <li>Multi-factor authentication (MFA) configuration</li>
+  </ul>
+
+  <p><strong>Project &amp; work data</strong></p>
+  <ul>
+    <li>Project names and site addresses you create within the Service</li>
+    <li>Requests for Information (RFIs), daily reports, and associated free-text notes</li>
+    <li>Site photos and safety-incident photos uploaded by you</li>
+    <li>Voice note audio recordings created for daily reports</li>
+    <li>Digital signatures captured in-app</li>
+  </ul>
+
+  <p><strong>Location data</strong></p>
+  <ul>
+    <li>GPS coordinates used to verify clock-in events within a configurable geofence (default 200 m radius around a job site)</li>
+    <li>Location data attached to safety incident reports</li>
+    <li>We do <em>not</em> track your location continuously; location is only accessed at the moment you initiate a clock-in or file an incident report</li>
+  </ul>
+
+  <p><strong>Device data</strong></p>
+  <ul>
+    <li>Apple Push Notification Service (APNs) token for routing push notifications to your device</li>
+    <li>Device model and operating-system version (used for push-routing and crash-triage only)</li>
+  </ul>
+
+  <p><strong>Usage data</strong></p>
+  <ul>
+    <li>Page views and feature-interaction events (collected via PostHog analytics, where enabled)</li>
+    <li>Session metadata such as IP address, browser type, and referrer</li>
+  </ul>
+
+  <p><strong>Billing data</strong></p>
+  <ul>
+    <li>Subscription tier and billing status (managed by Stripe)</li>
+    <li>We do <em>not</em> store full card numbers; payment card data is handled exclusively by Stripe and is subject to their PCI-DSS compliance</li>
+  </ul>
+
+  <h2>3. How We Use Your Data</h2>
+  <ul>
+    <li>To create and maintain your account and authenticate you securely</li>
+    <li>To deliver the core Service features (project management, timesheets, RFIs, daily reports)</li>
+    <li>To verify clock-in geofencing and process timesheet data</li>
+    <li>To send push notifications for project updates and reminders</li>
+    <li>To process subscription payments and manage billing</li>
+    <li>To analyse product usage and improve the Service</li>
+    <li>To detect and prevent fraud, abuse, and security incidents</li>
+    <li>To comply with legal obligations</li>
+  </ul>
+
+  <p><strong>Legal bases (UK GDPR):</strong> contract performance (Art. 6(1)(b)) for core features; legitimate interests (Art. 6(1)(f)) for security and analytics; consent (Art. 6(1)(a)) for optional analytics and marketing communications.</p>
+
+  <h2>4. Permissions We Request on Your Device</h2>
+
+  <p><strong>Location (iOS)</strong> — requested only when you clock in or file an incident report. We use "While Using the App" permission. We never request "Always On" location access.</p>
+
+  <p><strong>Camera &amp; Photo Library</strong> — requested when you attach site photos or safety-incident photos. We do not access your photo library without explicit user interaction.</p>
+
+  <p><strong>Microphone</strong> — requested when you record a voice note for a daily report. Recording stops as soon as you stop the in-app recording session.</p>
+
+  <p><strong>Push Notifications</strong> — requested to deliver project updates. You may disable this at any time in iOS Settings.</p>
+
+  <h2>5. Third Parties We Share Data With</h2>
+
+  <div class="highlight">
+    We do not sell your personal data. We share data only with the processors listed below, solely to operate the Service.
+  </div>
+
+  <ul>
+    <li><strong>Stripe</strong> — payment processing and subscription management. <a href="https://stripe.com/privacy" target="_blank" rel="noopener">Stripe Privacy Policy</a></li>
+    <li><strong>Google / Microsoft</strong> — OAuth authentication (only when you choose to sign in via these providers). Data shared is limited to what is needed to verify your identity.</li>
+    <li><strong>Apple APNs</strong> — delivery of push notifications to iOS devices.</li>
+    <li><strong>PostHog</strong> — product analytics (page views and feature events), where enabled. Data is pseudonymised. <a href="https://posthog.com/privacy" target="_blank" rel="noopener">PostHog Privacy Policy</a></li>
+    <li><strong>Infrastructure provider</strong> — our VPS host processes data on our behalf under a data processing agreement.</li>
+  </ul>
+
+  <p>We may disclose personal data if required to do so by law or in response to a valid request from a public authority.</p>
+
+  <h2>6. Data Storage &amp; Security</h2>
+  <p>
+    All data is stored in a PostgreSQL database and Redis cache on our VPS at
+    <strong>cortexbuildpro.com</strong>. Data in transit is protected by TLS 1.2+.
+    Data at rest is protected by server-level disk encryption. We enforce access controls,
+    audit logging, and automated vulnerability scanning on all production systems.
+  </p>
+
+  <h2>7. Data Retention</h2>
+  <ul>
+    <li>Project data, timesheets, photos, and associated records are retained for the life of your active subscription plus <strong>30 days</strong> after cancellation, to allow for re-activation.</li>
+    <li>Database backups are retained for <strong>90 days</strong>, after which they are securely deleted.</li>
+    <li>Account data is deleted within 30 days of an account-deletion request (see Section 8).</li>
+    <li>APNs tokens are deleted when you log out, uninstall the app, or delete your account.</li>
+    <li>Analytics events are retained for up to 12 months.</li>
+  </ul>
+
+  <h2>8. Your Rights Under UK GDPR</h2>
+  <p>You have the following rights regarding your personal data:</p>
+  <ul>
+    <li><strong>Access</strong> — request a copy of the data we hold about you</li>
+    <li><strong>Rectification</strong> — request correction of inaccurate or incomplete data</li>
+    <li><strong>Erasure ("right to be forgotten")</strong> — request deletion of your account and associated data</li>
+    <li><strong>Data portability</strong> — request an export of your data in a machine-readable format (JSON/CSV)</li>
+    <li><strong>Restriction</strong> — request that we limit processing of your data in certain circumstances</li>
+    <li><strong>Objection</strong> — object to processing based on legitimate interests</li>
+    <li><strong>Withdraw consent</strong> — where processing is based on consent, you may withdraw it at any time without affecting prior processing</li>
+  </ul>
+  <p>
+    To exercise any of these rights, email us at
+    <a href="mailto:admin@cortexbuildpro.com">admin@cortexbuildpro.com</a>.
+    We will respond within 30 days. You also have the right to lodge a complaint with the
+    UK Information Commissioner's Office (ICO) at
+    <a href="https://ico.org.uk" target="_blank" rel="noopener">ico.org.uk</a>.
+  </p>
+
+  <h2>9. Children</h2>
+  <p>
+    The Service is not directed at children under 13 years of age. We do not knowingly collect
+    personal data from children under 13. If you believe a child has provided us with personal
+    data, please contact us at <a href="mailto:admin@cortexbuildpro.com">admin@cortexbuildpro.com</a>
+    and we will delete it promptly.
+  </p>
+
+  <h2>10. Cookies &amp; Similar Technologies</h2>
+  <p>
+    The web application uses session cookies required for authentication and security (strictly
+    necessary). We may use analytics cookies (PostHog) where you have consented. You can control
+    cookies through your browser settings; disabling strictly-necessary cookies will prevent you
+    from signing in.
+  </p>
+
+  <h2>11. Changes to This Policy</h2>
+  <p>
+    We may update this Privacy Policy from time to time. We will notify you of material changes
+    by email or via an in-app notice at least 14 days before the change takes effect.
+    The "Last updated" date at the top of this page reflects the most recent revision.
+  </p>
+
+  <h2>12. Contact Us</h2>
+  <p>
+    If you have any questions or concerns about this Privacy Policy or our data practices,
+    please contact us at:<br /><br />
+    <strong>Email:</strong> <a href="mailto:admin@cortexbuildpro.com">admin@cortexbuildpro.com</a><br />
+    <strong>Website:</strong> <a href="https://www.cortexbuildpro.com">https://www.cortexbuildpro.com</a>
+  </p>
+</div>
+
+<footer>
+  &copy; 2026 CortexBuild &mdash;
+  <a href="https://www.cortexbuildpro.com">Back to app</a> &mdash;
+  <a href="/support.html">Support</a>
+</footer>
+
+</body>
+</html>

@@ -1,0 +1,128 @@
+version: '3.9'
+
+services:
+  api:
+    build:
+      context: .
+      dockerfile: ./packages/api/Dockerfile
+    container_name: cortexbuild-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - DATABASE_URL=postgresql://cortexbuild:${POSTGRES_PASSWORD}@postgres:5432/cortexbuild
+      - JWT_SECRET=${JWT_SECRET}
+      - JWT_REFRESH_SECRET=${JWT_REFRESH_SECRET}
+      - REDIS_URL=redis://redis:6379
+      - CORS_ORIGIN=${CORS_ORIGIN}
+      - LOG_LEVEL=${LOG_LEVEL:-info}
+    ports:
+      - "3001:3001"
+    depends_on:
+      postgres:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    volumes:
+      - uploads:/app/uploads
+    networks:
+      - cortexbuild
+
+  web:
+    build:
+      context: .
+      dockerfile: ./apps/web/Dockerfile
+    container_name: cortexbuild-web
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+      - API_URL=${API_URL}
+    ports:
+      - "3002:3000"
+    networks:
+      - cortexbuild
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: cortexbuild-postgres
+    restart: unless-stopped
+    environment:
+      - POSTGRES_USER=cortexbuild
+      - POSTGRES_PASSWORD=${POSTGRES_PASSWORD}
+      - POSTGRES_DB=cortexbuild
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./packages/db/drizzle:/docker-entrypoint-initdb.d
+    ports:
+      - "5432:5432"
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U cortexbuild -d cortexbuild"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cortexbuild
+
+  redis:
+    image: redis:7-alpine
+    container_name: cortexbuild-redis
+    restart: unless-stopped
+    command: redis-server --appendonly yes
+    volumes:
+      - redisdata:/data
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 3s
+      retries: 5
+    networks:
+      - cortexbuild
+
+  minio:
+    image: minio/minio:latest
+    container_name: cortexbuild-minio
+    restart: unless-stopped
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=${MINIO_ROOT_USER:-minio}
+      - MINIO_ROOT_PASSWORD=${MINIO_ROOT_PASSWORD:-minio123}
+    volumes:
+      - miniodata:/data
+    ports:
+      - "9000:9000"
+      - "9001:9001"
+    networks:
+      - cortexbuild
+
+  nginx:
+    image: nginx:alpine
+    container_name: cortexbuild-nginx
+    restart: unless-stopped
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/nginx.conf:/etc/nginx/nginx.conf:ro
+      - ./nginx/sites:/etc/nginx/sites-enabled:ro
+      - certbot-data:/etc/letsencrypt
+      - certbot-www:/var/www/certbot
+    networks:
+      - cortexbuild
+    depends_on:
+      - api
+      - web
+
+volumes:
+  pgdata:
+  redisdata:
+  miniodata:
+  uploads:
+  certbot-data:
+  certbot-www:
+
+networks:
+  cortexbuild:
+    driver: bridge

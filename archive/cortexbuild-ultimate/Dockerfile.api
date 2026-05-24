@@ -1,0 +1,21 @@
+# CortexBuild Ultimate - Express API Dockerfile
+FROM node:22-alpine AS base
+
+# Install curl for Docker healthchecks and deploy scripts
+RUN apk add --no-cache curl
+
+WORKDIR /app
+
+COPY server/package.json server/package-lock.json* ./
+RUN npm ci --omit=dev --legacy-peer-deps
+
+COPY server/ .
+
+
+ENV NODE_ENV=production
+ENV PORT=3001
+
+EXPOSE 3001
+
+# Apply migrations + seed on first boot (idempotent), then start API.
+CMD ["sh", "-c", "node scripts/ensure-database.js && node index.js"]
