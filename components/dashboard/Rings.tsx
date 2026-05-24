@@ -1,6 +1,7 @@
 'use client'
 
 import { IcFire } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface RingsProps {
@@ -13,6 +14,7 @@ const stroke = 22
 const radii = [88, 64, 40]
 
 export default function Rings({ accent = '#2563eb', data }: RingsProps) {
+  const { connected } = useRealtimeActivity(data?.activities || [])
   const hoursThisWeek = data?.stats?.hoursThisWeek ?? 0
   const activeSites = data?.stats?.activeSites ?? 0
   const projects = data?.projects || []
@@ -32,7 +34,10 @@ export default function Rings({ accent = '#2563eb', data }: RingsProps) {
   return (
     <div style={{ padding: '0 0 100px' }}>
       <div style={{ padding: '20px 20px 8px' }}>
-        <h2 style={{ fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)' }}>This week</h2>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h2 style={{ fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)' }}>This week</h2>
+          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+        </div>
         <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>
           Mon — Sun · Week {Math.ceil((new Date().getTime() - new Date(new Date().getFullYear(), 0, 1).getTime()) / (7 * 86400000))}
         </p>

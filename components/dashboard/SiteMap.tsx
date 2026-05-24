@@ -2,6 +2,7 @@
 
 import { useRouter } from 'next/navigation'
 import { IcFilter, IcPlus } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface SiteMapProps {
@@ -24,6 +25,7 @@ const pinPositions = [
 
 export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
   const router = useRouter()
+  const { connected } = useRealtimeActivity(data?.activities || [])
   const projects = data?.projects || []
   const activeCount = projects.filter(p => p.status === 'active' || p.status === 'snagging').length
 
@@ -31,7 +33,10 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
     <div style={{ padding: '0 0 100px' }}>
       <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
-          <h2 style={{ fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: SF }}>Sites</h2>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h2 style={{ fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: SF }}>Sites</h2>
+            <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+          </div>
           <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>{projects.length} site{projects.length !== 1 ? 's' : ''} · {activeCount} active</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>

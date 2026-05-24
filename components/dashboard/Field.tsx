@@ -4,6 +4,7 @@ import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { IcCamera, IcReceipt, IcMic, IcAlert, IcCheck, IcPin, IcChevDown } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData, Task } from '@/lib/types'
 
 interface FieldProps {
@@ -17,6 +18,7 @@ interface FieldProps {
  */
 export default function Field({ accent = '#f59e0b', data }: FieldProps) {
   const router = useRouter()
+  const { connected } = useRealtimeActivity(data?.activities || [])
   const [localTasks, setLocalTasks] = useState<Task[] | null>(null)
 
   const activeProject = data?.projects?.find(p => p.status === 'active') || data?.projects?.[0]
@@ -47,7 +49,10 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
       {activeProject && (
         <div style={{ padding: '8px 20px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div onClick={() => router.push('/projects')} style={{ cursor: 'pointer' }}>
-            <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', fontWeight: 600, letterSpacing: 0.3 }}>SITE</div>
+            <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', fontWeight: 600, letterSpacing: 0.3, display: 'flex', alignItems: 'center', gap: 6 }}>
+              SITE
+              <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 6, height: 6, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 6px #10b98166' : 'none', transition: 'all 0.3s' }} />
+            </div>
             <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: 6 }}>
               {activeProject.name}
               <IcChevDown size={18} color="#eef3fa" />
