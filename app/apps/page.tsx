@@ -64,10 +64,10 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Project & site',
     items: [
       { href: '/projects',           label: 'Timeline',   Icon: IcLayers,   color: '#2563eb' },
-      { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4', comingSoon: true },
+      { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4' },
       { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981' },
       { href: '/photos',             label: 'Photos',     Icon: IcCamera,   color: '#8b5cf6' },
-      { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb', comingSoon: true },
+      { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb' },
       { href: '/documents',          label: 'Documents',  Icon: IcDoc,      color: '#ef4444' },
       { href: '/snags',              label: 'Snags',      Icon: IcAlert,    color: '#ef4444', badgeKey: 'snags' },
       { href: '/observations',       label: 'Observations', Icon: IcCheck,  color: '#22c55e', badgeKey: 'observations' },
