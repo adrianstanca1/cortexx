@@ -2,7 +2,7 @@
 
 Status as of **24 May 2026**.
 
-> **Repository consolidation (24 May 2026):** All Cortexx-related repositories (`cortexbuild-ultimate`, `cortexbuild-field`, `cortexbuild-web`, `cortexbuildpro`, `cortexbuild-platform`, `cortexbuild-unified`, `cortexbuildpro-ultimate`, `cortexxxxxx`, `cortexx-pwa`) have been merged into this repository. Their full source code is preserved in `archive/`. All redundant repositories have been deleted from GitHub. This is now the **single source of truth** for the entire Cortexx platform.
+> **Repository consolidation (24 May 2026):** All Cortexx-related repositories (`cortexbuild-ultimate`, `cortexbuild-field`, `cortexbuild-web`, `cortexbuildpro`, `cortexbuild-platform`, `cortexbuild-unified`, `cortexbuildpro-ultimate`, `cortexxxxxx`, `cortexx-pwa`) have been merged into this repository. Their full source code is preserved in `archive/` — including `archive/cortexx-pwa/` (standalone single-file PWA bundles + app-store submission pack, 5 MB) and `archive/claude-design/` (the original Claude Design canvas JSX + chat history + reference screenshots, dated April 30). All redundant repositories have been deleted from GitHub. This is now the **single source of truth** for the entire Cortexx platform.
 
 Source of truth for what's shipped, in-flight, and planned. Maintained alongside the codebase, not in a separate tracker.
 

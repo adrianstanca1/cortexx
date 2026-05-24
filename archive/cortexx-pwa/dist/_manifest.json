@@ -1,0 +1,430 @@
+{
+  "generated": "2026-05-23T12:53:35.872Z",
+  "babelVersion": "7.29.0",
+  "fileCount": 60,
+  "totalBytesIn": 1040122,
+  "totalBytesOut": 1114832,
+  "totalTransformMs": 1596,
+  "files": [
+    {
+      "src": "lib/app-main.jsx",
+      "out": "dist/app-main.js",
+      "msTransform": 68,
+      "bytesIn": 33116,
+      "bytesOut": 37797
+    },
+    {
+      "src": "lib/app-screens-2.jsx",
+      "out": "dist/app-screens-2.js",
+      "msTransform": 36,
+      "bytesIn": 31681,
+      "bytesOut": 34048
+    },
+    {
+      "src": "lib/app-screens.jsx",
+      "out": "dist/app-screens.js",
+      "msTransform": 44,
+      "bytesIn": 19481,
+      "bytesOut": 20802
+    },
+    {
+      "src": "lib/app-sheets.jsx",
+      "out": "dist/app-sheets.js",
+      "msTransform": 50,
+      "bytesIn": 37201,
+      "bytesOut": 40511
+    },
+    {
+      "src": "lib/app-utils.jsx",
+      "out": "dist/app-utils.js",
+      "msTransform": 36,
+      "bytesIn": 27570,
+      "bytesOut": 30314
+    },
+    {
+      "src": "lib/dashboards-v2.jsx",
+      "out": "dist/dashboards-v2.js",
+      "msTransform": 30,
+      "bytesIn": 17511,
+      "bytesOut": 19504
+    },
+    {
+      "src": "lib/dashboards-v3.jsx",
+      "out": "dist/dashboards-v3.js",
+      "msTransform": 20,
+      "bytesIn": 13424,
+      "bytesOut": 14793
+    },
+    {
+      "src": "lib/dashboards-v4.jsx",
+      "out": "dist/dashboards-v4.js",
+      "msTransform": 27,
+      "bytesIn": 16502,
+      "bytesOut": 17000
+    },
+    {
+      "src": "lib/dashboards-v5.jsx",
+      "out": "dist/dashboards-v5.js",
+      "msTransform": 27,
+      "bytesIn": 15808,
+      "bytesOut": 17340
+    },
+    {
+      "src": "lib/dashboards.jsx",
+      "out": "dist/dashboards.js",
+      "msTransform": 44,
+      "bytesIn": 34385,
+      "bytesOut": 38239
+    },
+    {
+      "src": "lib/design-canvas.jsx",
+      "out": "dist/design-canvas.js",
+      "msTransform": 33,
+      "bytesIn": 29846,
+      "bytesOut": 26712
+    },
+    {
+      "src": "lib/ios-frame.jsx",
+      "out": "dist/ios-frame.js",
+      "msTransform": 23,
+      "bytesIn": 14279,
+      "bytesOut": 15076
+    },
+    {
+      "src": "lib/screens-ops.jsx",
+      "out": "dist/screens-ops.js",
+      "msTransform": 46,
+      "bytesIn": 32688,
+      "bytesOut": 34885
+    },
+    {
+      "src": "lib/screens-phase10.jsx",
+      "out": "dist/screens-phase10.js",
+      "msTransform": 36,
+      "bytesIn": 13256,
+      "bytesOut": 14394
+    },
+    {
+      "src": "lib/screens-phase11.jsx",
+      "out": "dist/screens-phase11.js",
+      "msTransform": 33,
+      "bytesIn": 20905,
+      "bytesOut": 21515
+    },
+    {
+      "src": "lib/screens-phase12.jsx",
+      "out": "dist/screens-phase12.js",
+      "msTransform": 16,
+      "bytesIn": 6973,
+      "bytesOut": 7127
+    },
+    {
+      "src": "lib/screens-phase13.jsx",
+      "out": "dist/screens-phase13.js",
+      "msTransform": 21,
+      "bytesIn": 9163,
+      "bytesOut": 10108
+    },
+    {
+      "src": "lib/screens-phase14.jsx",
+      "out": "dist/screens-phase14.js",
+      "msTransform": 8,
+      "bytesIn": 6865,
+      "bytesOut": 7308
+    },
+    {
+      "src": "lib/screens-phase15.jsx",
+      "out": "dist/screens-phase15.js",
+      "msTransform": 19,
+      "bytesIn": 9399,
+      "bytesOut": 9012
+    },
+    {
+      "src": "lib/screens-phase16.jsx",
+      "out": "dist/screens-phase16.js",
+      "msTransform": 34,
+      "bytesIn": 22340,
+      "bytesOut": 24468
+    },
+    {
+      "src": "lib/screens-phase17.jsx",
+      "out": "dist/screens-phase17.js",
+      "msTransform": 15,
+      "bytesIn": 6601,
+      "bytesOut": 6522
+    },
+    {
+      "src": "lib/screens-phase18.jsx",
+      "out": "dist/screens-phase18.js",
+      "msTransform": 22,
+      "bytesIn": 10586,
+      "bytesOut": 12267
+    },
+    {
+      "src": "lib/screens-phase19.jsx",
+      "out": "dist/screens-phase19.js",
+      "msTransform": 23,
+      "bytesIn": 12047,
+      "bytesOut": 13050
+    },
+    {
+      "src": "lib/screens-phase2.jsx",
+      "out": "dist/screens-phase2.js",
+      "msTransform": 44,
+      "bytesIn": 36090,
+      "bytesOut": 38572
+    },
+    {
+      "src": "lib/screens-phase20.jsx",
+      "out": "dist/screens-phase20.js",
+      "msTransform": 17,
+      "bytesIn": 7530,
+      "bytesOut": 8518
+    },
+    {
+      "src": "lib/screens-phase21-30.jsx",
+      "out": "dist/screens-phase21-30.js",
+      "msTransform": 30,
+      "bytesIn": 18935,
+      "bytesOut": 21448
+    },
+    {
+      "src": "lib/screens-phase3.jsx",
+      "out": "dist/screens-phase3.js",
+      "msTransform": 50,
+      "bytesIn": 37759,
+      "bytesOut": 40851
+    },
+    {
+      "src": "lib/screens-phase31.jsx",
+      "out": "dist/screens-phase31.js",
+      "msTransform": 6,
+      "bytesIn": 1113,
+      "bytesOut": 1008
+    },
+    {
+      "src": "lib/screens-phase32.jsx",
+      "out": "dist/screens-phase32.js",
+      "msTransform": 31,
+      "bytesIn": 9874,
+      "bytesOut": 11227
+    },
+    {
+      "src": "lib/screens-phase33.jsx",
+      "out": "dist/screens-phase33.js",
+      "msTransform": 6,
+      "bytesIn": 1191,
+      "bytesOut": 1336
+    },
+    {
+      "src": "lib/screens-phase34.jsx",
+      "out": "dist/screens-phase34.js",
+      "msTransform": 14,
+      "bytesIn": 4753,
+      "bytesOut": 5420
+    },
+    {
+      "src": "lib/screens-phase35.jsx",
+      "out": "dist/screens-phase35.js",
+      "msTransform": 11,
+      "bytesIn": 4452,
+      "bytesOut": 4977
+    },
+    {
+      "src": "lib/screens-phase36.jsx",
+      "out": "dist/screens-phase36.js",
+      "msTransform": 17,
+      "bytesIn": 7181,
+      "bytesOut": 7857
+    },
+    {
+      "src": "lib/screens-phase37.jsx",
+      "out": "dist/screens-phase37.js",
+      "msTransform": 12,
+      "bytesIn": 4485,
+      "bytesOut": 4825
+    },
+    {
+      "src": "lib/screens-phase38.jsx",
+      "out": "dist/screens-phase38.js",
+      "msTransform": 9,
+      "bytesIn": 3353,
+      "bytesOut": 3635
+    },
+    {
+      "src": "lib/screens-phase39.jsx",
+      "out": "dist/screens-phase39.js",
+      "msTransform": 24,
+      "bytesIn": 17242,
+      "bytesOut": 17784
+    },
+    {
+      "src": "lib/screens-phase4.jsx",
+      "out": "dist/screens-phase4.js",
+      "msTransform": 60,
+      "bytesIn": 38541,
+      "bytesOut": 42279
+    },
+    {
+      "src": "lib/screens-phase40.jsx",
+      "out": "dist/screens-phase40.js",
+      "msTransform": 18,
+      "bytesIn": 11287,
+      "bytesOut": 11825
+    },
+    {
+      "src": "lib/screens-phase41-50.jsx",
+      "out": "dist/screens-phase41-50.js",
+      "msTransform": 16,
+      "bytesIn": 9887,
+      "bytesOut": 9588
+    },
+    {
+      "src": "lib/screens-phase5.jsx",
+      "out": "dist/screens-phase5.js",
+      "msTransform": 22,
+      "bytesIn": 13046,
+      "bytesOut": 13910
+    },
+    {
+      "src": "lib/screens-phase51-70.jsx",
+      "out": "dist/screens-phase51-70.js",
+      "msTransform": 28,
+      "bytesIn": 15582,
+      "bytesOut": 19839
+    },
+    {
+      "src": "lib/screens-phase6.jsx",
+      "out": "dist/screens-phase6.js",
+      "msTransform": 33,
+      "bytesIn": 23507,
+      "bytesOut": 26305
+    },
+    {
+      "src": "lib/screens-phase7.jsx",
+      "out": "dist/screens-phase7.js",
+      "msTransform": 16,
+      "bytesIn": 7936,
+      "bytesOut": 8664
+    },
+    {
+      "src": "lib/screens-phase72.jsx",
+      "out": "dist/screens-phase72.js",
+      "msTransform": 43,
+      "bytesIn": 32537,
+      "bytesOut": 34886
+    },
+    {
+      "src": "lib/screens-phase73.jsx",
+      "out": "dist/screens-phase73.js",
+      "msTransform": 29,
+      "bytesIn": 24130,
+      "bytesOut": 23620
+    },
+    {
+      "src": "lib/screens-phase74.jsx",
+      "out": "dist/screens-phase74.js",
+      "msTransform": 34,
+      "bytesIn": 20226,
+      "bytesOut": 21167
+    },
+    {
+      "src": "lib/screens-phase75.jsx",
+      "out": "dist/screens-phase75.js",
+      "msTransform": 34,
+      "bytesIn": 28855,
+      "bytesOut": 29088
+    },
+    {
+      "src": "lib/screens-phase76.jsx",
+      "out": "dist/screens-phase76.js",
+      "msTransform": 23,
+      "bytesIn": 17068,
+      "bytesOut": 16889
+    },
+    {
+      "src": "lib/screens-phase77.jsx",
+      "out": "dist/screens-phase77.js",
+      "msTransform": 30,
+      "bytesIn": 34154,
+      "bytesOut": 34967
+    },
+    {
+      "src": "lib/screens-phase78.jsx",
+      "out": "dist/screens-phase78.js",
+      "msTransform": 23,
+      "bytesIn": 21075,
+      "bytesOut": 21302
+    },
+    {
+      "src": "lib/screens-phase79.jsx",
+      "out": "dist/screens-phase79.js",
+      "msTransform": 12,
+      "bytesIn": 16071,
+      "bytesOut": 15654
+    },
+    {
+      "src": "lib/screens-phase8.jsx",
+      "out": "dist/screens-phase8.js",
+      "msTransform": 36,
+      "bytesIn": 5178,
+      "bytesOut": 7016
+    },
+    {
+      "src": "lib/screens-phase80.jsx",
+      "out": "dist/screens-phase80.js",
+      "msTransform": 32,
+      "bytesIn": 11211,
+      "bytesOut": 10164
+    },
+    {
+      "src": "lib/screens-phase9.jsx",
+      "out": "dist/screens-phase9.js",
+      "msTransform": 36,
+      "bytesIn": 19370,
+      "bytesOut": 20616
+    },
+    {
+      "src": "lib/screens-project.jsx",
+      "out": "dist/screens-project.js",
+      "msTransform": 43,
+      "bytesIn": 25734,
+      "bytesOut": 27898
+    },
+    {
+      "src": "lib/tokens.jsx",
+      "out": "dist/tokens.js",
+      "msTransform": 34,
+      "bytesIn": 16536,
+      "bytesOut": 28481
+    },
+    {
+      "src": "lib/tweaks-panel.jsx",
+      "out": "dist/tweaks-panel.js",
+      "msTransform": 12,
+      "bytesIn": 17770,
+      "bytesOut": 15588
+    },
+    {
+      "src": "lib/backend-extras.js",
+      "out": "dist/backend-extras.js",
+      "msTransform": 0,
+      "bytesIn": 18105,
+      "bytesOut": 18105
+    },
+    {
+      "src": "lib/backend.js",
+      "out": "dist/backend.js",
+      "msTransform": 0,
+      "bytesIn": 15080,
+      "bytesOut": 15080
+    },
+    {
+      "src": "lib/perf-phase71.js",
+      "out": "dist/perf-phase71.js",
+      "msTransform": 0,
+      "bytesIn": 1651,
+      "bytesOut": 1651
+    }
+  ]
+}
