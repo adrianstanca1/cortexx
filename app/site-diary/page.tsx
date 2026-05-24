@@ -39,6 +39,8 @@ export default function SiteDiaryPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
+  const [weather, setWeather] = useState<{ icon: string; tempC: number; condition: string; windKph: number; windDir: string; precipMm: number } | null>(null)
+  const [weatherLoading, setWeatherLoading] = useState(false)
 
   useEffect(() => {
     fetch('/api/projects').then(r => r.ok ? r.json() : null).then(d => {
@@ -59,6 +61,22 @@ export default function SiteDiaryPage() {
   }, [projectId, date])
   useEffect(() => { load() }, [load])
 
+  // Weather is only available for today (wttr.in's free tier has no history).
+  // Fetch when we have a postcode and the diary date IS today; otherwise clear.
+  useEffect(() => {
+    const todayStr = new Date().toISOString().slice(0, 10)
+    if (!data?.project?.postcode || date !== todayStr) {
+      setWeather(null)
+      return
+    }
+    setWeatherLoading(true)
+    fetch(`/api/weather?postcode=${encodeURIComponent(data.project.postcode)}`)
+      .then(r => r.ok ? r.json() : null)
+      .then(w => { if (w && !w.error) setWeather(w) })
+      .catch(() => {})
+      .finally(() => setWeatherLoading(false))
+  }, [data?.project?.postcode, date])
+
   const shiftDay = (delta: number) => {
     const d = new Date(date)
     d.setDate(d.getDate() + delta)
@@ -74,6 +92,7 @@ export default function SiteDiaryPage() {
     const text = [
       `Site Diary — ${data.project.name}`,
       `${niceDate}`,
+      ...(weather && isToday ? [`Weather: ${weather.icon} ${Math.round(weather.tempC)}°C · ${weather.condition} · wind ${Math.round(weather.windKph)} km/h ${weather.windDir}${weather.precipMm > 0 ? ` · ${weather.precipMm.toFixed(1)}mm rain` : ''}`] : []),
       ``,
       `${sum.hoursTotal.toFixed(1)} hours · ${sum.peopleOnSite} people on site`,
       `${sum.snagsRaised} snag${sum.snagsRaised === 1 ? '' : 's'} raised · ${sum.snagsClosed} closed`,
@@ -135,6 +154,29 @@ export default function SiteDiaryPage() {
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : data ? (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          {/* Weather card — today only. Hidden silently for past days (wttr.in has no free history). */}
+          {(weather || weatherLoading) && isToday && (
+            <div style={{ background: 'linear-gradient(135deg, #1e3a5f, #152641)', borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, border: '0.5px solid rgba(96,165,250,0.18)' }}>
+              {weatherLoading && !weather ? (
+                <div style={{ fontFamily: SF, fontSize: 13, color: '#8ea8c5' }}>Checking weather…</div>
+              ) : weather ? (
+                <>
+                  <div style={{ fontSize: 32 }}>{weather.icon}</div>
+                  <div style={{ flex: 1 }}>
+                    <div style={{ fontFamily: SF, fontSize: 11, color: '#60a5fa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Now on site</div>
+                    <div style={{ fontFamily: SF, fontSize: 18, color: '#eef3fa', fontWeight: 700, marginTop: 2 }}>
+                      {Math.round(weather.tempC)}°C · {weather.condition}
+                    </div>
+                    <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 2 }}>
+                      Wind {Math.round(weather.windKph)} km/h {weather.windDir}
+                      {weather.precipMm > 0 ? ` · ${weather.precipMm.toFixed(1)}mm rain` : ''}
+                    </div>
+                  </div>
+                </>
+              ) : null}
+            </div>
+          )}
+
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
             <Kpi icon={<IcClock size={14} color="#10b981" />} label="Hours" value={data.summary.hoursTotal.toFixed(1)} color="#10b981" />
             <Kpi icon={<IcTeam size={14} color="#3b82f6" />} label="On site" value={String(data.summary.peopleOnSite)} color="#3b82f6" />

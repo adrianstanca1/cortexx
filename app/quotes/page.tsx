@@ -483,6 +483,14 @@ export default function QuotesPage() {
               <button onClick={() => sendByEmail(activeQuote)} style={{ ...statusBtn('#06b6d4'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcSend size={12} color="#fff" /> {activeQuote.status === 'draft' ? 'Send (mark sent)' : 'Email again'}
               </button>
+              <a
+                href={`/api/quotes/${activeQuote.id}/pdf`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ ...statusBtn('#8b5cf6'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, textDecoration: 'none' }}
+              >
+                <IcDoc size={12} color="#8b5cf6" /> Download PDF
+              </a>
               {activeQuote.status === 'sent' && (
                 <>
                   <button onClick={() => changeStatus(activeQuote, 'accepted')} style={statusBtn('#22c55e')}>Mark accepted</button>
