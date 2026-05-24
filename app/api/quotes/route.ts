@@ -114,7 +114,8 @@ export async function POST(req: NextRequest) {
 
     // Sequential QTE number — global (not per-customer)
     const last = await prisma.quote.findFirst({ orderBy: { createdAt: 'desc' }, select: { number: true } })
-    const lastNum = last ? parseInt(last.number.split('-').pop() || '0') : 0
+    const parsed = last ? parseInt(last.number.split('-').pop() || '0', 10) : 0
+    const lastNum = Number.isFinite(parsed) ? parsed : 0
     const number = `QTE-${String(lastNum + 1).padStart(4, '0')}`
 
     const status = ALLOWED_STATUS.has(body.status) ? body.status : 'draft'

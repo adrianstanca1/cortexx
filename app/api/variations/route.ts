@@ -76,7 +76,8 @@ export async function POST(req: NextRequest) {
       orderBy: { createdAt: 'desc' },
       select: { number: true },
     })
-    const lastNum = last ? parseInt(last.number.split('-').pop() || '0') : 0
+    const parsed = last ? parseInt(last.number.split('-').pop() || '0', 10) : 0
+    const lastNum = Number.isFinite(parsed) ? parsed : 0
     const number = `VAR-${String(lastNum + 1).padStart(3, '0')}`
 
     const status = ALLOWED_STATUS.has(body.status) ? body.status : 'draft'
