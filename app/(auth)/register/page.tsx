@@ -39,7 +39,9 @@ export default function RegisterPage() {
       setError('Account created, but sign-in failed. Try logging in manually.')
       return
     }
-    router.push('/dashboard')
+    // Fresh accounts have no org yet — send to onboarding (which forwards to
+    // /dashboard for users who already have a workspace).
+    router.push('/onboarding')
     router.refresh()
   }
 
