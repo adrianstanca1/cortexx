@@ -1,5 +1,6 @@
 'use client'
 import { useState, useEffect, useCallback, useRef } from 'react'
+import { subscribe } from './broadcast'
 import type { DashboardData } from './types'
 
 export function useDashboardData() {
@@ -52,12 +53,19 @@ export function useDashboardData() {
     }
     connect()
 
+    // BroadcastChannel — other tabs in the same browser can hint at
+    // changes faster than the SSE round-trip. Refetch on any scope.
+    const unsubscribe = subscribe(msg => {
+      if (msg.type === 'data:invalidate') refetchSoon()
+    })
+
     return () => {
       document.removeEventListener('visibilitychange', onVisibility)
       clearInterval(interval)
       if (refetchTimer.current) clearTimeout(refetchTimer.current)
       if (reconnectTimer) clearTimeout(reconnectTimer)
       es?.close()
+      unsubscribe()
     }
   }, [fetchData, refetchSoon])
 

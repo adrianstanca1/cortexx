@@ -7,6 +7,7 @@ import Avatar from '@/components/ui/Avatar'
 import { IcSearch, IcPlus, IcChevR, IcX } from '@/components/ui/Icons'
 import Toast from '@/components/ui/Toast'
 import { useModalEffects } from '@/lib/useModalEffects'
+import { broadcastInvalidate, subscribe } from '@/lib/broadcast'
 import type { Project } from '@/lib/types'
 
 const statusColor: Record<string, string> = {
@@ -45,6 +46,15 @@ export default function ProjectsPage() {
   }
 
   useEffect(() => { load(showArchived) }, [showArchived])
+
+  // Cross-tab sync — refetch when another tab broadcasts a projects change.
+  useEffect(() => {
+    return subscribe(msg => {
+      if (msg.type === 'data:invalidate' && (msg.scope === 'projects' || msg.scope === 'all')) {
+        load(showArchived)
+      }
+    })
+  }, [showArchived])
 
   useEffect(() => {
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1') {
@@ -95,6 +105,7 @@ export default function ProjectsPage() {
       setShowModal(false)
       setForm({ name: '', clientName: '', address: '', postcode: '', status: 'active', budget: '', startDate: '', endDate: '' })
       setToast({ msg: 'Project created' })
+      broadcastInvalidate('projects')
     } catch {
       setToast({ msg: 'Failed to create project', type: 'error' })
     } finally {

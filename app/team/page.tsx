@@ -8,6 +8,7 @@ import Avatar from '@/components/ui/Avatar'
 import { IcCheck, IcClock, IcPlus, IcX, IcEdit } from '@/components/ui/Icons'
 import Toast from '@/components/ui/Toast'
 import { useModalEffects } from '@/lib/useModalEffects'
+import { broadcastInvalidate, subscribe } from '@/lib/broadcast'
 import type { TeamMember } from '@/lib/types'
 
 const AVATAR_COLORS = ['#2563eb', '#f59e0b', '#10b981', '#8b5cf6', '#ef4444', '#06b6d4', '#ec4899', '#84cc16']
@@ -56,15 +57,28 @@ export default function TeamPage() {
     textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
   }
 
-  useEffect(() => {
+  const loadTeam = () => {
     fetch('/api/team')
       .then(r => { if (!r.ok) throw new Error('Failed to load team'); return r.json() })
       .then(data => { setTeam(data.team || []); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
+  }
+
+  useEffect(() => {
+    loadTeam()
     fetch('/api/projects')
       .then(r => r.json())
       .then(d => setProjects((d.projects || []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }))))
       .catch(() => {})
+  }, [])
+
+  // Cross-tab sync — refetch when another tab broadcasts a team change.
+  useEffect(() => {
+    return subscribe(msg => {
+      if (msg.type === 'data:invalidate' && (msg.scope === 'team' || msg.scope === 'all')) {
+        loadTeam()
+      }
+    })
   }, [])
 
   useEffect(() => {
@@ -134,6 +148,7 @@ export default function TeamPage() {
       setShowModal(false)
       setForm({ name: '', role: '', email: '', phone: '', dailyRate: '', avatarColor: AVATAR_COLORS[0] })
       setToast({ msg: `${newMember.name} added` })
+      broadcastInvalidate('team')
     } catch { setToast({ msg: 'Failed to add member', type: 'error' }) }
     finally { setSaving(false) }
   }
@@ -174,6 +189,7 @@ export default function TeamPage() {
       setShowEditModal(false)
       setEditTarget(null)
       setToast({ msg: 'Member updated' })
+      broadcastInvalidate('team')
     } catch { setToast({ msg: 'Failed to update member', type: 'error' }) }
     finally { setSavingEdit(false) }
   }
@@ -188,6 +204,7 @@ export default function TeamPage() {
       setEditTarget(null)
       setConfirmDelete(false)
       setToast({ msg: 'Member removed' })
+      broadcastInvalidate('team')
     } catch { setToast({ msg: 'Failed to remove member', type: 'error' }) }
   }
 

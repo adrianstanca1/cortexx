@@ -9,6 +9,7 @@ import { IcCheck, IcClock, IcPlus, IcX, IcSearch, IcTrash, IcEdit } from '@/comp
 import Toast from '@/components/ui/Toast'
 import CommentsThread from '@/components/ui/CommentsThread'
 import { useModalEffects } from '@/lib/useModalEffects'
+import { broadcastInvalidate, subscribe } from '@/lib/broadcast'
 import type { Task } from '@/lib/types'
 
 // Semantic priority colors: critical=red, high=orange, medium=blue, low=gray
@@ -94,6 +95,7 @@ export default function TasksPage() {
       }
       setToast({ msg: `${data.updated} task${data.updated === 1 ? '' : 's'} ${action === 'delete' ? 'deleted' : action === 'complete' ? 'completed' : 'reopened'}` })
       exitSelectMode()
+      broadcastInvalidate('tasks')
     } catch {
       setToast({ msg: 'Bulk action failed', type: 'error' })
     } finally {
@@ -104,7 +106,7 @@ export default function TasksPage() {
   useModalEffects(showModal, () => setShowModal(false))
   useModalEffects(!!editTarget, () => setEditTarget(null))
 
-  useEffect(() => {
+  const loadTasks = () => {
     fetch('/api/tasks')
       .then(r => {
         if (!r.ok) throw new Error('Failed to load tasks')
@@ -115,6 +117,17 @@ export default function TasksPage() {
         setLoading(false)
       })
       .catch(e => { setError(e.message); setLoading(false) })
+  }
+
+  useEffect(() => { loadTasks() }, [])
+
+  // Cross-tab sync — refetch when another tab broadcasts a tasks change.
+  useEffect(() => {
+    return subscribe(msg => {
+      if (msg.type === 'data:invalidate' && (msg.scope === 'tasks' || msg.scope === 'all')) {
+        loadTasks()
+      }
+    })
   }, [])
 
   useEffect(() => {
@@ -164,6 +177,7 @@ export default function TasksPage() {
       setShowModal(false)
       setForm({ title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '', category: '' })
       setToast({ msg: 'Task created' })
+      broadcastInvalidate('tasks')
     } catch {
       setToast({ msg: 'Failed to create task', type: 'error' })
     } finally {
@@ -228,6 +242,7 @@ export default function TasksPage() {
       if (!res.ok) throw new Error('Failed')
       setTasks(prev => prev.filter(t => t.id !== task.id))
       setToast({ msg: 'Task deleted' })
+      broadcastInvalidate('tasks')
     } catch {
       setToast({ msg: 'Failed to delete task', type: 'error' })
     }
@@ -282,6 +297,7 @@ export default function TasksPage() {
       setTasks(prev => prev.map(t => t.id === editTarget.id ? updated : t))
       setEditTarget(null)
       setToast({ msg: 'Task updated' })
+      broadcastInvalidate('tasks')
     } catch {
       setToast({ msg: 'Failed to update task', type: 'error' })
     } finally {
