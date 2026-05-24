@@ -58,43 +58,33 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
     setAiLoading(true)
     setAiResponse(null)
 
-    // Build context-aware response from real data
-    await new Promise(r => setTimeout(r, 700))
-    const activeSites = (data?.projects || []).filter(p => p.status === 'active').length
-    const openTasks = tasks.length
-    const owed = data?.stats?.owed ?? 0
-    const overdueInvoices = invoices.filter(i => i.status === 'overdue').length
-    const hoursThisWeek = data?.stats?.hoursThisWeek ?? 0
-
-    let response = ''
-    const ql = q.toLowerCase()
-    if (ql.includes('task') || ql.includes('todo') || ql.includes('do')) {
-      const topTask = tasks[0]
-      response = topTask
-        ? `You have ${openTasks} open task${openTasks !== 1 ? 's' : ''}. Top priority: "${topTask.title}"${topTask.project ? ` on ${topTask.project.name}` : ''}.`
-        : 'No open tasks — all clear!'
-    } else if (ql.includes('money') || ql.includes('invoice') || ql.includes('payment') || ql.includes('owed') || ql.includes('cash')) {
-      response = `£${(owed/1000).toFixed(0)}k outstanding across ${invoices.filter(i => i.status !== 'paid').length} invoices.${overdueInvoices > 0 ? ` ⚠ ${overdueInvoices} overdue.` : ' All current.'}`
-    } else if (ql.includes('site') || ql.includes('project')) {
-      response = `${activeSites} active site${activeSites !== 1 ? 's' : ''}. ${(data?.projects || []).map(p => `${p.name} (${p.progress}%)`).join(', ')}.`
-    } else if (ql.includes('team') || ql.includes('staff') || ql.includes('hours')) {
-      response = `${(data?.team || []).length} team members logged ${hoursThisWeek}h this week. ${(data?.team || []).filter(m => m.onSite).length} on site now.`
-    } else if (ql.includes('status') || ql.includes('summary') || ql.includes('overview')) {
-      response = `${activeSites} active sites · ${openTasks} open tasks · £${(owed/1000).toFixed(0)}k owed · ${hoursThisWeek}h logged this week.`
-    } else {
-      response = `${activeSites} active sites running. ${openTasks} open tasks — top: "${tasks[0]?.title || 'none'}". £${(owed/1000).toFixed(0)}k outstanding.`
+    // Real call to the local Ollama LLM. /api/ask builds a workspace-context
+    // system prompt server-side from live project/snag/timesheet/activity
+    // data — no need to duplicate that here.
+    try {
+      const res = await fetch('/api/ask', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ message: q, history: [] }),
+      })
+      const json = await res.json().catch(() => null)
+      if (!res.ok) {
+        if (json?.code === 'LLM_UNAVAILABLE') {
+          setAiResponse(`Cortex AI is offline. Install Ollama on the server: \`curl -fsSL https://ollama.com/install.sh | sh\` then \`ollama pull ${json.config?.model || 'llama3.2:3b'}\`.`)
+        } else {
+          setAiResponse(json?.error || 'Failed to reach Cortex AI.')
+        }
+        setAiQuery('')
+        return
+      }
+      setAiResponse(json?.content || '(empty response)')
+      setAiQuery('')
+    } catch (e) {
+      setAiResponse(e instanceof Error ? `Network error: ${e.message}` : 'Network error.')
+      setAiQuery('')
+    } finally {
+      setAiLoading(false)
     }
-
-    setAiResponse(response)
-    setAiQuery('')
-    setAiLoading(false)
-
-    // Log the query as activity
-    fetch('/api/activity', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ actorName: 'Cortex AI', actorType: 'ai', action: `answered: "${q}"`, iconType: 'spark' }),
-    }).catch(() => {})
   }
 
   return (

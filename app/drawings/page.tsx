@@ -52,13 +52,58 @@ export default function DrawingsPage() {
   const [activeDwg, setActiveDwg] = useState<Drawing | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploadingRev, setUploadingRev] = useState(false)
+
+  // AI revision compare state — scoped to the active drawing's detail sheet.
+  const [compareSelection, setCompareSelection] = useState<string[]>([])
+  const [comparing, setComparing] = useState(false)
+  type RevCompareResult = {
+    summary: string
+    changes: { description: string; severity: 'minor' | 'moderate' | 'major'; affects?: string }[]
+    designIntent: 'preserved' | 'modified' | 'unclear'
+    reviewRecommended: boolean
+    notes?: string
+    earlier?: { revision: string }
+    later?: { revision: string }
+  }
+  const [revCompareResult, setRevCompareResult] = useState<RevCompareResult | null>(null)
+  const [revCompareError, setRevCompareError] = useState<string | null>(null)
+
+  const runRevCompare = async (drawingId: string) => {
+    if (compareSelection.length !== 2) return
+    setComparing(true)
+    setRevCompareResult(null)
+    setRevCompareError(null)
+    try {
+      const res = await fetch(`/api/drawings/${drawingId}/compare`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aRev: compareSelection[0], bRev: compareSelection[1] }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        const msg = json.code === 'VISION_UNAVAILABLE'
+          ? `Vision model not installed. Run: ollama pull ${json.config?.model || 'moondream'}`
+          : json.code === 'UNREADABLE_FORMAT'
+          ? json.error
+          : json.error || 'Failed to compare revisions'
+        setRevCompareError(msg)
+        return
+      }
+      setRevCompareResult(json)
+      setToast({ msg: `Compared — ${(json.changes || []).length} change${(json.changes || []).length === 1 ? '' : 's'} flagged` })
+    } catch (e) {
+      setRevCompareError(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setComparing(false)
+    }
+  }
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const revFileInput = useRef<HTMLInputElement>(null)
   const [form, setForm] = useState({ projectId: '', number: '', title: '', discipline: 'Architectural', notes: '' })
   const [revLabel, setRevLabel] = useState('A')
   const [revNotes, setRevNotes] = useState('')
 
-  useModalEffects(showAdd || activeDwg !== null, () => { setShowAdd(false); setActiveDwg(null) })
+  useModalEffects(showAdd || activeDwg !== null, () => { setShowAdd(false); setActiveDwg(null); setCompareSelection([]); setRevCompareResult(null); setRevCompareError(null) })
 
   const load = useCallback(() => {
     const params = new URLSearchParams()
@@ -322,28 +367,94 @@ export default function DrawingsPage() {
             </div>
 
             <div>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6 }}>Revisions ({activeDwg.revisions.length})</div>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
+                <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Revisions ({activeDwg.revisions.length})</div>
+                {activeDwg.revisions.length >= 2 && (
+                  <button
+                    onClick={() => setCompareSelection(prev => prev.length === 0 && activeDwg.revisions.length >= 2 ? [activeDwg.revisions[1].id, activeDwg.revisions[0].id] : [])}
+                    style={{ background: compareSelection.length > 0 ? '#8b5cf6' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: compareSelection.length > 0 ? '#fff' : '#a78bfa', borderRadius: 8, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                  >
+                    {compareSelection.length > 0 ? `Comparing ${compareSelection.length}/2` : '✨ Compare revs'}
+                  </button>
+                )}
+              </div>
               {activeDwg.revisions.length === 0 ? (
                 <div style={{ padding: 12, fontFamily: SF, fontSize: 12, color: '#52749a', textAlign: 'center', background: '#1a2f4e', borderRadius: 8 }}>No revisions uploaded yet</div>
               ) : (
                 <div style={{ background: '#1a2f4e', borderRadius: 10, overflow: 'hidden' }}>
-                  {activeDwg.revisions.map((r, i) => (
-                    <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: i < activeDwg.revisions.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none' }}>
-                      <div style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 8, background: i === 0 ? '#22c55e22' : '#52749a22', color: i === 0 ? '#22c55e' : '#52749a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'ui-monospace, monospace', fontSize: 11, fontWeight: 700 }}>{r.revision}</div>
-                      <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.fileName || 'No file'}</div>
-                        <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', marginTop: 1 }}>
-                          {new Date(r.uploadedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
-                          {r.fileSize !== null && ` · ${(r.fileSize / 1024).toFixed(0)} KB`}
-                          {i === 0 && <span style={{ color: '#22c55e', fontWeight: 700, marginLeft: 4 }}>· CURRENT</span>}
+                  {activeDwg.revisions.map((r, i) => {
+                    const selIdx = compareSelection.indexOf(r.id)
+                    const isSel = selIdx !== -1
+                    return (
+                      <div key={r.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', borderBottom: i < activeDwg.revisions.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none', background: isSel ? 'rgba(139,92,246,0.10)' : 'transparent' }}>
+                        <div style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 8, background: i === 0 ? '#22c55e22' : '#52749a22', color: i === 0 ? '#22c55e' : '#52749a', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'ui-monospace, monospace', fontSize: 11, fontWeight: 700 }}>{r.revision}</div>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <div style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.fileName || 'No file'}</div>
+                          <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', marginTop: 1 }}>
+                            {new Date(r.uploadedAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            {r.fileSize !== null && ` · ${(r.fileSize / 1024).toFixed(0)} KB`}
+                            {i === 0 && <span style={{ color: '#22c55e', fontWeight: 700, marginLeft: 4 }}>· CURRENT</span>}
+                          </div>
                         </div>
+                        {compareSelection.length > 0 && r.fileUrl && (
+                          <button
+                            onClick={() => {
+                              setCompareSelection(prev => {
+                                if (prev.includes(r.id)) return prev.filter(x => x !== r.id)
+                                if (prev.length >= 2) return [prev[1], r.id]
+                                return [...prev, r.id]
+                              })
+                            }}
+                            style={{ background: isSel ? '#8b5cf6' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: isSel ? '#fff' : '#a78bfa', borderRadius: 6, padding: '4px 8px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', minWidth: 28 }}
+                          >
+                            {isSel ? selIdx + 1 : '+'}
+                          </button>
+                        )}
+                        {r.fileUrl && (
+                          <a href={r.fileUrl} target="_blank" rel="noreferrer" style={{ background: 'rgba(37,99,235,0.2)', border: '0.5px solid rgba(37,99,235,0.4)', color: '#60a5fa', borderRadius: 6, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>Open</a>
+                        )}
                       </div>
-                      {r.fileUrl && (
-                        <a href={r.fileUrl} target="_blank" rel="noreferrer" style={{ background: 'rgba(37,99,235,0.2)', border: '0.5px solid rgba(37,99,235,0.4)', color: '#60a5fa', borderRadius: 6, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>Open</a>
-                      )}
-                    </div>
-                  ))}
+                    )
+                  })}
                 </div>
+              )}
+              {compareSelection.length === 2 && (
+                <button
+                  onClick={() => runRevCompare(activeDwg.id)}
+                  disabled={comparing}
+                  style={{ marginTop: 8, width: '100%', background: '#8b5cf6', border: 'none', color: '#fff', borderRadius: 10, padding: '10px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: comparing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                >
+                  ✨ {comparing ? 'Comparing revisions… (30–90s)' : 'Run AI compare'}
+                </button>
+              )}
+              {revCompareResult && (
+                <div style={{ marginTop: 10, padding: '12px 14px', background: 'rgba(139,92,246,0.08)', borderRadius: 10, borderLeft: '3px solid #a78bfa' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6, flexWrap: 'wrap' }}>
+                    <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.5 }}>AI comparison</span>
+                    <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#8ea8c5' }}>
+                      {revCompareResult.earlier?.revision} → {revCompareResult.later?.revision}
+                    </span>
+                    <span style={{ padding: '2px 8px', borderRadius: 99, background: revCompareResult.designIntent === 'preserved' ? 'rgba(34,197,94,0.18)' : revCompareResult.designIntent === 'modified' ? 'rgba(245,158,11,0.18)' : 'rgba(82,116,154,0.18)', color: revCompareResult.designIntent === 'preserved' ? '#22c55e' : revCompareResult.designIntent === 'modified' ? '#f59e0b' : '#8ea8c5', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{revCompareResult.designIntent}</span>
+                    {revCompareResult.reviewRecommended && <span style={{ padding: '2px 8px', borderRadius: 99, background: 'rgba(239,68,68,0.18)', color: '#ef4444', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>review</span>}
+                  </div>
+                  {revCompareResult.summary && <div style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', marginBottom: 8, lineHeight: 1.4 }}>{revCompareResult.summary}</div>}
+                  {revCompareResult.changes.length > 0 && (
+                    <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                      {revCompareResult.changes.map((c, i) => (
+                        <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                          <span style={{ fontFamily: SF, fontSize: 9, fontWeight: 700, color: c.severity === 'major' ? '#ef4444' : c.severity === 'moderate' ? '#f59e0b' : '#52749a', textTransform: 'uppercase', letterSpacing: 0.4, padding: '1px 5px', borderRadius: 3, background: c.severity === 'major' ? 'rgba(239,68,68,0.18)' : c.severity === 'moderate' ? 'rgba(245,158,11,0.18)' : 'rgba(82,116,154,0.18)', flexShrink: 0, marginTop: 1 }}>{c.severity}</span>
+                          <span style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', lineHeight: 1.35 }}>
+                            {c.description}{c.affects && <span style={{ color: '#8ea8c5' }}> · {c.affects}</span>}
+                          </span>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                  {revCompareResult.notes && <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 6, fontStyle: 'italic' }}>Note: {revCompareResult.notes}</div>}
+                </div>
+              )}
+              {revCompareError && (
+                <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 10, fontFamily: SF, fontSize: 12, color: '#ef4444' }}>{revCompareError}</div>
               )}
             </div>
 
