@@ -1,0 +1,81 @@
+name: Debug VPS
+on:
+  workflow_dispatch:
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+          ssh-keyscan -H 72.62.132.43 >> ~/.ssh/known_hosts 2>/dev/null || true
+      - name: VPS diagnostics
+        env:
+          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
+          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
+          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
+          SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
+        run: |
+          echo "Local NEXTAUTH_SECRET length: ${#NEXTAUTH_SECRET}"
+          echo "Local ADMIN_EMAIL: $ADMIN_EMAIL"
+          echo "Local ADMIN_PASSWORD length: ${#ADMIN_PASSWORD}"
+          echo "Local SEED_TOKEN length: ${#SEED_TOKEN}"
+          echo ""
+          {
+            echo "=== Remote env check ==="
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
+              NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
+              ADMIN_EMAIL="$ADMIN_EMAIL" \
+              ADMIN_PASSWORD="$ADMIN_PASSWORD" \
+              SEED_TOKEN="$SEED_TOKEN" \
+              'bash -s' << 'REMOTE'
+              echo "Remote env vars (length only):"
+              echo "  NEXTAUTH_SECRET: ${#NEXTAUTH_SECRET}"
+              echo "  ADMIN_EMAIL: $ADMIN_EMAIL"
+              echo "  ADMIN_PASSWORD: ${#ADMIN_PASSWORD}"
+              echo "  SEED_TOKEN: ${#SEED_TOKEN}"
+          REMOTE
+
+            echo ""
+            echo "=== System Postgres check ==="
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+              echo "PostgreSQL version: $(psql --version 2>&1 | head -1)"
+              echo "PostgreSQL status: $(systemctl is-active postgresql 2>/dev/null || echo unknown)"
+              echo "Databases:"
+              sudo -u postgres psql -tAc "SELECT datname FROM pg_database WHERE datistemplate=false;" 2>/dev/null || echo "Could not list databases"
+              echo "Users:"
+              sudo -u postgres psql -tAc "SELECT usename FROM pg_user;" 2>/dev/null || echo "Could not list users"
+          REMOTE
+
+            echo ""
+            echo "=== App status ==="
+            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+              echo "PM2 processes:"
+              pm2 list 2>/dev/null || echo "pm2 not found"
+              echo ""
+              echo "App dir:"
+              ls -la /opt/cortexx/ 2>/dev/null | head -20 || echo "/opt/cortexx not found"
+              echo ""
+              echo "App health:"
+              curl -s --max-time 10 http://localhost:3010/api/health 2>/dev/null || echo "Health check failed"
+              echo ""
+              echo ".env.production (keys only):"
+              grep -E "^[A-Z_]+=" /opt/cortexx/.env.production 2>/dev/null | sed 's/=.*/=<redacted>/' || echo "No .env.production"
+              echo ""
+              echo "Nginx status: $(systemctl is-active nginx 2>/dev/null || echo unknown)"
+              echo ""
+              echo "Certbot cert:"
+              ls /etc/letsencrypt/live/cortexbuildpro.com/ 2>/dev/null || echo "No cert found"
+          REMOTE
+
+          } 2>&1 | tee debug.txt
+          git config user.email "actions@github.com"
+          git config user.name "GitHub Actions"
+          git add debug.txt
+          git commit -m "chore: deploy debug [skip ci]" || true
+          git push || true
