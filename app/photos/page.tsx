@@ -4,7 +4,9 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
-import { IcCamera, IcChevL, IcPlus } from '@/components/ui/Icons'
+import { IcCamera, IcChevL, IcPlus, IcSpark } from '@/components/ui/Icons'
+
+interface PhotoTags { tags: string[]; category: string; summary: string; loading?: boolean; error?: string }
 
 interface PhotoDoc {
   id: string
@@ -28,7 +30,28 @@ export default function PhotosPage() {
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [photoTags, setPhotoTags] = useState<Record<string, PhotoTags>>({})
+  const [activePhoto, setActivePhoto] = useState<PhotoDoc | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const tagPhoto = async (photoId: string) => {
+    setPhotoTags(prev => ({ ...prev, [photoId]: { ...(prev[photoId] || { tags: [], category: '', summary: '' }), loading: true, error: undefined } }))
+    try {
+      const res = await fetch(`/api/documents/${photoId}/tag`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) {
+        const msg = json.code === 'VISION_UNAVAILABLE'
+          ? `Vision model not installed. Run: ollama pull ${json.config?.model || 'moondream'}`
+          : json.error || 'Failed to tag'
+        setPhotoTags(prev => ({ ...prev, [photoId]: { tags: [], category: '', summary: '', loading: false, error: msg } }))
+        return
+      }
+      setPhotoTags(prev => ({ ...prev, [photoId]: { tags: json.tags || [], category: json.category || 'other', summary: json.summary || '', loading: false } }))
+      setToast({ msg: `Tagged: ${(json.tags || []).join(', ').slice(0, 60)}` })
+    } catch (e) {
+      setPhotoTags(prev => ({ ...prev, [photoId]: { tags: [], category: '', summary: '', loading: false, error: e instanceof Error ? e.message : 'Failed' } }))
+    }
+  }
 
   const load = useCallback(() => {
     fetch('/api/documents?type=photo&take=100')
@@ -138,17 +161,87 @@ export default function PhotosPage() {
         </div>
       ) : (
         <div style={{ padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
-          {filtered.map(p => (
-            <a key={p.id} href={p.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', position: 'relative', aspectRatio: '1 / 1', borderRadius: 10, overflow: 'hidden', background: '#0c1a2e', textDecoration: 'none' }}>
-              {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src={p.url!} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
-              {p.project && (
-                <span style={{ position: 'absolute', bottom: 4, left: 4, right: 4, fontFamily: SF, fontSize: 9, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,0.55)', padding: '2px 6px', borderRadius: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                  {p.project.name}
-                </span>
-              )}
-            </a>
-          ))}
+          {filtered.map(p => {
+            const tags = photoTags[p.id]
+            return (
+              <div key={p.id} style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: 10, overflow: 'hidden', background: '#0c1a2e' }}>
+                <button
+                  onClick={() => setActivePhoto(p)}
+                  aria-label={`Open photo ${p.name}`}
+                  style={{ position: 'absolute', inset: 0, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
+                >
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={p.url!} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
+                </button>
+                <button
+                  onClick={(e) => { e.stopPropagation(); tagPhoto(p.id) }}
+                  disabled={tags?.loading}
+                  aria-label="Tag with AI"
+                  style={{ position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: 6, background: tags?.tags?.length ? 'rgba(139,92,246,0.85)' : 'rgba(0,0,0,0.55)', border: tags?.tags?.length ? 'none' : '0.5px solid rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: tags?.loading ? 'wait' : 'pointer', padding: 0 }}
+                >
+                  {tags?.loading ? (
+                    <span style={{ fontFamily: SF, fontSize: 9, color: '#fff', fontWeight: 700 }}>…</span>
+                  ) : (
+                    <IcSpark size={12} color="#fff" />
+                  )}
+                </button>
+                {p.project && (
+                  <span style={{ position: 'absolute', bottom: 4, left: 4, right: 4, fontFamily: SF, fontSize: 9, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,0.55)', padding: '2px 6px', borderRadius: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }}>
+                    {p.project.name}
+                  </span>
+                )}
+              </div>
+            )
+          })}
+        </div>
+      )}
+
+      {/* Photo lightbox + tags */}
+      {activePhoto && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(6,16,30,0.95)', display: 'flex', flexDirection: 'column' }}>
+          <button onClick={() => setActivePhoto(null)} aria-label="Close" style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#fff', fontFamily: SF, fontSize: 18, cursor: 'pointer', zIndex: 1 }}>×</button>
+          <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, minHeight: 0 }}>
+            {/* eslint-disable-next-line @next/next/no-img-element */}
+            <img src={activePhoto.url!} alt={activePhoto.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }} />
+          </div>
+          <div style={{ background: '#152641', padding: '16px 20px 24px', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12, marginBottom: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 700, color: '#eef3fa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{activePhoto.name}</div>
+                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
+                  {activePhoto.project?.name || 'No project'} · {new Date(activePhoto.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
+                </div>
+              </div>
+              <button
+                onClick={() => tagPhoto(activePhoto.id)}
+                disabled={photoTags[activePhoto.id]?.loading}
+                style={{ background: 'rgba(139,92,246,0.20)', color: '#a78bfa', border: '0.5px solid rgba(139,92,246,0.5)', borderRadius: 10, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: photoTags[activePhoto.id]?.loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+              >
+                <IcSpark size={12} color="#a78bfa" />
+                {photoTags[activePhoto.id]?.loading ? 'Tagging…' : photoTags[activePhoto.id]?.tags?.length ? 'Re-tag' : 'Tag with AI'}
+              </button>
+            </div>
+            {photoTags[activePhoto.id] && !photoTags[activePhoto.id].loading && (
+              <div>
+                {photoTags[activePhoto.id].error ? (
+                  <div style={{ fontFamily: SF, fontSize: 12, color: '#ef4444' }}>{photoTags[activePhoto.id].error}</div>
+                ) : photoTags[activePhoto.id].tags.length > 0 || photoTags[activePhoto.id].summary ? (
+                  <>
+                    <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginBottom: 6 }}>
+                      <span style={{ color: '#a78bfa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>{photoTags[activePhoto.id].category.replace('_', ' ')}</span>
+                      {photoTags[activePhoto.id].summary && <> · {photoTags[activePhoto.id].summary}</>}
+                    </div>
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4 }}>
+                      {photoTags[activePhoto.id].tags.map(t => (
+                        <span key={t} style={{ padding: '3px 8px', borderRadius: 99, background: 'rgba(139,92,246,0.13)', color: '#c4b5fd', fontFamily: SF, fontSize: 11, fontWeight: 600 }}>{t.replace('_', ' ')}</span>
+                      ))}
+                    </div>
+                  </>
+                ) : null}
+              </div>
+            )}
+            <a href={activePhoto.url!} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: 10, fontFamily: SF, fontSize: 11, color: '#52749a', textDecoration: 'underline' }}>Open original ↗</a>
+          </div>
         </div>
       )}
 
