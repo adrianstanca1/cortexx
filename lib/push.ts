@@ -46,16 +46,33 @@ export interface PushPayload {
 }
 
 /**
+ * Notification category — used to honour per-user notification preferences.
+ * Subscriptions belonging to users who have disabled the category's push
+ * channel are filtered out before delivery.
+ */
+export type PushCategory = 'tasks' | 'safety' | 'invoices' | 'announcements'
+
+const CATEGORY_TO_PREF: Record<PushCategory, 'tasksPush' | 'safetyPush' | 'invoicesPush' | 'announcementsPush'> = {
+  tasks: 'tasksPush',
+  safety: 'safetyPush',
+  invoices: 'invoicesPush',
+  announcements: 'announcementsPush',
+}
+
+/**
  * Send a push notification to one or more subscriptions. Stale
  * subscriptions (410 Gone / 404) are auto-deleted from the DB.
  *
  * Pass `userId` to dispatch to every device that user has subscribed,
- * or omit and pass `endpoints` for ad-hoc targeting.
+ * or omit and pass `endpoints` for ad-hoc targeting. When `category` is
+ * provided, subscriptions belonging to users who have disabled that
+ * category's push channel are filtered out.
  */
 export async function sendPush(opts: {
   payload: PushPayload
   userId?: string
   endpoints?: string[]
+  category?: PushCategory
 }): Promise<{ delivered: number; pruned: number; skipped: boolean }> {
   if (!isPushConfigured()) return { delivered: 0, pruned: 0, skipped: true }
 
@@ -66,6 +83,24 @@ export async function sendPush(opts: {
         ? { endpoint: { in: opts.endpoints } }
         : {},
   })
+
+  // Honour per-user notification preferences when a category is specified.
+  // Subscriptions without a userId (legacy / not signed-in) pass through.
+  let allowedSubs = subs
+  if (opts.category) {
+    const prefField = CATEGORY_TO_PREF[opts.category]
+    const userIds = Array.from(new Set(subs.map(s => s.userId).filter(Boolean) as string[]))
+    if (userIds.length > 0) {
+      const prefs = await prisma.notificationPreference.findMany({
+        where: { userId: { in: userIds } },
+        select: { userId: true, [prefField]: true } as { userId: true } & Record<typeof prefField, true>,
+      })
+      const disabledUserIds = new Set(
+        prefs.filter(p => (p as Record<string, unknown>)[prefField] === false).map(p => p.userId),
+      )
+      allowedSubs = subs.filter(s => !s.userId || !disabledUserIds.has(s.userId))
+    }
+  }
 
   const body = JSON.stringify({
     title: opts.payload.title.slice(0, 80),
@@ -81,7 +116,7 @@ export async function sendPush(opts: {
   const stale: string[] = []
 
   await Promise.all(
-    subs.map(async sub => {
+    allowedSubs.map(async sub => {
       try {
         await webpush.sendNotification(
           { endpoint: sub.endpoint, keys: { p256dh: sub.p256dh, auth: sub.auth } },
