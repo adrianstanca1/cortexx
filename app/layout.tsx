@@ -1,6 +1,5 @@
 import type { Metadata, Viewport } from 'next'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 import SessionProviderClient from '@/components/SessionProviderClient'
 import AuthedShell from '@/components/ui/AuthedShell'
 import SWRegister from '@/components/ui/SWRegister'
@@ -59,7 +58,7 @@ export const viewport: Viewport = {
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   return (
     <html lang="en" style={{ background: '#06101e' }}>
       <head>
