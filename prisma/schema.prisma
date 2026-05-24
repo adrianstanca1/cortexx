@@ -738,7 +738,7 @@ model Inspection {
   type           String    @default("general") // general, safety, quality, scaffold, electrical
   status         String    @default("draft") // draft, in_progress, passed, failed
   checklistItems Json      @default("[]") // [{ id, label, result: 'pass'|'fail'|'na', note? }]
-  overallResult  String?   // pass, fail
+  overallResult  String? // pass, fail
   conductedBy    String?
   scheduledAt    DateTime?
   completedAt    DateTime?
@@ -753,19 +753,19 @@ model Inspection {
 }
 
 model Meeting {
-  id          String    @id @default(cuid())
+  id          String   @id @default(cuid())
   projectId   String?
   title       String
   location    String?
   scheduledAt DateTime
-  durationMin Int       @default(60)
+  durationMin Int      @default(60)
   attendees   String? // newline-separated names
   minutes     String?
-  actionItems Json      @default("[]") // [{ id, title, assignee?, dueDate? }]
-  status      String    @default("scheduled") // scheduled, completed, cancelled
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  actionItems Json     @default("[]") // [{ id, title, assignee?, dueDate? }]
+  status      String   @default("scheduled") // scheduled, completed, cancelled
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
   @@index([projectId, scheduledAt])
   @@index([status, scheduledAt])
