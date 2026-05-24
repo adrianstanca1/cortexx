@@ -139,6 +139,9 @@ jobs:
             GH_PAT="$GH_PAT" \
             'bash -s' << 'REMOTE'
             set -euo pipefail
+            # Verbose tracing — every command echoes to stderr (visible in
+            # the job log). Remove once the deploy is healthy again.
+            set -x
             APP_DIR=/opt/cortexx
             APP_PORT=3010
             BACKUP_DIR=/opt/cortexx-backups
