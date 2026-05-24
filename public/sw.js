@@ -5,7 +5,7 @@
 //   • Everything else → network only (API calls bypass the SW)
 // Update model: bump CACHE_VERSION below; the new SW takes over on next page load.
 
-const CACHE_VERSION = 'cortexx-v2'
+const CACHE_VERSION = 'cortexx-v3'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 
@@ -85,4 +85,46 @@ self.addEventListener('fetch', (event) => {
       })
     )
   }
+})
+
+// ─── Push notifications ───────────────────────────────────────────────
+// Notifications are delivered by /lib/push.ts on the server. Payload is a
+// JSON string with { title, body, url?, tag?, icon?, badge? }.
+self.addEventListener('push', (event) => {
+  if (!event.data) return
+  let data = {}
+  try {
+    data = event.data.json()
+  } catch {
+    data = { title: 'Cortexx', body: event.data.text() }
+  }
+  const title = (data && data.title) || 'Cortexx'
+  const options = {
+    body: (data && data.body) || '',
+    icon: (data && data.icon) || '/icon-192.png',
+    badge: (data && data.badge) || '/icon-192.png',
+    tag: data && data.tag,
+    data: { url: (data && data.url) || '/' },
+    requireInteraction: false,
+  }
+  event.waitUntil(self.registration.showNotification(title, options))
+})
+
+self.addEventListener('notificationclick', (event) => {
+  event.notification.close()
+  const targetUrl = (event.notification.data && event.notification.data.url) || '/'
+  event.waitUntil(
+    self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then((all) => {
+      // If an existing tab is open on the app, focus + navigate it.
+      for (const client of all) {
+        if ('focus' in client) {
+          client.focus()
+          if ('navigate' in client) return client.navigate(targetUrl)
+          return undefined
+        }
+      }
+      if (self.clients.openWindow) return self.clients.openWindow(targetUrl)
+      return undefined
+    })
+  )
 })
