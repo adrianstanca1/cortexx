@@ -17,8 +17,9 @@ export default function Focus({ accent = '#10b981', data }: FocusProps) {
 
   useEffect(() => {
     if (!snoozeUntil) return
-    const remaining = snoozeUntil - Date.now()
-    if (remaining <= 0) { setSnoozed(false); setSnoozeUntil(null); return }
+    // Math.max so an already-expired snooze still flushes via setTimeout(0)
+    // rather than syncing setState inside the effect body.
+    const remaining = Math.max(0, snoozeUntil - Date.now())
     const t = setTimeout(() => { setSnoozed(false); setSnoozeUntil(null) }, remaining)
     return () => clearTimeout(t)
   }, [snoozeUntil])
