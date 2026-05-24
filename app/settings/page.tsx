@@ -1,14 +1,110 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useSession, signOut } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import { IcChevL } from '@/components/ui/Icons'
 
+// VAPID public key needs base64url → Uint8Array conversion for the SW.
+function urlBase64ToUint8Array(base64: string): Uint8Array<ArrayBuffer> {
+  const padding = '='.repeat((4 - (base64.length % 4)) % 4)
+  const b64 = (base64 + padding).replace(/-/g, '+').replace(/_/g, '/')
+  const raw = atob(b64)
+  const buffer = new ArrayBuffer(raw.length)
+  const out = new Uint8Array(buffer)
+  for (let i = 0; i < raw.length; i++) out[i] = raw.charCodeAt(i)
+  return out
+}
+
 export default function SettingsPage() {
   const { data: session, update: updateSession } = useSession()
   const router = useRouter()
+
+  // ─── Push notifications ───
+  const [pushSupported, setPushSupported] = useState(false)
+  const [pushPermission, setPushPermission] = useState<'default' | 'granted' | 'denied'>('default')
+  const [pushSubscribed, setPushSubscribed] = useState(false)
+  const [pushConfigured, setPushConfigured] = useState(false)
+  const [pushVapidKey, setPushVapidKey] = useState<string | null>(null)
+  const [pushBusy, setPushBusy] = useState(false)
+  const [pushMsg, setPushMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    if (typeof window === 'undefined') return
+    const supported = 'serviceWorker' in navigator && 'PushManager' in window && 'Notification' in window
+    setPushSupported(supported)
+    if (!supported) return
+    setPushPermission(Notification.permission as 'default' | 'granted' | 'denied')
+    fetch('/api/push/subscribe').then(r => r.ok ? r.json() : null).then(d => {
+      if (d) { setPushConfigured(!!d.configured); setPushVapidKey(d.publicKey || null) }
+    }).catch(() => {})
+    navigator.serviceWorker.ready.then(reg => reg.pushManager.getSubscription())
+      .then(sub => setPushSubscribed(!!sub))
+      .catch(() => {})
+  }, [])
+
+  const subscribePush = useCallback(async () => {
+    setPushBusy(true)
+    setPushMsg(null)
+    try {
+      if (!pushVapidKey) throw new Error('No VAPID public key configured on the server')
+      const permission = await Notification.requestPermission()
+      setPushPermission(permission as 'default' | 'granted' | 'denied')
+      if (permission !== 'granted') throw new Error('Notification permission denied')
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.subscribe({ userVisibleOnly: true, applicationServerKey: urlBase64ToUint8Array(pushVapidKey) })
+      const json = sub.toJSON() as { endpoint: string; keys?: { p256dh?: string; auth?: string } }
+      const res = await fetch('/api/push/subscribe', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ endpoint: json.endpoint, keys: json.keys }),
+      })
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Subscribe failed')
+      setPushSubscribed(true)
+      setPushMsg('Subscribed — you\'ll get notifications on this device.')
+    } catch (e) {
+      setPushMsg(e instanceof Error ? e.message : 'Failed to subscribe')
+    } finally { setPushBusy(false) }
+  }, [pushVapidKey])
+
+  const unsubscribePush = useCallback(async () => {
+    setPushBusy(true)
+    setPushMsg(null)
+    try {
+      const reg = await navigator.serviceWorker.ready
+      const sub = await reg.pushManager.getSubscription()
+      if (sub) {
+        await fetch('/api/push/subscribe', {
+          method: 'DELETE',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ endpoint: sub.endpoint }),
+        })
+        await sub.unsubscribe()
+      }
+      setPushSubscribed(false)
+      setPushMsg('Unsubscribed.')
+    } catch (e) {
+      setPushMsg(e instanceof Error ? e.message : 'Failed to unsubscribe')
+    } finally { setPushBusy(false) }
+  }, [])
+
+  const sendTestPush = useCallback(async () => {
+    setPushBusy(true)
+    setPushMsg(null)
+    try {
+      const res = await fetch('/api/push/test', { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) {
+        if (json.code === 'PUSH_NOT_CONFIGURED') setPushMsg('Server hasn\'t got VAPID keys configured yet — ask an admin to set VAPID_PUBLIC_KEY and VAPID_PRIVATE_KEY.')
+        else setPushMsg(json.error || 'Failed')
+        return
+      }
+      setPushMsg(`Delivered to ${json.delivered} device${json.delivered === 1 ? '' : 's'}${json.pruned ? `, pruned ${json.pruned} stale` : ''}`)
+    } catch (e) {
+      setPushMsg(e instanceof Error ? e.message : 'Failed')
+    } finally { setPushBusy(false) }
+  }, [])
 
   const [name, setName] = useState('')
   const [savingName, setSavingName] = useState(false)
@@ -186,6 +282,72 @@ export default function SettingsPage() {
             </a>
           ))}
         </div>
+      </section>
+
+      {/* Push notifications */}
+      <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+        <div style={labelStyle}>Notifications</div>
+        <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: 0, lineHeight: 1.5 }}>
+          Get push notifications on this device for new tasks, overdue invoices and site events. Works in the background even when the app is closed.
+        </p>
+
+        {!pushSupported && (
+          <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, padding: '8px 12px' }}>
+            This browser doesn&apos;t support push notifications. Try Chrome, Edge or Firefox.
+          </div>
+        )}
+
+        {pushSupported && !pushConfigured && (
+          <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#f59e0b', background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', borderRadius: 10, padding: '8px 12px' }}>
+            Push is not configured on the server yet. An admin needs to set <code style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>VAPID_PUBLIC_KEY</code> and <code style={{ background: 'rgba(0,0,0,0.3)', padding: '1px 4px', borderRadius: 3 }}>VAPID_PRIVATE_KEY</code> env vars.
+          </div>
+        )}
+
+        {pushSupported && pushPermission === 'denied' && (
+          <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '8px 12px' }}>
+            Notification permission is blocked. Re-enable it in your browser&apos;s site settings.
+          </div>
+        )}
+
+        {pushSupported && (
+          <div style={{ display: 'flex', gap: 8 }}>
+            {pushSubscribed ? (
+              <button
+                type="button"
+                onClick={unsubscribePush}
+                disabled={pushBusy}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 10, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: pushBusy ? 0.5 : 1 }}
+              >
+                {pushBusy ? 'Working…' : 'Unsubscribe'}
+              </button>
+            ) : (
+              <button
+                type="button"
+                onClick={subscribePush}
+                disabled={pushBusy || !pushConfigured || pushPermission === 'denied'}
+                style={{ flex: 1, padding: '10px 0', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: pushBusy || !pushConfigured || pushPermission === 'denied' ? 0.5 : 1 }}
+              >
+                {pushBusy ? 'Working…' : 'Enable notifications'}
+              </button>
+            )}
+            {pushSubscribed && (
+              <button
+                type="button"
+                onClick={sendTestPush}
+                disabled={pushBusy}
+                style={{ padding: '10px 14px', borderRadius: 10, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: pushBusy ? 0.5 : 1 }}
+              >
+                Send test
+              </button>
+            )}
+          </div>
+        )}
+
+        {pushMsg && (
+          <div role="status" style={{ background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.3)', color: '#93c5fd', borderRadius: 10, padding: '8px 12px', fontFamily: 'var(--font-system)', fontSize: 12 }}>
+            {pushMsg}
+          </div>
+        )}
       </section>
 
       <section style={{ marginTop: 24 }}>

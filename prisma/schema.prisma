@@ -10,17 +10,18 @@ datasource db {
 // ─── Auth models (NextAuth + Prisma adapter) ───────────────────────────────
 
 model User {
-  id            String    @id @default(cuid())
-  name          String?
-  email         String    @unique
-  passwordHash  String?
-  emailVerified DateTime?
-  image         String?
-  role          String    @default("member") // member, admin
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
-  accounts      Account[]
-  sessions      Session[]
+  id                String             @id @default(cuid())
+  name              String?
+  email             String             @unique
+  passwordHash      String?
+  emailVerified     DateTime?
+  image             String?
+  role              String             @default("member") // member, admin
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  accounts          Account[]
+  sessions          Session[]
+  pushSubscriptions PushSubscription[]
 }
 
 model Account {
@@ -882,4 +883,18 @@ model SafetyIncident {
   @@index([projectId, status])
   @@index([status, occurredAt])
   @@index([severity])
+}
+
+model PushSubscription {
+  id        String   @id @default(cuid())
+  userId    String?
+  endpoint  String   @unique
+  p256dh    String
+  auth      String
+  userAgent String?
+  createdAt DateTime @default(now())
+  lastUsed  DateTime @default(now())
+  user      User?    @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([userId])
 }
