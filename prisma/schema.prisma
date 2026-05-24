@@ -110,9 +110,13 @@ model Project {
   toolboxTalks    ToolboxTalk[]
   safetyIncidents SafetyIncident[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([status])
   @@index([updatedAt])
   @@index([archivedAt])
+  @@index([organizationId])
 }
 
 model Task {
@@ -132,10 +136,14 @@ model Task {
   assignee    TeamMember? @relation(fields: [assigneeId], references: [id], onDelete: SetNull)
   comments    Comment[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([assigneeId, status])
   @@index([dueDate])
   @@index([status, priority])
+  @@index([organizationId])
 }
 
 model TeamMember {
@@ -155,7 +163,11 @@ model TeamMember {
   siteCheckIns   SiteCheckIn[]
   mileageEntries MileageEntry[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([email])
+  @@index([organizationId])
 }
 
 model Assignment {
@@ -167,7 +179,11 @@ model Assignment {
   project   Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
   member    TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([projectId, memberId])
+  @@index([organizationId])
 }
 
 model Invoice {
@@ -184,8 +200,12 @@ model Invoice {
   project    Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
   createdAt  DateTime  @default(now())
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([status, dueDate])
+  @@index([organizationId])
 }
 
 model TimeEntry {
@@ -200,9 +220,13 @@ model TimeEntry {
   member    TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
   project   Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([memberId, date])
   @@index([projectId, date])
   @@index([week, year])
+  @@index([organizationId])
 }
 
 model Activity {
@@ -216,8 +240,12 @@ model Activity {
   createdAt DateTime @default(now())
   project   Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, createdAt])
   @@index([createdAt])
+  @@index([organizationId])
 }
 
 model Comment {
@@ -232,8 +260,12 @@ model Comment {
   task       Task?    @relation(fields: [taskId], references: [id], onDelete: Cascade)
   project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([taskId, createdAt])
   @@index([projectId, createdAt])
+  @@index([organizationId])
 }
 
 model Document {
@@ -248,9 +280,13 @@ model Document {
   createdAt DateTime  @default(now())
   project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId])
   @@index([expiresAt])
   @@index([type])
+  @@index([organizationId])
 }
 
 model Snag {
@@ -268,9 +304,13 @@ model Snag {
   updatedAt   DateTime  @updatedAt
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([status, priority])
   @@index([dueDate])
+  @@index([organizationId])
 }
 
 model Certification {
@@ -286,9 +326,13 @@ model Certification {
   updatedAt  DateTime    @updatedAt
   member     TeamMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([memberId])
   @@index([expiryDate])
   @@index([type])
+  @@index([organizationId])
 }
 
 model Rfi {
@@ -309,10 +353,14 @@ model Rfi {
   updatedAt   DateTime  @updatedAt
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([projectId, number])
   @@index([projectId, status])
   @@index([status, priority])
   @@index([dueDate])
+  @@index([organizationId])
 }
 
 model Announcement {
@@ -327,8 +375,12 @@ model Announcement {
   updatedAt  DateTime @updatedAt
   project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, createdAt])
   @@index([isPinned, createdAt])
+  @@index([organizationId])
 }
 
 model Observation {
@@ -346,9 +398,13 @@ model Observation {
   updatedAt   DateTime  @updatedAt
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([type, status])
   @@index([createdAt])
+  @@index([organizationId])
 }
 
 model Variation {
@@ -369,10 +425,14 @@ model Variation {
   updatedAt   DateTime  @updatedAt
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([projectId, number])
   @@index([projectId, status])
   @@index([status])
   @@index([submittedAt])
+  @@index([organizationId])
 }
 
 model Lead {
@@ -392,8 +452,12 @@ model Lead {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([status])
   @@index([createdAt])
+  @@index([organizationId])
 }
 
 model Customer {
@@ -410,8 +474,12 @@ model Customer {
   updatedAt    DateTime  @updatedAt
   quotes       Quote[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([name])
   @@index([archivedAt])
+  @@index([organizationId])
 }
 
 model Quote {
@@ -436,9 +504,13 @@ model Quote {
   updatedAt    DateTime  @updatedAt
   customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([status])
   @@index([customerId])
   @@index([validUntil])
+  @@index([organizationId])
 }
 
 model SiteCheckIn {
@@ -455,9 +527,13 @@ model SiteCheckIn {
   member       TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
   project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([memberId, checkedInAt])
   @@index([projectId, checkedInAt])
   @@index([checkedOutAt])
+  @@index([organizationId])
 }
 
 model MileageEntry {
@@ -479,9 +555,13 @@ model MileageEntry {
   updatedAt    DateTime    @updatedAt
   member       TeamMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([memberId, date])
   @@index([date])
   @@index([approved])
+  @@index([organizationId])
 }
 
 model CostItem {
@@ -497,9 +577,13 @@ model CostItem {
   createdAt   DateTime  @default(now())
   updatedAt   DateTime  @updatedAt
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([category])
   @@index([code])
   @@index([archivedAt])
+  @@index([organizationId])
 }
 
 model Subcontractor {
@@ -521,10 +605,14 @@ model Subcontractor {
   createdAt            DateTime     @default(now())
   updatedAt            DateTime     @updatedAt
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([name])
   @@index([trade])
   @@index([insuranceExpiry])
   @@index([archivedAt])
+  @@index([organizationId])
 }
 
 model Equipment {
@@ -545,9 +633,13 @@ model Equipment {
   updatedAt      DateTime              @updatedAt
   maintenances   MaintenanceSchedule[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([status])
   @@index([nextServiceAt])
   @@index([archivedAt])
+  @@index([organizationId])
 }
 
 model Material {
@@ -566,9 +658,13 @@ model Material {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([category])
   @@index([code])
   @@index([archivedAt])
+  @@index([organizationId])
 }
 
 model PurchaseOrder {
@@ -593,9 +689,13 @@ model PurchaseOrder {
   updatedAt        DateTime  @updatedAt
   project          Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([status])
   @@index([expectedDelivery])
+  @@index([organizationId])
 }
 
 model SubInvoice {
@@ -618,9 +718,13 @@ model SubInvoice {
   subcontractor   Subcontractor @relation(fields: [subcontractorId], references: [id], onDelete: Cascade)
   project         Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([subcontractorId, number])
   @@index([subcontractorId, status])
   @@index([status, invoiceDate])
+  @@index([organizationId])
 }
 
 model Drawing {
@@ -637,9 +741,13 @@ model Drawing {
   project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
   revisions  DrawingRevision[]
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([projectId, number])
   @@index([projectId, status])
   @@index([discipline])
+  @@index([organizationId])
 }
 
 model DrawingRevision {
@@ -654,8 +762,12 @@ model DrawingRevision {
   uploadedAt DateTime @default(now())
   drawing    Drawing  @relation(fields: [drawingId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@unique([drawingId, revision])
   @@index([drawingId, uploadedAt])
+  @@index([organizationId])
 }
 
 model Milestone {
@@ -671,9 +783,13 @@ model Milestone {
   updatedAt    DateTime  @updatedAt
   project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, plannedStart])
   @@index([plannedEnd])
   @@index([status])
+  @@index([organizationId])
 }
 
 model Permit {
@@ -694,9 +810,13 @@ model Permit {
   updatedAt  DateTime  @updatedAt
   project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([status, validTo])
   @@index([type])
+  @@index([organizationId])
 }
 
 model Rams {
@@ -716,9 +836,13 @@ model Rams {
   updatedAt DateTime  @updatedAt
   project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([reviewBy])
   @@index([type])
+  @@index([organizationId])
 }
 
 model Tender {
@@ -736,8 +860,12 @@ model Tender {
   updatedAt   DateTime  @updatedAt
   project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([status, deadline])
+  @@index([organizationId])
 }
 
 model Inspection {
@@ -756,9 +884,13 @@ model Inspection {
   updatedAt      DateTime  @updatedAt
   project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([scheduledAt])
   @@index([type])
+  @@index([organizationId])
 }
 
 model Meeting {
@@ -776,8 +908,12 @@ model Meeting {
   updatedAt   DateTime @updatedAt
   project     Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, scheduledAt])
   @@index([status, scheduledAt])
+  @@index([organizationId])
 }
 
 model Risk {
@@ -797,9 +933,13 @@ model Risk {
   updatedAt  DateTime  @updatedAt
   project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([score])
   @@index([reviewBy])
+  @@index([organizationId])
 }
 
 model ToolboxTalk {
@@ -819,8 +959,12 @@ model ToolboxTalk {
   updatedAt      DateTime  @updatedAt
   project        Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, date])
   @@index([date])
+  @@index([organizationId])
 }
 
 model MaintenanceSchedule {
@@ -839,9 +983,13 @@ model MaintenanceSchedule {
   updatedAt    DateTime  @updatedAt
   equipment    Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([equipmentId, status])
   @@index([status, dueDate])
   @@index([dueDate])
+  @@index([organizationId])
 }
 
 model Supplier {
@@ -860,9 +1008,13 @@ model Supplier {
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([name])
   @@index([category])
   @@index([archivedAt])
+  @@index([organizationId])
 }
 
 model SafetyIncident {
@@ -885,9 +1037,13 @@ model SafetyIncident {
   updatedAt        DateTime  @updatedAt
   project          Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
   @@index([projectId, status])
   @@index([status, occurredAt])
   @@index([severity])
+  @@index([organizationId])
 }
 
 model PushSubscription {
@@ -910,21 +1066,60 @@ model PushSubscription {
 // follow-up migration. See docs/v1-completion-plan.md.
 
 model Organization {
-  id                   String               @id @default(cuid())
-  slug                 String               @unique
+  id                   String                @id @default(cuid())
+  slug                 String                @unique
   name                 String
-  plan                 String               @default("trial") // trial / starter / pro / enterprise
-  subscriptionStatus   String               @default("active") // active / past_due / cancelled
+  plan                 String                @default("trial") // trial / starter / pro / enterprise
+  subscriptionStatus   String                @default("active") // active / past_due / cancelled
   trialEndsAt          DateTime?
-  stripeCustomerId     String?              @unique
-  stripeSubscriptionId String?              @unique
+  stripeCustomerId     String?               @unique
+  stripeSubscriptionId String?               @unique
   brandingLogoUrl      String?
   brandingAccent       String?
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
   members              UserOrganization[]
   invites              OrganizationInvite[]
   auditEvents          AuditEvent[]
+  projects             Project[]
+  tasks                Task[]
+  teamMembers          TeamMember[]
+  assignments          Assignment[]
+  invoices             Invoice[]
+  timeEntries          TimeEntry[]
+  activities           Activity[]
+  comments             Comment[]
+  documents            Document[]
+  snags                Snag[]
+  certifications       Certification[]
+  rfis                 Rfi[]
+  announcements        Announcement[]
+  observations         Observation[]
+  variations           Variation[]
+  leads                Lead[]
+  customers            Customer[]
+  quotes               Quote[]
+  siteCheckIns         SiteCheckIn[]
+  mileageEntries       MileageEntry[]
+  costItems            CostItem[]
+  subcontractors       Subcontractor[]
+  equipment            Equipment[]
+  materials            Material[]
+  purchaseOrders       PurchaseOrder[]
+  subInvoices          SubInvoice[]
+  drawings             Drawing[]
+  drawingRevisions     DrawingRevision[]
+  milestones           Milestone[]
+  permits              Permit[]
+  rams                 Rams[]
+  tenders              Tender[]
+  inspections          Inspection[]
+  meetings             Meeting[]
+  risks                Risk[]
+  toolboxTalks         ToolboxTalk[]
+  maintenanceSchedules MaintenanceSchedule[]
+  suppliers            Supplier[]
+  safetyIncidents      SafetyIncident[]
 }
 
 model UserOrganization {

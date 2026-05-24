@@ -10,7 +10,12 @@ const PUBLIC_PATHS = new Set<string>([
   '/sw.js',
   '/offline.html',
 ])
-const PUBLIC_API_PREFIXES = ['/api/auth/', '/api/health']
+const PUBLIC_API_PREFIXES = [
+  '/api/auth/',
+  '/api/health',
+  '/api/webhooks/',  // Stripe et al; signature-verified inside the handlers
+  '/api/cron/',      // CRON_SECRET bearer header verified inside the handlers
+]
 
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true
