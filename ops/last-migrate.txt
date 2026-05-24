@@ -1,0 +1,52 @@
+=== Clearing stuck _prisma_migrations rows ===
+DELETE 1
+
+=== State BEFORE migrate ===
+                   migration_name                    | done 
+-----------------------------------------------------+------
+ 20260525000000_add_multitenancy_foundation          | t
+ 20260524001200_add_push_subscription                | t
+ 20260524001100_add_safety_incident                  | t
+ 20260524001000_add_toolboxtalk_maintenance_supplier | t
+ 20260524000900_add_inspection_meeting_risk          | t
+ 20260524000800_add_drawing_revision                 | t
+ 20260524000700_add_project_share_token              | t
+ 20260524000600_add_material_po_subinvoice           | t
+(8 rows)
+
+
+=== Sync repo ===
+From https://github.com/adrianstanca1/cortexx
+ * branch            main       -> FETCH_HEAD
+   8784bc2..e93127b  main       -> origin/main
+HEAD is now at e93127b ops: migrate-debug workflow — captures full prisma migrate deploy output
+e93127b ops: migrate-debug workflow — captures full prisma migrate deploy output
+
+=== prisma migrate deploy ===
+
+Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
+
+Tip: Easily identify and fix slow SQL queries in your app. Optimize helps you enhance your visibility: https://pris.ly/--optimize
+
+
+----- migrate deploy output START -----
+Prisma schema loaded from prisma/schema.prisma
+Datasource "db": PostgreSQL database "cortexx", schema "public" at "127.0.0.1:5432"
+
+Error: P1000: Authentication failed against database server at `127.0.0.1`, the provided database credentials for `cortexx` are not valid.
+
+Please make sure to provide valid database credentials for the database server at `127.0.0.1`.
+----- migrate deploy output END (exit=1) -----
+
+=== State AFTER migrate ===
+                   migration_name                    |          started_at           |          finished_at          
+-----------------------------------------------------+-------------------------------+-------------------------------
+ 20260525000000_add_multitenancy_foundation          | 2026-05-24 22:39:37.863405+00 | 2026-05-24 22:39:37.915089+00
+ 20260524001200_add_push_subscription                | 2026-05-24 21:37:51.823513+00 | 2026-05-24 21:37:51.84779+00
+ 20260524001100_add_safety_incident                  | 2026-05-24 18:10:50.676903+00 | 2026-05-24 18:10:50.699028+00
+ 20260524001000_add_toolboxtalk_maintenance_supplier | 2026-05-24 14:44:27.617579+00 | 2026-05-24 14:44:27.658444+00
+ 20260524000900_add_inspection_meeting_risk          | 2026-05-24 14:21:15.671524+00 | 2026-05-24 14:21:15.732623+00
+(5 rows)
+
+
+=== Project.organizationId after attempt? ===
