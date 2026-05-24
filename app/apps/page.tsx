@@ -48,7 +48,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/inbox',    label: 'Inbox',      Icon: IcBell,   color: '#2563eb', badgeKey: 'inbox' },
       { href: '/messages', label: 'Messages',   Icon: IcBell,   color: '#06b6d4', badgeKey: 'messages' },
       { href: '/rfis',     label: 'RFIs',       Icon: IcAlert,  color: '#f59e0b', badgeKey: 'rfis' },
-      { href: '/ask',      label: 'Ask Cortex', Icon: IcSpark,  color: '#8b5cf6', ai: true, comingSoon: true },
+      { href: '/ask',      label: 'Ask Cortex', Icon: IcSpark,  color: '#8b5cf6', ai: true },
     ],
   },
   {
