@@ -106,9 +106,40 @@ function CaptureContent() {
 
   const finishVoiceRfi = useCallback(async (audioUrl: string | null) => {
     const title = `RFI: ${activeProject?.name || 'site'}`
-    const description = audioUrl
-      ? `Voice RFI raised from capture page.\nAudio: ${audioUrl}\n(Transcription pending.)`
-      : 'Voice RFI raised from capture page (audio capture unavailable on this device).'
+
+    // Try to transcribe if we got audio. Best-effort: if whisper isn't on
+    // the server or ffmpeg can't decode, we still create the RFI task with
+    // just the audio link and the user can listen + type later.
+    let transcript: string | null = null
+    let transcribeNote = ''
+    if (audioUrl) {
+      try {
+        const txRes = await fetch('/api/transcribe', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: audioUrl }),
+        })
+        const json = await txRes.json().catch(() => null) as { text?: string; error?: string; code?: string } | null
+        if (txRes.ok && json?.text) {
+          transcript = json.text
+        } else if (json?.code === 'WHISPER_UNAVAILABLE' || json?.code === 'FFMPEG_UNAVAILABLE') {
+          transcribeNote = '(Transcription unavailable on this server — install whisper.cpp.)'
+        } else if (json?.code === 'EMPTY_TRANSCRIPT') {
+          transcribeNote = '(Audio was silent — no transcription produced.)'
+        } else {
+          transcribeNote = `(Transcription failed: ${json?.error || 'unknown error'}.)`
+        }
+      } catch {
+        transcribeNote = '(Transcription request failed.)'
+      }
+    }
+
+    const description = transcript
+      ? `Transcript:\n${transcript}\n\nAudio: ${audioUrl}`
+      : audioUrl
+        ? `Voice RFI raised from capture page.\nAudio: ${audioUrl}\n${transcribeNote || '(Transcription pending.)'}`
+        : 'Voice RFI raised from capture page (audio capture unavailable on this device).'
+
     const res = await fetch('/api/tasks', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -120,8 +151,12 @@ function CaptureContent() {
       }),
     })
     if (!res.ok) throw new Error('Failed to create RFI task')
-    await logActivity('raised a Voice RFI', 'mic', audioUrl ? 'audio attached' : null)
-    finishWith('RFI task created')
+    await logActivity(
+      'raised a Voice RFI',
+      'mic',
+      transcript ? `transcribed (${transcript.length} chars)` : audioUrl ? 'audio attached' : null
+    )
+    finishWith(transcript ? 'RFI transcribed' : 'RFI task created')
   }, [activeProject, logActivity, finishWith])
 
   const stopRecording = useCallback(() => {

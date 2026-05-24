@@ -55,6 +55,8 @@ jobs:
             command -v nginx >/dev/null 2>&1 || need+=(nginx)
             command -v gzip >/dev/null 2>&1 || need+=(gzip)
             command -v psql >/dev/null 2>&1 || need+=(postgresql postgresql-contrib)
+            command -v ffmpeg >/dev/null 2>&1 || need+=(ffmpeg)
+            command -v make >/dev/null 2>&1 || need+=(build-essential)
             if [ ${#need[@]} -gt 0 ]; then
               if [[ " ${need[*]} " == *" nodejs "* ]]; then
                 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -64,7 +66,31 @@ jobs:
             fi
             command -v pm2 >/dev/null 2>&1 || npm install -g pm2
             systemctl enable --now postgresql 2>/dev/null || true
+
+            # whisper.cpp — best-effort, non-blocking. Powers /api/transcribe
+            # for the voice-RFI flow. If install fails, /api/transcribe just
+            # returns 503 and the voice flow falls back to audio-only.
+            if [ ! -x /opt/whisper.cpp/main ] && [ ! -x /opt/whisper.cpp/build/bin/whisper-cli ]; then
+              echo "Installing whisper.cpp (one-time, ~5 min)…"
+              (
+                set -e
+                rm -rf /opt/whisper.cpp
+                git clone --depth 1 https://github.com/ggerganov/whisper.cpp /opt/whisper.cpp
+                cd /opt/whisper.cpp
+                # Newer whisper.cpp uses cmake; older uses make. Try both.
+                if [ -f CMakeLists.txt ] && command -v cmake >/dev/null 2>&1; then
+                  cmake -B build -DBUILD_SHARED_LIBS=OFF >/dev/null
+                  cmake --build build --config Release -j2 >/dev/null
+                else
+                  make -j2 >/dev/null
+                fi
+                bash ./models/download-ggml-model.sh base.en
+              ) || { echo "whisper.cpp install failed — voice transcription will be disabled"; rm -rf /opt/whisper.cpp; }
+            fi
+
             echo "Node: $(node -v) | pm2: $(pm2 -v) | psql: $(psql --version 2>&1 | head -1)"
+            echo "ffmpeg: $(ffmpeg -version 2>&1 | head -1)"
+            echo "whisper: $(ls /opt/whisper.cpp/main /opt/whisper.cpp/build/bin/whisper-cli 2>/dev/null | head -1 || echo 'not installed')"
           REMOTE
 
       - name: Provision DB, backup, deploy app
