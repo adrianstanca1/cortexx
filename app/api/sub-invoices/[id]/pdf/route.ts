@@ -23,7 +23,8 @@ const STATUS_COLOR: Record<string, string> = {
   disputed: '#ef4444',
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
 
