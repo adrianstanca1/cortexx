@@ -5,6 +5,7 @@ import { auth } from '@/lib/auth'
 const PUBLIC_PATHS = new Set<string>([
   '/login',
   '/register',
+  '/pricing',
   '/manifest.json',
   '/favicon.ico',
   '/sw.js',
