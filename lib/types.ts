@@ -114,9 +114,39 @@ export interface Document {
   projectId: string | null
   type: string
   name: string
+  url?: string | null
+  size?: number | null
+  mimeType?: string | null
   expiresAt: string | null
   createdAt: string
   project?: Project | null
+}
+
+export interface Comment {
+  id: string
+  taskId?: string | null
+  projectId?: string | null
+  authorId: string
+  authorName: string
+  body: string
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Snag {
+  id: string
+  projectId: string
+  title: string
+  description: string | null
+  location: string | null
+  status: 'open' | 'in_progress' | 'closed'
+  priority: 'low' | 'medium' | 'high' | 'critical'
+  photoUrl: string | null
+  dueDate: string | null
+  closedAt: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
 }
 
 export interface DashboardStats {
