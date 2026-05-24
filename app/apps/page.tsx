@@ -46,8 +46,8 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Inbox & comms',
     items: [
       { href: '/inbox',    label: 'Inbox',      Icon: IcBell,   color: '#2563eb', badgeKey: 'inbox' },
-      { href: '/messages', label: 'Messages',   Icon: IcBell,   color: '#06b6d4', badgeKey: 'messages', comingSoon: true },
-      { href: '/rfis',     label: 'RFIs',       Icon: IcAlert,  color: '#f59e0b', badgeKey: 'rfis', comingSoon: true },
+      { href: '/messages', label: 'Messages',   Icon: IcBell,   color: '#06b6d4', badgeKey: 'messages' },
+      { href: '/rfis',     label: 'RFIs',       Icon: IcAlert,  color: '#f59e0b', badgeKey: 'rfis' },
       { href: '/ask',      label: 'Ask Cortex', Icon: IcSpark,  color: '#8b5cf6', ai: true, comingSoon: true },
     ],
   },
@@ -65,7 +65,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     items: [
       { href: '/projects',           label: 'Timeline',   Icon: IcLayers,   color: '#2563eb' },
       { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4', comingSoon: true },
-      { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981', comingSoon: true },
+      { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981' },
       { href: '/photos',             label: 'Photos',     Icon: IcCamera,   color: '#8b5cf6' },
       { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb', comingSoon: true },
       { href: '/documents',          label: 'Documents',  Icon: IcDoc,      color: '#ef4444' },
@@ -92,7 +92,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/timesheets',    label: 'Timesheets',    Icon: IcClock,   color: '#8b5cf6', badgeKey: 'timesheets' },
       { href: '/check-in',      label: 'Check in/out',  Icon: IcPin,     color: '#10b981', comingSoon: true },
       { href: '/live-status',   label: 'Live status',   Icon: IcPin,     color: '#06b6d4', comingSoon: true },
-      { href: '/training',      label: 'Training',      Icon: IcHardhat, color: '#f59e0b', badgeKey: 'training', comingSoon: true },
+      { href: '/training',      label: 'Training',      Icon: IcHardhat, color: '#f59e0b', badgeKey: 'training' },
     ],
   },
 ]
@@ -121,12 +121,15 @@ export default function AppsPage() {
       fetch('/api/inbox').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/timeentries?approved=false&allWeeks=true').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/snags?status=open&take=1').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets, snags]) => {
+      fetch('/api/rfis?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/training').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags, rfis, training]) => {
       setBadges({
         inbox: inbox?.total ?? 0,
-        rfis: inbox?.overdueTasks?.filter((t: { priority?: string }) => t?.priority === 'critical').length ?? 0,
+        rfis: rfis?.openCount ?? 0,
         snags: snags?.openCount ?? 0,
         timesheets: Array.isArray(timesheets?.entries) ? timesheets.entries.length : 0,
+        training: (training?.counts?.expired ?? 0) + (training?.counts?.expiring ?? 0),
       })
     })
   }, [])

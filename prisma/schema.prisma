@@ -60,31 +60,33 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id          String       @id @default(cuid())
-  name        String
-  address     String
-  postcode    String
-  status      String       @default("active") // active, snagging, quoting, complete
-  progress    Int          @default(0)
-  clientName  String       @default("")
-  budget      Float        @default(0)
-  spent       Float        @default(0)
-  lat         Float        @default(51.5)
-  lng         Float        @default(-0.1)
-  startDate   DateTime?
-  endDate     DateTime?
-  onSiteCount Int          @default(0)
-  archivedAt  DateTime?
-  createdAt   DateTime     @default(now())
-  updatedAt   DateTime     @updatedAt
-  tasks       Task[]
-  assignments Assignment[]
-  invoices    Invoice[]
-  activities  Activity[]
-  timeEntries TimeEntry[]
-  documents   Document[]
-  comments    Comment[]
-  snags       Snag[]
+  id            String         @id @default(cuid())
+  name          String
+  address       String
+  postcode      String
+  status        String         @default("active") // active, snagging, quoting, complete
+  progress      Int            @default(0)
+  clientName    String         @default("")
+  budget        Float          @default(0)
+  spent         Float          @default(0)
+  lat           Float          @default(51.5)
+  lng           Float          @default(-0.1)
+  startDate     DateTime?
+  endDate       DateTime?
+  onSiteCount   Int            @default(0)
+  archivedAt    DateTime?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  tasks         Task[]
+  assignments   Assignment[]
+  invoices      Invoice[]
+  activities    Activity[]
+  timeEntries   TimeEntry[]
+  documents     Document[]
+  comments      Comment[]
+  snags         Snag[]
+  rfis          Rfi[]
+  announcements Announcement[]
 
   @@index([status])
   @@index([updatedAt])
@@ -115,18 +117,19 @@ model Task {
 }
 
 model TeamMember {
-  id          String       @id @default(cuid())
-  name        String
-  role        String
-  email       String?
-  phone       String?
-  avatarColor String       @default("#2563eb")
-  dailyRate   Float        @default(0)
-  onSite      Boolean      @default(false)
-  createdAt   DateTime     @default(now())
-  tasks       Task[]
-  assignments Assignment[]
-  timeEntries TimeEntry[]
+  id             String          @id @default(cuid())
+  name           String
+  role           String
+  email          String?
+  phone          String?
+  avatarColor    String          @default("#2563eb")
+  dailyRate      Float           @default(0)
+  onSite         Boolean         @default(false)
+  createdAt      DateTime        @default(now())
+  tasks          Task[]
+  assignments    Assignment[]
+  timeEntries    TimeEntry[]
+  certifications Certification[]
 
   @@index([email])
 }
@@ -244,4 +247,62 @@ model Snag {
   @@index([projectId, status])
   @@index([status, priority])
   @@index([dueDate])
+}
+
+model Certification {
+  id         String      @id @default(cuid())
+  memberId   String?
+  holderName String
+  type       String // CSCS, IPAF, PASMA, asbestos, SSSTS, SMSTS, first aid, etc.
+  number     String?
+  issuedDate DateTime?
+  expiryDate DateTime?
+  notes      String?
+  createdAt  DateTime    @default(now())
+  updatedAt  DateTime    @updatedAt
+  member     TeamMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([memberId])
+  @@index([expiryDate])
+  @@index([type])
+}
+
+model Rfi {
+  id          String    @id @default(cuid())
+  number      String
+  subject     String
+  body        String
+  projectId   String
+  status      String    @default("open") // open, answered, closed
+  priority    String    @default("medium") // low, medium, high
+  raisedBy    String?
+  assignee    String? // freeform: "Structural Engineer", "Architect", etc.
+  dueDate     DateTime?
+  response    String?
+  respondedAt DateTime?
+  closedAt    DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, number])
+  @@index([projectId, status])
+  @@index([status, priority])
+  @@index([dueDate])
+}
+
+model Announcement {
+  id         String   @id @default(cuid())
+  title      String
+  body       String
+  type       String   @default("general") // general, safety, urgent, update
+  projectId  String?
+  authorName String?
+  isPinned   Boolean  @default(false)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+  project    Project? @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, createdAt])
+  @@index([isPinned, createdAt])
 }
