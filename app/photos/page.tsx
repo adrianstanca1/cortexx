@@ -32,7 +32,48 @@ export default function PhotosPage() {
   const [uploading, setUploading] = useState(false)
   const [photoTags, setPhotoTags] = useState<Record<string, PhotoTags>>({})
   const [activePhoto, setActivePhoto] = useState<PhotoDoc | null>(null)
+  const [compareMode, setCompareMode] = useState(false)
+  const [compareSelected, setCompareSelected] = useState<string[]>([])
+  const [comparing, setComparing] = useState(false)
+  type CompareResult = { summary: string; changes: string[]; progress: 'progressed' | 'reversed' | 'stalled' | 'unrelated'; notes?: string; earlier: { id: string; name: string; url: string | null; createdAt: string }; later: { id: string; name: string; url: string | null; createdAt: string } }
+  const [compareResult, setCompareResult] = useState<CompareResult | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+
+  const toggleCompareSelection = (id: string) => {
+    setCompareSelected(prev => {
+      if (prev.includes(id)) return prev.filter(x => x !== id)
+      if (prev.length >= 2) return [prev[1], id] // keep last + new
+      return [...prev, id]
+    })
+  }
+
+  const runCompare = async () => {
+    if (compareSelected.length !== 2) return
+    setComparing(true)
+    setCompareResult(null)
+    try {
+      const res = await fetch('/api/photos/compare', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ aId: compareSelected[0], bId: compareSelected[1] }),
+      })
+      const json = await res.json()
+      if (!res.ok) {
+        const msg = json.code === 'VISION_UNAVAILABLE'
+          ? `Vision model not installed. Run: ollama pull ${json.config?.model || 'moondream'}`
+          : json.error || 'Failed to compare'
+        setToast({ msg, type: 'error' })
+        return
+      }
+      setCompareResult(json)
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Failed', type: 'error' })
+    } finally {
+      setComparing(false)
+    }
+  }
+
+  const exitCompareMode = () => { setCompareMode(false); setCompareSelected([]); setCompareResult(null) }
 
   const tagPhoto = async (photoId: string) => {
     setPhotoTags(prev => ({ ...prev, [photoId]: { ...(prev[photoId] || { tags: [], category: '', summary: '' }), loading: true, error: undefined } }))
@@ -126,12 +167,32 @@ export default function PhotosPage() {
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Photos</h1>
             <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
-              {photos.length} total{filter !== 'all' ? ` · ${filtered.length} in filter` : ''}
+              {photos.length} total{filter !== 'all' ? ` · ${filtered.length} in filter` : ''}{compareMode ? ` · ${compareSelected.length}/2 selected` : ''}
             </p>
           </div>
-          <button onClick={() => inputRef.current?.click()} disabled={uploading} aria-label="Upload photo" style={{ width: 36, height: 36, borderRadius: 10, background: '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
-            <IcPlus size={18} color="#fff" />
-          </button>
+          <div style={{ display: 'flex', gap: 6 }}>
+            {compareMode ? (
+              <>
+                <button onClick={exitCompareMode} aria-label="Exit compare mode" style={{ height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#8ea8c5', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: '0 12px' }}>
+                  Cancel
+                </button>
+                <button onClick={runCompare} disabled={compareSelected.length !== 2 || comparing} style={{ height: 36, borderRadius: 10, background: compareSelected.length === 2 ? '#8b5cf6' : 'rgba(139,92,246,0.3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: compareSelected.length === 2 && !comparing ? 'pointer' : 'not-allowed', padding: '0 14px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <IcSpark size={12} color="#fff" />
+                  {comparing ? 'Comparing…' : 'Compare'}
+                </button>
+              </>
+            ) : (
+              <>
+                <button onClick={() => { setCompareMode(true); setCompareSelected([]); setCompareResult(null) }} aria-label="Compare photos" disabled={photos.length < 2} style={{ height: 36, borderRadius: 10, background: 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: '#a78bfa', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: photos.length < 2 ? 'not-allowed' : 'pointer', opacity: photos.length < 2 ? 0.5 : 1, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <IcSpark size={12} color="#a78bfa" />
+                  Compare
+                </button>
+                <button onClick={() => inputRef.current?.click()} disabled={uploading} aria-label="Upload photo" style={{ width: 36, height: 36, borderRadius: 10, background: '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
+                  <IcPlus size={18} color="#fff" />
+                </button>
+              </>
+            )}
+          </div>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           <button onClick={() => setFilter('all')} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === 'all' ? '#8b5cf6' : 'rgba(255,255,255,0.06)', color: filter === 'all' ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === 'all' ? 700 : 400, cursor: 'pointer' }}>
@@ -163,28 +224,37 @@ export default function PhotosPage() {
         <div style={{ padding: '12px 16px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 6 }}>
           {filtered.map(p => {
             const tags = photoTags[p.id]
+            const selectIndex = compareSelected.indexOf(p.id) // -1 if not selected
+            const isSelected = selectIndex !== -1
             return (
-              <div key={p.id} style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: 10, overflow: 'hidden', background: '#0c1a2e' }}>
+              <div key={p.id} style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: 10, overflow: 'hidden', background: '#0c1a2e', outline: compareMode && isSelected ? `3px solid #8b5cf6` : 'none', outlineOffset: -3 }}>
                 <button
-                  onClick={() => setActivePhoto(p)}
-                  aria-label={`Open photo ${p.name}`}
+                  onClick={() => compareMode ? toggleCompareSelection(p.id) : setActivePhoto(p)}
+                  aria-label={compareMode ? (isSelected ? `Deselect ${p.name}` : `Select ${p.name} to compare`) : `Open photo ${p.name}`}
                   style={{ position: 'absolute', inset: 0, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
                 >
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={p.url!} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
                 </button>
-                <button
-                  onClick={(e) => { e.stopPropagation(); tagPhoto(p.id) }}
-                  disabled={tags?.loading}
-                  aria-label="Tag with AI"
-                  style={{ position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: 6, background: tags?.tags?.length ? 'rgba(139,92,246,0.85)' : 'rgba(0,0,0,0.55)', border: tags?.tags?.length ? 'none' : '0.5px solid rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: tags?.loading ? 'wait' : 'pointer', padding: 0 }}
-                >
-                  {tags?.loading ? (
-                    <span style={{ fontFamily: SF, fontSize: 9, color: '#fff', fontWeight: 700 }}>…</span>
-                  ) : (
-                    <IcSpark size={12} color="#fff" />
-                  )}
-                </button>
+                {compareMode && isSelected && (
+                  <span style={{ position: 'absolute', top: 4, left: 4, width: 24, height: 24, borderRadius: 12, background: '#8b5cf6', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                    {selectIndex + 1}
+                  </span>
+                )}
+                {!compareMode && (
+                  <button
+                    onClick={(e) => { e.stopPropagation(); tagPhoto(p.id) }}
+                    disabled={tags?.loading}
+                    aria-label="Tag with AI"
+                    style={{ position: 'absolute', top: 4, right: 4, width: 24, height: 24, borderRadius: 6, background: tags?.tags?.length ? 'rgba(139,92,246,0.85)' : 'rgba(0,0,0,0.55)', border: tags?.tags?.length ? 'none' : '0.5px solid rgba(255,255,255,0.18)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: tags?.loading ? 'wait' : 'pointer', padding: 0 }}
+                  >
+                    {tags?.loading ? (
+                      <span style={{ fontFamily: SF, fontSize: 9, color: '#fff', fontWeight: 700 }}>…</span>
+                    ) : (
+                      <IcSpark size={12} color="#fff" />
+                    )}
+                  </button>
+                )}
                 {p.project && (
                   <span style={{ position: 'absolute', bottom: 4, left: 4, right: 4, fontFamily: SF, fontSize: 9, fontWeight: 700, color: '#fff', background: 'rgba(0,0,0,0.55)', padding: '2px 6px', borderRadius: 6, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', pointerEvents: 'none' }}>
                     {p.project.name}
@@ -193,6 +263,51 @@ export default function PhotosPage() {
               </div>
             )
           })}
+        </div>
+      )}
+
+      {/* Compare results modal */}
+      {compareResult && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(6,16,30,0.95)', display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
+          <button onClick={() => setCompareResult(null)} aria-label="Close" style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#fff', fontFamily: SF, fontSize: 18, cursor: 'pointer', zIndex: 1 }}>×</button>
+          <div style={{ padding: '20px 16px 16px', maxWidth: 800, margin: '0 auto', width: '100%' }}>
+            <div style={{ fontFamily: SF, fontSize: 11, color: '#a78bfa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>Photo comparison</div>
+            <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa', marginBottom: 14 }}>
+              <span style={{ padding: '3px 8px', borderRadius: 99, background: compareResult.progress === 'progressed' ? 'rgba(16,185,129,0.2)' : compareResult.progress === 'reversed' ? 'rgba(239,68,68,0.2)' : compareResult.progress === 'stalled' ? 'rgba(245,158,11,0.2)' : 'rgba(82,116,154,0.2)', color: compareResult.progress === 'progressed' ? '#10b981' : compareResult.progress === 'reversed' ? '#ef4444' : compareResult.progress === 'stalled' ? '#f59e0b' : '#8ea8c5', fontSize: 11, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginRight: 6 }}>{compareResult.progress}</span>
+              {compareResult.summary}
+            </div>
+
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10, marginBottom: 14 }}>
+              {[compareResult.earlier, compareResult.later].map((photo, idx) => (
+                <div key={photo.id}>
+                  <div style={{ aspectRatio: '1 / 1', borderRadius: 10, overflow: 'hidden', background: '#0c1a2e' }}>
+                    {/* eslint-disable-next-line @next/next/no-img-element */}
+                    <img src={photo.url || ''} alt={photo.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                  </div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', marginTop: 4, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>
+                    {idx === 0 ? 'Earlier' : 'Later'} · {new Date(photo.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {compareResult.changes.length > 0 && (
+              <div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>What changed</div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  {compareResult.changes.map((c, i) => (
+                    <li key={i} style={{ display: 'flex', gap: 8, padding: '8px 10px', background: 'rgba(139,92,246,0.06)', borderRadius: 8, borderLeft: '2px solid #a78bfa' }}>
+                      <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#a78bfa', fontWeight: 700, flexShrink: 0, marginTop: 1 }}>{String(i + 1).padStart(2, '0')}</span>
+                      <span style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', lineHeight: 1.45 }}>{c}</span>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            )}
+            {compareResult.notes && (
+              <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontStyle: 'italic', marginTop: 10, padding: '8px 10px', background: 'rgba(255,255,255,0.03)', borderRadius: 6 }}>Note: {compareResult.notes}</div>
+            )}
+          </div>
         </div>
       )}
 
