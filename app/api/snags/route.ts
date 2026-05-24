@@ -53,6 +53,16 @@ export async function POST(req: NextRequest) {
     const projectId = String(body.projectId || '').trim()
     if (!projectId) return NextResponse.json({ error: 'Project is required' }, { status: 400 })
 
+    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } })
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
+
+    let dueDate: Date | null = null
+    if (body.dueDate) {
+      const d = new Date(body.dueDate)
+      if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid dueDate' }, { status: 400 })
+      dueDate = d
+    }
+
     const priority = ALLOWED_PRIORITY.has(body.priority) ? body.priority : 'medium'
     const status = ALLOWED_STATUS.has(body.status) ? body.status : 'open'
 
@@ -64,7 +74,7 @@ export async function POST(req: NextRequest) {
         priority,
         status,
         photoUrl: typeof body.photoUrl === 'string' && body.photoUrl ? body.photoUrl : null,
-        dueDate: body.dueDate ? new Date(body.dueDate) : null,
+        dueDate,
         projectId,
         closedAt: status === 'closed' ? new Date() : null,
       },

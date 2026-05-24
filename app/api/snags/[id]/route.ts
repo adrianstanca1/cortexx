@@ -33,6 +33,21 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
     const justClosed = existing.status !== 'closed' && nextStatus === 'closed'
     const reopened = existing.status === 'closed' && nextStatus !== 'closed'
 
+    let dueDateUpdate: { dueDate: Date | null } | Record<string, never> = {}
+    if (body.dueDate !== undefined) {
+      if (body.dueDate) {
+        const d = new Date(body.dueDate)
+        if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid dueDate' }, { status: 400 })
+        dueDateUpdate = { dueDate: d }
+      } else {
+        dueDateUpdate = { dueDate: null }
+      }
+    }
+
+    if (body.title !== undefined && !String(body.title).trim()) {
+      return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
+    }
+
     const snag = await prisma.snag.update({
       where: { id: params.id },
       data: {
@@ -42,7 +57,7 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
         ...(body.priority !== undefined && ALLOWED_PRIORITY.has(body.priority) && { priority: body.priority }),
         ...(body.status !== undefined && { status: nextStatus }),
         ...(body.photoUrl !== undefined && { photoUrl: body.photoUrl || null }),
-        ...(body.dueDate !== undefined && { dueDate: body.dueDate ? new Date(body.dueDate) : null }),
+        ...dueDateUpdate,
         closedAt: justClosed ? new Date() : reopened ? null : undefined,
       },
       include: { project: { select: { id: true, name: true } } },
