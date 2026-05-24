@@ -88,9 +88,24 @@ jobs:
               ) || { echo "whisper.cpp install failed — voice transcription will be disabled"; rm -rf /opt/whisper.cpp; }
             fi
 
+            # Ollama vision model (moondream, ~1.8 GB) — best-effort,
+            # non-blocking. Powers /api/snags/[id]/analyze + /api/ask vision
+            # flows. If pull fails (network / disk), the analyze endpoint
+            # returns 503 with install instructions and the rest of the app
+            # keeps working.
+            if command -v ollama >/dev/null 2>&1; then
+              if ! ollama list 2>/dev/null | grep -q '^moondream'; then
+                echo "Pulling moondream vision model (one-time, ~1.8 GB)…"
+                ollama pull moondream 2>&1 | tail -3 || echo "moondream pull failed — vision analysis will be disabled"
+              fi
+            else
+              echo "ollama not installed — vision + /ask features will be unavailable. Install: curl -fsSL https://ollama.com/install.sh | sh"
+            fi
+
             echo "Node: $(node -v) | pm2: $(pm2 -v) | psql: $(psql --version 2>&1 | head -1)"
             echo "ffmpeg: $(ffmpeg -version 2>&1 | head -1)"
             echo "whisper: $(ls /opt/whisper.cpp/main /opt/whisper.cpp/build/bin/whisper-cli 2>/dev/null | head -1 || echo 'not installed')"
+            echo "ollama models: $(ollama list 2>/dev/null | tail -n +2 | awk '{print $1}' | tr '\n' ' ' || echo 'ollama not installed')"
           REMOTE
 
       - name: Provision DB, backup, deploy app
