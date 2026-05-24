@@ -52,6 +52,20 @@ async function copyRecursive(src, dest) {
 }
 
 async function main() {
+  // Cloud mode — capacitor.config.ts has `server.url` set via the
+  // CAPACITOR_SERVER_URL env. The WebView loads the URL on every launch,
+  // so www/ just needs a placeholder index.html (a Capacitor invariant).
+  if (process.env.CAPACITOR_SERVER_URL) {
+    log(`Cloud mode — server.url = ${process.env.CAPACITOR_SERVER_URL}`);
+    log('Wiping', OUT);
+    await rmrf(OUT);
+    await fs.mkdir(OUT, { recursive: true });
+    const placeholder = `<!doctype html><html><head><meta charset="utf-8"><title>Cortexx</title><meta http-equiv="refresh" content="0; url=${process.env.CAPACITOR_SERVER_URL}"></head><body>Loading Cortexx…</body></html>`;
+    await fs.writeFile(path.join(OUT, 'index.html'), placeholder);
+    log('Done →', OUT, '(cloud mode; WebView will load the live app)');
+    return;
+  }
+
   if (!existsSync(LEGACY_SRC)) {
     console.error('✗ public/legacy/ does not exist. The legacy PWA bundle must be present at the repo root.');
     console.error('  Expected:', LEGACY_SRC);
