@@ -15,9 +15,9 @@ Live: **https://cortexbuildpro.com**
 
 ## Stack
 
-- **Next.js 14** (App Router) — 46+ pages, 35+ API routes, 30+ components
-- **PostgreSQL + Prisma** — 14 models, 5 migrations
-- **NextAuth** (credentials) + middleware-gated routes
+- **Next.js 16 + React 19** (App Router) — 50+ pages, 110+ API routes, 30+ components
+- **PostgreSQL + Prisma** — 43 models, 17 migrations
+- **NextAuth** (credentials) + proxy-gated routes (`proxy.ts`)
 - **PWA** — service worker, offline fallback, install hint, splash screens
 - **iOS** — Capacitor 6 native shell (`ios/`) targeting the App Store
 - **Hostinger VPS** + nginx + pm2, automated deploys via GitHub Actions
@@ -28,7 +28,7 @@ Live: **https://cortexbuildpro.com**
 app/                     # Next.js App Router
   (auth)/login           # Public auth pages
   (auth)/register
-  dashboard              # 12 dashboard variants — matches Claude design
+  dashboard              # 15 dashboard variants — matches Claude design
   projects               # List + detail + board + gallery
   tasks                  # List + bulk ops + select mode
   team                   # Members + per-member profile
@@ -113,11 +113,18 @@ the DB password rotation.
 
 ## Routes summary
 
-- **43 pages** — 12 dashboard variants + 31 distinct screens
-- **35 API routes** — full CRUD for Projects, Tasks, Team, Invoices, Documents,
-  Time Entries, Comments, plus `/api/inbox`, `/api/activity`, `/api/search`,
-  `/api/reports`, `/api/health`, `/api/auth/*`, `/api/seed`, `/api/errors`,
-  `/api/events/stream` (SSE), `/api/export/[type]` (CSV)
+- **50+ pages** — 15 dashboard variants + every shipped module (Projects, Tasks,
+  Team, Invoices, Documents, RFIs, Snags, Observations, Variations, Quotes,
+  Leads, Customers, Permits, RAMS, Tenders, Inspections, Meetings, Risks,
+  Drawings, Schedule, Site diary, Timesheets, Training, Toolbox talks,
+  Maintenance, Suppliers, Materials, POs, Sub-invoices, Subs, Equipment,
+  Cost catalog, Mileage, Check-in, Live status, Valuations, Safety, Reports,
+  Search, Activity, Inbox, Apps hub, Capture, Ask, Photos, Settings, Client view)
+- **110+ API routes** — full CRUD across the above + `/api/health` (db/disk/memory),
+  `/api/events/stream` (SSE), `/api/ask` (Ollama LLM), `/api/transcribe`
+  (whisper.cpp), `/api/quotes/draft` + `/api/pos/draft` (AI line items),
+  `/api/weather` (wttr.in proxy), `/api/{quotes,invoices,pos,sub-invoices}/[id]/pdf`
+  (pdfkit), `/api/export/[type]` (CSV), `/api/valuations` (interim payment apps)
 - All API routes auth-gated by `middleware.ts` except `/api/auth/*`,
   `/api/health`, `/api/seed`, `/login`, `/register`, `/manifest.json`,
   `/sw.js`, `/offline.html`, `/favicon.ico`
