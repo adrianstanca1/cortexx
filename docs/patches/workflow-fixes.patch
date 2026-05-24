@@ -1,0 +1,138 @@
+[1mdiff --git a/.github/workflows/debug-vps.yml b/.github/workflows/debug-vps.yml[m
+[1mindex 1c89d8c..603fee1 100644[m
+[1m--- a/.github/workflows/debug-vps.yml[m
+[1m+++ b/.github/workflows/debug-vps.yml[m
+[36m@@ -13,8 +13,8 @@[m [mjobs:[m
+           mkdir -p ~/.ssh[m
+           echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy[m
+           chmod 600 ~/.ssh/cortexx_deploy[m
+[31m-[m
+[31m-      - name: Try deploy step manually with full tracing[m
+[32m+[m[32m          ssh-keyscan -H 72.62.132.43 >> ~/.ssh/known_hosts 2>/dev/null || true[m
+[32m+[m[32m      - name: VPS diagnostics[m
+         env:[m
+           NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}[m
+           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}[m
+[36m@@ -26,7 +26,6 @@[m [mjobs:[m
+           echo "Local ADMIN_PASSWORD length: ${#ADMIN_PASSWORD}"[m
+           echo "Local SEED_TOKEN length: ${#SEED_TOKEN}"[m
+           echo ""[m
+[31m-          # Run deploy step verbatim, capturing everything[m
+           {[m
+             echo "=== Remote env check ==="[m
+             ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \[m
+[36m@@ -41,68 +40,39 @@[m [mjobs:[m
+               echo "  ADMIN_PASSWORD: ${#ADMIN_PASSWORD}"[m
+               echo "  SEED_TOKEN: ${#SEED_TOKEN}"[m
+           REMOTE[m
+[32m+[m
+             echo ""[m
+[31m-            echo "=== Pre-check files ==="[m
+[31m-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \[m
+[31m-              'ls -la /opt/cortexx-db-password /tmp/cortexx_pg_ip /tmp/cortexx_pg_container 2>&1'[m
+[31m-            echo ""[m
+[31m-            echo "=== Postgres DB check ==="[m
+[32m+[m[32m            echo "=== System Postgres check ==="[m
+             ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'[m
+[31m-              DB_PASS=$(cat /opt/cortexx-db-password 2>/dev/null)[m
+[31m-              PG_IP=$(cat /tmp/cortexx_pg_ip 2>/dev/null)[m
+[31m-              PG_CONTAINER=$(cat /tmp/cortexx_pg_container 2>/dev/null)[m
+[31m-              echo "DB_PASS length: ${#DB_PASS}"[m
+[31m-              echo "PG_IP: $PG_IP"[m
+[31m-              echo "PG_CONTAINER: $PG_CONTAINER"[m
+[31m-              if [ -n "$DB_PASS" ] && [ -n "$PG_IP" ]; then[m
+[31m-                echo "Test connection:"[m
+[31m-                docker exec -i "$PG_CONTAINER" psql -U cortexx -d cortexx -h "$PG_IP" -c "SELECT 1;" 2>&1 | head -5[m
+[31m-              fi[m
+[32m+[m[32m              echo "PostgreSQL version: $(psql --version 2>&1 | head -1)"[m
+[32m+[m[32m              echo "PostgreSQL status: $(systemctl is-active postgresql 2>/dev/null || echo unknown)"[m
+[32m+[m[32m              echo "Databases:"[m
+[32m+[m[32m              sudo -u postgres psql -tAc "SELECT datname FROM pg_database WHERE datistemplate=false;" 2>/dev/null || echo "Could not list databases"[m
+[32m+[m[32m              echo "Users:"[m
+[32m+[m[32m              sudo -u postgres psql -tAc "SELECT usename FROM pg_user;" 2>/dev/null || echo "Could not list users"[m
+           REMOTE[m
+[31m-            echo ""[m
+[31m-            echo "=== Try deploy step ==="[m
+[31m-            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \[m
+[31m-              NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \[m
+[31m-              ADMIN_EMAIL="$ADMIN_EMAIL" \[m
+[31m-              ADMIN_PASSWORD="$ADMIN_PASSWORD" \[m
+[31m-              SEED_TOKEN="$SEED_TOKEN" \[m
+[31m-              'bash -s' << 'REMOTE' 2>&1 || true[m
+[31m-              set -ex[m
+[31m-              APP_DIR=/opt/cortexx[m
+[31m-              APP_PORT=3010[m
+[31m-              DB_PASS=$(cat /opt/cortexx-db-password 2>/dev/null)[m
+[31m-              PG_IP=$(cat /tmp/cortexx_pg_ip 2>/dev/null)[m
+[31m-              if [ -z "$DB_PASS" ] || [ -z "$PG_IP" ]; then[m
+[31m-                echo "ERROR: Missing DB password or Postgres IP"[m
+[31m-                exit 1[m
+[31m-              fi[m
+[31m-              DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"[m
+[31m-              echo "DB_URL set"[m
+[31m-[m
+[31m-              cd $APP_DIR[m
+[31m-              git fetch origin 2>&1 | tail -3[m
+[31m-              git reset --hard origin/main 2>&1 | tail -3[m
+[31m-              rm -rf $APP_DIR/.next $APP_DIR/node_modules[m
+[31m-[m
+[31m-              echo "Writing .env.production"[m
+[31m-              cat > $APP_DIR/.env.production << ENV[m
+[31m-          DATABASE_URL=$DB_URL[m
+[31m-          NEXTAUTH_SECRET=$NEXTAUTH_SECRET[m
+[31m-          NEXTAUTH_URL=https://cortexbuildpro.com[m
+[31m-          NODE_ENV=production[m
+[31m-          PORT=$APP_PORT[m
+[31m-          ALLOW_SEED=true[m
+[31m-          SEED_TOKEN=$SEED_TOKEN[m
+[31m-          ADMIN_EMAIL=$ADMIN_EMAIL[m
+[31m-          ADMIN_PASSWORD=$ADMIN_PASSWORD[m
+[31m-          ENV[m
+[31m-              chmod 600 $APP_DIR/.env.production[m
+[31m-              echo ".env.production size: $(wc -c < $APP_DIR/.env.production) bytes"[m
+ [m
+[31m-              echo "Running npm ci..."[m
+[31m-              npm ci --include=dev 2>&1 | tail -15[m
+[31m-              echo "npm ci exit: $?"[m
+[32m+[m[32m            echo ""[m
+[32m+[m[32m            echo "=== App status ==="[m
+[32m+[m[32m            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'[m
+[32m+[m[32m              echo "PM2 processes:"[m
+[32m+[m[32m              pm2 list 2>/dev/null || echo "pm2 not found"[m
+[32m+[m[32m              echo ""[m
+[32m+[m[32m              echo "App dir:"[m
+[32m+[m[32m              ls -la /opt/cortexx/ 2>/dev/null | head -20 || echo "/opt/cortexx not found"[m
+[32m+[m[32m              echo ""[m
+[32m+[m[32m              echo "App health:"[m
+[32m+[m[32m              curl -s --max-time 10 http://localhost:3010/api/health 2>/dev/null || echo "Health check failed"[m
+[32m+[m[32m              echo ""[m
+[32m+[m[32m              echo ".env.production (keys only):"[m
+[32m+[m[32m              grep -E "^[A-Z_]+=" /opt/cortexx/.env.production 2>/dev/null | sed 's/=.*/=<redacted>/' || echo "No .env.production"[m
+[32m+[m[32m              echo ""[m
+[32m+[m[32m              echo "Nginx status: $(systemctl is-active nginx 2>/dev/null || echo unknown)"[m
+[32m+[m[32m              echo ""[m
+[32m+[m[32m              echo "Certbot cert:"[m
+[32m+[m[32m              ls /etc/letsencrypt/live/cortexbuildpro.com/ 2>/dev/null || echo "No cert found"[m
+           REMOTE[m
+[32m+[m
+           } 2>&1 | tee debug.txt[m
+           git config user.email "actions@github.com"[m
+           git config user.name "GitHub Actions"[m
+[1mdiff --git a/.github/workflows/deploy-vps.yml b/.github/workflows/deploy-vps.yml[m
+[1mindex bec94f1..430abe0 100644[m
+[1m--- a/.github/workflows/deploy-vps.yml[m
+[1m+++ b/.github/workflows/deploy-vps.yml[m
+[36m@@ -379,9 +379,9 @@[m [mjobs:[m
+           ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \[m
+             'curl -s -o /dev/null -w "Local 3010: HTTP %{http_code}\n" http://localhost:3010/'[m
+           echo "=== Public ==="[m
+[31m-          curl -s -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.com/[m
+[31m-          curl -s -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.com/api/health[m
+[31m-          curl -s -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.com/login[m
+[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.com/ || echo "HTTPS root: connection error (SSL may still be provisioning)"[m
+[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.com/api/health || echo "HTTPS health: connection error"[m
+[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.com/login || echo "HTTPS login: connection error"[m
+           echo "=== Health body ==="[m
+[31m-          curl -s --max-time 10 https://cortexbuildpro.com/api/health[m
+[32m+[m[32m          curl -s --max-time 20 https://cortexbuildpro.com/api/health || echo "Health check via HTTPS failed — app is still running on port 3010"[m
+           echo ""[m
