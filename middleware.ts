@@ -18,6 +18,8 @@ function isPublic(pathname: string): boolean {
   if (pathname.startsWith('/_next/')) return true
   if (pathname.startsWith('/static/')) return true
   if (pathname.startsWith('/legacy/')) return true // marketing + legacy PWA bundle
+  if (pathname.startsWith('/client/')) return true // public shared project view — token-gated by /api/client-view
+  if (pathname.startsWith('/api/client-view/')) return true // public token-gated read API
   return false
 }
 
