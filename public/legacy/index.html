@@ -1,0 +1,229 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>Cortexx — Working App</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#06101e" media="(prefers-color-scheme: dark)"/>
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)"/>
+<meta name="description" content="Cortexx — the AI construction OS for UK SMB contractors. Quotes, projects, CIS-aware accounting, safety, snags."/>
+
+<!-- iOS PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="Cortexx"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
+<link rel="icon" type="image/svg+xml" href="icon.svg"/>
+
+<!-- Open Graph -->
+<meta property="og:title" content="Cortexx — Construction OS"/>
+<meta property="og:description" content="The construction OS that thinks with you. Free for UK SMB contractors."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="icon-512.png"/>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0a0e16; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  body {
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(37,99,235,0.06), transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(139,92,246,0.05), transparent 50%),
+      #0a0e16;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; padding: 24px 16px;
+    box-sizing: border-box; color: #e8eef7;
+  }
+  .header { text-align: center; margin-bottom: 18px; max-width: 480px; }
+  .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin: 0 0 6px; }
+  .header p { font-size: 13px; color: #7a9cc0; margin: 0; line-height: 1.5; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(37,99,235,0.15); color: #60a5fa;
+    border: 0.5px solid rgba(37,99,235,0.4);
+    padding: 4px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.4px;
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  .stage { display: flex; justify-content: center; width: 100%; }
+  #root { width: 100%; max-width: 430px; }
+  .footer { color: #3d5e82; font-size: 11px; margin-top: 16px; text-align: center; max-width: 380px; font-family: "SF Mono", monospace; }
+  .footer a { color: #60a5fa; text-decoration: none; }
+</style>
+<style>
+/* Print stylesheet — when window.print() is called, strip Cortexx chrome
+   (status bar, tab bar, FAB, etc.) so output is a clean A4 document. */
+@media print {
+  body { background: white !important; color: #000 !important; }
+  /* Hide the iPhone frame, status bar, tab bar, floating buttons, sheet chrome */
+  [class*="ios-frame"], .ios-frame, .deck-stage,
+  [data-print-hide], [class*="MobileHeader"] button,
+  button[style*="position: fixed"], div[style*="position: fixed"][style*="bottom"] {
+    display: none !important;
+  }
+  /* Force readable text */
+  * { color: #000 !important; background: white !important;
+      box-shadow: none !important; border-color: #ccc !important; }
+  a { text-decoration: underline; }
+  /* Anything scrollable becomes full flow */
+  [style*="overflowY"] { overflow: visible !important; max-height: none !important; }
+  @page { margin: 14mm; size: A4; }
+}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">● Live · iPhone 15 Pro</div>
+  <h1>Cortexx — full app</h1>
+  <p>Tap a project, the + button, or the AI orb. Top-right chip swaps the dashboard layout (12 variations). Tweaks panel changes accent color.</p>
+</div>
+
+<div class="stage"><div id="root"></div></div>
+
+<div class="footer">5 tabs · 12 dashboards · sheets · live Cortex AI · <a href="Cortexx Mobile Dashboard.html">view all variations →</a></div>
+
+<script>
+  // ───────────────────────────────────────────────────────────
+  // Cortexx — smart loader
+  //   ?dev=1 in URL  → load .jsx from lib/ and transform in-browser via Babel
+  //   default        → load precompiled .js from dist/ (zero Babel cost)
+  // Cold-start time is exposed at window.__cortexxBoot.
+  // ───────────────────────────────────────────────────────────
+  window.__cortexxBoot = performance.now();
+  const DEV_MODE = new URLSearchParams(location.search).has('dev')
+                || location.hostname === 'localhost'
+                || location.hostname === '127.0.0.1';
+  window.__cortexxDevMode = DEV_MODE;
+
+  // Module list in load order. Keep in sync with the JSX sources in lib/.
+  const MODULES = [
+    'ios-frame', 'tweaks-panel', 'tokens',
+    'dashboards', 'dashboards-v2', 'dashboards-v3', 'dashboards-v4', 'dashboards-v5',
+    'backend', 'backend-extras',
+    'perf-phase71', 'perf-phase81',
+    'app-screens', 'app-sheets', 'app-screens-2', 'app-utils',
+    'screens-ops', 'screens-project',
+    'screens-phase2','screens-phase3','screens-phase4','screens-phase5','screens-phase6',
+    'screens-phase7','screens-phase8','screens-phase9','screens-phase10','screens-phase11',
+    'screens-phase12','screens-phase13','screens-phase14','screens-phase15','screens-phase16',
+    'screens-phase17','screens-phase18','screens-phase19','screens-phase20',
+    'screens-phase21-30',
+    'screens-phase31','screens-phase32','screens-phase33','screens-phase34','screens-phase35',
+    'screens-phase36','screens-phase37','screens-phase38','screens-phase39','screens-phase40',
+    'screens-phase41-50','screens-phase51-70',
+    'screens-phase72','screens-phase73','screens-phase74','screens-phase75','screens-phase76',
+    'screens-phase77','screens-phase78','screens-phase79','screens-phase80',
+    'app-main',
+    'boot',
+  ];
+  // Files that are plain JS (not JSX) — they go through <script src> even in dev.
+  const PLAIN_JS = new Set(['backend', 'backend-extras', 'perf-phase71', 'perf-phase81']);
+
+  // 1) Load React + (dev only) Babel
+  function injectExternal(src, integrity) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      s.src = src; s.crossOrigin = 'anonymous';
+      if (integrity) s.integrity = integrity;
+      s.onload = res; s.onerror = rej;
+      document.head.appendChild(s);
+    });
+  }
+  function injectLocal(src, kind) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      if (kind === 'babel') {
+        // Dynamically-injected <script type="text/babel" src=...> does NOT
+        // auto-transform; we must fetch + transform + inline.
+        fetch(src)
+          .then(r => r.text())
+          .then(code => {
+            const out = window.Babel.transform(code, {
+              presets: [['react', { runtime: 'classic' }]],
+              compact: false, comments: false, sourceType: 'script',
+            }).code;
+            const s2 = document.createElement('script');
+            s2.textContent = out;
+            document.head.appendChild(s2);
+            res();
+          })
+          .catch(rej);
+      } else {
+        s.src = src;
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      }
+    });
+  }
+
+  (async () => {
+    await injectExternal(
+      'https://unpkg.com/react@18.3.1/umd/react.development.js',
+      'sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L'
+    );
+    await injectExternal(
+      'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js',
+      'sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm'
+    );
+    if (DEV_MODE) {
+      await injectExternal(
+        'https://unpkg.com/@babel/standalone@7.29.0/babel.min.js',
+        'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y'
+      );
+    }
+    // Modules don't all need to load serially, but ORDER matters because they
+    // share global scope. Load them serially to preserve order; Babel handles
+    // both <script type=text/babel> and <script src> sequentially anyway.
+    for (const name of MODULES) {
+      const isPlain = PLAIN_JS.has(name);
+      if (DEV_MODE) {
+        const path = isPlain ? `lib/${name}.js` : `lib/${name}.jsx`;
+        await injectLocal(path, isPlain ? 'js' : 'babel');
+      } else {
+        // Production: every module ships as plain JS from dist/
+        await injectLocal(`dist/${name}.js`, 'js');
+      }
+    }
+    // Boot the root tree (defined inline below)
+    if (window.__cortexxBootApp) window.__cortexxBootApp();
+  })().catch(err => {
+    document.body.insertAdjacentHTML('beforeend',
+      `<pre style="color:#ef4444;padding:18px;font:12px monospace;">Cortexx load failed:\n${err && err.message || err}</pre>`);
+  });
+</script>
+
+<script type="text/babel">
+// (Legacy inline bootstrap — kept for fallback. In normal mode the loader uses
+//  dist/boot.js which is the precompiled version of lib/boot.jsx.)
+</script>
+<script>
+// Register service worker for offline + PWA install
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0c1a2e"/>
+        <stop offset="1" stop-color="#152641"/>
+      </linearGradient>
+    </defs>
+    <rect width="200" height="200" fill="url(#bg)"/>
+    <g transform="translate(100,100)">
+      <rect x="-40" y="-40" width="80" height="80" rx="18" fill="#2563eb"/>
+      <path d="M-18 -8 L0 14 L18 -8" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g>
+    <text x="100" y="170" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="700" fill="#60a5fa" letter-spacing="2">CORTEXX</text>
+  </svg>
+</template>
+</body>
+</html>
