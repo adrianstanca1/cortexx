@@ -52,6 +52,41 @@ export default function POsPage() {
   const [form, setForm] = useState({
     supplier: '', contactEmail: '', projectId: '', vatRate: '20', expectedDelivery: '', items: [blankItem()],
   })
+  const [aiOpen, setAiOpen] = useState(false)
+  const [aiBrief, setAiBrief] = useState('')
+  const [aiBusy, setAiBusy] = useState(false)
+  const [aiError, setAiError] = useState<string | null>(null)
+  const [aiNotes, setAiNotes] = useState<string | null>(null)
+
+  const draftWithAi = async () => {
+    const brief = aiBrief.trim()
+    if (brief.length < 10) { setAiError('Brief needs at least 10 characters'); return }
+    setAiBusy(true); setAiError(null); setAiNotes(null)
+    try {
+      const res = await fetch('/api/pos/draft', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ brief, supplier: form.supplier }),
+      })
+      const json = await res.json()
+      if (!res.ok) throw new Error(json?.error || 'Failed to draft')
+      const items: LineItem[] = (json.items || []).map((it: { description: string; quantity: number; unit: string; unitPrice: number }) => ({
+        description: it.description,
+        quantity: it.quantity,
+        unit: it.unit,
+        unitPrice: it.unitPrice,
+        total: it.quantity * it.unitPrice,
+      }))
+      if (items.length === 0) throw new Error('Model returned no usable items')
+      setForm(p => ({ ...p, items }))
+      setAiNotes(json.notes || null)
+      setAiOpen(false)
+      setAiBrief('')
+      setToast({ msg: `Drafted ${items.length} item${items.length === 1 ? '' : 's'} — review before saving` })
+    } catch (e) {
+      setAiError(e instanceof Error ? e.message : 'Failed to draft')
+    } finally { setAiBusy(false) }
+  }
 
   useModalEffects(showAdd || activePo !== null, () => { setShowAdd(false); setActivePo(null) })
 
@@ -104,6 +139,7 @@ export default function POsPage() {
       if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Failed')
       setShowAdd(false)
       setForm({ supplier: '', contactEmail: '', projectId: '', vatRate: '20', expectedDelivery: '', items: [blankItem()] })
+      setAiOpen(false); setAiBrief(''); setAiError(null); setAiNotes(null)
       load()
       setToast({ msg: 'PO drafted' })
     } catch (e) {
@@ -219,6 +255,79 @@ export default function POsPage() {
             </div>
             <input autoFocus value={form.supplier} onChange={e => setForm(p => ({ ...p, supplier: e.target.value }))} placeholder="Supplier" style={inputStyle} />
             <input type="email" value={form.contactEmail} onChange={e => setForm(p => ({ ...p, contactEmail: e.target.value }))} placeholder="Supplier email" style={inputStyle} />
+
+            {/* AI-draft toggle + panel */}
+            {!aiOpen ? (
+              <button
+                onClick={() => { setAiOpen(true); setAiError(null) }}
+                type="button"
+                style={{
+                  background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(245,158,11,0.10))',
+                  border: '0.5px dashed rgba(139,92,246,0.5)',
+                  color: '#c4b5fd',
+                  borderRadius: 12,
+                  padding: '10px 14px',
+                  fontFamily: SF,
+                  fontSize: 12,
+                  fontWeight: 600,
+                  cursor: 'pointer',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'space-between',
+                  gap: 8,
+                }}
+              >
+                <span>✨ Estimate items with AI from a brief</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, opacity: 0.7 }}>local LLM</span>
+              </button>
+            ) : (
+              <div style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.35)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                  <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: '#c4b5fd' }}>✨ Estimate with AI</span>
+                  <button onClick={() => { setAiOpen(false); setAiError(null) }} aria-label="Close" type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                    <IcX size={14} color="#8ea8c5" />
+                  </button>
+                </div>
+                <textarea
+                  value={aiBrief}
+                  onChange={e => setAiBrief(e.target.value)}
+                  placeholder="e.g. Materials for 12m brick boundary wall, 1.8m high — bricks, mortar, foundations, capping. Plus a 1.5T mini-excavator for 2 days."
+                  rows={3}
+                  maxLength={800}
+                  style={{ ...inputStyle, fontFamily: SF, fontSize: 12, resize: 'vertical', minHeight: 60 }}
+                />
+                {aiError && (
+                  <div style={{ fontFamily: SF, fontSize: 11, color: '#ef4444' }}>{aiError}</div>
+                )}
+                <button
+                  onClick={draftWithAi}
+                  disabled={aiBusy || aiBrief.trim().length < 10}
+                  type="button"
+                  style={{
+                    padding: '8px 14px',
+                    borderRadius: 10,
+                    background: '#8b5cf6',
+                    border: 'none',
+                    color: '#fff',
+                    fontFamily: SF,
+                    fontSize: 12,
+                    fontWeight: 700,
+                    cursor: aiBusy || aiBrief.trim().length < 10 ? 'not-allowed' : 'pointer',
+                    opacity: aiBusy || aiBrief.trim().length < 10 ? 0.5 : 1,
+                  }}
+                >
+                  {aiBusy ? 'Estimating (10–30s)…' : 'Generate line items'}
+                </button>
+                <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5' }}>
+                  AI suggests realistic UK construction materials and plant. Always confirm prices with your supplier before sending.
+                </div>
+              </div>
+            )}
+            {aiNotes && !aiOpen && (
+              <div style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.25)', borderRadius: 10, padding: '8px 12px', fontFamily: SF, fontSize: 11, color: '#c4b5fd' }}>
+                <span style={{ fontWeight: 700 }}>AI note: </span>{aiNotes}
+              </div>
+            )}
             <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
               <option value="">— Project (optional) —</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}

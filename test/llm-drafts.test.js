@@ -1,14 +1,15 @@
 /**
- * Unit tests for the AI-draft response parser in /api/quotes/draft.
- * The parser is the most fragile piece — local LLMs sometimes wrap JSON
- * in markdown fences or include stray keys.
+ * Unit tests for the AI-draft response parser in lib/llmDrafts.ts.
+ * The parser is shared by /api/quotes/draft and /api/pos/draft. It is
+ * the most fragile piece — local LLMs sometimes wrap JSON in markdown
+ * fences, drift on key casing, or return out-of-range numbers.
  *
  * Run with:  npm test
  */
 const test = require('node:test')
 const assert = require('node:assert/strict')
 
-// Pure mirror of the parsing rules in app/api/quotes/draft/route.ts.
+// Pure mirror of the parsing rules in lib/llmDrafts.ts.
 const COMMON_UNITS = ['hour', 'day', 'item', 'm', 'm²', 'm³', 'kg', 'tonne', 'job']
 const MAX_ITEMS = 12
 const MAX_DESC_LEN = 140
