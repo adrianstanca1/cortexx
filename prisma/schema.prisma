@@ -87,6 +87,8 @@ model Project {
   snags         Snag[]
   rfis          Rfi[]
   announcements Announcement[]
+  observations  Observation[]
+  variations    Variation[]
 
   @@index([status])
   @@index([updatedAt])
@@ -305,4 +307,48 @@ model Announcement {
 
   @@index([projectId, createdAt])
   @@index([isPinned, createdAt])
+}
+
+model Observation {
+  id          String    @id @default(cuid())
+  projectId   String
+  type        String    @default("positive") // positive, improvement, unsafe, near_miss
+  title       String
+  description String?
+  location    String?
+  reportedBy  String?
+  photoUrl    String?
+  status      String    @default("open") // open, resolved
+  resolvedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([type, status])
+  @@index([createdAt])
+}
+
+model Variation {
+  id          String    @id @default(cuid())
+  number      String
+  projectId   String
+  title       String
+  description String?
+  costImpact  Float     @default(0)
+  daysImpact  Int       @default(0)
+  status      String    @default("draft") // draft, submitted, approved, rejected
+  clientName  String?
+  notes       String?
+  submittedAt DateTime?
+  approvedAt  DateTime?
+  rejectedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, number])
+  @@index([projectId, status])
+  @@index([status])
+  @@index([submittedAt])
 }
