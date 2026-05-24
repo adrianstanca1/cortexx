@@ -60,23 +60,23 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id            String         @id @default(cuid())
+  id            String          @id @default(cuid())
   name          String
   address       String
   postcode      String
-  status        String         @default("active") // active, snagging, quoting, complete
-  progress      Int            @default(0)
-  clientName    String         @default("")
-  budget        Float          @default(0)
-  spent         Float          @default(0)
-  lat           Float          @default(51.5)
-  lng           Float          @default(-0.1)
+  status        String          @default("active") // active, snagging, quoting, complete
+  progress      Int             @default(0)
+  clientName    String          @default("")
+  budget        Float           @default(0)
+  spent         Float           @default(0)
+  lat           Float           @default(51.5)
+  lng           Float           @default(-0.1)
   startDate     DateTime?
   endDate       DateTime?
-  onSiteCount   Int            @default(0)
+  onSiteCount   Int             @default(0)
   archivedAt    DateTime?
-  createdAt     DateTime       @default(now())
-  updatedAt     DateTime       @updatedAt
+  createdAt     DateTime        @default(now())
+  updatedAt     DateTime        @updatedAt
   tasks         Task[]
   assignments   Assignment[]
   invoices      Invoice[]
@@ -90,6 +90,8 @@ model Project {
   observations  Observation[]
   variations    Variation[]
   siteCheckIns  SiteCheckIn[]
+  pos           PurchaseOrder[]
+  subInvoices   SubInvoice[]
 
   @@index([status])
   @@index([updatedAt])
@@ -484,7 +486,7 @@ model CostItem {
 }
 
 model Subcontractor {
-  id                   String    @id @default(cuid())
+  id                   String       @id @default(cuid())
   name                 String
   trade                String?
   contactName          String?
@@ -492,14 +494,15 @@ model Subcontractor {
   contactPhone         String?
   address              String?
   postcode             String?
-  cisStatus            String    @default("20") // gross, 20, 30
+  cisStatus            String       @default("20") // gross, 20, 30
   utrNumber            String?
   insuranceExpiry      DateTime?
   qualificationsExpiry DateTime?
   notes                String?
   archivedAt           DateTime?
-  createdAt            DateTime  @default(now())
-  updatedAt            DateTime  @updatedAt
+  subInvoices          SubInvoice[]
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
   @@index([name])
   @@index([trade])
@@ -527,4 +530,77 @@ model Equipment {
   @@index([status])
   @@index([nextServiceAt])
   @@index([archivedAt])
+}
+
+model Material {
+  id           String    @id @default(cuid())
+  name         String
+  code         String?
+  category     String?
+  unit         String    @default("item")
+  unitCost     Float     @default(0)
+  stockLevel   Float     @default(0)
+  reorderPoint Float     @default(0)
+  supplier     String?
+  location     String?
+  notes        String?
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([category])
+  @@index([code])
+  @@index([archivedAt])
+}
+
+model PurchaseOrder {
+  id               String    @id @default(cuid())
+  number           String    @unique
+  projectId        String?
+  supplier         String
+  contactEmail     String?
+  contactPhone     String?
+  status           String    @default("draft") // draft, sent, received, closed, cancelled
+  lineItems        Json      @default("[]")
+  subtotal         Float     @default(0)
+  vatRate          Float     @default(20)
+  vatAmount        Float     @default(0)
+  total            Float     @default(0)
+  expectedDelivery DateTime?
+  receivedAt       DateTime?
+  sentAt           DateTime?
+  closedAt         DateTime?
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  project          Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([status])
+  @@index([expectedDelivery])
+}
+
+model SubInvoice {
+  id              String        @id @default(cuid())
+  number          String
+  subcontractorId String
+  projectId       String?
+  invoiceDate     DateTime
+  description     String?
+  netAmount       Float         @default(0)
+  vatAmount       Float         @default(0)
+  cisAmount       Float         @default(0)
+  grossAmount     Float         @default(0)
+  payableAmount   Float         @default(0)
+  status          String        @default("received") // received, approved, paid, disputed
+  paidAt          DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  subcontractor   Subcontractor @relation(fields: [subcontractorId], references: [id], onDelete: Cascade)
+  project         Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@unique([subcontractorId, number])
+  @@index([subcontractorId, status])
+  @@index([status, invoiceDate])
 }
