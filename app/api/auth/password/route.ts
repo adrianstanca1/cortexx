@@ -2,12 +2,16 @@ import { NextRequest, NextResponse } from 'next/server'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const userId = (auth.user as { id?: string }).id
+  const limited = enforceRateLimit(req, 'auth', userId)
+  if (limited) return limited
   try {
     const body = await req.json()
     const current = String(body.currentPassword || '')

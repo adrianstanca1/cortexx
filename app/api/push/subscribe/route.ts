@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { publicVapidKey, isPushConfigured } from '@/lib/push'
+import { enforceRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +20,9 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await requireAuth()
   if (session instanceof NextResponse) return session
+  const userId = (session.user as { id?: string }).id
+  const limited = enforceRateLimit(req, 'auth', userId)
+  if (limited) return limited
 
   let body: { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }
@@ -31,15 +35,15 @@ export async function POST(req: NextRequest) {
   }
   if (endpoint.length > 1024) return NextResponse.json({ error: 'endpoint too long' }, { status: 400 })
 
-  const userId = (session.user as { id?: string }).id || null
   const userAgent = req.headers.get('user-agent')?.slice(0, 280) || null
 
   // Upsert keyed on the unique endpoint — same browser re-subscribing
   // updates user/key/lastUsed rather than creating a duplicate.
+  const subUserId = userId || null
   const sub = await prisma.pushSubscription.upsert({
     where: { endpoint },
-    create: { endpoint, p256dh, auth, userId, userAgent },
-    update: { p256dh, auth, userId, userAgent, lastUsed: new Date() },
+    create: { endpoint, p256dh, auth, userId: subUserId, userAgent },
+    update: { p256dh, auth, userId: subUserId, userAgent, lastUsed: new Date() },
   })
 
   return NextResponse.json({ id: sub.id, ok: true })

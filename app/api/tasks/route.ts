@@ -84,6 +84,7 @@ export async function POST(req: NextRequest) {
           if (!user) return
           return sendPush({
             userId: user.id,
+            category: 'tasks',
             payload: {
               title: `📋 ${task.priority === 'critical' ? 'Urgent task' : 'New task'}`,
               body: `${task.title}${task.project?.name ? ` · ${task.project.name}` : ''}`,

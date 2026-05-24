@@ -117,6 +117,7 @@ export async function POST(req: NextRequest) {
     // response. Lower-severity near-misses are captured by the activity feed.
     if (severity === 'critical' || severity === 'high' || riddorReportable) {
       sendPush({
+        category: 'safety',
         payload: {
           title: `⚠️ ${riddorReportable ? 'RIDDOR · ' : ''}Safety incident`,
           body: `${incident.title} (${severity})`,
