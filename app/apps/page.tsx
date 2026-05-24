@@ -78,9 +78,9 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Money & ops',
     items: [
       { href: '/reports',     label: 'Money',        Icon: IcReceipt, color: '#10b981' },
-      { href: '/pos',         label: 'POs',          Icon: IcDoc,     color: '#f59e0b', badgeKey: 'pos', comingSoon: true },
-      { href: '/sub-invoices',label: 'Sub invoices', Icon: IcDoc,     color: '#f59e0b', badgeKey: 'subinvoices', comingSoon: true },
-      { href: '/materials',   label: 'Materials',    Icon: IcWrench,  color: '#f59e0b', badgeKey: 'materials', comingSoon: true },
+      { href: '/pos',         label: 'POs',          Icon: IcDoc,     color: '#f59e0b', badgeKey: 'pos' },
+      { href: '/sub-invoices',label: 'Sub invoices', Icon: IcDoc,     color: '#f59e0b', badgeKey: 'subinvoices' },
+      { href: '/materials',   label: 'Materials',    Icon: IcWrench,  color: '#f59e0b', badgeKey: 'materials' },
       { href: '/subs',        label: 'Subs',         Icon: IcTeam,    color: '#2563eb' },
       { href: '/equipment',   label: 'Equipment',    Icon: IcWrench,  color: '#52749a' },
       { href: '/cost-catalog',label: 'Cost catalog', Icon: IcLayers,  color: '#06b6d4' },
