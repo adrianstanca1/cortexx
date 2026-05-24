@@ -98,6 +98,9 @@ model Project {
   permits       Permit[]
   rams          Rams[]
   tenders       Tender[]
+  inspections   Inspection[]
+  meetings      Meeting[]
+  risks         Risk[]
 
   @@index([status])
   @@index([updatedAt])
@@ -726,4 +729,66 @@ model Tender {
 
   @@index([projectId, status])
   @@index([status, deadline])
+}
+
+model Inspection {
+  id             String    @id @default(cuid())
+  projectId      String
+  title          String
+  type           String    @default("general") // general, safety, quality, scaffold, electrical
+  status         String    @default("draft") // draft, in_progress, passed, failed
+  checklistItems Json      @default("[]") // [{ id, label, result: 'pass'|'fail'|'na', note? }]
+  overallResult  String?   // pass, fail
+  conductedBy    String?
+  scheduledAt    DateTime?
+  completedAt    DateTime?
+  notes          String?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([scheduledAt])
+  @@index([type])
+}
+
+model Meeting {
+  id          String    @id @default(cuid())
+  projectId   String?
+  title       String
+  location    String?
+  scheduledAt DateTime
+  durationMin Int       @default(60)
+  attendees   String? // newline-separated names
+  minutes     String?
+  actionItems Json      @default("[]") // [{ id, title, assignee?, dueDate? }]
+  status      String    @default("scheduled") // scheduled, completed, cancelled
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, scheduledAt])
+  @@index([status, scheduledAt])
+}
+
+model Risk {
+  id         String    @id @default(cuid())
+  projectId  String
+  title      String
+  category   String    @default("operational") // operational, financial, schedule, safety, quality, environmental
+  likelihood Int       @default(3) // 1-5
+  impact     Int       @default(3) // 1-5
+  score      Int       @default(9) // likelihood × impact, server-computed
+  mitigation String?
+  owner      String?
+  status     String    @default("open") // open, mitigated, accepted, closed
+  reviewBy   DateTime?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([score])
+  @@index([reviewBy])
 }
