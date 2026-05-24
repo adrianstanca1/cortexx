@@ -94,6 +94,10 @@ model Project {
   pos           PurchaseOrder[]
   subInvoices   SubInvoice[]
   drawings      Drawing[]
+  milestones    Milestone[]
+  permits       Permit[]
+  rams          Rams[]
+  tenders       Tender[]
 
   @@index([status])
   @@index([updatedAt])
@@ -640,4 +644,86 @@ model DrawingRevision {
 
   @@unique([drawingId, revision])
   @@index([drawingId, uploadedAt])
+}
+
+model Milestone {
+  id           String    @id @default(cuid())
+  projectId    String
+  title        String
+  plannedStart DateTime
+  plannedEnd   DateTime
+  actualEnd    DateTime?
+  status       String    @default("planned") // planned, in_progress, complete, slipped
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  project      Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, plannedStart])
+  @@index([plannedEnd])
+  @@index([status])
+}
+
+model Permit {
+  id         String    @id @default(cuid())
+  projectId  String
+  title      String
+  type       String    @default("general") // hot_work, confined_space, excavation, working_at_height, electrical, general
+  status     String    @default("draft") // draft, active, expired, cancelled
+  riskLevel  String    @default("medium") // low, medium, high, critical
+  location   String?
+  issuedBy   String?
+  issuedTo   String?
+  validFrom  DateTime?
+  validTo    DateTime?
+  conditions String?
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([status, validTo])
+  @@index([type])
+}
+
+model Rams {
+  id        String    @id @default(cuid())
+  projectId String
+  title     String
+  type      String    @default("rams") // rams, risk_assessment, method_statement
+  hazards   String?
+  controls  String?
+  ppe       String?
+  reviewBy  DateTime?
+  signedBy  String?
+  signedAt  DateTime?
+  status    String    @default("draft") // draft, active, expired, archived
+  notes     String?
+  createdAt DateTime  @default(now())
+  updatedAt DateTime  @updatedAt
+  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([reviewBy])
+  @@index([type])
+}
+
+model Tender {
+  id          String    @id @default(cuid())
+  projectId   String?
+  title       String
+  clientName  String?
+  status      String    @default("draft") // draft, submitted, won, lost, withdrawn
+  totalValue  Float     @default(0)
+  deadline    DateTime?
+  submittedAt DateTime?
+  decidedAt   DateTime?
+  notes       String?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  project     Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([status, deadline])
 }
