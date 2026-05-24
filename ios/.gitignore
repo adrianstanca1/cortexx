@@ -1,0 +1,38 @@
+# iOS build artifacts
+App/build/
+App/DerivedData/
+App/*.xcarchive
+App/Pods/
+*.ipa
+*.dSYM.zip
+*.dSYM
+
+# Capacitor generated www/ (rebuilt by npm run build:web)
+www/
+
+# Node
+node_modules/
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Xcode user-specific files
+*.xcuserstate
+App/App.xcodeproj/xcuserdata/
+App/App.xcworkspace/xcuserdata/
+
+# macOS
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Fastlane
+fastlane/report.xml
+fastlane/Preview.html
+fastlane/screenshots/**/*.png
+fastlane/test_output
+
+# Signing — never commit certificates or profiles
+*.p12
+*.mobileprovision
+*.p8

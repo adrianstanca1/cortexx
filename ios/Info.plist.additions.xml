@@ -1,0 +1,96 @@
+<!--
+Cortexx — Info.plist additions for Apple App Store submission.
+
+After `npx cap add ios`, open ios/App/App/Info.plist in Xcode and paste
+each <key>…</key><string>…</string> pair INSIDE the existing top-level <dict>.
+
+Every permission key Cortexx uses appears here. Apple REJECTS apps that
+trigger a permission prompt without a corresponding usage description.
+Wording is the public-facing rationale your end users will see.
+-->
+
+<dict>
+  <!-- Camera — receipt scanning, site photos, snag evidence, incident reports -->
+  <key>NSCameraUsageDescription</key>
+  <string>Cortexx uses the camera so you can scan receipts, photograph site progress, capture snag evidence, and attach photos to incident reports.</string>
+
+  <!-- Photo Library (read) — for picking existing photos to attach -->
+  <key>NSPhotoLibraryUsageDescription</key>
+  <string>Cortexx needs access to your photos so you can attach existing site photos to projects, snags, RFIs and incident reports.</string>
+
+  <!-- Photo Library (write) — saving annotated photos and quote PDFs -->
+  <key>NSPhotoLibraryAddUsageDescription</key>
+  <string>Cortexx saves annotated photos, quote PDFs and report exports to your Photos library.</string>
+
+  <!-- Microphone — voice memos -->
+  <key>NSMicrophoneUsageDescription</key>
+  <string>Cortexx records voice memos so you can dictate tasks, site notes and meeting minutes hands-free on site.</string>
+
+  <!-- Location (when in use) — site check-in, mileage tracking -->
+  <key>NSLocationWhenInUseUsageDescription</key>
+  <string>Cortexx uses your location to verify site check-ins, geotag site photos and calculate HMRC-allowable mileage between job sites.</string>
+
+  <!-- Location (always) — only needed for background mileage tracking. Omit if not used. -->
+  <key>NSLocationAlwaysAndWhenInUseUsageDescription</key>
+  <string>Cortexx uses your location in the background to automatically log mileage between job sites for HMRC.</string>
+
+  <!-- Contacts — for picking client contact details -->
+  <key>NSContactsUsageDescription</key>
+  <string>Cortexx can read your Contacts so you can attach a customer to a project without re-typing their details.</string>
+
+  <!-- Calendar — for adding scheduled site visits / inspections -->
+  <key>NSCalendarsUsageDescription</key>
+  <string>Cortexx can add inspections, site visits and material delivery slots to your calendar.</string>
+
+  <!-- Face ID — for unlocking the app (Local Authentication) -->
+  <key>NSFaceIDUsageDescription</key>
+  <string>Cortexx can use Face ID to unlock the app so financial and CIS data stays private.</string>
+
+  <!-- Local network — if you ever sync to a site router or printer (e.g. Bluetooth tape printer) -->
+  <key>NSLocalNetworkUsageDescription</key>
+  <string>Cortexx can discover thermal label printers, site Wi-Fi cameras and other devices on the local network.</string>
+
+  <!-- App Transport Security — leave default (forces HTTPS). Only override if you must talk to a self-signed host. -->
+
+  <!-- Background modes used: declare in Xcode > Signing & Capabilities > Background Modes:
+       ☑ Location updates             (if using background mileage)
+       ☑ Remote notifications         (if using push)
+       ☑ Background fetch             (for daily refresh) -->
+
+  <!-- iOS 18 / iPad: support all orientations on iPad, portrait-only on iPhone -->
+  <key>UISupportedInterfaceOrientations</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+  </array>
+  <key>UISupportedInterfaceOrientations~ipad</key>
+  <array>
+    <string>UIInterfaceOrientationPortrait</string>
+    <string>UIInterfaceOrientationPortraitUpsideDown</string>
+    <string>UIInterfaceOrientationLandscapeLeft</string>
+    <string>UIInterfaceOrientationLandscapeRight</string>
+  </array>
+
+  <!-- Status bar style during launch -->
+  <key>UIStatusBarStyle</key>
+  <string>UIStatusBarStyleLightContent</string>
+  <key>UIViewControllerBasedStatusBarAppearance</key>
+  <false/>
+
+  <!-- Display name (override CFBundleName) -->
+  <key>CFBundleDisplayName</key>
+  <string>Cortexx</string>
+
+  <!-- Hide the status bar during the splash so the launch screen looks clean -->
+  <key>UIStatusBarHidden</key>
+  <false/>
+
+  <!-- Encryption export compliance: TRUE if you only use Apple's TLS / standard crypto. -->
+  <key>ITSAppUsesNonExemptEncryption</key>
+  <false/>
+
+  <!-- Required reason API declarations (iOS 17+).
+       Reference: https://developer.apple.com/documentation/bundleresources/privacy_manifest_files/describing_use_of_required_reason_api -->
+  <!-- These go into PrivacyInfo.xcprivacy at the project root, not Info.plist.
+       See ios/PrivacyInfo.xcprivacy. -->
+
+</dict>

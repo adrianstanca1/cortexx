@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+
+  <!-- Push notifications (APNs) -->
+  <key>aps-environment</key>
+  <string>production</string>
+
+  <!-- Universal Links — cortexbuildpro.com/app/* routes open in the app -->
+  <key>com.apple.developer.associated-domains</key>
+  <array>
+    <string>applinks:cortexbuildpro.com</string>
+    <string>webcredentials:cortexbuildpro.com</string>
+  </array>
+
+  <!-- iCloud (for future CloudKit sync) -->
+  <!-- Uncomment when you enable iCloud in Xcode Signing & Capabilities
+  <key>com.apple.developer.icloud-container-identifiers</key>
+  <array>
+    <string>iCloud.app.cortexbuild.cortexx</string>
+  </array>
+  <key>com.apple.developer.icloud-services</key>
+  <array>
+    <string>CloudKit</string>
+  </array>
+  -->
+
+  <!-- App Groups — shared container for Share Extension -->
+  <key>com.apple.security.application-groups</key>
+  <array>
+    <string>group.app.cortexbuild.cortexx</string>
+  </array>
+
+  <!-- Keychain sharing — for biometric-protected secrets -->
+  <key>keychain-access-groups</key>
+  <array>
+    <string>$(AppIdentifierPrefix)app.cortexbuild.cortexx</string>
+  </array>
+
+</dict>
+</plist>
