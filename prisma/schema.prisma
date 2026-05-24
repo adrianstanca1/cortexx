@@ -60,48 +60,49 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id            String          @id @default(cuid())
-  name          String
-  address       String
-  postcode      String
-  status        String          @default("active") // active, snagging, quoting, complete
-  progress      Int             @default(0)
-  clientName    String          @default("")
-  shareToken    String?         @unique
-  budget        Float           @default(0)
-  spent         Float           @default(0)
-  lat           Float           @default(51.5)
-  lng           Float           @default(-0.1)
-  startDate     DateTime?
-  endDate       DateTime?
-  onSiteCount   Int             @default(0)
-  archivedAt    DateTime?
-  createdAt     DateTime        @default(now())
-  updatedAt     DateTime        @updatedAt
-  tasks         Task[]
-  assignments   Assignment[]
-  invoices      Invoice[]
-  activities    Activity[]
-  timeEntries   TimeEntry[]
-  documents     Document[]
-  comments      Comment[]
-  snags         Snag[]
-  rfis          Rfi[]
-  announcements Announcement[]
-  observations  Observation[]
-  variations    Variation[]
-  siteCheckIns  SiteCheckIn[]
-  pos           PurchaseOrder[]
-  subInvoices   SubInvoice[]
-  drawings      Drawing[]
-  milestones    Milestone[]
-  permits       Permit[]
-  rams          Rams[]
-  tenders       Tender[]
-  inspections   Inspection[]
-  meetings      Meeting[]
-  risks         Risk[]
-  toolboxTalks  ToolboxTalk[]
+  id              String           @id @default(cuid())
+  name            String
+  address         String
+  postcode        String
+  status          String           @default("active") // active, snagging, quoting, complete
+  progress        Int              @default(0)
+  clientName      String           @default("")
+  shareToken      String?          @unique
+  budget          Float            @default(0)
+  spent           Float            @default(0)
+  lat             Float            @default(51.5)
+  lng             Float            @default(-0.1)
+  startDate       DateTime?
+  endDate         DateTime?
+  onSiteCount     Int              @default(0)
+  archivedAt      DateTime?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  tasks           Task[]
+  assignments     Assignment[]
+  invoices        Invoice[]
+  activities      Activity[]
+  timeEntries     TimeEntry[]
+  documents       Document[]
+  comments        Comment[]
+  snags           Snag[]
+  rfis            Rfi[]
+  announcements   Announcement[]
+  observations    Observation[]
+  variations      Variation[]
+  siteCheckIns    SiteCheckIn[]
+  pos             PurchaseOrder[]
+  subInvoices     SubInvoice[]
+  drawings        Drawing[]
+  milestones      Milestone[]
+  permits         Permit[]
+  rams            Rams[]
+  tenders         Tender[]
+  inspections     Inspection[]
+  meetings        Meeting[]
+  risks           Risk[]
+  toolboxTalks    ToolboxTalk[]
+  safetyIncidents SafetyIncident[]
 
   @@index([status])
   @@index([updatedAt])
@@ -856,4 +857,29 @@ model Supplier {
   @@index([name])
   @@index([category])
   @@index([archivedAt])
+}
+
+model SafetyIncident {
+  id               String    @id @default(cuid())
+  projectId        String?
+  title            String
+  description      String?
+  type             String    @default("near_miss") // near_miss, first_aid, accident, dangerous_occurrence, environmental, security
+  severity         String    @default("low") // near_miss, low, medium, high, critical
+  status           String    @default("open") // open, investigating, closed
+  location         String?
+  reportedBy       String?
+  injuredParty     String?
+  photoUrl         String?
+  riddorReportable Boolean   @default(false) // Reportable to HSE under RIDDOR
+  occurredAt       DateTime  @default(now())
+  closedAt         DateTime?
+  notes            String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  project          Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, status])
+  @@index([status, occurredAt])
+  @@index([severity])
 }
