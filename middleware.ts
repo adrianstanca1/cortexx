@@ -17,6 +17,7 @@ function isPublic(pathname: string): boolean {
   if (PUBLIC_API_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p))) return true
   if (pathname.startsWith('/_next/')) return true
   if (pathname.startsWith('/static/')) return true
+  if (pathname.startsWith('/legacy/')) return true // marketing + legacy PWA bundle
   return false
 }
 
