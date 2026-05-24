@@ -16,7 +16,7 @@ interface ModuleItem {
   color: string
   ai?: boolean
   comingSoon?: boolean
-  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'permits' | 'rams' | 'tenders' | 'inspections' | 'meetings' | 'risks'
+  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'permits' | 'rams' | 'tenders' | 'inspections' | 'meetings' | 'risks' | 'toolboxTalks' | 'maintenance'
 }
 
 interface CaptureAction {
@@ -112,6 +112,14 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/risks',       label: 'Risk register', Icon: IcAlert, color: '#ef4444', badgeKey: 'risks' },
     ],
   },
+  {
+    title: 'Daily ops',
+    items: [
+      { href: '/toolbox-talks', label: 'Toolbox talks', Icon: IcHardhat, color: '#f59e0b', badgeKey: 'toolboxTalks' },
+      { href: '/maintenance',   label: 'Maintenance',   Icon: IcWrench,  color: '#06b6d4', badgeKey: 'maintenance' },
+      { href: '/suppliers',     label: 'Suppliers',     Icon: IcTeam,    color: '#8b5cf6' },
+    ],
+  },
 ]
 
 interface BadgeData {
@@ -133,6 +141,8 @@ interface BadgeData {
   inspections?: number
   meetings?: number
   risks?: number
+  toolboxTalks?: number
+  maintenance?: number
 }
 
 export default function AppsPage() {
@@ -156,7 +166,9 @@ export default function AppsPage() {
       fetch('/api/inspections').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/meetings').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/risks').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads, permits, rams, tenders, inspections, meetings, risks]) => {
+      fetch('/api/toolbox-talks').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/maintenance').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads, permits, rams, tenders, inspections, meetings, risks, toolboxTalks, maintenance]) => {
       setBadges({
         inbox: inbox?.total ?? 0,
         rfis: rfis?.openCount ?? 0,
@@ -172,6 +184,8 @@ export default function AppsPage() {
         inspections: inspections?.failedCount ?? 0,
         meetings: meetings?.upcomingCount ?? 0,
         risks: risks?.highSeverityCount ?? 0,
+        toolboxTalks: toolboxTalks?.monthCount ?? 0,
+        maintenance: maintenance?.overdueCount ?? 0,
       })
     })
   }, [])

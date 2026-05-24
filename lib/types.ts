@@ -200,6 +200,58 @@ export interface Risk {
   project?: { id: string; name: string } | null
 }
 
+export interface ToolboxTalk {
+  id: string
+  projectId: string | null
+  date: string
+  topic: string
+  location: string | null
+  deliveredBy: string | null
+  attendees: string | null
+  attendeeCount: number
+  hazardsCovered: string | null
+  notes: string | null
+  signedOff: boolean
+  signedAt: string | null
+  createdAt: string
+  updatedAt: string
+  project?: { id: string; name: string } | null
+}
+
+export interface MaintenanceSchedule {
+  id: string
+  equipmentId: string
+  title: string
+  type: 'service' | 'inspection' | 'calibration' | 'repair'
+  status: 'scheduled' | 'due' | 'completed' | 'overdue' | 'cancelled'
+  dueDate: string
+  intervalDays: number | null
+  completedAt: string | null
+  performedBy: string | null
+  cost: number
+  notes: string | null
+  createdAt: string
+  updatedAt: string
+  equipment?: { id: string; name: string; code: string | null; status: string } | null
+}
+
+export interface Supplier {
+  id: string
+  name: string
+  category: 'materials' | 'plant' | 'services' | 'other'
+  contactName: string | null
+  contactEmail: string | null
+  contactPhone: string | null
+  address: string | null
+  postcode: string | null
+  paymentTerms: string | null
+  accountNumber: string | null
+  notes: string | null
+  archivedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
 export interface DashboardStats {
   cashflow: number
   owed: number
