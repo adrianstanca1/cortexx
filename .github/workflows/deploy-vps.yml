@@ -114,6 +114,11 @@ jobs:
           ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
           ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
           SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
+          # Optional — push notifications are a no-op when these aren't set.
+          # Generate locally via `npx web-push generate-vapid-keys`.
+          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
+          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
+          VAPID_CONTACT_EMAIL: ${{ secrets.VAPID_CONTACT_EMAIL }}
           # Workflow-scoped token; valid for the run; can read the repo it owns.
           GH_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
@@ -128,6 +133,9 @@ jobs:
             ADMIN_EMAIL="$ADMIN_EMAIL" \
             ADMIN_PASSWORD="$ADMIN_PASSWORD" \
             SEED_TOKEN="$SEED_TOKEN" \
+            VAPID_PUBLIC_KEY="$VAPID_PUBLIC_KEY" \
+            VAPID_PRIVATE_KEY="$VAPID_PRIVATE_KEY" \
+            VAPID_CONTACT_EMAIL="$VAPID_CONTACT_EMAIL" \
             GH_PAT="$GH_PAT" \
             'bash -s' << 'REMOTE'
             set -euo pipefail
@@ -215,6 +223,9 @@ jobs:
           SEED_TOKEN=$SEED_TOKEN
           ADMIN_EMAIL=$ADMIN_EMAIL
           ADMIN_PASSWORD=$ADMIN_PASSWORD
+          VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY
+          VAPID_PRIVATE_KEY=$VAPID_PRIVATE_KEY
+          VAPID_CONTACT_EMAIL=${VAPID_CONTACT_EMAIL:-admin@cortexbuildpro.com}
           ENV
             chmod 600 $APP_DIR/.env.production
             echo "✓ .env.production written ($(wc -c < $APP_DIR/.env.production) bytes)"
