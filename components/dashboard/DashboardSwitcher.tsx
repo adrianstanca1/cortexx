@@ -5,6 +5,7 @@ import { useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useDashboardData } from '@/lib/useDashboardData'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import ErrorBoundary from '@/components/ui/ErrorBoundary'
 import { IcSearch, IcDoc, IcBell, IcReceipt, IcClock } from '@/components/ui/Icons'
 import type { DashboardData } from '@/lib/types'
@@ -74,6 +75,7 @@ export default function DashboardSwitcher() {
     return 'v1'
   })
   const { data, loading, error } = useDashboardData()
+  const { connected } = useRealtimeActivity(data?.activities || [])
   const [inboxCount, setInboxCount] = useState(0)
 
   useEffect(() => {
@@ -152,6 +154,22 @@ export default function DashboardSwitcher() {
             </span>
           )}
         </Link>
+        <span
+          role="status"
+          aria-live="polite"
+          aria-label={connected ? 'Live updates connected' : 'Live updates reconnecting'}
+          title={connected ? 'Live updates connected' : 'Reconnecting…'}
+          style={{
+            flexShrink: 0,
+            width: 8,
+            height: 8,
+            borderRadius: '50%',
+            background: connected ? '#10b981' : '#52749a',
+            boxShadow: connected ? '0 0 6px #10b98166' : 'none',
+            transition: 'all 0.3s',
+            marginRight: 4,
+          }}
+        />
         {variants.map(v => {
           const isActive = v.id === active
           return (
