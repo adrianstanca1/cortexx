@@ -67,6 +67,7 @@ model Project {
   status        String          @default("active") // active, snagging, quoting, complete
   progress      Int             @default(0)
   clientName    String          @default("")
+  shareToken    String?         @unique
   budget        Float           @default(0)
   spent         Float           @default(0)
   lat           Float           @default(51.5)
