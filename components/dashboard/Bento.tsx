@@ -4,6 +4,7 @@ import { useRouter } from 'next/navigation'
 import Avatar from '../ui/Avatar'
 import ProgressBar from '../ui/ProgressBar'
 import { IcSpark, IcAlert, IcTrend, IcReceipt, IcClock, IcArrowRight } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface BentoProps {
@@ -17,6 +18,7 @@ interface BentoProps {
  */
 export default function Bento({ accent = '#2563eb', data }: BentoProps) {
   const router = useRouter()
+  const { connected } = useRealtimeActivity(data?.activities || [])
 
   const projects = data?.projects || []
   const activeProject = projects.find(p => p.status === 'active') || projects[0]
@@ -46,7 +48,10 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
     <div style={{ padding: '8px 0 100px' }}>
       {/* Header */}
       <div style={{ padding: '8px 20px 12px' }}>
-        <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Dashboard</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Dashboard</div>
+          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+        </div>
         <div style={{ fontFamily: SF, fontSize: 13, color: '#8ea8c5', marginTop: 2 }}>{activeProject?.clientName || 'Cortexx'}</div>
       </div>
 

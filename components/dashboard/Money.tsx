@@ -1,6 +1,7 @@
 'use client'
 
 import { IcTrend, IcArrowUp, IcArrowRight } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface MoneyProps {
@@ -13,6 +14,7 @@ interface MoneyProps {
  * Matches project/lib/dashboards-v2.jsx DashV8_Money.
  */
 export default function Money({ accent = '#10b981', data }: MoneyProps) {
+  const { connected } = useRealtimeActivity(data?.activities || [])
   const invoices = data?.invoices || []
   const cashflow = data?.stats?.cashflow ?? 0
   const owed = data?.stats?.owed ?? 0
@@ -38,7 +40,10 @@ export default function Money({ accent = '#10b981', data }: MoneyProps) {
     <div style={{ padding: '8px 0 100px' }}>
       {/* Header */}
       <div style={{ padding: '8px 20px 12px' }}>
-        <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Books</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Books</div>
+          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+        </div>
         <div style={{ fontFamily: SF, fontSize: 13, color: '#8ea8c5', marginTop: 2 }}>Wk {wk} · CIS aware</div>
       </div>
 

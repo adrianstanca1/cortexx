@@ -3,6 +3,7 @@
 import { useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { IcWeather, IcCheck, IcPin, IcWrench, IcTruck, IcHardhat, IcClock, IcArrowRight } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface ActionFirstProps {
@@ -20,6 +21,7 @@ const iconForCategory = (cat: string | null) => {
 
 export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstProps) {
   const router = useRouter()
+  const { connected } = useRealtimeActivity(data?.activities || [])
   const today = new Date()
   const dayName = today.toLocaleDateString('en-GB', { weekday: 'long' })
   const dateStr = today.toLocaleDateString('en-GB', { day: 'numeric', month: 'long' })
@@ -77,9 +79,12 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
             <p style={{ fontSize: 13, color: '#52749a', fontFamily: 'var(--font-system)' }}>
               {dayName}, {dateStr}
             </p>
-            <h2 style={{ fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginTop: 2 }}>
-              Good morning
-            </h2>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+              <h2 style={{ fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginTop: 2 }}>
+                Good morning
+              </h2>
+              <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+            </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'rgba(255,255,255,0.07)', borderRadius: 12 }}>
             <IcWeather size={16} color="#60a5fa" />
