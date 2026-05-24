@@ -233,7 +233,7 @@ function CaptureContent() {
     } catch (e) {
       failWith(e instanceof Error ? e.message : 'Failed')
     }
-  }, [activeProject, logActivity, finishWith, failWith])
+  }, [activeProject, logActivity, finishWith, failWith, recording, startVoiceRfi, stopRecording])
 
   // Auto-trigger if type pre-selected
   useEffect(() => {

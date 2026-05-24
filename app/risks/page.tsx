@@ -115,7 +115,7 @@ export default function RisksPage() {
       if (row >= 0 && row < 5 && col >= 0 && col < 5) cells[row][col]++
     }
     return cells
-  }, [risks])
+  }, [allRisks])
 
   const openAdd = () => {
     setForm({ projectId: projects[0]?.id || '', title: '', category: 'operational', likelihood: 3, impact: 3, mitigation: '', owner: '', reviewBy: '' })
