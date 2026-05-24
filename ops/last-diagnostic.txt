@@ -1,14 +1,14 @@
 === uptime ===
- 23:34:22 up 1 day,  9:31,  2 users,  load average: 0.25, 0.28, 0.22
+ 23:38:37 up 1 day,  9:36,  2 users,  load average: 1.04, 0.56, 0.32
 
 === disk free ===
 Filesystem      Size  Used Avail Use% Mounted on
-/dev/sda1       387G   35G  352G  10% /
-/dev/sda1       387G   35G  352G  10% /
+/dev/sda1       387G   36G  352G  10% /
+/dev/sda1       387G   36G  352G  10% /
 
 === memory ===
                total        used        free      shared  buff/cache   available
-Mem:            31Gi       1.2Gi       9.9Gi        31Mi        20Gi        30Gi
+Mem:            31Gi       1.1Gi       9.9Gi        31Mi        20Gi        30Gi
 Swap:             0B          0B          0B
 
 === postgres service ===
@@ -18,28 +18,28 @@ OK
 === postgres active queries on cortexx ===
 
 === _prisma_migrations ===
-                   migration_name                    |          started_at           |          finished_at          | rolled_back_at 
------------------------------------------------------+-------------------------------+-------------------------------+----------------
- 20260525010000_add_organizationid_columns           | 2026-05-24 23:34:05.700632+00 |                               | 
- 20260525000000_add_multitenancy_foundation          | 2026-05-24 22:39:37.863405+00 | 2026-05-24 22:39:37.915089+00 | 
- 20260524001200_add_push_subscription                | 2026-05-24 21:37:51.823513+00 | 2026-05-24 21:37:51.84779+00  | 
- 20260524001100_add_safety_incident                  | 2026-05-24 18:10:50.676903+00 | 2026-05-24 18:10:50.699028+00 | 
- 20260524001000_add_toolboxtalk_maintenance_supplier | 2026-05-24 14:44:27.617579+00 | 2026-05-24 14:44:27.658444+00 | 
- 20260524000900_add_inspection_meeting_risk          | 2026-05-24 14:21:15.671524+00 | 2026-05-24 14:21:15.732623+00 | 
- 20260524000800_add_drawing_revision                 | 2026-05-24 05:40:42.292171+00 | 2026-05-24 05:40:42.331786+00 | 
- 20260524000700_add_project_share_token              | 2026-05-24 05:26:18.528954+00 | 2026-05-24 05:26:18.550935+00 | 
- 20260524000600_add_material_po_subinvoice           | 2026-05-24 05:06:05.387643+00 | 2026-05-24 05:06:05.438576+00 | 
- 20260524000500_add_costitem_subcontractor_equipment | 2026-05-24 04:54:39.051172+00 | 2026-05-24 04:54:39.08374+00  | 
- 20260524000400_add_sitecheckin_mileage              | 2026-05-24 04:42:56.718304+00 | 2026-05-24 04:42:56.75661+00  | 
- 20260524000300_add_lead_customer_quote              | 2026-05-24 04:31:55.753281+00 | 2026-05-24 04:31:55.804713+00 | 
- 20260524000200_add_observation_variation            | 2026-05-24 04:18:32.33941+00  | 2026-05-24 04:18:32.383068+00 | 
- 20260524000100_add_rfi_announcement_certification   | 2026-05-24 04:05:59.860086+00 | 2026-05-24 04:05:59.915874+00 | 
- 20260524000000_add_snag_model                       | 2026-05-24 00:04:19.587166+00 | 2026-05-24 00:04:19.607957+00 | 
+                     migration_name                      |          started_at           |          finished_at          | rolled_back_at 
+---------------------------------------------------------+-------------------------------+-------------------------------+----------------
+ 20260525010000_add_organizationid_columns               | 2026-05-24 23:37:31.100244+00 | 2026-05-24 23:37:31.186639+00 | 
+ 20260525005000_add_missing_milestone_permit_rams_tender | 2026-05-24 23:37:31.054393+00 | 2026-05-24 23:37:31.099445+00 | 
+ 20260525000000_add_multitenancy_foundation              | 2026-05-24 22:39:37.863405+00 | 2026-05-24 22:39:37.915089+00 | 
+ 20260524001200_add_push_subscription                    | 2026-05-24 21:37:51.823513+00 | 2026-05-24 21:37:51.84779+00  | 
+ 20260524001100_add_safety_incident                      | 2026-05-24 18:10:50.676903+00 | 2026-05-24 18:10:50.699028+00 | 
+ 20260524001000_add_toolboxtalk_maintenance_supplier     | 2026-05-24 14:44:27.617579+00 | 2026-05-24 14:44:27.658444+00 | 
+ 20260524000900_add_inspection_meeting_risk              | 2026-05-24 14:21:15.671524+00 | 2026-05-24 14:21:15.732623+00 | 
+ 20260524000800_add_drawing_revision                     | 2026-05-24 05:40:42.292171+00 | 2026-05-24 05:40:42.331786+00 | 
+ 20260524000700_add_project_share_token                  | 2026-05-24 05:26:18.528954+00 | 2026-05-24 05:26:18.550935+00 | 
+ 20260524000600_add_material_po_subinvoice               | 2026-05-24 05:06:05.387643+00 | 2026-05-24 05:06:05.438576+00 | 
+ 20260524000500_add_costitem_subcontractor_equipment     | 2026-05-24 04:54:39.051172+00 | 2026-05-24 04:54:39.08374+00  | 
+ 20260524000400_add_sitecheckin_mileage                  | 2026-05-24 04:42:56.718304+00 | 2026-05-24 04:42:56.75661+00  | 
+ 20260524000300_add_lead_customer_quote                  | 2026-05-24 04:31:55.753281+00 | 2026-05-24 04:31:55.804713+00 | 
+ 20260524000200_add_observation_variation                | 2026-05-24 04:18:32.33941+00  | 2026-05-24 04:18:32.383068+00 | 
+ 20260524000100_add_rfi_announcement_certification       | 2026-05-24 04:05:59.860086+00 | 2026-05-24 04:05:59.915874+00 | 
 (15 rows)
 
 
 === table count ===
-46
+50
 
 === Organization rows ===
             id             |      slug      |      name       | plan 
@@ -49,18 +49,19 @@ OK
 
 
 === Project.organizationId present? ===
+organizationId|YES
 
 === pg_dump --schema-only line count ===
-2544
-
-real	0m0.098s
-user	0m0.031s
-sys	0m0.024s
+3393
 
 === git ===
-69b7800 fix(deploy): atomic DB password rotation — reuse if existing one works
-0f4f944 ops(rescue): resync-password action — atomic ALTER USER + .env.production sed + pm2 reload
-89a943a ops: migrate debug output [skip ci]
+
+real	0m0.104s
+user	0m0.035s
+sys	0m0.027s
+b399b84 fix(prisma): create missing Milestone / Permit / Rams / Tender tables
+991d8bc ops: migrate debug output [skip ci]
+ed0130a ops: latest deploy diagnostic [skip ci]
 
 === node version ===
 v20.20.2
@@ -69,5 +70,5 @@ v20.20.2
 ┌────┬────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name       │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ cortexx    │ default     │ N/A     │ fork    │ 0        │ 0      │ 16   │ errored   │ 0%       │ 0b       │ root     │ disabled │
+│ 0  │ cortexx    │ default     │ N/A     │ fork    │ 147561   │ 38s    │ 0    │ online    │ 0%       │ 56.1mb   │ root     │ disabled │
 └────┴────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
