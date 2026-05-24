@@ -25,7 +25,8 @@ const EXT_TO_MIME: Record<string, string> = {
   '.wav': 'audio/wav',
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { name: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ name: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
 

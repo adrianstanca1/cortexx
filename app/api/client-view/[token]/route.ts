@@ -14,7 +14,8 @@ export const dynamic = 'force-dynamic'
  *
  * Bypassed by middleware (see middleware.ts isPublic /api/client-view/).
  */
-export async function GET(_req: NextRequest, { params }: { params: { token: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
+  const params = await paramsP
   const token = String(params.token || '').trim()
   if (!token || token.length < 8) {
     return NextResponse.json({ error: 'Invalid link' }, { status: 404 })

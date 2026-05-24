@@ -20,7 +20,8 @@ function toCSV(headers: string[], rows: Array<Record<string, unknown>>): string 
   return lines.join('\r\n') + '\r\n'
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { type: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ type: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof Response) return auth
 

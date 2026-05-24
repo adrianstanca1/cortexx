@@ -18,7 +18,8 @@ function esc(s: string | null | undefined): string {
  * Returns a print-optimised HTML invoice. Open in a browser and use
  * Print → Save as PDF for a real PDF. Avoids heavy PDF libraries.
  */
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof Response) return auth
   try {

@@ -7,7 +7,8 @@ export const dynamic = 'force-dynamic'
 /**
  * All comments on tasks belonging to a project (most recent first).
  */
-export async function GET(req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
