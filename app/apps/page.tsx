@@ -16,7 +16,7 @@ interface ModuleItem {
   color: string
   ai?: boolean
   comingSoon?: boolean
-  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'permits' | 'rams' | 'tenders'
+  badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'permits' | 'rams' | 'tenders' | 'inspections' | 'meetings' | 'risks'
 }
 
 interface CaptureAction {
@@ -104,6 +104,14 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/tenders', label: 'Tenders', Icon: IcDoc,     color: '#3b82f6', badgeKey: 'tenders' },
     ],
   },
+  {
+    title: 'Quality & governance',
+    items: [
+      { href: '/inspections', label: 'Inspections', Icon: IcCheck, color: '#10b981', badgeKey: 'inspections' },
+      { href: '/meetings',    label: 'Meetings',    Icon: IcClock, color: '#06b6d4', badgeKey: 'meetings' },
+      { href: '/risks',       label: 'Risk register', Icon: IcAlert, color: '#ef4444', badgeKey: 'risks' },
+    ],
+  },
 ]
 
 interface BadgeData {
@@ -122,6 +130,9 @@ interface BadgeData {
   permits?: number
   rams?: number
   tenders?: number
+  inspections?: number
+  meetings?: number
+  risks?: number
 }
 
 export default function AppsPage() {
@@ -142,7 +153,10 @@ export default function AppsPage() {
       fetch('/api/permits?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/rams?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/tenders?status=draft').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads, permits, rams, tenders]) => {
+      fetch('/api/inspections').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/meetings').then(r => r.ok ? r.json() : null).catch(() => null),
+      fetch('/api/risks').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads, permits, rams, tenders, inspections, meetings, risks]) => {
       setBadges({
         inbox: inbox?.total ?? 0,
         rfis: rfis?.openCount ?? 0,
@@ -152,9 +166,12 @@ export default function AppsPage() {
         timesheets: Array.isArray(timesheets?.entries) ? timesheets.entries.length : 0,
         training: (training?.counts?.expired ?? 0) + (training?.counts?.expiring ?? 0),
         leads: leads?.openCount ?? 0,
-        permits: permits?.alerts ?? 0,
-        rams: rams?.alerts ?? 0,
-        tenders: tenders?.total ?? 0,
+        permits: permits?.expiringSoon ?? 0,
+        rams: rams?.dueForReview ?? 0,
+        tenders: tenders?.draftCount ?? 0,
+        inspections: inspections?.failedCount ?? 0,
+        meetings: meetings?.upcomingCount ?? 0,
+        risks: risks?.highSeverityCount ?? 0,
       })
     })
   }, [])
