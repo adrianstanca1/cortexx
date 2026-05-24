@@ -316,6 +316,15 @@ export default function SubInvoicesPage() {
               <Row label="Payable" value={`£${activeInv.payableAmount.toFixed(2)}`} bold />
             </div>
 
+            <a
+              href={`/api/sub-invoices/${activeInv.id}/pdf`}
+              target="_blank"
+              rel="noreferrer"
+              style={{ padding: '10px', borderRadius: 10, background: 'rgba(139,92,246,0.13)', border: '0.5px solid rgba(139,92,246,0.4)', color: '#a78bfa', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+            >
+              <IcDoc size={12} color="#a78bfa" /> Download PDF
+            </a>
+
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
               {activeInv.status === 'received' && (
                 <button onClick={() => changeStatus(activeInv, 'approved')} style={statusBtn('#f59e0b')}>Approve</button>
