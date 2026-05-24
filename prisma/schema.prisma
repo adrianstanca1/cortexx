@@ -101,6 +101,7 @@ model Project {
   inspections   Inspection[]
   meetings      Meeting[]
   risks         Risk[]
+  toolboxTalks  ToolboxTalk[]
 
   @@index([status])
   @@index([updatedAt])
@@ -520,21 +521,22 @@ model Subcontractor {
 }
 
 model Equipment {
-  id             String    @id @default(cuid())
+  id             String                @id @default(cuid())
   name           String
   code           String?
   category       String?
   serial         String?
-  ownership      String    @default("owned") // owned, hired
+  ownership      String                @default("owned") // owned, hired
   hireCompany    String?
   location       String?
-  status         String    @default("in_yard") // in_service, in_yard, in_service_centre, out_of_service
+  status         String                @default("in_yard") // in_service, in_yard, in_service_centre, out_of_service
   lastServicedAt DateTime?
   nextServiceAt  DateTime?
   notes          String?
   archivedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
+  createdAt      DateTime              @default(now())
+  updatedAt      DateTime              @updatedAt
+  maintenances   MaintenanceSchedule[]
 
   @@index([status])
   @@index([nextServiceAt])
@@ -791,4 +793,67 @@ model Risk {
   @@index([projectId, status])
   @@index([score])
   @@index([reviewBy])
+}
+
+model ToolboxTalk {
+  id             String    @id @default(cuid())
+  projectId      String?
+  date           DateTime
+  topic          String
+  location       String?
+  deliveredBy    String?
+  attendees      String? // newline-separated names
+  attendeeCount  Int       @default(0)
+  hazardsCovered String?
+  notes          String?
+  signedOff      Boolean   @default(false)
+  signedAt       DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+  project        Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+
+  @@index([projectId, date])
+  @@index([date])
+}
+
+model MaintenanceSchedule {
+  id           String    @id @default(cuid())
+  equipmentId  String
+  title        String
+  type         String    @default("service") // service, inspection, calibration, repair
+  status       String    @default("scheduled") // scheduled, due, completed, overdue, cancelled
+  dueDate      DateTime
+  intervalDays Int? // when set, completion auto-schedules the next one
+  completedAt  DateTime?
+  performedBy  String?
+  cost         Float     @default(0)
+  notes        String?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  equipment    Equipment @relation(fields: [equipmentId], references: [id], onDelete: Cascade)
+
+  @@index([equipmentId, status])
+  @@index([status, dueDate])
+  @@index([dueDate])
+}
+
+model Supplier {
+  id            String    @id @default(cuid())
+  name          String
+  category      String    @default("materials") // materials, plant, services, other
+  contactName   String?
+  contactEmail  String?
+  contactPhone  String?
+  address       String?
+  postcode      String?
+  paymentTerms  String? // e.g. "Net 30"
+  accountNumber String?
+  notes         String?
+  archivedAt    DateTime?
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  @@index([name])
+  @@index([category])
+  @@index([archivedAt])
 }
