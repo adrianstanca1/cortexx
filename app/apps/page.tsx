@@ -57,7 +57,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/leads',     label: 'Leads',       Icon: IcArrowRight, color: '#06b6d4', badgeKey: 'leads' },
       { href: '/customers', label: 'Customers',   Icon: IcTeam,       color: '#2563eb' },
       { href: '/quotes',    label: 'Quotes',      Icon: IcDoc,        color: '#06b6d4' },
-      { href: '/client-view', label: 'Client view', Icon: IcLayers,   color: '#10b981', comingSoon: true },
+      { href: '/client-view', label: 'Client view', Icon: IcLayers,   color: '#10b981' },
     ],
   },
   {
