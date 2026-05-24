@@ -44,12 +44,16 @@ From inside `ios/`:
 
 ```bash
 npm install
-npm run build:web        # copies the web app into ios/www and renames Cortexx.html → index.html
+npm run build:web        # copies public/legacy/ → ios/www/ + disables the SW
 npx cap init Cortexx app.cortexbuild.cortexx --web-dir www
 npx cap add ios
 ```
 
 This creates `ios/App/` — a fully-formed Xcode project.
+
+> **What `build:web` does now (24 May 2026)**  
+> Reads from `public/legacy/` (the consolidated single-file PWA bundle, formerly the standalone `cortexx-pwa` repo) and copies the whole thing into `ios/www/`. The PWA's relative paths already point at `dist/`, `lib/`, `manifest.json` etc., so the WebView serves everything offline. The script also patches the SW registration in `index.html` to a no-op — the WebView serves files from the bundle directly, no service worker needed.  
+> If you'd rather not bundle the static PWA at all, the alternative is to set `server.url = 'https://cortexbuildpro.com'` in `capacitor.config.ts` — the native shell then loads the live Next.js app on each launch. Online-only, but always up to date and uses the real Postgres.
 
 ### Apply the privacy + permission files
 
