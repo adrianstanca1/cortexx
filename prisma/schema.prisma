@@ -464,3 +464,67 @@ model MileageEntry {
   @@index([date])
   @@index([approved])
 }
+
+model CostItem {
+  id          String    @id @default(cuid())
+  code        String?
+  description String
+  category    String?
+  unit        String    @default("item") // item, m, m², m³, hour, day, kg, tonne
+  unitCost    Float     @default(0)
+  vendor      String?
+  notes       String?
+  archivedAt  DateTime?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@index([category])
+  @@index([code])
+  @@index([archivedAt])
+}
+
+model Subcontractor {
+  id                   String    @id @default(cuid())
+  name                 String
+  trade                String?
+  contactName          String?
+  contactEmail         String?
+  contactPhone         String?
+  address              String?
+  postcode             String?
+  cisStatus            String    @default("20") // gross, 20, 30
+  utrNumber            String?
+  insuranceExpiry      DateTime?
+  qualificationsExpiry DateTime?
+  notes                String?
+  archivedAt           DateTime?
+  createdAt            DateTime  @default(now())
+  updatedAt            DateTime  @updatedAt
+
+  @@index([name])
+  @@index([trade])
+  @@index([insuranceExpiry])
+  @@index([archivedAt])
+}
+
+model Equipment {
+  id             String    @id @default(cuid())
+  name           String
+  code           String?
+  category       String?
+  serial         String?
+  ownership      String    @default("owned") // owned, hired
+  hireCompany    String?
+  location       String?
+  status         String    @default("in_yard") // in_service, in_yard, in_service_centre, out_of_service
+  lastServicedAt DateTime?
+  nextServiceAt  DateTime?
+  notes          String?
+  archivedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  updatedAt      DateTime  @updatedAt
+
+  @@index([status])
+  @@index([nextServiceAt])
+  @@index([archivedAt])
+}
