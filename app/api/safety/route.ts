@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { sendPush } from '@/lib/push'
 
 export const dynamic = 'force-dynamic'
 
@@ -111,6 +112,19 @@ export async function POST(req: NextRequest) {
         iconType: 'alert',
       },
     }).catch(() => {})
+
+    // Site-wide push for serious incidents — best effort, never blocks the
+    // response. Lower-severity near-misses are captured by the activity feed.
+    if (severity === 'critical' || severity === 'high' || riddorReportable) {
+      sendPush({
+        payload: {
+          title: `⚠️ ${riddorReportable ? 'RIDDOR · ' : ''}Safety incident`,
+          body: `${incident.title} (${severity})`,
+          url: '/safety',
+          tag: `safety-${incident.id}`,
+        },
+      }).catch(() => {})
+    }
 
     return NextResponse.json(incident, { status: 201 })
   } catch (error) {
