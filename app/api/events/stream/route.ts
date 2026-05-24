@@ -1,7 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
-import { getServerSession } from 'next-auth'
-import { authOptions } from '@/lib/auth'
+import { auth } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -12,7 +11,7 @@ const MAX_CONCURRENT = 100
 let active = 0
 
 export async function GET(req: NextRequest) {
-  const session = await getServerSession(authOptions)
+  const session = await auth()
   if (!session?.user) {
     return new Response('Unauthorized', { status: 401 })
   }

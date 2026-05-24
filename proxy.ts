@@ -1,5 +1,5 @@
-import { NextResponse, type NextRequest } from 'next/server'
-import { getToken } from 'next-auth/jwt'
+import { NextResponse } from 'next/server'
+import { auth } from '@/lib/auth'
 
 // Paths that never require auth (in addition to /_next, /api/auth, static assets)
 const PUBLIC_PATHS = new Set<string>([
@@ -23,12 +23,14 @@ function isPublic(pathname: string): boolean {
   return false
 }
 
-export async function proxy(req: NextRequest) {
+// Auth.js v5 — wrap the proxy with the exported `auth` callback to inject
+// `req.auth` (the session). This replaces the v4 pattern of decoding the
+// JWT manually via getToken().
+export default auth(req => {
   const { pathname } = req.nextUrl
   if (isPublic(pathname)) return NextResponse.next()
 
-  const token = await getToken({ req, secret: process.env.NEXTAUTH_SECRET })
-  if (token) return NextResponse.next()
+  if (req.auth) return NextResponse.next()
 
   // Unauthenticated
   if (pathname.startsWith('/api/')) {
@@ -37,7 +39,7 @@ export async function proxy(req: NextRequest) {
   const url = new URL('/login', req.url)
   if (pathname !== '/') url.searchParams.set('callbackUrl', pathname + (req.nextUrl.search || ''))
   return NextResponse.redirect(url)
-}
+})
 
 export const config = {
   // Run on everything except Next internals & common static
