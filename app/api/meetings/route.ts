@@ -68,8 +68,11 @@ export async function POST(req: NextRequest) {
     const body = await req.json()
     const title = String(body.title || '').trim()
     if (!title) return NextResponse.json({ error: 'Title is required' }, { status: 400 })
+    if (body.scheduledAt === undefined || body.scheduledAt === null || body.scheduledAt === '') {
+      return NextResponse.json({ error: 'scheduledAt is required' }, { status: 400 })
+    }
     const scheduledAt = parseDate(body.scheduledAt)
-    if (!scheduledAt) return NextResponse.json({ error: 'scheduledAt is required' }, { status: 400 })
+    if (!scheduledAt) return NextResponse.json({ error: 'Invalid scheduledAt' }, { status: 400 })
 
     let projectId: string | null = null
     if (body.projectId) {

@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect, useCallback, useMemo } from 'react'
+import { Fragment, useState, useEffect, useCallback, useMemo } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
@@ -61,6 +61,10 @@ export default function RisksPage() {
     projectId: '', title: '', category: 'operational' as Risk['category'],
     likelihood: 3, impact: 3, mitigation: '', owner: '', reviewBy: '',
   })
+  // Separate "all" view feeds the matrix + KPI header so they reflect the
+  // whole register, not just the filtered subset the list is showing.
+  const [allRisks, setAllRisks] = useState<Risk[]>([])
+  const [serverCounts, setServerCounts] = useState<{ openCount: number; highSeverityCount: number }>({ openCount: 0, highSeverityCount: 0 })
 
   useModalEffects(showModal, () => setShowModal(false))
 
@@ -68,13 +72,25 @@ export default function RisksPage() {
     try {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.set('status', statusFilter)
-      const [rRes, prjRes] = await Promise.all([
+      const fetches: Promise<Response>[] = [
         fetch(`/api/risks?${params.toString()}`),
         fetch('/api/projects?status=active'),
-      ])
+      ]
+      // When a filter is active, fetch the unfiltered list separately for
+      // the matrix + KPI header. With "all" selected, reuse the main fetch.
+      if (statusFilter !== 'all') fetches.push(fetch('/api/risks'))
+      const [rRes, prjRes, allRes] = await Promise.all(fetches)
       if (!rRes.ok) throw new Error('Failed to load risks')
       const rd = await rRes.json()
       setRisks(rd.risks || [])
+      if (statusFilter === 'all') {
+        setAllRisks(rd.risks || [])
+        setServerCounts({ openCount: rd.openCount ?? 0, highSeverityCount: rd.highSeverityCount ?? 0 })
+      } else if (allRes?.ok) {
+        const ad = await allRes.json()
+        setAllRisks(ad.risks || [])
+        setServerCounts({ openCount: ad.openCount ?? 0, highSeverityCount: ad.highSeverityCount ?? 0 })
+      }
       if (prjRes.ok) {
         const pd = await prjRes.json()
         setProjects((pd.projects || []).map((p: Project) => ({ id: p.id, name: p.name })))
@@ -87,9 +103,12 @@ export default function RisksPage() {
   useEffect(() => { load() }, [load])
 
   const matrix = useMemo(() => {
-    // 5x5 grid: rows = impact (5→1 top to bottom), cols = likelihood (1→5)
+    // 5x5 grid: rows = impact (5→1 top to bottom), cols = likelihood (1→5).
+    // Always count from the full unfiltered list so the heat-map matches
+    // the caption ("open + mitigated + accepted") regardless of which
+    // status filter is currently selected for the list view.
     const cells = Array.from({ length: 5 }, () => Array.from({ length: 5 }, () => 0))
-    for (const r of risks) {
+    for (const r of allRisks) {
       if (r.status === 'closed') continue
       const row = 5 - r.impact // 1..5 with 5 at top
       const col = r.likelihood - 1
@@ -168,8 +187,8 @@ export default function RisksPage() {
             <div key={l} style={{ textAlign: 'center', fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700 }}>L{l}</div>
           ))}
           {[5, 4, 3, 2, 1].map((impact, rowIdx) => (
-            <>
-              <div key={`label-${impact}`} style={{ textAlign: 'right', alignSelf: 'center', fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, paddingRight: 4 }}>I{impact}</div>
+            <Fragment key={`row-${impact}`}>
+              <div style={{ textAlign: 'right', alignSelf: 'center', fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, paddingRight: 4 }}>I{impact}</div>
               {[1, 2, 3, 4, 5].map(likelihood => {
                 const score = likelihood * impact
                 const count = matrix[rowIdx][likelihood - 1]
@@ -180,7 +199,7 @@ export default function RisksPage() {
                   </div>
                 )
               })}
-            </>
+            </Fragment>
           ))}
         </div>
       </div>

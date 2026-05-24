@@ -53,11 +53,20 @@ export async function PATCH(req: NextRequest, { params }: { params: { id: string
     if (typeof body.status === 'string' && ALLOWED_STATUS.has(body.status)) {
       data.status = body.status
       // Auto-derive overallResult + completedAt on terminal status.
+      // Map status -> result enum ('pass'/'fail') to match the documented
+      // 4-char enum on the column.
       if (body.status === 'passed' || body.status === 'failed') {
-        data.overallResult = body.status
+        data.overallResult = body.status === 'passed' ? 'pass' : 'fail'
         data.completedAt = existing.completedAt || new Date()
       }
-      if (body.status === 'draft' || body.status === 'in_progress') {
+      // Only wipe stamps when actually transitioning FROM a terminal state.
+      // Re-asserting the existing non-terminal status (e.g. the page sends
+      // status='in_progress' on every checklist tick) must not silently demote
+      // a passed/failed inspection if the client's snapshot is stale.
+      if (
+        (body.status === 'draft' || body.status === 'in_progress') &&
+        (existing.status === 'passed' || existing.status === 'failed')
+      ) {
         data.overallResult = null
         data.completedAt = null
       }
