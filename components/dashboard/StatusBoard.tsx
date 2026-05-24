@@ -3,6 +3,7 @@
 import { useRouter } from 'next/navigation'
 import ProgressBar from '../ui/ProgressBar'
 import { IcLayers, IcTrend, IcReceipt, IcArrowRight } from '../ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 import type { DashboardData } from '@/lib/types'
 
 interface StatusBoardProps {
@@ -16,6 +17,7 @@ interface StatusBoardProps {
  */
 export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardProps) {
   const router = useRouter()
+  const { connected } = useRealtimeActivity(data?.activities || [])
   const projects = data?.projects || []
   const activeSites = data?.stats?.activeSites ?? projects.filter(p => p.status === 'active').length
   const owed = data?.stats?.owed ?? 0
@@ -37,7 +39,10 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
     <div style={{ padding: '8px 0 100px' }}>
       {/* Header */}
       <div style={{ padding: '8px 20px 12px' }}>
-        <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Site Status</div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Site Status</div>
+          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+        </div>
         <div style={{ fontFamily: SFMono, fontSize: 11, color: '#10b981', marginTop: 2, fontWeight: 600 }}>
           ● LIVE · {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} {Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop()?.toUpperCase() || 'BST'}
         </div>
