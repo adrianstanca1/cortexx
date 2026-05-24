@@ -81,6 +81,7 @@ export async function POST(req: NextRequest) {
     // General + update types stay in-app to avoid notification fatigue.
     if (type === 'safety' || type === 'urgent') {
       sendPush({
+        category: type === 'safety' ? 'safety' : 'announcements',
         payload: {
           title: type === 'safety' ? `⚠️ Safety: ${ann.title}` : `📣 ${ann.title}`,
           body: bodyText.slice(0, 160),
