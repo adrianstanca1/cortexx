@@ -89,7 +89,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
   {
     title: 'People & time',
     items: [
-      { href: '/timesheets',    label: 'Timesheets',    Icon: IcClock,   color: '#8b5cf6', badgeKey: 'timesheets', comingSoon: true },
+      { href: '/timesheets',    label: 'Timesheets',    Icon: IcClock,   color: '#8b5cf6', badgeKey: 'timesheets' },
       { href: '/check-in',      label: 'Check in/out',  Icon: IcPin,     color: '#10b981', comingSoon: true },
       { href: '/live-status',   label: 'Live status',   Icon: IcPin,     color: '#06b6d4', comingSoon: true },
       { href: '/training',      label: 'Training',      Icon: IcHardhat, color: '#f59e0b', badgeKey: 'training', comingSoon: true },
