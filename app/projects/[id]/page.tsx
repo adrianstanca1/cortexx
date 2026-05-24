@@ -705,7 +705,7 @@ export default function ProjectDetailPage() {
                       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: ic, fontWeight: 700 }}>£{inv.amount.toLocaleString()}</div>
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: ic, marginTop: 1, textTransform: 'capitalize', fontWeight: 600 }}>{inv.status} →</div>
                     </div>
-                    <a href={`/api/invoices/${inv.id}/print`} target="_blank" rel="noopener" aria-label="Print invoice" style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, textDecoration: 'none', fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#2563eb' }}>
+                    <a href={`/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener" aria-label="Download invoice PDF" style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, textDecoration: 'none', fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#2563eb' }}>
                       PDF
                     </a>
                     <button onClick={() => openEditInvoice(inv)} style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
