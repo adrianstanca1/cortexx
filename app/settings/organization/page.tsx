@@ -309,7 +309,7 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
         }
         return
       }
-      if (data.url) window.location.href = data.url
+      if (data.url) window.location.assign(data.url)
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Failed')
     } finally {
@@ -328,7 +328,7 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
       })
       const data = await res.json()
       if (!res.ok) { setMsg(data.error || 'Failed'); return }
-      if (data.url) window.location.href = data.url
+      if (data.url) window.location.assign(data.url)
     } catch (e) {
       setMsg(e instanceof Error ? e.message : 'Failed')
     } finally {
