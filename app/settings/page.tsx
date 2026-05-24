@@ -267,6 +267,18 @@ export default function SettingsPage() {
         </button>
       </form>
 
+      {/* Workspace settings */}
+      <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <div style={labelStyle}>Workspace</div>
+        <Link
+          href="/settings/organization"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 10, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+        >
+          <span>Team members &amp; invites</span>
+          <span style={{ color: '#52749a' }}>→</span>
+        </Link>
+      </section>
+
       {/* Export data */}
       <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
         <div style={labelStyle}>Export data (CSV)</div>
