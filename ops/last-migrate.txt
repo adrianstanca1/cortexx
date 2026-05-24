@@ -18,34 +18,48 @@ DELETE 1
 === Sync repo ===
 From https://github.com/adrianstanca1/cortexx
  * branch            main       -> FETCH_HEAD
-   8784bc2..e93127b  main       -> origin/main
-HEAD is now at e93127b ops: migrate-debug workflow — captures full prisma migrate deploy output
-e93127b ops: migrate-debug workflow — captures full prisma migrate deploy output
+   69b7800..ed0130a  main       -> origin/main
+HEAD is now at ed0130a ops: latest deploy diagnostic [skip ci]
+ed0130a ops: latest deploy diagnostic [skip ci]
 
 === prisma migrate deploy ===
 
 Start by importing your Prisma Client (See: https://pris.ly/d/importing-client)
 
-Tip: Easily identify and fix slow SQL queries in your app. Optimize helps you enhance your visibility: https://pris.ly/--optimize
+Tip: Want to react to database changes in your app as they happen? Discover how with Pulse: https://pris.ly/tip-1-pulse
 
 
 ----- migrate deploy output START -----
 Prisma schema loaded from prisma/schema.prisma
 Datasource "db": PostgreSQL database "cortexx", schema "public" at "127.0.0.1:5432"
 
-Error: P1000: Authentication failed against database server at `127.0.0.1`, the provided database credentials for `cortexx` are not valid.
+20 migrations found in prisma/migrations
 
-Please make sure to provide valid database credentials for the database server at `127.0.0.1`.
+Applying migration `20260525010000_add_organizationid_columns`
+Error: P3018
+
+A migration failed to apply. New migrations cannot be applied before the error is recovered from. Read more about how to resolve migration issues in a production database: https://pris.ly/d/migrate-resolve
+
+Migration name: 20260525010000_add_organizationid_columns
+
+Database error code: 42P01
+
+Database error:
+ERROR: relation "Milestone" does not exist
+
+DbError { severity: "ERROR", parsed_severity: Some(Error), code: SqlState(E42P01), message: "relation \"Milestone\" does not exist", detail: None, hint: None, position: None, where_: Some("SQL statement \"ALTER TABLE \"Milestone\" ADD COLUMN IF NOT EXISTS \"organizationId\" TEXT\"\nPL/pgSQL function inline_code_block line 156 at SQL statement"), schema: None, table: None, column: None, datatype: None, constraint: None, file: Some("namespace.c"), line: Some(434), routine: Some("RangeVarGetRelidExtended") }
+
+
 ----- migrate deploy output END (exit=1) -----
 
 === State AFTER migrate ===
                    migration_name                    |          started_at           |          finished_at          
 -----------------------------------------------------+-------------------------------+-------------------------------
+ 20260525010000_add_organizationid_columns           | 2026-05-24 23:34:57.957877+00 | 
  20260525000000_add_multitenancy_foundation          | 2026-05-24 22:39:37.863405+00 | 2026-05-24 22:39:37.915089+00
  20260524001200_add_push_subscription                | 2026-05-24 21:37:51.823513+00 | 2026-05-24 21:37:51.84779+00
  20260524001100_add_safety_incident                  | 2026-05-24 18:10:50.676903+00 | 2026-05-24 18:10:50.699028+00
  20260524001000_add_toolboxtalk_maintenance_supplier | 2026-05-24 14:44:27.617579+00 | 2026-05-24 14:44:27.658444+00
- 20260524000900_add_inspection_meeting_risk          | 2026-05-24 14:21:15.671524+00 | 2026-05-24 14:21:15.732623+00
 (5 rows)
 
 
