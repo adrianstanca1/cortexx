@@ -54,9 +54,9 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
   {
     title: 'Sales & CRM',
     items: [
-      { href: '/leads',     label: 'Leads',       Icon: IcArrowRight, color: '#06b6d4', badgeKey: 'leads', comingSoon: true },
-      { href: '/customers', label: 'Customers',   Icon: IcTeam,       color: '#2563eb', comingSoon: true },
-      { href: '/quotes',    label: 'Quotes',      Icon: IcDoc,        color: '#06b6d4', comingSoon: true },
+      { href: '/leads',     label: 'Leads',       Icon: IcArrowRight, color: '#06b6d4', badgeKey: 'leads' },
+      { href: '/customers', label: 'Customers',   Icon: IcTeam,       color: '#2563eb' },
+      { href: '/quotes',    label: 'Quotes',      Icon: IcDoc,        color: '#06b6d4' },
       { href: '/client-view', label: 'Client view', Icon: IcLayers,   color: '#10b981', comingSoon: true },
     ],
   },
@@ -127,7 +127,8 @@ export default function AppsPage() {
       fetch('/api/training').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/observations?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
       fetch('/api/variations?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
-    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations]) => {
+      fetch('/api/leads?take=1').then(r => r.ok ? r.json() : null).catch(() => null),
+    ]).then(([inbox, timesheets, snags, rfis, training, observations, variations, leads]) => {
       setBadges({
         inbox: inbox?.total ?? 0,
         rfis: rfis?.openCount ?? 0,
@@ -136,6 +137,7 @@ export default function AppsPage() {
         variations: variations?.pendingCount ?? 0,
         timesheets: Array.isArray(timesheets?.entries) ? timesheets.entries.length : 0,
         training: (training?.counts?.expired ?? 0) + (training?.counts?.expiring ?? 0),
+        leads: leads?.openCount ?? 0,
       })
     })
   }, [])

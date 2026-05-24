@@ -352,3 +352,69 @@ model Variation {
   @@index([status])
   @@index([submittedAt])
 }
+
+model Lead {
+  id           String    @id @default(cuid())
+  name         String
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  address      String?
+  postcode     String?
+  source       String?
+  status       String    @default("new") // new, qualified, proposing, won, lost
+  value        Float     @default(0)
+  notes        String?
+  lostReason   String?
+  convertedAt  DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+
+  @@index([status])
+  @@index([createdAt])
+}
+
+model Customer {
+  id           String    @id @default(cuid())
+  name         String
+  contactName  String?
+  contactEmail String?
+  contactPhone String?
+  address      String?
+  postcode     String?
+  notes        String?
+  archivedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  quotes       Quote[]
+
+  @@index([name])
+  @@index([archivedAt])
+}
+
+model Quote {
+  id           String    @id @default(cuid())
+  number       String    @unique
+  customerId   String?
+  customerName String
+  title        String
+  description  String?
+  lineItems    Json      @default("[]")
+  subtotal     Float     @default(0)
+  vatRate      Float     @default(20)
+  vatAmount    Float     @default(0)
+  total        Float     @default(0)
+  validUntil   DateTime?
+  status       String    @default("draft") // draft, sent, accepted, rejected
+  terms        String?
+  sentAt       DateTime?
+  acceptedAt   DateTime?
+  rejectedAt   DateTime?
+  createdAt    DateTime  @default(now())
+  updatedAt    DateTime  @updatedAt
+  customer     Customer? @relation(fields: [customerId], references: [id], onDelete: SetNull)
+
+  @@index([status])
+  @@index([customerId])
+  @@index([validUntil])
+}
