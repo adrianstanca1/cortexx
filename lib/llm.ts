@@ -20,6 +20,8 @@ const NUM_PREDICT_MAX = 1024
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
+  /** Base64-encoded image bytes (no data:image/... prefix). Sent to multimodal models like llava / moondream. */
+  images?: string[]
 }
 
 export interface LlmResponse {
@@ -71,19 +73,25 @@ export function sanitizePromptValue(s: string, maxLen = 80): string {
 export interface ChatOptions {
   /** Request strict JSON output. Ollama enforces this server-side via grammar. */
   json?: boolean
+  /** Override the default text model — e.g. for the vision model on /api/snags/[id]/analyze. */
+  model?: string
+  /** Override request timeout (ms). Vision inference can run 30-90s. */
+  timeoutMs?: number
 }
 
 export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Promise<LlmResponse> {
   const url = `${OLLAMA_BASE_URL.replace(/\/+$/, '')}/api/chat`
   const controller = new AbortController()
-  const timeout = setTimeout(() => controller.abort(), REQUEST_TIMEOUT_MS)
+  const timeoutMs = opts.timeoutMs ?? REQUEST_TIMEOUT_MS
+  const timeout = setTimeout(() => controller.abort(), timeoutMs)
+  const model = opts.model || OLLAMA_MODEL
   let res: Response
   try {
     res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
-        model: OLLAMA_MODEL,
+        model,
         messages,
         stream: false,
         ...(opts.json ? { format: 'json' } : {}),
@@ -98,10 +106,10 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
   } catch (err) {
     clearTimeout(timeout)
     if (err instanceof Error && err.name === 'AbortError') {
-      throw new LlmUnavailableError(`Local LLM timed out after ${REQUEST_TIMEOUT_MS / 1000}s. The model may be too large or the server is busy.`)
+      throw new LlmUnavailableError(`Local LLM timed out after ${Math.round(timeoutMs / 1000)}s. The model may be too large or the server is busy.`)
     }
     throw new LlmUnavailableError(
-      `Cannot reach Ollama at ${OLLAMA_BASE_URL}. Is it running? Install: curl -fsSL https://ollama.com/install.sh | sh, then pull a model: ollama pull ${OLLAMA_MODEL}`
+      `Cannot reach Ollama at ${OLLAMA_BASE_URL}. Is it running? Install: curl -fsSL https://ollama.com/install.sh | sh, then pull a model: ollama pull ${model}`
     )
   }
   clearTimeout(timeout)
@@ -113,7 +121,7 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
     // Match on "not found" to avoid mis-firing on unrelated 404s whose
     // bodies happen to mention the word "model".
     if (res.status === 404 && /not found/i.test(text)) {
-      throw new LlmUnavailableError(`Model "${OLLAMA_MODEL}" not installed. Run: ollama pull ${OLLAMA_MODEL}`)
+      throw new LlmUnavailableError(`Model "${model}" not installed. Run: ollama pull ${model}`)
     }
     throw new LlmUnavailableError(`Ollama returned HTTP ${res.status}: ${text.slice(0, 200)}`)
   }

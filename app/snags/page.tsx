@@ -4,8 +4,17 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
-import { IcAlert, IcChevL, IcPlus, IcX, IcCheck, IcTrash, IcCamera } from '@/components/ui/Icons'
+import { IcAlert, IcChevL, IcPlus, IcX, IcCheck, IcTrash, IcCamera, IcSpark } from '@/components/ui/Icons'
 import { useModalEffects } from '@/lib/useModalEffects'
+
+interface Defect { description: string; severity: 'cosmetic' | 'minor' | 'major' | 'safety'; location?: string }
+interface Analysis { defects: Defect[]; summary: string; notes?: string; loading?: boolean; error?: string }
+const SEVERITY_COLOR: Record<Defect['severity'], string> = {
+  cosmetic: '#52749a',
+  minor: '#3b82f6',
+  major: '#f59e0b',
+  safety: '#ef4444',
+}
 
 interface Snag {
   id: string
@@ -57,7 +66,27 @@ export default function SnagsPage() {
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [analyses, setAnalyses] = useState<Record<string, Analysis>>({})
   const photoInputRef = useRef<HTMLInputElement>(null)
+
+  const analyze = async (snagId: string) => {
+    setAnalyses(prev => ({ ...prev, [snagId]: { ...(prev[snagId] || { defects: [], summary: '' }), loading: true, error: undefined } }))
+    try {
+      const res = await fetch(`/api/snags/${snagId}/analyze`, { method: 'POST' })
+      const json = await res.json()
+      if (!res.ok) {
+        const msg = json.code === 'VISION_UNAVAILABLE'
+          ? `Vision model not installed on server. Run: ollama pull ${json.config?.model || 'moondream'}`
+          : json.error || 'Failed to analyse'
+        setAnalyses(prev => ({ ...prev, [snagId]: { defects: [], summary: '', loading: false, error: msg } }))
+        return
+      }
+      setAnalyses(prev => ({ ...prev, [snagId]: { defects: json.defects || [], summary: json.summary || '', notes: json.notes, loading: false } }))
+      setToast({ msg: `Analysed — ${(json.defects || []).length} defect${(json.defects || []).length === 1 ? '' : 's'} flagged` })
+    } catch (e) {
+      setAnalyses(prev => ({ ...prev, [snagId]: { defects: [], summary: '', loading: false, error: e instanceof Error ? e.message : 'Failed' } }))
+    }
+  }
   const [form, setForm] = useState({
     title: '',
     description: '',
@@ -216,7 +245,8 @@ export default function SnagsPage() {
       ) : (
         <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(s => (
-            <div key={s.id} style={{ background: '#152641', borderRadius: 14, padding: '14px', display: 'flex', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)', opacity: s.status === 'closed' ? 0.7 : 1 }}>
+            <div key={s.id} style={{ background: '#152641', borderRadius: 14, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10, border: '0.5px solid rgba(255,255,255,0.07)', opacity: s.status === 'closed' ? 0.7 : 1 }}>
+              <div style={{ display: 'flex', gap: 12 }}>
               {s.photoUrl ? (
                 <a href={s.photoUrl} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -247,6 +277,17 @@ export default function SnagsPage() {
                 >
                   {STATUS_LABEL[s.status]}
                 </button>
+                {s.photoUrl && (
+                  <button
+                    onClick={() => analyze(s.id)}
+                    disabled={analyses[s.id]?.loading}
+                    aria-label="Analyse photo with AI"
+                    style={{ background: 'rgba(139,92,246,0.15)', color: '#a78bfa', border: '0.5px solid rgba(139,92,246,0.4)', borderRadius: 99, padding: '3px 9px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: analyses[s.id]?.loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}
+                  >
+                    <IcSpark size={10} color="#a78bfa" />
+                    {analyses[s.id]?.loading ? 'Analysing…' : analyses[s.id]?.defects?.length ? 'Re-analyse' : 'Analyse'}
+                  </button>
+                )}
                 <button
                   onClick={() => remove(s.id)}
                   aria-label={confirmDelete === s.id ? 'Confirm delete' : 'Delete snag'}
@@ -256,6 +297,35 @@ export default function SnagsPage() {
                   {confirmDelete === s.id && <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', fontFamily: SF }}>Sure?</span>}
                 </button>
               </div>
+              </div>
+              {analyses[s.id] && !analyses[s.id].loading && (analyses[s.id].defects.length > 0 || analyses[s.id].error || analyses[s.id].summary) && (
+                <div style={{ padding: '10px 12px', background: 'rgba(139,92,246,0.06)', borderRadius: 10, borderLeft: '3px solid #a78bfa' }}>
+                  {analyses[s.id].error ? (
+                    <div style={{ fontFamily: SF, fontSize: 12, color: '#ef4444' }}>{analyses[s.id].error}</div>
+                  ) : (
+                    <>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
+                        <IcSpark size={12} color="#a78bfa" />
+                        <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.5 }}>AI analysis</span>
+                      </div>
+                      {analyses[s.id].summary && <div style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', marginBottom: 8, lineHeight: 1.4 }}>{analyses[s.id].summary}</div>}
+                      {analyses[s.id].defects.length > 0 && (
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
+                          {analyses[s.id].defects.map((d, i) => (
+                            <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
+                              <span style={{ fontFamily: SF, fontSize: 9, fontWeight: 700, color: SEVERITY_COLOR[d.severity], textTransform: 'uppercase', letterSpacing: 0.4, padding: '1px 5px', borderRadius: 3, background: `${SEVERITY_COLOR[d.severity]}22`, flexShrink: 0, marginTop: 1 }}>{d.severity}</span>
+                              <span style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', lineHeight: 1.35 }}>
+                                {d.description}{d.location && <span style={{ color: '#8ea8c5' }}> · {d.location}</span>}
+                              </span>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                      {analyses[s.id].notes && <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 6, fontStyle: 'italic' }}>Note: {analyses[s.id].notes}</div>}
+                    </>
+                  )}
+                </div>
+              )}
             </div>
           ))}
         </div>
