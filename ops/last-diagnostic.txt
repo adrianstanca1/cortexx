@@ -1,5 +1,5 @@
 === uptime ===
- 23:29:17 up 1 day,  9:26,  3 users,  load average: 0.32, 0.31, 0.21
+ 23:34:22 up 1 day,  9:31,  2 users,  load average: 0.25, 0.28, 0.22
 
 === disk free ===
 Filesystem      Size  Used Avail Use% Mounted on
@@ -8,7 +8,7 @@ Filesystem      Size  Used Avail Use% Mounted on
 
 === memory ===
                total        used        free      shared  buff/cache   available
-Mem:            31Gi       1.1Gi         9Gi        31Mi        20Gi        30Gi
+Mem:            31Gi       1.2Gi       9.9Gi        31Mi        20Gi        30Gi
 Swap:             0B          0B          0B
 
 === postgres service ===
@@ -20,7 +20,7 @@ OK
 === _prisma_migrations ===
                    migration_name                    |          started_at           |          finished_at          | rolled_back_at 
 -----------------------------------------------------+-------------------------------+-------------------------------+----------------
- 20260525010000_add_organizationid_columns           | 2026-05-24 23:28:48.82626+00  |                               | 
+ 20260525010000_add_organizationid_columns           | 2026-05-24 23:34:05.700632+00 |                               | 
  20260525000000_add_multitenancy_foundation          | 2026-05-24 22:39:37.863405+00 | 2026-05-24 22:39:37.915089+00 | 
  20260524001200_add_push_subscription                | 2026-05-24 21:37:51.823513+00 | 2026-05-24 21:37:51.84779+00  | 
  20260524001100_add_safety_incident                  | 2026-05-24 18:10:50.676903+00 | 2026-05-24 18:10:50.699028+00 | 
@@ -53,14 +53,14 @@ OK
 === pg_dump --schema-only line count ===
 2544
 
-=== git ===
+real	0m0.098s
+user	0m0.031s
+sys	0m0.024s
 
-real	0m0.108s
-user	0m0.037s
-sys	0m0.021s
-8004a04 ops: commit diagnostic output to repo for sandbox-accessible read
-19e324e ops: upload diagnostic as artifact for sandbox-accessible download
-719bec8 fix(ops): scp the diagnose script over instead of inline heredoc (YAML-indented delimiter trap)
+=== git ===
+69b7800 fix(deploy): atomic DB password rotation — reuse if existing one works
+0f4f944 ops(rescue): resync-password action — atomic ALTER USER + .env.production sed + pm2 reload
+89a943a ops: migrate debug output [skip ci]
 
 === node version ===
 v20.20.2
@@ -69,5 +69,5 @@ v20.20.2
 ┌────┬────────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
 │ id │ name       │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
 ├────┼────────────┼─────────────┼─────────┼─────────┼──────────┼────────┼──────┼───────────┼──────────┼──────────┼──────────┼──────────┤
-│ 0  │ cortexx    │ default     │ N/A     │ fork    │ 133909   │ 35m    │ 0    │ online    │ 0%       │ 56.8mb   │ root     │ disabled │
+│ 0  │ cortexx    │ default     │ N/A     │ fork    │ 0        │ 0      │ 16   │ errored   │ 0%       │ 0b       │ root     │ disabled │
 └────┴────────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
