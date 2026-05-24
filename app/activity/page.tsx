@@ -51,6 +51,10 @@ export default function ActivityPage() {
     return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [load])
 
+  // Captured once via useState's lazy initializer so relative-time labels
+  // stay stable across re-renders.
+  const [now] = useState(() => Date.now())
+
   return (
     <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
       <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
@@ -99,7 +103,7 @@ export default function ActivityPage() {
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {activities.map(a => {
               const color = ACTOR_COLOR[a.actorType] || '#52749a'
-              const mins = Math.round((Date.now() - new Date(a.createdAt).getTime()) / 60000)
+              const mins = Math.round((now - new Date(a.createdAt).getTime()) / 60000)
               const rel = mins < 60 ? `${mins}m` : mins < 1440 ? `${Math.round(mins / 60)}h` : `${Math.round(mins / 1440)}d`
               return (
                 <div key={a.id} style={{ background: '#152641', borderRadius: 12, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>

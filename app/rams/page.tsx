@@ -77,6 +77,10 @@ export default function RamsPage() {
 
   useEffect(() => { load() }, [load])
 
+  // "Review due within 14d" threshold captured once via useState's lazy
+  // initializer (guaranteed to run exactly once).
+  const [reviewDueThreshold] = useState(() => Date.now() + 1000 * 60 * 60 * 24 * 14)
+
   const openAdd = () => {
     setForm({ projectId: projects[0]?.id || '', title: '', type: 'rams', hazards: '', controls: '', ppe: 'Hard hat\nHi-vis\nSafety boots', reviewBy: '' })
     setShowModal(true)
@@ -166,7 +170,7 @@ export default function RamsPage() {
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
         {docs.map(d => {
-          const reviewDue = d.reviewBy && new Date(d.reviewBy) < new Date(Date.now() + 1000 * 60 * 60 * 24 * 14)
+          const reviewDue = d.reviewBy && new Date(d.reviewBy).getTime() < reviewDueThreshold
           return (
             <div key={d.id} style={{ background: '#152641', border: `0.5px solid ${reviewDue && d.status === 'active' ? '#f59e0b66' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>

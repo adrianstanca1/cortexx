@@ -101,7 +101,9 @@ export default function DocumentsPage() {
 
   const types = Array.from(new Set(docs.map(d => d.type)))
   const filtered = docs.filter(d => filter === 'all' || d.type === filter)
-  const now = Date.now()
+  // Captured once via useState's lazy initializer so the "expiring"
+  // threshold doesn't shift mid-render.
+  const [now] = useState(() => Date.now())
   const expiringCount = docs.filter(d => d.expiresAt && new Date(d.expiresAt).getTime() < now + EXPIRY_WARN_DAYS * 86400000).length
 
   return (

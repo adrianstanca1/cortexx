@@ -21,7 +21,9 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
   const { activities } = useRealtimeActivity(data?.activities || [])
   const invoices = data?.invoices || []
   const tasks = data?.tasks || []
-  const now = Date.now()
+  // Captured once via useState's lazy initializer (guaranteed to run
+  // exactly once) so the snooze threshold doesn't shift mid-render.
+  const [now] = useState(() => Date.now())
 
   const briefings = activities.slice(0, 3).map(a => `${a.actorName} ${a.action}${a.detail ? ` — ${a.detail}` : ''}${a.project ? ` · ${a.project.name}` : ''}`)
 
