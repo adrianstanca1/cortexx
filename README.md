@@ -17,7 +17,7 @@ Live: **https://cortexbuildpro.com**
 
 - **Next.js 16 + React 19** (App Router) — 50+ pages, 110+ API routes, 30+ components
 - **PostgreSQL + Prisma** — 43 models, 17 migrations
-- **NextAuth** (credentials) + proxy-gated routes (`proxy.ts`)
+- **Auth.js v5** (credentials provider) + proxy-gated routes (`proxy.ts`)
 - **PWA** — service worker, offline fallback, install hint, splash screens
 - **iOS** — Capacitor 6 native shell (`ios/`) targeting the App Store
 - **Hostinger VPS** + nginx + pm2, automated deploys via GitHub Actions
