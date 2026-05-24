@@ -1,0 +1,75 @@
+name: Migrate Debug (manual)
+
+# Workflow_dispatch — clear stuck migrations, then attempt prisma
+# migrate deploy on the VPS and capture the FULL output to the repo
+# so we can see the actual SQL error.
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  debug:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+
+      - name: Clear + run migration with verbose capture
+        run: |
+          cat > /tmp/mig.sh << 'SCRIPT'
+          set +e
+          echo "=== Clearing stuck _prisma_migrations rows ==="
+          sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL"
+          echo
+          echo "=== State BEFORE migrate ==="
+          sudo -u postgres psql cortexx -c "SELECT migration_name, finished_at IS NOT NULL AS done FROM _prisma_migrations ORDER BY started_at DESC LIMIT 8"
+          echo
+          echo "=== Sync repo ==="
+          cd /opt/cortexx
+          git fetch origin main
+          git reset --hard origin/main
+          git log --oneline -1
+          echo
+          echo "=== prisma migrate deploy ==="
+          DB_PASS=$(grep -oP 'DATABASE_URL=postgresql://cortexx:\K[^@]+' /opt/cortexx/.env.production)
+          export DATABASE_URL="postgresql://cortexx:$DB_PASS@127.0.0.1:5432/cortexx"
+          cd /opt/cortexx
+          # Ensure node_modules + prisma generate
+          if [ ! -d node_modules ]; then npm ci --include=dev 2>&1 | tail -5; fi
+          npx prisma generate 2>&1 | tail -5
+          echo
+          echo "----- migrate deploy output START -----"
+          npx prisma migrate deploy 2>&1
+          MIG_EXIT=$?
+          echo "----- migrate deploy output END (exit=$MIG_EXIT) -----"
+          echo
+          echo "=== State AFTER migrate ==="
+          sudo -u postgres psql cortexx -c "SELECT migration_name, started_at, finished_at FROM _prisma_migrations ORDER BY started_at DESC LIMIT 5"
+          echo
+          echo "=== Project.organizationId after attempt? ==="
+          sudo -u postgres psql cortexx -tAc "SELECT column_name FROM information_schema.columns WHERE table_name = 'Project' AND column_name = 'organizationId'"
+          SCRIPT
+
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy /tmp/mig.sh root@72.62.132.43:/tmp/mig.sh
+          OUT=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o ServerAliveInterval=30 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash /tmp/mig.sh' 2>&1 || true)
+
+          echo "$OUT" > /tmp/migrate-out.txt
+          wc -l /tmp/migrate-out.txt
+
+      - name: Commit migrate output to repo
+        run: |
+          BASE_SHA=$(gh api "repos/${{ github.repository }}/git/refs/heads/main" -q '.object.sha')
+          BLOB_SHA=$(jq -Rsn --rawfile content /tmp/migrate-out.txt '{content: $content, encoding: "utf-8"}' | gh api --method POST "repos/${{ github.repository }}/git/blobs" --input - -q '.sha')
+          TREE_SHA=$(jq -n --arg base "$BASE_SHA" --arg blob "$BLOB_SHA" '{base_tree: $base, tree: [{path: "ops/last-migrate.txt", mode: "100644", type: "blob", sha: $blob}]}' | gh api --method POST "repos/${{ github.repository }}/git/trees" --input - -q '.sha')
+          COMMIT_SHA=$(jq -n --arg tree "$TREE_SHA" --arg parent "$BASE_SHA" '{message: "ops: migrate debug output [skip ci]", tree: $tree, parents: [$parent]}' | gh api --method POST "repos/${{ github.repository }}/git/commits" --input - -q '.sha')
+          gh api --method PATCH "repos/${{ github.repository }}/git/refs/heads/main" -f sha="$COMMIT_SHA"
+          echo "✓ Committed migrate output: $COMMIT_SHA"
