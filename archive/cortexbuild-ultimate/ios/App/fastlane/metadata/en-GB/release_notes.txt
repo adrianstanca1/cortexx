@@ -1,0 +1,14 @@
+Initial release.
+
+• Daily site reports with voice + photo + weather
+• Toolbox talks with on-screen attendee signatures
+• Safety incident reports with GPS and photo
+• Time clock with site-radius geofencing
+• Permits, RAMS, RFIs, punch list, plant register
+• CIS subcontractor invoicing
+• Multi-org Stripe subscriptions
+• MFA TOTP authentication
+• APNs push notifications
+• Works offline with automatic sync queue
+
+CDM 2015 ready. UK GDPR compliant.

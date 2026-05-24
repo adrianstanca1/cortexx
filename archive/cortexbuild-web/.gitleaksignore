@@ -1,0 +1,22 @@
+# HISTORICAL credential leaks — see SECURITY-ROTATION-NEEDED.md.
+# These commits already happened; the credentials need ROTATION upstream,
+# not erasure from this file. Adding new fingerprints requires a PR review.
+
+dfefed15ada4a424dc5dc03abe4d291a2817c50f:PUBLIC_DEPLOYMENT.md:generic-api-key:105
+1f416d0294e0581e4d5b63ed2e9afa708119b2b5:nextjs_space/.env.example:generic-api-key:10
+c5597736cc1f34546db661f6d19963a722aa367d:nextjs_space/.env.backup:generic-api-key:2
+c5597736cc1f34546db661f6d19963a722aa367d:nextjs_space/.env.backup:generic-api-key:8
+17653e9a838995ce309cda5082e2dbd031a2a1c9:SETUP_COMPLETE.md:generic-api-key:29
+17653e9a838995ce309cda5082e2dbd031a2a1c9:SETUP_COMPLETE.md:generic-api-key:39
+f29536066746662fa61f6667cac292b2d7b8e653:API_SETUP_GUIDE.md:generic-api-key:188
+890baba9042378cdd6a16f900eb30baa44386807:nextjs_space/.env:generic-api-key:2
+890baba9042378cdd6a16f900eb30baa44386807:nextjs_space/.env:generic-api-key:7
+8bb411b5a20f7b776aec584283229751ac4a5b4a:nextjs_space/.env:generic-api-key:2
+8bb411b5a20f7b776aec584283229751ac4a5b4a:nextjs_space/.env:generic-api-key:7
+
+# SECURITY-ROTATION-NEEDED.md self-references the leaked values for rotation tracking
+# (intentionally masked but entropy still triggers; values are public knowledge anyway)
+6b9a1f4528debcdd47cddcfa31c09ee14feab12b:SECURITY-ROTATION-NEEDED.md:generic-api-key:21
+453413e943c9f79733af301c4023ed2308808f91:SECURITY-ROTATION-NEEDED.md:generic-api-key:13
+453413e943c9f79733af301c4023ed2308808f91:SECURITY-ROTATION-NEEDED.md:generic-api-key:14
+453413e943c9f79733af301c4023ed2308808f91:SECURITY-ROTATION-NEEDED.md:generic-api-key:16

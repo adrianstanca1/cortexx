@@ -1,0 +1,118 @@
+name: EAS Build — iOS (TestFlight)
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: true
+
+on:
+  workflow_dispatch:
+    inputs:
+      profile:
+        description: 'Build profile'
+        required: true
+        default: 'preview'
+        type: choice
+        options:
+          - preview
+          - production
+  # Lets CI/automation trigger the same job when `workflow_dispatch` is blocked
+  # for a token (e.g. some GitHub Apps). POST /repos/.../dispatches with
+  # event_type: eas-build-ios and client_payload: { "profile": "preview" | "production" }.
+  repository_dispatch:
+    types: [eas-build-ios]
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build-ios:
+    name: Build iOS for TestFlight
+    runs-on: ubuntu-latest
+    timeout-minutes: 60
+
+    # Trigger source decides the profile:
+    #   repository_dispatch -> client_payload.profile (default preview)
+    #   workflow_dispatch -> user-selected input (preview | production)
+    #   push tag v*       -> production (semver tag = release)
+    #   anything else     -> preview
+    env:
+      PROFILE: ${{ (github.event_name == 'repository_dispatch' && github.event.client_payload.profile) || github.event.inputs.profile || (startsWith(github.ref, 'refs/tags/v') && 'production' || 'preview') }}
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install pnpm
+        uses: pnpm/action-setup@v4
+
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+
+      - name: Set up EAS
+        # Release tags are numeric (e.g. 8.2.1), not v-prefixed — @v8.2.1 fails resolution.
+        uses: expo/expo-github-action@8.2.1
+        with:
+          eas-version: latest
+          token: ${{ secrets.EXPO_TOKEN }}
+
+      # The .p8 path is the single source of truth in eas.json
+      # (submit.production.ios.ascApiKeyPath). Read it here so a key rotation
+      # only requires editing eas.json + updating the GitHub secret — no
+      # workflow change. The contents come from EXPO_ASC_API_KEY_P8; .p8 is
+      # gitignored, so the file is materialised at build time and wiped after.
+      # Skipped for preview (no TestFlight submit), so unconfigured secrets
+      # don't fail preview builds.
+      - name: Write ASC API Key
+        if: env.PROFILE == 'production'
+        env:
+          ASC_API_KEY_P8: ${{ secrets.EXPO_ASC_API_KEY_P8 }}
+        run: |
+          if [ -z "$ASC_API_KEY_P8" ]; then
+            echo "::error::Production submit requires the EXPO_ASC_API_KEY_P8 secret. See https://docs.expo.dev/submit/ios/#with-an-app-store-connect-api-key"
+            exit 1
+          fi
+          ASC_KEY_PATH=$(jq -r '.submit.production.ios.ascApiKeyPath' eas.json)
+          if [ -z "$ASC_KEY_PATH" ] || [ "$ASC_KEY_PATH" = "null" ]; then
+            echo "::error::eas.json is missing submit.production.ios.ascApiKeyPath"
+            exit 1
+          fi
+          # Optional: expose path for later steps. Wipe derives the same path
+          # from eas.json with `always()` so cleanup does not depend on this.
+          echo "ASC_KEY_PATH=$ASC_KEY_PATH" >> "$GITHUB_ENV"
+          # Trim any trailing whitespace/newlines from the secret value, then
+          # write the .p8 bytes verbatim to the path eas.json points at.
+          printf '%s' "$ASC_API_KEY_P8" > "$ASC_KEY_PATH"
+          chmod 600 "$ASC_KEY_PATH"
+
+      - name: Build iOS app
+        run: |
+          # Production: build + auto-submit to TestFlight via the configured
+          # ASC API Key. EAS waits for the build then submits.
+          # Preview: build only (no TestFlight push).
+          if [ "$PROFILE" = "production" ]; then
+            eas build --platform ios --profile "$PROFILE" --non-interactive --auto-submit
+          else
+            eas build --platform ios --profile "$PROFILE" --non-interactive --no-wait
+          fi
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+
+      # Derive the path from eas.json (same as the write step). Do not gate on
+      # env.ASC_KEY_PATH — GITHUB_ENV from a failed/cancelled write step may
+      # never persist, which would skip cleanup and leave the .p8 on disk.
+      - name: Wipe ASC API Key from runner
+        if: ${{ always() && env.PROFILE == 'production' }}
+        run: |
+          ASC_KEY_PATH=$(jq -r '.submit.production.ios.ascApiKeyPath' eas.json)
+          if [ -n "$ASC_KEY_PATH" ] && [ "$ASC_KEY_PATH" != "null" ]; then
+            rm -f "$ASC_KEY_PATH"
+          fi
+
+      - name: Notify build started
+        run: |
+          echo "iOS build submitted to EAS. Monitor at https://expo.dev"
+          echo "Profile: $PROFILE"

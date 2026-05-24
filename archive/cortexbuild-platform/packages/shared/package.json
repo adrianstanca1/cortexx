@@ -1,0 +1,24 @@
+{
+  "name": "@cortexbuild/shared",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Types, constants, validation schemas, and utilities shared across all CortexBuild services",
+  "type": "module",
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "check": "tsc --noEmit",
+    "lint": "eslint .",
+    "format": "prettier --write ."
+  },
+  "dependencies": {
+    "zod": "^3.24.0"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.0",
+    "eslint": "^9.0.0",
+    "prettier": "^3.4.0",
+    "rimraf": "^6.0.0"
+  }
+}

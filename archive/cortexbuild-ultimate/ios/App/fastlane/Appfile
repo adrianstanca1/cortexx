@@ -1,0 +1,6 @@
+app_identifier("com.cortexbuildpro.app")
+
+# Prefer env vars in CI; local runs can export FASTLANE_* or rely on defaults below.
+apple_id(ENV.fetch("FASTLANE_APPLE_ID", "admin@cortexbuildpro.com"))
+itc_team_id(ENV.fetch("FASTLANE_ITC_TEAM_ID", ""))
+team_id(ENV.fetch("FASTLANE_TEAM_ID", ""))

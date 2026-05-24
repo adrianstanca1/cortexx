@@ -1,7 +1,10 @@
 # Cortexx — Roadmap
 
-Status as of **23 May 2026**. Source of truth for what's shipped, in-flight,
-and planned. Maintained alongside the codebase, not in a separate tracker.
+Status as of **24 May 2026**.
+
+> **Repository consolidation (24 May 2026):** All Cortexx-related repositories (`cortexbuild-ultimate`, `cortexbuild-field`, `cortexbuild-web`, `cortexbuildpro`, `cortexbuild-platform`, `cortexbuild-unified`, `cortexbuildpro-ultimate`, `cortexxxxxx`, `cortexx-pwa`) have been merged into this repository. Their full source code is preserved in `archive/`. All redundant repositories have been deleted from GitHub. This is now the **single source of truth** for the entire Cortexx platform.
+
+Source of truth for what's shipped, in-flight, and planned. Maintained alongside the codebase, not in a separate tracker.
 
 ## ✅ Shipped
 

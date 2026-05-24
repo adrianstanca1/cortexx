@@ -1,0 +1,76 @@
+default_platform(:ios)
+
+platform :ios do
+
+  desc "Run tests on simulator"
+  lane :test do
+    run_tests(
+      project: "App.xcodeproj",
+      scheme: "App",
+      devices: ["iPhone 16"]
+    )
+  end
+
+  desc "Build debug IPA for simulator (no signing)"
+  lane :build_debug do
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Debug",
+      sdk: "iphonesimulator",
+      skip_codesigning: true,
+      output_directory: "./build",
+      output_name: "CortexBuild-debug.app"
+    )
+  end
+
+  private_lane :next_build_number do
+    begin
+      lb = latest_testflight_build_number(app_identifier: "com.cortexbuildpro.app")
+      increment_build_number(xcodeproj: "App.xcodeproj", build_number: (lb.to_i + 1).to_s)
+    rescue StandardError => e
+      UI.important("Could not read TestFlight build number (#{e.message}); bumping local project only.")
+      increment_build_number(xcodeproj: "App.xcodeproj")
+    end
+  end
+
+  desc "Build and upload to TestFlight"
+  lane :beta do
+    next_build_number
+
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "CortexBuild.ipa",
+      include_symbols: true,
+      include_bitcode: false
+    )
+
+    upload_to_testflight(
+      skip_waiting_for_build_processing: true,
+      changelog: ENV["CHANGELOG"] || `git log -1 --pretty=%B`.strip
+    )
+  end
+
+  desc "Build and submit to App Store"
+  lane :release do
+    next_build_number
+
+    build_app(
+      project: "App.xcodeproj",
+      scheme: "App",
+      configuration: "Release",
+      export_method: "app-store",
+      output_directory: "./build",
+      output_name: "CortexBuild.ipa"
+    )
+
+    upload_to_app_store(
+      submit_for_review: false,
+      automatic_release: false
+    )
+  end
+end

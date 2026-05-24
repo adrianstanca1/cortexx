@@ -1,0 +1,70 @@
+node_modules/
+dist/
+coverage/
+
+# Ephemeral agent / session artifacts (do not commit)
+memory/.dreams/
+memory/dreaming/
+.env
+.env.local
+.env.production
+.DS_Store
+*.log
+agent-debug-82d802.ndjson
+.vercel
+tsconfig.tsbuildinfo
+stats.html
+dist_backup_*/
+.next/
+sendgrid.env
+*.plist
+clean_lint*.json
+lint_*.json
+lint_*.txt
+lint_report.json
+fix_any.js
+.claude/
+backups/
+server/doc/
+
+# SSL certificates - NEVER commit private keys
+nginx/ssl/*.pem
+nginx/ssl/*.key
+.env.docker
+deploy/.local-api-secrets.env
+
+# Playwright
+playwright-report/
+test-results/
+.env*.local
+
+# macOS artifacts and runtime uploads
+._*
+uploads/
+server/uploads/
+
+server/.env
+.pids/
+logs/
+*.pid
+
+# Local session state
+.remember/
+.logs/
+
+# Local git worktrees (agent / dev scratch)
+.worktrees/
+
+# Removed dead directories (prevent re-addition)
+.agents/
+.jez/
+.qwen/
+prisma/
+startup-scripts/
+types/
+
+# Removed dead files
+.eslintrc.cjs
+Dockerfile
+deploy.sh
+server/security.js

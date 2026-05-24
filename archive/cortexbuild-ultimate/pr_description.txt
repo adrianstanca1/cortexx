@@ -1,0 +1,12 @@
+🎯 **What:**
+The `processMultipleImages` function in `server/lib/utils/image-utils.ts` was completely untested. This function is important for aggregating image data into the format expected by the Gemini AI integration.
+
+📊 **Coverage:**
+Added unit tests covering:
+- **Empty input:** Processing an empty array of images.
+- **Base64 strings:** Correctly processing an array of raw base64 data.
+- **Data URLs:** Extracting and processing standard image data URLs.
+- **Optional parameter:** Verifying that providing an explicit `mimeType` applies correctly to all mapped results.
+
+✨ **Result:**
+Full branch and statement coverage has been added for `processMultipleImages`, ensuring it maps inputs predictably without regressions as AI integrations expand.

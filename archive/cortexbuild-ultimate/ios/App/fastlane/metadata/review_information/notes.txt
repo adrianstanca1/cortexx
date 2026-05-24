@@ -1,0 +1,15 @@
+CortexBuild is a UK construction site management platform.
+
+Test login (do not share with anyone):
+  Email: review@cortexbuildpro.com
+  Password: AppReview2026!
+
+Note for reviewer: GPS clock-in requires being within 200m of the site
+location. For testing, please tap "GPS unavailable — enter manually" or
+use any GPS coordinates — the radius check is non-blocking.
+
+Push notifications fire after first clock-in.
+
+Voice notes use the microphone — please grant permission when prompted.
+
+Photo capture uses the camera and photo library.

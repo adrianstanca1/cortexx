@@ -1,0 +1,34 @@
+CortexBuild — UK Construction Site Management
+
+Built for site managers, foremen, and field workers running CDM 2015-compliant projects. Replace your paper folders with one app:
+
+DAILY OPERATIONS
+• Daily site reports with voice dictation, photo evidence, weather capture
+• Toolbox talks with on-screen attendee signatures (CDM 2015 Reg 15 / HSE INDG401)
+• Safety incident reports with GPS-tagged location and photo capture
+• Permits to work, RAMS, RFIs, punch list, drawings register
+
+WORKFORCE & PROJECTS
+• Time clock with site-radius verification (200m geofence)
+• Subcontractors, plant & equipment, materials register
+• CIS-compliant subcontractor invoicing
+• Multi-organisation Stripe billing
+• Real-time collaborative document editing
+
+NATIVE iOS
+• Apple Push Notifications for clock-in reminders and safety alerts
+• Camera capture for site photos and incident reports
+• GPS for accurate site clock-in and incident location
+• Haptic feedback throughout
+• Works offline — sync queue automatically replays when you regain signal
+
+SECURITY
+• TOTP multi-factor authentication
+• Per-organisation data isolation
+• HTTPS-only with CSP, HSTS, and secure cookies
+• Daily encrypted backups
+
+CDM 2015 ready. UK GDPR compliant.
+
+Subscriptions: monthly or annual. Cancel anytime.
+Support: support@cortexbuildpro.com

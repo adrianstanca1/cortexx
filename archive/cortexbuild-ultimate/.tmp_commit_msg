@@ -1,0 +1,14 @@
+feat(ultimate): add Permits and Licences module
+
+- Add DB migrations for enhanced site_permits (permit_number, project_id,
+  description, issued_to, renewal_date, document_id, updated_at, indexes)
+- Add permit_renewals and permit_inspections tables
+- Add permit_renewals and permit_inspections columns to generic router
+- Add custom /api/permits route (stats, expiring, renewals, renew, remind)
+- Wire new site_permits columns into ALLOWED_COLUMNS for generic CRUD
+- Add frontend Permits component with dashboard, status chart, expiring alerts,
+  renewal history, CRUD, search and filter
+- Export safetyPermitsApi, permitRenewalsApi, permitInspectionsApi in api.ts
+- Add reactive hooks for safetyPermits, permitRenewals, permitInspections
+- Fixed breaking removal of useSiteInspections (preserves backward compat)
+- Update navigation (Sidebar, Header, Breadcrumbs, CommandPalette, App switch)

@@ -1,0 +1,46 @@
+{
+  "name": "cortexbuild-platform",
+  "version": "2.0.0",
+  "description": "Unified Construction Management Platform \u2014 All CortexBuild apps consolidated into one monorepo",
+  "private": true,
+  "type": "module",
+  "license": "MIT",
+  "author": "CortexBuild Ltd. <ci@cortexbuild.com>",
+  "packageManager": "pnpm@9.0.0",
+  "engines": {
+    "node": ">=22.0.0"
+  },
+  "scripts": {
+    "dev": "pnpm --filter ./packages/api run dev & pnpm --filter ./apps/web run dev",
+    "dev:api": "pnpm --filter ./packages/api run dev",
+    "dev:web": "pnpm --filter ./apps/web run dev",
+    "dev:mobile": "pnpm --filter ./apps/mobile run dev",
+    "build": "pnpm -r run build",
+    "build:api": "pnpm --filter ./packages/api run build",
+    "build:web": "pnpm --filter ./apps/web run build",
+    "start": "pnpm --filter ./packages/api run start",
+    "db:generate": "pnpm --filter ./packages/db run db:generate",
+    "db:migrate": "pnpm --filter ./packages/db run db:migrate",
+    "db:push": "pnpm --filter ./packages/db run db:push",
+    "db:studio": "pnpm --filter ./packages/db run db:studio",
+    "test": "pnpm -r run test",
+    "lint": "pnpm -r lint || true",
+    "format": "pnpm -r run format",
+    "check": "pnpm -r check || true",
+    "deploy": "bash scripts/deploy.sh"
+  },
+  "devDependencies": {
+    "@eslint/js": "^9.39.4",
+    "@types/node": "^22.0.0",
+    "turbo": "^2.9.14",
+    "typescript": "^5.5.0",
+    "typescript-eslint": "^8.59.2"
+  },
+  "pnpm": {
+    "overrides": {
+      "esbuild@<=0.24.2": ">=0.25.0",
+      "postcss@<8.5.10": ">=8.5.10",
+      "ws": ">=8.20.1"
+    }
+  }
+}

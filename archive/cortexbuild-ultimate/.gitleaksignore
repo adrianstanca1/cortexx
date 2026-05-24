@@ -1,0 +1,7 @@
+# Known false-positives + historical leaks already triaged.
+# Auto-generated 2026-05-17. New findings should be reviewed before adding here.
+
+642ad07225d505322b79712822de2e1a6e33ce2d:e2e/.auth/storage-state.json:jwt:9
+642ad07225d505322b79712822de2e1a6e33ce2d:docs/API_DOCUMENTATION.md:generic-api-key:222
+642ad07225d505322b79712822de2e1a6e33ce2d:docs/API_DOCUMENTATION.md:generic-api-key:252
+642ad07225d505322b79712822de2e1a6e33ce2d:src/components/modules/Webhooks.tsx:generic-api-key:150
