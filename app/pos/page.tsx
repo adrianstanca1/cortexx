@@ -401,6 +401,14 @@ export default function POsPage() {
               <button onClick={() => emailSupplier(activePo)} style={{ ...statusBtn('#f59e0b'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcSend size={12} color="#fff" /> Email supplier
               </button>
+              <a
+                href={`/api/pos/${activePo.id}/pdf`}
+                target="_blank"
+                rel="noreferrer"
+                style={{ ...statusBtn('#8b5cf6'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, textDecoration: 'none' }}
+              >
+                <IcDoc size={12} color="#8b5cf6" /> Download PDF
+              </a>
               {activePo.status === 'sent' && (
                 <button onClick={() => changeStatus(activePo, 'received')} style={statusBtn('#22c55e')}>Mark received</button>
               )}
