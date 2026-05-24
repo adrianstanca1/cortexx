@@ -182,6 +182,21 @@ jobs:
             fi
             echo "✓ DB ready"
 
+            # ─── 3a. Self-heal stuck Prisma migrations ────────────────────
+            # A failed migration leaves a row in _prisma_migrations with
+            # finished_at = NULL. Prisma's next migrate deploy refuses to
+            # proceed past it, so each subsequent deploy gets stuck. Clear
+            # via raw SQL (no Node deps needed at this point in the flow).
+            # Idempotent: zero stuck rows means zero deletes.
+            STUCK_TABLE_EXISTS=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
+            if [ "$STUCK_TABLE_EXISTS" = "_prisma_migrations" ]; then
+              STUCK_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT COUNT(*) FROM _prisma_migrations WHERE finished_at IS NULL" 2>/dev/null | xargs)
+              if [ -n "$STUCK_COUNT" ] && [ "$STUCK_COUNT" -gt 0 ]; then
+                echo "↻ Found $STUCK_COUNT stuck Prisma migration row(s) — clearing"
+                sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL"
+              fi
+            fi
+
             # ─── 4. Nightly backup cron (idempotent) ──────────────────────
             cat > /etc/cron.daily/cortexx-backup << 'CRON'
           #!/usr/bin/env bash
@@ -240,18 +255,9 @@ jobs:
             DATABASE_URL="$DB_URL" npx prisma generate > /tmp/cortexx-prisma-gen.log 2>&1
             tail -3 /tmp/cortexx-prisma-gen.log
 
-            # If a prior migration was marked failed (e.g. transient SSH abort,
-            # network blip while a long migration was running), Prisma refuses
-            # to proceed. Detect and roll back the stuck row so the retry can
-            # re-apply the SQL on a clean slate. Idempotent: no failed rows = no-op.
-            STUCK=$(sudo -u postgres psql cortexx -tAc "SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NULL OR rolled_back_at IS NOT NULL ORDER BY started_at DESC LIMIT 1" 2>/dev/null || echo "")
-            if [ -n "$STUCK" ]; then
-              echo "↻ Found stuck migration: $STUCK — marking rolled-back so it re-applies"
-              DATABASE_URL="$DB_URL" npx prisma migrate resolve --rolled-back "$STUCK" 2>&1 || echo "(resolve failed — continuing)"
-            fi
-
             # set -e would silence the migration log, so handle the failure
             # explicitly: dump the log then re-raise the same exit code.
+            # (Stuck-migration cleanup already happened earlier in step 3a.)
             if ! DATABASE_URL="$DB_URL" npx prisma migrate deploy > /tmp/cortexx-prisma-mig.log 2>&1; then
               echo "✗ prisma migrate deploy failed — full log:"
               cat /tmp/cortexx-prisma-mig.log
