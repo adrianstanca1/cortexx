@@ -150,8 +150,8 @@ export default function DocumentsPage() {
               return (
                 <div key={d.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
                   {isImage && d.url ? (
-                    /* eslint-disable-next-line @next/next/no-img-element */
                     <a href={d.url} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img src={d.url} alt="" width={36} height={36} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', display: 'block' }} />
                     </a>
                   ) : (
