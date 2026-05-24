@@ -23,6 +23,11 @@ export async function GET(req: NextRequest) {
     const memberId = searchParams.get('memberId')
     const weekParam = searchParams.get('week')
     const yearParam = searchParams.get('year')
+    // approved=false → only unapproved; approved=true → only approved; omit → all
+    const approvedParam = searchParams.get('approved')
+    const approvedFilter = approvedParam === 'false' ? false : approvedParam === 'true' ? true : undefined
+    // allWeeks=true → skip week/year filter (used for cross-week pending count)
+    const allWeeks = searchParams.get('allWeeks') === 'true'
 
     const nowIso = isoWeek(new Date())
     const currentWeek = weekParam ? parseInt(weekParam) : nowIso.week
@@ -31,8 +36,8 @@ export async function GET(req: NextRequest) {
     const entries = await prisma.timeEntry.findMany({
       where: {
         ...(memberId && { memberId }),
-        week: currentWeek,
-        year: currentYear,
+        ...(!allWeeks && { week: currentWeek, year: currentYear }),
+        ...(approvedFilter !== undefined && { approved: approvedFilter }),
       },
       include: { member: true, project: true },
       orderBy: { date: 'asc' },

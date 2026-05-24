@@ -40,7 +40,7 @@ export default function Exec({ data }: ExecProps) {
 
   useEffect(() => {
     fetch('/api/snags?status=open&take=1').then(r => r.ok ? r.json() : null).then(d => { if (d) setOpenSnags(d.openCount ?? 0) }).catch(() => {})
-    fetch('/api/timeentries?approved=false').then(r => r.ok ? r.json() : null).then(d => { if (d && Array.isArray(d.entries)) setPendingTS(d.entries.length) }).catch(() => {})
+    fetch('/api/timeentries?approved=false&allWeeks=true').then(r => r.ok ? r.json() : null).then(d => { if (d && Array.isArray(d.entries)) setPendingTS(d.entries.length) }).catch(() => {})
     fetch('/api/inbox').then(r => r.ok ? r.json() : null).then(d => { if (d) setInboxCount(d.total ?? 0) }).catch(() => {})
   }, [])
 
