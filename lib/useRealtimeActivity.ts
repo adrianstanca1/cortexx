@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useRef, useState } from 'react'
+import { useEffect, useState } from 'react'
 import type { Activity } from './types'
 
 interface State {
@@ -17,14 +17,15 @@ export function useRealtimeActivity(initial: Activity[] = []): State {
   const [activities, setActivities] = useState<Activity[]>(initial)
   const [connected, setConnected] = useState(false)
   const [error, setError] = useState<string | null>(null)
-  const seenIds = useRef<Set<string>>(new Set(initial.map(a => a.id)))
 
-  // Reseed when `initial` reference changes (e.g. after refetch)
-  useEffect(() => {
+  // Reseed when `initial` reference changes (e.g. after refetch). The React 19
+  // idiom: detect the change during render against a sentinel state and adjust.
+  const initialKey = `${initial.length}|${initial[0]?.id || ''}`
+  const [prevKey, setPrevKey] = useState(initialKey)
+  if (prevKey !== initialKey) {
+    setPrevKey(initialKey)
     setActivities(initial)
-    seenIds.current = new Set(initial.map(a => a.id))
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [initial.length, initial[0]?.id])
+  }
 
   useEffect(() => {
     let es: EventSource | null = null
@@ -38,10 +39,14 @@ export function useRealtimeActivity(initial: Activity[] = []): State {
         es.addEventListener('activity', (e: MessageEvent) => {
           try {
             const incoming = JSON.parse(e.data) as Activity[]
-            const fresh = incoming.filter(a => !seenIds.current.has(a.id))
-            if (fresh.length === 0) return
-            fresh.forEach(a => seenIds.current.add(a.id))
-            setActivities(prev => [...fresh.reverse(), ...prev].slice(0, 50))
+            // Dedup against current state inside the updater so we don't need
+            // a parallel ref (which React 19 flags if written during render).
+            setActivities(prev => {
+              const seen = new Set(prev.map(a => a.id))
+              const fresh = incoming.filter(a => !seen.has(a.id))
+              if (fresh.length === 0) return prev
+              return [...fresh.reverse(), ...prev].slice(0, 50)
+            })
           } catch {}
         })
 

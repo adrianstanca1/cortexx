@@ -88,12 +88,16 @@ export default function DashboardSwitcher() {
     return () => clearInterval(i)
   }, [])
 
-  useEffect(() => {
+  // Adjust state when the URL ?v= param changes — the React 19 idiom: track
+  // the previous value in state, run the sync during render when it changes.
+  const [prevVParam, setPrevVParam] = useState(vParam)
+  if (vParam !== prevVParam) {
+    setPrevVParam(vParam)
     if (vParam) {
       const found = variants.find(v => v.id === `v${vParam}`)
       if (found) setActive(found.id)
     }
-  }, [vParam])
+  }
   const current = variants.find(v => v.id === active)!
   const Comp = current.Comp as React.ComponentType<CompProps>
 
