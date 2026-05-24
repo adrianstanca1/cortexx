@@ -1,0 +1,36 @@
+{
+  "name": "cortexx",
+  "displayName": "Cortexx",
+  "version": "1.0.0",
+  "description": "The construction OS that thinks with you. AI-powered project, accounting, CIS, safety & site ops for UK SMB contractors.",
+  "private": true,
+  "scripts": {
+    "build:web": "node ./scripts/build-web.mjs",
+    "cap:init": "cap init Cortexx app.cortexbuild.cortexx --web-dir www",
+    "cap:add:ios": "cap add ios",
+    "cap:sync": "cap sync ios",
+    "cap:open:ios": "cap open ios",
+    "ios": "npm run build:web && npm run cap:sync && npm run cap:open:ios"
+  },
+  "dependencies": {
+    "@capacitor/app": "^6.0.1",
+    "@capacitor/camera": "^6.1.0",
+    "@capacitor/core": "^6.1.2",
+    "@capacitor/device": "^6.0.1",
+    "@capacitor/filesystem": "^6.0.1",
+    "@capacitor/geolocation": "^6.0.1",
+    "@capacitor/haptics": "^6.0.1",
+    "@capacitor/ios": "^6.1.2",
+    "@capacitor/keyboard": "^6.0.2",
+    "@capacitor/local-notifications": "^6.1.0",
+    "@capacitor/network": "^6.0.2",
+    "@capacitor/preferences": "^6.0.2",
+    "@capacitor/push-notifications": "^6.0.2",
+    "@capacitor/share": "^6.0.2",
+    "@capacitor/splash-screen": "^6.0.2",
+    "@capacitor/status-bar": "^6.0.1"
+  },
+  "devDependencies": {
+    "@capacitor/cli": "^6.1.2"
+  }
+}
