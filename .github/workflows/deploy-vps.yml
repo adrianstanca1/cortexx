@@ -122,13 +122,17 @@ jobs:
           # Workflow-scoped token; valid for the run; can read the repo it owns.
           GH_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Generate per-deploy DB password (rotated automatically — admin user is recreated by seed)
-          DB_PASS=$(openssl rand -hex 16)
-          echo "::add-mask::$DB_PASS"
+          # Generate a candidate password — only used if the existing one
+          # doesn't work (atomic rotation: either both DB + .env.production
+          # get the new one, or both keep the old one). Prevents the drift
+          # we saw earlier where failed deploys rotated DB without writing
+          # the matching env file.
+          DB_PASS_CANDIDATE=$(openssl rand -hex 16)
+          echo "::add-mask::$DB_PASS_CANDIDATE"
 
           # Pass ALL secrets via the SSH env-var prefix — single SSH session, no cross-step file deps
           ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
-            DB_PASS="$DB_PASS" \
+            DB_PASS_CANDIDATE="$DB_PASS_CANDIDATE" \
             NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
             ADMIN_EMAIL="$ADMIN_EMAIL" \
             ADMIN_PASSWORD="$ADMIN_PASSWORD" \
@@ -139,9 +143,6 @@ jobs:
             GH_PAT="$GH_PAT" \
             'bash -s' << 'REMOTE'
             set -euo pipefail
-            # Verbose tracing — every command echoes to stderr (visible in
-            # the job log). Remove once the deploy is healthy again.
-            set -x
             APP_DIR=/opt/cortexx
             APP_PORT=3010
             BACKUP_DIR=/opt/cortexx-backups
@@ -163,14 +164,32 @@ jobs:
             fi
             find "$BACKUP_DIR" -name '*.sql.gz' -mtime +30 -delete 2>/dev/null || true
 
-            # ─── 3. Create/update user + database (idempotent) ────────────
-            # Superuser is the OS 'postgres' user via peer auth on local socket.
+            # ─── 3. Create/update user + database (idempotent + atomic) ──
+            # Strategy: try the password already in .env.production FIRST.
+            # If it works, keep it (no rotation; no risk of drift). Only
+            # rotate to the candidate if the existing one is broken / missing.
             HAS_USER=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_user WHERE usename='cortexx'" 2>/dev/null || echo "")
-            if [ "$HAS_USER" != "1" ]; then
-              sudo -u postgres psql -c "CREATE USER cortexx WITH PASSWORD '$DB_PASS';"
-              echo "✓ Created user cortexx"
+
+            EXISTING_PASS=""
+            if [ -f /opt/cortexx/.env.production ]; then
+              EXISTING_PASS=$(grep -oP 'DATABASE_URL=postgresql://cortexx:\K[^@]+' /opt/cortexx/.env.production || echo "")
             fi
-            sudo -u postgres psql -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';" >/dev/null
+
+            DB_PASS=""
+            if [ -n "$EXISTING_PASS" ] && [ "$HAS_USER" = "1" ] && PGPASSWORD="$EXISTING_PASS" psql "postgresql://cortexx:$EXISTING_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>/dev/null | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
+              DB_PASS="$EXISTING_PASS"
+              echo "✓ Reusing existing password from .env.production"
+            else
+              DB_PASS="$DB_PASS_CANDIDATE"
+              if [ "$HAS_USER" != "1" ]; then
+                sudo -u postgres psql -c "CREATE USER cortexx WITH PASSWORD '$DB_PASS';"
+                echo "✓ Created user cortexx"
+              else
+                sudo -u postgres psql -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';" >/dev/null
+                echo "↻ Rotated DB password (existing one wasn't usable)"
+              fi
+            fi
+
             HAS_DB=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" 2>/dev/null || echo "")
             if [ "$HAS_DB" != "1" ]; then
               sudo -u postgres psql -c "CREATE DATABASE cortexx OWNER cortexx;"
