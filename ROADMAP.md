@@ -75,7 +75,7 @@ Every roadmap module is now a real implementation with auth-gated CRUD and match
 | # | Issue | Severity | Notes |
 |---|---|---|---|
 | 1 | ~~Capture page only stores file metadata, not bytes~~ | ✅ Fixed | `/api/uploads` POST writes to `UPLOAD_DIR` (default `./uploads`, prod = `/var/lib/cortexx/uploads`); `/api/uploads/[name]` streams it back (auth-gated). `Document` has `url`/`size`/`mimeType`. `/capture` uploads then creates the doc; `/documents` shows thumbnails for images. 25 MB cap, MIME allowlist. |
-| 2 | Voice RFI: audio captured, transcription still pending | Partial | `/capture?type=voice` now uses MediaRecorder to record, uploads the blob, attaches the URL to the RFI task description (and as an `audio` document on the project). Whisper-style transcription parked behind the Whisper API-key / `whisper.cpp` decision. |
+| 2 | ~~Voice RFI: audio captured, transcription still pending~~ | ✅ Fixed | `/capture?type=voice` records via MediaRecorder, uploads the blob, then calls `/api/transcribe` which runs `whisper.cpp` (`base.en` model) after an `ffmpeg`-driven 16 kHz mono WAV conversion. Successful transcription becomes the RFI task description; on `WHISPER_UNAVAILABLE` / `FFMPEG_UNAVAILABLE` / `EMPTY_TRANSCRIPT`, the task still gets created with the audio URL. Deploy workflow installs whisper.cpp idempotently. |
 | 3 | ~~Module stubs don't surface their "coming soon" status~~ | ✅ Fixed | All 24 modules are now real implementations — zero `ModuleStub` references left in `/app/`. |
 | 4 | Client-rendered pages → weak social previews | Partial | Root layout now exports `openGraph` + `twitter` metadata using `NEXT_PUBLIC_SITE_URL`, so unfurls work even for client-rendered routes. Full server-component refactor stays an open architecture decision. |
 
@@ -97,7 +97,7 @@ Run these after every push to main (the Hostinger workflow handles 1+2 automatic
 2. **Server components by default** — client components only where state, effects, or browser APIs are needed. Cuts JS bundle.
 3. **`force-dynamic` on every GET API route** — all routes are auth-gated; Next.js's default caching would cache pre-auth responses.
 4. **Service worker network-first for navigation** — never serve stale HTML. Static assets are stale-while-revalidate so they cache for ~30d but update in background.
-5. **Cross-tab realtime via SSE only (not BroadcastChannel)** — SSE alone is sufficient since the server is the source of truth. BroadcastChannel would help on connection-loss only, and the trade-off (cache invalidation complexity) wasn't worth it yet.
+5. **Cross-tab realtime via SSE + BroadcastChannel** — SSE remains the source-of-truth path (server pushes activity events; tabs refetch). BroadcastChannel (`lib/broadcast.ts`) is layered on top for same-browser sibling tabs: a successful mutation in tab A broadcasts `data:invalidate` so tab B refetches in ~50 ms instead of waiting for the server hop. Scoped (`tasks`/`projects`/`team`/`activity`/`all`) to keep invalidations targeted.
 6. **No design system / no Tailwind classes for the dashboard** — inline styles match the Claude design's prototype exactly. Refactoring to Tailwind happens once we stabilise the visual language (post-v1.5).
 
 ## 🅿️ Parked
