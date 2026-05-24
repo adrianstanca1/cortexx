@@ -41,63 +41,48 @@ Source of truth for what's shipped, in-flight, and planned. Maintained alongside
 | **A11y** | `aria-label` on icon-only buttons, `aria-current=page` on active nav, focus-trap on modals, Escape-to-close on bottom sheets, screen-reader-friendly toasts. |
 | **Performance** | `dueTime`/`dueDate`/`skip`/`hours`/`progress` validation hardened, 4 graceful-404 endpoints, dashboard `groupBy` aggregates, static asset cache headers (30d for icons, immutable for `/_next/static`), CI build cache. |
 | **Deploy reliability** | Hardened deploy script: SSH retry 8x, hard-fail on build error, `pm2 delete + start` (fresh env), `/api/health` gate, system Postgres via apt (no docker dependency), authenticated git clone via workflow `GITHUB_TOKEN`. |
-| **Tests** | First unit tests using `node:test` — 8 tests covering validation invariants. CI runs them between tsc + build. |
+| **Tests** | First unit tests using `node:test` — 18 tests covering validation invariants. CI runs them between tsc + build. |
+| **Drawings + Schedule** | `/drawings` — `Drawing` + `DrawingRevision` models, per-project `DWG-NNN` sequencing, per-drawing unique `(drawingId, revision)`, file storage via existing `/api/uploads` (PDF / image / DWG ≤ 25 MB), revision history with "CURRENT" tag, status pipeline draft → approved → superseded → archived, auto-incrementing rev labels (A→B, P01→P02), discipline + project filter chips. **/schedule** — read-only `/api/schedule?from=&weeks=` aggregating Tasks-with-dueDate across active projects. Horizontal Gantt-style day grid with sticky project column, today highlighted, Monday boundaries thicker, weekend dimmed. Per-task bars positioned by dueDate with status background + priority left-stripe, clickable to `/tasks?focus=`. Prev/next-week, 4/8/12-week zoom, project filter. |
 
 ## 🛠 In flight
 
 | Item | Status |
 |---|---|
-| **24 module stubs → real implementations** | All 24 modules have stub pages with planned-capability lists. Implementation incremental per module — see "Planned releases" below. |
-| **Service worker update prompt** | Shipping reload-toast when a new SW is waiting. UX is in place; surface this more prominently next release. |
+| **Voice → text transcription** | `/capture?type=voice` records via `MediaRecorder` and attaches the blob to the RFI; Whisper-style transcription still needs an API key. The local-LLM Ollama setup added with `/ask` could be extended with `whisper.cpp` for self-hosted transcription. |
 | **Real-time dashboard cross-tab sync** | SSE feeds the activity list; broader cross-tab BroadcastChannel sync (mirror of PWA approach) not yet wired. |
-| **iOS native shell (Capacitor 6)** | Scaffold absorbed from cortexx-pwa into `ios/` — Capacitor 6 with camera/geolocation/voice-recorder/haptics/local+push notifications plugins wired, splash + status-bar themed `#06101e`, `PrivacyInfo.xcprivacy`, GitHub Actions iOS workflow in `ios/ci/`. App Store submission pack (icons, screenshots-generator, copy, SUBMISSION.md) in `app-store/`. Build adapter for Next.js (`next export` → `ios/www`) still TODO — see `ios/README.md` §1. |
-| **Legal pages** | `/privacy`, `/terms`, `/support` ported as Next.js server components from the cortexx-pwa standalone HTML. Shared `LegalShell` keeps the visual language consistent. |
-| **cortexx-pwa consolidation** | The sibling static-PWA repo's source is now in this codebase. Single-file PWA → `public/legacy/` (served at `/legacy/`, scoped SW so it doesn't fight the Next.js SW). The full `dist/` (60+ Babel-transpiled JS bundles: dashboards, screens-phase\*, app-main, boot, tokens, lib helpers) is included as the porting reference. PWA docs (DEPLOY_NOW, SHIP_READY, SHIP_TO_APP_STORE, PERF_PHASE_81, etc.) under `docs/pwa/`. Two repos collapsed into one. |
+| **Capacitor → Next.js bridge** | iOS scaffold is in `ios/` but `scripts/build-web.mjs` still targets the legacy static PWA. Last-mile work: either run `next export` and point `webDir` at `out/`, or point Capacitor's `server.url` at `cortexbuildpro.com`. Documented in `ios/README.md` §1. |
+| **AI enhancements per module** | Base modules are real and working. The AI-powered cherries-on-top still to add: AI defect detection on snag photos, AI tagging on photos, photo compare-over-time, AI-drafted quotes from a brief, AI estimator on POs, Whisper transcription, weather auto-fetch on site-diary, PDF export, drawing rev-compare + markup. Each one slots into the existing module backend; design pass needed per item. |
 
-## 🗺 Planned releases
+## 🎯 What's shipped (all 24 modules + extras)
 
-### v1.1 — Communication
-- `/messages` — per-project threads, @mentions, push via PWA notifications
-- `/rfis` — Voice → AI transcription → structured RFI, ball-in-court routing, SLA tracking
-- `/ask` — Cortex AI conversational agent grounded in workspace data
+Every roadmap module is now a real implementation with auth-gated CRUD and matching UI. Quick map:
 
-### v1.2 — Sales pipeline
-- `/leads` — capture, enrichment, stage pipeline, convert-to-customer
-- `/customers` — org + contacts, project history, cumulative invoicing
-- `/quotes` — AI-drafted from brief, line items from cost catalog, accept→project
-- `/client-view` — read-only branded project portal at a public URL
-
-### v1.3 — Site operations
-- `/schedule` — Gantt-style program across all projects, resource view, slippage
-- `/site-diary` — auto-compiled from check-ins + activity, weather, PDF export
-- ~~`/photos`~~ — ✅ shipped (gallery + uploads). AI tagging + compare-over-time still planned.
-- `/drawings` — versioned with pinned RFIs/snags, rev compare, markup
-- ~~`/snags`~~ — ✅ shipped (CRUD + status + photo). AI defect detection still planned.
-- `/variations` — change orders with cost/time impact + client approval
-
-### v1.4 — Money & ops
-- `/pos` — Purchase orders, three-way match with deliveries + invoices
-- `/sub-invoices` — CIS-aware subcontractor invoice processing, weekly run
-- `/materials` — cost catalog, ordering, GRN, stock locations, waste tracking
-- `/subs` — subcontractor register with insurance/qualification alerts
-- `/equipment` — plant & tools asset register with service intervals
-- `/cost-catalog` — unit-rate library with merchant trade prices
-- `/mileage` — HMRC-compliant mileage capture with fuel-card matching
-
-### v1.5 — People & time
-- `/timesheets` — auto-populated from check-ins, weekly approval, payroll CSV
-- `/check-in` — GPS-verified arrival/departure, induction confirmation
-- `/live-status` — real-time map of all sites + who's where
-- `/training` — ticket register (CSCS, IPAF, asbestos), expiry alerts
+- **Comms**: `/messages` (Announcement), `/rfis` (Rfi), `/ask` (local Ollama LLM)
+- **Sales**: `/leads` (Lead), `/customers` (Customer), `/quotes` (Quote, line items), `/client-view` + public `/client/[token]`
+- **Site ops**: `/schedule` (Gantt), `/site-diary` (aggregation), `/photos` (Document), `/drawings` (Drawing + DrawingRevision), `/snags` (Snag), `/observations` (Observation), `/variations` (Variation)
+- **Money & ops**: `/pos` (PurchaseOrder), `/sub-invoices` (SubInvoice with HMRC-CIS auto-calc), `/materials` (Material), `/subs` (Subcontractor), `/equipment` (Equipment), `/cost-catalog` (CostItem), `/mileage` (MileageEntry)
+- **People & time**: `/timesheets` (TimeEntry weekly grid), `/check-in` (SiteCheckIn with GPS), `/live-status` (real-time map), `/training` (Certification)
 
 ## 🐛 Known issues
 
 | # | Issue | Severity | Notes |
 |---|---|---|---|
 | 1 | ~~Capture page only stores file metadata, not bytes~~ | ✅ Fixed | `/api/uploads` POST writes to `UPLOAD_DIR` (default `./uploads`, prod = `/var/lib/cortexx/uploads`); `/api/uploads/[name]` streams it back (auth-gated). `Document` has `url`/`size`/`mimeType`. `/capture` uploads then creates the doc; `/documents` shows thumbnails for images. 25 MB cap, MIME allowlist. |
-| 2 | Voice RFI: audio captured, transcription still pending | Partial | `/capture?type=voice` now uses MediaRecorder to record, uploads the blob, attaches the URL to the RFI task description (and as an `audio` document on the project). Whisper-style transcription still needs an API key — parked for v1.1. |
-| 3 | ~~Module stubs don't surface their "coming soon" status~~ | ✅ Fixed | `/apps` greys non-shipped modules (opacity 0.55) and renders a "SOON" pip. Real-data badges suppressed on coming-soon items so users don't expect data behind them. |
-| 4 | Client-rendered pages → weak social previews | Partial | Root layout now exports `openGraph` + `twitter` metadata using `NEXT_PUBLIC_SITE_URL`, so unfurls work even for client-rendered routes. Full server-component refactor stays an open architecture decision (post-v1.5). |
+| 2 | Voice RFI: audio captured, transcription still pending | Partial | `/capture?type=voice` now uses MediaRecorder to record, uploads the blob, attaches the URL to the RFI task description (and as an `audio` document on the project). Whisper-style transcription parked behind the Whisper API-key / `whisper.cpp` decision. |
+| 3 | ~~Module stubs don't surface their "coming soon" status~~ | ✅ Fixed | All 24 modules are now real implementations — zero `ModuleStub` references left in `/app/`. |
+| 4 | Client-rendered pages → weak social previews | Partial | Root layout now exports `openGraph` + `twitter` metadata using `NEXT_PUBLIC_SITE_URL`, so unfurls work even for client-rendered routes. Full server-component refactor stays an open architecture decision. |
+
+## 🚀 Production deploy checklist
+
+Run these after every push to main (the Hostinger workflow handles 1+2 automatically):
+
+1. **Run migrations** — `prisma migrate deploy` (currently 14 migrations; the latest 9 were added this rebuild cycle)
+2. **Restart pm2** — `pm2 reload cortexx` (or `pm2 delete cortexx && pm2 start ...` for env-var changes)
+3. **Health gate** — wait for `/api/health` → 200 before declaring deploy good
+4. **Local LLM** (only if `/ask` should respond):
+   - `curl -fsSL https://ollama.com/install.sh | sh`
+   - `ollama pull llama3.2:3b` (or whatever `OLLAMA_MODEL` env is set to)
+   - `systemctl enable --now ollama` (or `ollama serve` in tmux)
 
 ## 🏗 Architecture decisions
 
@@ -113,6 +98,6 @@ Source of truth for what's shipped, in-flight, and planned. Maintained alongside
 | Item | Why parked |
 |---|---|
 | ~~**iOS native build (Capacitor wrap)**~~ | ✅ Unblocked — Capacitor 6 scaffold + App Store submission pack now live in this repo (`ios/`, `app-store/`). Last-mile work: adapt `ios/scripts/build-web.mjs` to run `next export` (or point Capacitor at the deployed `cortexbuildpro.com` via `server.url`) instead of copying the standalone PWA HTML. |
-| **Push notifications** | Requires VAPID keys + service worker `push` event handling + per-user subscription storage. Useful once `/messages` ships. |
+| **Push notifications** | Requires VAPID keys + service worker `push` event handling + per-user subscription storage. Useful once mobile-app traffic grows. |
 | **Multi-tenancy** | Currently single-tenant. The data model has no `organizationId`. If we want multi-tenant we'll need a migration and a row-level-security pass. |
-| **Cortex AI agent** | The `/ask` route is a stub. Real implementation needs prompt construction with workspace context, citations, and a usage-quota layer. |
+| ~~**Cortex AI agent**~~ | ✅ Shipped (`/ask`) — runs against a local Ollama LLM (default `llama3.2:3b`). Workspace-context system prompt grounds answers in live project/snag/timesheet/activity data. No external API key; no per-request cost. |
