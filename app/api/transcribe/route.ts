@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/requireAuth'
 import { existsSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
+import { stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
 import { join } from 'node:path'
 import { execFile } from 'node:child_process'
@@ -134,9 +135,9 @@ export async function POST(req: NextRequest) {
   }
 
   // Cheap size check before doing anything heavy.
-  const stat = await import('node:fs/promises').then(m => m.stat(sourcePath))
-  if (stat.size > MAX_AUDIO_BYTES) {
-    return NextResponse.json({ error: `Audio too large (${Math.round(stat.size / 1024 / 1024)} MB, max 25 MB)` }, { status: 413 })
+  const fileStat = await stat(sourcePath)
+  if (fileStat.size > MAX_AUDIO_BYTES) {
+    return NextResponse.json({ error: `Audio too large (${Math.round(fileStat.size / 1024 / 1024)} MB, max 25 MB)` }, { status: 413 })
   }
 
   const work = mkdtempSync(join(tmpdir(), 'cortexx-tx-'))
