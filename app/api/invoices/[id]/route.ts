@@ -4,7 +4,8 @@ import { requireAuth, actorName } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
@@ -29,7 +30,8 @@ async function recalcSpent(projectId: string) {
   await prisma.project.update({ where: { id: projectId }, data: { spent } })
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
@@ -62,7 +64,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {

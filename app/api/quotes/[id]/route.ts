@@ -43,7 +43,8 @@ function validateLineItems(raw: unknown): LineItem[] {
     .filter((x): x is LineItem => x !== null)
 }
 
-export async function GET(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   const quote = await prisma.quote.findUnique({
@@ -54,7 +55,8 @@ export async function GET(_req: NextRequest, { params }: { params: { id: string 
   return NextResponse.json({ quote })
 }
 
-export async function PUT(req: NextRequest, { params }: { params: { id: string } }) {
+export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
@@ -129,7 +131,8 @@ export async function PUT(req: NextRequest, { params }: { params: { id: string }
   }
 }
 
-export async function DELETE(_req: NextRequest, { params }: { params: { id: string } }) {
+export async function DELETE(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+  const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
