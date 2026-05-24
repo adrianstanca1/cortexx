@@ -35,6 +35,7 @@ and planned. Maintained alongside the codebase, not in a separate tracker.
 | **Real-time dashboard cross-tab sync** | SSE feeds the activity list; broader cross-tab BroadcastChannel sync (mirror of PWA approach) not yet wired. |
 | **iOS native shell (Capacitor 6)** | Scaffold absorbed from cortexx-pwa into `ios/` — Capacitor 6 with camera/geolocation/voice-recorder/haptics/local+push notifications plugins wired, splash + status-bar themed `#06101e`, `PrivacyInfo.xcprivacy`, GitHub Actions iOS workflow in `ios/ci/`. App Store submission pack (icons, screenshots-generator, copy, SUBMISSION.md) in `app-store/`. Build adapter for Next.js (`next export` → `ios/www`) still TODO — see `ios/README.md` §1. |
 | **Legal pages** | `/privacy`, `/terms`, `/support` ported as Next.js server components from the cortexx-pwa standalone HTML. Shared `LegalShell` keeps the visual language consistent. |
+| **cortexx-pwa consolidation** | The sibling static-PWA repo's source is now in this codebase. Single-file PWA → `public/legacy/` (served at `/legacy/`, scoped SW so it doesn't fight the Next.js SW). The full `dist/` (60+ Babel-transpiled JS bundles: dashboards, screens-phase\*, app-main, boot, tokens, lib helpers) is included as the porting reference. PWA docs (DEPLOY_NOW, SHIP_READY, SHIP_TO_APP_STORE, PERF_PHASE_81, etc.) under `docs/pwa/`. Two repos collapsed into one. |
 
 ## 🗺 Planned releases
 
