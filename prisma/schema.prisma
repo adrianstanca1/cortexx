@@ -89,6 +89,7 @@ model Project {
   announcements Announcement[]
   observations  Observation[]
   variations    Variation[]
+  siteCheckIns  SiteCheckIn[]
 
   @@index([status])
   @@index([updatedAt])
@@ -132,6 +133,8 @@ model TeamMember {
   assignments    Assignment[]
   timeEntries    TimeEntry[]
   certifications Certification[]
+  siteCheckIns   SiteCheckIn[]
+  mileageEntries MileageEntry[]
 
   @@index([email])
 }
@@ -417,4 +420,47 @@ model Quote {
   @@index([status])
   @@index([customerId])
   @@index([validUntil])
+}
+
+model SiteCheckIn {
+  id           String     @id @default(cuid())
+  memberId     String
+  projectId    String
+  checkedInAt  DateTime   @default(now())
+  checkedOutAt DateTime?
+  latitudeIn   Float?
+  longitudeIn  Float?
+  latitudeOut  Float?
+  longitudeOut Float?
+  notes        String?
+  member       TeamMember @relation(fields: [memberId], references: [id], onDelete: Cascade)
+  project      Project    @relation(fields: [projectId], references: [id], onDelete: Cascade)
+
+  @@index([memberId, checkedInAt])
+  @@index([projectId, checkedInAt])
+  @@index([checkedOutAt])
+}
+
+model MileageEntry {
+  id           String      @id @default(cuid())
+  memberId     String?
+  date         DateTime
+  fromAddress  String
+  toAddress    String
+  fromPostcode String?
+  toPostcode   String?
+  miles        Float
+  vehicleType  String      @default("car") // car, van, motorbike
+  purpose      String?
+  ratePence    Float       @default(45) // HMRC standard 45p
+  amount       Float
+  approved     Boolean     @default(false)
+  notes        String?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+  member       TeamMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+
+  @@index([memberId, date])
+  @@index([date])
+  @@index([approved])
 }
