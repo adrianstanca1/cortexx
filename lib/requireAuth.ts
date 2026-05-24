@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { auth } from './auth'
 import { MULTITENANT_ENFORCED } from './org'
+import { setOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
@@ -55,6 +56,10 @@ export async function requireOrg() {
   } catch {
     // Not in a request context — fall through.
   }
+
+  // Thread the org into the async context so the Prisma tenancy extension
+  // can auto-scope every query for the rest of this request.
+  setOrgContext({ organizationId: active.id, userId: userId ?? null, role: active.role })
 
   return {
     session,

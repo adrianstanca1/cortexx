@@ -239,7 +239,24 @@ jobs:
             tail -5 /tmp/cortexx-npm-ci.log
             DATABASE_URL="$DB_URL" npx prisma generate > /tmp/cortexx-prisma-gen.log 2>&1
             tail -3 /tmp/cortexx-prisma-gen.log
-            DATABASE_URL="$DB_URL" npx prisma migrate deploy > /tmp/cortexx-prisma-mig.log 2>&1
+
+            # If a prior migration was marked failed (e.g. transient SSH abort,
+            # network blip while a long migration was running), Prisma refuses
+            # to proceed. Detect and roll back the stuck row so the retry can
+            # re-apply the SQL on a clean slate. Idempotent: no failed rows = no-op.
+            STUCK=$(sudo -u postgres psql cortexx -tAc "SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NULL OR rolled_back_at IS NOT NULL ORDER BY started_at DESC LIMIT 1" 2>/dev/null || echo "")
+            if [ -n "$STUCK" ]; then
+              echo "↻ Found stuck migration: $STUCK — marking rolled-back so it re-applies"
+              DATABASE_URL="$DB_URL" npx prisma migrate resolve --rolled-back "$STUCK" 2>&1 || echo "(resolve failed — continuing)"
+            fi
+
+            # set -e would silence the migration log, so handle the failure
+            # explicitly: dump the log then re-raise the same exit code.
+            if ! DATABASE_URL="$DB_URL" npx prisma migrate deploy > /tmp/cortexx-prisma-mig.log 2>&1; then
+              echo "✗ prisma migrate deploy failed — full log:"
+              cat /tmp/cortexx-prisma-mig.log
+              exit 1
+            fi
             tail -10 /tmp/cortexx-prisma-mig.log
             DATABASE_URL="$DB_URL" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" \
               npx prisma db seed > /tmp/cortexx-seed.log 2>&1 || echo "Seed skipped"
