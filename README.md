@@ -3,12 +3,23 @@
 Mobile-first construction-management app for UK SMEs.
 Live: **https://cortexbuildpro.com**
 
+> **May 2026 consolidation.** The sibling [`cortexx-pwa`](https://github.com/adrianstanca1/cortexx-pwa)
+> repo (single-file static PWA + iOS Capacitor scaffold + App Store pack) has
+> been folded into this codebase:
+> - iOS shell → `ios/` (Capacitor 6, ready for Xcode)
+> - App Store submission pack → `app-store/`
+> - Legacy single-file PWA → `public/legacy/` (served at `/legacy/`)
+> - Legacy docs → `docs/pwa/`
+>
+> One repo, one source of truth.
+
 ## Stack
 
-- **Next.js 14** (App Router) — 43 pages, 35 API routes, 30 components
-- **PostgreSQL + Prisma** — 13 models, 4 migrations
+- **Next.js 14** (App Router) — 46+ pages, 35+ API routes, 30+ components
+- **PostgreSQL + Prisma** — 14 models, 5 migrations
 - **NextAuth** (credentials) + middleware-gated routes
 - **PWA** — service worker, offline fallback, install hint, splash screens
+- **iOS** — Capacitor 6 native shell (`ios/`) targeting the App Store
 - **Hostinger VPS** + nginx + pm2, automated deploys via GitHub Actions
 
 ## Structure
