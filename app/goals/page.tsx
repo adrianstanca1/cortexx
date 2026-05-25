@@ -19,12 +19,12 @@ export default function GoalPage() {
   }, [])
 
   const create = async () => {
-    const title = window.prompt('New goals (okrs) — short label')
-    if (!title) return
+    const value = window.prompt('New goals (okrs) — short label')
+    if (!value) return
     const res = await fetch('/api/goals', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ title: title }),
+      body: JSON.stringify({ title: value }),
     })
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
@@ -33,6 +33,13 @@ export default function GoalPage() {
     }
     const created = await res.json()
     setRows(prev => [created.item, ...prev])
+  }
+
+  const del = async (id: string) => {
+    if (!window.confirm('Delete this record? This cannot be undone.')) return
+    const res = await fetch(`/api/goals/${id}`, { method: 'DELETE' })
+    if (!res.ok) { window.alert('Delete failed'); return }
+    setRows(prev => prev.filter(r => r.id !== id))
   }
 
   return (
@@ -52,11 +59,14 @@ export default function GoalPage() {
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {rows.map(r => (
-            <li key={r.id} style={{ background: '#152641', borderRadius: 10, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa' }}>
-              <div>{[r.title, r.owner, r.quarter].filter(Boolean).join(' · ') || r.id}</div>
-              <div style={{ fontSize: 11, color: '#52749a', marginTop: 4 }}>
-                {new Date(r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+            <li key={r.id} style={{ background: '#152641', borderRadius: 10, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', display: 'flex', alignItems: 'center', gap: 12 }}>
+              <div style={{ flex: 1, minWidth: 0 }}>
+                <div>{[r.title, r.owner, r.quarter].filter(Boolean).join(' · ') || r.id}</div>
+                <div style={{ fontSize: 11, color: '#52749a', marginTop: 4 }}>
+                  {new Date(r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </div>
               </div>
+              <button onClick={() => del(r.id)} style={{ flexShrink: 0, fontSize: 11, color: '#ef4444', background: 'transparent', border: '0.5px solid rgba(239,68,68,0.4)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'var(--font-system)' }}>Delete</button>
             </li>
           ))}
         </ul>
