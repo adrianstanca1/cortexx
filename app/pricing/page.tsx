@@ -1,17 +1,21 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
-import { isBillingConfigured } from '@/lib/billing'
+import { isBillingConfigured, PLANS as CANONICAL_PLANS } from '@/lib/billing'
 
 export const metadata: Metadata = {
   title: 'Pricing — Cortexx',
   description: 'Construction-management software for UK contractors. Trial free for 14 days. From £29/month.',
 }
 
+// Marketing copy here, canonical pricing from lib/billing.ts. Previously
+// the £29 / £79 strings were hard-coded in three places (here,
+// /settings/organization, and lib/billing.ts) — when pricing changed,
+// only one drifted into sync. Now changes in lib/billing.ts flow here.
 const PLANS = [
   {
     key: 'starter',
     name: 'Starter',
-    price: '£29',
+    price: `£${CANONICAL_PLANS.starter.priceMonthlyGbp}`,
     cadence: '/month',
     description: 'For solo contractors and small crews.',
     features: [
@@ -29,7 +33,7 @@ const PLANS = [
   {
     key: 'pro',
     name: 'Pro',
-    price: '£79',
+    price: `£${CANONICAL_PLANS.pro.priceMonthlyGbp}`,
     cadence: '/month',
     description: 'For growing builders running multiple sites.',
     features: [
