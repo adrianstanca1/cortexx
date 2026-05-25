@@ -85,6 +85,11 @@ const PUBLIC_PATHS = new Set<string>([
   '/marketing',
   '/marketing.html',
   '/help',
+  '/privacy',           // GDPR / legal — must be reachable without auth
+  '/terms',             // same
+  '/status',            // public uptime/health board — no auth needed
+  '/robots.txt',        // SEO crawlers
+  '/sitemap.xml',       // SEO crawlers
   '/manifest.json',
   '/favicon.ico',
   '/sw.js',
