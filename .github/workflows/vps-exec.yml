@@ -27,7 +27,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 35
     permissions:
-      issues: write
+      contents: write
     steps:
       - name: Setup SSH
         run: |
@@ -66,51 +66,72 @@ jobs:
           echo "::notice title=VPS exec exit code::$rc"
           echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
 
-      - name: Post output to tracking issue
-        # Persists every invocation's output as a comment on a sticky issue
-        # so the api.github.com-only sandbox can read results without
-        # touching results-receiver.actions.githubusercontent.com.
+      - name: Mirror output to a dedicated branch
+        # Persists every invocation's output to the orphan `vps-exec-logs`
+        # branch as `latest.txt` (always overwritten) + `runs/<id>.txt`
+        # (appended history). Uses the Contents API so the api.github.com-
+        # restricted sandbox can read results without touching
+        # results-receiver.actions.githubusercontent.com.
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           CMD: ${{ inputs.command }}
           RC: ${{ steps.ssh.outputs.exit_code }}
           RUN_ID: ${{ github.run_id }}
+          REPO: ${{ github.repository }}
+          BRANCH: vps-exec-logs
         run: |
-          # Find or create the sticky tracking issue (no label — keeps
-          # the workflow agnostic to repo label setup).
-          issue=$(gh issue list --search 'in:title "vps-exec output stream"' --state open --json number --jq '.[0].number // empty')
-          if [ -z "$issue" ]; then
-            gh issue create \
-              --title 'vps-exec output stream' \
-              --body 'Sticky issue collecting outputs from `.github/workflows/vps-exec.yml`. Each run appends one comment with the command, exit code, and output. Used as an API-readable channel because the sandbox running automation cannot reach `results-receiver.actions.githubusercontent.com`.'
-            issue=$(gh issue list --search 'in:title "vps-exec output stream"' --state open --json number --jq '.[0].number // empty')
-          fi
-          if [ -z "$issue" ]; then
-            echo "::error::could not find or create tracking issue"
-            exit 1
-          fi
-
-          # Truncate to 60kB to stay well under GitHub's 64kB comment limit
-          out=$(head -c 60000 /tmp/vps-out.txt)
-          truncated=$([ "$(wc -c < /tmp/vps-out.txt)" -gt 60000 ] && echo ' [truncated]' || echo '')
-
+          # Build the file payload — header + command + raw output, trimmed
+          # to 800 kB to stay below GitHub's 1 MB file ceiling.
           {
-            echo "**Run [$RUN_ID](https://github.com/${{ github.repository }}/actions/runs/$RUN_ID)** — exit \`$RC\`$truncated"
-            echo
-            echo '<details><summary>Command</summary>'
-            echo
-            echo '```'
-            printf '%s\n' "$CMD"
-            echo '```'
-            echo '</details>'
-            echo
-            echo '```'
-            printf '%s\n' "$out"
-            echo '```'
-          } > /tmp/comment.md
+            echo "run_id: $RUN_ID"
+            echo "exit_code: ${RC:-unknown}"
+            echo "completed_at: $(date -u +%FT%TZ)"
+            echo "command: |"
+            printf '%s\n' "$CMD" | sed 's/^/  /'
+            echo "---"
+            head -c 800000 /tmp/vps-out.txt
+          } > /tmp/payload.txt
+          b64=$(base64 -w0 /tmp/payload.txt)
 
-          gh issue comment "$issue" --body-file /tmp/comment.md
+          # Ensure the branch exists (orphan, no shared history with main).
+          if ! gh api "repos/$REPO/branches/$BRANCH" >/dev/null 2>&1; then
+            empty_tree=$(gh api "repos/$REPO/git/trees" -X POST -f 'tree=[]' --jq '.sha' 2>/dev/null) || true
+            if [ -z "$empty_tree" ]; then
+              # Fallback: well-known SHA of git's empty tree
+              empty_tree='4b825dc642cb6eb9a060e54bf8d69288fbee4904'
+            fi
+            commit=$(gh api "repos/$REPO/git/commits" -X POST \
+              -f message='chore(vps-exec): initialise output branch' \
+              -f tree="$empty_tree" \
+              -F 'parents=[]' --jq '.sha')
+            gh api "repos/$REPO/git/refs" -X POST \
+              -f "ref=refs/heads/$BRANCH" -f "sha=$commit" >/dev/null
+          fi
+
+          put_file() {
+            local path="$1"
+            # Look up existing file sha (required for update)
+            local sha
+            sha=$(gh api "repos/$REPO/contents/$path?ref=$BRANCH" --jq '.sha' 2>/dev/null || true)
+            if [ -n "$sha" ] && [ "$sha" != "null" ]; then
+              gh api "repos/$REPO/contents/$path" -X PUT \
+                -f "message=vps-exec run $RUN_ID — $path" \
+                -f "content=$b64" \
+                -f "branch=$BRANCH" \
+                -f "sha=$sha" >/dev/null
+            else
+              gh api "repos/$REPO/contents/$path" -X PUT \
+                -f "message=vps-exec run $RUN_ID — $path" \
+                -f "content=$b64" \
+                -f "branch=$BRANCH" >/dev/null
+            fi
+          }
+
+          put_file "latest.txt"
+          put_file "runs/${RUN_ID}.txt"
+
+          echo "::notice title=Output mirror::https://github.com/$REPO/blob/$BRANCH/latest.txt"
 
       - name: Propagate exit code
         if: always()
