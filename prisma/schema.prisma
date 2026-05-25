@@ -1169,6 +1169,7 @@ model Organization {
   infraSnapshots      InfraSnapshot[]
   projectBookmarks    ProjectBookmark[]
   actionPlans         ActionPlan[]
+  conflicts           Conflict[]
 }
 
 model UserOrganization {
@@ -1637,6 +1638,30 @@ model ActionPlan {
   linkedId       String?
   createdAt      DateTime      @default(now())
   updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model Conflict {
+  // Logged cross-team conflict on site (subcontractor vs subcontractor,
+  // schedule clash, design clash, etc.) with assignee, severity,
+  // resolution notes, and a status workflow.
+  id              String        @id @default(cuid())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  projectId       String?
+  parties         String? // freeform: "Acme Plumbing vs Roof Co"
+  severity        String        @default("medium") // low / medium / high / critical
+  status          String        @default("open") // open / investigating / resolved / dropped
+  owner           String? // person handling resolution
+  raisedAt        DateTime      @default(now())
+  resolvedAt      DateTime?
+  resolutionNotes String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
 
   @@index([organizationId])
   @@index([status])

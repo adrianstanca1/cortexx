@@ -76,7 +76,7 @@ const OWNED_MODELS = new Set<string>([
   'Reminder', 'SavedView', 'Tag', 'Goal', 'Improvement', 'KaizenCard',
   'ProcessDoc', 'SiteReview', 'Apprenticeship', 'InsuranceClaim',
   'CurrencyRate', 'Persona', 'ServiceCatalogItem', 'SubPortalSession',
-  'ApiKey', 'InfraSnapshot', 'ProjectBookmark', 'ActionPlan',
+  'ApiKey', 'InfraSnapshot', 'ProjectBookmark', 'ActionPlan', 'Conflict',
 ])
 
 /**
