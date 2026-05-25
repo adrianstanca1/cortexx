@@ -13,7 +13,7 @@ const VITAL_NAMES = new Set(['CLS', 'FCP', 'FID', 'INP', 'LCP', 'TTFB'])
  * Body: { name: string, value: number, id: string, rating?: 'good' | 'needs-improvement' | 'poor', url?: string }
  */
 export async function POST(req: NextRequest) {
-  const limited = enforceRateLimit(req, 'write')
+  const limited = await enforceRateLimit(req, 'write')
   if (limited) return limited
   try {
     const body = await req.json().catch(() => ({}))

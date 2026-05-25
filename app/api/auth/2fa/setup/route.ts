@@ -18,7 +18,7 @@ export async function POST(req: NextRequest) {
   if (session instanceof NextResponse) return session
   const userId = (session.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user id' }, { status: 401 })
-  const __limited = enforceRateLimit(req, 'auth', userId)
+  const __limited = await enforceRateLimit(req, 'auth', userId)
   if (__limited) return __limited
 
   const user = await prisma.user.findUnique({

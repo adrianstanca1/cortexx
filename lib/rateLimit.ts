@@ -1,12 +1,17 @@
 /**
- * Tiny in-process sliding-window rate limiter. Per-key (user id, IP, …).
+ * Sliding-window rate limiter, per-key (user id, IP, …).
  *
- * Not durable, not cross-instance — sufficient for a single-VPS deployment
- * to stop one client from monopolising a slow local resource (e.g. Ollama).
- * Swap for Redis if you ever go multi-node.
+ * Backed by Redis when REDIS_URL is set so pm2 cluster workers share
+ * state; falls back to an in-process Map otherwise. Per-worker fallback
+ * is fine for dev and for the bounded "stop one runaway script" use
+ * case — production deploys set REDIS_URL.
+ *
+ * The Redis impl uses ZADD/ZREMRANGEBYSCORE/ZCARD in a pipeline so a
+ * single round-trip both records the hit and counts the live ones in
+ * the window.
  */
-
-const buckets = new Map<string, number[]>()
+import { NextRequest, NextResponse } from 'next/server'
+import { getRedis } from './redis'
 
 export interface RateLimitResult {
   ok: boolean
@@ -14,7 +19,9 @@ export interface RateLimitResult {
   retryAfterMs: number
 }
 
-export function rateLimit(key: string, max: number, windowMs: number, now = Date.now()): RateLimitResult {
+const buckets = new Map<string, number[]>()
+
+function rateLimitInMemory(key: string, max: number, windowMs: number, now: number): RateLimitResult {
   const cutoff = now - windowMs
   const hits = (buckets.get(key) || []).filter(t => t > cutoff)
   if (hits.length >= max) {
@@ -24,7 +31,6 @@ export function rateLimit(key: string, max: number, windowMs: number, now = Date
   }
   hits.push(now)
   buckets.set(key, hits)
-  // Opportunistic cleanup so the map doesn't grow unbounded.
   if (buckets.size > 1000) {
     buckets.forEach((v, k) => {
       const live = v.filter((t: number) => t > cutoff)
@@ -35,34 +41,60 @@ export function rateLimit(key: string, max: number, windowMs: number, now = Date
   return { ok: true, remaining: max - hits.length, retryAfterMs: 0 }
 }
 
+async function rateLimitRedis(key: string, max: number, windowMs: number, now: number): Promise<RateLimitResult> {
+  const redis = getRedis()
+  if (!redis || redis.status !== 'ready') {
+    return rateLimitInMemory(key, max, windowMs, now)
+  }
+  const k = `rl:${key}`
+  const cutoff = now - windowMs
+  try {
+    const pipe = redis.pipeline()
+    pipe.zremrangebyscore(k, 0, cutoff)
+    pipe.zadd(k, now, `${now}-${Math.random()}`)
+    pipe.zcard(k)
+    pipe.pexpire(k, windowMs)
+    const results = await pipe.exec()
+    if (!results) return rateLimitInMemory(key, max, windowMs, now)
+    const count = Number(results[2]?.[1] ?? 0)
+    if (count > max) {
+      const oldest = await redis.zrange(k, 0, 0, 'WITHSCORES')
+      const oldestTs = Number(oldest[1] ?? now)
+      const retryAfterMs = Math.max(0, oldestTs + windowMs - now)
+      return { ok: false, remaining: 0, retryAfterMs }
+    }
+    return { ok: true, remaining: Math.max(0, max - count), retryAfterMs: 0 }
+  } catch {
+    return rateLimitInMemory(key, max, windowMs, now)
+  }
+}
+
+export async function rateLimit(
+  key: string,
+  max: number,
+  windowMs: number,
+  now = Date.now(),
+): Promise<RateLimitResult> {
+  const redis = getRedis()
+  if (redis && redis.status === 'ready') {
+    return rateLimitRedis(key, max, windowMs, now)
+  }
+  return rateLimitInMemory(key, max, windowMs, now)
+}
+
 export function _resetRateLimitForTests() {
   buckets.clear()
 }
 
-import { NextRequest, NextResponse } from 'next/server'
-
-/**
- * Pre-built limit profiles for the common call patterns. Centralised so
- * tweaking a category (e.g. tightening auth) is a one-line change.
- */
 export const RATE_PROFILES = {
-  // 60 writes / minute / actor — generous for normal use, blocks runaway scripts
   write: { max: 60, windowMs: 60_000 },
-  // 5 attempts / minute — auth, password resets, push subscribe; brute-force defence
   auth: { max: 5, windowMs: 60_000 },
-  // 20 / minute / user — LLM endpoints (existing /api/ask profile)
   llm: { max: 20, windowMs: 60_000 },
-  // 240 / minute — read-only list endpoints, mostly to catch infinite-loop scripts
   read: { max: 240, windowMs: 60_000 },
 } as const
 
 export type RateProfile = keyof typeof RATE_PROFILES
 
-/**
- * Extract a stable rate-limit key from a request — userId when present,
- * else the client IP. Falls back to a constant so an unknown caller still
- * gets limited (rather than escaping).
- */
 export function rateLimitKey(req: NextRequest, userId?: string | null): string {
   if (userId) return `u:${userId}`
   const ip =
@@ -73,20 +105,17 @@ export function rateLimitKey(req: NextRequest, userId?: string | null): string {
 }
 
 /**
- * One-shot rate-limit check + 429 response. Returns the NextResponse to
- * return on limit-exceeded, or null when the request can proceed.
- *
- *   const limited = enforceRateLimit(req, 'write', userId)
+ *   const limited = await enforceRateLimit(req, 'write', userId)
  *   if (limited) return limited
  */
-export function enforceRateLimit(
+export async function enforceRateLimit(
   req: NextRequest,
   profile: RateProfile,
   userId?: string | null,
-): NextResponse | null {
+): Promise<NextResponse | null> {
   const { max, windowMs } = RATE_PROFILES[profile]
   const key = `${profile}:${rateLimitKey(req, userId)}`
-  const result = rateLimit(key, max, windowMs)
+  const result = await rateLimit(key, max, windowMs)
   if (result.ok) return null
   const retryAfter = Math.ceil(result.retryAfterMs / 1000)
   return NextResponse.json(
