@@ -1,0 +1,64 @@
+name: VPS Exec
+# Ad-hoc SSH bridge: run an arbitrary shell command on the production VPS
+# and dump stdout/stderr to the workflow log. Triggered only by
+# workflow_dispatch — repo write access is the auth gate. The `command`
+# input is logged at trigger time, so don't pass secrets through it; use
+# repo/env secrets instead.
+
+on:
+  workflow_dispatch:
+    inputs:
+      command:
+        description: 'Shell command to run on the VPS (executed via `bash -c`).'
+        required: true
+        type: string
+      timeout_s:
+        description: 'Kill the command after N seconds (default 300, max 1800).'
+        required: false
+        type: string
+        default: '300'
+
+concurrency:
+  group: vps-exec
+  cancel-in-progress: false
+
+jobs:
+  exec:
+    runs-on: ubuntu-latest
+    timeout-minutes: 35
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+          # Pre-trust the host so StrictHostKeyChecking can stay on for
+          # any future enhancement; for now we accept on first use.
+          ssh-keyscan -H 72.62.132.43 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Run command on VPS
+        env:
+          CMD: ${{ inputs.command }}
+          TIMEOUT_S: ${{ inputs.timeout_s }}
+        run: |
+          # Clamp timeout to a sane range
+          t=${TIMEOUT_S:-300}
+          if ! [[ "$t" =~ ^[0-9]+$ ]] || [ "$t" -lt 1 ]; then t=300; fi
+          if [ "$t" -gt 1800 ]; then t=1800; fi
+
+          echo "::group::VPS command"
+          printf '%s\n' "$CMD"
+          echo "::endgroup::"
+
+          # Run with explicit timeout; preserve exit code for the job
+          set +e
+          ssh -o StrictHostKeyChecking=no \
+              -o ConnectTimeout=15 \
+              -i ~/.ssh/cortexx_deploy \
+              root@72.62.132.43 \
+              "timeout --signal=KILL ${t}s bash -lc \"\$(cat)\"" <<< "$CMD"
+          rc=$?
+          set -e
+
+          echo "::notice title=VPS exec exit code::$rc"
+          exit $rc
