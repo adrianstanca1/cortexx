@@ -300,10 +300,17 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
       })
       const data = await res.json()
       if (!res.ok) {
-        if (data.code === 'STRIPE_NOT_CONFIGURED') {
-          setMsg('Billing isn\'t configured yet. Ask an admin to set the Stripe env vars.')
-        } else if (data.code === 'PRICE_NOT_SET') {
-          setMsg(`Stripe price id for ${planKey} not configured.`)
+        if (data.code === 'STRIPE_NOT_CONFIGURED' || data.code === 'PRICE_NOT_SET') {
+          // Self-serve checkout is being polished — direct users to sales
+          // for manual onboarding. mailto: preserves the chosen plan.
+          const subject = encodeURIComponent(`Cortexx ${planKey} subscription`)
+          const body = encodeURIComponent(
+            `Hi — I'd like to subscribe to the ${planKey} plan for my workspace.\n\n` +
+            `Workspace id: ${organizationId}\n` +
+            `(self-serve checkout was unavailable; please send me a payment link)`,
+          )
+          window.location.assign(`mailto:sales@cortexbuildpro.com?subject=${subject}&body=${body}`)
+          setMsg('Opening your mail client — sales will send you a payment link.')
         } else {
           setMsg(data.error || 'Checkout failed')
         }
