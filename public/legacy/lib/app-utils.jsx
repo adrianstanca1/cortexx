@@ -253,7 +253,8 @@ function AddProjectSheet({ onClose, accent }) {
   const save = async () => {
     if (!form.name || !form.client) { toast('Name and client required', 'error'); return; }
     await Backend.db.projects.create({
-      ...form, value: parseInt(form.value) || 0, pct: 0, margin: 0, team: 0, due: null, createdAt: '2026-05-22'
+      ...form, value: parseInt(form.value) || 0, pct: 0, margin: 0, team: 0, due: null,
+      createdAt: new Date().toISOString().slice(0, 10),
     });
     toast(`Project "${form.name}" created`, 'success');
     onClose();
@@ -276,7 +277,7 @@ function AddMaterialSheet({ onClose, accent }) {
     if (!form.name) { toast('Name required', 'error'); return; }
     await Backend.db.materials.create({
       ...form, stock: parseInt(form.stock) || 0, min: parseInt(form.min) || 0,
-      projectId: null, lastOrder: '2026-05-22',
+      projectId: null, lastOrder: new Date().toISOString().slice(0, 10),
     });
     toast(`Added ${form.name}`, 'success');
     onClose();
@@ -300,7 +301,7 @@ function AddSubSheet({ onClose, accent }) {
   const save = async () => {
     if (!form.name) { toast('Name required', 'error'); return; }
     await Backend.db.subs.create({
-      ...form, rating: 0, jobsDone: 0, since: '2026-05',
+      ...form, rating: 0, jobsDone: 0, since: new Date().toISOString().slice(0, 7),
     });
     toast(`${form.name} added`, 'success');
     onClose();
@@ -321,7 +322,8 @@ function AddEquipmentSheet({ onClose, accent }) {
   const save = async () => {
     if (!form.name) { toast('Name required', 'error'); return; }
     await Backend.db.equipment.create({
-      ...form, nextService: '2026-08-22',
+      // nextService = 3 months out from today (matches the original prototype's 90-day interval)
+      ...form, nextService: new Date(Date.now() + 90 * 24 * 60 * 60 * 1000).toISOString().slice(0, 10),
     });
     toast(`${form.name} added`, 'success');
     onClose();
@@ -382,7 +384,7 @@ function AddChangeOrderSheet({ onClose, accent }) {
     const next = (Backend.db.changeOrders.listSync().length + 1).toString().padStart(3, '0');
     await Backend.db.changeOrders.create({
       ...form, amount: parseFloat(form.amount) || 0, status: 'pending',
-      id: 'CO-' + next, requested: '2026-05-22',
+      id: 'CO-' + next, requested: new Date().toISOString().slice(0, 10),
     });
     toast('Variation submitted', 'success');
     onClose();
@@ -405,7 +407,8 @@ function AddDiarySheet({ onClose, accent }) {
   const aiSummarise = async () => {
     setSummarising(true);
     const result = await Backend.ai.summariseDiary({
-      date: '2026-05-22', weather: { temp: 14, cond: 'Cloudy' },
+      date: new Date().toISOString().slice(0, 10),
+      weather: { temp: 14, cond: 'Cloudy' },
       present: form.present, notes: form.notes || form.summary,
     });
     setForm(f => ({ ...f, summary: result }));
@@ -415,7 +418,9 @@ function AddDiarySheet({ onClose, accent }) {
   const save = async () => {
     if (!form.summary) { toast('Summary required', 'error'); return; }
     await Backend.db.diary.create({
-      ...form, date: '2026-05-22', weather: { temp: 14, cond: 'Cloudy' },
+      ...form,
+      date: new Date().toISOString().slice(0, 10),
+      weather: { temp: 14, cond: 'Cloudy' },
       photos: 0, issues: [],
     });
     toast('Diary entry saved', 'success');
