@@ -27,6 +27,7 @@ model User {
   pushSubscriptions      PushSubscription[]
   organizations          UserOrganization[]
   notificationPreference NotificationPreference?
+  projectBookmarks       ProjectBookmark[]
 }
 
 model Account {
@@ -116,6 +117,25 @@ model Project {
   @@index([status])
   @@index([updatedAt])
   @@index([archivedAt])
+  @@index([organizationId])
+  bookmarks       ProjectBookmark[]
+}
+
+model ProjectBookmark {
+  // Per-user pinned-project shortcut. Lightweight join table; users
+  // see their bookmarks at the top of /projects and in the dashboard
+  // quick-access strip.
+  id             String       @id @default(cuid())
+  userId         String
+  projectId      String
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project        Project      @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime     @default(now())
+
+  @@unique([userId, projectId])
+  @@index([userId])
   @@index([organizationId])
 }
 
@@ -1146,6 +1166,7 @@ model Organization {
   subPortalSessions   SubPortalSession[]
   apiKeys             ApiKey[]
   infraSnapshots      InfraSnapshot[]
+  projectBookmarks    ProjectBookmark[]
 }
 
 model UserOrganization {
