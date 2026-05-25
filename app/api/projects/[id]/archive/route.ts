@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 /**
@@ -30,7 +31,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     }).catch(() => {})
     return NextResponse.json({ project })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to archive' }, { status: 500 })
   }
 }
@@ -55,7 +56,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     }).catch(() => {})
     return NextResponse.json({ project })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to unarchive' }, { status: 500 })
   }
 }

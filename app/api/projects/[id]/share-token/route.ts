@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { canManage } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
+import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 /** Gate share-token rotation/revoke behind admin+ role — without this a
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
 
     return NextResponse.json(project)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to rotate share token' }, { status: 500 })
   }
 }
@@ -103,7 +104,7 @@ export async function DELETE(_req: NextRequest, { params: paramsP }: { params: P
     }).catch(() => {})
     return NextResponse.json(project)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to revoke share token' }, { status: 500 })
   }
 }

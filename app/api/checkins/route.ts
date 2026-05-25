@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -36,7 +37,7 @@ export async function GET(req: NextRequest) {
     ])
     return NextResponse.json({ checkins, activeCount })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch check-ins' }, { status: 500 })
   }
 }
@@ -113,7 +114,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(checkin, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to check in' }, { status: 500 })
   }
 }

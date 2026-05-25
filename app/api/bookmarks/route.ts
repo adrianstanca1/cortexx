@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,7 +59,7 @@ export async function POST(req: NextRequest) {
   } catch (error) {
     const code = (error as { code?: string })?.code
     if (code === 'P2003') return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to bookmark' }, { status: 500 })
   }
 }
@@ -80,7 +81,7 @@ export async function DELETE(req: NextRequest) {
   } catch (error) {
     const code = (error as { code?: string })?.code
     if (code === 'P2025') return NextResponse.json({ error: 'Not bookmarked' }, { status: 404 })
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to remove bookmark' }, { status: 500 })
   }
 }

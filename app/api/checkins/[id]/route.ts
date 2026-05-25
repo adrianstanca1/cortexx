@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 // PUT = check out (only out fields)
@@ -59,7 +60,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
     return NextResponse.json(updated)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to check out' }, { status: 500 })
   }
 }
@@ -93,7 +94,7 @@ export async function DELETE(_req: NextRequest, { params: paramsP }: { params: P
     })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
   }
 }

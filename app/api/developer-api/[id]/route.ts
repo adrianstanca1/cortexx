@@ -5,6 +5,7 @@ import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog } from '@/lib/audit'
 import { canManage } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,7 +31,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
     if (!item) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json({ item })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
   }
 }
@@ -61,7 +62,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   } catch (error) {
     const code = (error as { code?: string })?.code
     if (code === 'P2025') return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
   }
 }
@@ -88,7 +89,7 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
   } catch (error) {
     const code = (error as { code?: string })?.code
     if (code === 'P2025') return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
   }
 }
