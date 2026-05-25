@@ -9,6 +9,7 @@
  *
  * See: https://nextjs.org/docs/app/api-reference/file-conventions/error#global-error
  */
+import Link from 'next/link'
 import { useEffect } from 'react'
 
 export default function GlobalErrorBoundary({
@@ -58,12 +59,12 @@ export default function GlobalErrorBoundary({
             >
               Try again
             </button>
-            <a
+            <Link
               href="/"
               style={{ background: 'transparent', color: '#8ea8c5', border: '0.5px solid rgba(255,255,255,0.15)', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 700, textDecoration: 'none' }}
             >
               Home
-            </a>
+            </Link>
           </div>
         </div>
       </body>
