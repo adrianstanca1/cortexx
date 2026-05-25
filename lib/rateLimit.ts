@@ -91,6 +91,11 @@ export const RATE_PROFILES = {
   auth: { max: 5, windowMs: 60_000 },
   llm: { max: 20, windowMs: 60_000 },
   read: { max: 240, windowMs: 60_000 },
+  // Tight cap for the 4 expensive vision endpoints (snag-analyze,
+  // photo-tag, photo-compare, drawing-compare). Each call hits the
+  // local Ollama vision model (~3–8 s wall-clock on CPU), so even a
+  // single user can stack 5 in 60 s ≈ saturate the GPU.
+  vision: { max: 5, windowMs: 60_000 },
 } as const
 
 export type RateProfile = keyof typeof RATE_PROFILES

@@ -22,17 +22,7 @@ interface CompareResult {
   notes?: string
 }
 
-const rateLimits = new Map<string, number[]>()
-function checkRateLimit(userKey: string, max = 2, windowMs = 60_000): { ok: true } | { ok: false; retryAfter: number } {
-  const now = Date.now()
-  const arr = (rateLimits.get(userKey) || []).filter(t => now - t < windowMs)
-  if (arr.length >= max) {
-    return { ok: false, retryAfter: Math.ceil((windowMs - (now - arr[0])) / 1000) }
-  }
-  arr.push(now)
-  rateLimits.set(userKey, arr)
-  return { ok: true }
-}
+// Rate limit moved to the Redis-backed 'vision' profile in lib/rateLimit.ts.
 
 function parseCompareResponse(raw: string): CompareResult {
   let parsed: unknown
@@ -94,17 +84,10 @@ async function loadImageBase64(doc: { url: string | null; mimeType: string | nul
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
-
-  const userId = (auth.user as { id?: string } | undefined)?.id || 'anon'
-  const rl = checkRateLimit(userId)
-  if (!rl.ok) {
-    return new NextResponse(JSON.stringify({ error: `Too many comparisons. Try again in ${rl.retryAfter}s.` }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) },
-    })
-  }
+  // 'vision' profile (5/min/user, Redis-backed) supersedes the prior
+  // in-process Map (which was per-pm2-worker → 8× too loose).
+  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  if (limited) return limited
 
   let body: { aId?: unknown; bId?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }

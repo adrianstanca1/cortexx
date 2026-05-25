@@ -27,6 +27,10 @@ export async function GET() {
       invoiceTotalsByStatus,
     ] = await Promise.all([
       prisma.project.findMany({
+        // Cap at 200 — the dashboard heat-grid renders fine up to that;
+        // tenants with more need a paginated /projects view, not a
+        // single-shot dashboard fetch.
+        take: 200,
         where: { archivedAt: null },
         include: {
           _count: { select: { tasks: true, assignments: true } },
@@ -41,6 +45,7 @@ export async function GET() {
         take: 10,
       }),
       prisma.teamMember.findMany({
+        take: 200,
         include: {
           assignments: { include: { project: true } },
           _count: { select: { timeEntries: true } },
