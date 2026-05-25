@@ -18,6 +18,12 @@ const OWNED_MODELS = new Set([
   'Material', 'PurchaseOrder', 'SubInvoice', 'Drawing', 'DrawingRevision',
   'Milestone', 'Permit', 'Rams', 'Tender', 'Inspection', 'Meeting', 'Risk',
   'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident',
+  'PayrollRun', 'LeaveRequest', 'BankTransaction', 'CarbonEntry',
+  'WasteEntry', 'Appraisal', 'DocumentTemplate', 'FormDefinition',
+  'Reminder', 'SavedView', 'Tag', 'Goal', 'Improvement', 'KaizenCard',
+  'ProcessDoc', 'SiteReview', 'Apprenticeship', 'InsuranceClaim',
+  'CurrencyRate', 'Persona', 'ServiceCatalogItem', 'SubPortalSession',
+  'ApiKey', 'InfraSnapshot',
 ])
 
 const READ_OPERATIONS = new Set([

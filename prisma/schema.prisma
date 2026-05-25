@@ -1120,6 +1120,32 @@ model Organization {
   maintenanceSchedules MaintenanceSchedule[]
   suppliers            Supplier[]
   safetyIncidents      SafetyIncident[]
+
+  // ── Legacy-parity v1.1 modules
+  payrollRuns         PayrollRun[]
+  leaveRequests       LeaveRequest[]
+  bankTransactions    BankTransaction[]
+  carbonEntries       CarbonEntry[]
+  wasteEntries        WasteEntry[]
+  appraisals          Appraisal[]
+  documentTemplates   DocumentTemplate[]
+  formDefinitions     FormDefinition[]
+  reminders           Reminder[]
+  savedViews          SavedView[]
+  tags                Tag[]
+  goals               Goal[]
+  improvements        Improvement[]
+  kaizenCards         KaizenCard[]
+  processDocs         ProcessDoc[]
+  siteReviews         SiteReview[]
+  apprenticeships     Apprenticeship[]
+  insuranceClaims     InsuranceClaim[]
+  currencyRates       CurrencyRate[]
+  personas            Persona[]
+  serviceCatalogItems ServiceCatalogItem[]
+  subPortalSessions   SubPortalSession[]
+  apiKeys             ApiKey[]
+  infraSnapshots      InfraSnapshot[]
 }
 
 model UserOrganization {
@@ -1184,4 +1210,386 @@ model NotificationPreference {
   weeklyDigest       Boolean  @default(true)
   updatedAt          DateTime @updatedAt
   user               User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+// ─── Legacy-parity modules (24 new tables — Phase 1 of menu parity) ─────
+// Each is a minimal CRUD-able registry; full feature flesh-out follows.
+
+model PayrollRun {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  periodStart    DateTime?
+  periodEnd      DateTime?
+  grossTotal     Float?
+  cisDeducted    Float?
+  paeTotal       Float?
+  status         String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model LeaveRequest {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberId       String?
+  type           String?
+  startDate      DateTime?
+  endDate        DateTime?
+  days           Float?
+  status         String?
+  reason         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model BankTransaction {
+  id               String        @id @default(cuid())
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  accountName      String?
+  occurredAt       DateTime?
+  amount           Float?
+  description      String?
+  reference        String?
+  reconciled       Boolean?
+  matchedInvoiceId String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model CarbonEntry {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  category       String?
+  description    String?
+  co2eKg         Float?
+  occurredAt     DateTime?
+  source         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model WasteEntry {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  wasteType      String?
+  weightKg       Float?
+  carrier        String?
+  ticketNumber   String?
+  occurredAt     DateTime?
+  disposalSite   String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model Appraisal {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberId       String?
+  reviewerId     String?
+  periodLabel    String?
+  rating         Int?
+  strengths      String?
+  improvements   String?
+  goals          String?
+  status         String?
+  heldAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model DocumentTemplate {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String?
+  category       String?
+  body           String?
+  placeholders   String?
+  isPublic       Boolean?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model FormDefinition {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String?
+  schema         String?
+  description    String?
+  isActive       Boolean?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model Reminder {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String?
+  dueAt          DateTime?
+  memberId       String?
+  done           Boolean?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model SavedView {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String?
+  name           String?
+  url            String?
+  description    String?
+  icon           String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model Tag {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String?
+  color          String?
+  description    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model Goal {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String?
+  owner          String?
+  quarter        String?
+  target         String?
+  progress       Int?
+  status         String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model Improvement {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String?
+  description    String?
+  raisedBy       String?
+  status         String?
+  impact         String?
+  effort         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model KaizenCard {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String?
+  problem        String?
+  solution       String?
+  owner          String?
+  status         String?
+  boardColumn    String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model ProcessDoc {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String?
+  category       String?
+  body           String?
+  owner          String?
+  version        String?
+  publishedAt    DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model SiteReview {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  kind           String?
+  reviewer       String?
+  score          Int?
+  findings       String?
+  heldAt         DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model Apprenticeship {
+  id               String        @id @default(cuid())
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  memberId         String?
+  trade            String?
+  nvqLevel         Int?
+  startDate        DateTime?
+  expectedEndDate  DateTime?
+  trainingProvider String?
+  status           String?
+  createdAt        DateTime      @default(now())
+  updatedAt        DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model InsuranceClaim {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  incidentDate   DateTime?
+  policy         String?
+  description    String?
+  amountClaimed  Float?
+  status         String?
+  closedAt       DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model CurrencyRate {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  code           String?
+  gbpRate        Float?
+  asOf           DateTime?
+  source         String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model Persona {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String?
+  role           String?
+  goals          String?
+  painPoints     String?
+  quote          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model ServiceCatalogItem {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String?
+  category       String?
+  unitPrice      Float?
+  unit           String?
+  description    String?
+  active         Boolean?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model SubPortalSession {
+  id              String        @id @default(cuid())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  subcontractorId String?
+  token           String?
+  expiresAt       DateTime?
+  lastUsedAt      DateTime?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model ApiKey {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  name           String?
+  prefix         String?
+  hash           String?
+  scopes         String?
+  lastUsedAt     DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+}
+
+model InfraSnapshot {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  recordedAt     DateTime?
+  cpuPercent     Float?
+  memMb          Int?
+  diskGb         Int?
+  pgConnections  Int?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
 }
