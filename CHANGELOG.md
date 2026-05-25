@@ -1,5 +1,54 @@
 # Changelog
 
+## v1.1.2 — 26 May 2026 (pre-launch security pass + test coverage)
+
+Post-v1.1.1 commits closing the last loop before the public launch.
+
+### Security (from a focused code-review subagent pass)
+
+Subagent audited the 25 highest-risk files (auth chain, multi-tenancy
+gate, billing + Stripe webhook, cron + share-token, public surfaces).
+Verdict was launch-ready with 1 MEDIUM + 2 LOW findings; the
+fixable two shipped (`2e8d51f`):
+
+- **Invite-email rate limit** (MEDIUM) — `/api/orgs/[id]/invites`
+  POST had no `enforceRateLimit`, so any admin (including a fresh
+  trial-org admin) could spray invites to arbitrary addresses as a
+  phishing relay. Added the 'write' profile limit matching every
+  other write surface.
+- **Share-token role gate** (LOW) — `/api/projects/[id]/share-token`
+  POST + DELETE accepted any authenticated user including
+  `viewer`. A viewer could DOS the client-facing link by rotating
+  it. Now gated by `canManage(role)` via a `requireManageRole()`
+  helper reading `getCurrentOrg().role`.
+
+### Test coverage
+
+- **`test/tenancy.test.js` mirror sync** — the local OWNED_MODELS
+  set was 3 days stale (missing the 6 v1.1 additions). Drift
+  between the live extension and the test guard is exactly the
+  silent failure mode this suite was meant to catch. Added all
+  6 + 6 new tests, one per v1.1 model exercising a different op.
+- Tests: 183 → 189.
+
+### Repo hygiene
+
+- **Dropped `FINAL_REVIEW.md`** — stale 3-day-old audit doc
+  claiming 43 pages / 35 routes / 13 models; current reality is
+  107 / 196 / 79. Pure noise; README footer points at CHANGELOG +
+  RUNBOOK now. (`8968fa3`)
+- **VPS cleanup** — pm2 logs 96K → 4K, apt cache freed (180 MB),
+  /tmp old build artifacts removed, /opt/cortexx-rebuild-stash
+  (leftover from clean rebuild) removed.
+
+### Verification
+
+- All checks green: TSC 0 · 189/189 tests · lint 0 · build OK
+- Production: 8/8 pm2 workers · /api/health 200 in 27 ms · public
+  routes 200 · auth routes 307 · cron secret env↔cron.d in sync
+
+---
+
 ## v1.1.1 — 26 May 2026 (launch hardening)
 
 Post-v1.1.0 fixes surfaced by a launch-readiness probe + a clean
