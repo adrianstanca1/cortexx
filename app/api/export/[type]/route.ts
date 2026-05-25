@@ -97,8 +97,67 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
         })),
       )
       filename = 'timeentries.csv'
+    } else if (type === 'sub-invoices') {
+      const data = await prisma.subInvoice.findMany({
+        orderBy: [{ status: 'asc' }, { invoiceDate: 'desc' }],
+        include: { subcontractor: { select: { name: true, cisStatus: true, utrNumber: true } }, project: { select: { name: true } } },
+      })
+      csv = toCSV(
+        ['id', 'number', 'subcontractor', 'utr', 'cisStatus', 'project', 'invoiceDate', 'status', 'netAmount', 'vatAmount', 'cisAmount', 'grossAmount', 'payableAmount', 'paidAt'],
+        data.map(s => ({
+          id: s.id, number: s.number,
+          subcontractor: s.subcontractor.name,
+          utr: s.subcontractor.utrNumber,
+          cisStatus: s.subcontractor.cisStatus,
+          project: s.project?.name, invoiceDate: s.invoiceDate, status: s.status,
+          netAmount: s.netAmount, vatAmount: s.vatAmount, cisAmount: s.cisAmount,
+          grossAmount: s.grossAmount, payableAmount: s.payableAmount, paidAt: s.paidAt,
+        })),
+      )
+      filename = 'sub-invoices.csv'
+    } else if (type === 'ledger') {
+      // Xero / QuickBooks / Sage import format: Date, Reference,
+      // Description, AccountCode, TaxRate, TaxAmount, GrossAmount.
+      // Combines outgoing invoices (sales — credit account 200) and
+      // incoming sub-invoices (cost-of-sales — debit account 310).
+      const [inv, sub] = await Promise.all([
+        prisma.invoice.findMany({ orderBy: { issuedDate: 'desc' }, include: { project: { select: { name: true } } } }),
+        prisma.subInvoice.findMany({ orderBy: { invoiceDate: 'desc' }, include: { subcontractor: { select: { name: true } }, project: { select: { name: true } } } }),
+      ])
+      const rows: Array<Record<string, unknown>> = []
+      for (const i of inv) {
+        rows.push({
+          Date: i.issuedDate ? new Date(i.issuedDate).toISOString().slice(0, 10) : '',
+          Reference: i.number,
+          Description: `${i.clientName}${i.project?.name ? ' — ' + i.project.name : ''}`,
+          AccountCode: '200',
+          TaxRate: '20% (VAT on Income)',
+          TaxAmount: (i.amount * 0.2 / 1.2).toFixed(2),
+          GrossAmount: i.amount.toFixed(2),
+          ContactName: i.clientName,
+          InvoiceStatus: i.status,
+        })
+      }
+      for (const s of sub) {
+        rows.push({
+          Date: new Date(s.invoiceDate).toISOString().slice(0, 10),
+          Reference: s.number,
+          Description: `${s.subcontractor.name}${s.project?.name ? ' — ' + s.project.name : ''} (sub-invoice, CIS ${s.cisAmount.toFixed(2)})`,
+          AccountCode: '310',
+          TaxRate: s.vatAmount > 0 ? '20% (VAT on Expenses)' : 'No VAT',
+          TaxAmount: s.vatAmount.toFixed(2),
+          GrossAmount: s.grossAmount.toFixed(2),
+          ContactName: s.subcontractor.name,
+          InvoiceStatus: s.status,
+        })
+      }
+      csv = toCSV(
+        ['Date', 'Reference', 'Description', 'AccountCode', 'TaxRate', 'TaxAmount', 'GrossAmount', 'ContactName', 'InvoiceStatus'],
+        rows,
+      )
+      filename = 'ledger.csv'
     } else {
-      return Response.json({ error: 'Unknown export type. Use: projects, tasks, invoices, team, timeentries' }, { status: 400 })
+      return Response.json({ error: 'Unknown export type. Use: projects, tasks, invoices, sub-invoices, ledger, team, timeentries' }, { status: 400 })
     }
 
     const ts = new Date().toISOString().slice(0, 10)
