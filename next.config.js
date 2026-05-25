@@ -14,6 +14,15 @@ const nextConfig = {
   experimental: {
     optimizePackageImports: ['@prisma/client'],
   },
+  async rewrites() {
+    return [
+      // Clean URL for the static marketing page — /marketing serves the
+      // archive/cortexx-pwa/Cortexx Marketing.html design that's been
+      // copied to public/marketing.html. Keeps /legacy/marketing.html
+      // as the historical path too.
+      { source: '/marketing', destination: '/marketing.html' },
+    ]
+  },
   async headers() {
     return [
       {

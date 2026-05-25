@@ -3,9 +3,12 @@ import { auth } from '@/lib/auth'
 
 // Paths that never require auth (in addition to /_next, /api/auth, static assets)
 const PUBLIC_PATHS = new Set<string>([
+  '/',                  // root — page handler decides marketing-vs-dashboard by auth
   '/login',
   '/register',
   '/pricing',
+  '/marketing',
+  '/marketing.html',
   '/manifest.json',
   '/favicon.ico',
   '/sw.js',
