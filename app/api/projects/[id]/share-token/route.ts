@@ -3,7 +3,19 @@ import { randomBytes } from 'node:crypto'
 
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { canManage } from '@/lib/rbac'
+import { getCurrentOrg } from '@/lib/tenancy'
 export const dynamic = 'force-dynamic'
+
+/** Gate share-token rotation/revoke behind admin+ role — without this a
+ *  viewer can DOS the client-facing link. */
+function requireManageRole(): NextResponse | null {
+  const ctx = getCurrentOrg()
+  if (!ctx?.role || !canManage(ctx.role)) {
+    return NextResponse.json({ error: 'Only admins can manage share links' }, { status: 403 })
+  }
+  return null
+}
 
 // 16 chars from a URL-safe alphabet — enough entropy for an unguessable
 // share token while staying short enough to copy/paste comfortably.
@@ -20,6 +32,8 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const roleGate = requireManageRole()
+  if (roleGate) return roleGate
   try {
     const existing = await prisma.project.findUnique({ where: { id: params.id }, select: { id: true, name: true } })
     if (!existing) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
@@ -70,6 +84,8 @@ export async function DELETE(_req: NextRequest, { params: paramsP }: { params: P
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const roleGate = requireManageRole()
+  if (roleGate) return roleGate
   try {
     const project = await prisma.project.update({
       where: { id: params.id },
