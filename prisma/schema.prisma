@@ -115,6 +115,7 @@ model Project {
   organizationId String?
   organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   bookmarks      ProjectBookmark[]
+  conversations  Conversation[]
 
   @@index([status])
   @@index([updatedAt])
@@ -1171,6 +1172,8 @@ model Organization {
   actionPlans         ActionPlan[]
   conflicts           Conflict[]
   cis300Returns       Cis300Return[]
+  conversations       Conversation[]
+  chatMessages        ChatMessage[]
 }
 
 model UserOrganization {
@@ -1692,4 +1695,40 @@ model Cis300Return {
   @@unique([organizationId, taxMonth])
   @@index([organizationId])
   @@index([status])
+}
+
+model Conversation {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title          String
+  kind           String        @default("project") // project / direct / topic
+  archivedAt     DateTime?
+  lastMessageAt  DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  messages       ChatMessage[]
+
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([lastMessageAt])
+}
+
+model ChatMessage {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorId       String
+  authorName     String // denormalized so deleted users still show their name
+  body           String
+  // Plain text only for v1; future rich text via a `richBody Json?` field.
+  createdAt      DateTime      @default(now())
+  editedAt       DateTime?
+
+  @@index([conversationId, createdAt])
+  @@index([organizationId])
 }
