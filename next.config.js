@@ -56,6 +56,31 @@ const nextConfig = {
           { key: 'X-Frame-Options', value: 'SAMEORIGIN' },
           { key: 'Referrer-Policy', value: 'strict-origin-when-cross-origin' },
           { key: 'Permissions-Policy', value: 'camera=(self), microphone=(self), geolocation=(self)' },
+          {
+            // CSP: pragmatic starter covering Next 16's hydration scripts
+            // and ~10 inline <style> blocks. No 3rd-party scripts run
+            // client-side (Stripe redirects are top-level navigations,
+            // Sentry is server-only). Google Fonts are loaded by two
+            // dashboard components.
+            //
+            // Future tightening:
+            //   - script-src: swap 'unsafe-inline' for per-request nonce
+            //     via middleware once we're certain no hydration paths break
+            //   - img-src 'https:': narrow to specific upload/avatar origins
+            key: 'Content-Security-Policy',
+            value: [
+              "default-src 'self'",
+              "script-src 'self' 'unsafe-inline' 'unsafe-eval'",
+              "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+              "font-src 'self' https://fonts.gstatic.com data:",
+              "img-src 'self' data: blob: https:",
+              "connect-src 'self'",
+              "frame-ancestors 'none'",
+              "base-uri 'self'",
+              "form-action 'self'",
+              "object-src 'none'",
+            ].join('; '),
+          },
         ],
       },
     ]
