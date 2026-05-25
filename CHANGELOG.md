@@ -1,5 +1,67 @@
 # Changelog
 
+## v1.0.2 — 25 May 2026 (design parity + safety)
+
+**Design-canvas alignment + a security finding remediated.** The Claude
+Design canvas at claude.ai/design had 7 modules our production codebase
+didn't, plus a real PII leak in the diagnostic bridge surfaced during
+security review.
+
+### Design-canvas modules (8 new pages, +1 API)
+- **`/roles`** — workspace RBAC overview grouped by role with last-seen-at.
+  Backed by new `/api/orgs/members` that uses the active-org context
+  (no need to thread org id through the URL).
+- **`/my-day`** — personal daily agenda: tasks due today, meetings today,
+  hours logged today.
+- **`/tomorrow`** — forward-looking next-24h view of tasks + meetings.
+- **`/ai-history`** — reads the same per-user-namespaced localStorage
+  that `/ask` writes to; pairs user prompts with assistant responses.
+- **`/leadership`** — bookmarkable redirect to the Executive dashboard
+  variant (`/dashboard?v=13`).
+- **`/vera-ceo`** — AI exec briefing built from `/api/dashboard` +
+  `/api/snags`; renders summary, highlight cards, and contextual nudges.
+- **`/vera-autopilot`** — opt-in automation catalogue (5 entries:
+  invoice-chase, snag-triage, cert-expiry, monthly-CIS, photo-tag).
+  Toggles persist to localStorage; backend `/api/automations` is a
+  follow-up.
+- **`/tpl-library`** — categorised template browser with filter chips.
+
+### Surface gaps closed
+- **`/status`** — auto-refreshing health board polling `/api/health` every
+  30s. Replaces the `/support`-referenced but unbuilt
+  `status.cortexbuild.app`.
+- **Audit-log pagination** — `/settings/audit-log` had "Pagination coming
+  soon" text. Wired a Load-more button using the existing take/skip
+  backend, with a running `N of TOTAL` counter.
+- **First-run banner** on the dashboard for empty workspaces with three
+  click-targets (create project / invite team / explore apps).
+- **`/apps`** — added a new "AI & insights" section grouping the 7 design
+  modules.
+
+### Security — PII leak remediation
+- Security review caught: the `vps-exec.yml` workflow mirrors SSH stdout
+  to a **public** branch. A diagnostic `SELECT email FROM "User"`
+  earlier in v1.0.1 dev had leaked 2 user emails to the public git
+  history.
+- **Branch deleted** via GitHub API → leaked emails out of public history.
+- **Redaction filter** added before the mirror push: masks emails,
+  Postgres passwords in connection strings, bearer tokens, JWTs, and
+  Stripe secret keys via a `sed` pipeline. Workflow header rewritten
+  with an explicit `⚠️ PII / SECRET HANDLING` warning.
+
+### Concurrent improvements (landed alongside in other PRs)
+- **CSP nonces** — `proxy.ts` now sets per-request `nonce-…` CSP via
+  middleware, replacing the static `unsafe-inline` from v1.0.1. The
+  future-tightening item I flagged is done.
+- iOS release-workflow unblock.
+
+### Build / hygiene
+- **Build emits 103 routes** (was 91 at v1.0.0).
+- TSC 0 · 177/177 unit tests · 10/10 integration tests · lint 0 errors
+- npm audit: 0 vulnerabilities.
+
+---
+
 ## v1.0.1 — 25 May 2026 (post-launch polish)
 
 **Capability + polish pass after the v1.0 launch shipped.** All
