@@ -1,9 +1,18 @@
 name: VPS Exec
 # Ad-hoc SSH bridge: run an arbitrary shell command on the production VPS
 # and dump stdout/stderr to the workflow log. Triggered only by
-# workflow_dispatch — repo write access is the auth gate. The `command`
-# input is logged at trigger time, so don't pass secrets through it; use
-# repo/env secrets instead.
+# workflow_dispatch — repo write access is the auth gate.
+#
+# ⚠️  PII / SECRET HANDLING ⚠️
+# The repo is public. The 'command' input is logged at trigger time and
+# the SSH output is mirrored to the public `vps-exec-logs` branch. A
+# best-effort redaction filter masks emails, JWTs, bearer tokens, and
+# Postgres URLs before push, but the safest pattern is to NEVER select
+# rows from PII tables (User, TeamMember, Customer, Subcontractor,
+# AuditEvent) — query counts only:
+#     SELECT COUNT(*) FROM "User"       ← safe
+#     SELECT email FROM "User"           ← LEAKS to public history
+# Use repo/env secrets, not the `command` input, for any credential.
 
 on:
   workflow_dispatch:
@@ -89,16 +98,32 @@ jobs:
           RUN_ID: ${{ github.run_id }}
           BRANCH: vps-exec-logs
         run: |
+          # Best-effort redaction of common PII / secret shapes before
+          # the payload lands in the public mirror branch. Anything that
+          # the SSH command might unintentionally surface — user emails,
+          # bearer tokens, Postgres URLs with embedded passwords, JWTs —
+          # gets masked. This is defence-in-depth; the primary control is
+          # operator discipline (don't SELECT rows from PII tables).
+          redact() {
+            sed -E \
+              -e 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[email-redacted]/g' \
+              -e 's/(postgres(ql)?:\/\/[^:]+:)[^@]+(@)/\1[pw-redacted]\3/g' \
+              -e 's/(Bearer\s+)[A-Za-z0-9._~+\/=-]{20,}/\1[token-redacted]/g' \
+              -e 's/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/[jwt-redacted]/g' \
+              -e 's/(sk_(live|test)_)[A-Za-z0-9]+/\1[stripe-redacted]/g'
+          }
+
           # Build payload — capped at 800 kB to stay under GitHub's 1 MB
-          # blob ceiling
+          # blob ceiling. Redaction applied to both the echoed command and
+          # the captured output.
           {
             echo "run_id: $RUN_ID"
             echo "exit_code: ${RC:-unknown}"
             echo "completed_at: $(date -u +%FT%TZ)"
             echo "command: |"
-            printf '%s\n' "$CMD" | sed 's/^/  /'
+            printf '%s\n' "$CMD" | redact | sed 's/^/  /'
             echo "---"
-            head -c 800000 /tmp/vps-out.txt
+            head -c 800000 /tmp/vps-out.txt | redact
           } > /tmp/payload.txt
 
           # Work in a clean throwaway dir so we don't mutate the
