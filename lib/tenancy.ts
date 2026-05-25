@@ -16,7 +16,7 @@ import { AsyncLocalStorage } from 'node:async_hooks'
 import { Prisma } from '@prisma/client'
 import { MULTITENANT_ENFORCED } from './org'
 
-interface OrgRequestContext {
+export interface OrgRequestContext {
   organizationId: string | null
   userId: string | null
   role: string | null
