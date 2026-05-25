@@ -5,13 +5,21 @@ import { useRouter } from 'next/navigation'
 import Link from 'next/link'
 import Avatar from '@/components/ui/Avatar'
 import TabBar from '@/components/ui/TabBar'
-import { IcChevL, IcSearch, IcCheck, IcReceipt, IcHardhat, IcPin } from '@/components/ui/Icons'
+import { IcChevL, IcSearch, IcCheck, IcReceipt, IcHardhat, IcPin, IcAlert, IcDoc, IcTeam, IcSpark, IcBell, IcLayers } from '@/components/ui/Icons'
 
 interface SearchResult {
   projects: Array<{ id: string; name: string; status: string; clientName: string; postcode: string; progress: number }>
   tasks: Array<{ id: string; title: string; status: string; priority: string; projectId?: string | null; project?: { name: string } | null; assignee?: { name: string } | null }>
   team: Array<{ id: string; name: string; role: string; avatarColor: string; onSite: boolean }>
   invoices: Array<{ id: string; number: string; clientName: string; amount: number; status: string; projectId?: string | null; project?: { name: string } | null }>
+  snags: Array<{ id: string; title: string; status: string; priority: string; project?: { name: string } | null }>
+  rfis: Array<{ id: string; number: string; subject: string; status: string; priority: string; project?: { name: string } | null }>
+  documents: Array<{ id: string; name: string; type: string; project?: { name: string } | null }>
+  customers: Array<{ id: string; name: string; contactName?: string | null; contactEmail?: string | null; postcode?: string | null }>
+  subcontractors: Array<{ id: string; name: string; trade?: string | null; contactName?: string | null; cisStatus: string }>
+  tags: Array<{ id: string; name: string | null; color: string | null }>
+  processDocs: Array<{ id: string; title: string | null; category: string | null; owner: string | null; version: string | null }>
+  reminders: Array<{ id: string; title: string | null; dueAt: string | null; done: boolean | null }>
   total: number
 }
 
@@ -67,7 +75,7 @@ export default function SearchPage() {
             ref={inputRef}
             value={q}
             onChange={e => setQ(e.target.value)}
-            placeholder="Search projects, tasks, team, invoices…"
+            placeholder="Search projects, tasks, team, invoices, snags, RFIs, docs…"
             style={{ background: 'none', border: 'none', outline: 'none', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 15, flex: 1 }}
           />
           {loading && <span style={{ width: 14, height: 14, borderRadius: '50%', border: '2px solid #52749a', borderTopColor: 'transparent', display: 'inline-block', animation: 'spin 0.6s linear infinite' }} />}
@@ -148,6 +156,121 @@ export default function SearchPage() {
                   <div style={subStyle}>{i.clientName}{i.project ? ` · ${i.project.name}` : ''}</div>
                 </div>
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#eef3fa', fontWeight: 700 }}>£{i.amount.toLocaleString()}</span>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.snags.length > 0 && (
+          <Section title="Snags" count={results.snags.length}>
+            {results.snags.map(s => (
+              <button key={s.id} onClick={() => router.push('/snags')} style={cardStyle}>
+                <IcAlert size={14} color={priorityColor[s.priority] || '#ef4444'} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{s.title}</div>
+                  <div style={subStyle}>{s.project?.name || 'No project'} · {s.status}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.rfis.length > 0 && (
+          <Section title="RFIs" count={results.rfis.length}>
+            {results.rfis.map(r => (
+              <button key={r.id} onClick={() => router.push('/rfis')} style={cardStyle}>
+                <IcAlert size={14} color={priorityColor[r.priority] || '#f59e0b'} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{r.number} — {r.subject}</div>
+                  <div style={subStyle}>{r.project?.name || 'No project'} · {r.status}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.documents.length > 0 && (
+          <Section title="Documents" count={results.documents.length}>
+            {results.documents.map(d => (
+              <button key={d.id} onClick={() => router.push('/documents')} style={cardStyle}>
+                <IcDoc size={14} color="#06b6d4" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{d.name}</div>
+                  <div style={subStyle}>{d.type}{d.project ? ` · ${d.project.name}` : ''}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.customers.length > 0 && (
+          <Section title="Customers" count={results.customers.length}>
+            {results.customers.map(c => (
+              <button key={c.id} onClick={() => router.push('/customers')} style={cardStyle}>
+                <IcTeam size={14} color="#2563eb" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{c.name}</div>
+                  <div style={subStyle}>{[c.contactName, c.contactEmail, c.postcode].filter(Boolean).join(' · ') || 'No contact'}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.subcontractors.length > 0 && (
+          <Section title="Subcontractors" count={results.subcontractors.length}>
+            {results.subcontractors.map(s => (
+              <button key={s.id} onClick={() => router.push('/subs')} style={cardStyle}>
+                <IcHardhat size={14} color="#8b5cf6" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{s.name}</div>
+                  <div style={subStyle}>{[s.trade, s.contactName, `CIS ${s.cisStatus}`].filter(Boolean).join(' · ')}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.tags.length > 0 && (
+          <Section title="Tags" count={results.tags.length}>
+            {results.tags.map(t => (
+              <button key={t.id} onClick={() => router.push('/tags')} style={cardStyle}>
+                <IcLayers size={14} color={t.color || '#8ea8c5'} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{t.name || '(unnamed)'}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.processDocs.length > 0 && (
+          <Section title="Process docs" count={results.processDocs.length}>
+            {results.processDocs.map(p => (
+              <button key={p.id} onClick={() => router.push('/process-library')} style={cardStyle}>
+                <IcDoc size={14} color="#06b6d4" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{p.title || '(untitled)'}</div>
+                  <div style={subStyle}>{[p.category, p.owner, p.version].filter(Boolean).join(' · ')}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.reminders.length > 0 && (
+          <Section title="Reminders" count={results.reminders.length}>
+            {results.reminders.map(r => (
+              <button key={r.id} onClick={() => router.push('/reminders')} style={cardStyle}>
+                <IcBell size={14} color={r.done ? '#52749a' : '#f59e0b'} />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={{ ...titleStyle, textDecoration: r.done ? 'line-through' : 'none', opacity: r.done ? 0.5 : 1 }}>
+                    {r.title || '(untitled)'}
+                  </div>
+                  {r.dueAt && (
+                    <div style={subStyle}>Due {new Date(r.dueAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
+                  )}
+                </div>
               </button>
             ))}
           </Section>
