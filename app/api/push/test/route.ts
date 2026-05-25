@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { sendPush } from '@/lib/push'
 
 export const dynamic = 'force-dynamic'
@@ -8,9 +9,11 @@ export const dynamic = 'force-dynamic'
  * Send a test push to all of the current user's subscriptions. Used by
  * the Settings → Notifications "Send test" button.
  */
-export async function POST(_req: NextRequest) {
+export async function POST(req: NextRequest) {
   const session = await requireAuth()
   if (session instanceof NextResponse) return session
+  const __limited = enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
+  if (__limited) return __limited
   const userId = (session.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user id in session' }, { status: 401 })
 

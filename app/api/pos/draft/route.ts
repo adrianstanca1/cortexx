@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { isLlmUnavailable, isLlmEmpty, sanitizePromptValue, LLM_CONFIG } from '@/lib/llm'
 import { draftLineItems, checkDraftRateLimit, COMMON_UNITS, MAX_ITEMS, MAX_BRIEF_LEN } from '@/lib/llmDrafts'
 
@@ -8,6 +9,8 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const __limited = enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (__limited) return __limited
   const userId = (auth.user as { id?: string } | undefined)?.id || 'anon'
 
   const rl = checkDraftRateLimit(userId)

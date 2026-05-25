@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { canManage, hasRole, isOwner } from '@/lib/rbac'
 import { auditLog, requestMeta } from '@/lib/audit'
 

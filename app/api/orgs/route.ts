@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { findAvailableSlug } from '@/lib/org'
 import { auditLog, requestMeta } from '@/lib/audit'
 
@@ -38,6 +39,8 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const session = await requireAuth()
   if (session instanceof NextResponse) return session
+  const __limited = enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
+  if (__limited) return __limited
   const userId = (session.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user id' }, { status: 401 })
 
