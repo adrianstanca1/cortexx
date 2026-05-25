@@ -1,6 +1,6 @@
 # Cortexx — iOS build (Capacitor)
 
-This folder wraps the existing Cortexx web app as a native iOS application using **Capacitor 6**. The whole web app — every screen, dashboard, dialog, AI flow, local-first store — runs unchanged inside a WKWebView. Native plugins are wired in for camera, geolocation, microphone, haptics, push notifications, local notifications, and biometric unlock.
+This folder wraps the existing Cortexx web app as a native iOS application using **Capacitor 8**. The whole web app — every screen, dashboard, dialog, AI flow, local-first store — runs unchanged inside a WKWebView. Native plugins are wired in for camera, geolocation, microphone, haptics, push notifications, local notifications, and biometric unlock. Minimum iOS deployment target is **15.0** (Capacitor 8 requirement).
 
 > **You will need a Mac** with Xcode 15.4 or newer to build and submit. Everything below assumes macOS.
 
@@ -50,8 +50,8 @@ This folder wraps the existing Cortexx web app as a native iOS application using
 xcode-select --install
 sudo xcodebuild -license accept
 
-# 2. Node 20 LTS
-brew install node@20
+# 2. Node 22 LTS (Capacitor CLI 8 requires Node >=22)
+brew install node@22
 
 # 3. CocoaPods (Capacitor uses it for native deps)
 brew install cocoapods
@@ -94,7 +94,7 @@ Apple will reject the build if these are missing.
 # from ios/
 mkdir -p App/App/Assets.xcassets/AppIcon.appiconset
 
-# Capacitor 6 expects a single 1024×1024 icon in the asset catalog; Xcode handles the rest.
+# Capacitor 8 expects a single 1024×1024 icon in the asset catalog; Xcode handles the rest.
 cp ../app-store/icons/icon-1024.png App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
 ```
 
