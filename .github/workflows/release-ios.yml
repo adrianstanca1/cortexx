@@ -1,0 +1,202 @@
+name: Release iOS — Build & TestFlight
+
+# Two trigger paths:
+#   • Tag push matching v*-ios (e.g. v1.0.0-ios) — automatic release-train
+#     entry. Tag the commit you want shipped, push the tag, the IPA goes
+#     up. Pairs with semver app-side tags (v1.0.0) so the web release and
+#     the iOS release can drift independently when Apple review delays.
+#   • workflow_dispatch — manual one-off builds with a toggle for whether
+#     to upload to TestFlight or just archive the IPA artifact.
+#
+# Both produce: signed Release IPA + dSYM, uploaded as a workflow
+# artifact, optionally pushed to TestFlight via altool.
+#
+# Required GitHub secrets (one-time setup):
+#   APPLE_TEAM_ID                       e.g. ABCDE12345
+#   IOS_CERTIFICATE_BASE64              .p12 contents, base64-encoded
+#   IOS_CERTIFICATE_PASSWORD            export password for the .p12
+#   IOS_KEYCHAIN_PASSWORD               throwaway password for the CI keychain
+#   IOS_PROVISIONING_PROFILE_BASE64     App Store distribution profile
+#   APP_STORE_CONNECT_KEY_ID            from App Store Connect → Users & Access → Keys
+#   APP_STORE_CONNECT_ISSUER_ID         from App Store Connect → Users & Access → Keys
+#   APP_STORE_CONNECT_KEY_BASE64        .p8 private key, base64-encoded
+on:
+  push:
+    tags:
+      - 'v*-ios'
+  workflow_dispatch:
+    inputs:
+      upload_to_testflight:
+        description: 'Upload to TestFlight after build?'
+        required: false
+        default: 'true'
+        type: boolean
+
+concurrency:
+  group: ios-build-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Archive & Upload
+    runs-on: macos-14          # Apple Silicon — Xcode 15.4
+    timeout-minutes: 60
+
+    env:
+      XCODE_PROJECT: ios/App/App.xcodeproj
+      XCODE_SCHEME:  App
+      BUNDLE_ID:     app.cortexbuild.cortexx
+      EXPORT_METHOD: app-store
+
+    steps:
+      # ── Checkout ──────────────────────────────────────────────────
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # ── Node 20 ───────────────────────────────────────────────────
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: ios/package-lock.json
+
+      # ── Install JS deps ───────────────────────────────────────────
+      - name: Install JS dependencies
+        working-directory: ios
+        run: npm ci
+
+      # ── Build web assets ──────────────────────────────────────────
+      - name: Build web assets (www/)
+        working-directory: ios
+        run: npm run build:web
+
+      # ── CocoaPods ─────────────────────────────────────────────────
+      - name: Cache CocoaPods
+        uses: actions/cache@v4
+        with:
+          path: ios/App/Pods
+          key: pods-${{ hashFiles('ios/App/Podfile.lock') }}
+          restore-keys: pods-
+
+      - name: Install CocoaPods
+        working-directory: ios/App
+        run: pod install --repo-update
+
+      # ── Code signing ──────────────────────────────────────────────
+      - name: Import signing certificate
+        env:
+          CERTIFICATE_BASE64:     ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD:   ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD:      ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+        run: |
+          KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
+          echo "$CERTIFICATE_BASE64" | base64 --decode > $RUNNER_TEMP/certificate.p12
+          security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
+          security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security import "$RUNNER_TEMP/certificate.p12" \
+            -k "$KEYCHAIN_PATH" \
+            -P "$CERTIFICATE_PASSWORD" \
+            -T /usr/bin/codesign
+          security list-keychain -d user -s "$KEYCHAIN_PATH"
+          security set-key-partition-list \
+            -S apple-tool:,apple: \
+            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+
+      - name: Install provisioning profile
+        env:
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+        run: |
+          PP_PATH=$RUNNER_TEMP/build.mobileprovision
+          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+          mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
+          cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
+
+      # ── Increment build number ────────────────────────────────────
+      - name: Set build number
+        run: |
+          BUILD_NUMBER=${{ github.run_number }}
+          xcrun agvtool new-version -all "$BUILD_NUMBER"
+        working-directory: ios/App
+
+      # ── Archive ───────────────────────────────────────────────────
+      - name: Archive
+        run: |
+          xcodebuild archive \
+            -workspace ios/App/App.xcworkspace \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -archivePath $RUNNER_TEMP/Cortexx.xcarchive \
+            -destination "generic/platform=iOS" \
+            CODE_SIGN_STYLE=Manual \
+            CODE_SIGN_IDENTITY="iPhone Distribution" \
+            PROVISIONING_PROFILE_SPECIFIER="Cortexx App Store" \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            | xcpretty
+
+      # ── Export IPA ────────────────────────────────────────────────
+      - name: Export IPA
+        run: |
+          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>${{ env.EXPORT_METHOD }}</string>
+            <key>teamID</key>
+            <string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>uploadBitcode</key>
+            <false/>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>compileBitcode</key>
+            <false/>
+            <key>signingStyle</key>
+            <string>manual</string>
+            <key>provisioningProfiles</key>
+            <dict>
+              <key>${{ env.BUNDLE_ID }}</key>
+              <string>Cortexx App Store</string>
+            </dict>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath $RUNNER_TEMP/Cortexx.xcarchive \
+            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
+            -exportPath $RUNNER_TEMP/ipa \
+            | xcpretty
+
+      # ── Upload to TestFlight ──────────────────────────────────────
+      - name: Upload to App Store Connect / TestFlight
+        if: ${{ github.event.inputs.upload_to_testflight != 'false' }}
+        env:
+          APP_STORE_CONNECT_KEY_ID:       ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID:    ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_BASE64:   ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+        run: |
+          echo "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > $RUNNER_TEMP/AuthKey.p8
+
+          xcrun altool --upload-app \
+            --type ios \
+            --file "$RUNNER_TEMP/ipa/Cortexx.ipa" \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
+            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --apiKeyPath "$RUNNER_TEMP/AuthKey.p8" \
+            --verbose
+
+      # ── Upload IPA as artifact ────────────────────────────────────
+      - name: Upload IPA artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: Cortexx-${{ github.run_number }}.ipa
+          path: ${{ runner.temp }}/ipa/Cortexx.ipa
+          retention-days: 30
+
+      # ── Clean up keychain ─────────────────────────────────────────
+      - name: Clean up keychain
+        if: always()
+        run: security delete-keychain $RUNNER_TEMP/build.keychain || true
