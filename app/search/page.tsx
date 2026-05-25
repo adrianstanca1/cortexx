@@ -41,22 +41,29 @@ export default function SearchPage() {
   const [loading, setLoading] = useState(false)
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
   const inputRef = useRef<HTMLInputElement>(null)
+  // Monotonic counter to drop stale responses. Without this, the user
+  // can type 'a' → 'ab' → 'abc' fast enough that the 'a' response
+  // lands AFTER the 'abc' response, and setResults overwrites with
+  // wrong-query results.
+  const reqIdRef = useRef(0)
 
   const search = useCallback(async (term: string) => {
     if (term.trim().length < 2) {
       setResults(null)
       return
     }
+    const myReqId = ++reqIdRef.current
     setLoading(true)
     try {
       const res = await fetch(`/api/search?q=${encodeURIComponent(term)}`)
       if (!res.ok) throw new Error('Search failed')
       const data = await res.json()
+      if (myReqId !== reqIdRef.current) return  // stale response — newer query in flight
       setResults(data)
     } catch {
-      setResults(null)
+      if (myReqId === reqIdRef.current) setResults(null)
     } finally {
-      setLoading(false)
+      if (myReqId === reqIdRef.current) setLoading(false)
     }
   }, [])
 
