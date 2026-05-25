@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
+import { bypassTenancy } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -13,6 +14,10 @@ export const dynamic = 'force-dynamic'
  * photo previews.
  *
  * Bypassed by the edge proxy (see proxy.ts isPublic /api/client-view/).
+ *
+ * Wrapped in bypassTenancy() because the share token deliberately
+ * grants cross-tenant read access (the project's org may differ from
+ * any signed-in viewer's active org — usually no viewer signed in at all).
  */
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ token: string }> }) {
   const params = await paramsP
@@ -20,6 +25,10 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   if (!token || token.length < 8) {
     return NextResponse.json({ error: 'Invalid link' }, { status: 404 })
   }
+  return bypassTenancy(() => fetchClientView(token))
+}
+
+async function fetchClientView(token: string): Promise<NextResponse> {
   try {
     const project = await prisma.project.findUnique({
       where: { shareToken: token },
