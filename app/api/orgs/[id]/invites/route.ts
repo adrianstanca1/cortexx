@@ -29,9 +29,25 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  // Never return the secret `token` in the list response. The token IS
+  // the acceptance credential — anyone who can read it can accept the
+  // invite as the invited email. The POST handler returns the full
+  // acceptUrl (containing the token) ONCE at creation; the list view
+  // shows enough for admins to manage pending invites without leaking
+  // the secret to subsequent readers.
   const invites = await prisma.organizationInvite.findMany({
     where: { organizationId, acceptedAt: null, expiresAt: { gt: new Date() } },
     orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      organizationId: true,
+      email: true,
+      role: true,
+      expiresAt: true,
+      acceptedAt: true,
+      invitedById: true,
+      createdAt: true,
+    },
   })
   return NextResponse.json({ invites })
 }
