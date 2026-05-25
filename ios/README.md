@@ -185,17 +185,33 @@ The web code already detects which APIs are available and degrades gracefully �
 
 ## CI/CD — GitHub Actions iOS Build
 
-The file `ios/ci/ios-build.workflow.yml` contains the complete GitHub Actions workflow for automated App Store builds. To activate it:
+**Active workflow: `.github/workflows/release-ios.yml`** (live on the
+default branch).
 
-1. On your Mac, clone the repo and run:
-   ```bash
-   mkdir -p .github/workflows
-   cp ios/ci/ios-build.workflow.yml .github/workflows/ios-build.yml
-   git add .github/workflows/ios-build.yml
-   git commit -m "ci(ios): activate iOS App Store build workflow"
-   git push origin cortexbuildpro
-   ```
+Triggers:
+- **Tag push** matching `v*-ios` (e.g. `git tag v1.0.0-ios && git push --tags`) —
+  the release-train path. Tag a commit, push, the IPA goes up to TestFlight.
+- **workflow_dispatch** — manual one-off builds with a toggle for whether
+  to upload to TestFlight or just archive the IPA artifact.
 
-2. Then add the 8 GitHub Secrets listed in `app-store/SUBMISSION.md` (section 4b).
+Both produce: signed Release IPA + dSYM, uploaded as a workflow artifact,
+optionally pushed to TestFlight via `xcrun altool`.
 
-Once active, every push to `cortexbuildpro` that touches `ios/` or `Cortexx.html` will automatically archive, sign, and upload to TestFlight.
+Required GitHub secrets (one-time setup):
+| Secret | Source |
+|---|---|
+| `APPLE_TEAM_ID` | developer.apple.com → Account → Membership |
+| `IOS_CERTIFICATE_BASE64` | export the iPhone Distribution `.p12` and `base64` it |
+| `IOS_CERTIFICATE_PASSWORD` | the export password set when exporting the `.p12` |
+| `IOS_KEYCHAIN_PASSWORD` | a throwaway password for the ephemeral CI keychain |
+| `IOS_PROVISIONING_PROFILE_BASE64` | the App Store distribution profile, base64-encoded |
+| `APP_STORE_CONNECT_KEY_ID` | App Store Connect → Users & Access → Keys |
+| `APP_STORE_CONNECT_ISSUER_ID` | same page |
+| `APP_STORE_CONNECT_KEY_BASE64` | the `.p8` private key, base64-encoded |
+
+See `../app-store/SUBMISSION.md` for the screenshots / copy / privacy /
+review-notes side of the checklist.
+
+> **Note**: `ios/ci/ios-build.workflow.yml` is the same content kept as
+> a reference doc (it has `.workflow.yml` not `.yml` so GitHub doesn't
+> double-run it). The authoritative copy is in `.github/workflows/`.
