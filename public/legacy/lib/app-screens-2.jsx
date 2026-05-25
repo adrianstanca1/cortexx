@@ -445,10 +445,17 @@ function ReceiptScanSheet({ onClose, accent }) {
       mock = { vendor: 'Travis Perkins', amount: 142.80, date: new Date().toISOString().slice(0,10) };
     }
     setReceipt(mock);
-    // AI categorize
-    const result = await Backend.ai.categorizeReceipt(mock);
-    setAi(result);
-    setStage('result');
+    // AI categorize — fall back to "Uncategorised" if the AI call fails so the
+    // sheet doesn't get stuck on "scanning"; user can still edit + save the receipt.
+    try {
+      const result = await Backend.ai.categorizeReceipt(mock);
+      setAi(result);
+    } catch (e) {
+      setAi({ category: 'Uncategorised', projectId: null, confidence: 0 });
+      toast('Could not auto-categorise receipt', 'error');
+    } finally {
+      setStage('result');
+    }
   };
 
   const save = async () => {
@@ -566,9 +573,17 @@ function ChaseSheet({ invoice, onClose, accent }) {
 
   React.useEffect(() => {
     (async () => {
-      const txt = await Backend.ai.draftChase(invoice.id);
-      setDraft(txt);
-      setLoading(false);
+      // If the AI draft fails, give the user a typeable placeholder rather than
+      // leaving the sheet stuck on the loading spinner.
+      try {
+        const txt = await Backend.ai.draftChase(invoice.id);
+        setDraft(txt || '');
+      } catch (e) {
+        setDraft('Unable to draft automatically right now. Please write your message manually.');
+        toast('Could not generate AI draft', 'error');
+      } finally {
+        setLoading(false);
+      }
     })();
   }, [invoice.id]);
 

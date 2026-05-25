@@ -69,7 +69,8 @@ const SegControl = ({ value, onChange, options, accent = T.blue }) => (
 // Date helpers — convert ISO due dates to human-readable
 const daysUntil = (iso) => {
   if (!iso) return null;
-  const today = new Date('2026-05-22');
+  const today = new Date();
+  today.setHours(0, 0, 0, 0);
   const d = new Date(iso);
   return Math.ceil((d - today) / (24*60*60*1000));
 };

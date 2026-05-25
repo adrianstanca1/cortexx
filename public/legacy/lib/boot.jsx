@@ -51,21 +51,21 @@
         </IOSDevice>
 
         <TweaksPanel title="Tweaks">
-          <TweakSection title="Dashboard layout">
+          <TweakSection label="Dashboard layout">
             <TweakSelect
               value={tweaks.dashboard}
               onChange={v => setTweak('dashboard', v)}
               options={DASH_OPTS}
             />
           </TweakSection>
-          <TweakSection title="Accent color">
+          <TweakSection label="Accent color">
             <TweakColor
               value={tweaks.accent}
               onChange={v => setTweak('accent', v)}
               options={ACCENTS.map(a => a.value)}
             />
           </TweakSection>
-          <TweakSection title="Performance">
+          <TweakSection label="Performance">
             <button
               onClick={() => window.cortexxPerfOverlay && window.cortexxPerfOverlay()}
               style={{
