@@ -126,6 +126,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Quality & governance',
     items: [
       { href: '/inspections', label: 'Inspections', Icon: IcCheck, color: '#10b981', badgeKey: 'inspections' },
+      { href: '/action-plans', label: 'Action plans', Icon: IcCheck, color: '#10b981' },
       { href: '/meetings',    label: 'Meetings',    Icon: IcClock, color: '#06b6d4', badgeKey: 'meetings' },
       { href: '/risks',       label: 'Risk register', Icon: IcAlert, color: '#ef4444', badgeKey: 'risks' },
       { href: '/safety',      label: 'Safety',      Icon: IcHardhat, color: '#ef4444', badgeKey: 'safety' },

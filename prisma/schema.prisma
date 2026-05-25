@@ -1168,6 +1168,7 @@ model Organization {
   apiKeys             ApiKey[]
   infraSnapshots      InfraSnapshot[]
   projectBookmarks    ProjectBookmark[]
+  actionPlans         ActionPlan[]
 }
 
 model UserOrganization {
@@ -1614,4 +1615,29 @@ model InfraSnapshot {
   updatedAt      DateTime      @updatedAt
 
   @@index([organizationId])
+}
+
+model ActionPlan {
+  // Tracked corrective-action item with owner, due date, status, and
+  // close-out notes. Optionally linked back to a parent record (snag,
+  // RFI, incident) via linkedType + linkedId — the link is loose by
+  // design so the same model serves all of them.
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  owner          String?
+  priority       String        @default("medium")
+  status         String        @default("open")
+  dueDate        DateTime?
+  closedAt       DateTime?
+  closeOutNotes  String?
+  linkedType     String?
+  linkedId       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
 }
