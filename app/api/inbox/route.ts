@@ -16,7 +16,10 @@ export async function GET() {
     const now = new Date()
     const in7Days = new Date(now.getTime() + 7 * 86400000)
 
-    const [overdueInvoices, expiringDocs, overdueTasks, pendingTimesheets, criticalTasks] = await Promise.all([
+    const [
+      overdueInvoices, expiringDocs, overdueTasks, pendingTimesheets, criticalTasks,
+      expiringPermits, expiringRams, expiringCerts,
+    ] = await Promise.all([
       prisma.invoice.findMany({
         where: { status: 'overdue' },
         include: { project: { select: { id: true, name: true } } },
@@ -50,6 +53,27 @@ export async function GET() {
         orderBy: { dueDate: 'asc' },
         take: 25,
       }),
+      // Compliance expiries: permits, RAMS, certifications — anything
+      // lapsing in the next 7 days that isn't already expired or closed
+      // (today is the lower bound).
+      prisma.permit.findMany({
+        where: { validTo: { lt: in7Days, gte: now }, status: 'active' },
+        include: { project: { select: { id: true, name: true } } },
+        orderBy: { validTo: 'asc' },
+        take: 25,
+      }),
+      prisma.rams.findMany({
+        where: { reviewBy: { lt: in7Days, gte: now }, status: 'active' },
+        include: { project: { select: { id: true, name: true } } },
+        orderBy: { reviewBy: 'asc' },
+        take: 25,
+      }),
+      prisma.certification.findMany({
+        where: { expiryDate: { lt: in7Days, gte: now } },
+        include: { member: { select: { id: true, name: true } } },
+        orderBy: { expiryDate: 'asc' },
+        take: 25,
+      }),
     ])
 
     // Aggregate pending timesheets by member
@@ -71,7 +95,13 @@ export async function GET() {
       overdueTasks,
       criticalTasks,
       pendingTimesheets: pendingTimesheetSummary,
-      total: overdueInvoices.length + expiringDocs.length + overdueTasks.length + pendingTimesheetSummary.length + criticalTasks.length,
+      expiringPermits,
+      expiringRams,
+      expiringCerts,
+      total:
+        overdueInvoices.length + expiringDocs.length + overdueTasks.length +
+        pendingTimesheetSummary.length + criticalTasks.length +
+        expiringPermits.length + expiringRams.length + expiringCerts.length,
     })
   } catch (error) {
     console.error(error)
