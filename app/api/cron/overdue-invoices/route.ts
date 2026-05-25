@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireCronAuth } from '@/lib/cron'
 import { sendPush } from '@/lib/push'
 import { sendEmail, overdueDigestTemplate } from '@/lib/email'
+import { bypassTenancy } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,85 +17,119 @@ interface InvoiceRow {
 
 /**
  * Daily scan: find every overdue (status != paid && dueDate < today)
- * invoice and notify project owners. Sends push (per category=invoices
- * preference) and email digest. Idempotent — repeated runs only
- * re-notify if invoice dueDate has slipped further.
+ * invoice and notify the owning workspace. Each org gets its OWN push
+ * + email digest containing ONLY its own invoices — never cross-tenant.
+ * Idempotent — repeated runs only re-notify if invoice dueDate has
+ * slipped further.
  */
 export async function POST(req: NextRequest) {
   const denied = requireCronAuth(req)
   if (denied) return denied
 
+  // Cron operates across every tenant by design — bypass the tenancy
+  // extension so cross-org reads/writes aren't blocked when the flag flips.
+  return bypassTenancy(() => runOverdueScan())
+}
+
+async function runOverdueScan() {
   const now = new Date()
-  const overdue = await prisma.invoice.findMany({
-    where: {
-      status: { in: ['sent', 'overdue'] },
-      dueDate: { lt: now },
-    },
-    select: { id: true, number: true, clientName: true, amount: true, dueDate: true, status: true },
-    orderBy: { dueDate: 'asc' },
-    take: 500,
+
+  // Step 1: promote sent→overdue across all orgs in a single bulk update.
+  // Safe — purely status flip, no cross-tenant data movement.
+  const promoted = await prisma.invoice.updateMany({
+    where: { status: 'sent', dueDate: { lt: now } },
+    data: { status: 'overdue' },
   })
 
-  // Promote sent → overdue once a day so the status reflects reality.
-  const toPromote = overdue.filter(i => i.status === 'sent')
-  if (toPromote.length > 0) {
-    await prisma.invoice.updateMany({
-      where: { id: { in: toPromote.map(i => i.id) } },
-      data: { status: 'overdue' },
+  // Step 2: per-org notification pass. Group invoices by org so each
+  // notification carries only its own workspace's data.
+  const overdueByOrg = await prisma.invoice.findMany({
+    where: { status: 'overdue', dueDate: { lt: now } },
+    select: {
+      id: true, number: true, clientName: true, amount: true, dueDate: true,
+      organizationId: true,
+      organization: { select: { id: true, name: true } },
+    },
+    orderBy: [{ organizationId: 'asc' }, { dueDate: 'asc' }],
+    take: 5000,
+  })
+
+  if (overdueByOrg.length === 0) {
+    return NextResponse.json({ overdueCount: 0, promoted: promoted.count, orgsNotified: 0 })
+  }
+
+  // Group by org id (skip rows without an org — defensive against the
+  // pre-keystone-migration data that might still be unscoped).
+  const byOrg = new Map<string, { orgName: string; rows: InvoiceRow[] }>()
+  for (const inv of overdueByOrg) {
+    if (!inv.organizationId || !inv.organization) continue
+    const bucket = byOrg.get(inv.organizationId) || { orgName: inv.organization.name, rows: [] }
+    bucket.rows.push({
+      number: inv.number,
+      clientName: inv.clientName,
+      amount: inv.amount,
+      dueDate: inv.dueDate,
+      daysOverdue: Math.floor((now.getTime() - inv.dueDate.getTime()) / 86_400_000),
     })
+    byOrg.set(inv.organizationId, bucket)
   }
 
-  // No overdues → no notifications.
-  if (overdue.length === 0) {
-    return NextResponse.json({ overdueCount: 0, notified: 0 })
-  }
-
-  const rows: InvoiceRow[] = overdue.map(i => ({
-    number: i.number,
-    clientName: i.clientName,
-    amount: i.amount,
-    dueDate: i.dueDate,
-    daysOverdue: Math.floor((now.getTime() - i.dueDate.getTime()) / 86_400_000),
-  }))
-
-  // Workspace-wide push for the headline number.
-  const total = rows.reduce((s, r) => s + r.amount, 0)
-  sendPush({
-    category: 'invoices',
-    payload: {
-      title: `📒 ${rows.length} overdue invoice${rows.length === 1 ? '' : 's'}`,
-      body: `£${total.toLocaleString('en-GB', { maximumFractionDigits: 0 })} outstanding`,
-      url: '/invoices',
-      tag: 'overdue-daily',
-    },
-  }).catch(() => {})
-
-  // Email digest to every user whose NotificationPreference.invoicesEmail is on.
-  const eligible = await prisma.notificationPreference.findMany({
-    where: { invoicesEmail: true },
-    include: { user: { select: { email: true, name: true } } },
-  })
   const appUrl = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'
+  let totalEmails = 0
 
-  let emailsSent = 0
   await Promise.all(
-    eligible.map(async pref => {
-      if (!pref.user.email) return
-      const tmpl = overdueDigestTemplate({
-        recipientName: pref.user.name || pref.user.email.split('@')[0],
-        organizationName: 'your workspace',
-        invoices: rows,
-        appUrl,
+    Array.from(byOrg.entries()).map(async ([orgId, { orgName, rows }]) => {
+      const total = rows.reduce((s, r) => s + r.amount, 0)
+
+      // Push to every subscription tied to a user in this org (sendPush
+      // already honours the invoicesPush preference per user).
+      const orgUsers = await prisma.userOrganization.findMany({
+        where: { organizationId: orgId },
+        select: { userId: true },
       })
-      const res = await sendEmail({ to: pref.user.email, subject: tmpl.subject, html: tmpl.html, text: tmpl.text })
-      if (res.delivered > 0) emailsSent++
+      await Promise.all(
+        orgUsers.map(({ userId }) =>
+          sendPush({
+            userId,
+            category: 'invoices',
+            payload: {
+              title: `📒 ${rows.length} overdue invoice${rows.length === 1 ? '' : 's'}`,
+              body: `£${total.toLocaleString('en-GB', { maximumFractionDigits: 0 })} outstanding · ${orgName}`,
+              url: '/invoices',
+              tag: `overdue-daily-${orgId}`,
+            },
+          }).catch(() => {}),
+        ),
+      )
+
+      // Email digest — only to users who (a) belong to this org AND
+      // (b) have invoicesEmail enabled.
+      const eligibleUserIds = orgUsers.map(u => u.userId)
+      const eligible = await prisma.notificationPreference.findMany({
+        where: { invoicesEmail: true, userId: { in: eligibleUserIds } },
+        include: { user: { select: { email: true, name: true } } },
+      })
+
+      await Promise.all(
+        eligible.map(async pref => {
+          if (!pref.user.email) return
+          const tmpl = overdueDigestTemplate({
+            recipientName: pref.user.name || pref.user.email.split('@')[0],
+            organizationName: orgName,
+            invoices: rows,
+            appUrl,
+          })
+          const res = await sendEmail({ to: pref.user.email, subject: tmpl.subject, html: tmpl.html, text: tmpl.text })
+          if (res.delivered > 0) totalEmails++
+        }),
+      )
     }),
   )
 
   return NextResponse.json({
-    overdueCount: rows.length,
-    promotedToOverdue: toPromote.length,
-    totalOutstanding: total,
-    emailsSent,
+    overdueCount: overdueByOrg.length,
+    promoted: promoted.count,
+    orgsNotified: byOrg.size,
+    emailsSent: totalEmails,
   })
 }
