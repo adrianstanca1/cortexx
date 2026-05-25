@@ -1,6 +1,7 @@
 import NextAuth, { type NextAuthConfig } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
+import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 
@@ -74,6 +75,17 @@ export const authConfig: NextAuthConfig = {
           (token as { orgs?: SessionOrgMembership[] }).orgs || []
       }
       return session
+    },
+  },
+  events: {
+    // Wipe the active-org cookie on sign-out. Without this, the next
+    // user signing in on a shared device sees the previous user's
+    // org slug in the URL / org switcher briefly before requireAuth
+    // resolves their own memberships — minor data-exposure footgun.
+    async signOut() {
+      try {
+        (await cookies()).delete('cortexx_active_org')
+      } catch { /* not in a request context (rare) */ }
     },
   },
 }

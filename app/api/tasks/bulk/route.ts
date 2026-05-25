@@ -59,13 +59,40 @@ export async function POST(req: NextRequest) {
       updated = res.count
     }
 
-    // Recalculate progress for each affected project
-    for (const projectId of affectedProjectIds) {
-      const all = await prisma.task.findMany({ where: { projectId }, select: { status: true } })
-      const total = all.length
-      const done = all.filter(t => t.status === 'done').length
-      const progress = total > 0 ? Math.round((done / total) * 100) : 0
-      await prisma.project.update({ where: { id: projectId }, data: { progress } })
+    // Recompute progress for every affected project — single grouped
+    // read instead of N findManys, then per-project update. The prior
+    // version did N×(findMany + update) serially: ~10ms per project,
+    // so a 50-project bulk took 1s+ purely on round-trips. The groupBy
+    // returns all the counts in one DB query.
+    if (affectedProjectIds.length > 0) {
+      const counts = await prisma.task.groupBy({
+        by: ['projectId', 'status'],
+        where: { projectId: { in: affectedProjectIds } },
+        _count: { _all: true },
+      })
+      const totals = new Map<string, { total: number; done: number }>()
+      for (const row of counts) {
+        if (!row.projectId) continue
+        const cur = totals.get(row.projectId) || { total: 0, done: 0 }
+        cur.total += row._count._all
+        if (row.status === 'done') cur.done += row._count._all
+        totals.set(row.projectId, cur)
+      }
+      await Promise.all(
+        Array.from(totals.entries()).map(([projectId, { total, done }]) => {
+          const progress = total > 0 ? Math.round((done / total) * 100) : 0
+          return prisma.project.update({ where: { id: projectId }, data: { progress } })
+        }),
+      )
+      // Projects that had all their tasks deleted disappear from `counts` — zero them out.
+      const updated = new Set(totals.keys())
+      const zeroed = affectedProjectIds.filter(id => !updated.has(id))
+      if (zeroed.length > 0) {
+        await prisma.project.updateMany({
+          where: { id: { in: zeroed } },
+          data: { progress: 0 },
+        })
+      }
     }
 
     return NextResponse.json({ updated, affectedProjectIds })

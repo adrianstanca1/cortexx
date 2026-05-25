@@ -11,14 +11,19 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
+    // Cap every include to a reasonable hard limit. A long-running
+    // project with thousands of tasks/docs/invoices would otherwise
+    // ship megabytes of nested JSON to a single page, freezing the
+    // worker on serialise. Sub-resource pagination is via the per-
+    // type routes (/api/tasks?projectId=…, /api/documents?projectId=…).
     const project = await prisma.project.findUnique({
       where: { id: params.id },
       include: {
-        tasks: { include: { assignee: true }, orderBy: { dueDate: 'asc' } },
-        assignments: { include: { member: true } },
-        invoices: { orderBy: { createdAt: 'desc' } },
+        tasks: { include: { assignee: true }, orderBy: { dueDate: 'asc' }, take: 200 },
+        assignments: { include: { member: true }, take: 200 },
+        invoices: { orderBy: { createdAt: 'desc' }, take: 100 },
         activities: { orderBy: { createdAt: 'desc' }, take: 10 },
-        documents: { orderBy: { createdAt: 'desc' } },
+        documents: { orderBy: { createdAt: 'desc' }, take: 200 },
         _count: { select: { tasks: true, assignments: true } },
       },
     })
