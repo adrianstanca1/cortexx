@@ -10,7 +10,9 @@ repo so there's a single source of truth.
 | File | What it is |
 |---|---|
 | `index.html` | Originally `Cortexx.html`. A single-file Cortexx app — every screen, every dashboard, every sheet — that boots client-side and stores everything in `localStorage` + IndexedDB. No backend required. |
-| `marketing.html` | The marketing/landing page (originally `Cortexx Marketing.html`). |
+| `Cortexx-standalone.html` | The **fully-inlined 1.7 MB single-file PWA** — every JS bundle, every CSS rule, every Babel-transpiled phase module bundled into one file. Works offline forever after first load. Carries every one of the 80 phase modules from the Claude Design canvas (see `docs/pwa/PERF_PHASE_81.md`). |
+| `Cortexx-deploy.html` | Production-deploy variant of the standalone build (1.6 MB) — same surface as `Cortexx-standalone.html` minus the dev-mode loader branch. Used as the iOS app-shell asset. |
+| `marketing.html` | The marketing/landing page (originally `Cortexx Marketing.html`). Also promoted to `/marketing` and `/` (for signed-out visitors) at the Next.js root. |
 | `mobile-dashboard.html` | Standalone mobile dashboard preview (kept under the original filename `Cortexx Mobile Dashboard.html` as well so the in-app links keep working). |
 | `dist/` | Babel-transpiled JS bundles loaded by `index.html`: `boot.js`, `app-main.js`, `dashboards*.js`, `screens-phase*.js`, `tokens.js`, etc. About 60 files. |
 | `lib/` | Vanilla-JS PWA primitives (storage helpers, computed accessors, UI atoms). |
