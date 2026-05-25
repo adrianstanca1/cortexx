@@ -43,23 +43,36 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (body.amount !== undefined && (isNaN(Number(body.amount)) || Number(body.amount) <= 0)) {
       return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 })
     }
-    const invoice = await prisma.invoice.update({
-      where: { id: params.id },
-      data: {
-        ...(body.status !== undefined && { status: body.status }),
-        ...(body.amount !== undefined && { amount: Number(body.amount) }),
-        ...(body.clientName !== undefined && { clientName: body.clientName }),
-        ...(body.notes !== undefined && { notes: body.notes }),
-        ...(body.dueDate && { dueDate: new Date(body.dueDate) }),
-        ...(body.paidDate !== undefined && { paidDate: body.paidDate ? new Date(body.paidDate) : null }),
-        ...(body.status === 'paid' && !body.paidDate && { paidDate: new Date() }),
-      },
-      include: { project: true },
+    // Wrap update + project-spent recalc in a single transaction so two
+    // concurrent paid-flips on different invoices for the same project
+    // can't race: previously each PUT updated independently then read
+    // the (potentially in-flight) set of paid invoices, and the second
+    // writer's sum could miss the first's update. The interactive tx
+    // serialises both reads + the project.spent write.
+    const invoice = await prisma.$transaction(async (tx) => {
+      const inv = await tx.invoice.update({
+        where: { id: params.id },
+        data: {
+          ...(body.status !== undefined && { status: body.status }),
+          ...(body.amount !== undefined && { amount: Number(body.amount) }),
+          ...(body.clientName !== undefined && { clientName: body.clientName }),
+          ...(body.notes !== undefined && { notes: body.notes }),
+          ...(body.dueDate && { dueDate: new Date(body.dueDate) }),
+          ...(body.paidDate !== undefined && { paidDate: body.paidDate ? new Date(body.paidDate) : null }),
+          ...(body.status === 'paid' && !body.paidDate && { paidDate: new Date() }),
+        },
+        include: { project: true },
+      })
+      if (body.status !== undefined && inv.projectId) {
+        const paid = await tx.invoice.findMany({
+          where: { projectId: inv.projectId, status: 'paid' },
+          select: { amount: true },
+        })
+        const spent = paid.reduce((s, i) => s + i.amount, 0)
+        await tx.project.update({ where: { id: inv.projectId }, data: { spent } })
+      }
+      return inv
     })
-
-    if (body.status !== undefined && invoice.projectId) {
-      await recalcSpent(invoice.projectId)
-    }
 
     return NextResponse.json(invoice)
   } catch (error) {

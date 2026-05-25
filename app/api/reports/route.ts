@@ -31,10 +31,17 @@ export async function GET() {
       monthlyPOs,
       monthlyInvoices,
     ] = await Promise.all([
+      // All find* queries here are capped at 5000 — for a tenant with
+      // 100k+ rows, an uncapped query would OOM the pm2 worker (each row
+      // is small but loaded into memory + serialised through Prisma).
+      // Tenants needing larger reports should hit /api/export/* which
+      // streams via a worker, not this dashboard rollup.
       prisma.project.findMany({
+        take: 5000,
         select: { id: true, name: true, status: true, progress: true, budget: true, spent: true, onSiteCount: true },
       }),
       prisma.invoice.findMany({
+        take: 5000,
         select: { status: true, amount: true, projectId: true, paidDate: true, dueDate: true, project: { select: { name: true } } },
       }),
       prisma.task.groupBy({ by: ['status'], _count: { _all: true } }),
@@ -43,14 +50,17 @@ export async function GET() {
       prisma.timeEntry.aggregate({ _sum: { hours: true }, where: { date: { gte: monthStart } } }),
       prisma.activity.count({ where: { createdAt: { gte: last30 } } }),
       prisma.subInvoice.findMany({
+        take: 5000,
         where: { invoiceDate: { gte: sixMonthsAgo } },
         select: { invoiceDate: true, grossAmount: true },
       }),
       prisma.purchaseOrder.findMany({
+        take: 5000,
         where: { createdAt: { gte: sixMonthsAgo } },
         select: { createdAt: true, total: true },
       }),
       prisma.invoice.findMany({
+        take: 5000,
         where: { issuedDate: { gte: sixMonthsAgo } },
         select: { issuedDate: true, amount: true },
       }),

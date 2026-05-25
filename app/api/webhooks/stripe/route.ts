@@ -47,6 +47,22 @@ export async function POST(req: NextRequest) {
 }
 
 async function handleEvent(event: Stripe.Event, stripe: Stripe): Promise<NextResponse> {
+  // Idempotency guard. Stripe retries any non-2xx response (and very
+  // occasionally double-sends a single event). Insert the event.id
+  // FIRST; if it's already present, Prisma throws P2002 and we early-
+  // return 200 OK without re-running the state changes. Without this
+  // a retry re-fires checkout.session.completed → re-overwrites plan,
+  // resets trialEndsAt, and double-logs an audit entry.
+  try {
+    await prisma.processedStripeEvent.create({ data: { id: event.id, type: event.type } })
+  } catch (err) {
+    const code = (err as { code?: string })?.code
+    if (code === 'P2002') {
+      return NextResponse.json({ ok: true, duplicate: true, eventId: event.id })
+    }
+    throw err
+  }
+
   try {
     switch (event.type) {
       case 'checkout.session.completed': {

@@ -60,16 +60,23 @@ export async function POST(req: NextRequest) {
     if (!member) return NextResponse.json({ error: 'Member not found' }, { status: 400 })
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
 
-    const active = await prisma.siteCheckIn.findFirst({
-      where: { memberId, checkedOutAt: null },
-      select: { id: true },
-    })
-    if (active) return NextResponse.json({ error: 'Already checked in — check out first' }, { status: 409 })
-
     const lat = body.latitude !== undefined && body.latitude !== null ? Number(body.latitude) : null
     const lng = body.longitude !== undefined && body.longitude !== null ? Number(body.longitude) : null
 
+    // Move the active-check INSIDE the transaction so two concurrent
+    // POSTs can't both pass the check and create duplicate open
+    // check-ins (which would double-increment project.onSiteCount).
+    // The check + create + counter bumps all happen in one tx now.
+    let alreadyCheckedIn = false
     const checkin = await prisma.$transaction(async tx => {
+      const active = await tx.siteCheckIn.findFirst({
+        where: { memberId, checkedOutAt: null },
+        select: { id: true },
+      })
+      if (active) {
+        alreadyCheckedIn = true
+        return null
+      }
       const created = await tx.siteCheckIn.create({
         data: {
           memberId,
@@ -90,6 +97,9 @@ export async function POST(req: NextRequest) {
       })
       return created
     })
+    if (alreadyCheckedIn || !checkin) {
+      return NextResponse.json({ error: 'Already checked in — check out first' }, { status: 409 })
+    }
 
     prisma.activity.create({
       data: {

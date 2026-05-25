@@ -1732,3 +1732,17 @@ model ChatMessage {
   @@index([conversationId, createdAt])
   @@index([organizationId])
 }
+
+/// Idempotency record for Stripe webhook events. Stripe retries on any
+/// non-2xx response (and occasionally double-sends a single event), so
+/// the webhook handler inserts a row keyed on the event id BEFORE doing
+/// any state-changing work. A unique-constraint violation means we've
+/// already processed this event — return 200 OK without re-running.
+///
+/// Rows are kept indefinitely (small + bounded by Stripe's event-id
+/// space) so a webhook replay from days later is still caught.
+model ProcessedStripeEvent {
+  id        String   @id // the evt_* id from Stripe — natural PK
+  type      String // event.type for triage
+  createdAt DateTime @default(now())
+}
