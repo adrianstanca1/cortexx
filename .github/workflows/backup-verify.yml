@@ -1,0 +1,169 @@
+name: Backup Verify
+
+# Weekly verification that the nightly pg_dump backups are actually
+# restorable. Picks the most recent .sql.gz in /opt/cortexx-backups/,
+# restores it to a throwaway `cortexx_verify` database, runs smoke
+# queries, and drops the temp DB.
+#
+# Catches the worst class of backup failure: backups that complete
+# without errors but are corrupt or truncated and can't be restored.
+# A failed run is a P0 — the production data isn't actually backed up.
+
+on:
+  workflow_dispatch:
+  schedule:
+    # Sundays 04:00 UTC — runs after the nightly /etc/cron.daily backup
+    # at ~03:00. Weekly is enough; daily verification adds load without
+    # much marginal coverage given the backup script is the same every
+    # night.
+    - cron: '0 4 * * 0'
+
+permissions:
+  contents: read
+  issues: write          # opens a P0 issue when verification fails
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+
+      - name: Run backup verification
+        id: verify
+        run: |
+          # Write the verify script to a temp file then scp it over —
+          # avoids the YAML-indented-heredoc trap that bit us before
+          # (see deploy-diagnose.yml history).
+          cat > /tmp/verify.sh << 'SCRIPT'
+          set -uo pipefail
+          BACKUP_DIR=/opt/cortexx-backups
+          STAMP=$(date -u +%Y%m%d-%H%M%S)
+
+          echo "=== Finding most recent backup ==="
+          # Sort by mtime; take the newest .sql.gz that's > 1 KB (filters
+          # out the placeholder file pg_dump touches before writing).
+          LATEST=$(find "$BACKUP_DIR" -name 'cortexx-*.sql.gz' -size +1k -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -1 | awk '{print $2}')
+          if [ -z "$LATEST" ]; then
+            echo "✗ NO BACKUP FOUND in $BACKUP_DIR"
+            exit 1
+          fi
+          SIZE=$(du -h "$LATEST" | cut -f1)
+          AGE_SEC=$(( $(date +%s) - $(stat -c %Y "$LATEST") ))
+          AGE_HOURS=$(( AGE_SEC / 3600 ))
+          echo "Latest backup: $LATEST ($SIZE, ${AGE_HOURS}h old)"
+          if [ "$AGE_HOURS" -gt 36 ]; then
+            echo "✗ Most recent backup is ${AGE_HOURS}h old — nightly cron may have stopped"
+            exit 1
+          fi
+
+          echo ""
+          echo "=== Restoring to cortexx_verify ==="
+          # Drop the temp DB if it exists from a prior aborted run.
+          sudo -u postgres psql -c "DROP DATABASE IF EXISTS cortexx_verify"
+          sudo -u postgres psql -c "CREATE DATABASE cortexx_verify"
+
+          # Restore. set +e here so we can catch the exit code; gunzip
+          # exit is what we actually care about.
+          set +e
+          gunzip -c "$LATEST" | sudo -u postgres psql cortexx_verify > /tmp/verify-restore.log 2>&1
+          RESTORE_EXIT=$?
+          set -e
+
+          if [ $RESTORE_EXIT -ne 0 ]; then
+            echo "✗ Restore failed with exit $RESTORE_EXIT — last 30 log lines:"
+            tail -30 /tmp/verify-restore.log
+            sudo -u postgres psql -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
+            exit 1
+          fi
+
+          echo ""
+          echo "=== Smoke queries ==="
+          # The restore command may emit warnings (e.g. ALREADY EXISTS) and
+          # still produce a valid schema. Verify by running real queries.
+          USER_COUNT=$(sudo -u postgres psql cortexx_verify -tAc 'SELECT COUNT(*) FROM "User"' 2>&1)
+          PROJ_COUNT=$(sudo -u postgres psql cortexx_verify -tAc 'SELECT COUNT(*) FROM "Project"' 2>&1)
+          MIG_COUNT=$(sudo -u postgres psql cortexx_verify -tAc 'SELECT COUNT(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL' 2>&1)
+          echo "Users: $USER_COUNT  Projects: $PROJ_COUNT  Applied migrations: $MIG_COUNT"
+
+          # Sanity: the verified DB should have at least the admin user
+          # and the foundation migrations applied.
+          if ! [[ "$USER_COUNT" =~ ^[0-9]+$ ]] || [ "$USER_COUNT" -lt 1 ]; then
+            echo "✗ User table empty or unreadable in restored DB"
+            sudo -u postgres psql -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
+            exit 1
+          fi
+          if ! [[ "$MIG_COUNT" =~ ^[0-9]+$ ]] || [ "$MIG_COUNT" -lt 20 ]; then
+            echo "✗ Restored DB has only $MIG_COUNT applied migrations (expected 20+)"
+            sudo -u postgres psql -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
+            exit 1
+          fi
+
+          echo ""
+          echo "=== Cleanup ==="
+          sudo -u postgres psql -c "DROP DATABASE cortexx_verify"
+
+          echo ""
+          echo "✓ Backup verified: $LATEST"
+          echo "  Restored cleanly, ${USER_COUNT} users, ${PROJ_COUNT} projects, ${MIG_COUNT} migrations applied."
+          echo "VERIFY_OK=1"
+          SCRIPT
+
+          scp -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy /tmp/verify.sh root@72.62.132.43:/tmp/verify.sh
+          OUT=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o ServerAliveInterval=30 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash /tmp/verify.sh' 2>&1)
+          EXIT=$?
+
+          echo "$OUT"
+          {
+            echo "## Backup verification — $(date -u +%Y-%m-%d)"
+            echo ""
+            echo '```'
+            echo "$OUT"
+            echo '```'
+          } >> $GITHUB_STEP_SUMMARY
+
+          # Stash the output for the issue-opening step on failure.
+          mkdir -p /tmp/backup-verify
+          echo "$OUT" > /tmp/backup-verify/output.txt
+          echo "exit_code=$EXIT" >> $GITHUB_OUTPUT
+
+          exit $EXIT
+
+      - name: Open issue on failure
+        if: failure()
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          BODY=$(cat << 'HEADER'
+          ## ⚠️ Backup verification FAILED
+
+          The weekly backup-restore drill could not restore the most
+          recent `pg_dump` backup. This is a **P0** — production data
+          may not be recoverable from backups right now.
+
+          ### Triage
+          1. Re-run this workflow with `workflow_dispatch` to confirm
+             the failure isn't transient.
+          2. SSH into the VPS and check `/opt/cortexx-backups/` — is
+             the nightly `/etc/cron.daily/cortexx-backup` cron still
+             writing files?
+          3. Try the restore manually with a fresh backup taken on-the-spot
+             via `pg_dump cortexx > /tmp/now.sql.gz`.
+          4. If repeatable, halt non-essential deploys until the backup
+             pipeline is fixed.
+
+          ### Verification output
+          ```
+          HEADER
+          )
+          BODY+=$(cat /tmp/backup-verify/output.txt)
+          BODY+=$'\n```\n\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
+
+          gh issue create \
+            --title "[P0] Backup verification failed $(date -u +%Y-%m-%d)" \
+            --label "ops,backup,p0" \
+            --body "$BODY"
