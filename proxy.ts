@@ -9,6 +9,7 @@ const PUBLIC_PATHS = new Set<string>([
   '/pricing',
   '/marketing',
   '/marketing.html',
+  '/help',
   '/manifest.json',
   '/favicon.ico',
   '/sw.js',
@@ -47,6 +48,7 @@ function isPublic(pathname: string): boolean {
   if (pathname.startsWith('/client/')) return true // public shared project view — token-gated by /api/client-view
   if (pathname.startsWith('/api/client-view/')) return true // public token-gated read API
   if (pathname.startsWith('/invite/')) return true // signed-out users can land on an invite link
+  if (pathname.startsWith('/help/')) return true   // individual help articles
   return false
 }
 

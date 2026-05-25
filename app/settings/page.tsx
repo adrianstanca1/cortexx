@@ -293,6 +293,25 @@ export default function SettingsPage() {
         </button>
       </form>
 
+      {/* Security — 2FA + help */}
+      <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <div style={labelStyle}>Security</div>
+        <Link
+          href="/settings/security"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 10, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+        >
+          <span>Two-factor authentication</span>
+          <span style={{ color: '#52749a' }}>→</span>
+        </Link>
+        <Link
+          href="/help"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+        >
+          <span>Help &amp; docs</span>
+          <span style={{ color: '#52749a' }}>→</span>
+        </Link>
+      </section>
+
       {/* Workspace settings */}
       <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
         <div style={labelStyle}>Workspace</div>
