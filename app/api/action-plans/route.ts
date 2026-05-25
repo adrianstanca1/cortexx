@@ -40,16 +40,29 @@ export async function POST(req: NextRequest) {
     if (!title) {
       return NextResponse.json({ error: 'title is required' }, { status: 400 })
     }
+    // Enum + linked-resource validation. linkedType/linkedId together
+    // point to a parent record (snag/rfi/incident); only well-known
+    // types are accepted so future-deleted-resource references don't
+    // dangle.
+    const ALLOWED_PRIORITY = new Set(['low', 'medium', 'high', 'critical'])
+    const ALLOWED_STATUS = new Set(['open', 'in_progress', 'done', 'cancelled'])
+    const ALLOWED_LINKED_TYPE = new Set(['snag', 'rfi', 'incident', 'inspection', 'meeting'])
+    const linkedType = typeof body.linkedType === 'string' && ALLOWED_LINKED_TYPE.has(body.linkedType.trim())
+      ? body.linkedType.trim() : null
+    const linkedId = typeof body.linkedId === 'string' && body.linkedId.trim() ? body.linkedId.trim() : null
+    if (linkedId && !linkedType) {
+      return NextResponse.json({ error: 'linkedId requires a valid linkedType', code: 'LINKED_TYPE_REQUIRED' }, { status: 400 })
+    }
     const item = await prisma.actionPlan.create({
       data: {
         title,
         ...(typeof body.description === 'string' ? { description: body.description.trim() } : {}),
         ...(typeof body.owner === 'string' ? { owner: body.owner.trim() } : {}),
-        ...(typeof body.priority === 'string' ? { priority: body.priority.trim() } : {}),
-        ...(typeof body.status === 'string' ? { status: body.status.trim() } : {}),
+        ...(typeof body.priority === 'string' && ALLOWED_PRIORITY.has(body.priority.trim()) ? { priority: body.priority.trim() } : {}),
+        ...(typeof body.status === 'string' && ALLOWED_STATUS.has(body.status.trim()) ? { status: body.status.trim() } : {}),
         ...(typeof body.dueDate === 'string' && body.dueDate ? { dueDate: new Date(body.dueDate) } : {}),
-        ...(typeof body.linkedType === 'string' ? { linkedType: body.linkedType.trim() } : {}),
-        ...(typeof body.linkedId === 'string' ? { linkedId: body.linkedId.trim() } : {}),
+        ...(linkedType ? { linkedType } : {}),
+        ...(linkedId ? { linkedId } : {}),
       },
     })
     return NextResponse.json({ item }, { status: 201 })

@@ -44,14 +44,28 @@ export async function POST(req: NextRequest) {
     if (!title) {
       return NextResponse.json({ error: 'title is required' }, { status: 400 })
     }
+    // Verify user-supplied projectId belongs to the current org. The
+    // tenancy extension scopes the parent WHERE but not raw FK values
+    // in data — without this check a user could store an org-B project
+    // id on their own org-A conflict (data corruption, not disclosure,
+    // since reads on that FK auto-scope and return null).
+    const projectId = typeof body.projectId === 'string' && body.projectId.trim() ? body.projectId.trim() : null
+    if (projectId) {
+      const exists = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } })
+      if (!exists) {
+        return NextResponse.json({ error: 'projectId does not exist in this workspace', code: 'INVALID_FK' }, { status: 400 })
+      }
+    }
+    const ALLOWED_SEVERITY = new Set(['low', 'medium', 'high', 'critical'])
+    const ALLOWED_STATUS = new Set(['open', 'in_progress', 'resolved', 'escalated'])
     const item = await prisma.conflict.create({
       data: {
         title,
         ...(typeof body.description === 'string' ? { description: body.description.trim() } : {}),
-        ...(typeof body.projectId === 'string' ? { projectId: body.projectId.trim() } : {}),
+        ...(projectId ? { projectId } : {}),
         ...(typeof body.parties === 'string' ? { parties: body.parties.trim() } : {}),
-        ...(typeof body.severity === 'string' ? { severity: body.severity.trim() } : {}),
-        ...(typeof body.status === 'string' ? { status: body.status.trim() } : {}),
+        ...(typeof body.severity === 'string' && ALLOWED_SEVERITY.has(body.severity.trim()) ? { severity: body.severity.trim() } : {}),
+        ...(typeof body.status === 'string' && ALLOWED_STATUS.has(body.status.trim()) ? { status: body.status.trim() } : {}),
         ...(typeof body.owner === 'string' ? { owner: body.owner.trim() } : {}),
         ...(typeof body.raisedAt === 'string' && body.raisedAt ? { raisedAt: new Date(body.raisedAt) } : {}),
       },
