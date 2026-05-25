@@ -77,6 +77,7 @@ const OWNED_MODELS = new Set<string>([
   'ProcessDoc', 'SiteReview', 'Apprenticeship', 'InsuranceClaim',
   'CurrencyRate', 'Persona', 'ServiceCatalogItem', 'SubPortalSession',
   'ApiKey', 'InfraSnapshot', 'ProjectBookmark', 'ActionPlan', 'Conflict',
+  'Cis300Return',
 ])
 
 /**

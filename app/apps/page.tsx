@@ -101,6 +101,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/performance',   label: 'Performance',   Icon: IcCheck,   color: '#f59e0b' },
       { href: '/apprentice',    label: 'Apprentices',   Icon: IcHardhat, color: '#8b5cf6' },
       { href: '/sub-portal',    label: 'Sub portal',    Icon: IcTeam,    color: '#2563eb' },
+      { href: '/cis300',        label: 'CIS300',        Icon: IcReceipt, color: '#10b981' },
     ],
   },
   {
