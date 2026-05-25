@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { canManage } from '@/lib/rbac'
 import { sendEmail, inviteTemplate } from '@/lib/email'
 import { auditLog, requestMeta } from '@/lib/audit'
@@ -41,6 +42,11 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   if (session instanceof NextResponse) return session
   const userId = (session.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user id' }, { status: 401 })
+  // Rate-limit invite issuance — without this any admin (including one
+  // who just created a free trial org) can spray invite emails as a
+  // phishing relay. 'write' = 60/min/user.
+  const limited = await enforceRateLimit(req, 'write', userId)
+  if (limited) return limited
   const { id: organizationId } = await params
 
   const membership = await prisma.userOrganization.findUnique({
