@@ -10,9 +10,17 @@ import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import { IcChevL, IcCheck, IcClock, IcAlert } from '@/components/ui/Icons'
 
-interface Task { id: string; title: string; status: string; priority: string; project?: { name: string } | null }
+interface Task { id: string; title: string; status: string; priority: string; dueDate?: string | null; project?: { name: string } | null }
 interface TimeEntry { id: string; hours: number; date: string; project?: { name: string } | null }
 interface Meeting { id: string; title: string; startsAt: string; project?: { name: string } | null }
+
+function isSameDay(iso: string | null | undefined, target: Date): boolean {
+  if (!iso) return false
+  const d = new Date(iso)
+  return d.getFullYear() === target.getFullYear()
+    && d.getMonth() === target.getMonth()
+    && d.getDate() === target.getDate()
+}
 
 export default function MyDayPage() {
   const [tasks, setTasks] = useState<Task[]>([])
@@ -21,16 +29,22 @@ export default function MyDayPage() {
   const [loading, setLoading] = useState(true)
 
   useEffect(() => {
-    const today = new Date().toISOString().slice(0, 10)
+    const today = new Date()
+    // The underlying APIs don't take date filters yet — pull a reasonable
+    // page and filter client-side. Worth re-evaluating if any workspace
+    // routinely has 100+ open tasks / day.
     Promise.all([
-      fetch('/api/tasks?dueBefore=' + encodeURIComponent(new Date(Date.now() + 86400000).toISOString())).then(r => r.ok ? r.json() : { tasks: [] }),
-      fetch('/api/timeentries?on=' + today).then(r => r.ok ? r.json() : { entries: [] }),
-      fetch('/api/meetings?on=' + today).then(r => r.ok ? r.json() : { meetings: [] }),
+      fetch('/api/tasks?status=open&take=100').then(r => r.ok ? r.json() : { tasks: [] }),
+      fetch('/api/timeentries?take=100').then(r => r.ok ? r.json() : { entries: [] }),
+      fetch('/api/meetings?take=50').then(r => r.ok ? r.json() : { meetings: [] }),
     ])
       .then(([t, te, m]) => {
-        setTasks((t.tasks || []).filter((x: Task) => x.status !== 'done').slice(0, 8))
-        setTime(te.entries || [])
-        setMeetings(m.meetings || [])
+        const dueToday = (t.tasks || []).filter((x: Task) =>
+          x.status !== 'done' && (isSameDay(x.dueDate, today) || !x.dueDate),
+        ).slice(0, 8)
+        setTasks(dueToday)
+        setTime((te.entries || []).filter((x: TimeEntry) => isSameDay(x.date, today)))
+        setMeetings((m.meetings || []).filter((x: Meeting) => isSameDay(x.startsAt, today)))
       })
       .finally(() => setLoading(false))
   }, [])
