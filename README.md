@@ -170,4 +170,5 @@ the DB password rotation.
 - pm2 process: `cortexx`, single instance, loads `.env.production`
 
 See `ROADMAP.md` for shipped phases, in-flight work, and planned releases.
-See `FINAL_REVIEW.md` for the most recent audit pass.
+See `CHANGELOG.md` for per-release notes (v1.0.0 → v1.1.1).
+See `docs/RUNBOOK.md` for operational handover (deploy / rollback / incident triage).
