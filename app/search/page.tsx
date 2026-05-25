@@ -20,6 +20,13 @@ interface SearchResult {
   tags: Array<{ id: string; name: string | null; color: string | null }>
   processDocs: Array<{ id: string; title: string | null; category: string | null; owner: string | null; version: string | null }>
   reminders: Array<{ id: string; title: string | null; dueAt: string | null; done: boolean | null }>
+  goals: Array<{ id: string; title: string | null; owner: string | null; quarter: string | null; status: string | null; progress: number | null }>
+  improvements: Array<{ id: string; title: string | null; status: string | null; impact: string | null; effort: string | null; raisedBy: string | null }>
+  kaizenCards: Array<{ id: string; title: string | null; owner: string | null; status: string | null; boardColumn: string | null }>
+  claims: Array<{ id: string; policy: string | null; description: string | null; status: string | null; amountClaimed: number | null }>
+  siteReviews: Array<{ id: string; kind: string | null; reviewer: string | null; score: number | null; heldAt: string | null }>
+  personas: Array<{ id: string; name: string | null; role: string | null; goals: string | null }>
+  serviceCatalogItems: Array<{ id: string; name: string | null; category: string | null; unitPrice: number | null; unit: string | null; active: boolean | null }>
   total: number
 }
 
@@ -270,6 +277,107 @@ export default function SearchPage() {
                   {r.dueAt && (
                     <div style={subStyle}>Due {new Date(r.dueAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</div>
                   )}
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.goals.length > 0 && (
+          <Section title="Goals (OKRs)" count={results.goals.length}>
+            {results.goals.map(g => (
+              <button key={g.id} onClick={() => router.push('/goals')} style={cardStyle}>
+                <IcSpark size={14} color="#06b6d4" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{g.title || '(untitled)'}</div>
+                  <div style={subStyle}>{[g.owner, g.quarter, g.status].filter(Boolean).join(' · ')}</div>
+                </div>
+                {typeof g.progress === 'number' && (
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#8ea8c5', fontWeight: 700 }}>{g.progress}%</span>
+                )}
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.improvements.length > 0 && (
+          <Section title="Improvements" count={results.improvements.length}>
+            {results.improvements.map(i => (
+              <button key={i.id} onClick={() => router.push('/improve-hub')} style={cardStyle}>
+                <IcSpark size={14} color="#10b981" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{i.title || '(untitled)'}</div>
+                  <div style={subStyle}>{[i.raisedBy, i.status, i.impact && `impact ${i.impact}`, i.effort && `effort ${i.effort}`].filter(Boolean).join(' · ')}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.kaizenCards.length > 0 && (
+          <Section title="Kaizen cards" count={results.kaizenCards.length}>
+            {results.kaizenCards.map(k => (
+              <button key={k.id} onClick={() => router.push('/kaizen-board')} style={cardStyle}>
+                <IcLayers size={14} color="#f59e0b" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{k.title || '(untitled)'}</div>
+                  <div style={subStyle}>{[k.owner, k.status, k.boardColumn].filter(Boolean).join(' · ')}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.claims.length > 0 && (
+          <Section title="Insurance claims" count={results.claims.length}>
+            {results.claims.map(c => (
+              <button key={c.id} onClick={() => router.push('/claims')} style={cardStyle}>
+                <IcAlert size={14} color="#ef4444" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{c.policy || c.description || '(unidentified)'}</div>
+                  <div style={subStyle}>{[c.status, c.amountClaimed && `£${c.amountClaimed.toLocaleString()}`].filter(Boolean).join(' · ')}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.siteReviews.length > 0 && (
+          <Section title="Site reviews" count={results.siteReviews.length}>
+            {results.siteReviews.map(sr => (
+              <button key={sr.id} onClick={() => router.push('/reviews')} style={cardStyle}>
+                <IcCheck size={14} color="#10b981" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{[sr.kind, sr.reviewer].filter(Boolean).join(' · ') || '(unscored)'}</div>
+                  {sr.heldAt && <div style={subStyle}>Held {new Date(sr.heldAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}{typeof sr.score === 'number' ? ` · score ${sr.score}` : ''}</div>}
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.personas.length > 0 && (
+          <Section title="Personas" count={results.personas.length}>
+            {results.personas.map(p => (
+              <button key={p.id} onClick={() => router.push('/personas')} style={cardStyle}>
+                <IcTeam size={14} color="#8b5cf6" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{p.name || '(unnamed)'}</div>
+                  <div style={subStyle}>{[p.role, p.goals].filter(Boolean).join(' · ')}</div>
+                </div>
+              </button>
+            ))}
+          </Section>
+        )}
+
+        {results && results.serviceCatalogItems.length > 0 && (
+          <Section title="Service catalog" count={results.serviceCatalogItems.length}>
+            {results.serviceCatalogItems.map(s => (
+              <button key={s.id} onClick={() => router.push('/service-catalog')} style={cardStyle}>
+                <IcLayers size={14} color="#06b6d4" />
+                <div style={{ flex: 1, minWidth: 0 }}>
+                  <div style={titleStyle}>{s.name || '(unnamed)'}</div>
+                  <div style={subStyle}>{[s.category, typeof s.unitPrice === 'number' && `£${s.unitPrice}${s.unit ? '/' + s.unit : ''}`, s.active === false && 'inactive'].filter(Boolean).join(' · ')}</div>
                 </div>
               </button>
             ))}
