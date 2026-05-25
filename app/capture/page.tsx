@@ -66,6 +66,9 @@ function CaptureContent() {
   }, [])
 
   const uploadFile = useCallback(async (file: File | Blob, filename: string) => {
+    if (file.size > 25 * 1024 * 1024) {
+      throw new Error(`File too large (max 25 MB). This is ${Math.round(file.size / 1024 / 1024)} MB.`)
+    }
     const fd = new FormData()
     fd.append('file', file, filename)
     const res = await fetch('/api/uploads', { method: 'POST', body: fd })

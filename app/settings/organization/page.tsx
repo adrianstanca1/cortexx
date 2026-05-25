@@ -279,15 +279,51 @@ const inputStyle: React.CSSProperties = {
 // Suppress unused-var lint for RANK (kept for future role-sort use)
 void RANK
 
-const PLANS = [
-  { key: 'starter', name: 'Starter', price: '£29/mo', features: ['5 users', '10 projects', '5 GB'] },
-  { key: 'pro', name: 'Pro', price: '£79/mo', features: ['20 users', '50 projects', '50 GB', 'AI tools'] },
-  { key: 'enterprise', name: 'Enterprise', price: 'Contact us', features: ['Unlimited users', 'SAML SSO', 'Audit log retention'] },
-]
+// Plan catalogue is fetched from /api/billing/plans (single source of
+// truth — backed by lib/billing.ts PLANS). Prior to this we duplicated
+// the £29/£79 strings here AND in app/pricing/page.tsx AND in
+// lib/billing.ts and they drifted out of sync.
+interface PlanRow {
+  key: string
+  name: string
+  priceMonthlyGbp: number
+  limits: { users: number; projects: number; uploadGb: number }
+  features: string[]
+}
+interface OrgBilling {
+  plan: string | null
+  subscriptionStatus: string | null
+  trialEndsAt: string | null
+  memberCount: number
+}
 
 function BillingSection({ organizationId, canManage }: { organizationId: string; canManage: boolean }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
+  const [plans, setPlans] = useState<PlanRow[]>([])
+  const [billing, setBilling] = useState<OrgBilling | null>(null)
+
+  // Load plans + current org billing state on mount. Two parallel
+  // fetches: plans is org-agnostic, billing is the current org row.
+  useEffect(() => {
+    let cancelled = false
+    Promise.all([
+      fetch('/api/billing/plans').then(r => r.ok ? r.json() : null),
+      fetch(`/api/orgs/${organizationId}`).then(r => r.ok ? r.json() : null),
+    ]).then(([planData, orgData]) => {
+      if (cancelled) return
+      if (planData?.plans) setPlans(planData.plans)
+      if (orgData?.organization) {
+        setBilling({
+          plan: orgData.organization.plan,
+          subscriptionStatus: orgData.organization.subscriptionStatus,
+          trialEndsAt: orgData.organization.trialEndsAt,
+          memberCount: orgData.organization._count?.members || 0,
+        })
+      }
+    }).catch(() => {})
+    return () => { cancelled = true }
+  }, [organizationId])
 
   const startCheckout = async (planKey: string) => {
     setBusy(planKey)
@@ -343,31 +379,65 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
     }
   }
 
+  // Surface payment-failure / past-due / canceled status loudly. Webhook
+  // stores Stripe's status verbatim; if we don't surface "past_due" the
+  // user keeps trying to use a paid feature that's about to be locked.
+  const statusBanner = billing && billing.subscriptionStatus
+    && billing.subscriptionStatus !== 'active'
+    && billing.subscriptionStatus !== 'trialing'
+    ? { status: billing.subscriptionStatus, color: billing.subscriptionStatus === 'past_due' ? '#ef4444' : '#f59e0b' }
+    : null
+
   return (
     <section style={sectionStyle}>
       <div style={labelStyle}>Plan &amp; billing</div>
+      {statusBanner && (
+        <div role="alert" style={{ background: 'rgba(239,68,68,0.12)', border: `1px solid ${statusBanner.color}`, color: statusBanner.color, padding: '10px 12px', borderRadius: 8, marginBottom: 10, fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600 }}>
+          Subscription status: {statusBanner.status.replace(/_/g, ' ')}. {statusBanner.status === 'past_due' ? 'Update payment method to avoid losing access.' : 'Manage billing to restore your subscription.'}
+        </div>
+      )}
+      {billing?.plan && (
+        <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: '4px 0 12px' }}>
+          Current plan: <strong style={{ color: '#eef3fa' }}>{billing.plan}</strong>
+          {billing.trialEndsAt && new Date(billing.trialEndsAt) > new Date() && (
+            <> · trial ends {new Date(billing.trialEndsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</>
+          )}
+        </p>
+      )}
       <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: '8px 0 12px' }}>
         Start free, upgrade when you&apos;re ready. Cancel anytime.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8 }}>
-        {PLANS.map(plan => (
+        {plans.map(plan => {
+          // Warn on downgrade if current member count exceeds the
+          // new plan's user limit — clicking would otherwise silently
+          // de-provision users on next sync.
+          const memberOverflow = billing && billing.memberCount > plan.limits.users
+          return (
           <div key={plan.key} style={{ background: '#1a2f4e', borderRadius: 10, padding: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
             <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, color: '#eef3fa' }}>{plan.name}</div>
-            <div style={{ fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, color: '#f59e0b', margin: '4px 0 8px' }}>{plan.price}</div>
+            <div style={{ fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, color: '#f59e0b', margin: '4px 0 8px' }}>£{plan.priceMonthlyGbp}/mo</div>
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5' }}>
-              {plan.features.map(f => <li key={f} style={{ marginBottom: 2 }}>• {f}</li>)}
+              {plan.features.slice(0, 5).map(f => <li key={f} style={{ marginBottom: 2 }}>• {f}</li>)}
             </ul>
             {canManage && plan.key !== 'enterprise' && (
               <button
-                onClick={() => startCheckout(plan.key)}
+                onClick={() => {
+                  if (memberOverflow) {
+                    const overBy = billing!.memberCount - plan.limits.users
+                    if (!confirm(`This plan caps at ${plan.limits.users} members but you have ${billing!.memberCount}. ${overBy} member${overBy === 1 ? '' : 's'} will lose access. Continue?`)) return
+                  }
+                  startCheckout(plan.key)
+                }}
                 disabled={!!busy}
-                style={{ width: '100%', marginTop: 10, padding: '8px 0', borderRadius: 8, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+                style={{ width: '100%', marginTop: 10, padding: '10px 0', borderRadius: 8, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer', opacity: busy ? 0.5 : 1, minHeight: 44 }}
               >
-                {busy === plan.key ? '…' : 'Choose'}
+                {busy === plan.key ? '…' : memberOverflow ? `Choose (–${billing!.memberCount - plan.limits.users} members)` : 'Choose'}
               </button>
             )}
           </div>
-        ))}
+          )
+        })}
       </div>
       {canManage && (
         <button

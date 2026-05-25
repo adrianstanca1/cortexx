@@ -28,13 +28,18 @@ export async function POST(req: NextRequest) {
     const url = typeof body.url === 'string' ? body.url.slice(0, 200) : null
     const ua = req.headers.get('user-agent')?.slice(0, 120) || null
 
-    // For v1.0 — log to stdout (pm2 → journal). A follow-up can pipe these
-    // into the analytics destination of choice (Plausible, ClickHouse,
-    // Loki, etc.) without changing the beacon shape.
+    // For v1.0 — log to stdout (pm2 → journal). pm2 logs ship to the
+    // PUBLIC vps-exec-logs branch, so we strip the URL down to the
+    // pathname (no query / hash that might carry customer-name slugs,
+    // search terms, etc.) and drop the user-agent string entirely
+    // (it doesn't change with content but does narrow fingerprinting).
+    const pathOnly = url ? (() => { try { return new URL(url, 'https://x').pathname.slice(0, 120) } catch { return '' } })() : null
     console.log('[web-vitals]', JSON.stringify({
-      name, value: Math.round(value * 100) / 100, id, rating, url, ua,
+      name, value: Math.round(value * 100) / 100, id, rating, path: pathOnly,
       at: new Date().toISOString(),
     }))
+    // Ua intentionally NOT logged — see comment above.
+    void ua
 
     return NextResponse.json({ ok: true })
   } catch {

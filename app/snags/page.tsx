@@ -118,6 +118,10 @@ export default function SnagsPage() {
   useEffect(() => { load() }, [load])
 
   const uploadPhoto = useCallback(async (file: File) => {
+    if (file.size > 25 * 1024 * 1024) {
+      setToast({ msg: `Photo too large (max 25 MB). This is ${Math.round(file.size / 1024 / 1024)} MB.`, type: 'error' })
+      return
+    }
     setPhotoUploading(true)
     try {
       const fd = new FormData()

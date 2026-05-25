@@ -21,6 +21,22 @@ export async function POST(req: NextRequest) {
   const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
   if (__limited) return __limited
 
+  // Pre-flight size check via Content-Length BEFORE buffering the body
+  // into formData(). Without this, a 5 GB upload would fully buffer in
+  // node heap before the file.size > MAX check below could fire,
+  // OOMing the worker. We allow a small slop (+1KB) for multipart
+  // boundary overhead.
+  const contentLength = req.headers.get('content-length')
+  if (contentLength) {
+    const len = Number(contentLength)
+    if (Number.isFinite(len) && len > MAX_UPLOAD_BYTES + 1024) {
+      return NextResponse.json(
+        { error: `File exceeds ${MAX_UPLOAD_BYTES / 1024 / 1024} MB limit (declared ${Math.round(len / 1024 / 1024)} MB)` },
+        { status: 413 },
+      )
+    }
+  }
+
   let form: FormData
   try {
     form = await req.formData()
