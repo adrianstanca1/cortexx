@@ -3,6 +3,7 @@ import { auth } from '@/lib/auth'
 import SessionProviderClient from '@/components/SessionProviderClient'
 import AuthedShell from '@/components/ui/AuthedShell'
 import SWRegister from '@/components/ui/SWRegister'
+import WebVitalsReporter from '@/components/WebVitalsReporter'
 import './globals.css'
 
 const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://cortexbuildpro.com'
@@ -87,6 +88,7 @@ export default async function RootLayout({ children }: { children: React.ReactNo
           </div>
           <AuthedShell />
           <SWRegister />
+          <WebVitalsReporter />
         </SessionProviderClient>
       </body>
     </html>
