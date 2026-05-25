@@ -66,23 +66,31 @@ jobs:
           echo "::notice title=VPS exec exit code::$rc"
           echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
 
-      - name: Mirror output to a dedicated branch
-        # Persists every invocation's output to the orphan `vps-exec-logs`
+      - name: Checkout (for mirror branch work)
+        if: always()
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 1
+          token: ${{ github.token }}
+
+      - name: Mirror output to vps-exec-logs branch
+        # Persists every invocation's output to an orphan `vps-exec-logs`
         # branch as `latest.txt` (always overwritten) + `runs/<id>.txt`
-        # (appended history). Uses the Contents API so the api.github.com-
-        # restricted sandbox can read results without touching
-        # results-receiver.actions.githubusercontent.com.
+        # (history). Vanilla git so we don't fight the Contents API's
+        # raw/typed-field quirks. Read side from api.github.com-only
+        # clients:
+        #   gh api repos/<o>/<r>/contents/latest.txt?ref=vps-exec-logs \
+        #     --jq .content | base64 -d
         if: always()
         env:
           GH_TOKEN: ${{ github.token }}
           CMD: ${{ inputs.command }}
           RC: ${{ steps.ssh.outputs.exit_code }}
           RUN_ID: ${{ github.run_id }}
-          REPO: ${{ github.repository }}
           BRANCH: vps-exec-logs
         run: |
-          # Build the file payload — header + command + raw output, trimmed
-          # to 800 kB to stay below GitHub's 1 MB file ceiling.
+          # Build payload — capped at 800 kB to stay under GitHub's 1 MB
+          # blob ceiling
           {
             echo "run_id: $RUN_ID"
             echo "exit_code: ${RC:-unknown}"
@@ -92,46 +100,30 @@ jobs:
             echo "---"
             head -c 800000 /tmp/vps-out.txt
           } > /tmp/payload.txt
-          b64=$(base64 -w0 /tmp/payload.txt)
 
-          # Ensure the branch exists (orphan, no shared history with main).
-          if ! gh api "repos/$REPO/branches/$BRANCH" >/dev/null 2>&1; then
-            empty_tree=$(gh api "repos/$REPO/git/trees" -X POST -f 'tree=[]' --jq '.sha' 2>/dev/null) || true
-            if [ -z "$empty_tree" ]; then
-              # Fallback: well-known SHA of git's empty tree
-              empty_tree='4b825dc642cb6eb9a060e54bf8d69288fbee4904'
-            fi
-            commit=$(gh api "repos/$REPO/git/commits" -X POST \
-              -f message='chore(vps-exec): initialise output branch' \
-              -f tree="$empty_tree" \
-              -F 'parents=[]' --jq '.sha')
-            gh api "repos/$REPO/git/refs" -X POST \
-              -f "ref=refs/heads/$BRANCH" -f "sha=$commit" >/dev/null
+          # Work in a clean throwaway dir so we don't mutate the
+          # checkout's main worktree
+          work=$(mktemp -d)
+          cd "$work"
+          git init -q -b "$BRANCH"
+          git config user.email 'cortexx-bot@users.noreply.github.com'
+          git config user.name 'vps-exec bot'
+
+          # Try to seed from the remote branch; if it doesn't exist yet,
+          # we'll create it as an orphan with this run as the first commit
+          if git fetch -q "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$BRANCH" 2>/dev/null; then
+            git reset -q --hard FETCH_HEAD
           fi
 
-          put_file() {
-            local path="$1"
-            # Look up existing file sha (required for update)
-            local sha
-            sha=$(gh api "repos/$REPO/contents/$path?ref=$BRANCH" --jq '.sha' 2>/dev/null || true)
-            if [ -n "$sha" ] && [ "$sha" != "null" ]; then
-              gh api "repos/$REPO/contents/$path" -X PUT \
-                -f "message=vps-exec run $RUN_ID — $path" \
-                -f "content=$b64" \
-                -f "branch=$BRANCH" \
-                -f "sha=$sha" >/dev/null
-            else
-              gh api "repos/$REPO/contents/$path" -X PUT \
-                -f "message=vps-exec run $RUN_ID — $path" \
-                -f "content=$b64" \
-                -f "branch=$BRANCH" >/dev/null
-            fi
-          }
+          mkdir -p runs
+          cp /tmp/payload.txt latest.txt
+          cp /tmp/payload.txt "runs/${RUN_ID}.txt"
 
-          put_file "latest.txt"
-          put_file "runs/${RUN_ID}.txt"
+          git add -A
+          git commit -q -m "vps-exec run ${RUN_ID} (exit ${RC:-?})"
+          git push -q "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/${BRANCH}"
 
-          echo "::notice title=Output mirror::https://github.com/$REPO/blob/$BRANCH/latest.txt"
+          echo "::notice title=Output mirror::https://github.com/${{ github.repository }}/blob/${BRANCH}/latest.txt"
 
       - name: Propagate exit code
         if: always()
