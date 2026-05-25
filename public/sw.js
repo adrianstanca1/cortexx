@@ -5,7 +5,7 @@
 //   • Everything else → network only (API calls bypass the SW)
 // Update model: bump CACHE_VERSION below; the new SW takes over on next page load.
 
-const CACHE_VERSION = 'cortexx-v3'
+const CACHE_VERSION = 'cortexx-v4'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 
