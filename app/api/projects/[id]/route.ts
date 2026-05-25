@@ -49,10 +49,10 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (body.startDate && body.endDate && new Date(body.endDate) < new Date(body.startDate)) {
       return NextResponse.json({ error: 'End date must be on or after start date' }, { status: 400 })
     }
-    if (body.budget !== undefined && (isNaN(Number(body.budget)) || Number(body.budget) < 0)) {
+    if (body.budget !== undefined && (!Number.isFinite(Number(body.budget)) || Number(body.budget) < 0)) {
       return NextResponse.json({ error: 'Budget must be a non-negative number' }, { status: 400 })
     }
-    if (body.progress !== undefined && (isNaN(Number(body.progress)) || Number(body.progress) < 0 || Number(body.progress) > 100)) {
+    if (body.progress !== undefined && (!Number.isFinite(Number(body.progress)) || Number(body.progress) < 0 || Number(body.progress) > 100)) {
       return NextResponse.json({ error: 'Progress must be between 0 and 100' }, { status: 400 })
     }
     const project = await prisma.project.update({

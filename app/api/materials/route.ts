@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { getCurrentOrg } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -30,13 +31,27 @@ export async function GET(req: NextRequest) {
         ],
       }),
     }
-    const [items, categories, all] = await Promise.all([
+    // Compute lowStockCount via raw SQL instead of loading every
+    // material row into the worker just to count. The tenancy
+    // extension can't auto-scope a $queryRaw, so we filter on the
+    // org id from the current request context.
+    const orgId = getCurrentOrg()?.organizationId
+    const [items, categories, lowStockRows] = await Promise.all([
       prisma.material.findMany({ where, orderBy: [{ category: 'asc' }, { name: 'asc' }], take }),
       prisma.material.findMany({ where: { archivedAt: null, category: { not: null } }, distinct: ['category'], select: { category: true } }),
-      prisma.material.findMany({ where: { archivedAt: null }, select: { stockLevel: true, reorderPoint: true } }),
+      orgId
+        ? prisma.$queryRaw<Array<{ count: bigint }>>`
+            SELECT COUNT(*)::bigint AS count
+            FROM "Material"
+            WHERE "archivedAt" IS NULL
+              AND "reorderPoint" > 0
+              AND "stockLevel" <= "reorderPoint"
+              AND "organizationId" = ${orgId}
+          `
+        : Promise.resolve([{ count: BigInt(0) }] as Array<{ count: bigint }>),
     ])
     const filtered = lowStock ? items.filter(i => i.stockLevel <= i.reorderPoint && i.reorderPoint > 0) : items
-    const lowStockCount = all.filter(m => m.stockLevel <= m.reorderPoint && m.reorderPoint > 0).length
+    const lowStockCount = Number(lowStockRows[0]?.count ?? 0)
     return NextResponse.json({
       materials: filtered,
       categories: categories.map(c => c.category).filter(Boolean).sort(),

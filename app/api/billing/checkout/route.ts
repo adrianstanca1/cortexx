@@ -44,6 +44,13 @@ export async function POST(req: NextRequest) {
 
   // Reuse the org's Stripe customer if it already exists; otherwise create
   // one and persist back so future checkouts attach to the same customer.
+  //
+  // Race-safe: previously two concurrent first-time checkouts could each
+  // see stripeCustomerId=null, both create a customer, last-writer-wins
+  // on update → one customer orphaned in Stripe but still gets monthly
+  // invoiced. Now we attempt an updateMany() conditional on the column
+  // still being null. If count=0, someone else wrote first — delete OUR
+  // freshly-created customer to avoid the duplicate, and use theirs.
   let customerId = membership.organization.stripeCustomerId
   if (!customerId) {
     const userEmail = (session.user as { email?: string }).email
@@ -52,11 +59,22 @@ export async function POST(req: NextRequest) {
       name: membership.organization.name,
       metadata: { organizationId },
     })
-    customerId = customer.id
-    await prisma.organization.update({
-      where: { id: organizationId },
-      data: { stripeCustomerId: customerId },
+    const claim = await prisma.organization.updateMany({
+      where: { id: organizationId, stripeCustomerId: null },
+      data: { stripeCustomerId: customer.id },
     })
+    if (claim.count === 1) {
+      customerId = customer.id
+    } else {
+      // Lost the race. Delete our orphan + use whoever won.
+      await stripe.customers.del(customer.id).catch(() => {})
+      const fresh = await prisma.organization.findUnique({
+        where: { id: organizationId },
+        select: { stripeCustomerId: true },
+      })
+      customerId = fresh?.stripeCustomerId || null
+      if (!customerId) return NextResponse.json({ error: 'Customer creation race could not resolve', code: 'CUSTOMER_RACE' }, { status: 503 })
+    }
   }
 
   const appUrl = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'

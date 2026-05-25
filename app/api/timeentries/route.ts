@@ -75,7 +75,7 @@ export async function POST(req: NextRequest) {
     if (!body.date) {
       return NextResponse.json({ error: 'date is required' }, { status: 400 })
     }
-    if (body.hours === undefined || body.hours === null || isNaN(Number(body.hours)) || Number(body.hours) <= 0) {
+    if (body.hours === undefined || body.hours === null || !Number.isFinite(Number(body.hours)) || Number(body.hours) <= 0) {
       return NextResponse.json({ error: 'Hours must be a positive number' }, { status: 400 })
     }
     if (Number(body.hours) > 24) {

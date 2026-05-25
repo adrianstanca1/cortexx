@@ -30,8 +30,19 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
     const where: { conversationId: string; createdAt?: { lt?: Date; gt?: Date } } = {
       conversationId: id,
     }
-    if (before) where.createdAt = { ...(where.createdAt || {}), lt: new Date(before) }
-    if (after) where.createdAt = { ...(where.createdAt || {}), gt: new Date(after) }
+    // Guard `new Date(x)` — Invalid Date passed to Prisma surfaces as a
+    // confusing 500 instead of a clean 400. Reject malformed cursors up
+    // front so polling clients get an actionable error.
+    if (before) {
+      const d = new Date(before)
+      if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid `before` cursor' }, { status: 400 })
+      where.createdAt = { ...(where.createdAt || {}), lt: d }
+    }
+    if (after) {
+      const d = new Date(after)
+      if (isNaN(d.getTime())) return NextResponse.json({ error: 'Invalid `after` cursor' }, { status: 400 })
+      where.createdAt = { ...(where.createdAt || {}), gt: d }
+    }
 
     const items = await prisma.chatMessage.findMany({
       where,
