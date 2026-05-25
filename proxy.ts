@@ -152,6 +152,20 @@ export default auth(req => {
   requestHeaders.set('x-nonce', nonce)
   const nextOpts = { request: { headers: requestHeaders } }
 
+  // Signed-out visitors landing on / get the full standalone designer
+  // PWA bundle (the version built in the Claude Design canvas) instead
+  // of the thin server-rendered marketing page. Rewrite (not redirect)
+  // so the URL stays clean as `cortexbuildpro.com/`. Authenticated
+  // users fall through to app/page.tsx, which bounces to /dashboard.
+  if (pathname === '/' && !req.auth) {
+    const rewriteUrl = new URL('/legacy/Cortexx-standalone.html', req.url)
+    return withSecurityHeaders(
+      NextResponse.rewrite(rewriteUrl, nextOpts),
+      nonce,
+      '/legacy/Cortexx-standalone.html',
+    )
+  }
+
   if (isPublic(pathname)) {
     return withSecurityHeaders(NextResponse.next(nextOpts), nonce, pathname)
   }
