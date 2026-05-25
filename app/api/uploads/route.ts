@@ -1,16 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { writeFile } from 'fs/promises'
 
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import {
-  ensureUploadDir,
   extensionFor,
   generateStoredName,
   isAllowedMime,
   MAX_UPLOAD_BYTES,
-  safeJoinUpload,
-} from '@/lib/uploads'
+  putObject,
+  safeKey,
+  storageBackend,
+} from '@/lib/storage'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -47,25 +47,28 @@ export async function POST(req: NextRequest) {
   }
 
   const stored = generateStoredName(ext)
-  const fullPath = safeJoinUpload(stored)
-  if (!fullPath) {
+  if (!safeKey(stored)) {
     return NextResponse.json({ error: 'Internal storage error' }, { status: 500 })
   }
 
   try {
-    await ensureUploadDir()
     const buffer = Buffer.from(await file.arrayBuffer())
-    await writeFile(fullPath, buffer)
+    await putObject(stored, buffer, file.type)
   } catch (err) {
     console.error('upload write failed', err)
     return NextResponse.json({ error: 'Failed to persist upload' }, { status: 500 })
   }
 
+  // The /api/uploads/<name> read route handles BOTH backends — for S3 it
+  // returns a 302 to a presigned URL; for local-disk it streams from disk.
+  // Stored documents reference the in-app URL so toggling between
+  // backends doesn't need a Document.url rewrite.
   return NextResponse.json({
     url: `/api/uploads/${stored}`,
     name: stored,
     size: file.size,
     mimeType: file.type,
     originalName: file.name || null,
+    backend: storageBackend(),
   }, { status: 201 })
 }
