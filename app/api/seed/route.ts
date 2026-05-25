@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
+import { bypassTenancy } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +15,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
+  // Seed operates across the whole DB; bypass org scoping.
+  return bypassTenancy(() => runSeed())
+}
+
+async function runSeed(): Promise<NextResponse> {
   try {
     // Clean up
     await prisma.activity.deleteMany()

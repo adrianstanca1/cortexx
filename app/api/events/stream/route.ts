@@ -1,6 +1,8 @@
 import { NextRequest } from 'next/server'
+import { cookies } from 'next/headers'
 import { prisma } from '@/lib/db'
-import { auth } from '@/lib/auth'
+import { auth, type SessionOrgMembership } from '@/lib/auth'
+import { setOrgContext } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -9,6 +11,8 @@ export const runtime = 'nodejs'
 // clients = 1200 queries/min on top of regular API traffic.
 const MAX_CONCURRENT = 100
 let active = 0
+
+const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
 export async function GET(req: NextRequest) {
   const session = await auth()
@@ -19,6 +23,23 @@ export async function GET(req: NextRequest) {
     return new Response('Too many concurrent streams; try again shortly', { status: 503 })
   }
   active++
+
+  // Thread the active org into the AsyncLocalStorage so the Activity
+  // poll below auto-scopes to the user's workspace.
+  const orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  if (orgs.length > 0) {
+    const userId = (session.user as { id?: string }).id || null
+    let activeOrg = orgs[0]
+    try {
+      const store = await cookies()
+      const cookieValue = store.get(ACTIVE_ORG_COOKIE)?.value
+      if (cookieValue) {
+        const match = orgs.find(o => o.id === cookieValue)
+        if (match) activeOrg = match
+      }
+    } catch { /* fine — Next still calling this server-side without a request store */ }
+    setOrgContext({ organizationId: activeOrg.id, userId, role: activeOrg.role })
+  }
 
   const encoder = new TextEncoder()
   let cursor = new Date()

@@ -14,12 +14,38 @@ const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
  *   const session = await requireAuth()
  *   if (session instanceof NextResponse) return session
  *   // session.user.id, session.user.name, etc.
+ *
+ * SIDE EFFECT (intentional, transparent to callers): when the user has
+ * an active organization, threads it into the AsyncLocalStorage that
+ * powers the Prisma tenancy extension. Every Prisma query for an owned
+ * model in the rest of this request will auto-filter by organizationId
+ * without the route handler doing anything explicit. This is what lets
+ * the 120+ existing routes opt in to multi-tenancy without a codemod.
  */
 export async function requireAuth() {
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
+
+  // Resolve the active org from session.user.organizations (cached on the
+  // JWT in lib/auth) and the active-org cookie. Falls through silently
+  // when the user has no org yet (e.g. signed up but pre-onboarding).
+  const orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  if (orgs.length > 0) {
+    const userId = (session.user as { id?: string }).id || null
+    let active = orgs[0]
+    try {
+      const store = await cookies()
+      const cookieValue = store.get(ACTIVE_ORG_COOKIE)?.value
+      if (cookieValue) {
+        const match = orgs.find(o => o.id === cookieValue)
+        if (match) active = match
+      }
+    } catch { /* not in a request context */ }
+    setOrgContext({ organizationId: active.id, userId, role: active.role })
+  }
+
   return session
 }
 
