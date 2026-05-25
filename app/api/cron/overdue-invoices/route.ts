@@ -76,60 +76,81 @@ async function runOverdueScan() {
 
   const appUrl = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'
   let totalEmails = 0
+  const orgErrors: Array<{ orgId: string; error: string }> = []
 
-  await Promise.all(
-    Array.from(byOrg.entries()).map(async ([orgId, { orgName, rows }]) => {
-      const total = rows.reduce((s, r) => s + r.amount, 0)
+  // Process orgs in concurrency-capped batches with allSettled. Two
+  // reasons:
+  //   1. Unbounded Promise.all over hundreds of orgs would open
+  //      hundreds of email/push connections at once and exhaust the
+  //      worker's file descriptors / hit provider rate limits.
+  //   2. Plain Promise.all rejects on the first failure, abandoning
+  //      every org after it in iteration order — one mis-configured
+  //      tenant could silently mute notifications for everyone else.
+  const CONCURRENCY = 5
+  const processOrg = async ([orgId, { orgName, rows }]: [string, { orgName: string; rows: InvoiceRow[] }]) => {
+    const total = rows.reduce((s, r) => s + r.amount, 0)
 
-      // Push to every subscription tied to a user in this org (sendPush
-      // already honours the invoicesPush preference per user).
-      const orgUsers = await prisma.userOrganization.findMany({
-        where: { organizationId: orgId },
-        select: { userId: true },
-      })
-      await Promise.all(
-        orgUsers.map(({ userId }) =>
-          sendPush({
-            userId,
-            category: 'invoices',
-            payload: {
-              title: `📒 ${rows.length} overdue invoice${rows.length === 1 ? '' : 's'}`,
-              body: `£${total.toLocaleString('en-GB', { maximumFractionDigits: 0 })} outstanding · ${orgName}`,
-              url: '/invoices',
-              tag: `overdue-daily-${orgId}`,
-            },
-          }).catch(() => {}),
-        ),
-      )
+    // Push to every subscription tied to a user in this org (sendPush
+    // already honours the invoicesPush preference per user).
+    const orgUsers = await prisma.userOrganization.findMany({
+      where: { organizationId: orgId },
+      select: { userId: true },
+    })
+    await Promise.all(
+      orgUsers.map(({ userId }) =>
+        sendPush({
+          userId,
+          category: 'invoices',
+          payload: {
+            title: `📒 ${rows.length} overdue invoice${rows.length === 1 ? '' : 's'}`,
+            body: `£${total.toLocaleString('en-GB', { maximumFractionDigits: 0 })} outstanding · ${orgName}`,
+            url: '/invoices',
+            tag: `overdue-daily-${orgId}`,
+          },
+        }).catch(() => {}),
+      ),
+    )
 
-      // Email digest — only to users who (a) belong to this org AND
-      // (b) have invoicesEmail enabled.
-      const eligibleUserIds = orgUsers.map(u => u.userId)
-      const eligible = await prisma.notificationPreference.findMany({
-        where: { invoicesEmail: true, userId: { in: eligibleUserIds } },
-        include: { user: { select: { email: true, name: true } } },
-      })
+    // Email digest — only to users who (a) belong to this org AND
+    // (b) have invoicesEmail enabled.
+    const eligibleUserIds = orgUsers.map(u => u.userId)
+    const eligible = await prisma.notificationPreference.findMany({
+      where: { invoicesEmail: true, userId: { in: eligibleUserIds } },
+      include: { user: { select: { email: true, name: true } } },
+    })
 
-      await Promise.all(
-        eligible.map(async pref => {
-          if (!pref.user.email) return
-          const tmpl = overdueDigestTemplate({
-            recipientName: pref.user.name || pref.user.email.split('@')[0],
-            organizationName: orgName,
-            invoices: rows,
-            appUrl,
-          })
-          const res = await sendEmail({ to: pref.user.email, subject: tmpl.subject, html: tmpl.html, text: tmpl.text })
-          if (res.delivered > 0) totalEmails++
-        }),
-      )
-    }),
-  )
+    await Promise.allSettled(
+      eligible.map(async pref => {
+        if (!pref.user.email) return
+        const tmpl = overdueDigestTemplate({
+          recipientName: pref.user.name || pref.user.email.split('@')[0],
+          organizationName: orgName,
+          invoices: rows,
+          appUrl,
+        })
+        const res = await sendEmail({ to: pref.user.email, subject: tmpl.subject, html: tmpl.html, text: tmpl.text })
+        if (res.delivered > 0) totalEmails++
+      }),
+    )
+  }
+
+  const entries = Array.from(byOrg.entries())
+  for (let i = 0; i < entries.length; i += CONCURRENCY) {
+    const slice = entries.slice(i, i + CONCURRENCY)
+    const settled = await Promise.allSettled(slice.map(entry => processOrg(entry)))
+    settled.forEach((res, idx) => {
+      if (res.status === 'rejected') {
+        orgErrors.push({ orgId: slice[idx][0], error: String(res.reason).slice(0, 280) })
+      }
+    })
+  }
 
   return NextResponse.json({
     overdueCount: overdueByOrg.length,
     promoted: promoted.count,
-    orgsNotified: byOrg.size,
+    orgsNotified: byOrg.size - orgErrors.length,
+    orgsFailed: orgErrors.length,
+    errors: orgErrors,
     emailsSent: totalEmails,
   })
 }

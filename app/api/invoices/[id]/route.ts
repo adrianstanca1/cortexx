@@ -40,7 +40,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   if (limited) return limited
   try {
     const body = await req.json()
-    if (body.amount !== undefined && (isNaN(Number(body.amount)) || Number(body.amount) <= 0)) {
+    if (body.amount !== undefined && (!Number.isFinite(Number(body.amount)) || Number(body.amount) <= 0)) {
       return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 })
     }
     // Wrap update + project-spent recalc in a single transaction so two

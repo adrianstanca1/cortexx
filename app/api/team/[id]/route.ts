@@ -34,7 +34,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   if (limited) return limited
   try {
     const body = await req.json()
-    if (body.dailyRate !== undefined && (isNaN(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
+    if (body.dailyRate !== undefined && (!Number.isFinite(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
       return NextResponse.json({ error: 'Daily rate must be a non-negative number' }, { status: 400 })
     }
     if (body.name !== undefined && !body.name?.trim()) {

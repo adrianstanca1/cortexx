@@ -33,23 +33,29 @@ export async function POST(req: NextRequest) {
     if (!body.projectId || !body.memberId) {
       return NextResponse.json({ error: 'projectId and memberId required' }, { status: 400 })
     }
-    const existing = await prisma.assignment.findUnique({
-      where: { projectId_memberId: { projectId: body.projectId, memberId: body.memberId } },
-    })
-    if (existing) {
-      return NextResponse.json({ error: 'Already assigned' }, { status: 409 })
-    }
     const role = body.role ? String(body.role).trim().slice(0, 50) : null
-    const assignment = await prisma.assignment.create({
-      data: {
-        projectId: body.projectId,
-        memberId: body.memberId,
-        role: role || null,
-        onSite: body.onSite ?? false,
-      },
-      include: { member: true, project: true },
-    })
-    return NextResponse.json(assignment, { status: 201 })
+    // Skip findUnique-then-create and let the @@unique constraint do
+    // the duplicate-check atomically. The prior pattern had a TOCTOU
+    // race: two concurrent POSTs both passed the existence check, the
+    // second create() threw P2002 caught as a generic 500.
+    try {
+      const assignment = await prisma.assignment.create({
+        data: {
+          projectId: body.projectId,
+          memberId: body.memberId,
+          role: role || null,
+          onSite: body.onSite ?? false,
+        },
+        include: { member: true, project: true },
+      })
+      return NextResponse.json(assignment, { status: 201 })
+    } catch (err) {
+      const code = (err as { code?: string })?.code
+      if (code === 'P2002') {
+        return NextResponse.json({ error: 'Already assigned' }, { status: 409 })
+      }
+      throw err
+    }
   } catch (error) {
     console.error(error)
     return NextResponse.json({ error: 'Failed to create assignment' }, { status: 500 })

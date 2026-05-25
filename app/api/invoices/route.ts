@@ -50,7 +50,7 @@ export async function POST(req: NextRequest) {
     if (!body.clientName?.trim()) {
       return NextResponse.json({ error: 'Client name is required' }, { status: 400 })
     }
-    if (body.amount === undefined || body.amount === null || isNaN(Number(body.amount)) || Number(body.amount) <= 0) {
+    if (body.amount === undefined || body.amount === null || !Number.isFinite(Number(body.amount)) || Number(body.amount) <= 0) {
       return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 })
     }
     if (!body.dueDate) {

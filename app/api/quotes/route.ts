@@ -22,9 +22,15 @@ function recalc(lineItems: LineItem[], vatRate: number) {
   return { subtotal, vatAmount, total: subtotal + vatAmount }
 }
 
+// Cap the number of line items we accept on a single quote. A
+// 100k-item body would otherwise OOM the worker on JSON parse +
+// Prisma serialisation. 500 is far above any plausible legit quote.
+const MAX_QUOTE_LINE_ITEMS = 500
+
 function validateLineItems(raw: unknown): LineItem[] {
   if (!Array.isArray(raw)) return []
   return raw
+    .slice(0, MAX_QUOTE_LINE_ITEMS)
     .map(it => {
       if (!it || typeof it !== 'object') return null
       const o = it as Record<string, unknown>
@@ -32,7 +38,7 @@ function validateLineItems(raw: unknown): LineItem[] {
       if (!description) return null
       const quantity = Number(o.quantity)
       const unitPrice = Number(o.unitPrice)
-      if (isNaN(quantity) || isNaN(unitPrice)) return null
+      if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice)) return null
       const total = Number.isFinite(quantity * unitPrice) ? quantity * unitPrice : 0
       return {
         description,
