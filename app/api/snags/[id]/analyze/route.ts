@@ -1,11 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
+import { downloadToTemp } from '@/lib/storage'
 
 export const dynamic = 'force-dynamic'
 
@@ -109,22 +108,30 @@ export async function POST(_req: NextRequest, { params: paramsP }: { params: Pro
     return NextResponse.json({ error: 'Invalid photo URL', code: 'INVALID_PHOTO' }, { status: 400 })
   }
 
-  const uploadDir = process.env.UPLOAD_DIR || './uploads'
+  // Resolve via storage adapter so this works against both local-disk
+  // and S3 backends. Caller cleans up the temp file in finally.
   const filename = snag.photoUrl.replace(/^\/api\/uploads\//, '')
-  const photoPath = join(uploadDir, filename)
-  if (!existsSync(photoPath)) {
+  const dl = await downloadToTemp(filename)
+  if (!dl) {
     return NextResponse.json({ error: 'Photo file not found on server', code: 'PHOTO_MISSING' }, { status: 404 })
   }
 
   let imageBase64: string
   try {
-    const bytes = await readFile(photoPath)
+    const bytes = await readFile(dl.path)
     if (bytes.length > 8 * 1024 * 1024) {
+      await dl.cleanup()
       return NextResponse.json({ error: 'Photo too large for analysis (max 8 MB)', code: 'PHOTO_TOO_LARGE' }, { status: 413 })
     }
     imageBase64 = bytes.toString('base64')
   } catch (err) {
+    await dl.cleanup()
     return NextResponse.json({ error: err instanceof Error ? err.message : 'Failed to read photo', code: 'PHOTO_READ_FAILED' }, { status: 500 })
+  } finally {
+    // Best-effort cleanup of the temp file once we've read the bytes.
+    // (For local-disk backend this is a no-op since the path lives in
+    // the shared upload dir.)
+    dl.cleanup().catch(() => {})
   }
 
   const system = [

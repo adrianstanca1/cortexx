@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { downloadToTemp } from '@/lib/storage'
 import { existsSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -128,18 +129,19 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Invalid upload URL — must be /api/uploads/<filename>' }, { status: 400 })
   }
 
-  // Audio bytes live on the filesystem. Resolve directly via UPLOAD_DIR to
-  // avoid a self-fetch loop through the app.
-  const uploadDir = process.env.UPLOAD_DIR || './uploads'
+  // Resolve the audio bytes via the storage adapter — works for either
+  // local-disk or S3 backend. Caller is responsible for cleanup.
   const filename = url.replace(/^\/api\/uploads\//, '')
-  const sourcePath = join(uploadDir, filename)
-  if (!existsSync(sourcePath)) {
+  const dl = await downloadToTemp(filename)
+  if (!dl) {
     return NextResponse.json({ error: 'Audio file not found' }, { status: 404 })
   }
+  const sourcePath = dl.path
 
   // Cheap size check before doing anything heavy.
   const fileStat = await stat(sourcePath)
   if (fileStat.size > MAX_AUDIO_BYTES) {
+    await dl.cleanup()
     return NextResponse.json({ error: `Audio too large (${Math.round(fileStat.size / 1024 / 1024)} MB, max 25 MB)` }, { status: 413 })
   }
 
@@ -167,5 +169,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: msg, code: 'TRANSCRIBE_FAILED' }, { status: 502 })
   } finally {
     rmSync(work, { recursive: true, force: true })
+    await dl.cleanup()
   }
 }
