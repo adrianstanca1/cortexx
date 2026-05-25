@@ -155,6 +155,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/personas',      label: 'Personas',      Icon: IcTeam,    color: '#ec4899' },
       { href: '/developer-api', label: 'Developer API', Icon: IcSpark,   color: '#8ea8c5' },
       { href: '/infrastructure', label: 'Infrastructure', Icon: IcWrench, color: '#52749a' },
+      { href: '/status',        label: 'Status',        Icon: IcCheck,   color: '#10b981' },
       { href: '/roles',         label: 'Roles',         Icon: IcTeam,    color: '#06b6d4' },
     ],
   },
