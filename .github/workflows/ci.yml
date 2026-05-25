@@ -52,3 +52,39 @@ jobs:
           node-version: '20'
       - name: Security audit (high+)
         run: npm audit --audit-level=high --production || echo "::warning::Audit found high-severity issues"
+
+  integration-tests:
+    # Cross-org isolation tests against a real Postgres. The keystone
+    # safety check before MULTITENANT_ENFORCED=true can flip in
+    # production — without this green, every owned-model query is on
+    # the trust system.
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: cortexx_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      TEST_DATABASE_URL: postgresql://postgres:test@localhost:5432/cortexx_test
+      DATABASE_URL: postgresql://postgres:test@localhost:5432/cortexx_test
+      MULTITENANT_ENFORCED: 'true'
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Apply migrations to test DB
+        run: npx prisma migrate deploy
+      - name: Run integration suite
+        run: npm run test:integration

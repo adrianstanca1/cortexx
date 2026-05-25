@@ -28,9 +28,17 @@ interface OrgRequestContext {
 
 const storage = new AsyncLocalStorage<OrgRequestContext>()
 
-/** Set up the org context for the duration of `fn`. Returns whatever fn returns. */
-export function runWithOrg<T>(ctx: OrgRequestContext, fn: () => Promise<T> | T): Promise<T> | T {
-  return storage.run(ctx, fn)
+/** Set up the org context for the duration of `fn`. Returns whatever fn returns.
+ *
+ *  IMPORTANT: the inner await happens INSIDE the storage.run scope so
+ *  async work (e.g. `() => prisma.project.findMany()`) sees the context
+ *  when the Prisma extension fires. Without this wrapper, the PrismaPromise
+ *  is returned synchronously, storage.run exits, and the lazy query lookup
+ *  loses the context. Discovered while writing the cross-org integration
+ *  suite — caused every subtest to throw "called without org context".
+ */
+export function runWithOrg<T>(ctx: OrgRequestContext, fn: () => Promise<T> | T): Promise<T> {
+  return storage.run(ctx, async () => await fn())
 }
 
 /**
@@ -79,8 +87,13 @@ const OWNED_MODELS = new Set<string>([
  * webhook receiver). They opt out of fail-closed scoping for the
  * current async scope. Use sparingly.
  */
-export function bypassTenancy<T>(fn: () => Promise<T> | T): Promise<T> | T {
-  return storage.run({ organizationId: null, userId: null, role: null, bypass: true }, fn)
+export function bypassTenancy<T>(fn: () => Promise<T> | T): Promise<T> {
+  // Same await-inside-the-scope trick as runWithOrg — keeps the bypass
+  // context active while a PrismaPromise inside fn resolves.
+  return storage.run(
+    { organizationId: null, userId: null, role: null, bypass: true },
+    async () => await fn(),
+  )
 }
 
 export const tenancyExtension = Prisma.defineExtension({
