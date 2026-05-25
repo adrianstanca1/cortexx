@@ -16,13 +16,24 @@ function generateToken(len = 16): string {
 }
 
 // POST = create a share token if missing, or rotate the existing one
-export async function POST(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
     const existing = await prisma.project.findUnique({ where: { id: params.id }, select: { id: true, name: true } })
     if (!existing) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+
+    // Optional expiry on rotation: caller can pass { expiresInDays: 7 } or
+    // { expiresAt: ISO } to time-box the link. Default null = never expires.
+    const body = await req.json().catch(() => ({}))
+    let expiresAt: Date | null = null
+    if (typeof body.expiresInDays === 'number' && body.expiresInDays > 0) {
+      expiresAt = new Date(Date.now() + Math.min(body.expiresInDays, 365) * 86400000)
+    } else if (typeof body.expiresAt === 'string' && body.expiresAt) {
+      const d = new Date(body.expiresAt)
+      if (!isNaN(d.getTime()) && d.getTime() > Date.now()) expiresAt = d
+    }
 
     // Generate + retry on the unlikely collision
     let token = generateToken()
@@ -34,8 +45,8 @@ export async function POST(_req: NextRequest, { params: paramsP }: { params: Pro
 
     const project = await prisma.project.update({
       where: { id: params.id },
-      data: { shareToken: token },
-      select: { id: true, name: true, shareToken: true },
+      data: { shareToken: token, shareTokenExpiresAt: expiresAt },
+      select: { id: true, name: true, shareToken: true, shareTokenExpiresAt: true },
     })
 
     prisma.activity.create({
@@ -43,7 +54,7 @@ export async function POST(_req: NextRequest, { params: paramsP }: { params: Pro
         projectId: params.id,
         actorName: actorName(auth),
         actorType: 'human',
-        action: `rotated client-view link`,
+        action: expiresAt ? `rotated client-view link (expires ${expiresAt.toISOString().slice(0, 10)})` : 'rotated client-view link',
         iconType: 'check',
       },
     }).catch(() => {})
@@ -62,7 +73,7 @@ export async function DELETE(_req: NextRequest, { params: paramsP }: { params: P
   try {
     const project = await prisma.project.update({
       where: { id: params.id },
-      data: { shareToken: null },
+      data: { shareToken: null, shareTokenExpiresAt: null },
       select: { id: true, shareToken: true },
     })
     prisma.activity.create({
