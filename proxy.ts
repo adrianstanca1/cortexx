@@ -1,6 +1,47 @@
 import { NextResponse } from 'next/server'
 import { auth } from '@/lib/auth'
 
+// Per-request CSP nonce. Generated in the edge runtime via Web Crypto so it
+// works in middleware (Node `crypto` isn't available). The nonce flows two
+// ways: (1) into the `x-nonce` request header so server components — and
+// Next's own hydration script injector — can read it via `headers()`;
+// (2) into the `script-src 'nonce-…' 'strict-dynamic'` response header so
+// the browser only executes inline scripts that carry the matching nonce.
+function generateNonce(): string {
+  const bytes = new Uint8Array(16)
+  crypto.getRandomValues(bytes)
+  let bin = ''
+  for (let i = 0; i < bytes.length; i++) bin += String.fromCharCode(bytes[i])
+  return btoa(bin)
+}
+
+function buildCsp(nonce: string): string {
+  return [
+    "default-src 'self'",
+    // 'strict-dynamic' delegates trust to nonced scripts and their dynamic
+    // imports, neutralising any future inline-script injection that doesn't
+    // carry the nonce. 'unsafe-inline' is kept as a fallback for browsers
+    // that ignore nonces (none current — but CSP spec says nonced sources
+    // override 'unsafe-inline' on compliant UAs).
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline'`,
+    // React inlines styles during SSR; replacing with hashes is a separate
+    // project. style-src stays permissive for now.
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join('; ')
+}
+
+function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
+  response.headers.set('Content-Security-Policy', buildCsp(nonce))
+  return response
+}
+
 // Paths that never require auth (in addition to /_next, /api/auth, static assets)
 const PUBLIC_PATHS = new Set<string>([
   '/',                  // root — page handler decides marketing-vs-dashboard by auth
@@ -63,7 +104,18 @@ function isNoOrgAllowed(pathname: string): boolean {
 // JWT manually via getToken().
 export default auth(req => {
   const { pathname } = req.nextUrl
-  if (isPublic(pathname)) return NextResponse.next()
+  const nonce = generateNonce()
+
+  // Propagate the nonce to downstream server components so Next's hydration
+  // scripts (and anything reading `headers()` in a layout) can mark inline
+  // scripts with the matching nonce attribute.
+  const requestHeaders = new Headers(req.headers)
+  requestHeaders.set('x-nonce', nonce)
+  const nextOpts = { request: { headers: requestHeaders } }
+
+  if (isPublic(pathname)) {
+    return withSecurityHeaders(NextResponse.next(nextOpts), nonce)
+  }
 
   if (!req.auth) {
     if (pathname.startsWith('/api/')) {
@@ -89,7 +141,7 @@ export default auth(req => {
     return NextResponse.redirect(url)
   }
 
-  return NextResponse.next()
+  return withSecurityHeaders(NextResponse.next(nextOpts), nonce)
 })
 
 export const config = {
