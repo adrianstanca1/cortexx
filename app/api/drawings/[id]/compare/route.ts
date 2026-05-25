@@ -7,6 +7,8 @@ import { requireAuth, actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 
 export const dynamic = 'force-dynamic'
+// Node-only: vision-model invocation + node:fs/promises + storage adapter.
+export const runtime = 'nodejs'
 
 const VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'moondream'
 const COMPARE_TIMEOUT_MS = 180_000
