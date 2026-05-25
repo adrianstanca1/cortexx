@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
     ])
     return NextResponse.json({ snags, total, openCount, hasMore: skip + snags.length < total })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch snags' }, { status: 500 })
   }
 }
@@ -97,7 +98,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(snag, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create snag' }, { status: 500 })
   }
 }

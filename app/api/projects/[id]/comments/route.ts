@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,7 +24,7 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
     })
     return NextResponse.json({ comments })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch comments' }, { status: 500 })
   }
 }

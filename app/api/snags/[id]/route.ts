@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -83,7 +84,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
     return NextResponse.json(snag)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update snag' }, { status: 500 })
   }
 }
@@ -113,7 +114,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete snag' }, { status: 500 })
   }
 }

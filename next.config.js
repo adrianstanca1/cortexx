@@ -47,6 +47,18 @@ const nextConfig = {
         source: '/_next/static/:path*',
         headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
       },
+      // Default no-store for the API surface. /api/* responses carry
+      // tenant-scoped data (members, customers, invoices) that must
+      // never be cached by a CDN / Cloudflare / reverse proxy. Routes
+      // that want to be cached can override with their own Cache-Control
+      // (e.g. /api/billing/plans is org-agnostic and could allow short
+      // TTL, but no_store is the safe default).
+      {
+        source: '/api/:path*',
+        headers: [
+          { key: 'Cache-Control', value: 'private, no-store, max-age=0' },
+        ],
+      },
       // Security headers that don't vary per request. CSP is set on a
       // per-request basis in proxy.ts so it can include a fresh nonce that
       // gates inline-script execution via `'nonce-…' 'strict-dynamic'`.

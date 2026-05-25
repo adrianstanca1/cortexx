@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,7 +42,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     const customer = await prisma.customer.update({ where: { id: params.id }, data })
     return NextResponse.json(customer)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update customer' }, { status: 500 })
   }
 }
@@ -60,7 +61,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete customer' }, { status: 500 })
   }
 }

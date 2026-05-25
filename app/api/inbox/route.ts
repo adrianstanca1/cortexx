@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -104,7 +105,7 @@ export async function GET() {
         expiringPermits.length + expiringRams.length + expiringCerts.length,
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to load inbox' }, { status: 500 })
   }
 }

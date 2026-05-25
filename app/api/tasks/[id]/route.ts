@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
     return NextResponse.json(task)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch task' }, { status: 500 })
   }
 }
@@ -67,7 +68,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
     return NextResponse.json(task)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update task' }, { status: 500 })
   }
 }
@@ -97,7 +98,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete task' }, { status: 500 })
   }
 }

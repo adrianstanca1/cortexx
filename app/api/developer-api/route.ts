@@ -5,6 +5,7 @@ import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { canManage } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +40,7 @@ export async function GET(req: NextRequest) {
     const total = await prisma.apiKey.count()
     return NextResponse.json({ items, total, hasMore: skip + items.length < total })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch' }, { status: 500 })
   }
 }
@@ -78,7 +79,7 @@ export async function POST(req: NextRequest) {
     // Subsequent GETs never expose it again (only the prefix).
     return NextResponse.json({ item, secret }, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create' }, { status: 500 })
   }
 }

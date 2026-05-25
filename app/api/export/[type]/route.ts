@@ -1,6 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -169,7 +170,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
       },
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return Response.json({ error: 'Export failed' }, { status: 500 })
   }
 }

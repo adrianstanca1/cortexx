@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +45,7 @@ export async function GET(req: NextRequest) {
       disciplines: disciplines.map(d => d.discipline).filter(Boolean).sort(),
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch drawings' }, { status: 500 })
   }
 }
@@ -110,7 +111,7 @@ export async function POST(req: NextRequest) {
     if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Drawing number already used on this project' }, { status: 409 })
     }
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create drawing' }, { status: 500 })
   }
 }

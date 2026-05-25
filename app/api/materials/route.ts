@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { getCurrentOrg } from '@/lib/tenancy'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,7 +59,7 @@ export async function GET(req: NextRequest) {
       lowStockCount,
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch materials' }, { status: 500 })
   }
 }
@@ -96,7 +97,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json(material, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create material' }, { status: 500 })
   }
 }

@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,7 +19,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     if (!invoice) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json({ invoice })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch invoice' }, { status: 500 })
   }
 }
@@ -76,7 +77,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
     return NextResponse.json(invoice)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update invoice' }, { status: 500 })
   }
 }
@@ -125,7 +126,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
 
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete invoice' }, { status: 500 })
   }
 }

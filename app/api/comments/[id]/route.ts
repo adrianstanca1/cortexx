@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { canManage } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,7 +33,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete comment' }, { status: 500 })
   }
 }
