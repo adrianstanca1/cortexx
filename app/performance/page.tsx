@@ -35,6 +35,9 @@ export default function AppraisalPage() {
     }
     const created = await res.json()
     setRows(prev => [created.item, ...prev])
+    // Open the edit modal on the new record so the user can fill in
+    // the remaining fields without having to find + click the row.
+    setSelected(created.item)
   }
 
   return (
