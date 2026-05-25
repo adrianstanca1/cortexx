@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { captureException, isSentryConfigured } from '@/lib/sentry'
 
 export const dynamic = 'force-dynamic'
 
 /**
- * Lightweight client-error sink. Logs to stdout (captured by pm2 → systemd
- * journal). Not a full APM but enough to spot patterns in production.
+ * Lightweight client-error sink. Always logs to stdout (captured by pm2 →
+ * systemd journal); also forwards to Sentry when SENTRY_DSN is set.
  *
  * Body: { message: string, stack?: string, url?: string, componentStack?: string }
  */
@@ -22,16 +23,18 @@ export async function POST(req: NextRequest) {
     const stack = String(body.stack || '').slice(0, 4000)
     const componentStack = String(body.componentStack || '').slice(0, 2000)
     const user = actorName(auth)
+    const ua = req.headers.get('user-agent')?.slice(0, 200)
 
     console.error('[client-error]', JSON.stringify({
-      user,
-      url,
-      message,
-      stack,
-      componentStack,
-      ua: req.headers.get('user-agent')?.slice(0, 200),
+      user, url, message, stack, componentStack, ua,
       at: new Date().toISOString(),
     }))
+
+    if (isSentryConfigured() && message) {
+      const err = new Error(message)
+      if (stack) err.stack = stack
+      captureException(err, { user, url, componentStack, ua, source: 'client' })
+    }
 
     return NextResponse.json({ logged: true })
   } catch {

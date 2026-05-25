@@ -18,6 +18,23 @@ const PUBLIC_API_PREFIXES = [
   '/api/cron/',      // CRON_SECRET bearer header verified inside the handlers
 ]
 
+// Paths that authenticated users WITHOUT an organization can visit. Everything
+// else gets redirected to /onboarding so they finish workspace creation
+// before any owned-model query can fail under the tenancy extension.
+const NO_ORG_ALLOWED = new Set<string>([
+  '/onboarding',
+  '/settings',
+  '/settings/notifications',
+])
+const NO_ORG_ALLOWED_API_PREFIXES = [
+  '/api/orgs',                  // create/list/switch
+  '/api/invites/',              // accept an invite
+  '/api/notifications/',        // prefs are user-scoped, not org-scoped
+  '/api/push/',                 // push subscribe is user-scoped
+  '/api/errors',                // client error reporting must always work
+  '/api/uploads',               // avatar uploads etc. that an org-less user could do
+]
+
 function isPublic(pathname: string): boolean {
   if (PUBLIC_PATHS.has(pathname)) return true
   if (PUBLIC_API_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/') || pathname.startsWith(p))) return true
@@ -30,6 +47,12 @@ function isPublic(pathname: string): boolean {
   return false
 }
 
+function isNoOrgAllowed(pathname: string): boolean {
+  if (NO_ORG_ALLOWED.has(pathname)) return true
+  if (NO_ORG_ALLOWED_API_PREFIXES.some(p => pathname.startsWith(p))) return true
+  return false
+}
+
 // Auth.js v5 — wrap the proxy with the exported `auth` callback to inject
 // `req.auth` (the session). This replaces the v4 pattern of decoding the
 // JWT manually via getToken().
@@ -37,15 +60,31 @@ export default auth(req => {
   const { pathname } = req.nextUrl
   if (isPublic(pathname)) return NextResponse.next()
 
-  if (req.auth) return NextResponse.next()
-
-  // Unauthenticated
-  if (pathname.startsWith('/api/')) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!req.auth) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const url = new URL('/login', req.url)
+    if (pathname !== '/') url.searchParams.set('callbackUrl', pathname + (req.nextUrl.search || ''))
+    return NextResponse.redirect(url)
   }
-  const url = new URL('/login', req.url)
-  if (pathname !== '/') url.searchParams.set('callbackUrl', pathname + (req.nextUrl.search || ''))
-  return NextResponse.redirect(url)
+
+  // Authenticated. Funnel users who don't yet have an organization into
+  // /onboarding before they can touch any org-scoped surface.
+  type SessionUser = { organizations?: { id: string }[] }
+  const orgs = ((req.auth.user as SessionUser | undefined)?.organizations) || []
+  if (orgs.length === 0 && !isNoOrgAllowed(pathname)) {
+    if (pathname.startsWith('/api/')) {
+      return NextResponse.json({ error: 'No active workspace', code: 'NO_ORG' }, { status: 403 })
+    }
+    const url = new URL('/onboarding', req.url)
+    if (pathname !== '/dashboard' && pathname !== '/') {
+      url.searchParams.set('callbackUrl', pathname + (req.nextUrl.search || ''))
+    }
+    return NextResponse.redirect(url)
+  }
+
+  return NextResponse.next()
 })
 
 export const config = {
