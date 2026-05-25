@@ -2,7 +2,7 @@ import { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/db'
 import { auth, type SessionOrgMembership } from '@/lib/auth'
-import { setOrgContext } from '@/lib/tenancy'
+import { setOrgContext, runWithOrg, type OrgRequestContext } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -24,9 +24,14 @@ export async function GET(req: NextRequest) {
   }
   active++
 
-  // Thread the active org into the AsyncLocalStorage so the Activity
-  // poll below auto-scopes to the user's workspace.
+  // Resolve the active org once and capture in closure. We CANNOT rely on
+  // setOrgContext() (enterWith) persisting into setInterval callbacks: by
+  // the time the timer fires, we're in a fresh async stack and the GET
+  // handler's enterWith() context is gone — Activity.findMany would throw
+  // "called without org context" once MULTITENANT_ENFORCED=true (which it
+  // is in prod). Re-establish per-tick via runWithOrg() below.
   const orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  let orgCtx: OrgRequestContext | null = null
   if (orgs.length > 0) {
     const userId = (session.user as { id?: string }).id || null
     let activeOrg = orgs[0]
@@ -38,7 +43,10 @@ export async function GET(req: NextRequest) {
         if (match) activeOrg = match
       }
     } catch { /* fine — Next still calling this server-side without a request store */ }
-    setOrgContext({ organizationId: activeOrg.id, userId, role: activeOrg.role })
+    orgCtx = { organizationId: activeOrg.id, userId, role: activeOrg.role }
+    // Also set for any synchronous work in this handler before the
+    // stream takes over (defensive — currently nothing depends on it).
+    setOrgContext(orgCtx)
   }
 
   const encoder = new TextEncoder()
@@ -69,15 +77,22 @@ export async function GET(req: NextRequest) {
 
       send('ready', { cursor: cursor.toISOString() })
 
+      const queryActivities = () => prisma.activity.findMany({
+        where: { createdAt: { gt: cursor } },
+        include: { project: true },
+        orderBy: { createdAt: 'asc' },
+        take: 50,
+      })
+
       const poll = async () => {
         if (closed) return
         try {
-          const newActivities = await prisma.activity.findMany({
-            where: { createdAt: { gt: cursor } },
-            include: { project: true },
-            orderBy: { createdAt: 'asc' },
-            take: 50,
-          })
+          // Wrap in runWithOrg so the Prisma tenancy extension sees the
+          // active organization on every tick — setInterval callbacks
+          // don't inherit the GET handler's AsyncLocalStorage context.
+          const newActivities = orgCtx
+            ? await runWithOrg(orgCtx, queryActivities)
+            : await queryActivities()
           if (newActivities.length > 0) {
             cursor = newActivities[newActivities.length - 1].createdAt
             send('activity', newActivities)
