@@ -181,10 +181,19 @@ export default function PricingPage() {
           </div>
         </div>
 
-        <div style={{ textAlign: 'center', marginTop: 48 }}>
+        <div style={{ textAlign: 'center', marginTop: 48, display: 'flex', flexDirection: 'column', gap: 12 }}>
           <Link href="/login" style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', textDecoration: 'none' }}>
             Already have an account? <span style={{ color: '#f59e0b', fontWeight: 600 }}>Sign in</span>
           </Link>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontFamily: 'var(--font-system)', fontSize: 12, color: '#52749a' }}>
+            <a href="/marketing" style={{ color: 'inherit', textDecoration: 'none' }}>About Cortexx</a>
+            <span>·</span>
+            <a href="/legacy/" style={{ color: 'inherit', textDecoration: 'none' }}>Live demo</a>
+            <span>·</span>
+            <a href="/privacy" style={{ color: 'inherit', textDecoration: 'none' }}>Privacy</a>
+            <span>·</span>
+            <a href="/terms" style={{ color: 'inherit', textDecoration: 'none' }}>Terms</a>
+          </div>
         </div>
       </div>
     </main>
