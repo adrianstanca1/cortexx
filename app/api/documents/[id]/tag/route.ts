@@ -4,7 +4,6 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
-import { enforceRateLimit } from '@/lib/rateLimit'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 
 export const dynamic = 'force-dynamic'

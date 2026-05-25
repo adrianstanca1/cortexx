@@ -2,7 +2,6 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
-import { enforceRateLimit } from '@/lib/rateLimit'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 import { downloadToTemp } from '@/lib/storage'
 
