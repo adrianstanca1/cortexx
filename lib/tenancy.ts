@@ -119,8 +119,12 @@ export const tenancyExtension = Prisma.defineExtension({
         }
 
         // Clone args at every branch — never mutate the caller's object,
-        // since it may be a shared template reused across calls.
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        // since it may be a shared template reused across calls. Prisma's
+        // generated args types are model-specific unions, so query()
+        // accepts different shapes per model; casting through `any` keeps
+        // the single $allOperations handler usable across all 39 owned
+        // models. Project's eslint config doesn't enforce no-explicit-any,
+        // so no directive needed.
         const aIn = args as any
 
         if (

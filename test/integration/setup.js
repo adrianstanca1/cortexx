@@ -26,9 +26,7 @@ function getPrismaAndTenancy() {
   // initialise their module-scoped state.
   process.env.DATABASE_URL = TEST_URL
   process.env.MULTITENANT_ENFORCED = 'true'
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const { prisma } = require('../../lib/db')
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
   const tenancy = require('../../lib/tenancy')
   return { prisma, tenancy }
 }
