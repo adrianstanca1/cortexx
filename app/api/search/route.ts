@@ -26,6 +26,8 @@ export async function GET(req: NextRequest) {
         projects: [], tasks: [], team: [], invoices: [],
         snags: [], rfis: [], documents: [], customers: [], subcontractors: [],
         tags: [], processDocs: [], reminders: [],
+        goals: [], improvements: [], kaizenCards: [], claims: [],
+        siteReviews: [], personas: [], serviceCatalogItems: [],
         total: 0,
       })
     }
@@ -35,6 +37,8 @@ export async function GET(req: NextRequest) {
       projects, tasks, team, invoices,
       snags, rfis, documents, customers, subcontractors,
       tags, processDocs, reminders,
+      goals, improvements, kaizenCards, claims,
+      siteReviews, personas, serviceCatalogItems,
     ] = await Promise.all([
       prisma.project.findMany({
         where: { OR: [
@@ -99,17 +103,56 @@ export async function GET(req: NextRequest) {
         select: { id: true, title: true, dueAt: true, done: true },
         take: 10,
       }),
+      prisma.goal.findMany({
+        where: { OR: [{ title: contains }, { owner: contains }, { target: contains }, { notes: contains }] },
+        select: { id: true, title: true, owner: true, quarter: true, status: true, progress: true },
+        take: 10,
+      }),
+      prisma.improvement.findMany({
+        where: { OR: [{ title: contains }, { description: contains }, { raisedBy: contains }] },
+        select: { id: true, title: true, status: true, impact: true, effort: true, raisedBy: true },
+        take: 10,
+      }),
+      prisma.kaizenCard.findMany({
+        where: { OR: [{ title: contains }, { problem: contains }, { solution: contains }, { owner: contains }] },
+        select: { id: true, title: true, owner: true, status: true, boardColumn: true },
+        take: 10,
+      }),
+      prisma.insuranceClaim.findMany({
+        where: { OR: [{ policy: contains }, { description: contains }] },
+        select: { id: true, policy: true, description: true, status: true, amountClaimed: true },
+        take: 10,
+      }),
+      prisma.siteReview.findMany({
+        where: { OR: [{ kind: contains }, { reviewer: contains }, { findings: contains }] },
+        select: { id: true, kind: true, reviewer: true, score: true, heldAt: true },
+        take: 10,
+      }),
+      prisma.persona.findMany({
+        where: { OR: [{ name: contains }, { role: contains }, { goals: contains }, { painPoints: contains }] },
+        select: { id: true, name: true, role: true, goals: true },
+        take: 10,
+      }),
+      prisma.serviceCatalogItem.findMany({
+        where: { OR: [{ name: contains }, { category: contains }, { description: contains }] },
+        select: { id: true, name: true, category: true, unitPrice: true, unit: true, active: true },
+        take: 10,
+      }),
     ])
 
     const total =
       projects.length + tasks.length + team.length + invoices.length +
       snags.length + rfis.length + documents.length + customers.length + subcontractors.length +
-      tags.length + processDocs.length + reminders.length
+      tags.length + processDocs.length + reminders.length +
+      goals.length + improvements.length + kaizenCards.length + claims.length +
+      siteReviews.length + personas.length + serviceCatalogItems.length
 
     return NextResponse.json({
       projects, tasks, team, invoices,
       snags, rfis, documents, customers, subcontractors,
       tags, processDocs, reminders,
+      goals, improvements, kaizenCards, claims,
+      siteReviews, personas, serviceCatalogItems,
       total,
     })
   } catch (error) {
