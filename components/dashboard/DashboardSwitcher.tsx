@@ -25,6 +25,7 @@ const Focus = dynamic(() => import('./Focus'), { ssr: false })
 const Exec = dynamic(() => import('./Exec'), { ssr: false })
 const Broadsheet = dynamic(() => import('./Broadsheet'), { ssr: false })
 const SiteNotice = dynamic(() => import('./SiteNotice'), { ssr: false })
+const FirstRunBanner = dynamic(() => import('./FirstRunBanner'), { ssr: false })
 
 const variants = [
   { id: 'v1',  label: '01', sub: 'Action-first',  Comp: ActionFirst },
@@ -211,6 +212,7 @@ export default function DashboardSwitcher() {
           <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14 }}>{error}</div>
         ) : (
           <ErrorBoundary key={active}>
+            <FirstRunBanner data={data} />
             <Comp accent={accent} data={data} />
           </ErrorBoundary>
         )}
