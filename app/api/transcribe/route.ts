@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireAuth } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { existsSync, mkdtempSync, rmSync, writeFileSync, readFileSync } from 'node:fs'
 import { stat } from 'node:fs/promises'
 import { tmpdir } from 'node:os'
@@ -106,6 +107,8 @@ async function runWhisper(wavPath: string, binPath: string): Promise<WhisperResu
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const __limited = enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (__limited) return __limited
 
   const binPath = findWhisper()
   if (!binPath) return notInstalled()

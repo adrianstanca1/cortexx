@@ -4,6 +4,7 @@ import { existsSync } from 'node:fs'
 import { join } from 'node:path'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 
 export const dynamic = 'force-dynamic'
@@ -88,6 +89,8 @@ async function loadImageBase64(doc: { url: string | null; mimeType: string | nul
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const __limited = enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (__limited) return __limited
 
   const userId = (auth.user as { id?: string } | undefined)?.id || 'anon'
   const rl = checkRateLimit(userId)
