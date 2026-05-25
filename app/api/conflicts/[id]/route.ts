@@ -28,6 +28,15 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
   const { id } = await params
   try {
     const body = await req.json().catch(() => ({}))
+    // Same FK + enum guard as the POST route.
+    if (typeof body.projectId === 'string' && body.projectId.trim()) {
+      const exists = await prisma.project.findUnique({ where: { id: body.projectId.trim() }, select: { id: true } })
+      if (!exists) {
+        return NextResponse.json({ error: 'projectId does not exist in this workspace', code: 'INVALID_FK' }, { status: 400 })
+      }
+    }
+    const ALLOWED_SEVERITY = new Set(['low', 'medium', 'high', 'critical'])
+    const ALLOWED_STATUS = new Set(['open', 'in_progress', 'resolved', 'escalated'])
     const item = await prisma.conflict.update({
       where: { id },
       data: {
@@ -35,8 +44,8 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
         ...(typeof body.description === 'string' ? { description: body.description.trim() } : {}),
         ...(typeof body.projectId === 'string' ? { projectId: body.projectId.trim() } : {}),
         ...(typeof body.parties === 'string' ? { parties: body.parties.trim() } : {}),
-        ...(typeof body.severity === 'string' ? { severity: body.severity.trim() } : {}),
-        ...(typeof body.status === 'string' ? { status: body.status.trim() } : {}),
+        ...(typeof body.severity === 'string' && ALLOWED_SEVERITY.has(body.severity.trim()) ? { severity: body.severity.trim() } : {}),
+        ...(typeof body.status === 'string' && ALLOWED_STATUS.has(body.status.trim()) ? { status: body.status.trim() } : {}),
         ...(typeof body.owner === 'string' ? { owner: body.owner.trim() } : {}),
         ...(typeof body.raisedAt === 'string' && body.raisedAt ? { raisedAt: new Date(body.raisedAt) } : {}),
         ...(typeof body.resolvedAt === 'string' && body.resolvedAt ? { resolvedAt: new Date(body.resolvedAt) } : {}),
