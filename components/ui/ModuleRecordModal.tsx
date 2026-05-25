@@ -39,7 +39,10 @@ function coerceForSubmit(initialType: 'string' | 'number' | 'boolean' | 'date', 
     return Number.isFinite(n) ? n : null
   }
   if (initialType === 'boolean') return raw === 'true'
-  if (initialType === 'date') return raw ? new Date(raw).toISOString() : null
+  // Anchor the date at local midnight so a yyyy-mm-dd input doesn't
+  // shift back/forward by one day on re-edit in non-UTC locales. The
+  // ISO output still serializes consistently for the server.
+  if (initialType === 'date') return raw ? new Date(raw + 'T00:00:00').toISOString() : null
   return raw
 }
 

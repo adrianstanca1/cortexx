@@ -80,11 +80,22 @@ export default function DashboardSwitcher() {
   const [inboxCount, setInboxCount] = useState(0)
 
   useEffect(() => {
-    fetch('/api/inbox').then(r => r.ok ? r.json() : null).then(d => { if (d) setInboxCount(d.total || 0) }).catch(() => {})
+    // 401 on /api/inbox means the session expired mid-page-life. Without
+    // a redirect the inbox badge silently shows 0 forever and the rest
+    // of the dashboard's data fetches also start failing — user thinks
+    // their workspace is empty.
+    const fetchInbox = () => {
+      fetch('/api/inbox').then(r => {
+        if (r.status === 401) {
+          window.location.assign('/login?callbackUrl=' + encodeURIComponent(window.location.pathname + window.location.search))
+          return null
+        }
+        return r.ok ? r.json() : null
+      }).then(d => { if (d) setInboxCount(d.total || 0) }).catch(() => {})
+    }
+    fetchInbox()
     const i = setInterval(() => {
-      if (document.visibilityState === 'visible') {
-        fetch('/api/inbox').then(r => r.ok ? r.json() : null).then(d => { if (d) setInboxCount(d.total || 0) }).catch(() => {})
-      }
+      if (document.visibilityState === 'visible') fetchInbox()
     }, 60000)
     return () => clearInterval(i)
   }, [])
