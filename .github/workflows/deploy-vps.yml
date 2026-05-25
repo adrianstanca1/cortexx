@@ -312,10 +312,16 @@ jobs:
             #
             # Cluster mode: -i max forks one worker per CPU core for ~Nx
             # throughput on the request loop. Workers share rate-limit
-            # state via Redis (REDIS_URL above). With -i 1 in dev or when
-            # Redis is unreachable, the limiter falls back to in-process.
+            # state via Redis (REDIS_URL above). pm2 MUST be pointed at
+            # the Node entry script (node_modules/next/dist/bin/next),
+            # NOT 'npm start' — pm2's cluster wrapper extends Node's
+            # cluster module to share the listen socket via SO_REUSEPORT,
+            # which only works when pm2 spawns the listening process
+            # directly. With `npm start` only worker #0 binds the port
+            # and 1..N error out with EADDRINUSE.
             pm2 delete cortexx 2>/dev/null || true
-            PORT=$APP_PORT pm2 start npm --name cortexx -i max -- start
+            PORT=$APP_PORT pm2 start "$APP_DIR/node_modules/next/dist/bin/next" \
+              --name cortexx -i max --cwd "$APP_DIR" -- start -p "$APP_PORT"
             pm2 save
             (pm2 startup systemd -u root --hp /root 2>&1 | grep "sudo " | bash) || true
 
