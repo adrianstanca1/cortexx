@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { downloadToTemp } from '@/lib/storage'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
@@ -101,15 +100,20 @@ async function loadRevImage(rev: { fileUrl: string | null; mimeType: string | nu
   if (!/^\/api\/uploads\/[A-Za-z0-9._-]+$/.test(rev.fileUrl)) {
     return { error: 'Invalid revision URL', code: 'INVALID_URL', status: 400 }
   }
-  const uploadDir = process.env.UPLOAD_DIR || './uploads'
+  // downloadToTemp() handles local-disk + S3 modes uniformly — the prior
+  // direct join(uploadDir, filename) silently 404'd in S3 mode.
   const filename = rev.fileUrl.replace(/^\/api\/uploads\//, '')
-  const path = join(uploadDir, filename)
-  if (!existsSync(path)) return { error: 'Revision file not found on server', code: 'FILE_MISSING', status: 404 }
-  const bytes = await readFile(path)
-  if (bytes.length > MAX_BYTES) {
-    return { error: `Revision file too large (max ${MAX_BYTES / 1024 / 1024} MB)`, code: 'FILE_TOO_LARGE', status: 413 }
+  const dl = await downloadToTemp(filename)
+  if (!dl) return { error: 'Revision file not found on server', code: 'FILE_MISSING', status: 404 }
+  try {
+    const bytes = await readFile(dl.path)
+    if (bytes.length > MAX_BYTES) {
+      return { error: `Revision file too large (max ${MAX_BYTES / 1024 / 1024} MB)`, code: 'FILE_TOO_LARGE', status: 413 }
+    }
+    return bytes.toString('base64')
+  } finally {
+    await dl.cleanup()
   }
-  return bytes.toString('base64')
 }
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {

@@ -21,6 +21,13 @@ export default function SWRegister() {
     if (!('serviceWorker' in navigator)) return
 
     let mounted = true
+    // The 30-min update-poll interval was previously cleared by a
+    // `return () => clearInterval` INSIDE the .then() callback — that
+    // return value is the promise's resolved value, NOT the useEffect
+    // cleanup. The interval was leaking across re-mounts / strict-mode
+    // double-mount. Hoist the handle out so the effect cleanup can
+    // see it.
+    let updateInterval: ReturnType<typeof setInterval> | null = null
     navigator.serviceWorker.register('/sw.js').then(reg => {
       if (!mounted) return
 
@@ -40,8 +47,7 @@ export default function SWRegister() {
       })
 
       // Check for updates every 30 min
-      const interval = setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000)
-      return () => clearInterval(interval)
+      updateInterval = setInterval(() => reg.update().catch(() => {}), 30 * 60 * 1000)
     }).catch(() => {
       /* registration failures are non-critical */
     })
@@ -57,6 +63,7 @@ export default function SWRegister() {
 
     return () => {
       mounted = false
+      if (updateInterval) clearInterval(updateInterval)
       navigator.serviceWorker.removeEventListener('controllerchange', onController)
     }
   }, [])

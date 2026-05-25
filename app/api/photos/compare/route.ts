@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { downloadToTemp } from '@/lib/storage'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
@@ -73,17 +72,23 @@ async function loadImageBase64(doc: { url: string | null; mimeType: string | nul
   if (!/^\/api\/uploads\/[A-Za-z0-9._-]+$/.test(doc.url)) {
     return { error: 'Invalid document URL', code: 'INVALID_URL', status: 400 }
   }
-  const uploadDir = process.env.UPLOAD_DIR || './uploads'
+  // Use downloadToTemp() so the route works under both local-disk and S3
+  // storage modes — direct join(uploadDir, filename) reads only worked in
+  // the local case and silently 404'd once S3_BUCKET is set.
   const filename = doc.url.replace(/^\/api\/uploads\//, '')
-  const path = join(uploadDir, filename)
-  if (!existsSync(path)) {
+  const dl = await downloadToTemp(filename)
+  if (!dl) {
     return { error: 'Image file not found on server', code: 'FILE_MISSING', status: 404 }
   }
-  const bytes = await readFile(path)
-  if (bytes.length > MAX_BYTES) {
-    return { error: `Image too large for comparison (max ${MAX_BYTES / 1024 / 1024} MB)`, code: 'IMAGE_TOO_LARGE', status: 413 }
+  try {
+    const bytes = await readFile(dl.path)
+    if (bytes.length > MAX_BYTES) {
+      return { error: `Image too large for comparison (max ${MAX_BYTES / 1024 / 1024} MB)`, code: 'IMAGE_TOO_LARGE', status: 413 }
+    }
+    return bytes.toString('base64')
+  } finally {
+    await dl.cleanup()
   }
-  return bytes.toString('base64')
 }
 
 export async function POST(req: NextRequest) {
