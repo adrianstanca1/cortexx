@@ -1170,6 +1170,7 @@ model Organization {
   projectBookmarks    ProjectBookmark[]
   actionPlans         ActionPlan[]
   conflicts           Conflict[]
+  cis300Returns       Cis300Return[]
 }
 
 model UserOrganization {
@@ -1663,6 +1664,32 @@ model Conflict {
   createdAt       DateTime      @default(now())
   updatedAt       DateTime      @updatedAt
 
+  @@index([organizationId])
+  @@index([status])
+}
+
+model Cis300Return {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // UK tax month: stored as the start date (always the 6th of a month).
+  // E.g. 2026-04-06 = April tax month (covers 6 Apr — 5 May).
+  taxMonth       DateTime
+  // Aggregated totals frozen at submission time
+  totalGross     Float         @default(0)
+  totalCis       Float         @default(0)
+  totalNet       Float         @default(0)
+  subCount       Int           @default(0)
+  // Per-sub line items captured at submit (JSON snapshot)
+  lineItems      Json          @default("[]")
+  status         String        @default("draft") // draft, submitted, accepted, rejected
+  submittedAt    DateTime?
+  hmrcReference  String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([organizationId, taxMonth])
   @@index([organizationId])
   @@index([status])
 }
