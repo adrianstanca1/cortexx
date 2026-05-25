@@ -250,7 +250,10 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
     }, 220);
   };
 
-  const DashComp = window[DASHBOARDS[dashboardId].c];
+  // Resolve once with a fallback so a stale persisted dashboardId can't crash the shell.
+  const safeDashboardId = DASHBOARDS[dashboardId] ? dashboardId : 'v1';
+  const activeDashboard = DASHBOARDS[safeDashboardId];
+  const DashComp = window[activeDashboard.c];
 
   return (
     <div style={{
@@ -314,7 +317,7 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
           boxShadow: '0 6px 18px rgba(0,0,0,0.4)',
         }}>
           <span style={{ color: accent }}>{React.cloneElement(Ic.layers, { size: 12 })}</span>
-          {dashboardId.toUpperCase()}<span style={{ color: T.t3 }}>·</span>{DASHBOARDS[dashboardId].l}
+          {safeDashboardId.toUpperCase()}<span style={{ color: T.t3 }}>·</span>{activeDashboard.l}
           {React.cloneElement(Ic.chevDown, { size: 11 })}
         </button>
       )}
