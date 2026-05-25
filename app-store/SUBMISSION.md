@@ -61,7 +61,7 @@ For each category below, declare **Data Used to Track You = NO** (Cortexx does n
 
 ## 4b · GitHub Actions CI/CD Secrets
 
-For the automated `ios-build.yml` workflow to sign and upload builds, add these secrets to the **cortexx-pwa** repo (Settings → Secrets and variables → Actions):
+For the automated `.github/workflows/release-ios.yml` workflow to sign and upload builds, add these secrets to the **cortexx** repo (Settings → Secrets and variables → Actions):
 
 | Secret name | How to get the value |
 |---|---|
@@ -74,7 +74,9 @@ For the automated `ios-build.yml` workflow to sign and upload builds, add these 
 | `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID from the same page |
 | `APP_STORE_CONNECT_KEY_BASE64` | `base64 -i AuthKey_KEYID.p8 \| pbcopy` |
 
-Once these are set, every push to `cortexbuildpro` that touches `ios/` or `Cortexx.html` will trigger a full archive + TestFlight upload automatically.
+Once these are set, the workflow runs on two triggers:
+- **Tag push** matching `v*-ios` (e.g. `git tag v1.0.0-ios && git push --tags`) — automatic TestFlight upload.
+- **workflow_dispatch** from the Actions tab — manual one-off builds with a toggle for whether to push to TestFlight or just archive the IPA artifact.
 
 ---
 
