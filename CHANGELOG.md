@@ -1,5 +1,59 @@
 # Changelog
 
+## v1.1.0-rc — 26 May 2026 (legacy-archive port — in progress)
+
+A 10-item plan landed in `ROADMAP.md` after an Explore-agent inventory
+of the 10 sub-folders under `archive/`. Each item is its own commit
+shipping a full slice (schema → migration → API → UI → apps registry).
+
+### Shipped
+
+- **CSV ledger export** (`1bd6f1d`) — Xero/QuickBooks/Sage-compatible
+  accounting CSV combining outgoing invoices (account 200) + sub-invoices
+  (account 310) with VAT rate column. Also adds `sub-invoices` as its
+  own export type.
+- **Project bookmarks** (`1bd6f1d`) — new `ProjectBookmark` Prisma model
+  (unique `[userId, projectId]`), `/api/bookmarks` GET/POST/DELETE,
+  auto-scoped per org.
+- **Activity feed live SSE** (`8fc25d7`) — `/activity` subscribes to
+  `/api/events/stream` and prepends new rows in real-time; small
+  connection dot mirrors the dashboard's.
+- **Customer portal share-link expiry** (`838b14e`) — `Project.shareTokenExpiresAt`;
+  POST accepts `{ expiresInDays }` or `{ expiresAt }` (clamped 365d);
+  expired tokens return HTTP 410 Gone so the client UI can render a
+  distinct "expired" state.
+- **Action plans module** (`52f7961`, subagent) — `ActionPlan` model
+  with owner/priority/status/dueDate/closeOutNotes/linked-to-X fields,
+  full CRUD via `ModuleRecordModal`, per-row "Mark done" quick action.
+- **Conflicts module** (`a0c430a`, subagent) — `Conflict` model
+  (cross-team site conflicts with severity / status / parties / resolution
+  notes), filter chips per status, per-row "Mark resolved" quick action,
+  critical rows get a red border.
+- **Cost forecasting on /reports** (`26534ce`) — 6-month outflow/inflow/net
+  cashflow chart (pure CSS bars, no chart library) + a 3-month-rolling-
+  average forecast bucket for next month. Outflow = SubInvoice.grossAmount
+  + PurchaseOrder.total; inflow = Invoice.amount.
+- **Notification Center** (`76ea2b7`) — `/inbox` aggregates 3 new
+  compliance categories: expiring permits (validTo < +7d), RAMS due for
+  review (reviewBy < +7d), and lapsing certifications (expiryDate < +7d).
+  Page also subscribes to SSE — debounces 1s then refetches on activity
+  events. Visibility-gated so background tabs don't refetch.
+
+### Still in flight / queued
+
+- CIS300 monthly return automation (item 8)
+- Team chat + conversation memory (item 9)
+
+### v2.0 horizon (deferred — see ROADMAP.md)
+
+- Advanced analytics BI dashboards (LARGE)
+- 8-AI-agent expansion (LARGE) — supersedes the current Vera CEO/autopilot scaffolds
+- Photo-as-mention (vision → action items)
+- Offline-map mark-up, NFC check-in, StoreKit subscription parity
+- Equipment service logs, enquiry pipelines
+
+---
+
 ## v1.0.2 — 25 May 2026 (design parity + safety)
 
 **Design-canvas alignment + a security finding remediated.** The Claude
