@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
+import Stripe from 'stripe'
 import { prisma } from '@/lib/db'
 import { getStripe, isBillingConfigured } from '@/lib/billing'
 import { auditLog } from '@/lib/audit'
+import { bypassTenancy } from '@/lib/tenancy'
 
+// Stripe sends webhook payloads as raw bytes that must be byte-identical
+// for signature verification. The Edge runtime can alter / re-encode the
+// body, so pin the handler to the Node runtime.
 export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs'
 
 const WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET
 
@@ -33,63 +39,95 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: `Invalid signature: ${err instanceof Error ? err.message : 'unknown'}` }, { status: 400 })
   }
 
+  // Webhook receiver operates outside any signed-in session — the only
+  // authoritative tenant identifier is the Stripe customer id, resolved
+  // per-event below. Bypass the tenancy extension so writes against the
+  // resolved org go through cleanly.
+  return bypassTenancy(() => handleEvent(event, stripe))
+}
+
+async function handleEvent(event: Stripe.Event, stripe: Stripe): Promise<NextResponse> {
   try {
     switch (event.type) {
       case 'checkout.session.completed': {
         const session = event.data.object
-        const orgId = session.metadata?.organizationId
+        const claimedOrgId = session.metadata?.organizationId
         const plan = session.metadata?.plan
         const subscriptionId = typeof session.subscription === 'string' ? session.subscription : null
-        // Subscription metadata can also be set at subscription creation time;
-        // we fall back to the live subscription if needed.
-        let resolvedOrgId = orgId
+        const customerId = typeof session.customer === 'string' ? session.customer : null
+
+        // SECURITY: never trust metadata.organizationId in isolation —
+        // resolve the org from the Stripe customer id, then assert the
+        // claim matches. This prevents a webhook sender from supplying a
+        // victim's organizationId and having us flip their plan.
+        if (!customerId) break
+        const ownerOrg = await prisma.organization.findFirst({
+          where: { stripeCustomerId: customerId },
+          select: { id: true },
+        })
+        if (!ownerOrg) {
+          console.warn('[stripe webhook] checkout.session.completed for unknown customer', customerId)
+          break
+        }
+        if (claimedOrgId && claimedOrgId !== ownerOrg.id) {
+          console.warn('[stripe webhook] org mismatch — claimed', claimedOrgId, 'owner', ownerOrg.id)
+          break
+        }
+
+        // Pull plan from the live subscription if not in checkout metadata.
         let resolvedPlan = plan
-        if ((!resolvedOrgId || !resolvedPlan) && subscriptionId) {
+        if (!resolvedPlan && subscriptionId) {
           const sub = await stripe.subscriptions.retrieve(subscriptionId)
-          resolvedOrgId = resolvedOrgId || sub.metadata?.organizationId
-          resolvedPlan = resolvedPlan || sub.metadata?.plan
+          resolvedPlan = sub.metadata?.organizationId === ownerOrg.id ? sub.metadata?.plan : undefined
         }
-        if (resolvedOrgId) {
-          await prisma.organization.update({
-            where: { id: resolvedOrgId },
-            data: {
-              plan: resolvedPlan || 'starter',
-              subscriptionStatus: 'active',
-              stripeSubscriptionId: subscriptionId,
-              trialEndsAt: null,
-            },
-          })
-          auditLog({
-            organizationId: resolvedOrgId,
-            action: 'billing.subscribe',
-            resourceType: 'Organization',
-            resourceId: resolvedOrgId,
-            metadata: { plan: resolvedPlan, subscriptionId },
-          })
-        }
+
+        await prisma.organization.update({
+          where: { id: ownerOrg.id },
+          data: {
+            plan: resolvedPlan || 'starter',
+            subscriptionStatus: 'active',
+            stripeSubscriptionId: subscriptionId,
+            trialEndsAt: null,
+          },
+        })
+        auditLog({
+          organizationId: ownerOrg.id,
+          action: 'billing.subscribe',
+          resourceType: 'Organization',
+          resourceId: ownerOrg.id,
+          metadata: { plan: resolvedPlan, subscriptionId },
+        })
         break
       }
       case 'customer.subscription.updated':
       case 'customer.subscription.deleted': {
         const sub = event.data.object
-        const orgId = sub.metadata?.organizationId
-        if (orgId) {
-          const isActive = sub.status === 'active' || sub.status === 'trialing'
-          await prisma.organization.update({
-            where: { id: orgId },
-            data: {
-              subscriptionStatus: sub.status,
-              ...(event.type === 'customer.subscription.deleted' ? { plan: 'trial', stripeSubscriptionId: null } : {}),
-            },
-          })
-          auditLog({
-            organizationId: orgId,
-            action: event.type === 'customer.subscription.deleted' ? 'billing.cancel' : 'billing.update',
-            resourceType: 'Organization',
-            resourceId: orgId,
-            metadata: { status: sub.status, isActive },
-          })
+        const customerId = typeof sub.customer === 'string' ? sub.customer : null
+        // SECURITY: resolve org from the customer id, NOT from metadata.
+        if (!customerId) break
+        const ownerOrg = await prisma.organization.findFirst({
+          where: { stripeCustomerId: customerId },
+          select: { id: true },
+        })
+        if (!ownerOrg) {
+          console.warn('[stripe webhook] subscription event for unknown customer', customerId)
+          break
         }
+        const isActive = sub.status === 'active' || sub.status === 'trialing'
+        await prisma.organization.update({
+          where: { id: ownerOrg.id },
+          data: {
+            subscriptionStatus: sub.status,
+            ...(event.type === 'customer.subscription.deleted' ? { plan: 'trial', stripeSubscriptionId: null } : {}),
+          },
+        })
+        auditLog({
+          organizationId: ownerOrg.id,
+          action: event.type === 'customer.subscription.deleted' ? 'billing.cancel' : 'billing.update',
+          resourceType: 'Organization',
+          resourceId: ownerOrg.id,
+          metadata: { status: sub.status, isActive },
+        })
         break
       }
       case 'invoice.payment_failed': {

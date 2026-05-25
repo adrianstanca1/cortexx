@@ -14,20 +14,29 @@ const FIELDS = [
 
 type Field = typeof FIELDS[number]
 
-/** GET — fetch the current user's notification preferences (creates the
- *  default row on first read so the UI can render checkboxes immediately). */
+/** Defaults applied when the user hasn't saved preferences yet. Mirrors
+ *  the @default values on NotificationPreference in prisma/schema.prisma. */
+const DEFAULTS = {
+  tasksPush: true, tasksEmail: false,
+  safetyPush: true, safetyEmail: true,
+  invoicesPush: true, invoicesEmail: true,
+  announcementsPush: true, announcementsEmail: false,
+  weeklyDigest: true,
+} as const
+
+/** GET — fetch the current user's notification preferences. Returns the
+ *  saved row if it exists, otherwise the defaults (without writing — a
+ *  GET must be a safe method per HTTP semantics + avoids CSRF mutation). */
 export async function GET() {
   const session = await requireAuth()
   if (session instanceof NextResponse) return session
   const userId = (session.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user id' }, { status: 401 })
 
-  const prefs = await prisma.notificationPreference.upsert({
-    where: { userId },
-    create: { userId },
-    update: {},
+  const saved = await prisma.notificationPreference.findUnique({ where: { userId } })
+  return NextResponse.json({
+    preferences: saved || { userId, ...DEFAULTS, id: null, updatedAt: null },
   })
-  return NextResponse.json({ preferences: prefs })
 }
 
 /** PUT — update preferences. Body is a partial record of the boolean

@@ -20,6 +20,10 @@ interface OrgRequestContext {
   organizationId: string | null
   userId: string | null
   role: string | null
+  /** When true, the Prisma tenancy extension skips org-scope injection.
+   *  Use only for cron, webhook receivers, and tenant-management routes
+   *  via the bypassTenancy() helper. */
+  bypass?: boolean
 }
 
 const storage = new AsyncLocalStorage<OrgRequestContext>()
@@ -69,6 +73,16 @@ const OWNED_MODELS = new Set<string>([
  * the extension, watch logs, flip the flag in a follow-up deploy once
  * routes have been verified.
  */
+/**
+ * Routes / background jobs that LEGITIMATELY operate without an org
+ * context (cron sweeps, tenant-management routes themselves, the
+ * webhook receiver). They opt out of fail-closed scoping for the
+ * current async scope. Use sparingly.
+ */
+export function bypassTenancy<T>(fn: () => Promise<T> | T): Promise<T> | T {
+  return storage.run({ organizationId: null, userId: null, role: null, bypass: true }, fn)
+}
+
 export const tenancyExtension = Prisma.defineExtension({
   name: 'org-scope',
   query: {
@@ -78,14 +92,24 @@ export const tenancyExtension = Prisma.defineExtension({
         if (!model || !OWNED_MODELS.has(model)) return query(args)
 
         const ctx = storage.getStore()
+        if (ctx?.bypass) return query(args)
+
         const orgId = ctx?.organizationId
         if (!orgId) {
-          // No org context — pass through. Background jobs, cron, and the
-          // tenant-management routes themselves end up here.
-          return query(args)
+          // Fail closed: a query against an owned model without org context
+          // is almost always a bug (forgot requireOrg) or an attack vector.
+          // Bypass legitimately via bypassTenancy() wrapper.
+          throw new Error(
+            `[tenancy] ${model}.${operation} called without org context. ` +
+              `Wrap with bypassTenancy() if this is intentional (cron / system task).`,
+          )
         }
 
-        // Read-shaped operations: add to where.
+        // Clone args at every branch — never mutate the caller's object,
+        // since it may be a shared template reused across calls.
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        const aIn = args as any
+
         if (
           operation === 'findFirst' ||
           operation === 'findFirstOrThrow' ||
@@ -98,39 +122,29 @@ export const tenancyExtension = Prisma.defineExtension({
           operation === 'updateMany' ||
           operation === 'deleteMany'
         ) {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const a = args as any
-          a.where = { ...(a.where || {}), organizationId: orgId }
-          return query(a)
+          return query({ ...aIn, where: { ...(aIn.where || {}), organizationId: orgId } })
         }
 
-        // Create / createMany: add to data
-        if (operation === 'create' || operation === 'createMany') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const a = args as any
-          if (Array.isArray(a.data)) {
-            a.data = a.data.map((d: Record<string, unknown>) => ({ ...d, organizationId: orgId }))
-          } else if (a.data) {
-            a.data = { ...a.data, organizationId: orgId }
-          }
-          return query(a)
+        if (operation === 'create') {
+          return query({ ...aIn, data: { ...(aIn.data || {}), organizationId: orgId } })
+        }
+        if (operation === 'createMany') {
+          const data = Array.isArray(aIn.data)
+            ? aIn.data.map((d: Record<string, unknown>) => ({ ...d, organizationId: orgId }))
+            : { ...(aIn.data || {}), organizationId: orgId }
+          return query({ ...aIn, data })
         }
 
-        // upsert: filter the where AND scope create/update data
         if (operation === 'upsert') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const a = args as any
-          a.where = { ...(a.where || {}), organizationId: orgId }
-          if (a.create) a.create = { ...a.create, organizationId: orgId }
-          return query(a)
+          return query({
+            ...aIn,
+            where: { ...(aIn.where || {}), organizationId: orgId },
+            create: { ...(aIn.create || {}), organizationId: orgId },
+          })
         }
 
-        // update / delete (single, by id): scope via where
         if (operation === 'update' || operation === 'delete') {
-          // eslint-disable-next-line @typescript-eslint/no-explicit-any
-          const a = args as any
-          a.where = { ...(a.where || {}), organizationId: orgId }
-          return query(a)
+          return query({ ...aIn, where: { ...(aIn.where || {}), organizationId: orgId } })
         }
 
         return query(args)

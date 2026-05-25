@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireCronAuth } from '@/lib/cron'
 import { sendPush } from '@/lib/push'
+import { bypassTenancy } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,7 +17,10 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest) {
   const denied = requireCronAuth(req)
   if (denied) return denied
+  return bypassTenancy(() => runExpiryScan())
+}
 
+async function runExpiryScan() {
   const now = new Date()
   const horizon = new Date()
   horizon.setDate(horizon.getDate() + 14)
