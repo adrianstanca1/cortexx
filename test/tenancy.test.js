@@ -24,6 +24,9 @@ const OWNED_MODELS = new Set([
   'ProcessDoc', 'SiteReview', 'Apprenticeship', 'InsuranceClaim',
   'CurrencyRate', 'Persona', 'ServiceCatalogItem', 'SubPortalSession',
   'ApiKey', 'InfraSnapshot',
+  // v1.1 additions — keep in sync with lib/tenancy.ts OWNED_MODELS
+  'ProjectBookmark', 'ActionPlan', 'Conflict', 'Cis300Return',
+  'Conversation', 'ChatMessage',
 ])
 
 const READ_OPERATIONS = new Set([
@@ -254,4 +257,68 @@ test('org-A user creating record with claimed organizationId: org-B is overridde
   })
   assert.equal(out.data.organizationId, 'org-A',
     'user cannot create records in another tenant by setting organizationId in data')
+})
+
+// ─── v1.1 module-specific tests ────────────────────────────────────
+// Confirm each v1.1 model is in OWNED_MODELS and gets auto-scoped on
+// reads + writes. These guard against schema drift — adding a new
+// model without registering it in lib/tenancy.ts would silently
+// expose cross-tenant data.
+
+test('v1.1: ProjectBookmark findMany is scoped', () => {
+  const out = transformArgs({
+    model: 'ProjectBookmark', operation: 'findMany',
+    args: { where: { userId: 'u1' } },
+    ctx: { organizationId: 'org-A', userId: 'u1' }, enforced: true,
+  })
+  assert.equal(out.where.organizationId, 'org-A')
+  assert.equal(out.where.userId, 'u1')
+})
+
+test('v1.1: ActionPlan create gets organizationId injected', () => {
+  const out = transformArgs({
+    model: 'ActionPlan', operation: 'create',
+    args: { data: { title: 'Close out punch list', owner: 'Bob' } },
+    ctx: { organizationId: 'org-A' }, enforced: true,
+  })
+  assert.equal(out.data.organizationId, 'org-A')
+  assert.equal(out.data.title, 'Close out punch list')
+})
+
+test('v1.1: Conflict cross-tenant attack via where is overridden', () => {
+  const out = transformArgs({
+    model: 'Conflict', operation: 'findMany',
+    args: { where: { organizationId: 'org-B' } },
+    ctx: { organizationId: 'org-A' }, enforced: true,
+  })
+  assert.equal(out.where.organizationId, 'org-A')
+})
+
+test('v1.1: Cis300Return cross-tenant attack via data is overridden', () => {
+  const out = transformArgs({
+    model: 'Cis300Return', operation: 'create',
+    args: { data: { taxMonth: '2026-04', organizationId: 'org-B' } },
+    ctx: { organizationId: 'org-A' }, enforced: true,
+  })
+  assert.equal(out.data.organizationId, 'org-A')
+  assert.equal(out.data.taxMonth, '2026-04')
+})
+
+test('v1.1: Conversation findUnique scoped', () => {
+  const out = transformArgs({
+    model: 'Conversation', operation: 'findUnique',
+    args: { where: { id: 'conv-1' } },
+    ctx: { organizationId: 'org-A' }, enforced: true,
+  })
+  assert.deepEqual(out.where, { id: 'conv-1', organizationId: 'org-A' })
+})
+
+test('v1.1: ChatMessage deleteMany bulk-write is scoped', () => {
+  const out = transformArgs({
+    model: 'ChatMessage', operation: 'deleteMany',
+    args: { where: { conversationId: 'c1' } },
+    ctx: { organizationId: 'org-A' }, enforced: true,
+  })
+  assert.equal(out.where.organizationId, 'org-A')
+  assert.equal(out.where.conversationId, 'c1')
 })
