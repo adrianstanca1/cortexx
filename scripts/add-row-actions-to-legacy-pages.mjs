@@ -36,6 +36,7 @@ function render({ slug, componentName, title, tagline, firstField, summary }) {
 
 import { useEffect, useState } from 'react'
 import ModuleShell from '@/components/ui/ModuleShell'
+import ModuleRecordModal from '@/components/ui/ModuleRecordModal'
 
 interface Row { id: string; createdAt: string; [k: string]: unknown }
 
@@ -43,6 +44,7 @@ export default function ${componentName}() {
   const [rows, setRows] = useState<Row[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [selected, setSelected] = useState<Row | null>(null)
 
   useEffect(() => {
     fetch('/api/${slug}')
@@ -69,13 +71,6 @@ export default function ${componentName}() {
     setRows(prev => [created.item, ...prev])
   }
 
-  const del = async (id: string) => {
-    if (!window.confirm('Delete this record? This cannot be undone.')) return
-    const res = await fetch(\`/api/${slug}/\${id}\`, { method: 'DELETE' })
-    if (!res.ok) { window.alert('Delete failed'); return }
-    setRows(prev => prev.filter(r => r.id !== id))
-  }
-
   return (
     <ModuleShell
       title="${title}"
@@ -93,18 +88,27 @@ export default function ${componentName}() {
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
           {rows.map(r => (
-            <li key={r.id} style={{ background: '#152641', borderRadius: 10, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', display: 'flex', alignItems: 'center', gap: 12 }}>
-              <div style={{ flex: 1, minWidth: 0 }}>
-                <div>{[${summary}].filter(Boolean).join(' · ') || r.id}</div>
-                <div style={{ fontSize: 11, color: '#52749a', marginTop: 4 }}>
-                  {new Date(r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-                </div>
+            <li
+              key={r.id}
+              onClick={() => setSelected(r)}
+              style={{ background: '#152641', borderRadius: 10, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', cursor: 'pointer' }}
+            >
+              <div>{[${summary}].filter(Boolean).join(' · ') || r.id}</div>
+              <div style={{ fontSize: 11, color: '#52749a', marginTop: 4 }}>
+                {new Date(r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </div>
-              <button onClick={() => del(r.id)} style={{ flexShrink: 0, fontSize: 11, color: '#ef4444', background: 'transparent', border: '0.5px solid rgba(239,68,68,0.4)', borderRadius: 6, padding: '4px 10px', cursor: 'pointer', fontFamily: 'var(--font-system)' }}>Delete</button>
             </li>
           ))}
         </ul>
       )}
+
+      <ModuleRecordModal
+        slug="${slug}"
+        record={selected}
+        onClose={() => setSelected(null)}
+        onSaved={next => setRows(prev => prev.map(r => r.id === next.id ? next : r))}
+        onDeleted={id => setRows(prev => prev.filter(r => r.id !== id))}
+      />
     </ModuleShell>
   )
 }
