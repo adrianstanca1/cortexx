@@ -77,17 +77,18 @@ jobs:
           RC: ${{ steps.ssh.outputs.exit_code }}
           RUN_ID: ${{ github.run_id }}
         run: |
-          # Find or create the sticky tracking issue
-          issue=$(gh issue list --search 'in:title "vps-exec output stream"' --state open --json number --jq '.[0].number')
-          if [ -z "$issue" ] || [ "$issue" = "null" ]; then
-            issue=$(gh issue create \
+          # Find or create the sticky tracking issue (no label — keeps
+          # the workflow agnostic to repo label setup).
+          issue=$(gh issue list --search 'in:title "vps-exec output stream"' --state open --json number --jq '.[0].number // empty')
+          if [ -z "$issue" ]; then
+            gh issue create \
               --title 'vps-exec output stream' \
-              --body $'Sticky issue collecting outputs from `.github/workflows/vps-exec.yml`. Each run appends one comment with the command, exit code, and output. Used as an API-readable channel because the sandbox running automation cannot reach `results-receiver.actions.githubusercontent.com`.' \
-              --label automation 2>/dev/null || \
-              gh issue create \
-                --title 'vps-exec output stream' \
-                --body $'Sticky issue collecting outputs from `.github/workflows/vps-exec.yml`. Each run appends one comment with the command, exit code, and output. Used as an API-readable channel because the sandbox running automation cannot reach `results-receiver.actions.githubusercontent.com`.')
-            issue=$(gh issue list --search 'in:title "vps-exec output stream"' --state open --json number --jq '.[0].number')
+              --body 'Sticky issue collecting outputs from `.github/workflows/vps-exec.yml`. Each run appends one comment with the command, exit code, and output. Used as an API-readable channel because the sandbox running automation cannot reach `results-receiver.actions.githubusercontent.com`.'
+            issue=$(gh issue list --search 'in:title "vps-exec output stream"' --state open --json number --jq '.[0].number // empty')
+          fi
+          if [ -z "$issue" ]; then
+            echo "::error::could not find or create tracking issue"
+            exit 1
           fi
 
           # Truncate to 60kB to stay well under GitHub's 64kB comment limit
