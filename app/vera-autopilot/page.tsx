@@ -9,7 +9,7 @@
  * execution backend ships in a follow-up — this page lists what will
  * be available and lets the user toggle interest.
  */
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import { IcChevL, IcZap, IcSpark } from '@/components/ui/Icons'
@@ -72,12 +72,33 @@ const CATALOGUE: Automation[] = [
   },
 ]
 
+const STORAGE_KEY = 'cortexx_vera_autopilot_enabled'
+
 export default function VeraAutopilotPage() {
   const [items, setItems] = useState<Automation[]>(CATALOGUE)
 
+  // Persist toggle state to localStorage so users don't lose their
+  // selections on refresh. When we ship POST /api/automations, swap
+  // this for that — the same toggle handler can write to both.
+  useEffect(() => {
+    try {
+      const raw = window.localStorage.getItem(STORAGE_KEY)
+      if (!raw) return
+      const enabled: Record<string, boolean> = JSON.parse(raw)
+      setItems(prev => prev.map(a => ({ ...a, enabled: !!enabled[a.id] })))
+    } catch { /* corrupted state, ignore */ }
+  }, [])
+
   const toggle = (id: string) => {
-    setItems(prev => prev.map(a => a.id === id ? { ...a, enabled: !a.enabled } : a))
-    // Backend wiring TODO: POST /api/automations { id, enabled }
+    setItems(prev => {
+      const next = prev.map(a => a.id === id ? { ...a, enabled: !a.enabled } : a)
+      try {
+        const enabled: Record<string, boolean> = {}
+        for (const a of next) if (a.enabled) enabled[a.id] = true
+        window.localStorage.setItem(STORAGE_KEY, JSON.stringify(enabled))
+      } catch { /* quota / private mode — toggle still works in-memory */ }
+      return next
+    })
   }
 
   const enabledCount = items.filter(a => a.enabled).length
