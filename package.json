@@ -20,6 +20,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
     "@prisma/client": "^5.7.0",
+    "@sentry/nextjs": "^10.53.1",
     "@types/web-push": "^3.6.4",
     "bcryptjs": "^3.0.3",
     "next": "^16.2.6",
