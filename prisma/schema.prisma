@@ -67,49 +67,50 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id              String           @id @default(cuid())
-  name            String
-  address         String
-  postcode        String
-  status          String           @default("active") // active, snagging, quoting, complete
-  progress        Int              @default(0)
-  clientName      String           @default("")
-  shareToken      String?          @unique
-  budget          Float            @default(0)
-  spent           Float            @default(0)
-  lat             Float            @default(51.5)
-  lng             Float            @default(-0.1)
-  startDate       DateTime?
-  endDate         DateTime?
-  onSiteCount     Int              @default(0)
-  archivedAt      DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  tasks           Task[]
-  assignments     Assignment[]
-  invoices        Invoice[]
-  activities      Activity[]
-  timeEntries     TimeEntry[]
-  documents       Document[]
-  comments        Comment[]
-  snags           Snag[]
-  rfis            Rfi[]
-  announcements   Announcement[]
-  observations    Observation[]
-  variations      Variation[]
-  siteCheckIns    SiteCheckIn[]
-  pos             PurchaseOrder[]
-  subInvoices     SubInvoice[]
-  drawings        Drawing[]
-  milestones      Milestone[]
-  permits         Permit[]
-  rams            Rams[]
-  tenders         Tender[]
-  inspections     Inspection[]
-  meetings        Meeting[]
-  risks           Risk[]
-  toolboxTalks    ToolboxTalk[]
-  safetyIncidents SafetyIncident[]
+  id                  String           @id @default(cuid())
+  name                String
+  address             String
+  postcode            String
+  status              String           @default("active") // active, snagging, quoting, complete
+  progress            Int              @default(0)
+  clientName          String           @default("")
+  shareToken          String?          @unique
+  shareTokenExpiresAt DateTime?
+  budget              Float            @default(0)
+  spent               Float            @default(0)
+  lat                 Float            @default(51.5)
+  lng                 Float            @default(-0.1)
+  startDate           DateTime?
+  endDate             DateTime?
+  onSiteCount         Int              @default(0)
+  archivedAt          DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  tasks               Task[]
+  assignments         Assignment[]
+  invoices            Invoice[]
+  activities          Activity[]
+  timeEntries         TimeEntry[]
+  documents           Document[]
+  comments            Comment[]
+  snags               Snag[]
+  rfis                Rfi[]
+  announcements       Announcement[]
+  observations        Observation[]
+  variations          Variation[]
+  siteCheckIns        SiteCheckIn[]
+  pos                 PurchaseOrder[]
+  subInvoices         SubInvoice[]
+  drawings            Drawing[]
+  milestones          Milestone[]
+  permits             Permit[]
+  rams                Rams[]
+  tenders             Tender[]
+  inspections         Inspection[]
+  meetings            Meeting[]
+  risks               Risk[]
+  toolboxTalks        ToolboxTalk[]
+  safetyIncidents     SafetyIncident[]
 
   organizationId String?
   organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
