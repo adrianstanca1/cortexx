@@ -5,12 +5,17 @@ import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import { IcChevL } from '@/components/ui/Icons'
 
+interface MonthBucket { ym: string; label: string; outflow: number; inflow: number; net: number }
 interface Report {
   finance: { totalBudget: number; totalSpent: number; marginPct: number; totalInvoiced: number; paid: number; owed: number; overdue: number; collectedPct: number }
   projects: { total: number; active: number; snagging: number; quoting: number; complete: number; onSiteCount: number; margins: Array<{ id: string; name: string; status: string; budget: number; spent: number; progress: number; marginPct: number; spentPct: number; overBudget: boolean }> }
   tasks: { byStatus: Record<string, number>; byPriority: Record<string, number>; total: number }
   activity: { last30Days: number }
   hours: { thisWeek: number; thisMonth: number }
+  cashflow?: {
+    months: MonthBucket[]
+    forecast: { ym: string; label: string; outflow: number; inflow: number; net: number; basis: string }
+  }
 }
 
 const statusColor: Record<string, string> = { active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: '#52749a' }
@@ -116,6 +121,15 @@ export default function ReportsPage() {
               <Stat label="Activity (30d)" value={String(r.activity.last30Days)} />
             </div>
           </section>
+
+          {r.cashflow && r.cashflow.months.length > 0 && (
+            <section>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.02em', margin: '24px 0 12px', fontFamily: 'var(--font-system)' }}>
+                Cost forecasting
+              </h2>
+              <CashflowChart months={r.cashflow.months} forecast={r.cashflow.forecast} />
+            </section>
+          )}
         </div>
       ) : null}
 
@@ -148,6 +162,60 @@ function PillStat({ label, value, color }: { label: string; value: number; color
       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 700, color: color || '#eef3fa', marginTop: 2 }}>{value}</div>
     </div>
   )
+}
+
+/**
+ * 6-month outflow / inflow / net bar chart plus a forecast bar.
+ * Pure CSS — no chart library. Bar heights are scaled to the largest
+ * absolute value in the window so visual comparison is meaningful.
+ */
+function CashflowChart({
+  months,
+  forecast,
+}: {
+  months: MonthBucket[]
+  forecast: { label: string; outflow: number; inflow: number; net: number; basis: string }
+}) {
+  const all = [...months.flatMap(m => [m.outflow, m.inflow]), forecast.outflow, forecast.inflow]
+  const maxAbs = Math.max(1, ...all.map(v => Math.abs(v)))
+  const buckets = [...months, { ...forecast, ym: 'forecast', isForecast: true } as MonthBucket & { isForecast?: boolean }]
+
+  return (
+    <div style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 16, fontFamily: 'var(--font-system)' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
+        <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8ea8c5' }}>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Swatch color="#10b981" />Inflow</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Swatch color="#ef4444" />Outflow</span>
+          <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Swatch color="#f59e0b" />Forecast</span>
+        </div>
+        <span style={{ fontSize: 10, color: '#52749a' }}>{forecast.basis}</span>
+      </div>
+
+      <div style={{ display: 'grid', gridTemplateColumns: `repeat(${buckets.length}, 1fr)`, gap: 6, alignItems: 'end', height: 140 }}>
+        {buckets.map(b => {
+          const isForecast = 'isForecast' in b && b.isForecast
+          const outH = Math.max(2, Math.round((b.outflow / maxAbs) * 120))
+          const inH = Math.max(2, Math.round((b.inflow / maxAbs) * 120))
+          return (
+            <div key={b.ym} style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <div style={{ display: 'flex', gap: 2, alignItems: 'flex-end', height: 120, width: '100%', justifyContent: 'center' }}>
+                <div title={`Inflow £${b.inflow.toLocaleString()}`} style={{ width: '40%', height: inH, background: isForecast ? '#f59e0b' : '#10b981', borderRadius: '4px 4px 0 0', opacity: isForecast ? 0.7 : 1 }} />
+                <div title={`Outflow £${b.outflow.toLocaleString()}`} style={{ width: '40%', height: outH, background: isForecast ? '#f59e0b' : '#ef4444', borderRadius: '4px 4px 0 0', opacity: isForecast ? 0.7 : 1 }} />
+              </div>
+              <div style={{ fontSize: 10, color: isForecast ? '#f59e0b' : '#8ea8c5', fontWeight: isForecast ? 700 : 400 }}>{b.label}</div>
+              <div style={{ fontSize: 9, color: b.net >= 0 ? '#10b981' : '#ef4444', fontFamily: 'ui-monospace, monospace' }}>
+                {b.net >= 0 ? '+' : ''}£{Math.round(b.net).toLocaleString()}
+              </div>
+            </div>
+          )
+        })}
+      </div>
+    </div>
+  )
+}
+
+function Swatch({ color }: { color: string }) {
+  return <span style={{ display: 'inline-block', width: 10, height: 10, borderRadius: 2, background: color }} />
 }
 
 const projRow: React.CSSProperties = {
