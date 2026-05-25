@@ -47,6 +47,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     items: [
       { href: '/inbox',    label: 'Inbox',      Icon: IcBell,   color: '#2563eb', badgeKey: 'inbox' },
       { href: '/messages', label: 'Messages',   Icon: IcBell,   color: '#06b6d4', badgeKey: 'messages' },
+      { href: '/chat',     label: 'Team chat',  Icon: IcBell,   color: '#06b6d4' },
       { href: '/rfis',     label: 'RFIs',       Icon: IcAlert,  color: '#f59e0b', badgeKey: 'rfis' },
       { href: '/ask',      label: 'Ask Cortex', Icon: IcSpark,  color: '#8b5cf6', ai: true },
     ],
