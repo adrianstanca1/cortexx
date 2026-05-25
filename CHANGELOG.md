@@ -1,5 +1,67 @@
 # Changelog
 
+## v1.1.1 — 26 May 2026 (launch hardening)
+
+Post-v1.1.0 fixes surfaced by a launch-readiness probe + a clean
+VPS rebuild that intentionally exercised every code path.
+
+### Public surface
+- **Public routes 307→200**: `/privacy`, `/terms`, `/robots.txt`,
+  `/sitemap.xml`, `/status` were gated as auth-required by the
+  middleware. SEO crawlers (Google) literally can't follow a 307 to
+  `/login`, so `/robots.txt` referencing `/sitemap.xml` 307s broke
+  the entire sitemap chain. Added all 5 to `PUBLIC_PATHS` in
+  `proxy.ts`. (`8e53216`)
+- **`/status` added to `/apps`** registry under Daily Ops. (`f3e3848`)
+- **Billing graceful fallback**: when `STRIPE_SECRET_KEY` is unset
+  (early-access phase), `/pricing` shows an `Early access` banner
+  pointing to `mailto:sales@`, and `/settings/organization` checkout
+  button opens a pre-filled `mailto:sales` instead of an error toast.
+  Trial signup unaffected. (`863a02e`)
+
+### Cron infrastructure
+- **CRON_SECRET infrastructure** newly set up on the VPS — without
+  it, `/api/cron/{overdue-invoices,expiry-warnings,prune-push}`
+  returned 503 to every call and the 4 cron jobs had never run since
+  v1.0. Now: env-stored secret, `/etc/cron.d/cortexx-cron` with 3
+  schedules (06:00 daily, 06:30 daily, 03:00 Sunday). Smoke test
+  `POST /api/cron/overdue-invoices` → 200 with real data
+  `{overdueCount:1, orgsNotified:1}`. (`d2edd48`, hot-patched
+  manually via `vps-exec`)
+- **CRON_SECRET preservation in `deploy-vps.yml`** — d2edd48 had a
+  silent ordering bug (cron-trigger step before the `.env.production`
+  overwrite), so the secret would rotate on every deploy. Fixed by
+  stashing `EXISTING_CRON_SECRET` before the env rewrite, then
+  including it in the new env file + writing matching cron.d.
+  Verified: env and cron.d match after a fresh deploy. (`bfd8719`)
+
+### Repo hygiene
+- **PR #29 Capacitor 6→8 upgrade** merged — iOS pipeline now on
+  Node 22 + iOS 15+. All checks green. (`5c96759`)
+- **Archive cleanup**: 5 of 9 sub-folders pruned (5.7 MB), keeping
+  4 with real reference value (`cortexx-pwa` design lineage,
+  `cortexbuild-field` mobile shapes, `cortexbuild-ultimate` AI/test
+  ideas, `cortexbuild-web` chat patterns). (`c34d13f`)
+- **`docs/RUNBOOK.md`** — operational handover doc: env vars, cron
+  schedule, deploy/rollback procedures, incident triage, capacity
+  envelope, on-call expectations. (`5f17795`)
+
+### Verification
+- TSC 0 errors · 183/183 unit + 10/10 integration tests · lint 0
+- Production probe: 8/8 pm2 workers · all 29 migrations applied
+- All public routes 200 · all auth routes 307 · `/api/health` 200 in 27ms
+- End-to-end cron call: HTTP 200 with real data
+- Clean rebuild verified the deploy workflow is idempotent
+
+### Deferred to a future release
+- Wiring real Stripe price-ids (early-access banner stays until ready)
+- Unit tests for the 5 v1.1 modules (action-plans, conflicts, cis300,
+  bookmarks, chat) — need per-module integration-DB setup
+- SENTRY_DSN, RESEND_API_KEY, S3_*, OLLAMA_BASE_URL — all degrade
+  gracefully today; wire when you have the credentials
+
+---
+
 ## v1.1.0 — 26 May 2026 (legacy-archive port complete)
 
 A 10-item plan landed in `ROADMAP.md` after an Explore-agent inventory
