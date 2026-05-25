@@ -79,7 +79,7 @@ export default function SupportPage() {
       </details>
 
       <h2>Status</h2>
-      <p>Live status of Cortex AI, sync, and any incidents: <a href="https://status.cortexbuild.app">status.cortexbuild.app</a> (coming soon — for now check the app&apos;s <strong>Settings → Infrastructure</strong> screen, which pings our health endpoints in real time).</p>
+      <p>Live status of Cortex AI, sync, and any incidents: <a href="/status">/status</a> (auto-refreshes every 30s). The same data drives the workspace dashboard&rsquo;s connectivity indicator and the GitHub Actions Health Monitor that pages us on outages.</p>
 
       <h2>Security disclosures</h2>
       <p>If you&apos;ve found a security issue, please tell us privately first: <a href="mailto:security@cortexbuild.app">security@cortexbuild.app</a>. We have a responsible-disclosure policy and credit reporters in our changelog.</p>

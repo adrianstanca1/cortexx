@@ -21,15 +21,21 @@ export default function TomorrowPage() {
   useEffect(() => {
     const tomorrow = new Date()
     tomorrow.setDate(tomorrow.getDate() + 1)
-    const tomorrowISO = tomorrow.toISOString().slice(0, 10)
-    const dayAfter = new Date(tomorrow.getTime() + 86400000).toISOString()
+    const isTomorrow = (iso: string | null | undefined) => {
+      if (!iso) return false
+      const d = new Date(iso)
+      return d.getFullYear() === tomorrow.getFullYear()
+        && d.getMonth() === tomorrow.getMonth()
+        && d.getDate() === tomorrow.getDate()
+    }
+    // APIs don't take date filters — pull pages, filter client-side.
     Promise.all([
-      fetch(`/api/tasks?dueBefore=${encodeURIComponent(dayAfter)}&dueAfter=${encodeURIComponent(tomorrow.toISOString())}`).then(r => r.ok ? r.json() : { tasks: [] }),
-      fetch(`/api/meetings?on=${tomorrowISO}`).then(r => r.ok ? r.json() : { meetings: [] }),
+      fetch('/api/tasks?status=open&take=100').then(r => r.ok ? r.json() : { tasks: [] }),
+      fetch('/api/meetings?take=50').then(r => r.ok ? r.json() : { meetings: [] }),
     ])
       .then(([t, m]) => {
-        setTasks((t.tasks || []).slice(0, 10))
-        setMeetings((m.meetings || []).slice(0, 10))
+        setTasks((t.tasks || []).filter((x: Task) => isTomorrow(x.dueDate)).slice(0, 10))
+        setMeetings((m.meetings || []).filter((x: Meeting) => isTomorrow(x.startsAt)).slice(0, 10))
       })
       .finally(() => setLoading(false))
   }, [])

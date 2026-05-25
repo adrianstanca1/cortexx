@@ -27,17 +27,19 @@ export default function VeraCeoPage() {
   const [error, setError] = useState<string | null>(null)
 
   useEffect(() => {
-    // Reuse dashboard data to build a quick local briefing — no extra
-    // API call needed. When we ship a dedicated /api/vera/briefing
-    // endpoint that asks the LLM for a summary, swap this out.
-    fetch('/api/dashboard')
-      .then(r => r.ok ? r.json() : null)
-      .then(d => {
+    // Build a local briefing from existing endpoints. When we ship a
+    // dedicated /api/vera/briefing endpoint that asks the LLM for a
+    // synthesised summary, swap this out for that.
+    Promise.all([
+      fetch('/api/dashboard').then(r => r.ok ? r.json() : null),
+      fetch('/api/snags?status=open&take=100').then(r => r.ok ? r.json() : { snags: [] }),
+    ])
+      .then(([d, s]) => {
         if (!d) { setError('Failed to load workspace data'); return }
         const projects = d.projects || []
         const tasks = d.tasks || []
         const overdueInvoices = (d.invoices || []).filter((i: { status: string }) => i.status === 'overdue').length
-        const openSnags = (d.snags || []).filter((s: { status: string }) => s.status !== 'closed').length
+        const openSnags = (s.snags || []).length
         setBriefing({
           generatedAt: new Date().toISOString(),
           summary: `You have ${projects.length} active project${projects.length === 1 ? '' : 's'}, ${tasks.length} open task${tasks.length === 1 ? '' : 's'}, and ${overdueInvoices + openSnags} item${(overdueInvoices + openSnags) === 1 ? '' : 's'} needing attention.`,
