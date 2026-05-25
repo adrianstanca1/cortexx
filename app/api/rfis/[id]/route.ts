@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { auditLog, requestMeta } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
 
@@ -90,7 +91,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   }
 }
 
-export async function DELETE(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
@@ -98,6 +99,12 @@ export async function DELETE(_req: NextRequest, { params: paramsP }: { params: P
     const rfi = await prisma.rfi.findUnique({ where: { id: params.id }, select: { projectId: true, number: true, subject: true } })
     if (!rfi) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     await prisma.rfi.delete({ where: { id: params.id } })
+    auditLog({
+      action: 'rfi.delete',
+      resourceType: 'Rfi',
+      resourceId: params.id,
+      ...requestMeta(req),
+    })
     prisma.activity.create({
       data: {
         projectId: rfi.projectId,

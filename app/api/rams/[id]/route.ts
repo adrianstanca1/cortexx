@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { auditLog, requestMeta } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
 
@@ -70,7 +71,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
   }
 }
 
-export async function DELETE(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
@@ -78,6 +79,12 @@ export async function DELETE(_req: NextRequest, { params: paramsP }: { params: P
     const doc = await prisma.rams.findUnique({ where: { id: params.id } })
     if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     await prisma.rams.delete({ where: { id: params.id } })
+    auditLog({
+      action: 'rams.delete',
+      resourceType: 'Rams',
+      resourceId: params.id,
+      ...requestMeta(req),
+    })
     return NextResponse.json({ ok: true })
   } catch (error) {
     console.error('[rams/:id] DELETE failed:', error)
