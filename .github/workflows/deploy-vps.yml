@@ -286,8 +286,15 @@ jobs:
           MULTITENANT_ENFORCED=true
           REDIS_URL=redis://127.0.0.1:6379
           CRON_SECRET=$EXISTING_CRON_SECRET
+          UPLOAD_DIR=/var/lib/cortexx/uploads
           ENV
             chmod 600 $APP_DIR/.env.production
+            # Ensure the upload directory exists with correct ownership.
+            # Without UPLOAD_DIR the code defaulted to $APP_DIR/uploads, which
+            # was wiped on every fresh clone — silent data loss on redeploy.
+            mkdir -p /var/lib/cortexx/uploads
+            chown -R root:root /var/lib/cortexx/uploads
+            chmod 755 /var/lib/cortexx/uploads
             echo "✓ .env.production written ($(wc -c < $APP_DIR/.env.production) bytes)"
 
             # ─── 5b. /api/cron/* schedulers (idempotent, uses preserved secret) ─
