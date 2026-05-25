@@ -37,8 +37,42 @@ function buildCsp(nonce: string): string {
   ].join('; ')
 }
 
-function withSecurityHeaders(response: NextResponse, nonce: string): NextResponse {
-  response.headers.set('Content-Security-Policy', buildCsp(nonce))
+// Static HTML in /public/marketing.html and /public/legacy/*.html ships with
+// trusted inline <script> blocks (comparison tables, integration grids, the
+// 80-phase consolidated PWA bundle). Those bytes are committed to the repo —
+// they can't be rewritten with a per-request nonce attribute. A nonce-based
+// CSP would silently break them on compliant browsers, where `'unsafe-inline'`
+// is ignored once a nonce is present. For these paths we drop the nonce and
+// keep the older `'unsafe-inline'` script-src; everything else is identical.
+function buildStaticHtmlCsp(): string {
+  return [
+    "default-src 'self'",
+    "script-src 'self' 'unsafe-inline'",
+    "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
+    "font-src 'self' https://fonts.gstatic.com data:",
+    "img-src 'self' data: blob: https:",
+    "connect-src 'self'",
+    "frame-ancestors 'none'",
+    "base-uri 'self'",
+    "form-action 'self'",
+    "object-src 'none'",
+  ].join('; ')
+}
+
+function isStaticHtmlPath(pathname: string): boolean {
+  if (pathname === '/marketing' || pathname === '/marketing.html') return true
+  if (pathname === '/offline.html') return true
+  if (pathname.startsWith('/legacy/')) return true
+  return false
+}
+
+function withSecurityHeaders(
+  response: NextResponse,
+  nonce: string,
+  pathname: string,
+): NextResponse {
+  const csp = isStaticHtmlPath(pathname) ? buildStaticHtmlCsp() : buildCsp(nonce)
+  response.headers.set('Content-Security-Policy', csp)
   return response
 }
 
@@ -114,7 +148,7 @@ export default auth(req => {
   const nextOpts = { request: { headers: requestHeaders } }
 
   if (isPublic(pathname)) {
-    return withSecurityHeaders(NextResponse.next(nextOpts), nonce)
+    return withSecurityHeaders(NextResponse.next(nextOpts), nonce, pathname)
   }
 
   if (!req.auth) {
@@ -141,7 +175,7 @@ export default auth(req => {
     return NextResponse.redirect(url)
   }
 
-  return withSecurityHeaders(NextResponse.next(nextOpts), nonce)
+  return withSecurityHeaders(NextResponse.next(nextOpts), nonce, pathname)
 })
 
 export const config = {
