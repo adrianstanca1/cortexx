@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { downloadToTemp } from '@/lib/storage'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
@@ -34,17 +35,8 @@ interface RevCompareResult {
   notes?: string
 }
 
-const rateLimits = new Map<string, number[]>()
-function checkRateLimit(userKey: string, max = 2, windowMs = 60_000): { ok: true } | { ok: false; retryAfter: number } {
-  const now = Date.now()
-  const arr = (rateLimits.get(userKey) || []).filter(t => now - t < windowMs)
-  if (arr.length >= max) {
-    return { ok: false, retryAfter: Math.ceil((windowMs - (now - arr[0])) / 1000) }
-  }
-  arr.push(now)
-  rateLimits.set(userKey, arr)
-  return { ok: true }
-}
+// Rate limit moved to Redis-backed 'vision' profile in lib/rateLimit.ts
+// (5/min/user, shared across pm2 cluster workers).
 
 function parseCompareResponse(raw: string): RevCompareResult {
   let parsed: unknown
@@ -120,15 +112,8 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
-
-  const userId = (auth.user as { id?: string } | undefined)?.id || 'anon'
-  const rl = checkRateLimit(userId)
-  if (!rl.ok) {
-    return new NextResponse(JSON.stringify({ error: `Too many comparisons. Try again in ${rl.retryAfter}s.` }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) },
-    })
-  }
+  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  if (limited) return limited
 
   let body: { aRev?: unknown; bRev?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }

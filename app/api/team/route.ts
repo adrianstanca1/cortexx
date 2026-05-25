@@ -16,6 +16,10 @@ export async function GET() {
     weekStart.setHours(0, 0, 0, 0)
 
     const members = await prisma.teamMember.findMany({
+      // Cap at 500 — protects against runaway responses on big tenants.
+      // A workspace with >500 members would need a paginated view
+      // anyway; for now the cap is a backstop, not a UX requirement.
+      take: 500,
       include: {
         assignments: { include: { project: true } },
         timeEntries: { where: { date: { gte: weekStart } } },
