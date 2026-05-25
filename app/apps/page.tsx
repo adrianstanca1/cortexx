@@ -78,6 +78,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Money & ops',
     items: [
       { href: '/reports',     label: 'Money',        Icon: IcReceipt, color: '#10b981' },
+      { href: '/invoices',    label: 'Invoices',     Icon: IcReceipt, color: '#10b981' },
       { href: '/pos',         label: 'POs',          Icon: IcDoc,     color: '#f59e0b', badgeKey: 'pos' },
       { href: '/sub-invoices',label: 'Sub invoices', Icon: IcDoc,     color: '#f59e0b', badgeKey: 'subinvoices' },
       { href: '/valuations',  label: 'Valuations',   Icon: IcPound,   color: '#06b6d4' },
