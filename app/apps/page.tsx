@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   IcCamera, IcMic, IcReceipt, IcAlert, IcCheck, IcPin, IcSpark, IcDoc,
   IcBell, IcSearch, IcDashboard, IcProjects, IcTasks, IcTeam,
-  IcClock, IcLayers, IcWrench, IcTruck, IcHardhat, IcArrowRight, IcPound,
+  IcClock, IcLayers, IcWrench, IcTruck, IcHardhat, IcArrowRight, IcPound, IcZap,
 } from '@/components/ui/Icons'
 
 interface ModuleItem {
@@ -147,9 +147,22 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/saved-views',   label: 'Saved views',   Icon: IcLayers,  color: '#8ea8c5' },
       { href: '/tags',          label: 'Tags',          Icon: IcLayers,  color: '#8b5cf6' },
       { href: '/process-library', label: 'Process library', Icon: IcDoc, color: '#06b6d4' },
+      { href: '/tpl-library',   label: 'Template library', Icon: IcDoc,  color: '#2563eb' },
       { href: '/personas',      label: 'Personas',      Icon: IcTeam,    color: '#ec4899' },
       { href: '/developer-api', label: 'Developer API', Icon: IcSpark,   color: '#8ea8c5' },
       { href: '/infrastructure', label: 'Infrastructure', Icon: IcWrench, color: '#52749a' },
+      { href: '/roles',         label: 'Roles',         Icon: IcTeam,    color: '#06b6d4' },
+    ],
+  },
+  {
+    title: 'AI & insights',
+    items: [
+      { href: '/vera-ceo',      label: 'Vera CEO',      Icon: IcSpark,   color: '#8b5cf6', ai: true },
+      { href: '/vera-autopilot',label: 'Vera autopilot',Icon: IcZap,     color: '#8b5cf6', ai: true },
+      { href: '/leadership',    label: 'Leadership',    Icon: IcTeam,    color: '#8b5cf6', ai: true },
+      { href: '/ai-history',    label: 'AI history',    Icon: IcSpark,   color: '#8b5cf6', ai: true },
+      { href: '/my-day',        label: 'My day',        Icon: IcClock,   color: '#f59e0b' },
+      { href: '/tomorrow',      label: 'Tomorrow',      Icon: IcClock,   color: '#06b6d4' },
     ],
   },
 ]
