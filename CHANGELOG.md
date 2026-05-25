@@ -1,10 +1,11 @@
 # Changelog
 
-## v1.1.0-rc — 26 May 2026 (legacy-archive port — in progress)
+## v1.1.0 — 26 May 2026 (legacy-archive port complete)
 
 A 10-item plan landed in `ROADMAP.md` after an Explore-agent inventory
 of the 10 sub-folders under `archive/`. Each item is its own commit
 shipping a full slice (schema → migration → API → UI → apps registry).
+**All 10 items shipped.**
 
 ### Shipped
 
@@ -38,11 +39,33 @@ shipping a full slice (schema → migration → API → UI → apps registry).
   review (reviewBy < +7d), and lapsing certifications (expiryDate < +7d).
   Page also subscribes to SSE — debounces 1s then refetches on activity
   events. Visibility-gated so background tabs don't refetch.
+- **CIS300 monthly return automation** (`e2493d8`, subagent) — UK
+  HMRC monthly return automated. New `Cis300Return` Prisma model
+  with `@@unique([organizationId, taxMonth])` for idempotent recomputes;
+  `POST /api/cis300` aggregates the SubInvoice window `[taxMonth, +1mo)`
+  by subcontractorId; `GET /api/cis300/[id]/export` emits HMRC-import-
+  compatible CSV (Verification Number / Subcontractor Name / UTR /
+  Gross / Materials / Tax Deducted). UI: list with current-tax-month
+  default (6th-of-month edge handled), detail page with 3 totals card,
+  lineItems table, status-gated Mark-submitted / Download / Delete
+  buttons.
+- **Team chat + conversation memory** (`d2ca203`, subagent) — full
+  per-project chat. Two new Prisma models (`Conversation`,
+  `ChatMessage`), 3 new API surfaces (conversations + per-conversation
+  messages with before/after cursor pagination), 2 new pages
+  (`/chat` list + new-conversation modal, `/chat/[id]` detail with
+  Cmd-Enter to send, 5s message polling while tab visible, 30s
+  conversation-list refresh, auto-scroll near-bottom).
 
-### Still in flight / queued
+### Verification
 
-- CIS300 monthly return automation (item 8)
-- Team chat + conversation memory (item 9)
+- TSC 0 errors · 183/183 unit tests · 10/10 integration tests
+- 5 new Prisma models (ProjectBookmark, ActionPlan, Conflict,
+  Cis300Return, Conversation, ChatMessage) → 79 total
+- 5 new migrations applied (`20260526000000` → `20260526050000`)
+- Build emits ~110 routes (was 91 at v1.0.0; +12 from v1.1 modules
+  alone)
+- All 10 modules registered in `/apps`
 
 ### v2.0 horizon (deferred — see ROADMAP.md)
 

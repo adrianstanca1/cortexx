@@ -64,16 +64,16 @@ are ordered by impact/effort ratio. Architecture-blocker archives
 
 | # | Item | Source archive | Effort | Status |
 |---|------|---------------|--------|--------|
-| 1 | **CSV ledger export** (Xero / QB / Sage compatible) | cortexx-pwa | TRIVIAL | Targeted for v1.1 |
-| 2 | **Project bookmarks** (user-saved shortcuts) | cortexbuild-field | TRIVIAL | Targeted for v1.1 |
-| 3 | **Activity feed enhancements** (live SSE stream, filters) | cortexbuild-ultimate | SMALL | Targeted for v1.1 |
-| 4 | **Customer portal hardening** (share-token revoke, expiry) | cortexx-pwa | SMALL | /client-view exists; polish needed |
-| 5 | **Action plans module** (create / track / close-out) | cortexbuild-field | MEDIUM | New module |
-| 6 | **Conflict resolution log** (cross-team conflicts on site) | cortexbuild-field | MEDIUM | New module |
-| 7 | **Cost forecasting** (cost-vs-actual trend chart on /reports) | cortexbuild-field | MEDIUM | Reports extension |
-| 8 | **CIS300 monthly return automation** | cortexbuild-field | MEDIUM | New /payroll flow |
-| 9 | **Team chat + conversation memory** | cortexbuild-web | MEDIUM | /messages extension |
-| 10 | **Real-time Notification Center** (in-app inbox, unified) | cortexbuild-ultimate | MEDIUM | /inbox upgrade |
+| 1 | **CSV ledger export** (Xero / QB / Sage compatible) | cortexx-pwa | TRIVIAL | ✅ `1bd6f1d` |
+| 2 | **Project bookmarks** (user-saved shortcuts) | cortexbuild-field | TRIVIAL | ✅ `1bd6f1d` |
+| 3 | **Activity feed enhancements** (live SSE stream, filters) | cortexbuild-ultimate | SMALL | ✅ `8fc25d7` |
+| 4 | **Customer portal hardening** (share-token revoke, expiry) | cortexx-pwa | SMALL | ✅ `838b14e` |
+| 5 | **Action plans module** (create / track / close-out) | cortexbuild-field | MEDIUM | ✅ `52f7961` |
+| 6 | **Conflict resolution log** (cross-team conflicts on site) | cortexbuild-field | MEDIUM | ✅ `a0c430a` |
+| 7 | **Cost forecasting** (cost-vs-actual trend chart on /reports) | cortexbuild-field | MEDIUM | ✅ `26534ce` |
+| 8 | **CIS300 monthly return automation** | cortexbuild-field | MEDIUM | ✅ `e2493d8` |
+| 9 | **Team chat + conversation memory** | cortexbuild-web | MEDIUM | ✅ `d2ca203` |
+| 10 | **Real-time Notification Center** (in-app inbox, unified) | cortexbuild-ultimate | MEDIUM | ✅ `76ea2b7` |
 
 ### Parallel R&D (v2.0 horizon)
 
