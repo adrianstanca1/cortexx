@@ -107,7 +107,14 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
         if (additions.length === 0) return prev
         return [...prev, ...additions]
       })
-      lastSeenRef.current = fresh[fresh.length - 1].createdAt
+      // Only advance the cursor forward — guards against a poll that
+      // started before a send() and returned after, which would
+      // otherwise overwrite the newer createdAt with an older one
+      // and force a re-poll of the just-sent message on the next tick.
+      const candidate = fresh[fresh.length - 1].createdAt
+      if (!lastSeenRef.current || candidate > lastSeenRef.current) {
+        lastSeenRef.current = candidate
+      }
       autoScroll()
     } catch {}
   }, [id, autoScroll])
@@ -148,7 +155,10 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
       const d = await res.json()
       const created: ChatMessage = d.item
       setMessages(prev => prev.some(m => m.id === created.id) ? prev : [...prev, created])
-      lastSeenRef.current = created.createdAt
+      // Only advance forward — see pollNewMessages comment for why.
+      if (!lastSeenRef.current || created.createdAt > lastSeenRef.current) {
+        lastSeenRef.current = created.createdAt
+      }
       setDraft('')
       requestAnimationFrame(() => {
         const el = scrollRef.current

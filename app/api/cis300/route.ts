@@ -105,34 +105,30 @@ export async function POST(req: NextRequest) {
     const totalNet = lineItems.reduce((s, l) => s + l.net, 0)
     const subCount = lineItems.length
 
-    // Find-then-update-or-create. The tenancy extension auto-scopes
-    // findFirst by organizationId, so this naturally honours the
-    // org+taxMonth unique constraint without us having to thread the
-    // active organizationId through the compound where clause.
-    const existing = await prisma.cis300Return.findFirst({ where: { taxMonth } })
+    // Find-then-update-or-create with P2002 retry. Two concurrent
+    // POSTs for the same (org, taxMonth) used to both pass the
+    // findFirst gate and the second 500'd on the [organizationId,
+    // taxMonth] unique. Retry once on P2002 by falling through to
+    // update via the existing row.
     let item
+    const existing = await prisma.cis300Return.findFirst({ where: { taxMonth } })
+    const data = {
+      totalGross, totalCis, totalNet, subCount,
+      lineItems: lineItems as unknown as object,
+    }
     if (existing) {
-      item = await prisma.cis300Return.update({
-        where: { id: existing.id },
-        data: {
-          totalGross,
-          totalCis,
-          totalNet,
-          subCount,
-          lineItems: lineItems as unknown as object,
-        },
-      })
+      item = await prisma.cis300Return.update({ where: { id: existing.id }, data })
     } else {
-      item = await prisma.cis300Return.create({
-        data: {
-          taxMonth,
-          totalGross,
-          totalCis,
-          totalNet,
-          subCount,
-          lineItems: lineItems as unknown as object,
-        },
-      })
+      try {
+        item = await prisma.cis300Return.create({ data: { taxMonth, ...data } })
+      } catch (e) {
+        const code = (e as { code?: string })?.code
+        if (code !== 'P2002') throw e
+        // Lost the race — refetch and update the row our peer just created
+        const racer = await prisma.cis300Return.findFirst({ where: { taxMonth } })
+        if (!racer) throw e
+        item = await prisma.cis300Return.update({ where: { id: racer.id }, data })
+      }
     }
 
     return NextResponse.json({ item }, { status: 201 })
