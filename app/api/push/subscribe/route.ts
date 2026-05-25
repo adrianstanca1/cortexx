@@ -53,12 +53,20 @@ export async function POST(req: NextRequest) {
 export async function DELETE(req: NextRequest) {
   const session = await requireAuth()
   if (session instanceof NextResponse) return session
+  const userId = (session.user as { id?: string }).id
 
   let body: { endpoint?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }
   const endpoint = typeof body.endpoint === 'string' ? body.endpoint : ''
   if (!endpoint) return NextResponse.json({ error: 'endpoint is required' }, { status: 400 })
 
-  await prisma.pushSubscription.deleteMany({ where: { endpoint } })
+  // Scope the delete to the caller's user — without this, any signed-in
+  // user could unsubscribe anyone else's push endpoint (denial of
+  // notifications) just by knowing/learning their endpoint URL.
+  // Anonymous subscriptions (userId=null) can still be cleaned up by
+  // the caller that owns the session if they own the subscription.
+  await prisma.pushSubscription.deleteMany({
+    where: userId ? { endpoint, userId } : { endpoint, userId: null },
+  })
   return NextResponse.json({ ok: true })
 }

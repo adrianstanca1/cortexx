@@ -33,6 +33,20 @@ export async function POST(req: NextRequest) {
   if (typeof body.projectId !== 'string' || !body.projectId) {
     return NextResponse.json({ error: 'projectId is required' }, { status: 400 })
   }
+
+  // Cross-tenant guard: confirm the projectId belongs to the user's
+  // active org BEFORE upserting. findFirst auto-scopes by org via the
+  // Prisma tenancy extension, so a cross-org id returns null even if
+  // the row exists. Without this, a user could bookmark any project
+  // ID and read back name/clientName/status/progress via GET's include.
+  const project = await prisma.project.findFirst({
+    where: { id: body.projectId },
+    select: { id: true },
+  })
+  if (!project) {
+    return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+  }
+
   try {
     const bookmark = await prisma.projectBookmark.upsert({
       where: { userId_projectId: { userId, projectId: body.projectId } },
