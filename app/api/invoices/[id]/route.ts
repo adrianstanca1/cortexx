@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { auditLog, requestMeta } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,7 +66,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   }
 }
 
-export async function DELETE(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
@@ -84,6 +85,12 @@ export async function DELETE(_req: NextRequest, { params: paramsP }: { params: P
     }
 
     await prisma.invoice.delete({ where: { id: params.id } })
+    auditLog({
+      action: 'invoice.delete',
+      resourceType: 'Invoice',
+      resourceId: params.id,
+      ...requestMeta(req),
+    })
 
     // Keep project.spent in sync (was non-paid so spent shouldn't change, but be safe)
     if (existing.projectId) await recalcSpent(existing.projectId)

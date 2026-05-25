@@ -88,3 +88,32 @@ export function planByKey(key: string | null | undefined): Plan {
   if (key && key in PLANS) return PLANS[key as PlanKey]
   return PLANS.starter
 }
+
+/**
+ * Startup validation. Called from instrumentation.ts. When the operator has
+ * wired up STRIPE_SECRET_KEY (i.e. billing is meant to be live), the per-plan
+ * price ids must ALL be set — otherwise the /pricing page renders a "Choose"
+ * button that points at an undefined price and the Stripe checkout call
+ * silently 503s with PRICE_NOT_SET. That failure mode is invisible to the
+ * operator until a customer tries to subscribe and complains.
+ *
+ * Returns null on OK, or a human-readable error string for the instrumentation
+ * hook to log loudly. Does NOT throw — startup validation should warn, not
+ * brick the process (a missing Pro price id shouldn't kill the whole app).
+ *
+ * Enterprise has no Stripe price (contact-sales flow), so it's not required.
+ */
+export function validateBillingConfig(): string | null {
+  if (!SECRET) return null  // Billing intentionally disabled — nothing to check.
+
+  const required: { key: PlanKey; envVar: string }[] = [
+    { key: 'starter', envVar: 'STRIPE_PRICE_STARTER' },
+    { key: 'pro', envVar: 'STRIPE_PRICE_PRO' },
+  ]
+  const missing = required.filter(r => !PLANS[r.key].priceId)
+  if (missing.length === 0) return null
+
+  return `[billing] STRIPE_SECRET_KEY is set but ${missing.length} price id(s) missing: ${missing
+    .map(m => m.envVar)
+    .join(', ')}. /pricing checkout will fail with PRICE_NOT_SET for these plans until they're configured.`
+}

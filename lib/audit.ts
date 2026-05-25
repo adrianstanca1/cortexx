@@ -8,9 +8,13 @@
  */
 import { Prisma } from '@prisma/client'
 import { prisma } from './db'
+import { getCurrentOrg } from './tenancy'
 
 export interface AuditPayload {
-  organizationId: string
+  /** Optional. When omitted, falls back to the active org on the AsyncLocalStorage
+   *  context (set by requireAuth → setOrgContext). Skip the DB write when
+   *  neither is available rather than persisting a half-populated row. */
+  organizationId?: string
   userId?: string | null
   action: string                 // dot-notation: "project.delete", "invoice.paid", etc.
   resourceType: string
@@ -21,10 +25,18 @@ export interface AuditPayload {
 }
 
 export function auditLog(payload: AuditPayload): void {
+  const organizationId = payload.organizationId || getCurrentOrg()?.organizationId
+  if (!organizationId) {
+    // No org context — log to stderr but don't persist. Routes that fire
+    // outside any tenant scope (e.g. 2FA enable/disable for an org-less
+    // user) hit this path; the action still lives in the process log.
+    console.info('[audit] no org context — skipped DB write', payload.action, payload.resourceType, payload.resourceId)
+    return
+  }
   prisma.auditEvent.create({
     data: {
-      organizationId: payload.organizationId,
-      userId: payload.userId || null,
+      organizationId,
+      userId: payload.userId || getCurrentOrg()?.userId || null,
       action: payload.action,
       resourceType: payload.resourceType,
       resourceId: payload.resourceId,
