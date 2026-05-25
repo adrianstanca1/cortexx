@@ -33,11 +33,11 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
-  const __limited = enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
   if (__limited) return __limited
 
   const userId = (auth.user as { id?: string } | undefined)?.id || auth.user?.email || 'anon'
-  const rl = rateLimit(`ask:${userId}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)
+  const rl = await rateLimit(`ask:${userId}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)
   if (!rl.ok) {
     return NextResponse.json(
       { error: `Too many requests. Try again in ${Math.ceil(rl.retryAfterMs / 1000)}s.`, code: 'RATE_LIMITED' },

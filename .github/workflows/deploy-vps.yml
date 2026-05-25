@@ -57,6 +57,7 @@ jobs:
             command -v psql >/dev/null 2>&1 || need+=(postgresql postgresql-contrib)
             command -v ffmpeg >/dev/null 2>&1 || need+=(ffmpeg)
             command -v make >/dev/null 2>&1 || need+=(build-essential)
+            command -v redis-cli >/dev/null 2>&1 || need+=(redis-server)
             if [ ${#need[@]} -gt 0 ]; then
               if [[ " ${need[*]} " == *" nodejs "* ]]; then
                 curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
@@ -66,6 +67,9 @@ jobs:
             fi
             command -v pm2 >/dev/null 2>&1 || npm install -g pm2
             systemctl enable --now postgresql 2>/dev/null || true
+            # Redis: bind to loopback only (default), shared by pm2 cluster
+            # workers for rate-limit + future cache state.
+            systemctl enable --now redis-server 2>/dev/null || true
 
             # whisper.cpp — best-effort, non-blocking. Powers /api/transcribe
             # for the voice-RFI flow. If install fails, /api/transcribe just
@@ -264,6 +268,7 @@ jobs:
           VAPID_PRIVATE_KEY=$VAPID_PRIVATE_KEY
           VAPID_CONTACT_EMAIL=${VAPID_CONTACT_EMAIL:-admin@cortexbuildpro.com}
           MULTITENANT_ENFORCED=true
+          REDIS_URL=redis://127.0.0.1:6379
           ENV
             chmod 600 $APP_DIR/.env.production
             echo "✓ .env.production written ($(wc -c < $APP_DIR/.env.production) bytes)"
@@ -304,8 +309,13 @@ jobs:
             # an old DATABASE_URL=file:./prod.db survived for 10+ hours across
             # multiple "successful" deploys). Delete + start guarantees fresh
             # env from .env.production.
+            #
+            # Cluster mode: -i max forks one worker per CPU core for ~Nx
+            # throughput on the request loop. Workers share rate-limit
+            # state via Redis (REDIS_URL above). With -i 1 in dev or when
+            # Redis is unreachable, the limiter falls back to in-process.
             pm2 delete cortexx 2>/dev/null || true
-            PORT=$APP_PORT pm2 start npm --name cortexx -- start
+            PORT=$APP_PORT pm2 start npm --name cortexx -i max -- start
             pm2 save
             (pm2 startup systemd -u root --hp /root 2>&1 | grep "sudo " | bash) || true
 

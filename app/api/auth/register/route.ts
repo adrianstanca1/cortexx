@@ -7,7 +7,7 @@ import { enforceRateLimit } from '@/lib/rateLimit'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const limited = enforceRateLimit(req, 'auth')
+  const limited = await enforceRateLimit(req, 'auth')
   if (limited) return limited
   try {
     const body = await req.json()

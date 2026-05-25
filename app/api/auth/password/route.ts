@@ -10,7 +10,7 @@ export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   const userId = (auth.user as { id?: string }).id
-  const limited = enforceRateLimit(req, 'auth', userId)
+  const limited = await enforceRateLimit(req, 'auth', userId)
   if (limited) return limited
   try {
     const body = await req.json()

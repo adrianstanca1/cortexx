@@ -18,7 +18,7 @@ export const runtime = 'nodejs'
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
-  const __limited = enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
   if (__limited) return __limited
 
   let form: FormData

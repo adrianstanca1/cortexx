@@ -21,7 +21,7 @@ export async function POST(req: NextRequest) {
   const session = await requireAuth()
   if (session instanceof NextResponse) return session
   const userId = (session.user as { id?: string }).id
-  const limited = enforceRateLimit(req, 'auth', userId)
+  const limited = await enforceRateLimit(req, 'auth', userId)
   if (limited) return limited
 
   let body: { endpoint?: unknown; keys?: { p256dh?: unknown; auth?: unknown } }
