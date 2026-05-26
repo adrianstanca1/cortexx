@@ -4,6 +4,7 @@ import { PrismaAdapter } from '@auth/prisma-adapter'
 import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
+import { reportError } from './errors'
 
 export interface SessionOrgMembership {
   id: string
@@ -67,9 +68,12 @@ export const authConfig: NextAuthConfig = {
             name: m.organization.name,
             role: m.role,
           })) satisfies SessionOrgMembership[]
-        } catch {
-          // Org table may not exist yet during the migration window.
-          token.orgs = []
+        } catch (error) {
+          // Don't lock the user out — keep the previous cached value if
+          // present, fall back to [] only on first-load. Either way,
+          // surface the failure so we can see it in Sentry.
+          reportError(error, { context: 'auth.jwt.loadOrgs', userId: token.sub })
+          if (!Array.isArray(token.orgs)) token.orgs = []
         }
       }
       return token

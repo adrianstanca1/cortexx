@@ -1,11 +1,39 @@
 import { NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { auth } from './auth'
+import { prisma } from './db'
 import { MULTITENANT_ENFORCED } from './org'
+import { reportError } from './errors'
 import { setOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
+
+/**
+ * When the JWT carries `orgs: []`, hit the DB once to confirm the user
+ * really has no memberships before falling through. The JWT loader in
+ * lib/auth.ts swallows DB errors and caches an empty list — without
+ * this fallback, one bad sign-in permanently breaks every owned-model
+ * route for the rest of the 30-day token lifetime.
+ */
+async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[]> {
+  try {
+    const memberships = await prisma.userOrganization.findMany({
+      where: { userId },
+      include: { organization: { select: { id: true, slug: true, name: true } } },
+      orderBy: { joinedAt: 'asc' },
+    })
+    return memberships.map(m => ({
+      id: m.organization.id,
+      slug: m.organization.slug,
+      name: m.organization.name,
+      role: m.role,
+    }))
+  } catch (error) {
+    reportError(error, { context: 'requireAuth.refetchOrgsFromDb', userId })
+    return []
+  }
+}
 
 /**
  * Returns the authenticated session or a 401 NextResponse.
@@ -28,12 +56,13 @@ export async function requireAuth() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
 
-  // Resolve the active org from session.user.organizations (cached on the
-  // JWT in lib/auth) and the active-org cookie. Falls through silently
-  // when the user has no org yet (e.g. signed up but pre-onboarding).
-  const orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  const userId = (session.user as { id?: string }).id || null
+  let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  if (orgs.length === 0 && userId) {
+    orgs = await refetchOrgsFromDb(userId)
+  }
+
   if (orgs.length > 0) {
-    const userId = (session.user as { id?: string }).id || null
     let active = orgs[0]
     try {
       const store = await cookies()
@@ -62,7 +91,10 @@ export async function requireOrg() {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   }
   const userId = (session.user as { id?: string }).id
-  const orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  if (orgs.length === 0 && userId) {
+    orgs = await refetchOrgsFromDb(userId)
+  }
 
   if (orgs.length === 0) {
     if (MULTITENANT_ENFORCED) {
