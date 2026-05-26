@@ -31,7 +31,7 @@ jobs:
     env:
       XCODE_PROJECT: ios/App/App.xcodeproj
       XCODE_SCHEME:  App
-      BUNDLE_ID:     app.cortexbuild.cortexx
+      BUNDLE_ID:     com.cortexbuild.app
       EXPORT_METHOD: app-store
 
     steps:
