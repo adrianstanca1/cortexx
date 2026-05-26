@@ -59,7 +59,7 @@ brew install cocoapods
 
 You also need:
 - **Apple Developer Program membership** — £79/yr or $99/yr (apple.com/uk/developer)
-- A unique **Bundle Identifier** registered at developer.apple.com → Certificates, IDs & Profiles → Identifiers. We use `app.cortexbuild.cortexx` in `capacitor.config.ts`; change it to one you own.
+- A unique **Bundle Identifier** registered at developer.apple.com → Certificates, IDs & Profiles → Identifiers. We use `com.cortexbuild.app` in `capacitor.config.ts`; change it to one you own.
 - An **App Store Connect** record for the app (appstoreconnect.apple.com → My Apps → +).
 
 ---
@@ -71,7 +71,7 @@ From inside `ios/`:
 ```bash
 npm install
 npm run build:web        # copies public/legacy/ → ios/www/ + disables the SW
-npx cap init Cortexx app.cortexbuild.cortexx --web-dir www
+npx cap init Cortexx com.cortexbuild.app --web-dir www
 npx cap add ios
 ```
 
@@ -107,7 +107,7 @@ Then in Xcode, open **Assets.xcassets** → **AppIcon** → drag `AppIcon-1024.p
 In Xcode → select the `App` target → **Signing & Capabilities**:
 - ☑ Automatically manage signing
 - Team: your Apple Developer team
-- Bundle Identifier: `app.cortexbuild.cortexx` (must match what you registered)
+- Bundle Identifier: `com.cortexbuild.app` (must match what you registered)
 
 Add the **Background Modes** capability if you want background mileage tracking or push notifications:
 - ☑ Location updates
