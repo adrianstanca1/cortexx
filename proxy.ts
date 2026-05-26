@@ -47,11 +47,23 @@ function buildCsp(nonce: string): string {
 function buildStaticHtmlCsp(): string {
   return [
     "default-src 'self'",
-    "script-src 'self' 'unsafe-inline'",
+    // `blob:` is required because the standalone design bundle
+    // (public/legacy/Cortexx-standalone.html) decodes its embedded asset
+    // manifest at runtime, creates blob URLs via URL.createObjectURL,
+    // and loads them as <script> tags. Blob URLs are same-origin and
+    // created by the page itself, so allowing them keeps the trust
+    // boundary unchanged — same as `unsafe-inline` for the bundle's
+    // own inline loader. Without `blob:` here every script in the
+    // bundle is refused and the homepage demo shows a half-loaded shell
+    // with no behaviour ("nothing working - everything errors").
+    "script-src 'self' 'unsafe-inline' blob:",
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self'",
+    // The bundler also fetch()es its own blob URLs to read the asset
+    // bytes before scripting them. `connect-src` needs `blob:` for
+    // those reads or the bundle aborts with "Failed to fetch".
+    "connect-src 'self' blob:",
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -84,6 +96,11 @@ const PUBLIC_PATHS = new Set<string>([
   '/pricing',
   '/marketing',
   '/marketing.html',
+  '/legacy',            // Next's trailing-slash normaliser rewrites /legacy/ → /legacy
+                        //   before isPublic() runs; the startsWith('/legacy/') check
+                        //   below catches *children* of /legacy/, not the bare /legacy.
+                        //   Without this, the "Live demo" link on /pricing bounces
+                        //   anonymous visitors to /login?callbackUrl=/legacy.
   '/help',
   '/privacy',           // GDPR / legal — must be reachable without auth
   '/terms',             // same
