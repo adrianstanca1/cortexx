@@ -118,7 +118,7 @@ I am being explicit about which steps require human input because I cannot do th
 
 ### To go live on the App Store (1 week from now)
 1. You said you have an **Apple Developer Account** — good, that's the long pole gone.
-2. **Register bundle ID** `app.cortexbuild.cortexx` at developer.apple.com → Identifiers (5 min).
+2. **Register bundle ID** `com.cortexbuild.app` at developer.apple.com → Identifiers (5 min).
 3. **Create App Store Connect record** for the bundle (10 min).
 4. **Paste listing copy** from `app-store/metadata.txt` into App Store Connect (15 min).
 5. **Capture screenshots** from `app-store/screenshots-generator.html` via Chrome DevTools → "Capture node screenshot" (2 min).

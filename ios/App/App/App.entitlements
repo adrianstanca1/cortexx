@@ -18,7 +18,7 @@
   <!-- Uncomment when you enable iCloud in Xcode Signing & Capabilities
   <key>com.apple.developer.icloud-container-identifiers</key>
   <array>
-    <string>iCloud.app.cortexbuild.cortexx</string>
+    <string>iCloud.com.cortexbuild.app</string>
   </array>
   <key>com.apple.developer.icloud-services</key>
   <array>
@@ -29,13 +29,13 @@
   <!-- App Groups — shared container for Share Extension -->
   <key>com.apple.security.application-groups</key>
   <array>
-    <string>group.app.cortexbuild.cortexx</string>
+    <string>group.com.cortexbuild.app</string>
   </array>
 
   <!-- Keychain sharing — for biometric-protected secrets -->
   <key>keychain-access-groups</key>
   <array>
-    <string>$(AppIdentifierPrefix)app.cortexbuild.cortexx</string>
+    <string>$(AppIdentifierPrefix)com.cortexbuild.app</string>
   </array>
 
 </dict>

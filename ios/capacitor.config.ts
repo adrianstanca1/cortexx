@@ -13,7 +13,7 @@ const SERVER_URL = process.env.CAPACITOR_SERVER_URL;
 
 const config: CapacitorConfig = {
   // App ID — reverse-DNS format. Change to your registered Apple bundle id.
-  appId: 'app.cortexbuild.cortexx',
+  appId: 'com.cortexbuild.app',
 
   // Display name shown under the icon on the home screen.
   appName: 'Cortexx',
