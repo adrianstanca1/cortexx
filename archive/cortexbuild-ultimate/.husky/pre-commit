@@ -1,9 +1,0 @@
-#!/usr/bin/env bash
-echo "🔍 Running pre-commit checks..."
-
-# Run lint-staged for staged files (with npx to ensure tools are found)
-npx -y lint-staged 2>/dev/null || echo "⚠️  lint-staged skipped (tools not found)"
-
-# Run verification scripts (always run, non-blocking)
-./scripts/verify-server-routes.sh 2>/dev/null || echo "⚠️  Route verification skipped"
-./scripts/pre-commit-check.sh 2>/dev/null || echo "⚠️  Pre-commit check skipped"
