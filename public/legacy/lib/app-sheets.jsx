@@ -59,10 +59,15 @@ function ProjectSheet({ project, onClose, accent }) {
         </button>
         <button style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }} onClick={async () => {
           if (editing) {
+            // NaN-guard parseInt so a valid 0 (eg. resetting progress) isn't silently
+            // reverted to the previous value by an `||` fallback.
+            const nextValue = parseInt(draft.value, 10);
+            const nextPct = parseInt(draft.pct, 10);
             await Backend.db.projects.update(project.id, {
               name: draft.name, client: draft.client, addr: draft.addr,
-              value: parseInt(draft.value) || project.value, status: draft.status,
-              pct: parseInt(draft.pct) || project.pct,
+              value: Number.isNaN(nextValue) ? project.value : nextValue,
+              status: draft.status,
+              pct: Number.isNaN(nextPct) ? project.pct : nextPct,
             });
             toast('Project updated', 'success');
             setEditing(false);
