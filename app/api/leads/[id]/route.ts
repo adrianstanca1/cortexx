@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,7 +45,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     const lead = await prisma.lead.update({ where: { id: params.id }, data })
     return NextResponse.json(lead)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update lead' }, { status: 500 })
   }
 }
@@ -63,7 +64,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete lead' }, { status: 500 })
   }
 }
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     ])
     return NextResponse.json({ customer, lead: updated })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to convert' }, { status: 500 })
   }
 }

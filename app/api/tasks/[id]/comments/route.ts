@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
@@ -14,7 +15,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     })
     return NextResponse.json({ comments })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to load comments' }, { status: 500 })
   }
 }
@@ -60,7 +61,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
 
     return NextResponse.json({ comment }, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to add comment' }, { status: 500 })
   }
 }

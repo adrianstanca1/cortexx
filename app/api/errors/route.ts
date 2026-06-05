@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { createHash } from 'node:crypto'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { captureException, isSentryConfigured } from '@/lib/sentry'
@@ -25,11 +26,21 @@ export async function POST(req: NextRequest) {
     const user = actorName(auth)
     const ua = req.headers.get('user-agent')?.slice(0, 200)
 
+    // Sanitise BEFORE logging to stdout. pm2 logs ship to the
+    // vps-exec-logs branch (PUBLIC), so anything we print here is
+    // world-readable. Strip query strings (which often carry customer
+    // names / emails in routing), hash the actor, and skip the UA.
+    const stripQuery = (u: string) => { try { const x = new URL(u, 'https://x'); return x.pathname.slice(0, 200) } catch { return '' } }
+    const safeUrl = stripQuery(url)
+    const userHash = user ? `u${createHash('sha256').update(user).digest('hex').slice(0, 8)}` : 'anon'
+
     console.error('[client-error]', JSON.stringify({
-      user, url, message, stack, componentStack, ua,
+      user: userHash, url: safeUrl, message, stack,
       at: new Date().toISOString(),
     }))
 
+    // Sentry gets the full context (it's a private destination with the
+    // user's own credentials, not a public log branch).
     if (isSentryConfigured() && message) {
       const err = new Error(message)
       if (stack) err.stack = stack

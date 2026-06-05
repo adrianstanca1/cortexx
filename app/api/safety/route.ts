@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { sendPush } from '@/lib/push'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -56,7 +57,7 @@ export async function GET(req: NextRequest) {
       daysWithoutIncident,
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch safety incidents' }, { status: 500 })
   }
 }
@@ -132,7 +133,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(incident, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create safety incident' }, { status: 500 })
   }
 }

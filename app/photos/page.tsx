@@ -112,6 +112,12 @@ export default function PhotosPage() {
   useEffect(() => { load() }, [load])
 
   const handleFile = useCallback(async (file: File) => {
+    // Pre-flight size check — without it, the browser would upload a
+    // multi-GB file in full before the server's 413 response fires.
+    if (file.size > 25 * 1024 * 1024) {
+      setToast({ msg: `File too large (max 25 MB). This file is ${Math.round(file.size / 1024 / 1024)} MB.`, type: 'error' })
+      return
+    }
     setUploading(true)
     try {
       const fd = new FormData()

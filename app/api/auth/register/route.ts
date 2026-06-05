@@ -3,6 +3,7 @@ import bcrypt from 'bcryptjs'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +40,7 @@ export async function POST(req: NextRequest) {
       throw err
     }
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Registration failed' }, { status: 500 })
   }
 }

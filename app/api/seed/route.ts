@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { bypassTenancy } from '@/lib/tenancy'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -112,7 +113,7 @@ async function runSeed(): Promise<NextResponse> {
 
     return NextResponse.json({ success: true, message: 'Database seeded successfully' })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Seed failed', details: String(error) }, { status: 500 })
   }
 }

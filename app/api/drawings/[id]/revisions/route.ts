@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
@@ -48,7 +50,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'A revision with that label already exists' }, { status: 409 })
     }
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to add revision' }, { status: 500 })
   }
 }

@@ -1,8 +1,10 @@
 import NextAuth, { type NextAuthConfig } from 'next-auth'
 import Credentials from 'next-auth/providers/credentials'
 import { PrismaAdapter } from '@auth/prisma-adapter'
+import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
+import { reportError } from './errors'
 
 export interface SessionOrgMembership {
   id: string
@@ -43,10 +45,17 @@ export const authConfig: NextAuthConfig = {
         token.sub = user.id
         token.role = (user as { role?: string }).role ?? 'member'
       }
-      // Refresh org memberships on sign-in or when an explicit session
-      // update is triggered (e.g. after accepting an invite). Cached on
-      // the JWT to avoid a DB hit per request.
-      if (token.sub && (user || trigger === 'update' || !token.orgs)) {
+      // Refresh org memberships on sign-in, on explicit session update
+      // (e.g. after accepting an invite or finishing onboarding), and on
+      // every request while the cached list is empty. The empty-list
+      // case is what unsticks freshly-signed-up users: their first JWT
+      // is issued with `orgs: []`, and `![]` is `false`, so a plain
+      // `!token.orgs` check would never re-fetch even after they create
+      // their first workspace. Once they have ≥1 org the cache kicks in
+      // normally — at most one extra DB hit per onboarding session.
+      const cachedOrgs = token.orgs as SessionOrgMembership[] | undefined
+      const noOrgsCached = !Array.isArray(cachedOrgs) || cachedOrgs.length === 0
+      if (token.sub && (user || trigger === 'update' || noOrgsCached)) {
         try {
           const memberships = await prisma.userOrganization.findMany({
             where: { userId: token.sub as string },
@@ -59,9 +68,12 @@ export const authConfig: NextAuthConfig = {
             name: m.organization.name,
             role: m.role,
           })) satisfies SessionOrgMembership[]
-        } catch {
-          // Org table may not exist yet during the migration window.
-          token.orgs = []
+        } catch (error) {
+          // Don't lock the user out — keep the previous cached value if
+          // present, fall back to [] only on first-load. Either way,
+          // surface the failure so we can see it in Sentry.
+          reportError(error, { context: 'auth.jwt.loadOrgs', userId: token.sub })
+          if (!Array.isArray(token.orgs)) token.orgs = []
         }
       }
       return token
@@ -74,6 +86,17 @@ export const authConfig: NextAuthConfig = {
           (token as { orgs?: SessionOrgMembership[] }).orgs || []
       }
       return session
+    },
+  },
+  events: {
+    // Wipe the active-org cookie on sign-out. Without this, the next
+    // user signing in on a shared device sees the previous user's
+    // org slug in the URL / org switcher briefly before requireAuth
+    // resolves their own memberships — minor data-exposure footgun.
+    async signOut() {
+      try {
+        (await cookies()).delete('cortexx_active_org')
+      } catch { /* not in a request context (rare) */ }
     },
   },
 }

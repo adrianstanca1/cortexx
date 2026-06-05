@@ -147,6 +147,10 @@ export default function DrawingsPage() {
 
   const uploadRevision = async (file: File) => {
     if (!activeDwg || !revLabel.trim()) return
+    if (file.size > 25 * 1024 * 1024) {
+      setToast({ msg: `File too large (max 25 MB). This is ${Math.round(file.size / 1024 / 1024)} MB.`, type: 'error' })
+      return
+    }
     setUploadingRev(true)
     try {
       // Upload bytes via /api/uploads

@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,6 +17,10 @@ export async function GET() {
     weekStart.setHours(0, 0, 0, 0)
 
     const members = await prisma.teamMember.findMany({
+      // Cap at 500 — protects against runaway responses on big tenants.
+      // A workspace with >500 members would need a paginated view
+      // anyway; for now the cap is a backstop, not a UX requirement.
+      take: 500,
       include: {
         assignments: { include: { project: true } },
         timeEntries: { where: { date: { gte: weekStart } } },
@@ -30,7 +35,7 @@ export async function GET() {
 
     return NextResponse.json({ team: result })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch team' }, { status: 500 })
   }
 }
@@ -48,7 +53,7 @@ export async function POST(req: NextRequest) {
     if (!body.role?.trim()) {
       return NextResponse.json({ error: 'Role is required' }, { status: 400 })
     }
-    if (body.dailyRate !== undefined && body.dailyRate !== null && body.dailyRate !== '' && (isNaN(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
+    if (body.dailyRate !== undefined && body.dailyRate !== null && body.dailyRate !== '' && (!Number.isFinite(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
       return NextResponse.json({ error: 'Daily rate must be a non-negative number' }, { status: 400 })
     }
     const member = await prisma.teamMember.create({
@@ -64,7 +69,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json(member, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 })
   }
 }

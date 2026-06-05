@@ -53,6 +53,51 @@ Source of truth for what's shipped, in-flight, and planned. Maintained alongside
 | **Valuations** | `/valuations` — derived view (no new model) for UK construction interim payment applications. `/api/valuations?retentionPct=` aggregates active projects with `budget > 0` and `progress > 0`, computes `gross = budget × progress/100`, less `retentionPct` retention and previous-certified payments, returns `netDue` per project plus workspace totals. UI shows per-project VAL-NNN cards with status pill (draft/submitted/certified), full breakdown table, configurable retention input (0-20%, default 3%). "Preview only — not certified" banner makes the indicative nature clear. Ported from `archive/cortexbuild-field/app/valuations.tsx` (Manus) to the Next.js stack. Drives the `Money & ops` apps section. |
 | **Safety incident register** | `/safety` — `SafetyIncident` model + migration (`20260524001100_add_safety_incident`). 6 incident types per UK practice (near miss / first aid / accident / dangerous occurrence / environmental / security), 5 severity levels, 3-stage status pipeline (open → investigating → closed). RIDDOR-aware: auto-flags accident / dangerous occurrence / critical-severity incidents as RIDDOR-reportable (overridable). Days-without-incident counter, open + RIDDOR-open KPI strip. Activity events on log / close / delete. 10-test parser suite covers auto-RIDDOR rules, days-without-incident math, and the status-transition guard. Ported from `archive/cortexbuild-field/app/safety.tsx` (Manus) to the Next.js stack — replaces the react-native MOCK data with a real Postgres-backed model. |
 
+## 🗺 v1.1 — legacy-archive port plan (May 26 2026)
+
+An Explore-agent audit of `archive/` (10 sub-folders, ~5 MB of historical
+codebases) produced this concrete punch list of features that exist in
+one or more archived versions but are missing from production. Items
+are ordered by impact/effort ratio. Architecture-blocker archives
+(`cortexbuild-unified` failed monorepo, `cortexbuildpro` duplicates,
+`cortexbuild-platform` infra-only) are skipped.
+
+| # | Item | Source archive | Effort | Status |
+|---|------|---------------|--------|--------|
+| 1 | **CSV ledger export** (Xero / QB / Sage compatible) | cortexx-pwa | TRIVIAL | ✅ `1bd6f1d` |
+| 2 | **Project bookmarks** (user-saved shortcuts) | cortexbuild-field | TRIVIAL | ✅ `1bd6f1d` |
+| 3 | **Activity feed enhancements** (live SSE stream, filters) | cortexbuild-ultimate | SMALL | ✅ `8fc25d7` |
+| 4 | **Customer portal hardening** (share-token revoke, expiry) | cortexx-pwa | SMALL | ✅ `838b14e` |
+| 5 | **Action plans module** (create / track / close-out) | cortexbuild-field | MEDIUM | ✅ `52f7961` |
+| 6 | **Conflict resolution log** (cross-team conflicts on site) | cortexbuild-field | MEDIUM | ✅ `a0c430a` |
+| 7 | **Cost forecasting** (cost-vs-actual trend chart on /reports) | cortexbuild-field | MEDIUM | ✅ `26534ce` |
+| 8 | **CIS300 monthly return automation** | cortexbuild-field | MEDIUM | ✅ `e2493d8` |
+| 9 | **Team chat + conversation memory** | cortexbuild-web | MEDIUM | ✅ `d2ca203` |
+| 10 | **Real-time Notification Center** (in-app inbox, unified) | cortexbuild-ultimate | MEDIUM | ✅ `76ea2b7` |
+
+### Parallel R&D (v2.0 horizon)
+
+| Item | Source archive | Effort | Note |
+|------|---------------|--------|------|
+| Advanced analytics dashboards (BI) | cortexbuild-ultimate | LARGE | 8–12 weeks |
+| AI Agent expansion (8 personas) | cortexbuild-ultimate | LARGE | 6–8 weeks; superset of Vera CEO/autopilot |
+| Photo-as-mention (vision → action items) | cortexx-pwa | MEDIUM | Vision pipeline is already wired |
+| Offline map download & mark-up | cortexx-pwa | MEDIUM | iOS Capacitor + Mapbox |
+| NFC site check-in | cortexx-pwa | SMALL | Capacitor plugin |
+| StoreKit + Stripe subscription parity | cortexx-pwa | MEDIUM | iOS in-app purchase |
+| Equipment service logs | cortexbuild-field | SMALL | Maintenance schedule already exists; extend |
+| Enquiry pipelines (sales funnel) | cortexbuild-field | MEDIUM | Lead → quote → win |
+
+### Non-starters (skip)
+
+- **Mobile Expo port to Next.js** (cortexbuild-field): XLARGE; keep Expo
+  app as a parallel deployment if it ever ships
+- **MySQL → PostgreSQL rewrites** (cortexbuild-web): full re-build,
+  not a port
+- **Failed monorepo unification** (cortexbuild-unified): aspirational
+  README, real code 50% non-existent. Lessons learned via decisions,
+  not code.
+
 ## 🛠 In flight
 
 | Item | Status |

@@ -6,7 +6,7 @@ import { useRouter } from 'next/navigation'
 import {
   IcCamera, IcMic, IcReceipt, IcAlert, IcCheck, IcPin, IcSpark, IcDoc,
   IcBell, IcSearch, IcDashboard, IcProjects, IcTasks, IcTeam,
-  IcClock, IcLayers, IcWrench, IcTruck, IcHardhat, IcArrowRight, IcPound,
+  IcClock, IcLayers, IcWrench, IcTruck, IcHardhat, IcArrowRight, IcPound, IcZap,
 } from '@/components/ui/Icons'
 
 interface ModuleItem {
@@ -47,6 +47,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     items: [
       { href: '/inbox',    label: 'Inbox',      Icon: IcBell,   color: '#2563eb', badgeKey: 'inbox' },
       { href: '/messages', label: 'Messages',   Icon: IcBell,   color: '#06b6d4', badgeKey: 'messages' },
+      { href: '/chat',     label: 'Team chat',  Icon: IcBell,   color: '#06b6d4' },
       { href: '/rfis',     label: 'RFIs',       Icon: IcAlert,  color: '#f59e0b', badgeKey: 'rfis' },
       { href: '/ask',      label: 'Ask Cortex', Icon: IcSpark,  color: '#8b5cf6', ai: true },
     ],
@@ -101,6 +102,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/performance',   label: 'Performance',   Icon: IcCheck,   color: '#f59e0b' },
       { href: '/apprentice',    label: 'Apprentices',   Icon: IcHardhat, color: '#8b5cf6' },
       { href: '/sub-portal',    label: 'Sub portal',    Icon: IcTeam,    color: '#2563eb' },
+      { href: '/cis300',        label: 'CIS300',        Icon: IcReceipt, color: '#10b981' },
     ],
   },
   {
@@ -126,6 +128,8 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Quality & governance',
     items: [
       { href: '/inspections', label: 'Inspections', Icon: IcCheck, color: '#10b981', badgeKey: 'inspections' },
+      { href: '/action-plans', label: 'Action plans', Icon: IcCheck, color: '#10b981' },
+      { href: '/conflicts', label: 'Conflicts', Icon: IcAlert, color: '#ef4444' },
       { href: '/meetings',    label: 'Meetings',    Icon: IcClock, color: '#06b6d4', badgeKey: 'meetings' },
       { href: '/risks',       label: 'Risk register', Icon: IcAlert, color: '#ef4444', badgeKey: 'risks' },
       { href: '/safety',      label: 'Safety',      Icon: IcHardhat, color: '#ef4444', badgeKey: 'safety' },
@@ -147,9 +151,23 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/saved-views',   label: 'Saved views',   Icon: IcLayers,  color: '#8ea8c5' },
       { href: '/tags',          label: 'Tags',          Icon: IcLayers,  color: '#8b5cf6' },
       { href: '/process-library', label: 'Process library', Icon: IcDoc, color: '#06b6d4' },
+      { href: '/tpl-library',   label: 'Template library', Icon: IcDoc,  color: '#2563eb' },
       { href: '/personas',      label: 'Personas',      Icon: IcTeam,    color: '#ec4899' },
       { href: '/developer-api', label: 'Developer API', Icon: IcSpark,   color: '#8ea8c5' },
       { href: '/infrastructure', label: 'Infrastructure', Icon: IcWrench, color: '#52749a' },
+      { href: '/status',        label: 'Status',        Icon: IcCheck,   color: '#10b981' },
+      { href: '/roles',         label: 'Roles',         Icon: IcTeam,    color: '#06b6d4' },
+    ],
+  },
+  {
+    title: 'AI & insights',
+    items: [
+      { href: '/vera-ceo',      label: 'Vera CEO',      Icon: IcSpark,   color: '#8b5cf6', ai: true },
+      { href: '/vera-autopilot',label: 'Vera autopilot',Icon: IcZap,     color: '#8b5cf6', ai: true },
+      { href: '/leadership',    label: 'Leadership',    Icon: IcTeam,    color: '#8b5cf6', ai: true },
+      { href: '/ai-history',    label: 'AI history',    Icon: IcSpark,   color: '#8b5cf6', ai: true },
+      { href: '/my-day',        label: 'My day',        Icon: IcClock,   color: '#f59e0b' },
+      { href: '/tomorrow',      label: 'Tomorrow',      Icon: IcClock,   color: '#06b6d4' },
     ],
   },
 ]

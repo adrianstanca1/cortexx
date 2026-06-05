@@ -1,16 +1,21 @@
 import Link from 'next/link'
 import type { Metadata } from 'next'
+import { isBillingConfigured, PLANS as CANONICAL_PLANS } from '@/lib/billing'
 
 export const metadata: Metadata = {
   title: 'Pricing — Cortexx',
   description: 'Construction-management software for UK contractors. Trial free for 14 days. From £29/month.',
 }
 
+// Marketing copy here, canonical pricing from lib/billing.ts. Previously
+// the £29 / £79 strings were hard-coded in three places (here,
+// /settings/organization, and lib/billing.ts) — when pricing changed,
+// only one drifted into sync. Now changes in lib/billing.ts flow here.
 const PLANS = [
   {
     key: 'starter',
     name: 'Starter',
-    price: '£29',
+    price: `£${CANONICAL_PLANS.starter.priceMonthlyGbp}`,
     cadence: '/month',
     description: 'For solo contractors and small crews.',
     features: [
@@ -28,7 +33,7 @@ const PLANS = [
   {
     key: 'pro',
     name: 'Pro',
-    price: '£79',
+    price: `£${CANONICAL_PLANS.pro.priceMonthlyGbp}`,
     cadence: '/month',
     description: 'For growing builders running multiple sites.',
     features: [
@@ -95,9 +100,34 @@ const FAQ = [
 ]
 
 export default function PricingPage() {
+  // When STRIPE_SECRET_KEY isn't set in production yet (early-access phase),
+  // self-serve checkout is disabled — point users at sales for manual
+  // onboarding. Trials still work; only the subscribe-with-card flow
+  // is gated.
+  const selfServeBilling = isBillingConfigured()
+
   return (
     <main style={{ background: '#06101e', minHeight: '100dvh', padding: '60px 24px 80px', color: '#eef3fa' }}>
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
+        {!selfServeBilling && (
+          <div style={{
+            maxWidth: 720,
+            margin: '0 auto 32px',
+            padding: '14px 18px',
+            background: 'linear-gradient(135deg, rgba(245,158,11,0.12), rgba(245,158,11,0.04))',
+            border: '0.5px solid rgba(245,158,11,0.3)',
+            borderRadius: 12,
+            fontFamily: 'var(--font-system)',
+            fontSize: 13,
+            color: '#eef3fa',
+            textAlign: 'center',
+          }}>
+            <strong style={{ color: '#f59e0b' }}>Early access:</strong> self-serve checkout is being polished —
+            during this window please <Link href="mailto:sales@cortexbuildpro.com?subject=Cortexx%20subscription" style={{ color: '#f59e0b', textDecoration: 'underline' }}>email sales</Link> to subscribe.
+            The 14-day Pro trial is unaffected — sign up and start using the app today.
+          </div>
+        )}
+
         <div style={{ textAlign: 'center', marginBottom: 48 }}>
           <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#f59e0b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Pricing</div>
           <h1 style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.03em', margin: '0 0 12px', fontFamily: 'var(--font-system)' }}>

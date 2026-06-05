@@ -5,6 +5,7 @@ import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Avatar from '@/components/ui/Avatar'
 import { IcChevL, IcSearch, IcX } from '@/components/ui/Icons'
+import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 
 interface Activity {
   id: string
@@ -28,6 +29,14 @@ export default function ActivityPage() {
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
   const [projectFilter, setProjectFilter] = useState<string>('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  // Live SSE stream prepends new activities as they happen. The hook
+  // reseeds whenever the `activities` reference changes (e.g. after
+  // a filter-triggered refetch), so applied filters keep working.
+  // Cast — the global Activity type has a thicker `project` shape;
+  // we only use id/name here.
+  const realtime = useRealtimeActivity(activities as unknown as Parameters<typeof useRealtimeActivity>[0])
+  const liveActivities = realtime.activities as unknown as Activity[]
+  const connected = realtime.connected
 
   const load = useCallback(() => {
     const params = new URLSearchParams()
@@ -62,7 +71,15 @@ export default function ActivityPage() {
           <IcChevL size={18} color="#52749a" />
           <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Back</span>
         </Link>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Activity</h1>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: 'var(--font-system)', margin: 0 }}>Activity</h1>
+          <span
+            role="status"
+            aria-label={connected ? 'Live updates connected' : 'Reconnecting'}
+            title={connected ? 'Live updates connected' : 'Reconnecting…'}
+            style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 6px #10b98166' : 'none', transition: 'all 0.3s' }}
+          />
+        </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '9px 14px', marginTop: 10 }}>
           <IcSearch size={14} color="#52749a" />
@@ -101,7 +118,7 @@ export default function ActivityPage() {
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-            {activities.map(a => {
+            {liveActivities.map(a => {
               const color = ACTOR_COLOR[a.actorType] || '#52749a'
               const mins = Math.round((now - new Date(a.createdAt).getTime()) / 60000)
               const rel = mins < 60 ? `${mins}m` : mins < 1440 ? `${Math.round(mins / 60)}h` : `${Math.round(mins / 1440)}d`

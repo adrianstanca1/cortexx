@@ -10,9 +10,11 @@ export const dynamic = 'force-dynamic'
  * Daily scan for things that are about to expire in the next 14 days:
  * training certifications, RAMS reviews, permits valid-to.
  *
- * Each expiring item drives a single workspace-wide push so the team
- * notices without spamming once per device. UI links into the relevant
- * /training or /rams page.
+ * Iterates per-org so each tenant gets a push describing ONLY its own
+ * expiring items. The previous version summed counts across every org
+ * and blasted ONE push (no userId scope) to every push subscription
+ * globally — a cross-tenant data leak (org A learning about org B's
+ * existence) and useless (the count never matched either org's view).
  */
 export async function POST(req: NextRequest) {
   const denied = requireCronAuth(req)
@@ -25,50 +27,80 @@ async function runExpiryScan() {
   const horizon = new Date()
   horizon.setDate(horizon.getDate() + 14)
 
+  // Step 1: pull everything expiring in the horizon window, scoped by org.
+  // We select organizationId on each row so we can bucket by tenant below.
   const [certs, rams, permits] = await Promise.all([
     prisma.certification.findMany({
       where: { expiryDate: { gte: now, lte: horizon } },
-      select: { id: true, type: true, expiryDate: true, member: { select: { name: true } } },
+      select: { id: true, organizationId: true },
     }),
     prisma.rams.findMany({
       where: { reviewBy: { gte: now, lte: horizon } },
-      select: { id: true, title: true, reviewBy: true },
+      select: { id: true, organizationId: true },
     }),
     prisma.permit.findMany({
       where: { status: 'active', validTo: { gte: now, lte: horizon } },
-      select: { id: true, type: true, validTo: true },
+      select: { id: true, organizationId: true },
     }),
   ])
 
   const total = certs.length + rams.length + permits.length
   if (total === 0) {
-    return NextResponse.json({ expiring: 0 })
+    return NextResponse.json({ expiring: 0, orgsNotified: 0 })
   }
 
-  // Headline notification — clicking lands on whichever module has the
-  // most expiring items so the user can act immediately.
-  const target =
-    certs.length >= rams.length && certs.length >= permits.length ? '/training'
-      : rams.length >= permits.length ? '/rams'
-        : '/permits'
+  // Step 2: bucket per-org so each tenant gets its own count.
+  type OrgBucket = { certs: number; rams: number; permits: number }
+  const byOrg = new Map<string, OrgBucket>()
+  const ensure = (id: string | null): OrgBucket | null => {
+    if (!id) return null
+    let b = byOrg.get(id)
+    if (!b) { b = { certs: 0, rams: 0, permits: 0 }; byOrg.set(id, b) }
+    return b
+  }
+  for (const c of certs) ensure(c.organizationId)!.certs++
+  for (const r of rams) ensure(r.organizationId)!.rams++
+  for (const p of permits) ensure(p.organizationId)!.permits++
 
-  const segs: string[] = []
-  if (certs.length) segs.push(`${certs.length} cert${certs.length === 1 ? '' : 's'}`)
-  if (rams.length) segs.push(`${rams.length} RAMS`)
-  if (permits.length) segs.push(`${permits.length} permit${permits.length === 1 ? '' : 's'}`)
+  // Step 3: one push-per-org, scoped to the org's users. sendPush honours
+  // the 'safety' preference per user, so opted-out users still don't see it.
+  let orgsNotified = 0
+  await Promise.all(
+    Array.from(byOrg.entries()).map(async ([orgId, bucket]) => {
+      const target =
+        bucket.certs >= bucket.rams && bucket.certs >= bucket.permits ? '/training'
+          : bucket.rams >= bucket.permits ? '/rams'
+            : '/permits'
+      const segs: string[] = []
+      if (bucket.certs) segs.push(`${bucket.certs} cert${bucket.certs === 1 ? '' : 's'}`)
+      if (bucket.rams) segs.push(`${bucket.rams} RAMS`)
+      if (bucket.permits) segs.push(`${bucket.permits} permit${bucket.permits === 1 ? '' : 's'}`)
 
-  sendPush({
-    category: 'safety',
-    payload: {
-      title: '⏳ Expiring in the next 14 days',
-      body: segs.join(' · '),
-      url: target,
-      tag: 'expiry-daily',
-    },
-  }).catch(() => {})
+      const orgUsers = await prisma.userOrganization.findMany({
+        where: { organizationId: orgId },
+        select: { userId: true },
+      })
+      await Promise.all(
+        orgUsers.map(({ userId }) =>
+          sendPush({
+            userId,
+            category: 'safety',
+            payload: {
+              title: '⏳ Expiring in the next 14 days',
+              body: segs.join(' · '),
+              url: target,
+              tag: `expiry-daily-${orgId}`,
+            },
+          }).catch(() => {}),
+        ),
+      )
+      orgsNotified++
+    }),
+  )
 
   return NextResponse.json({
     expiring: total,
+    orgsNotified,
     breakdown: { certifications: certs.length, rams: rams.length, permits: permits.length },
   })
 }

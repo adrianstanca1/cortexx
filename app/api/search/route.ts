@@ -1,6 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +21,12 @@ export const dynamic = 'force-dynamic'
 export async function GET(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  // 19 parallel ILIKE queries per call — search-as-you-type from a few
+  // users would otherwise saturate Postgres on a large tenant. 'read'
+  // profile is 240/min/user, plenty for normal use but trips on a
+  // pathological loop.
+  const limited = await enforceRateLimit(req, 'read', (auth.user as { id?: string }).id)
+  if (limited) return limited
   try {
     const q = String(new URL(req.url).searchParams.get('q') || '').trim()
     if (q.length < 2) {
@@ -156,7 +164,7 @@ export async function GET(req: NextRequest) {
       total,
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Search failed' }, { status: 500 })
   }
 }

@@ -21,7 +21,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
 
       - name: Setup SSH
         run: |
@@ -234,6 +234,22 @@ jobs:
           CRON
             chmod +x /etc/cron.daily/cortexx-backup
 
+            # ─── 4b. Preserve CRON_SECRET across deploys ───────────────────
+            # The `cat > .env.production` at step 6 OVERWRITES the file with
+            # only the keys this workflow knows about — so CRON_SECRET would
+            # be lost on every deploy. Stash it here BEFORE the overwrite and
+            # restore in step 6b. Generate on first deploy.
+            EXISTING_CRON_SECRET=""
+            if [ -f $APP_DIR/.env.production ]; then
+              EXISTING_CRON_SECRET=$(grep -oP '^CRON_SECRET=\K.+' $APP_DIR/.env.production || echo "")
+            fi
+            if [ -z "$EXISTING_CRON_SECRET" ]; then
+              EXISTING_CRON_SECRET=$(openssl rand -hex 32)
+              echo "✓ generated fresh CRON_SECRET (first deploy)"
+            else
+              echo "✓ reusing existing CRON_SECRET"
+            fi
+
             # ─── 5. Build URL and clone/update repo ───────────────────────
             DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"
 
@@ -269,9 +285,28 @@ jobs:
           VAPID_CONTACT_EMAIL=${VAPID_CONTACT_EMAIL:-admin@cortexbuildpro.com}
           MULTITENANT_ENFORCED=true
           REDIS_URL=redis://127.0.0.1:6379
+          CRON_SECRET=$EXISTING_CRON_SECRET
+          UPLOAD_DIR=/var/lib/cortexx/uploads
           ENV
             chmod 600 $APP_DIR/.env.production
+            # Ensure the upload directory exists with correct ownership.
+            # Without UPLOAD_DIR the code defaulted to $APP_DIR/uploads, which
+            # was wiped on every fresh clone — silent data loss on redeploy.
+            mkdir -p /var/lib/cortexx/uploads
+            chown -R root:root /var/lib/cortexx/uploads
+            chmod 755 /var/lib/cortexx/uploads
             echo "✓ .env.production written ($(wc -c < $APP_DIR/.env.production) bytes)"
+
+            # ─── 5b. /api/cron/* schedulers (idempotent, uses preserved secret) ─
+            cat > /etc/cron.d/cortexx-cron << CRONJ
+          # Cortexx API crons. POSTs to /api/cron/* via localhost with the
+          # CRON_SECRET. Logs to syslog (journalctl -u cron).
+          0  6  *   *   *    root  curl -sS -X POST -H "Authorization: Bearer $EXISTING_CRON_SECRET" http://localhost:$APP_PORT/api/cron/overdue-invoices
+          30 6  *   *   *    root  curl -sS -X POST -H "Authorization: Bearer $EXISTING_CRON_SECRET" http://localhost:$APP_PORT/api/cron/expiry-warnings
+          0  3  *   *   0    root  curl -sS -X POST -H "Authorization: Bearer $EXISTING_CRON_SECRET" http://localhost:$APP_PORT/api/cron/prune-push
+          CRONJ
+            chmod 644 /etc/cron.d/cortexx-cron
+            echo "✓ /etc/cron.d/cortexx-cron written"
 
             # ─── 6. Install + migrate + seed + build ──────────────────────
             cd $APP_DIR
@@ -295,6 +330,13 @@ jobs:
             DATABASE_URL="$DB_URL" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" \
               npx prisma db seed > /tmp/cortexx-seed.log 2>&1 || echo "Seed skipped"
             tail -8 /tmp/cortexx-seed.log
+            # Nuke .next/ before every build. Repeated incremental rebuilds
+            # accumulate stale React-client-manifest entries — symptom is
+            # 'Invariant: client reference manifest for route X does not
+            # exist' 500s on a subset of routes (hit Adrian on /settings
+            # via mobile after 5 chained deploys on 25 May). Clean build
+            # adds ~30s to the deploy; worth it for predictability.
+            rm -rf .next
             DATABASE_URL="$DB_URL" NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
               NEXTAUTH_URL=https://cortexbuildpro.com npm run build > /tmp/cortexx-build.log 2>&1
             BUILD_RC=$?

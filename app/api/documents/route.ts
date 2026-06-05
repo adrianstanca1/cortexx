@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,7 +35,7 @@ export async function GET(req: NextRequest) {
     ])
     return NextResponse.json({ documents, total, hasMore: skip + documents.length < total })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch documents' }, { status: 500 })
   }
 }
@@ -77,7 +78,7 @@ export async function POST(req: NextRequest) {
     }
     return NextResponse.json(document, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create document' }, { status: 500 })
   }
 }

@@ -1,45 +1,44 @@
 # Cortexx — Consolidated Archive
 
-This directory contains the full source code of all previously separate Cortexx-related repositories, merged into this single repository on 2026-05-24.
+Full source of legacy Cortexx-related repositories that were merged into
+this monorepo on **2026-05-24**. All originals have been deleted from
+GitHub; this is the single source of truth.
 
-All repositories have been deleted from GitHub. This is now the single source of truth.
+After the v1.1 legacy-port (May 26 2026), low-value archives were
+pruned. The remaining 4 archives are kept as reference for any future
+work that needs to dig into their unique data shapes or design patterns.
 
-## Archived Repositories
+## Surviving archives (4)
 
-| Directory | Original Repo | Stack | Description |
+| Directory | Original repo | Stack | What it has of value |
 |---|---|---|---|
-| `cortexbuild-ultimate/` | `adrianstanca1/cortexbuild-ultimate` | Vite + Capacitor + Express | AI-powered unified construction management platform — 84 feature modules, 121 tests, billing, MFA, iOS docs |
-| `cortexbuild-field/` | `adrianstanca1/cortexbuild-field` | Expo React Native | Mobile field app — site inspections, daily reports, drawings, materials, equipment |
-| `cortexbuild-web/` | `adrianstanca1/cortexbuild-web` | Vite + Express | WhatsApp agent, chat inbox, conversations, issue tracker |
-| `cortexbuildpro/` | `adrianstanca1/cortexbuildpro` | Expo + Supabase | Native iOS/Android mobile app |
-| `cortexbuild-platform/` | `adrianstanca1/cortexbuild-platform` | Monorepo (web + api + db) | Platform monorepo scaffold |
-| `cortexbuild-unified/` | `adrianstanca1/cortexbuild-unified` | Monorepo stub | Unified monorepo packages scaffold |
-| `cortexbuildpro-ultimate/` | `adrianstanca1/cortexbuildpro-ultimate` | Vite React | Simple SPA scaffold |
+| `cortexx-pwa/` | `adrianstanca1/cortexx-pwa` | Standalone single-file PWA | Original design language, 80-phase roadmap, App Store submission pack. The design lineage of the current app. |
+| `cortexbuild-field/` | `adrianstanca1/cortexbuild-field` | Expo React Native + tRPC + Drizzle | Unique data shapes (`actionPlans`, `conflictPending`, `enquiryPipelines`, `equipmentAssignments`) — v1.1 ported the top 4 |
+| `cortexbuild-ultimate/` | `adrianstanca1/cortexbuild-ultimate` | Vite + Capacitor + Express | 8 AI-agent personas (CEO/CFO/Site Mgr/Compliance/Sales/Estimator/etc), advanced analytics dashboards, 121 Vitest tests — most of this is v2.0 horizon |
+| `cortexbuild-web/` | `adrianstanca1/cortexbuild-web` | Vite + Express + MySQL | Team chat + conversation memory patterns; v1.1 ported these as the live `/chat` module |
 
-## Key Assets to Promote
+## Cleaned-out archives
 
-The following files from the archive are candidates for integration into the live Next.js app:
+Deleted on 2026-05-26 as per the Explore-agent inventory:
 
-### From `cortexbuild-ultimate/`
-- `src/components/modules/` — 84 feature modules (BIM4D, CIS, RAMS, Tenders, AI Vision, etc.)
-- `server/routes/` — 60+ API route handlers
-- `docs/` — API docs, App Store deployment guide, CI/CD runbook, platform spec
-- `ios/` — Capacitor iOS project (alternative to the one in cortexx-pwa)
+| Directory | Why deleted |
+|---|---|
+| `claude-design/` | Already consumed by `cortexx-pwa/` |
+| `cortexbuild-platform/` | Infra-only (Docker + nginx config), no feature code |
+| `cortexbuild-unified/` | Failed monorepo unification attempt; README aspirational, 50+ TS2307 errors on tsc |
+| `cortexbuildpro/` | Older version of `cortexbuild-field/` (duplicate) |
+| `cortexbuildpro-ultimate/` | Single HTML file, no real content |
 
-### From `cortexbuild-field/`
-- `app/(tabs)/` — Expo tabs for field app
-- `server/routers/` — tRPC routers
-- `docs/` — Field app roadmap and superpowers
+Git history preserves these if anyone needs to recover.
 
-### From `cortexbuild-web/`
-- `client/src/pages/` — Chat inbox, conversations, issue tracker, image gallery
-- `server/` — Express API server
+## Items ported in v1.1
 
-### From `cortexbuildpro/`
-- `src/` — React Native screens and navigation
-- `docs/` — Architecture docs
+See `CHANGELOG.md` (v1.1.0 — 26 May 2026) for the full list of features
+extracted from these archives into the live Next.js app. The 10 items
+shipped covered the highest-leverage code from the surviving 4 archives;
+the remaining items are tracked under "v2.0 horizon" in `ROADMAP.md`.
 
-## Notes
+## Excluded from archive
 
-- `node_modules/`, `dist/`, `.next/`, `build/`, and lock files are excluded from the archive.
-- The live production app at `cortexbuildpro.com` runs from the `app/`, `components/`, `lib/`, and `prisma/` directories at the root of this repository.
+`node_modules/`, `dist/`, `.next/`, `build/`, and lock files were
+excluded when these archives were created.

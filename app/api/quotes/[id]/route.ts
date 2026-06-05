@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,9 +22,13 @@ function recalc(lineItems: LineItem[], vatRate: number) {
   return { subtotal, vatAmount, total: subtotal + vatAmount }
 }
 
+// Match the collection route's cap. See quotes/route.ts.
+const MAX_QUOTE_LINE_ITEMS = 500
+
 function validateLineItems(raw: unknown): LineItem[] {
   if (!Array.isArray(raw)) return []
   return raw
+    .slice(0, MAX_QUOTE_LINE_ITEMS)
     .map(it => {
       if (!it || typeof it !== 'object') return null
       const o = it as Record<string, unknown>
@@ -31,7 +36,7 @@ function validateLineItems(raw: unknown): LineItem[] {
       if (!description) return null
       const quantity = Number(o.quantity)
       const unitPrice = Number(o.unitPrice)
-      if (isNaN(quantity) || isNaN(unitPrice)) return null
+      if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice)) return null
       const total = Number.isFinite(quantity * unitPrice) ? quantity * unitPrice : 0
       return {
         description,
@@ -127,7 +132,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     })
     return NextResponse.json(quote)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update quote' }, { status: 500 })
   }
 }
@@ -146,7 +151,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     })
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete quote' }, { status: 500 })
   }
 }

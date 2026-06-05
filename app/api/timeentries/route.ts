@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -57,7 +58,7 @@ export async function GET(req: NextRequest) {
 
     return NextResponse.json({ entries, byMember: Object.values(byMember), week: currentWeek, year: currentYear })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch time entries' }, { status: 500 })
   }
 }
@@ -75,7 +76,7 @@ export async function POST(req: NextRequest) {
     if (!body.date) {
       return NextResponse.json({ error: 'date is required' }, { status: 400 })
     }
-    if (body.hours === undefined || body.hours === null || isNaN(Number(body.hours)) || Number(body.hours) <= 0) {
+    if (body.hours === undefined || body.hours === null || !Number.isFinite(Number(body.hours)) || Number(body.hours) <= 0) {
       return NextResponse.json({ error: 'Hours must be a positive number' }, { status: 400 })
     }
     if (Number(body.hours) > 24) {
@@ -101,7 +102,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json(entry, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create time entry' }, { status: 500 })
   }
 }

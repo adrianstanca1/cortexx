@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -60,7 +61,7 @@ export async function GET(req: NextRequest) {
       pendingCisHeld: totals._sum.cisAmount || 0,
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch sub-invoices' }, { status: 500 })
   }
 }
@@ -124,7 +125,7 @@ export async function POST(req: NextRequest) {
     if (error && typeof error === 'object' && 'code' in error && (error as { code: string }).code === 'P2002') {
       return NextResponse.json({ error: 'Duplicate invoice number for this subcontractor' }, { status: 409 })
     }
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create sub-invoice' }, { status: 500 })
   }
 }

@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +22,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     if (!member) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json({ member })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch team member' }, { status: 500 })
   }
 }
@@ -29,9 +31,11 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (limited) return limited
   try {
     const body = await req.json()
-    if (body.dailyRate !== undefined && (isNaN(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
+    if (body.dailyRate !== undefined && (!Number.isFinite(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
       return NextResponse.json({ error: 'Daily rate must be a non-negative number' }, { status: 400 })
     }
     if (body.name !== undefined && !body.name?.trim()) {
@@ -54,7 +58,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     })
     return NextResponse.json(member)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update team member' }, { status: 500 })
   }
 }
@@ -85,7 +89,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     }
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete team member' }, { status: 500 })
   }
 }

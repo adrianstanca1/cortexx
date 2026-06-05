@@ -10,7 +10,7 @@ Follow this top to bottom. Don't skip steps — Apple will reject for any one of
 |---|---|---|
 | Apple Developer Program | developer.apple.com | £79/yr (UK) or $99/yr. Pay first; account verification can take 24–48h. |
 | Mac with Xcode 15.4+ | App Store on macOS | You cannot submit from Windows or Linux. Period. |
-| Bundle ID registered | developer.apple.com → Certificates, IDs & Profiles → Identifiers | Use `app.cortexbuild.cortexx` or your own. Cannot be changed after first upload. |
+| Bundle ID registered | developer.apple.com → Certificates, IDs & Profiles → Identifiers | Use `com.cortexbuild.app` or your own. Cannot be changed after first upload. |
 | App record in App Store Connect | appstoreconnect.apple.com → My Apps → + | Pick the bundle ID. SKU = any unique string (e.g. `CORTEXX-1`). |
 | DUNS number (orgs only) | dnb.com | Free for sole traders; required if filing under a company name. |
 

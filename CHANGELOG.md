@@ -1,5 +1,255 @@
 # Changelog
 
+## v1.1.2 — 26 May 2026 (pre-launch security pass + test coverage)
+
+Post-v1.1.1 commits closing the last loop before the public launch.
+
+### Security (from a focused code-review subagent pass)
+
+Subagent audited the 25 highest-risk files (auth chain, multi-tenancy
+gate, billing + Stripe webhook, cron + share-token, public surfaces).
+Verdict was launch-ready with 1 MEDIUM + 2 LOW findings; the
+fixable two shipped (`2e8d51f`):
+
+- **Invite-email rate limit** (MEDIUM) — `/api/orgs/[id]/invites`
+  POST had no `enforceRateLimit`, so any admin (including a fresh
+  trial-org admin) could spray invites to arbitrary addresses as a
+  phishing relay. Added the 'write' profile limit matching every
+  other write surface.
+- **Share-token role gate** (LOW) — `/api/projects/[id]/share-token`
+  POST + DELETE accepted any authenticated user including
+  `viewer`. A viewer could DOS the client-facing link by rotating
+  it. Now gated by `canManage(role)` via a `requireManageRole()`
+  helper reading `getCurrentOrg().role`.
+
+### Test coverage
+
+- **`test/tenancy.test.js` mirror sync** — the local OWNED_MODELS
+  set was 3 days stale (missing the 6 v1.1 additions). Drift
+  between the live extension and the test guard is exactly the
+  silent failure mode this suite was meant to catch. Added all
+  6 + 6 new tests, one per v1.1 model exercising a different op.
+- Tests: 183 → 189.
+
+### Repo hygiene
+
+- **Dropped `FINAL_REVIEW.md`** — stale 3-day-old audit doc
+  claiming 43 pages / 35 routes / 13 models; current reality is
+  107 / 196 / 79. Pure noise; README footer points at CHANGELOG +
+  RUNBOOK now. (`8968fa3`)
+- **VPS cleanup** — pm2 logs 96K → 4K, apt cache freed (180 MB),
+  /tmp old build artifacts removed, /opt/cortexx-rebuild-stash
+  (leftover from clean rebuild) removed.
+
+### Verification
+
+- All checks green: TSC 0 · 189/189 tests · lint 0 · build OK
+- Production: 8/8 pm2 workers · /api/health 200 in 27 ms · public
+  routes 200 · auth routes 307 · cron secret env↔cron.d in sync
+
+---
+
+## v1.1.1 — 26 May 2026 (launch hardening)
+
+Post-v1.1.0 fixes surfaced by a launch-readiness probe + a clean
+VPS rebuild that intentionally exercised every code path.
+
+### Public surface
+- **Public routes 307→200**: `/privacy`, `/terms`, `/robots.txt`,
+  `/sitemap.xml`, `/status` were gated as auth-required by the
+  middleware. SEO crawlers (Google) literally can't follow a 307 to
+  `/login`, so `/robots.txt` referencing `/sitemap.xml` 307s broke
+  the entire sitemap chain. Added all 5 to `PUBLIC_PATHS` in
+  `proxy.ts`. (`8e53216`)
+- **`/status` added to `/apps`** registry under Daily Ops. (`f3e3848`)
+- **Billing graceful fallback**: when `STRIPE_SECRET_KEY` is unset
+  (early-access phase), `/pricing` shows an `Early access` banner
+  pointing to `mailto:sales@`, and `/settings/organization` checkout
+  button opens a pre-filled `mailto:sales` instead of an error toast.
+  Trial signup unaffected. (`863a02e`)
+
+### Cron infrastructure
+- **CRON_SECRET infrastructure** newly set up on the VPS — without
+  it, `/api/cron/{overdue-invoices,expiry-warnings,prune-push}`
+  returned 503 to every call and the 4 cron jobs had never run since
+  v1.0. Now: env-stored secret, `/etc/cron.d/cortexx-cron` with 3
+  schedules (06:00 daily, 06:30 daily, 03:00 Sunday). Smoke test
+  `POST /api/cron/overdue-invoices` → 200 with real data
+  `{overdueCount:1, orgsNotified:1}`. (`d2edd48`, hot-patched
+  manually via `vps-exec`)
+- **CRON_SECRET preservation in `deploy-vps.yml`** — d2edd48 had a
+  silent ordering bug (cron-trigger step before the `.env.production`
+  overwrite), so the secret would rotate on every deploy. Fixed by
+  stashing `EXISTING_CRON_SECRET` before the env rewrite, then
+  including it in the new env file + writing matching cron.d.
+  Verified: env and cron.d match after a fresh deploy. (`bfd8719`)
+
+### Repo hygiene
+- **PR #29 Capacitor 6→8 upgrade** merged — iOS pipeline now on
+  Node 22 + iOS 15+. All checks green. (`5c96759`)
+- **Archive cleanup**: 5 of 9 sub-folders pruned (5.7 MB), keeping
+  4 with real reference value (`cortexx-pwa` design lineage,
+  `cortexbuild-field` mobile shapes, `cortexbuild-ultimate` AI/test
+  ideas, `cortexbuild-web` chat patterns). (`c34d13f`)
+- **`docs/RUNBOOK.md`** — operational handover doc: env vars, cron
+  schedule, deploy/rollback procedures, incident triage, capacity
+  envelope, on-call expectations. (`5f17795`)
+
+### Verification
+- TSC 0 errors · 183/183 unit + 10/10 integration tests · lint 0
+- Production probe: 8/8 pm2 workers · all 29 migrations applied
+- All public routes 200 · all auth routes 307 · `/api/health` 200 in 27ms
+- End-to-end cron call: HTTP 200 with real data
+- Clean rebuild verified the deploy workflow is idempotent
+
+### Deferred to a future release
+- Wiring real Stripe price-ids (early-access banner stays until ready)
+- Unit tests for the 5 v1.1 modules (action-plans, conflicts, cis300,
+  bookmarks, chat) — need per-module integration-DB setup
+- SENTRY_DSN, RESEND_API_KEY, S3_*, OLLAMA_BASE_URL — all degrade
+  gracefully today; wire when you have the credentials
+
+---
+
+## v1.1.0 — 26 May 2026 (legacy-archive port complete)
+
+A 10-item plan landed in `ROADMAP.md` after an Explore-agent inventory
+of the 10 sub-folders under `archive/`. Each item is its own commit
+shipping a full slice (schema → migration → API → UI → apps registry).
+**All 10 items shipped.**
+
+### Shipped
+
+- **CSV ledger export** (`1bd6f1d`) — Xero/QuickBooks/Sage-compatible
+  accounting CSV combining outgoing invoices (account 200) + sub-invoices
+  (account 310) with VAT rate column. Also adds `sub-invoices` as its
+  own export type.
+- **Project bookmarks** (`1bd6f1d`) — new `ProjectBookmark` Prisma model
+  (unique `[userId, projectId]`), `/api/bookmarks` GET/POST/DELETE,
+  auto-scoped per org.
+- **Activity feed live SSE** (`8fc25d7`) — `/activity` subscribes to
+  `/api/events/stream` and prepends new rows in real-time; small
+  connection dot mirrors the dashboard's.
+- **Customer portal share-link expiry** (`838b14e`) — `Project.shareTokenExpiresAt`;
+  POST accepts `{ expiresInDays }` or `{ expiresAt }` (clamped 365d);
+  expired tokens return HTTP 410 Gone so the client UI can render a
+  distinct "expired" state.
+- **Action plans module** (`52f7961`, subagent) — `ActionPlan` model
+  with owner/priority/status/dueDate/closeOutNotes/linked-to-X fields,
+  full CRUD via `ModuleRecordModal`, per-row "Mark done" quick action.
+- **Conflicts module** (`a0c430a`, subagent) — `Conflict` model
+  (cross-team site conflicts with severity / status / parties / resolution
+  notes), filter chips per status, per-row "Mark resolved" quick action,
+  critical rows get a red border.
+- **Cost forecasting on /reports** (`26534ce`) — 6-month outflow/inflow/net
+  cashflow chart (pure CSS bars, no chart library) + a 3-month-rolling-
+  average forecast bucket for next month. Outflow = SubInvoice.grossAmount
+  + PurchaseOrder.total; inflow = Invoice.amount.
+- **Notification Center** (`76ea2b7`) — `/inbox` aggregates 3 new
+  compliance categories: expiring permits (validTo < +7d), RAMS due for
+  review (reviewBy < +7d), and lapsing certifications (expiryDate < +7d).
+  Page also subscribes to SSE — debounces 1s then refetches on activity
+  events. Visibility-gated so background tabs don't refetch.
+- **CIS300 monthly return automation** (`e2493d8`, subagent) — UK
+  HMRC monthly return automated. New `Cis300Return` Prisma model
+  with `@@unique([organizationId, taxMonth])` for idempotent recomputes;
+  `POST /api/cis300` aggregates the SubInvoice window `[taxMonth, +1mo)`
+  by subcontractorId; `GET /api/cis300/[id]/export` emits HMRC-import-
+  compatible CSV (Verification Number / Subcontractor Name / UTR /
+  Gross / Materials / Tax Deducted). UI: list with current-tax-month
+  default (6th-of-month edge handled), detail page with 3 totals card,
+  lineItems table, status-gated Mark-submitted / Download / Delete
+  buttons.
+- **Team chat + conversation memory** (`d2ca203`, subagent) — full
+  per-project chat. Two new Prisma models (`Conversation`,
+  `ChatMessage`), 3 new API surfaces (conversations + per-conversation
+  messages with before/after cursor pagination), 2 new pages
+  (`/chat` list + new-conversation modal, `/chat/[id]` detail with
+  Cmd-Enter to send, 5s message polling while tab visible, 30s
+  conversation-list refresh, auto-scroll near-bottom).
+
+### Verification
+
+- TSC 0 errors · 183/183 unit tests · 10/10 integration tests
+- 5 new Prisma models (ProjectBookmark, ActionPlan, Conflict,
+  Cis300Return, Conversation, ChatMessage) → 79 total
+- 5 new migrations applied (`20260526000000` → `20260526050000`)
+- Build emits ~110 routes (was 91 at v1.0.0; +12 from v1.1 modules
+  alone)
+- All 10 modules registered in `/apps`
+
+### v2.0 horizon (deferred — see ROADMAP.md)
+
+- Advanced analytics BI dashboards (LARGE)
+- 8-AI-agent expansion (LARGE) — supersedes the current Vera CEO/autopilot scaffolds
+- Photo-as-mention (vision → action items)
+- Offline-map mark-up, NFC check-in, StoreKit subscription parity
+- Equipment service logs, enquiry pipelines
+
+---
+
+## v1.0.2 — 25 May 2026 (design parity + safety)
+
+**Design-canvas alignment + a security finding remediated.** The Claude
+Design canvas at claude.ai/design had 7 modules our production codebase
+didn't, plus a real PII leak in the diagnostic bridge surfaced during
+security review.
+
+### Design-canvas modules (8 new pages, +1 API)
+- **`/roles`** — workspace RBAC overview grouped by role with last-seen-at.
+  Backed by new `/api/orgs/members` that uses the active-org context
+  (no need to thread org id through the URL).
+- **`/my-day`** — personal daily agenda: tasks due today, meetings today,
+  hours logged today.
+- **`/tomorrow`** — forward-looking next-24h view of tasks + meetings.
+- **`/ai-history`** — reads the same per-user-namespaced localStorage
+  that `/ask` writes to; pairs user prompts with assistant responses.
+- **`/leadership`** — bookmarkable redirect to the Executive dashboard
+  variant (`/dashboard?v=13`).
+- **`/vera-ceo`** — AI exec briefing built from `/api/dashboard` +
+  `/api/snags`; renders summary, highlight cards, and contextual nudges.
+- **`/vera-autopilot`** — opt-in automation catalogue (5 entries:
+  invoice-chase, snag-triage, cert-expiry, monthly-CIS, photo-tag).
+  Toggles persist to localStorage; backend `/api/automations` is a
+  follow-up.
+- **`/tpl-library`** — categorised template browser with filter chips.
+
+### Surface gaps closed
+- **`/status`** — auto-refreshing health board polling `/api/health` every
+  30s. Replaces the `/support`-referenced but unbuilt
+  `status.cortexbuild.app`.
+- **Audit-log pagination** — `/settings/audit-log` had "Pagination coming
+  soon" text. Wired a Load-more button using the existing take/skip
+  backend, with a running `N of TOTAL` counter.
+- **First-run banner** on the dashboard for empty workspaces with three
+  click-targets (create project / invite team / explore apps).
+- **`/apps`** — added a new "AI & insights" section grouping the 7 design
+  modules.
+
+### Security — PII leak remediation
+- Security review caught: the `vps-exec.yml` workflow mirrors SSH stdout
+  to a **public** branch. A diagnostic `SELECT email FROM "User"`
+  earlier in v1.0.1 dev had leaked 2 user emails to the public git
+  history.
+- **Branch deleted** via GitHub API → leaked emails out of public history.
+- **Redaction filter** added before the mirror push: masks emails,
+  Postgres passwords in connection strings, bearer tokens, JWTs, and
+  Stripe secret keys via a `sed` pipeline. Workflow header rewritten
+  with an explicit `⚠️ PII / SECRET HANDLING` warning.
+
+### Concurrent improvements (landed alongside in other PRs)
+- **CSP nonces** — `proxy.ts` now sets per-request `nonce-…` CSP via
+  middleware, replacing the static `unsafe-inline` from v1.0.1. The
+  future-tightening item I flagged is done.
+- iOS release-workflow unblock.
+
+### Build / hygiene
+- **Build emits 103 routes** (was 91 at v1.0.0).
+- TSC 0 · 177/177 unit tests · 10/10 integration tests · lint 0 errors
+- npm audit: 0 vulnerabilities.
+
+---
+
 ## v1.0.1 — 25 May 2026 (post-launch polish)
 
 **Capability + polish pass after the v1.0 launch shipped.** All

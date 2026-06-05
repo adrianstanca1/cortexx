@@ -5,10 +5,23 @@ import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
+// Open-redirect guard: only allow same-origin relative paths as the
+// post-login destination. An attacker phishing a link like
+//   /login?callbackUrl=https://evil.example/steal
+// would otherwise navigate authenticated users off-site, where the
+// attacker's page sees the new session cookie via the referer + any
+// auto-submitted form. Anything that isn't `/...` (no protocol, no
+// host) falls back to /dashboard.
+function safeCallback(raw: string | null): string {
+  if (!raw) return '/dashboard'
+  if (!raw.startsWith('/') || raw.startsWith('//')) return '/dashboard'
+  return raw
+}
+
 function LoginForm() {
   const router = useRouter()
   const search = useSearchParams()
-  const callbackUrl = search.get('callbackUrl') || '/dashboard'
+  const callbackUrl = safeCallback(search.get('callbackUrl'))
 
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
@@ -19,14 +32,21 @@ function LoginForm() {
     e.preventDefault()
     setError(null)
     setLoading(true)
-    const res = await signIn('credentials', { email, password, redirect: false, callbackUrl })
-    setLoading(false)
-    if (res?.error) {
-      setError('Invalid email or password')
-      return
+    try {
+      const res = await signIn('credentials', { email, password, redirect: false, callbackUrl })
+      if (res?.error) {
+        setError('Invalid email or password')
+        return
+      }
+      router.push(callbackUrl)
+      router.refresh()
+    } catch (e) {
+      // Network errors / Auth.js internals — without try/finally, the
+      // button stayed stuck on "Signing in…" and the user couldn't retry.
+      setError(e instanceof Error ? e.message : 'Sign in failed — try again.')
+    } finally {
+      setLoading(false)
     }
-    router.push(callbackUrl)
-    router.refresh()
   }
 
   return (

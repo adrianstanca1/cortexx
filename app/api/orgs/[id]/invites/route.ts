@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { canManage } from '@/lib/rbac'
 import { sendEmail, inviteTemplate } from '@/lib/email'
 import { auditLog, requestMeta } from '@/lib/audit'
@@ -28,9 +29,25 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
+  // Never return the secret `token` in the list response. The token IS
+  // the acceptance credential — anyone who can read it can accept the
+  // invite as the invited email. The POST handler returns the full
+  // acceptUrl (containing the token) ONCE at creation; the list view
+  // shows enough for admins to manage pending invites without leaking
+  // the secret to subsequent readers.
   const invites = await prisma.organizationInvite.findMany({
     where: { organizationId, acceptedAt: null, expiresAt: { gt: new Date() } },
     orderBy: { createdAt: 'desc' },
+    select: {
+      id: true,
+      organizationId: true,
+      email: true,
+      role: true,
+      expiresAt: true,
+      acceptedAt: true,
+      invitedById: true,
+      createdAt: true,
+    },
   })
   return NextResponse.json({ invites })
 }
@@ -41,6 +58,11 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   if (session instanceof NextResponse) return session
   const userId = (session.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user id' }, { status: 401 })
+  // Rate-limit invite issuance — without this any admin (including one
+  // who just created a free trial org) can spray invite emails as a
+  // phishing relay. 'write' = 60/min/user.
+  const limited = await enforceRateLimit(req, 'write', userId)
+  if (limited) return limited
   const { id: organizationId } = await params
 
   const membership = await prisma.userOrganization.findUnique({

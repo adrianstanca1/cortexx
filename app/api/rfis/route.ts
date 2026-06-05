@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,7 +38,7 @@ export async function GET(req: NextRequest) {
     ])
     return NextResponse.json({ rfis, openCount, overdueCount })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch RFIs' }, { status: 500 })
   }
 }
@@ -66,32 +67,49 @@ export async function POST(req: NextRequest) {
       dueDate = d
     }
 
-    // Per-project sequential RFI number: RFI-001
-    const last = await prisma.rfi.findFirst({
-      where: { projectId },
-      orderBy: { createdAt: 'desc' },
-      select: { number: true },
-    })
-    // Use Number.isFinite to guard against parseInt returning NaN on a
-    // malformed RFI number (e.g. legacy import or hand-edited DB row).
-    const parsed = last ? parseInt(last.number.split('-').pop() || '0', 10) : 0
-    const lastNum = Number.isFinite(parsed) ? parsed : 0
-    const number = `RFI-${String(lastNum + 1).padStart(3, '0')}`
-
-    const rfi = await prisma.rfi.create({
-      data: {
-        number,
-        subject,
-        body: bodyText,
-        projectId,
-        status: ALLOWED_STATUS.has(body.status) ? body.status : 'open',
-        priority: ALLOWED_PRIORITY.has(body.priority) ? body.priority : 'medium',
-        raisedBy: body.raisedBy?.toString().trim() || actorName(auth),
-        assignee: body.assignee?.toString().trim() || null,
-        dueDate,
-      },
-      include: { project: { select: { id: true, name: true } } },
-    })
+    // Per-project sequential RFI number: RFI-001. Two concurrent POSTs
+    // on the same project would otherwise generate the same number and
+    // the second would 500 on the unique constraint. Retry up to 5
+    // times on P2002, refetching the latest number each time — bounded
+    // and almost always succeeds on the second try in practice.
+    let rfi: Awaited<ReturnType<typeof prisma.rfi.create>> | null = null
+    let lastError: unknown = null
+    for (let attempt = 0; attempt < 5; attempt++) {
+      const last = await prisma.rfi.findFirst({
+        where: { projectId },
+        orderBy: { createdAt: 'desc' },
+        select: { number: true },
+      })
+      const parsed = last ? parseInt(last.number.split('-').pop() || '0', 10) : 0
+      const lastNum = Number.isFinite(parsed) ? parsed : 0
+      const number = `RFI-${String(lastNum + 1 + attempt).padStart(3, '0')}`
+      try {
+        rfi = await prisma.rfi.create({
+          data: {
+            number,
+            subject,
+            body: bodyText,
+            projectId,
+            status: ALLOWED_STATUS.has(body.status) ? body.status : 'open',
+            priority: ALLOWED_PRIORITY.has(body.priority) ? body.priority : 'medium',
+            raisedBy: body.raisedBy?.toString().trim() || actorName(auth),
+            assignee: body.assignee?.toString().trim() || null,
+            dueDate,
+          },
+          include: { project: { select: { id: true, name: true } } },
+        })
+        break
+      } catch (e) {
+        lastError = e
+        const code = (e as { code?: string })?.code
+        if (code !== 'P2002') throw e   // not a uniqueness collision — re-raise
+        // P2002 — racy peer also picked this number; retry with the next
+      }
+    }
+    if (!rfi) {
+      console.error('rfi create exhausted retries', lastError)
+      return NextResponse.json({ error: 'Could not allocate a unique RFI number — try again', code: 'NUMBER_RACE' }, { status: 503 })
+    }
 
     prisma.activity.create({
       data: {
@@ -105,7 +123,7 @@ export async function POST(req: NextRequest) {
 
     return NextResponse.json(rfi, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create RFI' }, { status: 500 })
   }
 }

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { downloadToTemp } from '@/lib/storage'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
@@ -23,17 +22,7 @@ interface CompareResult {
   notes?: string
 }
 
-const rateLimits = new Map<string, number[]>()
-function checkRateLimit(userKey: string, max = 2, windowMs = 60_000): { ok: true } | { ok: false; retryAfter: number } {
-  const now = Date.now()
-  const arr = (rateLimits.get(userKey) || []).filter(t => now - t < windowMs)
-  if (arr.length >= max) {
-    return { ok: false, retryAfter: Math.ceil((windowMs - (now - arr[0])) / 1000) }
-  }
-  arr.push(now)
-  rateLimits.set(userKey, arr)
-  return { ok: true }
-}
+// Rate limit moved to the Redis-backed 'vision' profile in lib/rateLimit.ts.
 
 function parseCompareResponse(raw: string): CompareResult {
   let parsed: unknown
@@ -73,33 +62,32 @@ async function loadImageBase64(doc: { url: string | null; mimeType: string | nul
   if (!/^\/api\/uploads\/[A-Za-z0-9._-]+$/.test(doc.url)) {
     return { error: 'Invalid document URL', code: 'INVALID_URL', status: 400 }
   }
-  const uploadDir = process.env.UPLOAD_DIR || './uploads'
+  // Use downloadToTemp() so the route works under both local-disk and S3
+  // storage modes — direct join(uploadDir, filename) reads only worked in
+  // the local case and silently 404'd once S3_BUCKET is set.
   const filename = doc.url.replace(/^\/api\/uploads\//, '')
-  const path = join(uploadDir, filename)
-  if (!existsSync(path)) {
+  const dl = await downloadToTemp(filename)
+  if (!dl) {
     return { error: 'Image file not found on server', code: 'FILE_MISSING', status: 404 }
   }
-  const bytes = await readFile(path)
-  if (bytes.length > MAX_BYTES) {
-    return { error: `Image too large for comparison (max ${MAX_BYTES / 1024 / 1024} MB)`, code: 'IMAGE_TOO_LARGE', status: 413 }
+  try {
+    const bytes = await readFile(dl.path)
+    if (bytes.length > MAX_BYTES) {
+      return { error: `Image too large for comparison (max ${MAX_BYTES / 1024 / 1024} MB)`, code: 'IMAGE_TOO_LARGE', status: 413 }
+    }
+    return bytes.toString('base64')
+  } finally {
+    await dl.cleanup()
   }
-  return bytes.toString('base64')
 }
 
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
-
-  const userId = (auth.user as { id?: string } | undefined)?.id || 'anon'
-  const rl = checkRateLimit(userId)
-  if (!rl.ok) {
-    return new NextResponse(JSON.stringify({ error: `Too many comparisons. Try again in ${rl.retryAfter}s.` }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) },
-    })
-  }
+  // 'vision' profile (5/min/user, Redis-backed) supersedes the prior
+  // in-process Map (which was per-pm2-worker → 8× too loose).
+  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  if (limited) return limited
 
   let body: { aId?: unknown; bId?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }

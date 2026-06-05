@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -22,9 +23,15 @@ function recalc(lineItems: LineItem[], vatRate: number) {
   return { subtotal, vatAmount, total: subtotal + vatAmount }
 }
 
+// Cap the number of line items we accept on a single quote. A
+// 100k-item body would otherwise OOM the worker on JSON parse +
+// Prisma serialisation. 500 is far above any plausible legit quote.
+const MAX_QUOTE_LINE_ITEMS = 500
+
 function validateLineItems(raw: unknown): LineItem[] {
   if (!Array.isArray(raw)) return []
   return raw
+    .slice(0, MAX_QUOTE_LINE_ITEMS)
     .map(it => {
       if (!it || typeof it !== 'object') return null
       const o = it as Record<string, unknown>
@@ -32,7 +39,7 @@ function validateLineItems(raw: unknown): LineItem[] {
       if (!description) return null
       const quantity = Number(o.quantity)
       const unitPrice = Number(o.unitPrice)
-      if (isNaN(quantity) || isNaN(unitPrice)) return null
+      if (!Number.isFinite(quantity) || !Number.isFinite(unitPrice)) return null
       const total = Number.isFinite(quantity * unitPrice) ? quantity * unitPrice : 0
       return {
         description,
@@ -75,7 +82,7 @@ export async function GET(req: NextRequest) {
       openValue: openValue._sum.total || 0,
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch quotes' }, { status: 500 })
   }
 }
@@ -144,7 +151,7 @@ export async function POST(req: NextRequest) {
     })
     return NextResponse.json(quote, { status: 201 })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to create quote' }, { status: 500 })
   }
 }

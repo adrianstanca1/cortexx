@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
+import { downloadToTemp } from '@/lib/storage'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
@@ -35,17 +35,8 @@ interface RevCompareResult {
   notes?: string
 }
 
-const rateLimits = new Map<string, number[]>()
-function checkRateLimit(userKey: string, max = 2, windowMs = 60_000): { ok: true } | { ok: false; retryAfter: number } {
-  const now = Date.now()
-  const arr = (rateLimits.get(userKey) || []).filter(t => now - t < windowMs)
-  if (arr.length >= max) {
-    return { ok: false, retryAfter: Math.ceil((windowMs - (now - arr[0])) / 1000) }
-  }
-  arr.push(now)
-  rateLimits.set(userKey, arr)
-  return { ok: true }
-}
+// Rate limit moved to Redis-backed 'vision' profile in lib/rateLimit.ts
+// (5/min/user, shared across pm2 cluster workers).
 
 function parseCompareResponse(raw: string): RevCompareResult {
   let parsed: unknown
@@ -101,30 +92,28 @@ async function loadRevImage(rev: { fileUrl: string | null; mimeType: string | nu
   if (!/^\/api\/uploads\/[A-Za-z0-9._-]+$/.test(rev.fileUrl)) {
     return { error: 'Invalid revision URL', code: 'INVALID_URL', status: 400 }
   }
-  const uploadDir = process.env.UPLOAD_DIR || './uploads'
+  // downloadToTemp() handles local-disk + S3 modes uniformly — the prior
+  // direct join(uploadDir, filename) silently 404'd in S3 mode.
   const filename = rev.fileUrl.replace(/^\/api\/uploads\//, '')
-  const path = join(uploadDir, filename)
-  if (!existsSync(path)) return { error: 'Revision file not found on server', code: 'FILE_MISSING', status: 404 }
-  const bytes = await readFile(path)
-  if (bytes.length > MAX_BYTES) {
-    return { error: `Revision file too large (max ${MAX_BYTES / 1024 / 1024} MB)`, code: 'FILE_TOO_LARGE', status: 413 }
+  const dl = await downloadToTemp(filename)
+  if (!dl) return { error: 'Revision file not found on server', code: 'FILE_MISSING', status: 404 }
+  try {
+    const bytes = await readFile(dl.path)
+    if (bytes.length > MAX_BYTES) {
+      return { error: `Revision file too large (max ${MAX_BYTES / 1024 / 1024} MB)`, code: 'FILE_TOO_LARGE', status: 413 }
+    }
+    return bytes.toString('base64')
+  } finally {
+    await dl.cleanup()
   }
-  return bytes.toString('base64')
 }
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
-
-  const userId = (auth.user as { id?: string } | undefined)?.id || 'anon'
-  const rl = checkRateLimit(userId)
-  if (!rl.ok) {
-    return new NextResponse(JSON.stringify({ error: `Too many comparisons. Try again in ${rl.retryAfter}s.` }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) },
-    })
-  }
+  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  if (limited) return limited
 
   let body: { aRev?: unknown; bRev?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }

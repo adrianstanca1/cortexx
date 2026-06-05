@@ -1,6 +1,6 @@
 # Cortexx — iOS build (Capacitor)
 
-This folder wraps the existing Cortexx web app as a native iOS application using **Capacitor 6**. The whole web app — every screen, dashboard, dialog, AI flow, local-first store — runs unchanged inside a WKWebView. Native plugins are wired in for camera, geolocation, microphone, haptics, push notifications, local notifications, and biometric unlock.
+This folder wraps the existing Cortexx web app as a native iOS application using **Capacitor 8**. The whole web app — every screen, dashboard, dialog, AI flow, local-first store — runs unchanged inside a WKWebView. Native plugins are wired in for camera, geolocation, microphone, haptics, push notifications, local notifications, and biometric unlock. Minimum iOS deployment target is **15.0** (Capacitor 8 requirement).
 
 > **You will need a Mac** with Xcode 15.4 or newer to build and submit. Everything below assumes macOS.
 
@@ -50,8 +50,8 @@ This folder wraps the existing Cortexx web app as a native iOS application using
 xcode-select --install
 sudo xcodebuild -license accept
 
-# 2. Node 20 LTS
-brew install node@20
+# 2. Node 22 LTS (Capacitor CLI 8 requires Node >=22)
+brew install node@22
 
 # 3. CocoaPods (Capacitor uses it for native deps)
 brew install cocoapods
@@ -59,7 +59,7 @@ brew install cocoapods
 
 You also need:
 - **Apple Developer Program membership** — £79/yr or $99/yr (apple.com/uk/developer)
-- A unique **Bundle Identifier** registered at developer.apple.com → Certificates, IDs & Profiles → Identifiers. We use `app.cortexbuild.cortexx` in `capacitor.config.ts`; change it to one you own.
+- A unique **Bundle Identifier** registered at developer.apple.com → Certificates, IDs & Profiles → Identifiers. We use `com.cortexbuild.app` in `capacitor.config.ts`; change it to one you own.
 - An **App Store Connect** record for the app (appstoreconnect.apple.com → My Apps → +).
 
 ---
@@ -71,7 +71,7 @@ From inside `ios/`:
 ```bash
 npm install
 npm run build:web        # copies public/legacy/ → ios/www/ + disables the SW
-npx cap init Cortexx app.cortexbuild.cortexx --web-dir www
+npx cap init Cortexx com.cortexbuild.app --web-dir www
 npx cap add ios
 ```
 
@@ -94,7 +94,7 @@ Apple will reject the build if these are missing.
 # from ios/
 mkdir -p App/App/Assets.xcassets/AppIcon.appiconset
 
-# Capacitor 6 expects a single 1024×1024 icon in the asset catalog; Xcode handles the rest.
+# Capacitor 8 expects a single 1024×1024 icon in the asset catalog; Xcode handles the rest.
 cp ../app-store/icons/icon-1024.png App/App/Assets.xcassets/AppIcon.appiconset/AppIcon-1024.png
 ```
 
@@ -107,7 +107,7 @@ Then in Xcode, open **Assets.xcassets** → **AppIcon** → drag `AppIcon-1024.p
 In Xcode → select the `App` target → **Signing & Capabilities**:
 - ☑ Automatically manage signing
 - Team: your Apple Developer team
-- Bundle Identifier: `app.cortexbuild.cortexx` (must match what you registered)
+- Bundle Identifier: `com.cortexbuild.app` (must match what you registered)
 
 Add the **Background Modes** capability if you want background mileage tracking or push notifications:
 - ☑ Location updates

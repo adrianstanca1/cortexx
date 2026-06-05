@@ -5,7 +5,7 @@ import { useRouter, useSearchParams } from 'next/navigation'
 import { useSession } from 'next-auth/react'
 
 export default function OnboardingPage() {
-  const { data: session, update } = useSession()
+  const { data: session, status: sessionStatus, update } = useSession()
   const router = useRouter()
   const params = useSearchParams()
   const callbackUrl = params.get('callbackUrl') || '/dashboard'
@@ -15,9 +15,22 @@ export default function OnboardingPage() {
   const [error, setError] = useState<string | null>(null)
   const [checked, setChecked] = useState(false)
 
-  // If the user already has at least one org, skip onboarding entirely.
+  // Resolve the gate decision once the session has loaded. Three states:
+  //   1. unauthenticated → bounce to /login (was a stuck-spinner before)
+  //   2. authenticated with ≥1 org → bounce to callbackUrl
+  //   3. authenticated with 0 orgs → show the create-workspace form
+  // Previously, an early `if (!session?.user) return` meant the page
+  // hung indefinitely whenever the session never resolved.
   useEffect(() => {
-    if (!session?.user) return
+    if (sessionStatus === 'loading') return
+    if (sessionStatus === 'unauthenticated') {
+      router.replace(`/login?callbackUrl=${encodeURIComponent('/onboarding')}`)
+      return
+    }
+    if (!session?.user) {
+      // Authenticated per status but no user object yet — wait one more tick.
+      return
+    }
     type OrgsUser = { organizations?: { id: string }[] }
     const orgs = (session.user as OrgsUser).organizations || []
     if (orgs.length > 0) {
@@ -25,7 +38,7 @@ export default function OnboardingPage() {
       return
     }
     setChecked(true)
-  }, [session, router, callbackUrl])
+  }, [session, sessionStatus, router, callbackUrl])
 
   const submit = async (e: React.FormEvent) => {
     e.preventDefault()

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -24,11 +25,16 @@ export async function GET(_req: NextRequest) {
         take: 200,
       }),
       prisma.project.findMany({
+        // Cap at 500 — live-status is polled frequently; tenants with
+        // more active projects need a paginated view, not a single fetch.
+        take: 500,
         where: { status: 'active', archivedAt: null },
         select: { id: true, name: true, address: true, postcode: true, lat: true, lng: true, onSiteCount: true, status: true, progress: true },
         orderBy: { name: 'asc' },
       }),
       prisma.teamMember.findMany({
+        // Cap at 500 — same rationale as projects above.
+        take: 500,
         select: { id: true, name: true, role: true, avatarColor: true, onSite: true },
         orderBy: { name: 'asc' },
       }),
@@ -57,7 +63,7 @@ export async function GET(_req: NextRequest) {
       },
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch live status' }, { status: 500 })
   }
 }

@@ -15,7 +15,7 @@ import UniformTypeIdentifiers
 ///   - Text              → added to Notes / Tasks
 class ShareViewController: UIViewController {
 
-    private let appGroupID = "group.app.cortexbuild.cortexx"
+    private let appGroupID = "group.com.cortexbuild.app"
     private let mainAppScheme = "cortexx"
 
     override func viewDidLoad() {

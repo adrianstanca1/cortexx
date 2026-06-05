@@ -27,6 +27,7 @@ model User {
   pushSubscriptions      PushSubscription[]
   organizations          UserOrganization[]
   notificationPreference NotificationPreference?
+  projectBookmarks       ProjectBookmark[]
 }
 
 model Account {
@@ -66,56 +67,77 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id              String           @id @default(cuid())
-  name            String
-  address         String
-  postcode        String
-  status          String           @default("active") // active, snagging, quoting, complete
-  progress        Int              @default(0)
-  clientName      String           @default("")
-  shareToken      String?          @unique
-  budget          Float            @default(0)
-  spent           Float            @default(0)
-  lat             Float            @default(51.5)
-  lng             Float            @default(-0.1)
-  startDate       DateTime?
-  endDate         DateTime?
-  onSiteCount     Int              @default(0)
-  archivedAt      DateTime?
-  createdAt       DateTime         @default(now())
-  updatedAt       DateTime         @updatedAt
-  tasks           Task[]
-  assignments     Assignment[]
-  invoices        Invoice[]
-  activities      Activity[]
-  timeEntries     TimeEntry[]
-  documents       Document[]
-  comments        Comment[]
-  snags           Snag[]
-  rfis            Rfi[]
-  announcements   Announcement[]
-  observations    Observation[]
-  variations      Variation[]
-  siteCheckIns    SiteCheckIn[]
-  pos             PurchaseOrder[]
-  subInvoices     SubInvoice[]
-  drawings        Drawing[]
-  milestones      Milestone[]
-  permits         Permit[]
-  rams            Rams[]
-  tenders         Tender[]
-  inspections     Inspection[]
-  meetings        Meeting[]
-  risks           Risk[]
-  toolboxTalks    ToolboxTalk[]
-  safetyIncidents SafetyIncident[]
+  id                  String           @id @default(cuid())
+  name                String
+  address             String
+  postcode            String
+  status              String           @default("active") // active, snagging, quoting, complete
+  progress            Int              @default(0)
+  clientName          String           @default("")
+  shareToken          String?          @unique
+  shareTokenExpiresAt DateTime?
+  budget              Float            @default(0)
+  spent               Float            @default(0)
+  lat                 Float            @default(51.5)
+  lng                 Float            @default(-0.1)
+  startDate           DateTime?
+  endDate             DateTime?
+  onSiteCount         Int              @default(0)
+  archivedAt          DateTime?
+  createdAt           DateTime         @default(now())
+  updatedAt           DateTime         @updatedAt
+  tasks               Task[]
+  assignments         Assignment[]
+  invoices            Invoice[]
+  activities          Activity[]
+  timeEntries         TimeEntry[]
+  documents           Document[]
+  comments            Comment[]
+  snags               Snag[]
+  rfis                Rfi[]
+  announcements       Announcement[]
+  observations        Observation[]
+  variations          Variation[]
+  siteCheckIns        SiteCheckIn[]
+  pos                 PurchaseOrder[]
+  subInvoices         SubInvoice[]
+  drawings            Drawing[]
+  milestones          Milestone[]
+  permits             Permit[]
+  rams                Rams[]
+  tenders             Tender[]
+  inspections         Inspection[]
+  meetings            Meeting[]
+  risks               Risk[]
+  toolboxTalks        ToolboxTalk[]
+  safetyIncidents     SafetyIncident[]
 
   organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bookmarks      ProjectBookmark[]
+  conversations  Conversation[]
 
   @@index([status])
   @@index([updatedAt])
   @@index([archivedAt])
+  @@index([organizationId])
+}
+
+model ProjectBookmark {
+  // Per-user pinned-project shortcut. Lightweight join table; users
+  // see their bookmarks at the top of /projects and in the dashboard
+  // quick-access strip.
+  id             String        @id @default(cuid())
+  userId         String
+  projectId      String
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  user           User          @relation(fields: [userId], references: [id], onDelete: Cascade)
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+
+  @@unique([userId, projectId])
+  @@index([userId])
   @@index([organizationId])
 }
 
@@ -1146,6 +1168,12 @@ model Organization {
   subPortalSessions   SubPortalSession[]
   apiKeys             ApiKey[]
   infraSnapshots      InfraSnapshot[]
+  projectBookmarks    ProjectBookmark[]
+  actionPlans         ActionPlan[]
+  conflicts           Conflict[]
+  cis300Returns       Cis300Return[]
+  conversations       Conversation[]
+  chatMessages        ChatMessage[]
 }
 
 model UserOrganization {
@@ -1592,4 +1620,129 @@ model InfraSnapshot {
   updatedAt      DateTime      @updatedAt
 
   @@index([organizationId])
+}
+
+model ActionPlan {
+  // Tracked corrective-action item with owner, due date, status, and
+  // close-out notes. Optionally linked back to a parent record (snag,
+  // RFI, incident) via linkedType + linkedId — the link is loose by
+  // design so the same model serves all of them.
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  owner          String?
+  priority       String        @default("medium")
+  status         String        @default("open")
+  dueDate        DateTime?
+  closedAt       DateTime?
+  closeOutNotes  String?
+  linkedType     String?
+  linkedId       String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model Conflict {
+  // Logged cross-team conflict on site (subcontractor vs subcontractor,
+  // schedule clash, design clash, etc.) with assignee, severity,
+  // resolution notes, and a status workflow.
+  id              String        @id @default(cuid())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title           String
+  description     String?
+  projectId       String?
+  parties         String? // freeform: "Acme Plumbing vs Roof Co"
+  severity        String        @default("medium") // low / medium / high / critical
+  status          String        @default("open") // open / investigating / resolved / dropped
+  owner           String? // person handling resolution
+  raisedAt        DateTime      @default(now())
+  resolvedAt      DateTime?
+  resolutionNotes String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([organizationId])
+  @@index([status])
+}
+
+model Cis300Return {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  // UK tax month: stored as the start date (always the 6th of a month).
+  // E.g. 2026-04-06 = April tax month (covers 6 Apr — 5 May).
+  taxMonth       DateTime
+  // Aggregated totals frozen at submission time
+  totalGross     Float         @default(0)
+  totalCis       Float         @default(0)
+  totalNet       Float         @default(0)
+  subCount       Int           @default(0)
+  // Per-sub line items captured at submit (JSON snapshot)
+  lineItems      Json          @default("[]")
+  status         String        @default("draft") // draft, submitted, accepted, rejected
+  submittedAt    DateTime?
+  hmrcReference  String?
+  notes          String?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+
+  @@unique([organizationId, taxMonth])
+  @@index([organizationId])
+  @@index([status])
+}
+
+model Conversation {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title          String
+  kind           String        @default("project") // project / direct / topic
+  archivedAt     DateTime?
+  lastMessageAt  DateTime?
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  messages       ChatMessage[]
+
+  @@index([organizationId])
+  @@index([projectId])
+  @@index([lastMessageAt])
+}
+
+model ChatMessage {
+  id             String        @id @default(cuid())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  conversationId String
+  conversation   Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  authorId       String
+  authorName     String // denormalized so deleted users still show their name
+  body           String
+  // Plain text only for v1; future rich text via a `richBody Json?` field.
+  createdAt      DateTime      @default(now())
+  editedAt       DateTime?
+
+  @@index([conversationId, createdAt])
+  @@index([organizationId])
+}
+
+/// Idempotency record for Stripe webhook events. Stripe retries on any
+/// non-2xx response (and occasionally double-sends a single event), so
+/// the webhook handler inserts a row keyed on the event id BEFORE doing
+/// any state-changing work. A unique-constraint violation means we've
+/// already processed this event — return 200 OK without re-running.
+///
+/// Rows are kept indefinitely (small + bounded by Stripe's event-id
+/// space) so a webhook replay from days later is still caught.
+model ProcessedStripeEvent {
+  id        String   @id // the evt_* id from Stripe — natural PK
+  type      String // event.type for triage
+  createdAt DateTime @default(now())
 }

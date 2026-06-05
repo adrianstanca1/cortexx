@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 import { downloadToTemp } from '@/lib/storage'
+import { enforceRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,23 +28,9 @@ interface AnalysisResult {
   notes?: string
 }
 
-// In-process rate limit — vision inference is expensive. 3 per user per
-// minute is generous for manual triage workflow.
-const rateLimits = new Map<string, number[]>()
-const RATE_LIMIT_MAX = 3
-const RATE_LIMIT_WINDOW_MS = 60_000
-
-function checkRateLimit(userKey: string): { ok: true } | { ok: false; retryAfter: number } {
-  const now = Date.now()
-  const arr = (rateLimits.get(userKey) || []).filter(t => now - t < RATE_LIMIT_WINDOW_MS)
-  if (arr.length >= RATE_LIMIT_MAX) {
-    const oldest = arr[0]
-    return { ok: false, retryAfter: Math.ceil((RATE_LIMIT_WINDOW_MS - (now - oldest)) / 1000) }
-  }
-  arr.push(now)
-  rateLimits.set(userKey, arr)
-  return { ok: true }
-}
+// Rate limit moved to the Redis-backed 'vision' profile in
+// lib/rateLimit.ts (5/min/user, shared across pm2 cluster workers).
+// Previous in-process Map was per-worker → 8× too loose under cluster.
 
 function parseVisionResponse(raw: string): AnalysisResult {
   let parsed: unknown
@@ -79,19 +66,16 @@ function parseVisionResponse(raw: string): AnalysisResult {
   return { defects, summary, notes }
 }
 
-export async function POST(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
+export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
-
-  const userId = (auth.user as { id?: string } | undefined)?.id || 'anon'
-  const rl = checkRateLimit(userId)
-  if (!rl.ok) {
-    return new NextResponse(JSON.stringify({ error: `Too many analyses. Try again in ${rl.retryAfter}s.` }), {
-      status: 429,
-      headers: { 'Content-Type': 'application/json', 'Retry-After': String(rl.retryAfter) },
-    })
-  }
+  // Use the Redis-backed 'vision' profile (5/min/user) so the limit
+  // works correctly under pm2 cluster mode. The previous per-route
+  // in-process Map was per-worker, so 8 workers × 3/min = 24/min in
+  // practice — too loose for a GPU-saturating endpoint.
+  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  if (limited) return limited
 
   const snag = await prisma.snag.findUnique({
     where: { id: params.id },

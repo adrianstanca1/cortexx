@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -21,7 +22,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     })
     return NextResponse.json(assignment)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update assignment' }, { status: 500 })
   }
 }
@@ -55,7 +56,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     }
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to remove assignment' }, { status: 500 })
   }
 }

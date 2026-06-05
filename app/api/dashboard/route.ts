@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,6 +28,10 @@ export async function GET() {
       invoiceTotalsByStatus,
     ] = await Promise.all([
       prisma.project.findMany({
+        // Cap at 200 — the dashboard heat-grid renders fine up to that;
+        // tenants with more need a paginated /projects view, not a
+        // single-shot dashboard fetch.
+        take: 200,
         where: { archivedAt: null },
         include: {
           _count: { select: { tasks: true, assignments: true } },
@@ -41,6 +46,7 @@ export async function GET() {
         take: 10,
       }),
       prisma.teamMember.findMany({
+        take: 200,
         include: {
           assignments: { include: { project: true } },
           _count: { select: { timeEntries: true } },
@@ -97,7 +103,7 @@ export async function GET() {
       stats: { cashflow, owed, hoursThisWeek, activeSites },
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch dashboard data' }, { status: 500 })
   }
 }

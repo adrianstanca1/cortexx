@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,6 +15,10 @@ export async function GET() {
     weekStart.setHours(0, 0, 0, 0)
     const monthStart = new Date(now.getFullYear(), now.getMonth(), 1)
     const last30 = new Date(now.getTime() - 30 * 86400000)
+    // 6-month cost-forecasting window: include the current month + the 5
+    // prior ones. Pull invoices, sub-invoices, and purchase orders in
+    // that range; aggregate client-side by month so the SQL stays simple.
+    const sixMonthsAgo = new Date(now.getFullYear(), now.getMonth() - 5, 1)
 
     const [
       allProjects,
@@ -23,11 +28,21 @@ export async function GET() {
       hoursThisWeek,
       hoursThisMonth,
       activityLast30,
+      monthlySubInvoices,
+      monthlyPOs,
+      monthlyInvoices,
     ] = await Promise.all([
+      // All find* queries here are capped at 5000 — for a tenant with
+      // 100k+ rows, an uncapped query would OOM the pm2 worker (each row
+      // is small but loaded into memory + serialised through Prisma).
+      // Tenants needing larger reports should hit /api/export/* which
+      // streams via a worker, not this dashboard rollup.
       prisma.project.findMany({
+        take: 5000,
         select: { id: true, name: true, status: true, progress: true, budget: true, spent: true, onSiteCount: true },
       }),
       prisma.invoice.findMany({
+        take: 5000,
         select: { status: true, amount: true, projectId: true, paidDate: true, dueDate: true, project: { select: { name: true } } },
       }),
       prisma.task.groupBy({ by: ['status'], _count: { _all: true } }),
@@ -35,7 +50,59 @@ export async function GET() {
       prisma.timeEntry.aggregate({ _sum: { hours: true }, where: { date: { gte: weekStart } } }),
       prisma.timeEntry.aggregate({ _sum: { hours: true }, where: { date: { gte: monthStart } } }),
       prisma.activity.count({ where: { createdAt: { gte: last30 } } }),
+      prisma.subInvoice.findMany({
+        take: 5000,
+        where: { invoiceDate: { gte: sixMonthsAgo } },
+        select: { invoiceDate: true, grossAmount: true },
+      }),
+      prisma.purchaseOrder.findMany({
+        take: 5000,
+        where: { createdAt: { gte: sixMonthsAgo } },
+        select: { createdAt: true, total: true },
+      }),
+      prisma.invoice.findMany({
+        take: 5000,
+        where: { issuedDate: { gte: sixMonthsAgo } },
+        select: { issuedDate: true, amount: true },
+      }),
     ])
+
+    // Build the 6 monthly buckets in chronological order
+    const monthBuckets: Array<{ ym: string; label: string; outflow: number; inflow: number; net: number }> = []
+    for (let i = 5; i >= 0; i--) {
+      const d = new Date(now.getFullYear(), now.getMonth() - i, 1)
+      const ym = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+      monthBuckets.push({
+        ym,
+        label: d.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }),
+        outflow: 0,
+        inflow: 0,
+        net: 0,
+      })
+    }
+    const ymOf = (d: Date) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`
+    for (const s of monthlySubInvoices) {
+      const b = monthBuckets.find(x => x.ym === ymOf(s.invoiceDate))
+      if (b) b.outflow += s.grossAmount
+    }
+    for (const p of monthlyPOs) {
+      const b = monthBuckets.find(x => x.ym === ymOf(p.createdAt))
+      if (b) b.outflow += p.total
+    }
+    for (const i of monthlyInvoices) {
+      const b = monthBuckets.find(x => x.ym === ymOf(i.issuedDate))
+      if (b) b.inflow += i.amount
+    }
+    for (const b of monthBuckets) b.net = b.inflow - b.outflow
+
+    // Naive forecast for next month: 3-month rolling average of the last
+    // three buckets. Better than nothing, simple enough to explain.
+    const recent3 = monthBuckets.slice(-3)
+    const forecast = {
+      outflow: recent3.reduce((s, b) => s + b.outflow, 0) / 3,
+      inflow: recent3.reduce((s, b) => s + b.inflow, 0) / 3,
+    }
+    const nextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
 
     const totalBudget = allProjects.reduce((s, p) => s + p.budget, 0)
     const totalSpent = allProjects.reduce((s, p) => s + p.spent, 0)
@@ -99,9 +166,22 @@ export async function GET() {
         thisWeek: hoursThisWeek._sum.hours || 0,
         thisMonth: hoursThisMonth._sum.hours || 0,
       },
+      cashflow: {
+        // 6 monthly buckets, oldest first; consumed by the cost-forecasting
+        // chart on /reports.
+        months: monthBuckets,
+        forecast: {
+          ym: `${nextMonth.getFullYear()}-${String(nextMonth.getMonth() + 1).padStart(2, '0')}`,
+          label: nextMonth.toLocaleDateString('en-GB', { month: 'short', year: '2-digit' }),
+          outflow: Math.round(forecast.outflow),
+          inflow: Math.round(forecast.inflow),
+          net: Math.round(forecast.inflow - forecast.outflow),
+          basis: '3-month rolling average',
+        },
+      },
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Reports failed' }, { status: 500 })
   }
 }

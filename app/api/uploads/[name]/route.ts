@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { extname } from 'node:path'
 
+import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { getObjectStream, getObjectUrl, isS3Configured, safeKey } from '@/lib/storage'
 
@@ -29,6 +30,23 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 
   const key = safeKey(params.name)
   if (!key) return NextResponse.json({ error: 'Invalid name' }, { status: 400 })
+
+  // Tenant-scope check: an upload is only readable if it's referenced by
+  // a row that belongs to the user's active organization. Each lookup
+  // below auto-scopes via the Prisma tenancy extension, so a row from
+  // another org never matches. Without this gate, any signed-in user
+  // could fetch any other org's upload just by guessing the 16-hex key.
+  const url = `/api/uploads/${params.name}`
+  const owned = await Promise.all([
+    prisma.document.findFirst({ where: { url }, select: { id: true } }),
+    prisma.snag.findFirst({ where: { photoUrl: url }, select: { id: true } }),
+    prisma.observation.findFirst({ where: { photoUrl: url }, select: { id: true } }),
+    prisma.drawingRevision.findFirst({ where: { fileUrl: url }, select: { id: true } }),
+    prisma.safetyIncident.findFirst({ where: { photoUrl: url }, select: { id: true } }),
+  ])
+  if (!owned.some(row => row !== null)) {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
 
   // When S3 is in use, redirect to a short-lived presigned URL so the
   // browser fetches bytes directly from object storage — no Node process

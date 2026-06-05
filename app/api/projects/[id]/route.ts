@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,21 +12,26 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
   try {
+    // Cap every include to a reasonable hard limit. A long-running
+    // project with thousands of tasks/docs/invoices would otherwise
+    // ship megabytes of nested JSON to a single page, freezing the
+    // worker on serialise. Sub-resource pagination is via the per-
+    // type routes (/api/tasks?projectId=…, /api/documents?projectId=…).
     const project = await prisma.project.findUnique({
       where: { id: params.id },
       include: {
-        tasks: { include: { assignee: true }, orderBy: { dueDate: 'asc' } },
-        assignments: { include: { member: true } },
-        invoices: { orderBy: { createdAt: 'desc' } },
+        tasks: { include: { assignee: true }, orderBy: { dueDate: 'asc' }, take: 200 },
+        assignments: { include: { member: true }, take: 200 },
+        invoices: { orderBy: { createdAt: 'desc' }, take: 100 },
         activities: { orderBy: { createdAt: 'desc' }, take: 10 },
-        documents: { orderBy: { createdAt: 'desc' } },
+        documents: { orderBy: { createdAt: 'desc' }, take: 200 },
         _count: { select: { tasks: true, assignments: true } },
       },
     })
     if (!project) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json({ project })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to fetch project' }, { status: 500 })
   }
 }
@@ -33,6 +40,8 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (limited) return limited
   try {
     const body = await req.json()
     if (body.name !== undefined && !String(body.name).trim()) {
@@ -41,10 +50,10 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (body.startDate && body.endDate && new Date(body.endDate) < new Date(body.startDate)) {
       return NextResponse.json({ error: 'End date must be on or after start date' }, { status: 400 })
     }
-    if (body.budget !== undefined && (isNaN(Number(body.budget)) || Number(body.budget) < 0)) {
+    if (body.budget !== undefined && (!Number.isFinite(Number(body.budget)) || Number(body.budget) < 0)) {
       return NextResponse.json({ error: 'Budget must be a non-negative number' }, { status: 400 })
     }
-    if (body.progress !== undefined && (isNaN(Number(body.progress)) || Number(body.progress) < 0 || Number(body.progress) > 100)) {
+    if (body.progress !== undefined && (!Number.isFinite(Number(body.progress)) || Number(body.progress) < 0 || Number(body.progress) > 100)) {
       return NextResponse.json({ error: 'Progress must be between 0 and 100' }, { status: 400 })
     }
     const project = await prisma.project.update({
@@ -65,7 +74,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     })
     return NextResponse.json(project)
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to update project' }, { status: 500 })
   }
 }
@@ -95,7 +104,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 })
   }
 }

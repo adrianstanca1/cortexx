@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
 import { bypassTenancy } from '@/lib/tenancy'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
@@ -46,10 +47,16 @@ async function fetchClientView(token: string): Promise<NextResponse> {
         endDate: true,
         createdAt: true,
         updatedAt: true,
+        shareTokenExpiresAt: true,
       },
     })
     if (!project || project.budget < 0) {
       return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    }
+    // Time-boxed link enforcement: explicit 410 so the client UI can
+    // show a friendly "this link has expired" state instead of a 404.
+    if (project.shareTokenExpiresAt && project.shareTokenExpiresAt.getTime() < Date.now()) {
+      return NextResponse.json({ error: 'This share link has expired', code: 'EXPIRED' }, { status: 410 })
     }
 
     const [openSnags, photoDocs, recentActivity] = await Promise.all([
@@ -78,7 +85,7 @@ async function fetchClientView(token: string): Promise<NextResponse> {
       activity: recentActivity,
     })
   } catch (error) {
-    console.error(error)
+    reportError(error)
     return NextResponse.json({ error: 'Failed to load project' }, { status: 500 })
   }
 }

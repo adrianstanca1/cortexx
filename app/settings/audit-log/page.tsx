@@ -26,14 +26,18 @@ export default function AuditLogPage() {
   const [total, setTotal] = useState(0)
   const [hasMore, setHasMore] = useState(false)
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
   const [error, setError] = useState<string | null>(null)
   const [filter, setFilter] = useState('')
+  const PAGE_SIZE = 100
 
   useEffect(() => {
     if (!activeOrg) return
     setLoading(true)
-    const qs = filter ? `?action=${encodeURIComponent(filter)}` : ''
-    fetch(`/api/orgs/${activeOrg.id}/audit-log${qs}`)
+    const params = new URLSearchParams()
+    if (filter) params.set('action', filter)
+    params.set('take', String(PAGE_SIZE))
+    fetch(`/api/orgs/${activeOrg.id}/audit-log?${params.toString()}`)
       .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error || 'Failed') }))
       .then(data => {
         setEvents(data.events || [])
@@ -43,6 +47,26 @@ export default function AuditLogPage() {
       .catch(e => setError(e instanceof Error ? e.message : 'Failed'))
       .finally(() => setLoading(false))
   }, [activeOrg, filter])
+
+  const loadMore = async () => {
+    if (!activeOrg || loadingMore) return
+    setLoadingMore(true)
+    const params = new URLSearchParams()
+    if (filter) params.set('action', filter)
+    params.set('take', String(PAGE_SIZE))
+    params.set('skip', String(events.length))
+    try {
+      const r = await fetch(`/api/orgs/${activeOrg.id}/audit-log?${params.toString()}`)
+      const data = await r.json()
+      if (!r.ok) throw new Error(data.error || 'Failed')
+      setEvents(prev => [...prev, ...(data.events || [])])
+      setHasMore(data.hasMore || false)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setLoadingMore(false)
+    }
+  }
 
   if (!activeOrg) {
     return <div style={{ background: '#06101e', minHeight: '100dvh', padding: 24, color: '#8ea8c5', fontFamily: 'var(--font-system)' }}>No active workspace.</div>
@@ -103,8 +127,17 @@ export default function AuditLogPage() {
             </div>
           ))}
           {hasMore && (
-            <div style={{ padding: '10px 12px', fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', textAlign: 'center' }}>
-              Showing first 100. Pagination coming soon.
+            <button
+              onClick={loadMore}
+              disabled={loadingMore}
+              style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', borderTop: '0.5px solid rgba(255,255,255,0.05)', fontFamily: 'var(--font-system)', fontSize: 11, color: loadingMore ? '#52749a' : '#f59e0b', textAlign: 'center', cursor: loadingMore ? 'default' : 'pointer', fontWeight: 600 }}
+            >
+              {loadingMore ? 'Loading…' : `Load more (${events.length} of ${total.toLocaleString('en-GB')})`}
+            </button>
+          )}
+          {!hasMore && events.length > 0 && (
+            <div style={{ padding: '10px 12px', fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', textAlign: 'center' }}>
+              End of log · {events.length.toLocaleString('en-GB')} event{events.length === 1 ? '' : 's'} shown
             </div>
           )}
         </div>
