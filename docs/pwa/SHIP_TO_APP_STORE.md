@@ -54,7 +54,7 @@ Everything you need to take the existing web app, wrap it as a native iOS binary
 
 - ✅ PWA install on iOS Safari (manifest, apple-touch-icon, status bar style, splash background, four app shortcuts)
 - ✅ Service worker (offline cache, cache versioning)
-- ✅ Bundle ID reserved-format string (`app.cortexbuild.cortexx`)
+- ✅ Bundle ID reserved-format string (`com.cortexbuild.app`)
 - ✅ Privacy manifest declaring every Required Reason API Cortexx uses
 - ✅ Info.plist permission strings for every iOS API (camera, mic, location, photos, contacts, calendar, biometrics, local network)
 - ✅ App Store icon at 1024×1024 with no transparency, no rounded corners (Apple applies them)
@@ -72,7 +72,7 @@ Everything you need to take the existing web app, wrap it as a native iOS binary
 |---|---|
 | Pay Apple £79/yr (or $99/yr in USD) | Apple won't take my card. |
 | Get a Mac with Xcode | iOS apps cannot be built or signed from anywhere else. Period. |
-| Replace `app.cortexbuild.cortexx` with **your** registered bundle ID | Each developer account owns its own. |
+| Replace `com.cortexbuild.app` with **your** registered bundle ID | Each developer account owns its own. |
 | Publish the privacy policy & support pages at the URLs in `metadata.txt` | App Store Connect rejects submissions with 404 URLs. |
 | Capture the five PNG screenshots from `screenshots-generator.html` | Apple needs them on every submission. |
 | Decide on price (free vs. paid) | I assumed Free in `SUBMISSION.md` — change it in App Store Connect if you want a paid tier. |
