@@ -6,15 +6,12 @@ module.exports = {
       cwd: "/workspace/cortexx",
       instances: 1,
       autorestart: true,
-      watch: false,
-      max_memory_restart: "1G",
       env: {
-        NODE_ENV: "production",
         PORT: 8080,
         LLM_RUNTIME: "ollama",
         OLLAMA_BASE: "http://127.0.0.1:11434",
         OLLAMA_MODEL: "qwen2.5-coder:7b",
-        DATABASE_URL: "postgresql://postgres:postgres@localhost:5432/cortexx"
+        DATABASE_URL: "postgresql://postgres:***REMOVED***@localhost:5432/cortexx"
       }
     },
     {
@@ -27,6 +24,30 @@ module.exports = {
       env: {
         OLLAMA_HOST: "127.0.0.1:11434"
       }
+    },
+    {
+      name: "cortexx-frontend",
+      script: "./start-frontend.sh",
+      cwd: "/workspace/cortexx",
+      instances: 1,
+      autorestart: true,
+      env: {
+        PORT: 3000
+      }
+    },
+    {
+      name: "cloudflare-tunnel-frontend",
+      script: "cloudflared",
+      args: "tunnel --url http://localhost:3000 --no-autoupdate",
+      interpreter: "none",
+      autorestart: true
+    },
+    {
+      name: "cloudflare-tunnel-api",
+      script: "cloudflared",
+      args: "tunnel --url http://localhost:8080 --no-autoupdate",
+      interpreter: "none",
+      autorestart: true
     }
   ]
 };
