@@ -204,14 +204,14 @@ app.get('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
     };
     let orderCol = ORDER[collection];
     if (!orderCol) orderCol = ['receipts','cisSubs','cisPayments','timesheets','diary','snags','changeOrders','rfis','subs','materials','documentsMeta','equipment','siteMaps'].includes(collection) ? 'updated_at' : 'id';
-    const r = await pool.query(`SELECT * FROM ${tbl} WHERE workspace_id=$1 ORDER BY ${orderCol} DESC NULLS LAST`, [req.user.ws]);
+    const r = await pool.query(`SELECT * FROM ${tbl} WHERE workspace_id=$1 ORDER BY ${orderCol} DESC NULLS LAST LIMIT 100`, [req.user.ws]);
     // Merge the JSONB `data` blob over the typed columns, drop internal bookkeeping.
     return res.json(r.rows.map(row => {
       const { data, workspace_id, ...cols } = row;
       return { ...cols, ...(data || {}) };
     }));
   }
-  const r = await pool.query('SELECT doc_id, data FROM documents_store WHERE workspace_id=$1 AND collection=$2', [req.user.ws, collection]);
+  const r = await pool.query('SELECT doc_id, data FROM documents_store WHERE workspace_id=$1 AND collection=$2 LIMIT 100', [req.user.ws, collection]);
   res.json(r.rows.map(row => ({ id: row.doc_id, ...row.data })));
 }));
 
@@ -228,7 +228,7 @@ app.post('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
     const tbl = tableFor(collection);
     await pool.query(
       `INSERT INTO ${tbl} (id, workspace_id, data) VALUES ($1,$2,$3)
-       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now()`,
+       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now() WHERE ${tbl}.workspace_id=$2`,
       [docId, req.user.ws, req.body]
     );
     bus.emit(req.user.ws, { type: 'change', collection, op: 'create', id: docId });
@@ -249,7 +249,7 @@ app.put('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
     const tbl = tableFor(collection);
     await pool.query(
       `INSERT INTO ${tbl} (id, workspace_id, data) VALUES ($1,$2,$3)
-       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now()`,
+       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now() WHERE ${tbl}.workspace_id=$2`,
       [id, req.user.ws, { ...req.body, id }]
     );
     bus.emit(req.user.ws, { type: 'change', collection, op: 'update', id });
