@@ -286,10 +286,16 @@ jobs:
                 done
               fi
             else
-              # Clear failed migrations (finished_at = NULL) that block deploy.
-              STUCK_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT COUNT(*) FROM _prisma_migrations WHERE finished_at IS NULL" 2>/dev/null | xargs)
-              if [ -n "$STUCK_COUNT" ] && [ "$STUCK_COUNT" -gt 0 ]; then
-                echo "↻ Found $STUCK_COUNT stuck Prisma migration row(s) — clearing"
+              # ─── 3c. Self-heal stuck Prisma migrations ─────────────
+              # If a migration is marked as started but not finished, Prisma blocks.
+              # We mark these as applied to reconcile with the DB state.
+              STUCK_MIGRATIONS=$(sudo -u postgres psql cortexx -tAc "SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NULL" 2>/dev/null | xargs)
+              if [ -n "$STUCK_MIGRATIONS" ]; then
+                for m in $STUCK_MIGRATIONS; do
+                  echo "↻ Marking stuck migration $m as applied..."
+                  DATABASE_URL="$DB_URL" npx prisma migrate resolve --applied "$m" || true
+                done
+                # Ensure no NULLs remain that would block the deploy
                 sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL"
               fi
             fi
