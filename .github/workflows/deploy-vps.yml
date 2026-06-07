@@ -210,28 +210,22 @@ jobs:
               exit 1
             fi
             echo "✓ DB ready"
-            # ─── 3b. Automatic Migration Baselining ───────────────────────
-            # If the database is non-empty but the migrations table is missing,
-            # we must baseline it to avoid P3005 errors during deploy.
-            if [ "$STUCK_TABLE_EXISTS" != "_prisma_migrations" ]; then
+
+            # ─── 3a. Migration Management ─────────────────────────────────
+            MIGRATION_TABLE=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
+
+            if [ "$MIGRATION_TABLE" != "_prisma_migrations" ]; then
+              # ─── 3b. Automatic Migration Baselining ───────────────
+              # If the database is non-empty but the migrations table is missing,
+              # we must baseline it to avoid P3005 errors during deploy.
               TABLE_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | xargs)
               if [ -n "$TABLE_COUNT" ] && [ "$TABLE_COUNT" -gt 0 ]; then
                 echo "↻ Database is not empty but _prisma_migrations is missing — baselining"
-                # We use the baseline migration found in prisma/migrations/20260523034123_init
-                # This creates the table and marks the initial migration as applied.
                 DATABASE_URL="$DB_URL" npx prisma migrate resolve --applied 20260523034123_init || echo "⚠ Baselining failed — manual intervention may be required"
               fi
-            fi
-
-            # ─── 3a. Self-heal stuck Prisma migrations ────────────────────
-            # ─── 3a. Self-heal stuck Prisma migrations ────────────────────
-            # A failed migration leaves a row in _prisma_migrations with
-            # finished_at = NULL. Prisma's next migrate deploy refuses to
-            # proceed past it, so each subsequent deploy gets stuck. Clear
-            # via raw SQL (no Node deps needed at this point in the flow).
-            # Idempotent: zero stuck rows means zero deletes.
-            STUCK_TABLE_EXISTS=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
-            if [ "$STUCK_TABLE_EXISTS" = "_prisma_migrations" ]; then
+            else
+              # ─── 3c. Self-heal stuck Prisma migrations ─────────────
+              # Clear failed migrations (finished_at = NULL) that block deploy.
               STUCK_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT COUNT(*) FROM _prisma_migrations WHERE finished_at IS NULL" 2>/dev/null | xargs)
               if [ -n "$STUCK_COUNT" ] && [ "$STUCK_COUNT" -gt 0 ]; then
                 echo "↻ Found $STUCK_COUNT stuck Prisma migration row(s) — clearing"
