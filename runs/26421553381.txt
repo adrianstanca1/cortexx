@@ -1,0 +1,110 @@
+run_id: 26421553381
+exit_code: 0
+completed_at: 2026-05-25T22:03:53Z
+command: |
+  echo "--- prod HEAD ---"
+  cd /opt/cortexx && git log -1 --oneline
+  echo
+  echo "--- repo size + node_modules size ---"
+  du -sh /opt/cortexx /opt/cortexx/node_modules /opt/cortexx/.next 2>&1
+  echo
+  echo "--- pm2 ---"
+  pm2 jlist 2>/dev/null | python3 -c "import json,sys;d=json.load(sys.stdin);print(f'{len(d)} workers, all online' if all(p[\"pm2_env\"][\"status\"]==\"online\" for p in d) else \"DEGRADED\"); print(f'  restarts: {sum(p[\"pm2_env\"][\"restart_time\"] for p in d)}, mem: {sum(p[\"monit\"][\"memory\"] for p in d)//1024//1024}MB total')"
+  echo
+  echo "--- env present? ---"
+  for v in DATABASE_URL NEXTAUTH_SECRET CRON_SECRET UPLOAD_DIR REDIS_URL MULTITENANT_ENFORCED; do
+    if grep -q "^${v}=" /opt/cortexx/.env.production 2>/dev/null; then
+      echo "  $v: SET"
+    else
+      echo "  $v: MISSING"
+    fi
+  done
+  echo
+  echo "--- cron file present ---"
+  ls -l /etc/cron.d/cortexx-cron 2>&1
+  echo
+  echo "--- uploads dir ---"
+  ls -ld /var/lib/cortexx/uploads 2>&1
+  echo
+  echo "--- external HTTPS ---"
+  for r in / /api/health /dashboard /api/dashboard /api/events/stream /pricing /onboarding /legacy/Cortexx-standalone.html; do
+    code=$(curl -sk -o /dev/null -w "%{http_code}" "https://cortexbuildpro.com$r" --max-time 8)
+    echo "  $r -> $code"
+  done
+  echo
+  echo "--- /api/health body ---"
+  curl -sk https://cortexbuildpro.com/api/health --max-time 10
+  echo
+  echo
+  echo "--- title at / ---"
+  curl -sk https://cortexbuildpro.com/ --max-time 8 | grep -oE "<title>[^<]+</title>" | head -1
+  echo
+  echo "--- live SW version ---"
+  curl -sk https://cortexbuildpro.com/sw.js --max-time 5 | grep -E "^const CACHE_VERSION"
+  echo
+  echo "--- pm2 errors (since fresh start, last 25) ---"
+  pm2 logs cortexx --err --nostream --lines 25 2>/dev/null | tail -25
+---
+--- prod HEAD ---
+00be0dc sec+perf: fix remaining 6 MED + 1 LOW audit findings
+
+--- repo size + node_modules size ---
+1.1G	/opt/cortexx
+
+--- pm2 ---
+8 workers, all online
+  restarts: 0, mem: 1746MB total
+
+--- env present? ---
+  DATABASE_URL: SET
+  NEXTAUTH_SECRET: SET
+  CRON_SECRET: SET
+  UPLOAD_DIR: SET
+  REDIS_URL: SET
+  MULTITENANT_ENFORCED: SET
+
+--- cron file present ---
+-rw-r--r-- 1 root root 656 May 25 22:01 /etc/cron.d/cortexx-cron
+
+--- uploads dir ---
+drwxr-xr-x 2 root root 4096 May 25 21:08 /var/lib/cortexx/uploads
+
+--- external HTTPS ---
+  / -> 200
+  /api/health -> 200
+  /dashboard -> 307
+  /api/dashboard -> 401
+  /api/events/stream -> 401
+  /pricing -> 200
+  /onboarding -> 307
+  /legacy/Cortexx-standalone.html -> 200
+
+--- /api/health body ---
+{"status":"ok","checks":{"database":{"ok":true,"ms":35},"disk":{"ok":true,"free_gb":350.81},"memory":{"ok":true,"rss_mb":223.5},"app":{"ok":true,"ms":35}},"uptime":52.803289199,"version":"unknown","timestamp":"2026-05-25T22:03:51.820Z"}
+
+--- title at / ---
+<title>Cortexx — Working App</title>
+
+--- live SW version ---
+const CACHE_VERSION = 'cortexx-v4'
+
+--- pm2 errors (since fresh start, last 25) ---
+[TAILING] Tailing last 25 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 25 lines:
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Invoice.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Invoice.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Invoice.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+

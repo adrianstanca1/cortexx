@@ -1,0 +1,62 @@
+run_id: 26412963192
+exit_code: 0
+completed_at: 2026-05-25T17:45:29Z
+command: |
+  echo "--- prod HEAD ---"
+  cd /opt/cortexx && git log -1 --oneline
+  echo
+  echo "--- CRON_SECRET coherence check ---"
+  ENV_SECRET=$(grep -oP "^CRON_SECRET=\K.+" /opt/cortexx/.env.production 2>/dev/null)
+  CRON_SECRET=$(grep -oP "Bearer \K[a-f0-9]{64}" /etc/cron.d/cortexx-cron 2>/dev/null | head -1)
+  echo "  env  secret length: ${#ENV_SECRET}"
+  echo "  cron secret length: ${#CRON_SECRET}"
+  if [ "$ENV_SECRET" = "$CRON_SECRET" ] && [ -n "$ENV_SECRET" ]; then
+    echo "  ✓ env and cron.d match"
+  else
+    echo "  ✗ MISMATCH"
+  fi
+  echo
+  echo "--- end-to-end cron call ---"
+  curl -sS -o /tmp/c.json -w "  HTTP %{http_code}\n" -X POST -H "Authorization: Bearer $ENV_SECRET" http://localhost:3010/api/cron/overdue-invoices
+  head -c 200 /tmp/c.json; echo
+  echo
+  echo "--- pm2 ---"
+  pm2 jlist | jq -r "[.[]|.pm2_env.status]|group_by(.)|map({status:.[0],n:length})"
+  echo
+  echo "--- public routes still working ---"
+  for r in /privacy /robots.txt /sitemap.xml /status; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3010$r)
+    echo "  GET $r -> $code"
+  done
+  echo
+  echo "--- /api/health ---"
+  curl -s -o /dev/null -w "  HTTP %{http_code} in %{time_total}s\n" http://localhost:3010/api/health
+---
+--- prod HEAD ---
+bfd8719 fix(deploy): preserve CRON_SECRET through the .env.production overwrite
+
+--- CRON_SECRET coherence check ---
+  env  secret length: 64
+  cron secret length: 64
+  ✓ env and cron.d match
+
+--- end-to-end cron call ---
+  HTTP 200
+{"overdueCount":1,"promoted":0,"orgsNotified":1,"emailsSent":0}
+
+--- pm2 ---
+[
+  {
+    "status": "online",
+    "n": 8
+  }
+]
+
+--- public routes still working ---
+  GET /privacy -> 200
+  GET /robots.txt -> 200
+  GET /sitemap.xml -> 200
+  GET /status -> 200
+
+--- /api/health ---
+  HTTP 200 in 0.026691s

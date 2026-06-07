@@ -1,0 +1,44 @@
+run_id: 26422003648
+exit_code: 0
+completed_at: 2026-05-25T22:20:26Z
+command: |
+  echo "--- prod HEAD ---"
+  cd /opt/cortexx && git log -1 --oneline
+  echo
+  echo "--- pm2 ---"
+  pm2 jlist 2>/dev/null | python3 -c "import json,sys;d=json.load(sys.stdin);print(f'{len(d)} workers, restarts: {sum(p[\"pm2_env\"][\"restart_time\"] for p in d)}')"
+  echo
+  echo "--- HTTPS ---"
+  for r in / /api/health /api/billing/plans /api/orgs/test-id /dashboard; do
+    code=$(curl -sk -o /dev/null -w "%{http_code}" "https://cortexbuildpro.com$r" --max-time 8)
+    echo "  $r -> $code"
+  done
+  echo
+  echo "--- /api/billing/plans body ---"
+  curl -sk https://cortexbuildpro.com/api/billing/plans --max-time 5
+  echo
+  echo
+  echo "--- pm2 errors (post-flush 30s) ---"
+  pm2 flush cortexx >/dev/null 2>&1
+  sleep 30
+  pm2 logs cortexx --err --nostream --lines 20 2>/dev/null | tail -20
+---
+--- prod HEAD ---
+d4dce60 sec+ux: fix 7 HIGH loop-3 findings (client-side + ops)
+
+--- pm2 ---
+8 workers, restarts: 0
+
+--- HTTPS ---
+  / -> 200
+  /api/health -> 200
+  /api/billing/plans -> 401
+  /api/orgs/test-id -> 401
+  /dashboard -> 307
+
+--- /api/billing/plans body ---
+{"error":"Unauthorized"}
+
+--- pm2 errors (post-flush 30s) ---
+[TAILING] Tailing last 20 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 20 lines:

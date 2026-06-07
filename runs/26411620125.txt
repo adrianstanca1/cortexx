@@ -1,0 +1,92 @@
+run_id: 26411620125
+exit_code: 0
+completed_at: 2026-05-25T17:07:08Z
+command: |
+  echo "--- env coverage on .env.production ---"
+  keys="STRIPE_SECRET_KEY STRIPE_PRICE_STARTER STRIPE_PRICE_PRO STRIPE_PRICE_ENTERPRISE STRIPE_WEBHOOK_SECRET SENTRY_DSN RESEND_API_KEY EMAIL_FROM CRON_SECRET SEED_TOKEN ALLOW_SEED ADMIN_EMAIL S3_BUCKET S3_ENDPOINT S3_ACCESS_KEY_ID S3_SECRET_ACCESS_KEY OLLAMA_BASE_URL UPLOAD_DIR CAPACITOR_SERVER_URL"
+  for k in $keys; do
+    if grep -q "^${k}=" /opt/cortexx/.env.production 2>/dev/null; then echo "  $k = set"; else echo "  $k = MISSING"; fi
+  done
+  echo
+  echo "--- cron ---"
+  crontab -l 2>/dev/null | head -5 || echo "(no user crontab)"
+  ls /etc/cron.d/ 2>/dev/null | head
+  echo
+  echo "--- nginx ---"
+  grep -hE "server_name|ssl_certificate " /etc/nginx/sites-enabled/* 2>/dev/null | head -5
+  echo
+  echo "--- TLS ---"
+  echo | openssl s_client -servername cortexbuildpro.com -connect localhost:443 2>/dev/null | openssl x509 -noout -dates 2>/dev/null
+  echo
+  echo "--- disk + mem ---"
+  df -h / | tail -1
+  free -h | head -2
+  echo
+  echo "--- pm2 ---"
+  pm2 jlist | jq -r ".[] | \"#\(.pm_id) up=\(.pm2_env.pm_uptime|tonumber|. /1000|floor)s mem=\(.monit.memory/1024/1024|floor)MB\""
+  uptime
+  echo
+  echo "--- post-fix probe of public routes ---"
+  for r in /privacy /terms /robots.txt /sitemap.xml /status; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3010$r)
+    echo "  GET $r -> $code"
+  done
+---
+--- env coverage on .env.production ---
+  STRIPE_SECRET_KEY = MISSING
+  STRIPE_PRICE_STARTER = MISSING
+  STRIPE_PRICE_PRO = MISSING
+  STRIPE_PRICE_ENTERPRISE = MISSING
+  STRIPE_WEBHOOK_SECRET = MISSING
+  SENTRY_DSN = MISSING
+  RESEND_API_KEY = MISSING
+  EMAIL_FROM = MISSING
+  CRON_SECRET = MISSING
+  SEED_TOKEN = set
+  ALLOW_SEED = set
+  ADMIN_EMAIL = set
+  S3_BUCKET = MISSING
+  S3_ENDPOINT = MISSING
+  S3_ACCESS_KEY_ID = MISSING
+  S3_SECRET_ACCESS_KEY = MISSING
+  OLLAMA_BASE_URL = MISSING
+  UPLOAD_DIR = MISSING
+  CAPACITOR_SERVER_URL = MISSING
+
+--- cron ---
+certbot
+e2scrub_all
+monarx-update
+sysstat
+
+--- nginx ---
+    server_name cortexbuildpro.com www.cortexbuildpro.com;
+    server_name cortexbuildpro.com www.cortexbuildpro.com;
+    ssl_certificate /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem;
+
+--- TLS ---
+notBefore=May 23 18:59:11 2026 GMT
+notAfter=Aug 21 18:59:10 2026 GMT
+
+--- disk + mem ---
+/dev/sda1       387G   36G  351G  10% /
+               total        used        free      shared  buff/cache   available
+Mem:            31Gi       2.5Gi        12Gi        42Mi        17Gi        28Gi
+
+--- pm2 ---
+#0 up=1779728724s mem=220MB
+#1 up=1779728724s mem=222MB
+#2 up=1779728724s mem=222MB
+#3 up=1779728724s mem=222MB
+#4 up=1779728724s mem=221MB
+#5 up=1779728724s mem=223MB
+#6 up=1779728724s mem=221MB
+#7 up=1779728724s mem=223MB
+ 17:07:06 up 2 days,  3:04,  2 users,  load average: 0.68, 0.78, 0.56
+
+--- post-fix probe of public routes ---
+  GET /privacy -> 200
+  GET /terms -> 200
+  GET /robots.txt -> 200
+  GET /sitemap.xml -> 200
+  GET /status -> 200

@@ -1,0 +1,83 @@
+run_id: 26412084786
+exit_code: 0
+completed_at: 2026-05-25T17:20:41Z
+command: |
+  set -ex
+  echo "--- env confirmed stashed ---"
+  ls -la /opt/cortexx-rebuild-stash/
+  echo
+  echo "--- stop pm2 ---"
+  pm2 delete cortexx 2>&1 || echo "(no cortexx in pm2)"
+  pm2 save --force 2>&1 || true
+  echo
+  echo "--- wipe /opt/cortexx ---"
+  du -sh /opt/cortexx 2>/dev/null
+  rm -rf /opt/cortexx
+  test ! -e /opt/cortexx && echo "✓ /opt/cortexx gone"
+  echo
+  echo "--- bootstrap empty + restore env so deploy can rebuild ---"
+  mkdir -p /opt/cortexx
+  install -m 0600 /opt/cortexx-rebuild-stash/.env.production /opt/cortexx/.env.production
+  echo "  env restored: $(wc -c < /opt/cortexx/.env.production) bytes"
+  ls -la /opt/cortexx/
+  echo
+  echo "READY — trigger deploy-vps.yml next" 
+---
+--- env confirmed stashed ---
++ echo '--- env confirmed stashed ---'
++ ls -la /opt/cortexx-rebuild-stash/
+total 12
+drwxr-xr-x 2 root root 4096 May 25 17:19 .
+drwxr-xr-x 6 root root 4096 May 25 17:18 ..
+-rw------- 1 root root  503 May 25 17:19 .env.production
+
+--- stop pm2 ---
++ echo
++ echo '--- stop pm2 ---'
++ pm2 delete cortexx
+[PM2] Applying action deleteProcessId on app [cortexx](ids: [
+  0, 1, 2, 3,
+  4, 5, 6, 7
+])
+[PM2] [cortexx](2) ✓
+[PM2] [cortexx](1) ✓
+[PM2] [cortexx](0) ✓
+[PM2] [cortexx](3) ✓
+[PM2] [cortexx](4) ✓
+[PM2] [cortexx](5) ✓
+[PM2] [cortexx](7) ✓
+[PM2] [cortexx](6) ✓
+┌────┬───────────┬─────────────┬─────────┬─────────┬──────────┬────────┬──────┬───────────┬──────────┬──────────┬──────────┬──────────┐
+│ id │ name      │ namespace   │ version │ mode    │ pid      │ uptime │ ↺    │ status    │ cpu      │ mem      │ user     │ watching │
+└────┴───────────┴─────────────┴─────────┴─────────┴──────────┴────────┴──────┴───────────┴──────────┴──────────┴──────────┴──────────┘
++ pm2 save --force
+[PM2] Saving current process list...
+[PM2] Successfully saved in /root/.pm2/dump.pm2
+
+--- wipe /opt/cortexx ---
++ echo
++ echo '--- wipe /opt/cortexx ---'
++ du -sh /opt/cortexx
+1.1G	/opt/cortexx
++ rm -rf /opt/cortexx
+✓ /opt/cortexx gone
+
+--- bootstrap empty + restore env so deploy can rebuild ---
++ test '!' -e /opt/cortexx
++ echo '✓ /opt/cortexx gone'
++ echo
++ echo '--- bootstrap empty + restore env so deploy can rebuild ---'
++ mkdir -p /opt/cortexx
++ install -m 0600 /opt/cortexx-rebuild-stash/.env.production /opt/cortexx/.env.production
+++ wc -c
+  env restored: 503 bytes
++ echo '  env restored: 503 bytes'
++ ls -la /opt/cortexx/
+total 12
+drwxr-xr-x 2 root root 4096 May 25 17:20 .
+drwxr-xr-x 6 root root 4096 May 25 17:20 ..
+-rw------- 1 root root  503 May 25 17:20 .env.production
+
+READY — trigger deploy-vps.yml next
++ echo
++ echo 'READY — trigger deploy-vps.yml next'

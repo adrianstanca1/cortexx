@@ -1,0 +1,38 @@
+run_id: 26421613076
+exit_code: 0
+completed_at: 2026-05-25T22:06:26Z
+command: |
+  echo "--- pm2 flush ---"
+  pm2 flush cortexx >/dev/null 2>&1 && echo flushed
+  echo
+  echo "--- access log from nginx (last 100 lines, filter API requests) ---"
+  tail -100 /var/log/nginx/access.log 2>/dev/null | grep -E "/api/(dashboard|projects|invoices|live-status|reports|search)" | tail -20
+  echo
+  echo "--- /opt/cortexx logs after fresh flush + 30s wait ---"
+  sleep 30
+  echo
+  echo "--- stdout (request log) ---"
+  pm2 logs cortexx --out --nostream --lines 60 2>/dev/null | tail -60
+  echo
+  echo "--- stderr (errors) ---"
+  pm2 logs cortexx --err --nostream --lines 30 2>/dev/null | tail -30
+---
+--- pm2 flush ---
+flushed
+
+--- access log from nginx (last 100 lines, filter API requests) ---
+217.43.19.138 - - [25/May/2026:21:59:54 +0000] "GET /api/reports HTTP/2.0" 500 26 "https://cortexbuildpro.com/reports" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1"
+217.43.19.138 - - [25/May/2026:21:59:56 +0000] "GET /api/dashboard HTTP/2.0" 500 42 "https://cortexbuildpro.com/dashboard" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1"
+217.43.19.138 - - [25/May/2026:21:59:57 +0000] "GET /api/dashboard HTTP/2.0" 500 42 "https://cortexbuildpro.com/dashboard" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1"
+217.43.19.138 - - [25/May/2026:22:00:01 +0000] "GET /api/dashboard HTTP/2.0" 500 42 "https://cortexbuildpro.com/dashboard" "Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /api/dashboard HTTP/2.0" 401 24 "-" "curl/8.5.0"
+
+--- /opt/cortexx logs after fresh flush + 30s wait ---
+
+--- stdout (request log) ---
+[TAILING] Tailing last 60 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-out.log last 60 lines:
+
+--- stderr (errors) ---
+[TAILING] Tailing last 30 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 30 lines:

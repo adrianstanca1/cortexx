@@ -1,0 +1,106 @@
+run_id: 26419027068
+exit_code: 0
+completed_at: 2026-05-25T20:44:00Z
+command: |
+  set -ex
+  cd /opt/cortexx
+  echo "--- BEFORE ---"
+  du -sh .next
+  echo
+  echo "--- nuking .next + rebuilding ---"
+  rm -rf .next
+  DB_URL=$(grep ^DATABASE_URL .env.production | cut -d= -f2-)
+  NEXTAUTH_SECRET=$(grep ^NEXTAUTH_SECRET .env.production | cut -d= -f2-)
+  DATABASE_URL="$DB_URL" NEXTAUTH_SECRET="$NEXTAUTH_SECRET" NEXTAUTH_URL=https://cortexbuildpro.com npm run build > /tmp/cortexx-rebuild.log 2>&1
+  tail -15 /tmp/cortexx-rebuild.log
+  echo
+  echo "--- pm2 restart ---"
+  pm2 delete cortexx >/dev/null 2>&1 || true
+  APP_PORT=3010
+  PORT=$APP_PORT pm2 start "$PWD/node_modules/next/dist/bin/next" --name cortexx -i max --cwd "$PWD" -- start -p "$APP_PORT" >/dev/null
+  pm2 save >/dev/null
+  sleep 8
+  pm2 jlist | jq -r "[.[]|.pm2_env.status]|group_by(.)|map({status:.[0],n:length})"
+  echo
+  echo "--- /settings now? ---"
+  for i in 1 2 3; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3010/settings)
+    echo "  attempt $i: $code"
+  done
+  curl -s -o /dev/null -w "  /api/health: %{http_code}\n" http://localhost:3010/api/health
+---
+--- BEFORE ---
++ cd /opt/cortexx
++ echo '--- BEFORE ---'
++ du -sh .next
+92M	.next
+
+--- nuking .next + rebuilding ---
++ echo
++ echo '--- nuking .next + rebuilding ---'
++ rm -rf .next
+++ grep '^DATABASE_URL' .env.production
+++ cut -d= -f2-
++ DB_URL=postgresql://cortexx:[pw-redacted]@127.0.0.1:5432/cortexx
+++ grep '^NEXTAUTH_SECRET' .env.production
+++ cut -d= -f2-
++ NEXTAUTH_SECRET=SWHMv3JSrdNOtRck6UL4SrBKbJ6DzrmSjKIRQSpQoSR3J3CB
++ DATABASE_URL=postgresql://cortexx:[pw-redacted]@127.0.0.1:5432/cortexx
++ NEXTAUTH_SECRET=SWHMv3JSrdNOtRck6UL4SrBKbJ6DzrmSjKIRQSpQoSR3J3CB
++ NEXTAUTH_URL=https://cortexbuildpro.com
++ npm run build
++ tail -15 /tmp/cortexx-rebuild.log
+├ ƒ /toolbox-talks
+├ ƒ /tpl-library
+├ ƒ /training
+├ ƒ /valuations
+├ ƒ /variations
+├ ƒ /vera-autopilot
+├ ƒ /vera-ceo
+└ ƒ /waste
+
+
+ƒ Proxy (Middleware)
+
+○  (Static)   prerendered as static content
+ƒ  (Dynamic)  server-rendered on demand
+
+
+--- pm2 restart ---
++ echo
++ echo '--- pm2 restart ---'
++ pm2 delete cortexx
++ APP_PORT=3010
++ PORT=3010
++ pm2 start /opt/cortexx/node_modules/next/dist/bin/next --name cortexx -i max --cwd /opt/cortexx -- start -p 3010
++ pm2 save
++ sleep 8
++ pm2 jlist
++ jq -r '[.[]|.pm2_env.status]|group_by(.)|map({status:.[0],n:length})'
+[
+  {
+    "status": "online",
+    "n": 8
+  }
+]
+
+--- /settings now? ---
++ echo
++ echo '--- /settings now? ---'
++ for i in 1 2 3
+++ curl -s -o /dev/null -w '%{http_code}' http://localhost:3010/settings
+  attempt 1: 307
++ code=307
++ echo '  attempt 1: 307'
++ for i in 1 2 3
+++ curl -s -o /dev/null -w '%{http_code}' http://localhost:3010/settings
+  attempt 2: 307
++ code=307
++ echo '  attempt 2: 307'
++ for i in 1 2 3
+++ curl -s -o /dev/null -w '%{http_code}' http://localhost:3010/settings
+  attempt 3: 307
++ code=307
++ echo '  attempt 3: 307'
++ curl -s -o /dev/null -w '  /api/health: %{http_code}\n' http://localhost:3010/api/health
+  /api/health: 200

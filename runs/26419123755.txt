@@ -1,0 +1,58 @@
+run_id: 26419123755
+exit_code: 0
+completed_at: 2026-05-25T20:46:09Z
+command: |
+  echo "--- post-rebuild verify ---"
+  for r in /dashboard /settings /apps /projects /; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3010$r)
+    echo "  GET $r -> $code"
+  done
+  echo
+  echo "--- POST /api/dashboard with no auth (expect 401) ---"
+  code=$(curl -s -o /dev/null -w "%{http_code}" -X GET http://localhost:3010/api/dashboard)
+  echo "  /api/dashboard (no session) -> $code"
+  echo
+  echo "--- pm2 errors since the rebuild (last 30 lines) ---"
+  pm2 logs cortexx --err --nostream --lines 40 2>/dev/null | tail -30
+---
+--- post-rebuild verify ---
+  GET /dashboard -> 307
+  GET /settings -> 307
+  GET /apps -> 307
+  GET /projects -> 307
+  GET / -> 200
+
+--- POST /api/dashboard with no auth (expect 401) ---
+  /api/dashboard (no session) -> 401
+
+--- pm2 errors since the rebuild (last 30 lines) ---
+0|cortexx  | ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/opt/cortexx/.next/server/pages/500.html'
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/settings" does not exist. This is a bug in Next.js.
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | [client-error] {"user":"Adrian","url":"https://cortexbuildpro.com/settings","message":"An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.","stack":"Error: An error occurred in the Server Components render. The specific message is omitted in production builds to avoid leaking sensitive details. A digest property is included on this error instance which may provide additional details about the nature of the error.","componentStack":"","ua":"Mozilla/5.0 (iPhone; CPU iPhone OS 18_7 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.5 Mobile/15E148 Safari/604.1","at":"2026-05-25T18:44:24.826Z"}
+0|cortexx  | ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/settings" does not exist. This is a bug in Next.js.
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/opt/cortexx/.next/server/pages/500.html'
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/settings" does not exist. This is a bug in Next.js.
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/settings" does not exist. This is a bug in Next.js.
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/opt/cortexx/.next/server/pages/500.html'
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/" does not exist. This is a bug in Next.js.
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | ⨯ Error [InvariantError]: Invariant: The client reference manifest for route "/" does not exist. This is a bug in Next.js.
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | ⨯ Error: Failed to load static file for page: /500 ENOENT: no such file or directory, open '/opt/cortexx/.next/server/pages/500.html'
+0|cortexx  |     at ignore-listed frames
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Invoice.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Invoice.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+
