@@ -1,9 +1,7 @@
 {
-  "fileCount": 131,
-  "lastUpdated": "2026-06-07T10:52:28Z",
+  "version": "1.4.0",
+  "updated": 1780831530,
   "files": [
-    ".sync-cache.json",
-    "_manifest.json",
     "app-main.js",
     "app-screens-2.js",
     "app-screens.js",
