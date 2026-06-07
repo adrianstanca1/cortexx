@@ -1,571 +1,137 @@
 {
-  "generated": "2026-06-06T04:00:01.692Z",
-  "babelVersion": "7.29.0",
-  "preset": "react (runtime: classic), compact:false, comments:false",
-  "note": "Regenerated from lib/ — full parity with the default lib/ load path. Plain-JS modules are copied verbatim; JSX is Babel-transformed. Loaded only on the ?prod path.",
-  "fileCount": 80,
-  "totalBytesIn": 1277454,
-  "totalBytesOut": 1375138,
+  "fileCount": 131,
+  "lastUpdated": "2026-06-07T10:52:28Z",
   "files": [
-    {
-      "src": "lib/ios-frame.jsx",
-      "out": "dist/ios-frame.js",
-      "plain": false,
-      "bytesIn": 14279,
-      "bytesOut": 15076
-    },
-    {
-      "src": "lib/tweaks-panel.jsx",
-      "out": "dist/tweaks-panel.js",
-      "plain": false,
-      "bytesIn": 17770,
-      "bytesOut": 15588
-    },
-    {
-      "src": "lib/tokens.jsx",
-      "out": "dist/tokens.js",
-      "plain": false,
-      "bytesIn": 17841,
-      "bytesOut": 29906
-    },
-    {
-      "src": "lib/dashboards.jsx",
-      "out": "dist/dashboards.js",
-      "plain": false,
-      "bytesIn": 34739,
-      "bytesOut": 38585
-    },
-    {
-      "src": "lib/dashboards-v2.jsx",
-      "out": "dist/dashboards-v2.js",
-      "plain": false,
-      "bytesIn": 17760,
-      "bytesOut": 19741
-    },
-    {
-      "src": "lib/dashboards-v3.jsx",
-      "out": "dist/dashboards-v3.js",
-      "plain": false,
-      "bytesIn": 13520,
-      "bytesOut": 14886
-    },
-    {
-      "src": "lib/dashboards-v4.jsx",
-      "out": "dist/dashboards-v4.js",
-      "plain": false,
-      "bytesIn": 16767,
-      "bytesOut": 17319
-    },
-    {
-      "src": "lib/dashboards-v5.jsx",
-      "out": "dist/dashboards-v5.js",
-      "plain": false,
-      "bytesIn": 16348,
-      "bytesOut": 17954
-    },
-    {
-      "src": "lib/backend.js",
-      "out": "dist/backend.js",
-      "plain": true,
-      "bytesIn": 17050,
-      "bytesOut": 17050
-    },
-    {
-      "src": "lib/backend-extras.js",
-      "out": "dist/backend-extras.js",
-      "plain": true,
-      "bytesIn": 18576,
-      "bytesOut": 18576
-    },
-    {
-      "src": "lib/cloud-sync.js",
-      "out": "dist/cloud-sync.js",
-      "plain": true,
-      "bytesIn": 6645,
-      "bytesOut": 6645
-    },
-    {
-      "src": "lib/qrcode.js",
-      "out": "dist/qrcode.js",
-      "plain": true,
-      "bytesIn": 10621,
-      "bytesOut": 10621
-    },
-    {
-      "src": "lib/invoice-pdf.js",
-      "out": "dist/invoice-pdf.js",
-      "plain": true,
-      "bytesIn": 13863,
-      "bytesOut": 13863
-    },
-    {
-      "src": "lib/perf-phase71.js",
-      "out": "dist/perf-phase71.js",
-      "plain": true,
-      "bytesIn": 1651,
-      "bytesOut": 1651
-    },
-    {
-      "src": "lib/perf-phase81.js",
-      "out": "dist/perf-phase81.js",
-      "plain": true,
-      "bytesIn": 11569,
-      "bytesOut": 11569
-    },
-    {
-      "src": "lib/app-screens.jsx",
-      "out": "dist/app-screens.js",
-      "plain": false,
-      "bytesIn": 21410,
-      "bytesOut": 22845
-    },
-    {
-      "src": "lib/app-sheets.jsx",
-      "out": "dist/app-sheets.js",
-      "plain": false,
-      "bytesIn": 42728,
-      "bytesOut": 46394
-    },
-    {
-      "src": "lib/app-screens-2.jsx",
-      "out": "dist/app-screens-2.js",
-      "plain": false,
-      "bytesIn": 32039,
-      "bytesOut": 34486
-    },
-    {
-      "src": "lib/app-utils.jsx",
-      "out": "dist/app-utils.js",
-      "plain": false,
-      "bytesIn": 27570,
-      "bytesOut": 30314
-    },
-    {
-      "src": "lib/screens-ops.jsx",
-      "out": "dist/screens-ops.js",
-      "plain": false,
-      "bytesIn": 32756,
-      "bytesOut": 34953
-    },
-    {
-      "src": "lib/screens-project.jsx",
-      "out": "dist/screens-project.js",
-      "plain": false,
-      "bytesIn": 28731,
-      "bytesOut": 31179
-    },
-    {
-      "src": "lib/screens-phase2.jsx",
-      "out": "dist/screens-phase2.js",
-      "plain": false,
-      "bytesIn": 36761,
-      "bytesOut": 39305
-    },
-    {
-      "src": "lib/screens-phase3.jsx",
-      "out": "dist/screens-phase3.js",
-      "plain": false,
-      "bytesIn": 39887,
-      "bytesOut": 43086
-    },
-    {
-      "src": "lib/screens-phase4.jsx",
-      "out": "dist/screens-phase4.js",
-      "plain": false,
-      "bytesIn": 38541,
-      "bytesOut": 42279
-    },
-    {
-      "src": "lib/screens-phase5.jsx",
-      "out": "dist/screens-phase5.js",
-      "plain": false,
-      "bytesIn": 13046,
-      "bytesOut": 13910
-    },
-    {
-      "src": "lib/screens-phase6.jsx",
-      "out": "dist/screens-phase6.js",
-      "plain": false,
-      "bytesIn": 23507,
-      "bytesOut": 26305
-    },
-    {
-      "src": "lib/screens-phase7.jsx",
-      "out": "dist/screens-phase7.js",
-      "plain": false,
-      "bytesIn": 7936,
-      "bytesOut": 8664
-    },
-    {
-      "src": "lib/screens-phase8.jsx",
-      "out": "dist/screens-phase8.js",
-      "plain": false,
-      "bytesIn": 5178,
-      "bytesOut": 7016
-    },
-    {
-      "src": "lib/screens-phase9.jsx",
-      "out": "dist/screens-phase9.js",
-      "plain": false,
-      "bytesIn": 19443,
-      "bytesOut": 20695
-    },
-    {
-      "src": "lib/screens-phase10.jsx",
-      "out": "dist/screens-phase10.js",
-      "plain": false,
-      "bytesIn": 13256,
-      "bytesOut": 14394
-    },
-    {
-      "src": "lib/screens-phase11.jsx",
-      "out": "dist/screens-phase11.js",
-      "plain": false,
-      "bytesIn": 20905,
-      "bytesOut": 21515
-    },
-    {
-      "src": "lib/screens-phase12.jsx",
-      "out": "dist/screens-phase12.js",
-      "plain": false,
-      "bytesIn": 6973,
-      "bytesOut": 7127
-    },
-    {
-      "src": "lib/screens-phase13.jsx",
-      "out": "dist/screens-phase13.js",
-      "plain": false,
-      "bytesIn": 9163,
-      "bytesOut": 10108
-    },
-    {
-      "src": "lib/screens-phase14.jsx",
-      "out": "dist/screens-phase14.js",
-      "plain": false,
-      "bytesIn": 6865,
-      "bytesOut": 7308
-    },
-    {
-      "src": "lib/screens-phase15.jsx",
-      "out": "dist/screens-phase15.js",
-      "plain": false,
-      "bytesIn": 12324,
-      "bytesOut": 11875
-    },
-    {
-      "src": "lib/screens-phase16.jsx",
-      "out": "dist/screens-phase16.js",
-      "plain": false,
-      "bytesIn": 22340,
-      "bytesOut": 24468
-    },
-    {
-      "src": "lib/screens-phase17.jsx",
-      "out": "dist/screens-phase17.js",
-      "plain": false,
-      "bytesIn": 6601,
-      "bytesOut": 6522
-    },
-    {
-      "src": "lib/screens-phase18.jsx",
-      "out": "dist/screens-phase18.js",
-      "plain": false,
-      "bytesIn": 10586,
-      "bytesOut": 12267
-    },
-    {
-      "src": "lib/screens-phase19.jsx",
-      "out": "dist/screens-phase19.js",
-      "plain": false,
-      "bytesIn": 12047,
-      "bytesOut": 13050
-    },
-    {
-      "src": "lib/screens-phase20.jsx",
-      "out": "dist/screens-phase20.js",
-      "plain": false,
-      "bytesIn": 7530,
-      "bytesOut": 8518
-    },
-    {
-      "src": "lib/screens-phase21-30.jsx",
-      "out": "dist/screens-phase21-30.js",
-      "plain": false,
-      "bytesIn": 18935,
-      "bytesOut": 21448
-    },
-    {
-      "src": "lib/screens-phase31.jsx",
-      "out": "dist/screens-phase31.js",
-      "plain": false,
-      "bytesIn": 1113,
-      "bytesOut": 1008
-    },
-    {
-      "src": "lib/screens-phase32.jsx",
-      "out": "dist/screens-phase32.js",
-      "plain": false,
-      "bytesIn": 10731,
-      "bytesOut": 12237
-    },
-    {
-      "src": "lib/screens-phase33.jsx",
-      "out": "dist/screens-phase33.js",
-      "plain": false,
-      "bytesIn": 1191,
-      "bytesOut": 1336
-    },
-    {
-      "src": "lib/screens-phase34.jsx",
-      "out": "dist/screens-phase34.js",
-      "plain": false,
-      "bytesIn": 4753,
-      "bytesOut": 5420
-    },
-    {
-      "src": "lib/screens-phase35.jsx",
-      "out": "dist/screens-phase35.js",
-      "plain": false,
-      "bytesIn": 4452,
-      "bytesOut": 4977
-    },
-    {
-      "src": "lib/screens-phase36.jsx",
-      "out": "dist/screens-phase36.js",
-      "plain": false,
-      "bytesIn": 7181,
-      "bytesOut": 7857
-    },
-    {
-      "src": "lib/screens-phase37.jsx",
-      "out": "dist/screens-phase37.js",
-      "plain": false,
-      "bytesIn": 4485,
-      "bytesOut": 4825
-    },
-    {
-      "src": "lib/screens-phase38.jsx",
-      "out": "dist/screens-phase38.js",
-      "plain": false,
-      "bytesIn": 3353,
-      "bytesOut": 3635
-    },
-    {
-      "src": "lib/screens-phase39.jsx",
-      "out": "dist/screens-phase39.js",
-      "plain": false,
-      "bytesIn": 18042,
-      "bytesOut": 18638
-    },
-    {
-      "src": "lib/screens-phase40.jsx",
-      "out": "dist/screens-phase40.js",
-      "plain": false,
-      "bytesIn": 11287,
-      "bytesOut": 11825
-    },
-    {
-      "src": "lib/screens-phase41-50.jsx",
-      "out": "dist/screens-phase41-50.js",
-      "plain": false,
-      "bytesIn": 9887,
-      "bytesOut": 9588
-    },
-    {
-      "src": "lib/screens-phase51-70.jsx",
-      "out": "dist/screens-phase51-70.js",
-      "plain": false,
-      "bytesIn": 15582,
-      "bytesOut": 19839
-    },
-    {
-      "src": "lib/screens-phase72.jsx",
-      "out": "dist/screens-phase72.js",
-      "plain": false,
-      "bytesIn": 32537,
-      "bytesOut": 34886
-    },
-    {
-      "src": "lib/screens-phase73.jsx",
-      "out": "dist/screens-phase73.js",
-      "plain": false,
-      "bytesIn": 24130,
-      "bytesOut": 23620
-    },
-    {
-      "src": "lib/screens-phase74.jsx",
-      "out": "dist/screens-phase74.js",
-      "plain": false,
-      "bytesIn": 20226,
-      "bytesOut": 21167
-    },
-    {
-      "src": "lib/screens-phase75.jsx",
-      "out": "dist/screens-phase75.js",
-      "plain": false,
-      "bytesIn": 28855,
-      "bytesOut": 29088
-    },
-    {
-      "src": "lib/screens-phase76.jsx",
-      "out": "dist/screens-phase76.js",
-      "plain": false,
-      "bytesIn": 17068,
-      "bytesOut": 16889
-    },
-    {
-      "src": "lib/screens-phase77.jsx",
-      "out": "dist/screens-phase77.js",
-      "plain": false,
-      "bytesIn": 34154,
-      "bytesOut": 34967
-    },
-    {
-      "src": "lib/screens-phase78.jsx",
-      "out": "dist/screens-phase78.js",
-      "plain": false,
-      "bytesIn": 21075,
-      "bytesOut": 21302
-    },
-    {
-      "src": "lib/screens-phase79.jsx",
-      "out": "dist/screens-phase79.js",
-      "plain": false,
-      "bytesIn": 16071,
-      "bytesOut": 15654
-    },
-    {
-      "src": "lib/screens-phase80.jsx",
-      "out": "dist/screens-phase80.js",
-      "plain": false,
-      "bytesIn": 11211,
-      "bytesOut": 10164
-    },
-    {
-      "src": "lib/screens-phase82.jsx",
-      "out": "dist/screens-phase82.js",
-      "plain": false,
-      "bytesIn": 13929,
-      "bytesOut": 14837
-    },
-    {
-      "src": "lib/screens-phase83.jsx",
-      "out": "dist/screens-phase83.js",
-      "plain": false,
-      "bytesIn": 9212,
-      "bytesOut": 10281
-    },
-    {
-      "src": "lib/screens-phase84.jsx",
-      "out": "dist/screens-phase84.js",
-      "plain": false,
-      "bytesIn": 8788,
-      "bytesOut": 8873
-    },
-    {
-      "src": "lib/screens-phase85.jsx",
-      "out": "dist/screens-phase85.js",
-      "plain": false,
-      "bytesIn": 10034,
-      "bytesOut": 11164
-    },
-    {
-      "src": "lib/screens-phase87.jsx",
-      "out": "dist/screens-phase87.js",
-      "plain": false,
-      "bytesIn": 12273,
-      "bytesOut": 13120
-    },
-    {
-      "src": "lib/screens-phase88.jsx",
-      "out": "dist/screens-phase88.js",
-      "plain": false,
-      "bytesIn": 12554,
-      "bytesOut": 15056
-    },
-    {
-      "src": "lib/screens-phase90.jsx",
-      "out": "dist/screens-phase90.js",
-      "plain": false,
-      "bytesIn": 13758,
-      "bytesOut": 15961
-    },
-    {
-      "src": "lib/screens-phase91.jsx",
-      "out": "dist/screens-phase91.js",
-      "plain": false,
-      "bytesIn": 10714,
-      "bytesOut": 12017
-    },
-    {
-      "src": "lib/screens-phase92.jsx",
-      "out": "dist/screens-phase92.js",
-      "plain": false,
-      "bytesIn": 9407,
-      "bytesOut": 10073
-    },
-    {
-      "src": "lib/screens-phase93.jsx",
-      "out": "dist/screens-phase93.js",
-      "plain": false,
-      "bytesIn": 16184,
-      "bytesOut": 17531
-    },
-    {
-      "src": "lib/screens-phase94.jsx",
-      "out": "dist/screens-phase94.js",
-      "plain": false,
-      "bytesIn": 10806,
-      "bytesOut": 12556
-    },
-    {
-      "src": "lib/screens-phase95.jsx",
-      "out": "dist/screens-phase95.js",
-      "plain": false,
-      "bytesIn": 15918,
-      "bytesOut": 17265
-    },
-    {
-      "src": "lib/screens-phase96.jsx",
-      "out": "dist/screens-phase96.js",
-      "plain": false,
-      "bytesIn": 7588,
-      "bytesOut": 7124
-    },
-    {
-      "src": "lib/screens-phase97.jsx",
-      "out": "dist/screens-phase97.js",
-      "plain": false,
-      "bytesIn": 10351,
-      "bytesOut": 11210
-    },
-    {
-      "src": "lib/screens-phase98.jsx",
-      "out": "dist/screens-phase98.js",
-      "plain": false,
-      "bytesIn": 12222,
-      "bytesOut": 13508
-    },
-    {
-      "src": "lib/screens-phase99.jsx",
-      "out": "dist/screens-phase99.js",
-      "plain": false,
-      "bytesIn": 15656,
-      "bytesOut": 16221
-    },
-    {
-      "src": "lib/app-main.jsx",
-      "out": "dist/app-main.js",
-      "plain": false,
-      "bytesIn": 39280,
-      "bytesOut": 44758
-    },
-    {
-      "src": "lib/boot.jsx",
-      "out": "dist/boot.js",
-      "plain": false,
-      "bytesIn": 5339,
-      "bytesOut": 5600
-    }
+    ".sync-cache.json",
+    "_manifest.json",
+    "app-main.js",
+    "app-screens-2.js",
+    "app-screens.js",
+    "app-sheets.js",
+    "app-utils.js",
+    "audit.ts",
+    "auth.ts",
+    "backend-extras.js",
+    "backend-repair.js",
+    "backend.js",
+    "banking.js",
+    "billing.ts",
+    "boot.js",
+    "broadcast.ts",
+    "cis300.js",
+    "cloud-sync.js",
+    "crash.js",
+    "cron.ts",
+    "dashboards-v2.js",
+    "dashboards-v3.js",
+    "dashboards-v4.js",
+    "dashboards-v5.js",
+    "dashboards.js",
+    "db.ts",
+    "design-canvas.js",
+    "e2ee.js",
+    "email.ts",
+    "errors.ts",
+    "hmrc.js",
+    "i18n.js",
+    "iap.js",
+    "invoice-pdf.js",
+    "ios-frame.js",
+    "llm-shim.js",
+    "llm.ts",
+    "llmDrafts.ts",
+    "local-agent.js",
+    "observability.js",
+    "org.ts",
+    "perf-phase71.js",
+    "perf-phase81.js",
+    "push.js",
+    "push.ts",
+    "qrcode.js",
+    "rateLimit.ts",
+    "rbac.ts",
+    "redis.ts",
+    "requireAuth.ts",
+    "retention.js",
+    "riddor.js",
+    "screens-ops.js",
+    "screens-phase10.js",
+    "screens-phase100.js",
+    "screens-phase101.js",
+    "screens-phase102.js",
+    "screens-phase103.js",
+    "screens-phase106.js",
+    "screens-phase107.js",
+    "screens-phase108.js",
+    "screens-phase109.js",
+    "screens-phase11.js",
+    "screens-phase110.js",
+    "screens-phase111.js",
+    "screens-phase12.js",
+    "screens-phase13.js",
+    "screens-phase14.js",
+    "screens-phase15.js",
+    "screens-phase16.js",
+    "screens-phase17.js",
+    "screens-phase18.js",
+    "screens-phase19.js",
+    "screens-phase2.js",
+    "screens-phase20.js",
+    "screens-phase21-30.js",
+    "screens-phase3.js",
+    "screens-phase31.js",
+    "screens-phase32.js",
+    "screens-phase33.js",
+    "screens-phase34.js",
+    "screens-phase35.js",
+    "screens-phase36.js",
+    "screens-phase37.js",
+    "screens-phase38.js",
+    "screens-phase39.js",
+    "screens-phase4.js",
+    "screens-phase40.js",
+    "screens-phase41-50.js",
+    "screens-phase5.js",
+    "screens-phase51-70.js",
+    "screens-phase6.js",
+    "screens-phase7.js",
+    "screens-phase72.js",
+    "screens-phase73.js",
+    "screens-phase74.js",
+    "screens-phase75.js",
+    "screens-phase76.js",
+    "screens-phase77.js",
+    "screens-phase78.js",
+    "screens-phase79.js",
+    "screens-phase8.js",
+    "screens-phase80.js",
+    "screens-phase82.js",
+    "screens-phase83.js",
+    "screens-phase84.js",
+    "screens-phase85.js",
+    "screens-phase87.js",
+    "screens-phase88.js",
+    "screens-phase9.js",
+    "screens-phase90.js",
+    "screens-phase91.js",
+    "screens-phase92.js",
+    "screens-phase93.js",
+    "screens-phase94.js",
+    "screens-phase95.js",
+    "screens-phase96.js",
+    "screens-phase97.js",
+    "screens-phase98.js",
+    "screens-phase99.js",
+    "screens-project.js",
+    "sentry.ts",
+    "storage.ts",
+    "tenancy.ts",
+    "tokens.js",
+    "totp.ts",
+    "tweaks-panel.js",
+    "types.ts",
+    "useDashboardData.ts",
+    "useModalEffects.ts",
+    "useRealtimeActivity.ts"
   ]
 }
