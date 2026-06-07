@@ -197,6 +197,7 @@ jobs:
               fi
             fi
 
+
             HAS_DB=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" 2>/dev/null || echo "")
             if [ "$HAS_DB" != "1" ]; then
               sudo -u postgres psql -c "CREATE DATABASE cortexx OWNER cortexx;"
@@ -210,6 +211,11 @@ jobs:
               exit 1
             fi
             echo "✓ DB ready"
+
+            # Build URL early for migration management
+            DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"
+
+
 
             # ─── 3a. Migration Management ─────────────────────────────────
             MIGRATION_TABLE=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
@@ -261,7 +267,6 @@ jobs:
             fi
 
             # ─── 5. Build URL and clone/update repo ───────────────────────
-            DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"
 
             # The repo is private — use a PAT for authenticated git operations.
             AUTH_URL="https://x-access-token:${GH_PAT}@github.com/adrianstanca1/cortexx.git"
