@@ -56,11 +56,11 @@ function DashV15_SiteNotice({
   const incidents = useDB('incidents') || [];
   const outstanding = useComputed('outstanding');
   const pipeline = useComputed('pipelineValue');
-  const todo = tasks.filter(t => !t.done);
-  const high = todo.filter(t => t.prio === 'high');
+  const pendingTasks = tasks.filter(t => !t.done);
+  const high = pendingTasks.filter(t => t.prio === 'high');
   const onSite = team.filter(t => t.status === 'on-site').length;
   const active = projects.filter(p => p.status === 'active');
-  const focus = todo.sort((a, b) => ({
+  const focus = pendingTasks.sort((a, b) => ({
     high: 0,
     med: 1,
     low: 2
@@ -449,7 +449,7 @@ function DashV15_SiteNotice({
     }
   }, /*#__PURE__*/React.createElement(DeskBtn15, {
     label: "Tasks",
-    sub: `${todo.length} OPEN`,
+    sub: `${pendingTasks.length} OPEN`,
     onClick: () => setNav('tab', 'tasks')
   }), /*#__PURE__*/React.createElement(DeskBtn15, {
     label: "Quotes",
