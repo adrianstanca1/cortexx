@@ -19,12 +19,14 @@
   "dependencies": {
     "@capacitor/android": "^6.1.0",
     "@capacitor/core": "^6.1.0",
-    "@capacitor/ios": "^6.1.0"
+    "@capacitor/ios": "^6.1.0",
+    "@prisma/client": "^5.22.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.0",
     "@babel/preset-react": "^7.24.0",
     "@capacitor/cli": "^8.4.0",
+    "prisma": "^5.22.0",
     "serve": "^14.2.0"
   }
 }
