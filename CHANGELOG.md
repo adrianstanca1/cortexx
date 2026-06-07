@@ -1,5 +1,19 @@
 # CortexBuild Pro — Changelog
 
+## v1.4 — 07 Jun 2026
+
+### Backend (server/)
+- **Smart LLM Routing** — Introduced a capability-aware routing layer in `llm.ts` and `routes/llm.js`. Image tasks automatically route to the vision-optimized sidecar, while text tasks use the high-performance sidecar.
+- **Inference Optimization Tier** — Support for native `llama-server` (v9544) sidecars. Text tier on port 8085 (`qwen2.5-coder:7b`), Vision tier on port 8086 (`moondream`). Verified 67% throughput increase and 3x faster response times.
+- **Automated DB Baselining** — The deployment workflow now automatically handles drifted database schemas and stuck migrations via `migrate resolve`.
+
+### Infrastructure (CI/CD)
+- **CI Restoration** — Resolved critical `package.json` conflicts and fixed TypeScript target deprecations (`ES2022`).
+- **Production Pipeline** — Hardened VPS deployment with automated URL-encoding for database passwords and reordered dependency installation to ensure environment stability.
+
+### Maintenance
+- **Massive Codebase Pruning** — Deleted ~900 redundant files, legacy archives, and temporary operational logs to ensure a lean production footprint.
+- **Brain System Synchronization** — Initialized and synchronized a persistent project documentation layer in `.brain/`.
 ## v1.3 — 6 Jun 2026
 
 ### Frontend (lib/)
