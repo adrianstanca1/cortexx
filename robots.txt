@@ -1,0 +1,11 @@
+User-agent: *
+Allow: /
+
+# Don't index the iOS scaffold, App Store assets, or build helpers
+Disallow: /ios/
+Disallow: /app-store/
+Disallow: /lib/
+Disallow: /uploads/
+Disallow: /screenshots/
+
+Sitemap: https://cortexbuildpro.com/sitemap.xml

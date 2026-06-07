@@ -1,0 +1,466 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover"/>
+<title>CortexBuild Pro — Working App</title>
+
+<!-- PWA -->
+<link rel="manifest" href="manifest.json"/>
+<meta name="theme-color" content="#06101e" media="(prefers-color-scheme: dark)"/>
+<meta name="theme-color" content="#2563eb" media="(prefers-color-scheme: light)"/>
+<meta name="description" content="CortexBuild Pro — the AI construction OS for UK SMB contractors. Quotes, projects, CIS-aware accounting, safety, snags."/>
+
+<!-- iOS PWA -->
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="CortexBuild Pro"/>
+<link rel="apple-touch-icon" href="apple-touch-icon.png"/>
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png"/>
+<link rel="icon" type="image/png" sizes="512x512" href="icon-512.png"/>
+<link rel="icon" type="image/svg+xml" href="icon.svg"/>
+
+<!-- Open Graph -->
+<meta property="og:title" content="CortexBuild Pro — Construction OS"/>
+<meta property="og:description" content="The construction OS that thinks with you. Free for UK SMB contractors."/>
+<meta property="og:type" content="website"/>
+<meta property="og:image" content="icon-512.png"/>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; background: #0a0e16; font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; }
+  body {
+    background:
+      radial-gradient(ellipse at 20% 10%, rgba(37,99,235,0.06), transparent 50%),
+      radial-gradient(ellipse at 80% 90%, rgba(139,92,246,0.05), transparent 50%),
+      #0a0e16;
+    min-height: 100vh;
+    display: flex; flex-direction: column;
+    align-items: center; padding: 24px 16px;
+    box-sizing: border-box; color: #e8eef7;
+  }
+  .header { text-align: center; margin-bottom: 18px; max-width: 480px; }
+  .header h1 { font-size: 26px; font-weight: 700; letter-spacing: -0.5px; margin: 0 0 6px; }
+  .header p { font-size: 13px; color: #7a9cc0; margin: 0; line-height: 1.5; }
+  .badge {
+    display: inline-flex; align-items: center; gap: 6px;
+    background: rgba(37,99,235,0.15); color: #60a5fa;
+    border: 0.5px solid rgba(37,99,235,0.4);
+    padding: 4px 10px; border-radius: 12px;
+    font-size: 11px; font-weight: 600; letter-spacing: 0.4px;
+    text-transform: uppercase; margin-bottom: 12px;
+  }
+  .stage { display: flex; justify-content: center; width: 100%; }
+  #root { width: 100%; max-width: 430px; }
+  .footer { color: #3d5e82; font-size: 11px; margin-top: 16px; text-align: center; max-width: 380px; font-family: "SF Mono", monospace; }
+  .footer a { color: #60a5fa; text-decoration: none; }
+</style>
+<style>
+/* Print stylesheet — when window.print() is called, strip Cortexx chrome
+   (status bar, tab bar, FAB, etc.) so output is a clean A4 document. */
+@media print {
+  body { background: white !important; color: #000 !important; }
+  /* Hide the iPhone frame, status bar, tab bar, floating buttons, sheet chrome */
+  [class*="ios-frame"], .ios-frame, .deck-stage,
+  [data-print-hide], [class*="MobileHeader"] button,
+  button[style*="position: fixed"], div[style*="position: fixed"][style*="bottom"] {
+    display: none !important;
+  }
+  /* Force readable text */
+  * { color: #000 !important; background: white !important;
+      box-shadow: none !important; border-color: #ccc !important; }
+  a { text-decoration: underline; }
+  /* Anything scrollable becomes full flow */
+  [style*="overflowY"] { overflow: visible !important; max-height: none !important; }
+  @page { margin: 14mm; size: A4; }
+}
+</style>
+<style>
+/* ── Global polish pass ── */
+* { -webkit-tap-highlight-color: transparent; }
+*:focus-visible { outline: 2px solid rgba(96,165,250,0.6); outline-offset: 2px; border-radius: 4px; }
+::selection { background: rgba(96,165,250,0.3); }
+/* momentum + hidden scrollbars inside the app shell */
+#root *::-webkit-scrollbar { width: 0; height: 0; }
+#root * { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+/* tactile press feedback — opt-in via data-press */
+[data-press] { transition: transform .12s ease, opacity .12s ease; }
+[data-press]:active { transform: scale(0.97); opacity: 0.9; }
+/* smoother rendering */
+#root { -webkit-font-smoothing: antialiased; text-rendering: optimizeLegibility; }
+/* respect reduced motion */
+@media (prefers-reduced-motion: reduce) { * { animation-duration: .01ms !important; transition-duration: .01ms !important; } }
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="badge">● Live · iPhone 15 Pro</div>
+  <h1>CortexBuild Pro — full app</h1>
+  <p>Tap a project, the + button, or the AI orb. Top-right chip swaps the dashboard layout (15 variations). Tweaks panel changes accent color.</p>
+</div>
+
+<div class="stage"><div id="root"></div></div>
+
+<div class="footer">5 tabs · 15 dashboards · sheets · live Cortex AI · <a href="Cortexx Mobile Dashboard.html">view all variations →</a></div>
+
+<script>
+  // ───────────────────────────────────────────────────────────
+  // Cortexx — smart loader
+  //   ?dev=1 in URL  → load .jsx from lib/ and transform in-browser via Babel
+  //   default        → load precompiled .js from dist/ (zero Babel cost)
+  // Cold-start time is exposed at window.__cortexxBoot.
+  // ───────────────────────────────────────────────────────────
+  window.__cortexxBoot = performance.now();
+  // Production: load precompiled .js from dist/ (zero Babel cost, fast cold-start)
+  // Development: append ?dev=1 to load .jsx from lib/ and transform via Babel
+  const isDev = new URLSearchParams(location.search).has('dev');
+  const DEV_MODE = isDev; // Production: load dist/ (precompiled). Dev: load lib/ + Babel.
+  window.__cortexxDevMode = DEV_MODE;
+
+  // Module list in load order. Keep in sync with the JSX sources in lib/.
+  const MODULES = [
+    'ios-frame', 'tweaks-panel', 'tokens',
+    'dashboards', 'dashboards-v2', 'dashboards-v3', 'dashboards-v4', 'dashboards-v5',
+    'backend', 'backend-extras', 'cloud-sync', 'qrcode', 'invoice-pdf',
+    'llm-shim', 'crash', 'observability', 'push', 'e2ee', 'cis300', 'banking', 'i18n', 'riddor', 'retention', 'iap', 'hmrc',
+    'perf-phase71', 'perf-phase81',
+    'app-screens', 'app-sheets', 'app-screens-2', 'app-utils',
+    'screens-ops', 'screens-project',
+    'screens-phase2','screens-phase3','screens-phase4','screens-phase5','screens-phase6',
+    'screens-phase7','screens-phase8','screens-phase9','screens-phase10','screens-phase11',
+    'screens-phase12','screens-phase13','screens-phase14','screens-phase15','screens-phase16',
+    'screens-phase17','screens-phase18','screens-phase19','screens-phase20',
+    'screens-phase21-30',
+    'screens-phase31','screens-phase32','screens-phase33','screens-phase34','screens-phase35',
+    'screens-phase36','screens-phase37','screens-phase38','screens-phase39','screens-phase40',
+    'screens-phase41-50','screens-phase51-70',
+    'screens-phase72','screens-phase73','screens-phase74','screens-phase75','screens-phase76',
+    'screens-phase77','screens-phase78','backend-repair','screens-phase79','screens-phase80','screens-phase82','screens-phase83','screens-phase84','screens-phase85','screens-phase87','screens-phase88','screens-phase90','screens-phase91','screens-phase92','screens-phase93','screens-phase94','screens-phase95','screens-phase96','screens-phase97','screens-phase98','screens-phase99','screens-phase100','screens-phase101','screens-phase102','screens-phase103','screens-phase106','screens-phase107','screens-phase108','screens-phase109','screens-phase110','screens-phase111',
+    'app-main',
+    'boot',
+  ];
+  // Files that are plain JS (not JSX) — they go through <script src> even in dev.
+  const PLAIN_JS = new Set(['backend', 'backend-extras', 'backend-repair', 'cloud-sync', 'qrcode', 'invoice-pdf', 'llm-shim', 'crash', 'observability', 'push', 'e2ee', 'cis300', 'banking', 'i18n', 'riddor', 'retention', 'iap', 'hmrc', 'perf-phase71', 'perf-phase81']);
+
+  // 1) Load React + (dev only) Babel — with multi-CDN fallback so a single
+  //    CDN outage (unpkg hiccup, blocked network) can't kill the whole app.
+  function injectExternal(src, integrity) {
+    return injectExternalFallback([src], integrity);
+  }
+  // Fetch the script TEXT (with CDN fallback) then inject it inline. Using
+  // fetch instead of <script src> means a failed CDN is a caught promise
+  // rejection — NOT a browser-level `resource_error` logged to the console.
+  // The npm CDNs all send `Access-Control-Allow-Origin: *`, so this is allowed.
+  async function injectExternalFallback(urls, integrity) {
+    let lastErr;
+    for (const url of urls) {
+      try {
+        const r = await fetch(url, { mode: 'cors', cache: 'force-cache' });
+        if (!r.ok) throw new Error('HTTP ' + r.status);
+        const code = await r.text();
+        if (!code || code.length < 100) throw new Error('empty body');
+        const s = document.createElement('script');
+        s.textContent = code;
+        document.head.appendChild(s);
+        return;
+      } catch (e) { lastErr = e; /* try next CDN silently */ }
+    }
+    throw new Error('All CDNs failed for ' + urls[0] + ': ' + (lastErr && lastErr.message));
+  }
+  // Build the fallback URL list for an npm UMD asset across 3 CDNs.
+  // jsDelivr first (most reliable global CDN), then unpkg, then cdnjs.
+  const cdnSet = (unpkgPath, jsdelivrPath, cdnjsPath) => ([
+    'https://cdn.jsdelivr.net/npm/' + jsdelivrPath,
+    'https://unpkg.com/' + unpkgPath,
+    'https://cdnjs.cloudflare.com/ajax/libs/' + cdnjsPath,
+  ]);
+  function injectLocal(src, kind) {
+    return new Promise((res, rej) => {
+      const s = document.createElement('script');
+      if (kind === 'babel') {
+        // Dynamically-injected <script type="text/babel" src=...> does NOT
+        // auto-transform; we must fetch + transform + inline.
+        fetch(src)
+          .then(r => r.text())
+          .then(code => {
+            const out = window.Babel.transform(code, {
+              presets: [['react', { runtime: 'classic' }]],
+              compact: false, comments: false, sourceType: 'script',
+            }).code;
+            const s2 = document.createElement('script');
+            s2.textContent = out;
+            document.head.appendChild(s2);
+            res();
+          })
+          .catch(rej);
+      } else {
+        s.src = src;
+        s.onload = res; s.onerror = rej;
+        document.head.appendChild(s);
+      }
+    });
+  }
+
+  (async () => {
+    await injectExternalFallback(
+      cdnSet('react@18.3.1/umd/react.development.js',
+             'react@18.3.1/umd/react.development.js',
+             'react/18.3.1/umd/react.development.js'),
+      'sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L'
+    );
+    await injectExternalFallback(
+      cdnSet('react-dom@18.3.1/umd/react-dom.development.js',
+             'react-dom@18.3.1/umd/react-dom.development.js',
+             'react-dom/18.3.1/umd/react-dom.development.js'),
+      'sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm'
+    );
+    if (DEV_MODE) {
+      await injectExternalFallback(
+        cdnSet('@babel/standalone@7.29.0/babel.min.js',
+               '@babel/standalone@7.29.0/babel.min.js',
+               'babel-standalone/7.29.0/babel.min.js'),
+        'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y'
+      );
+    }
+    // Modules don't all need to load serially, but ORDER matters because they
+    // share global scope. Load them serially to preserve order; Babel handles
+    // both <script type=text/babel> and <script src> sequentially anyway.
+    // ─── Parallel prefetch, serial execute ──────────────────────────
+    // Module SCRIPTS share global scope, so execution must be ordered.
+    // But FETCHING is independent — kick off all network requests
+    // simultaneously, then execute them in order as each one resolves.
+    // This collapses ~85 × 200ms serial waterfall into one round-trip-time.
+    // Modules that don't have precompiled dist/ files — always load from lib/.
+    // Add new phases here until npm run precompile catches them.
+    const LIB_ONLY = new Set([
+      'screens-phase100','screens-phase101','screens-phase102','screens-phase103',
+      'screens-phase106','screens-phase107','screens-phase108','screens-phase109',
+      'screens-phase110','screens-phase111',
+    ]);
+
+    const prefetch = new Map();
+    for (const name of MODULES) {
+      const isPlain = PLAIN_JS.has(name);
+      const distURL = `dist/${name}.js`;
+      const libJS = `lib/${name}.js`;
+      const libJSX = `lib/${name}.jsx`;
+      prefetch.set(name, (async () => {
+        if (DEV_MODE || LIB_ONLY.has(name)) {
+          const url = isPlain ? libJS : libJSX;
+          const r = await fetch(url);
+          if (!r.ok) throw new Error(url + ' HTTP ' + r.status);
+          return { url, text: await r.text() };
+        }
+        // Prod: dist first, then lib fallback
+        try {
+          const r = await fetch(distURL);
+          if (r.ok) return { url: distURL, text: await r.text() };
+        } catch (e) {}
+        const fb = isPlain ? libJS : libJSX;
+        const r2 = await fetch(fb);
+        if (!r2.ok) throw new Error(fb + ' HTTP ' + r2.status);
+        return { url: fb, text: await r2.text() };
+      })());
+    }
+
+    // Inject already-fetched text as a plain JS <script>. Synchronous on
+    // append — execution completes before the next iteration.
+    const injectInline = (name, text) => {
+      const s = document.createElement('script');
+      s.appendChild(document.createTextNode(text));
+      s.dataset.cortexxModule = name;
+      document.head.appendChild(s);
+    };
+
+    for (const name of MODULES) {
+      let cached;
+      try { cached = await prefetch.get(name); }
+      catch (e) {
+        // Cache miss — check localStorage first (pre-compiled JSX), then fetch lib/
+        const isPlain = PLAIN_JS.has(name);
+        const libURL = isPlain ? `lib/${name}.js` : `lib/${name}.jsx`;
+        let text = localStorage.getItem('__dist_' + name); // Try pre-compiled cache
+        if (!text) {
+          // Not in localStorage — fetch and compile
+          try {
+            const r = await fetch(libURL);
+            if (!r.ok) throw new Error(libURL + ' HTTP ' + r.status);
+            text = await r.text();
+          } catch (e2) {
+            console.error('[cortexx] failed to load', name, e2.message);
+            continue;
+          }
+          if (!isPlain) {
+            // JSX: lazy-load Babel once, transform synchronously
+            if (!window.Babel) {
+              await injectExternalFallback(
+                cdnSet('@babel/standalone@7.29.0/babel.min.js',
+                       '@babel/standalone@7.29.0/babel.min.js'),
+                'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y'
+              );
+            }
+            text = window.Babel.transform(text, { presets: ['react'] }).code;
+            localStorage.setItem('__dist_' + name, text); // Cache for next load
+          }
+        }
+        injectInline(name, text);
+        continue;
+      }
+      const isJSX = cached.url.endsWith('.jsx');
+      if (isJSX) {
+        // Transform via Babel directly (synchronous) — bypasses MutationObserver
+        if (!window.Babel) {
+          try {
+            await injectExternalFallback(
+              cdnSet('@babel/standalone@7.29.0/babel.min.js',
+                     '@babel/standalone@7.29.0/babel.min.js'),
+              'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y'
+            );
+          } catch (babelErr) {
+            console.error('[cortexx] Babel CDN failed:', babelErr.message);
+            continue; // skip this module rather than killing the whole boot
+          }
+        }
+        const code = window.Babel.transform(cached.text, { presets: ['react'] }).code;
+        injectInline(name, code);
+      } else {
+        injectInline(name, cached.text);
+      }
+    }
+    // Boot the root tree (defined inline below)
+    if (window.__cortexxBootApp) window.__cortexxBootApp();
+  })().catch(err => {
+    document.body.insertAdjacentHTML('beforeend',
+      `<pre style="color:#ef4444;padding:18px;font:12px monospace;">CortexBuild Pro load failed:\n${err && err.message || err}</pre>`);
+  });
+</script>
+
+<script type="text/babel">
+// (Legacy inline bootstrap — kept for fallback. In normal mode the loader uses
+//  dist/boot.js which is the precompiled version of lib/boot.jsx.)
+</script>
+<script>
+/* Cortexx Local Agent — inlined for guaranteed load (3-tier resilient AI) */
+(function () {
+  if (window.CortexLocalAgent) return;
+  var TIMEOUT_MS = 12000;
+  var fmtGBP = function (n) { return '£' + Math.round(n).toLocaleString('en-GB'); };
+  function localReason(q) {
+    var t = (q || '').toLowerCase(); var b = {};
+    try { b = (window.Backend && Backend.brain) ? Backend.brain.snapshot() : {}; } catch (e) { b = {}; }
+    var money = b.money || {}, proj = b.projects || {}, ops = b.ops || {}, people = b.people || {}, sales = b.sales || {};
+    var projList = proj.list || [];
+    var has = function () { var a = arguments; for (var i = 0; i < a.length; i++) if (t.indexOf(a[i]) >= 0) return true; return false; };
+    if (has('hello', 'hi ', 'hey', 'morning') && t.length < 24) return 'Morning. ' + (proj.active || 0) + ' active projects, ' + fmtGBP(money.cash || 0) + ' in the bank, ' + (ops.openTasks || 0) + ' open tasks. What do you need?';
+    if (has('cash', 'bank', 'balance', 'money', 'how much')) return 'Cash balance is ' + fmtGBP(money.cash || 0) + '. ' + fmtGBP(money.outstanding || 0) + ' outstanding' + (money.overdue ? ', ' + money.overdue + ' overdue' : '') + '. Pipeline ' + fmtGBP(money.pipeline || 0) + '.';
+    if (has('margin', 'profit')) { var best = projList.filter(function (p) { return p.margin > 0; }).sort(function (a, c) { return c.margin - a.margin; })[0]; return 'Average margin is ' + (money.avgMargin || 0) + '% across active jobs.' + (best ? ' Best is ' + best.name + ' at ' + best.margin + '%.' : ''); }
+    if (has('overdue', 'chase', 'unpaid', 'owed')) return money.overdue ? (money.overdue + ' invoice(s) overdue, ' + fmtGBP(money.outstanding || 0) + ' outstanding. Chase the oldest first.') : ('Nothing overdue. ' + fmtGBP(money.outstanding || 0) + ' outstanding but within terms.');
+    if (has('project', 'job', 'site')) { if (!projList.length) return 'No projects loaded yet.'; var act = projList.filter(function (p) { return p.status === 'active' || p.status === 'snagging'; }); return (proj.active || act.length) + ' active: ' + act.slice(0, 4).map(function (p) { return p.name + ' (' + p.pct + '%)'; }).join('; ') + '.'; }
+    if (has('task', 'todo', 'priorit', 'focus')) return (ops.openTasks || 0) + ' open tasks' + (ops.highPriorityTasks ? ', ' + ops.highPriorityTasks + ' high priority' : '') + '. ' + (ops.openRFIs ? ops.openRFIs + ' RFIs and ' : '') + (ops.openSnags || 0) + ' snags too.';
+    if (has('team', 'who', 'crew', 'staff', 'on site')) return (people.team || 0) + ' on the team, ' + (people.onSite || 0) + ' on site now.' + (people.certsExpiring ? ' ' + people.certsExpiring + ' certs expiring.' : '') + (people.pendingTimesheets ? ' ' + people.pendingTimesheets + ' timesheets to approve.' : '');
+    if (has('safe', 'rams', 'cscs', 'permit', 'cdm', 'compliance', 'inspection')) return (ops.openInspections || 0) + ' inspections scheduled, ' + ((b.compliance && b.compliance.permitsActive) || 0) + ' active permits.' + (people.certsExpiring ? ' ' + people.certsExpiring + ' certs expiring.' : ' Certs current.') + ' I apply CDM 2015 & BS 7671.';
+    if (has('material', 'stock', 'order', 'supplies')) return ops.lowStock ? (ops.lowStock + ' materials below minimum. Open Materials for a reorder forecast.') : 'Stock levels healthy.';
+    if (has('lead', 'sales', 'grow', 'pipeline', 'win')) return (sales.newLeads || 0) + ' new leads, ' + fmtGBP(sales.activeQuotes || 0) + ' in active quotes. Ask Vera to hunt more.';
+    if (has('variation', 'change order')) return (ops.pendingVariations || 0) + ' variations pending approval — get them signed off.';
+    if (has('status', 'summary', 'how are we', 'overview', 'doing', 'health', 'briefing')) return 'Quick read: ' + fmtGBP(money.cash || 0) + ' cash, ' + (proj.active || 0) + ' active jobs, ' + (money.avgMargin || 0) + '% margin. ' + (ops.openTasks || 0) + ' tasks, ' + (ops.openSnags || 0) + ' snags, ' + (ops.openRFIs || 0) + ' RFIs.' + (money.overdue ? ' ' + money.overdue + ' overdue to chase.' : ' Cashflow clean.');
+    if (has('help', 'what can you', 'how do i')) return 'Ask me about cash, projects, tasks, team, safety, materials, leads or margins — I read your live data and work offline.';
+    // Per-project drill-down — match a project by name
+    var named = projList.filter(function (p) { return p.name && t.indexOf(p.name.toLowerCase().split(' ')[0]) >= 0; })[0];
+    if (named) return named.name + ': ' + named.pct + '% complete, ' + named.status + ', value ' + fmtGBP(named.value || 0) + ', margin ' + (named.margin || 0) + '%. Client ' + (named.client || 'n/a') + '.';
+    // Forecast / predict / next month
+    if (has('forecast', 'predict', 'next month', 'next week', 'projection', 'expect')) {
+      var run = (money.cash || 0) + (money.outstanding || 0) - ((money.pipeline || 0) * 0.0);
+      return 'Rough forecast: with ' + fmtGBP(money.cash || 0) + ' cash plus ' + fmtGBP(money.outstanding || 0) + ' due in, you trend toward ' + fmtGBP(run) + ' once invoices land. Pipeline of ' + fmtGBP(money.pipeline || 0) + ' could lift that if you convert. Watch the ' + (money.overdue || 0) + ' overdue.';
+    }
+    // Compare / best / worst
+    if (has('compare', 'best', 'worst', 'which project', 'top')) {
+      var ranked = projList.filter(function (p) { return p.margin > 0; }).sort(function (a, c) { return c.margin - a.margin; });
+      if (ranked.length) return 'By margin: best is ' + ranked[0].name + ' (' + ranked[0].margin + '%), weakest is ' + ranked[ranked.length - 1].name + ' (' + ranked[ranked.length - 1].margin + '%). Focus effort where margin is thin.';
+    }
+    // Risk / worried / problem
+    if (has('risk', 'worried', 'problem', 'concern', 'behind', 'late')) {
+      var risks = [];
+      if (money.overdue) risks.push(money.overdue + ' overdue invoice(s)');
+      if (ops.openSnags) risks.push(ops.openSnags + ' open snags');
+      if (people.certsExpiring) risks.push(people.certsExpiring + ' certs expiring');
+      if (ops.lowStock) risks.push(ops.lowStock + ' low-stock items');
+      return risks.length ? ('Top risks right now: ' + risks.join(', ') + '. I\'d clear the overdue invoice and certs first.') : 'Nothing flashing red — cashflow, stock and compliance all look stable.';
+    }
+    return "Here's where things stand: " + fmtGBP(money.cash || 0) + ' cash, ' + (proj.active || 0) + ' active projects, ' + (ops.openTasks || 0) + ' open tasks, ' + (money.avgMargin || 0) + '% margin. Ask me anything specific.';
+  }
+  var webllmEngine = null, webllmTried = false, webllmAvailable = false;
+  async function initWebLLM(onProgress) {
+    if (webllmTried) return webllmEngine; webllmTried = true;
+    try {
+      if (!navigator.gpu) return null;
+      var mod = await import('https://esm.run/@mlc-ai/web-llm');
+      webllmEngine = await mod.CreateMLCEngine('Llama-3.2-1B-Instruct-q4f16_1-MLC', { initProgressCallback: function (p) { if (onProgress) onProgress(p.text); } });
+      webllmAvailable = true; return webllmEngine;
+    } catch (e) { webllmEngine = null; return null; }
+  }
+  async function webllmRespond(question, sys) {
+    if (!webllmEngine) return null;
+    try { var res = await webllmEngine.chat.completions.create({ messages: [{ role: 'system', content: sys }, { role: 'user', content: question }], temperature: 0.6, max_tokens: 300 }); return (res && res.choices && res.choices[0] && res.choices[0].message.content) || null; } catch (e) { return null; }
+  }
+  async function cloudRespond(question) {
+    if (!window.claude || !window.claude.complete) return null;
+    var sys = 'You are Cortex, an AI assistant inside a UK construction management app. Be concise and practical. UK English.';
+    try { if (window.Backend && Backend.brain) sys += ' Live state: ' + JSON.stringify(Backend.brain.snapshot()).slice(0, 1500); } catch (e) {}
+    var call = window.claude.complete({ messages: [{ role: 'user', content: sys + '\n\nUser: ' + question }] });
+    var timeout = new Promise(function (_, rej) { setTimeout(function () { rej(new Error('timeout')); }, TIMEOUT_MS); });
+    try { var res = await Promise.race([call, timeout]); return (typeof res === 'string' && res.trim()) ? res.trim() : null; } catch (e) { return null; }
+  }
+  var CortexLocalAgent = {
+    _cloudOK: null,
+    respond: async function (question) {
+      var q = (question || '').toString();
+      try { var cloud = await cloudRespond(q); if (cloud) { this._cloudOK = true; return cloud; } } catch (e) {}
+      this._cloudOK = false;
+      try { if (webllmAvailable && webllmEngine) { var sys = 'You are Cortex in a UK construction app. Concise, UK English.'; try { if (window.Backend && Backend.brain) sys += ' State: ' + JSON.stringify(Backend.brain.snapshot()).slice(0, 800); } catch (e) {} var loc = await webllmRespond(q, sys); if (loc) return loc; } } catch (e) {}
+      return localReason(q);
+    },
+    enableWebLLM: function (onProgress) { return initWebLLM(onProgress); },
+    status: function () { return { cloud: this._cloudOK, webgpu: !!navigator.gpu, webllm: webllmAvailable, local: true }; },
+    localReason: localReason, // exposed so the LLM shim can call deterministic tier WITHOUT re-entering window.claude
+  };
+  window.CortexLocalAgent = CortexLocalAgent;
+  function patchBackend() {
+    if (!window.Backend || !Backend.ai) { setTimeout(patchBackend, 300); return; }
+    if (Backend.ai.__resilient) return;
+    var orig = Backend.ai.ask.bind(Backend.ai);
+    Backend.ai.ask = async function (userMsg, opts) {
+      opts = opts || {};
+      try { var r = await orig(userMsg, opts); if (r && r.trim()) return r; } catch (e) {}
+      return localReason(userMsg || opts.system || '');
+    };
+    Backend.ai.__resilient = true;
+  }
+  patchBackend();
+})();
+</script>
+<script>
+// Register service worker for offline + PWA install
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', () => {
+    navigator.serviceWorker.register('sw.js').catch(() => {});
+  });
+}
+</script>
+<template id="__bundler_thumbnail">
+  <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200">
+    <defs>
+      <linearGradient id="bg" x1="0" y1="0" x2="1" y2="1">
+        <stop offset="0" stop-color="#0c1a2e"/>
+        <stop offset="1" stop-color="#152641"/>
+      </linearGradient>
+    </defs>
+    <rect width="200" height="200" fill="url(#bg)"/>
+    <g transform="translate(100,100)">
+      <rect x="-40" y="-40" width="80" height="80" rx="18" fill="#2563eb"/>
+      <path d="M-18 -8 L0 14 L18 -8" stroke="#fff" stroke-width="6" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
+    </g>
+    <text x="100" y="170" text-anchor="middle" font-family="-apple-system, system-ui, sans-serif" font-size="14" font-weight="700" fill="#60a5fa" letter-spacing="2">CORTEXX</text>
+  </svg>
+</template>
+</body>
+</html>

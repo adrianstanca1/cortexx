@@ -1,24 +1,14 @@
 #!/usr/bin/env node
-// Cortexx — build script for the Capacitor iOS wrap.
+// Cortexx — build script for Capacitor wrap.
 //
 // What it does:
 //   1. Wipes ios/www/ (the directory Capacitor copies into the app bundle).
-//   2. Copies the legacy single-file PWA out of public/legacy/ into ios/www/.
-//   3. Renames index.html (it's already the right name in /legacy) and
-//      copies the dist/ + lib/ bundles + icons + manifest.
-//   4. Patches the service-worker registration to a no-op so the WKWebView
-//      doesn't try to register a SW (it serves from the bundle directly).
-//
-// Why public/legacy/ and not the Next.js build?
-//   The Next.js app at this repo's root is server-rendered + uses
-//   /api/* routes. Capacitor needs a static webDir. Two ways to ship:
-//   (a) THIS SCRIPT — bundle the legacy static PWA at public/legacy/
-//       inside the app. Works fully offline. No /api/* — uses
-//       localStorage / IndexedDB inside the WebView.
-//   (b) Alternative — uncomment the `server.url` block in
-//       capacitor.config.ts pointing at https://cortexbuildpro.com.
-//       The shell loads the live Next.js app on each launch. Online
-//       only, but always up to date and uses the real DB.
+//   2. Copies every web asset from the project root into ios/www/.
+//   3. Renames Cortexx.html → index.html so the iOS WKWebView opens it directly.
+//   4. Vendors the React + Babel CDN scripts into www/vendor/ and rewrites the
+//      loader to use those local copies — so the packaged app boots with NO
+//      network (a native app must be self-contained).
+//   5. Disables the service-worker registration (the WebView serves from bundle).
 //
 // Run from the ios/ folder:  npm run build:web
 
@@ -29,8 +19,27 @@ import { fileURLToPath } from 'node:url';
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const IOS_DIR    = path.resolve(__dirname, '..');
 const ROOT       = path.resolve(IOS_DIR, '..');
-const LEGACY_SRC = path.join(ROOT, 'public', 'legacy');
 const OUT        = path.join(IOS_DIR, 'www');
+
+// What we ship inside the app bundle.
+const INCLUDE = [
+  'Cortexx.html',
+  'manifest.json',
+  'sw.js',
+  'icon.svg',
+  'icon-192.png',
+  'icon-512.png',
+  'apple-touch-icon.png',
+  'lib',
+  'dist',
+];
+
+// CDN scripts vendored locally so the native app needs no network to boot.
+const VENDOR = [
+  { url: 'https://unpkg.com/react@18.3.1/umd/react.development.js',        file: 'react.development.js' },
+  { url: 'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js', file: 'react-dom.development.js' },
+  { url: 'https://unpkg.com/@babel/standalone@7.29.0/babel.min.js',        file: 'babel.min.js' },
+];
 
 const log = (...a) => console.log('▶', ...a);
 
@@ -52,62 +61,56 @@ async function copyRecursive(src, dest) {
 }
 
 async function main() {
-  // Cloud mode — capacitor.config.ts has `server.url` set via the
-  // CAPACITOR_SERVER_URL env. The WebView loads the URL on every launch,
-  // so www/ just needs a placeholder index.html (a Capacitor invariant).
-  if (process.env.CAPACITOR_SERVER_URL) {
-    log(`Cloud mode — server.url = ${process.env.CAPACITOR_SERVER_URL}`);
-    log('Wiping', OUT);
-    await rmrf(OUT);
-    await fs.mkdir(OUT, { recursive: true });
-    const placeholder = `<!doctype html><html><head><meta charset="utf-8"><title>Cortexx</title><meta http-equiv="refresh" content="0; url=${process.env.CAPACITOR_SERVER_URL}"></head><body>Loading Cortexx…</body></html>`;
-    await fs.writeFile(path.join(OUT, 'index.html'), placeholder);
-    log('Done →', OUT, '(cloud mode; WebView will load the live app)');
-    return;
-  }
-
-  if (!existsSync(LEGACY_SRC)) {
-    console.error('✗ public/legacy/ does not exist. The legacy PWA bundle must be present at the repo root.');
-    console.error('  Expected:', LEGACY_SRC);
-    console.error('  See ios/README.md for the alternative `server.url` config that skips this script entirely.');
-    process.exit(1);
-  }
-
   log('Wiping', OUT);
   await rmrf(OUT);
   await fs.mkdir(OUT, { recursive: true });
 
-  // Copy the whole legacy PWA bundle — index.html, dist/, lib/, icons,
-  // manifest, sw.js. The legacy bundle already uses index.html as the
-  // entry point, so no rename needed.
-  log('Copying public/legacy/ → ios/www/');
-  for (const entry of await fs.readdir(LEGACY_SRC)) {
-    // Skip the README — it's developer-facing, not shipped to iOS.
-    if (entry === 'README.md') continue;
-    await copyRecursive(path.join(LEGACY_SRC, entry), path.join(OUT, entry));
+  for (const name of INCLUDE) {
+    const src = path.join(ROOT, name);
+    if (!existsSync(src)) { log('skip (missing):', name); continue; }
+    const dest = path.join(OUT, name);
+    log('copy', name);
+    await copyRecursive(src, dest);
   }
 
-  // The Capacitor WebView serves files from the bundle directly; the SW
-  // would try to cache against an http(s):// origin that doesn't exist
-  // inside the bundle. Disable it so it doesn't throw at load.
-  const indexPath = path.join(OUT, 'index.html');
-  if (existsSync(indexPath)) {
-    const html = await fs.readFile(indexPath, 'utf8');
-    const patched = html
-      // Match the legacy bundle's SW-register block — guard with `false`
-      .replace(
-        /if \('serviceWorker' in navigator\) \{[\s\S]*?navigator\.serviceWorker\.register\(['"]sw\.js['"]\)\.catch\(\(\) => \{\}\);\s*\}\);?\s*\}/,
-        `if (false && 'serviceWorker' in navigator) { /* SW disabled inside Capacitor wrap */ }`,
-      );
-    if (patched !== html) {
-      await fs.writeFile(indexPath, patched);
-      log('patched index.html — service worker registration disabled');
-    } else {
-      log('index.html — no SW block matched (probably already patched or absent)');
-    }
-  } else {
-    log('warn: index.html not found at', indexPath, '— Capacitor will boot to a blank screen');
+  // Capacitor opens www/index.html by default.
+  const srcHtml  = path.join(OUT, 'Cortexx.html');
+  const destHtml = path.join(OUT, 'index.html');
+  if (existsSync(srcHtml)) {
+    log('rename Cortexx.html → index.html');
+    await fs.rename(srcHtml, destHtml);
   }
+
+  // Vendor the CDN scripts locally so the native app boots with no network.
+  const vendorDir = path.join(OUT, 'vendor');
+  await fs.mkdir(vendorDir, { recursive: true });
+  let html = await fs.readFile(destHtml, 'utf8');
+  for (const v of VENDOR) {
+    try {
+      log('vendor', v.file);
+      const res = await fetch(v.url);
+      if (!res.ok) throw new Error('HTTP ' + res.status);
+      const code = await res.text();
+      await fs.writeFile(path.join(vendorDir, v.file), code);
+      // Point the loader at the local copy and strip the integrity hash
+      // (the bytes are identical, but a relative path + SRI can mismatch).
+      const esc = v.url.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+      html = html.replace(new RegExp(esc, 'g'), './vendor/' + v.file);
+    } catch (e) {
+      log('  ! vendor failed (' + v.file + ') — app will fall back to CDN:', e.message);
+    }
+  }
+  // Drop integrity attrs on the now-local scripts so SRI can't block them.
+  html = html.replace(/integrity:\s*'sha384-[^']*',?/g, '');
+
+  // Inside a Capacitor app the service worker is not needed (the WebView
+  // already serves files from the bundle). Patch out the registration.
+  html = html.replace(
+    /if \('serviceWorker' in navigator\) \{[\s\S]*?navigator\.serviceWorker\.register\('sw\.js'\)\.catch\(\(\) => \{\}\);\s*\}\);[\s\S]*?\}/,
+    `if (false && 'serviceWorker' in navigator) { /* SW disabled inside Capacitor wrap */ }`
+  );
+  await fs.writeFile(destHtml, html);
+  log('patched index.html (vendored deps + SW off)');
 
   log('Done →', OUT);
 }

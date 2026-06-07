@@ -26,3 +26,4 @@ prisma/migrations/dev.db
 
 # Local uploads (production points UPLOAD_DIR to /var/lib/cortexx/uploads)
 /uploads/
+.aider*

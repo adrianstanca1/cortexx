@@ -1,0 +1,85 @@
+<!doctype html>
+<!-- CortexBuild Pro — in-browser dist/ builder
+     Open this page once when lib/ has new files. It will compile every
+     lib/*.jsx using Babel and prompt you to save each one into dist/.
+     Useful when you can't run `npm run precompile` (e.g. no Node locally).
+
+     Usage:
+       1. Visit /tools/build-dist.html
+       2. Click "Compile all"
+       3. Save the resulting zip — extract into dist/
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>CortexBuild Pro — dist/ builder</title>
+<style>
+  body { font: 14px/1.5 -apple-system, sans-serif; max-width: 780px; margin: 40px auto; padding: 0 20px; background: #0c1a2e; color: #eef3fa; }
+  h1 { font-size: 22px; margin-bottom: 4px; }
+  .sub { color: #8ea8c5; font-size: 13px; margin-bottom: 24px; }
+  button { padding: 10px 20px; border-radius: 10px; border: none; background: #5b8def; color: #fff; font-weight: 700; font-size: 14px; cursor: pointer; }
+  button:disabled { opacity: 0.5; cursor: not-allowed; }
+  .row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid rgba(255,255,255,0.07); font-size: 13px; }
+  .ok { color: #22c55e; }
+  .err { color: #ef4444; }
+  pre { background: #06101e; padding: 12px; border-radius: 8px; font-size: 11px; overflow: auto; }
+</style>
+</head>
+<body>
+<h1>dist/ builder</h1>
+<div class="sub">In-browser compile lib/*.jsx → dist/*.js (when you can't run <code>npm run precompile</code>).</div>
+
+<button id="go">Compile all</button>
+<button id="dl" disabled style="margin-left: 8px; background: #22c55e;">Download as zip</button>
+
+<div id="status" style="margin-top: 20px;"></div>
+<div id="files" style="margin-top: 14px;"></div>
+
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js"></script>
+<script src="https://unpkg.com/jszip@3.10.1/dist/jszip.min.js"></script>
+<script>
+// List taken from Cortexx.html — keep in sync if modules change.
+const PHASES = [
+  'screens-phase100','screens-phase101','screens-phase102','screens-phase103',
+  'screens-phase106','screens-phase107','screens-phase108','screens-phase109',
+];
+
+const out = document.getElementById('files');
+const status = document.getElementById('status');
+let zip = null;
+
+document.getElementById('go').onclick = async () => {
+  zip = new JSZip();
+  out.innerHTML = '';
+  status.textContent = 'Compiling…';
+  let ok = 0, fail = 0;
+  for (const name of PHASES) {
+    const row = document.createElement('div');
+    row.className = 'row';
+    out.appendChild(row);
+    try {
+      const src = await (await fetch('../lib/' + name + '.jsx')).text();
+      const compiled = Babel.transform(src, { presets: ['react'] }).code;
+      zip.file(name + '.js', compiled);
+      row.innerHTML = '<span>' + name + '.js</span><span class="ok">✓ ' + compiled.length + ' chars</span>';
+      ok++;
+    } catch (e) {
+      row.innerHTML = '<span>' + name + '.js</span><span class="err">✗ ' + e.message + '</span>';
+      fail++;
+    }
+  }
+  status.innerHTML = '<strong>Done.</strong> ' + ok + ' compiled · ' + fail + ' failed.';
+  document.getElementById('dl').disabled = fail > 0;
+};
+
+document.getElementById('dl').onclick = async () => {
+  if (!zip) return;
+  const blob = await zip.generateAsync({ type: 'blob' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = 'cortexx-dist.zip';
+  document.body.appendChild(a); a.click(); a.remove();
+};
+</script>
+</body>
+</html>
