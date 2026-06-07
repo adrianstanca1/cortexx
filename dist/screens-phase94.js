@@ -1,10 +1,4 @@
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-// Cortexx — Cloud Sync settings screen (Phase 94)
-// Connects the app to the real backend (server/): set API URL, sign in via
-// magic link or password, toggle live realtime sync, replay offline queue.
-// Talks to window.cortexxCloud (lib/cloud-sync.js).
-
-// Auto-verify a magic link if the app was opened from ?magic=<token>
 (function () {
   try {
     const m = new URLSearchParams(location.search).get('magic');
@@ -29,19 +23,18 @@ function CloudSyncScreen({
   const [apiUrl, setApiUrl] = React.useState(st.apiUrl || '');
   const [email, setEmail] = React.useState('');
   const [password, setPassword] = React.useState('');
-  const [mode, setMode] = React.useState('magic'); // 'magic' | 'password'
+  const [mode, setMode] = React.useState('magic');
   const [devLink, setDevLink] = React.useState(null);
   const [busy, setBusy] = React.useState(false);
-  const [reach, setReach] = React.useState(null); // null | true | false
-
+  const [reach, setReach] = React.useState(null);
   React.useEffect(() => {
     if (!cloud) return;
     return cloud.onStatus(setSt);
   }, []);
   if (!cloud) {
-    return /*#__PURE__*/React.createElement(ScreenBg, {
+    return React.createElement(ScreenBg, {
       accent: accent
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         padding: 40,
         textAlign: 'center',
@@ -64,7 +57,7 @@ function CloudSyncScreen({
     setBusy(true);
     const r = await cloud.requestMagic(email.trim());
     setBusy(false);
-    if (typeof r === 'string') setDevLink(r); // dev mode returns the link
+    if (typeof r === 'string') setDevLink(r);
   };
   const doPassword = async () => {
     if (!email.trim() || !password) return;
@@ -82,27 +75,27 @@ function CloudSyncScreen({
   const StatusDot = ({
     on,
     label
-  }) => /*#__PURE__*/React.createElement("div", {
+  }) => React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 7
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 8,
       height: 8,
       borderRadius: 4,
       background: on ? T.green : T.t3
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: on ? T.t1 : T.t3
     }
   }, label));
-  const Field = props => /*#__PURE__*/React.createElement("input", _extends({}, props, {
+  const Field = props => React.createElement("input", _extends({}, props, {
     style: {
       width: '100%',
       boxSizing: 'border-box',
@@ -117,22 +110,22 @@ function CloudSyncScreen({
       ...(props.style || {})
     }
   }));
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Cloud sync",
     subtitle: st.authed ? 'Signed in · multi-device' : st.configured ? 'Configured · not signed in' : 'Local-only · offline-first'
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -143,33 +136,33 @@ function CloudSyncScreen({
       gap: 12,
       marginBottom: 16
     }
-  }, /*#__PURE__*/React.createElement(StatusDot, {
+  }, React.createElement(StatusDot, {
     on: st.configured,
     label: st.configured ? 'API set' : 'No API'
-  }), /*#__PURE__*/React.createElement(StatusDot, {
+  }), React.createElement(StatusDot, {
     on: st.online,
     label: st.online ? 'Online' : 'Offline'
-  }), /*#__PURE__*/React.createElement(StatusDot, {
+  }), React.createElement(StatusDot, {
     on: st.authed,
     label: st.authed ? 'Signed in' : 'Signed out'
-  }), /*#__PURE__*/React.createElement(StatusDot, {
+  }), React.createElement(StatusDot, {
     on: st.live,
     label: st.live ? 'Live stream on' : 'Live stream off'
-  }), st.queued > 0 && /*#__PURE__*/React.createElement("div", {
+  }), st.queued > 0 && React.createElement("div", {
     style: {
       gridColumn: '1 / -1',
       fontFamily: SFMono,
       fontSize: 11,
       color: T.amber
     }
-  }, st.queued, " change", st.queued === 1 ? '' : 's', " queued offline"), st.lastPull && /*#__PURE__*/React.createElement("div", {
+  }, st.queued, " change", st.queued === 1 ? '' : 's', " queued offline"), st.lastPull && React.createElement("div", {
     style: {
       gridColumn: '1 / -1',
       fontFamily: SF,
       fontSize: 11,
       color: T.t3
     }
-  }, "Last pull ", new Date(st.lastPull).toLocaleString('en-GB'))), /*#__PURE__*/React.createElement("div", {
+  }, "Last pull ", new Date(st.lastPull).toLocaleString('en-GB'))), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -179,18 +172,18 @@ function CloudSyncScreen({
       letterSpacing: 0.6,
       margin: '6px 2px 8px'
     }
-  }, "API endpoint"), /*#__PURE__*/React.createElement("div", {
+  }, "API endpoint"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement(Field, {
+  }, React.createElement(Field, {
     value: apiUrl,
     onChange: e => setApiUrl(e.target.value),
     placeholder: "https://cortexbuildpro.com",
     autoCapitalize: "none",
     autoCorrect: "off"
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: saveApi,
     disabled: busy,
     style: {
@@ -205,14 +198,14 @@ function CloudSyncScreen({
       cursor: 'pointer',
       flexShrink: 0
     }
-  }, busy ? '…' : 'Test')), reach !== null && /*#__PURE__*/React.createElement("div", {
+  }, busy ? '…' : 'Test')), reach !== null && React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: reach ? T.green : T.red,
       margin: '8px 2px 0'
     }
-  }, reach ? '✓ Reachable' : '✗ Could not reach /api/health'), !st.authed && st.configured && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, reach ? '✓ Reachable' : '✗ Could not reach /api/health'), !st.authed && st.configured && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -222,7 +215,7 @@ function CloudSyncScreen({
       letterSpacing: 0.6,
       margin: '20px 2px 8px'
     }
-  }, "Sign in"), /*#__PURE__*/React.createElement("div", {
+  }, "Sign in"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -234,7 +227,7 @@ function CloudSyncScreen({
   }, {
     k: 'password',
     l: 'Password'
-  }].map(x => /*#__PURE__*/React.createElement("button", {
+  }].map(x => React.createElement("button", {
     key: x.k,
     onClick: () => setMode(x.k),
     style: {
@@ -249,7 +242,7 @@ function CloudSyncScreen({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, x.l))), /*#__PURE__*/React.createElement(Field, {
+  }, x.l))), React.createElement(Field, {
     value: email,
     onChange: e => setEmail(e.target.value),
     placeholder: "you@company.co.uk",
@@ -259,7 +252,7 @@ function CloudSyncScreen({
     style: {
       marginBottom: 8
     }
-  }), mode === 'password' && /*#__PURE__*/React.createElement(Field, {
+  }), mode === 'password' && React.createElement(Field, {
     value: password,
     onChange: e => setPassword(e.target.value),
     placeholder: "Password",
@@ -267,7 +260,7 @@ function CloudSyncScreen({
     style: {
       marginBottom: 8
     }
-  }), mode === 'magic' ? /*#__PURE__*/React.createElement("button", {
+  }), mode === 'magic' ? React.createElement("button", {
     onClick: doMagic,
     disabled: busy || !email.trim(),
     style: {
@@ -283,7 +276,7 @@ function CloudSyncScreen({
       cursor: email.trim() ? 'pointer' : 'default',
       opacity: email.trim() ? 1 : 0.5
     }
-  }, busy ? 'Sending…' : 'Email me a magic link') : /*#__PURE__*/React.createElement("button", {
+  }, busy ? 'Sending…' : 'Email me a magic link') : React.createElement("button", {
     onClick: doPassword,
     disabled: busy || !email.trim() || !password,
     style: {
@@ -299,7 +292,7 @@ function CloudSyncScreen({
       cursor: 'pointer',
       opacity: email.trim() && password ? 1 : 0.5
     }
-  }, busy ? 'Signing in…' : 'Sign in'), devLink && /*#__PURE__*/React.createElement("div", {
+  }, busy ? 'Signing in…' : 'Sign in'), devLink && React.createElement("div", {
     style: {
       marginTop: 10,
       padding: 12,
@@ -307,14 +300,14 @@ function CloudSyncScreen({
       border: `0.5px solid ${accent}44`,
       borderRadius: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginBottom: 8
     }
-  }, "Dev mode returned the link directly (no email sent in development):"), /*#__PURE__*/React.createElement("button", {
+  }, "Dev mode returned the link directly (no email sent in development):"), React.createElement("button", {
     onClick: verifyDev,
     disabled: busy,
     style: {
@@ -329,7 +322,7 @@ function CloudSyncScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Open magic link & sign in"))), st.authed && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "Open magic link & sign in"))), st.authed && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -339,14 +332,14 @@ function CloudSyncScreen({
       letterSpacing: 0.6,
       margin: '20px 2px 8px'
     }
-  }, "Sync"), /*#__PURE__*/React.createElement("div", {
+  }, "Sync"), React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
       borderRadius: 12,
       overflow: 'hidden'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -354,20 +347,20 @@ function CloudSyncScreen({
       padding: 14,
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Live sync"), /*#__PURE__*/React.createElement("div", {
+  }, "Live sync"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, "Realtime push from other devices")), /*#__PURE__*/React.createElement("button", {
+  }, "Realtime push from other devices")), React.createElement("button", {
     onClick: () => cloud.setLive(!st.live),
     style: {
       width: 46,
@@ -379,7 +372,7 @@ function CloudSyncScreen({
       position: 'relative',
       transition: 'background .15s'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       position: 'absolute',
       top: 3,
@@ -390,7 +383,7 @@ function CloudSyncScreen({
       background: '#fff',
       transition: 'left .15s'
     }
-  }))), /*#__PURE__*/React.createElement("button", {
+  }))), React.createElement("button", {
     onClick: () => cloud.pull(),
     style: {
       width: '100%',
@@ -407,13 +400,13 @@ function CloudSyncScreen({
   }, React.cloneElement(Ic.download, {
     size: 16,
     color: accent
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1
     }
-  }, "Pull latest now")), /*#__PURE__*/React.createElement("button", {
+  }, "Pull latest now")), React.createElement("button", {
     onClick: () => {
       cloud.signOut();
       if (window.cortexxToast) window.cortexxToast('Signed out of cloud', 'info');
@@ -432,13 +425,13 @@ function CloudSyncScreen({
   }, React.cloneElement(Ic.x || Ic.close || Ic.shield, {
     size: 16,
     color: T.red
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.red
     }
-  }, "Sign out of cloud")))), /*#__PURE__*/React.createElement("div", {
+  }, "Sign out of cloud")))), React.createElement("div", {
     style: {
       marginTop: 16,
       padding: 12,
@@ -454,7 +447,7 @@ function CloudSyncScreen({
   }, React.cloneElement(Ic.shield, {
     size: 14,
     color: T.green
-  }), /*#__PURE__*/React.createElement("span", null, "The app is fully usable offline \u2014 cloud sync is optional. Writes made offline queue locally and replay automatically when you reconnect. Run the backend with ", /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", null, "The app is fully usable offline \u2014 cloud sync is optional. Writes made offline queue locally and replay automatically when you reconnect. Run the backend with ", React.createElement("span", {
     style: {
       fontFamily: SFMono
     }

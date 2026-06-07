@@ -1,11 +1,9 @@
-// Cortexx — Phase 33: Cmd+K hint pill on dashboard (discoverability)
-
 function CmdKHint({
   accent
 }) {
   const [dismissed, setDismissed] = React.useState(localStorage.getItem('cortexx_cmdk_hint_dismissed') === '1');
   if (dismissed) return null;
-  return /*#__PURE__*/React.createElement("button", {
+  return React.createElement("button", {
     onClick: () => {
       setDismissed(true);
       localStorage.setItem('cortexx_cmdk_hint_dismissed', '1');
@@ -32,13 +30,13 @@ function CmdKHint({
       fontWeight: 600,
       boxShadow: `0 4px 14px rgba(0,0,0,0.4)`
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.search, {
     size: 12
-  })), /*#__PURE__*/React.createElement("span", null, "Try"), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", null, "Try"), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,

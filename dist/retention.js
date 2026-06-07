@@ -18,8 +18,10 @@
 
 (function () {
   if (window.CortexRetention) return;
-  const DEFAULT_PCT = 0.05; // 5%
+
+  const DEFAULT_PCT = 0.05;       // 5%
   const DEFAULT_DEFECTS_DAYS = 365;
+
   function withRetention(inv) {
     const pct = Number(inv.retentionPct || 0);
     const amount = Number(inv.amount || 0);
@@ -33,25 +35,21 @@
       payableNow,
       retentionReleased: released,
       retentionOutstanding: outstanding,
-      retentionStatus: inv.retentionStatus || (pct > 0 ? 'held' : 'none')
+      retentionStatus: inv.retentionStatus || (pct > 0 ? 'held' : 'none'),
     });
   }
 
   // Returns the ledger: every invoice with retention > 0, plus aggregates
   function ledger(invoices, projects) {
-    const rows = (invoices || []).map(withRetention).filter(i => i.retentionAmount > 0);
+    const rows = (invoices || [])
+      .map(withRetention)
+      .filter(i => i.retentionAmount > 0);
 
     // Aggregate by project
     const byProject = {};
     for (const r of rows) {
       const key = r.projectId || 'unassigned';
-      if (!byProject[key]) byProject[key] = {
-        projectId: r.projectId,
-        totalHeld: 0,
-        totalReleased: 0,
-        invoiceCount: 0,
-        due: []
-      };
+      if (!byProject[key]) byProject[key] = { projectId: r.projectId, totalHeld: 0, totalReleased: 0, invoiceCount: 0, due: [] };
       byProject[key].totalHeld += r.retentionAmount;
       byProject[key].totalReleased += r.retentionReleased || 0;
       byProject[key].invoiceCount++;
@@ -60,9 +58,10 @@
     if (projects) {
       Object.values(byProject).forEach(p => {
         const proj = projects.find(x => x.id === p.projectId);
-        p.projectName = proj && proj.name || 'Unassigned';
+        p.projectName = (proj && proj.name) || 'Unassigned';
       });
     }
+
     const totalHeld = rows.reduce((s, r) => s + (r.retentionAmount || 0), 0);
     const totalReleased = rows.reduce((s, r) => s + (r.retentionReleased || 0), 0);
     const totalOutstanding = totalHeld - totalReleased;
@@ -73,37 +72,29 @@
     rows.forEach(r => {
       if (r.pcDate && r.retentionStatus === 'held') {
         upcoming.push({
-          invoice: r.id,
-          client: r.client,
-          projectId: r.projectId,
+          invoice: r.id, client: r.client, projectId: r.projectId,
           amount: r.retentionAmount / 2,
           dueDate: r.pcDate,
           kind: 'PC release (50%)',
-          overdue: new Date(r.pcDate) < today
+          overdue: new Date(r.pcDate) < today,
         });
       }
       if (r.finalReleaseDate && r.retentionStatus !== 'final_released') {
         upcoming.push({
-          invoice: r.id,
-          client: r.client,
-          projectId: r.projectId,
+          invoice: r.id, client: r.client, projectId: r.projectId,
           amount: r.retentionStatus === 'held' ? r.retentionAmount / 2 : r.retentionAmount - r.retentionReleased,
           dueDate: r.finalReleaseDate,
           kind: 'Final release',
-          overdue: new Date(r.finalReleaseDate) < today
+          overdue: new Date(r.finalReleaseDate) < today,
         });
       }
     });
     upcoming.sort((a, b) => new Date(a.dueDate) - new Date(b.dueDate));
+
     return {
-      rows,
-      byProject: Object.values(byProject),
-      totals: {
-        held: totalHeld,
-        released: totalReleased,
-        outstanding: totalOutstanding
-      },
-      upcoming
+      rows, byProject: Object.values(byProject),
+      totals: { held: totalHeld, released: totalReleased, outstanding: totalOutstanding },
+      upcoming,
     };
   }
 
@@ -113,13 +104,9 @@
     const all = await window.Backend.db.invoices.list();
     const inv = all.find(i => i.id === invoiceId);
     if (!inv) return null;
-    const patch = Object.assign({
-      retentionPct: pct,
-      retentionStatus: pct > 0 ? 'held' : 'none'
-    }, opts || {});
+    const patch = Object.assign({ retentionPct: pct, retentionStatus: pct > 0 ? 'held' : 'none' }, opts || {});
     if (opts && opts.pcDate && !patch.finalReleaseDate) {
-      const d = new Date(opts.pcDate);
-      d.setDate(d.getDate() + (opts.defectsPeriodDays || DEFAULT_DEFECTS_DAYS));
+      const d = new Date(opts.pcDate); d.setDate(d.getDate() + (opts.defectsPeriodDays || DEFAULT_DEFECTS_DAYS));
       patch.finalReleaseDate = d.toISOString().slice(0, 10);
     }
     return window.Backend.db.invoices.update(invoiceId, patch);
@@ -133,11 +120,13 @@
     if (!inv.retentionAmount) return null;
     const releaseAmount = amount == null ? inv.retentionOutstanding : Math.min(Number(amount), inv.retentionOutstanding);
     const newReleased = (inv.retentionReleased || 0) + releaseAmount;
-    const newStatus = newReleased >= inv.retentionAmount - 0.005 ? 'final_released' : kind === 'pc' || kind === 'PC' ? 'pc_released' : 'partial_released';
+    const newStatus = newReleased >= inv.retentionAmount - 0.005
+      ? 'final_released'
+      : (kind === 'pc' || kind === 'PC' ? 'pc_released' : 'partial_released');
     const result = await window.Backend.db.invoices.update(invoiceId, {
       retentionReleased: Math.round(newReleased * 100) / 100,
       retentionStatus: newStatus,
-      retentionLastReleased: new Date().toISOString().slice(0, 10)
+      retentionLastReleased: new Date().toISOString().slice(0, 10),
     });
     // Activity log
     try {
@@ -146,37 +135,25 @@
           id: 'act-ret-' + Date.now(),
           t: 'Retention released',
           sub: '£' + releaseAmount.toLocaleString() + ' from ' + invoiceId + ' (' + (kind || 'release') + ')',
-          when: 'now',
-          icon: '🔓'
+          when: 'now', icon: '🔓',
         });
       }
     } catch (e) {}
     return result;
   }
+
   window.CortexRetention = {
-    DEFAULT_PCT,
-    DEFAULT_DEFECTS_DAYS,
-    withRetention,
-    ledger,
-    setPct,
-    release,
+    DEFAULT_PCT, DEFAULT_DEFECTS_DAYS,
+    withRetention, ledger, setPct, release,
     // forProject(projectId) — summary used by the invoice lifecycle screen
-    forProject: projectId => {
+    forProject: (projectId) => {
       const invs = (Backend.db.snapshot().invoices || []).filter(i => i.projectId == projectId);
       const projs = Backend.db.snapshot().projects || [];
       const result = ledger(invs, projs);
       const held = result.totalHeld || 0;
       const toRelease = (result.upcoming || []).filter(u => u.overdue).reduce((s, u) => s + (u.amount || 0), 0);
       const released = result.totalReleased || 0;
-      return {
-        projectId,
-        invoiceCount: invs.length,
-        held,
-        toRelease,
-        released,
-        rows: result.rows || [],
-        upcoming: result.upcoming || []
-      };
-    }
+      return { projectId, invoiceCount: invs.length, held, toRelease, released, rows: result.rows || [], upcoming: result.upcoming || [] };
+    },
   };
 })();

@@ -1,7 +1,4 @@
-// Cortexx — Phase 38: Universal upload button + multi-target capability
-
 (function () {
-  // Global upload trigger - opens native picker, routes by file type
   window.cortexxUniversalUpload = async (opts = {}) => {
     const input = document.createElement('input');
     input.type = 'file';
@@ -79,13 +76,11 @@
     });
   };
 })();
-
-// Floating upload pill — pairs with the AI pill
 function FloatingUploadPill({
   accent,
   bottom = 100
 }) {
-  return /*#__PURE__*/React.createElement("button", {
+  return React.createElement("button", {
     onClick: () => window.cortexxUniversalUpload(),
     style: {
       position: 'absolute',
@@ -109,13 +104,13 @@ function FloatingUploadPill({
       fontSize: 12,
       fontWeight: 600
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: accent || T.cyan
     }
   }, React.cloneElement(Ic.upload, {
     size: 14
-  })), /*#__PURE__*/React.createElement("span", null, "Upload"));
+  })), React.createElement("span", null, "Upload"));
 }
 Object.assign(window, {
   FloatingUploadPill

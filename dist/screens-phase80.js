@@ -1,23 +1,3 @@
-// Cortexx — Phase 80
-//
-// Plugs functional gaps surfaced during code review:
-//
-//   1. AddInspectionSheet      — was referenced from Inspections (+ button)
-//                                but no sheet was wired; tapping it was a dead
-//                                end. Now creates a real inspection record
-//                                with optional AI-suggested checklist.
-//   2. Backend.computed.dueInvoices / failedInspectionCount / openIncidents
-//                              — small selectors used by widgets.
-//   3. Backend.ai.draftRFIReply — used by RFI detail to auto-draft a response
-//                                if missing.
-//   4. cortexxNav('inspection', insp)  — opens an existing inspection in the
-//                                detail sheet (mirrors 'project', 'rfi' etc.).
-//
-// Keep this file additive — do not redefine existing exports.
-
-// ─────────────────────────────────────────────────────────
-// Extra computed selectors
-// ─────────────────────────────────────────────────────────
 (function () {
   if (!window.Backend) return;
   const c = Backend.computed;
@@ -31,10 +11,6 @@
     c.openIncidents = () => (Backend.db.snapshot().incidents || []).filter(i => !i.closed).length;
   }
 })();
-
-// ─────────────────────────────────────────────────────────
-// AI helper — draft a brief RFI reply
-// ─────────────────────────────────────────────────────────
 (function () {
   if (!window.Backend || !Backend.ai || Backend.ai.draftRFIReply) return;
   Backend.ai.draftRFIReply = async rfi => {
@@ -51,10 +27,6 @@ Project: ${rfi.projectName || ''}`;
     }
   };
 })();
-
-// ─────────────────────────────────────────────────────────
-// AddInspectionSheet
-// ─────────────────────────────────────────────────────────
 function AddInspectionSheet({
   onClose,
   accent,
@@ -93,7 +65,6 @@ function AddInspectionSheet({
     inspector: preset?.inspector || Backend.db.user?.getSync?.()?.name?.split(' ')[0] || 'You',
     date: preset?.date || todayISO,
     schedule: 'today',
-    // today | tomorrow | later
     items: preset?.items || []
   });
   const [suggesting, setSuggesting] = React.useState(false);
@@ -169,12 +140,12 @@ function AddInspectionSheet({
     toast('Inspection scheduled', 'success');
     onClose();
   };
-  return /*#__PURE__*/React.createElement(FormSheet, {
+  return React.createElement(FormSheet, {
     title: "New inspection",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, /*#__PURE__*/React.createElement(FormSelect, {
+  }, React.createElement(FormSelect, {
     label: "Template",
     v: form.template,
     onChange: onTemplate,
@@ -182,12 +153,12 @@ function AddInspectionSheet({
       v: t.k,
       l: t.l
     }))
-  }), /*#__PURE__*/React.createElement(FormInput, {
+  }), React.createElement(FormInput, {
     label: "Name",
     v: form.kind,
     onChange: v => updateField('kind', v),
     placeholder: "What's being inspected"
-  }), /*#__PURE__*/React.createElement(FormSelect, {
+  }), React.createElement(FormSelect, {
     label: "Project",
     v: form.projectId,
     onChange: v => updateField('projectId', v),
@@ -195,7 +166,7 @@ function AddInspectionSheet({
       v: p.id,
       l: p.name
     }))
-  }), /*#__PURE__*/React.createElement(FormSelect, {
+  }), React.createElement(FormSelect, {
     label: "Inspector",
     v: form.inspector,
     onChange: v => updateField('inspector', v),
@@ -206,7 +177,7 @@ function AddInspectionSheet({
       v: t.n.split(' ')[0],
       l: t.n
     }))]
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -216,7 +187,7 @@ function AddInspectionSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.4
     }
-  }, "When"), /*#__PURE__*/React.createElement("div", {
+  }, "When"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
@@ -234,7 +205,7 @@ function AddInspectionSheet({
     k: 'later',
     l: 'Pick date',
     d: form.date
-  }].map(o => /*#__PURE__*/React.createElement("button", {
+  }].map(o => React.createElement("button", {
     key: o.k,
     onClick: () => setForm(f => ({
       ...f,
@@ -253,7 +224,7 @@ function AddInspectionSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, o.l))), form.schedule === 'later' && /*#__PURE__*/React.createElement("input", {
+  }, o.l))), form.schedule === 'later' && React.createElement("input", {
     type: "date",
     value: form.date,
     onChange: e => updateField('date', e.target.value),
@@ -269,14 +240,14 @@ function AddInspectionSheet({
       fontSize: 14,
       colorScheme: 'dark'
     }
-  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", null, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       marginBottom: 6
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -285,11 +256,11 @@ function AddInspectionSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.4
     }
-  }, "Checklist ", form.items.length > 0 && /*#__PURE__*/React.createElement("span", {
+  }, "Checklist ", form.items.length > 0 && React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "\xB7 ", form.items.length)), /*#__PURE__*/React.createElement("button", {
+  }, "\xB7 ", form.items.length)), React.createElement("button", {
     onClick: suggestItems,
     disabled: suggesting,
     style: {
@@ -309,7 +280,7 @@ function AddInspectionSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 11
-  }), suggesting ? 'Thinking…' : 'AI suggest')), form.items.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }), suggesting ? 'Thinking…' : 'AI suggest')), form.items.length > 0 && React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -317,7 +288,7 @@ function AddInspectionSheet({
       padding: '4px 0',
       marginBottom: 8
     }
-  }, form.items.map((it, i) => /*#__PURE__*/React.createElement("div", {
+  }, form.items.map((it, i) => React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -326,14 +297,14 @@ function AddInspectionSheet({
       padding: '8px 12px',
       borderBottom: i === form.items.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.t3,
       fontFamily: SFMono,
       fontSize: 10,
       width: 16
     }
-  }, i + 1), /*#__PURE__*/React.createElement("span", {
+  }, i + 1), React.createElement("span", {
     style: {
       flex: 1,
       fontFamily: SF,
@@ -341,7 +312,7 @@ function AddInspectionSheet({
       color: T.t1,
       lineHeight: 1.35
     }
-  }, it.q), /*#__PURE__*/React.createElement("button", {
+  }, it.q), React.createElement("button", {
     onClick: () => removeItem(i),
     style: {
       background: 'none',
@@ -354,12 +325,12 @@ function AddInspectionSheet({
       fontSize: 16
     },
     "aria-label": "Remove"
-  }, "\xD7")))), /*#__PURE__*/React.createElement("div", {
+  }, "\xD7")))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("input", {
+  }, React.createElement("input", {
     value: newItem,
     onChange: e => setNewItem(e.target.value),
     onKeyDown: e => {
@@ -381,7 +352,7 @@ function AddInspectionSheet({
       outline: 'none',
       boxSizing: 'border-box'
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: addItem,
     disabled: !newItem.trim(),
     style: {

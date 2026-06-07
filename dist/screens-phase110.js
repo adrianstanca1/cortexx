@@ -1,31 +1,21 @@
-// CortexBuild Pro — Phase 110: Missing "Add" sheets + localStorage quota monitor
-// Adds fully functional forms for addinvoice, addquote, addreceipt, addpo, addincident
-// plus a storage capacity monitor that warns at 80%.
-
 (function () {
   if (!window.Backend) return;
-
-  // ── localStorage quota monitor ──────────────────────────────────
   window.CortexStorage = window.CortexStorage || {
-    // Returns { used, total, pct } in bytes / percentage
     usage: () => {
       let used = 0;
       for (let i = 0; i < localStorage.length; i++) {
         const k = localStorage.key(i);
-        used += (k.length + (localStorage.getItem(k) || '').length) * 2; // UTF-16
+        used += (k.length + (localStorage.getItem(k) || '').length) * 2;
       }
-      const total = 5 * 1024 * 1024; // 5 MB typical
+      const total = 5 * 1024 * 1024;
       return {
         used,
         total,
         pct: Math.min(100, Math.round(used / total * 100))
       };
     },
-    // Format for display
     fmt: bytes => bytes < 1024 ? bytes + 'B' : bytes < 1024 * 1024 ? Math.round(bytes / 1024) + 'KB' : (bytes / (1024 * 1024)).toFixed(1) + 'MB'
   };
-
-  // ── Helper: SheetForm wrapper ───────────────────────────────────
   const ShW = ({
     title,
     onClose,
@@ -122,8 +112,6 @@
     ...style
   });
   const sel = inp;
-
-  // ── Add Invoice Sheet ────────────────────────────────────────────
   window.AddInvoiceSheet = function ({
     onClose,
     accent
@@ -147,7 +135,6 @@
         ...f,
         [k]: v
       };
-      // Auto-fill client when project changes
       if (k === 'projectId') {
         const p = projects.find(p => p.id == v);
         if (p) nf.client = p.client || '';
@@ -278,8 +265,6 @@
       onChange: e => set('notes', e.target.value)
     })));
   };
-
-  // ── Add Quote Sheet ──────────────────────────────────────────────
   window.AddQuoteSheet = function ({
     onClose,
     accent
@@ -423,8 +408,6 @@
       onChange: e => set('notes', e.target.value)
     })));
   };
-
-  // ── Add Receipt Sheet ────────────────────────────────────────────
   window.AddReceiptSheet = function ({
     onClose,
     accent
@@ -548,8 +531,6 @@
       onChange: e => set('notes', e.target.value)
     })));
   };
-
-  // ── Add Purchase Order Sheet ─────────────────────────────────────
   window.AddPOSheet = function ({
     onClose,
     accent
@@ -657,8 +638,6 @@
       value: s
     }, s.charAt(0).toUpperCase() + s.slice(1))))));
   };
-
-  // ── Add Incident Sheet ───────────────────────────────────────────
   window.AddIncidentSheet = function ({
     onClose,
     accent
@@ -815,8 +794,6 @@
       onChange: e => set('reportable', e.target.checked)
     }), 'May be RIDDOR-reportable (check F2508 requirements)'));
   };
-
-  // ── Storage Capacity Banner ──────────────────────────────────────
   window.StorageCapacityBanner = function ({
     onDismiss
   }) {
@@ -873,8 +850,6 @@
       }
     }, 'Export'));
   };
-
-  // Surface the storage banner globally so dashboards can mount it
   Backend.storage = Backend.storage || {};
   Backend.storage.usagePct = () => window.CortexStorage.usage().pct;
   Backend.storage.fmt = b => window.CortexStorage.fmt(b);

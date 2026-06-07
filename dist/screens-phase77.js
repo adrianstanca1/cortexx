@@ -1,23 +1,9 @@
-// Cortexx — Phase 77: Real device capture
-// Replaces the mocked Voice memo and Receipt scan with actual device-backed
-// implementations. Adds a global search across all data.
-//
-// - VoiceMemoSheetReal:   Web Speech API live transcription, MediaRecorder
-//                          audio capture, optional AI summarisation.
-// - ReceiptScanSheetReal: Camera (capture="environment") + vision OCR via
-//                          Backend.vision to extract vendor/amount/date/VAT.
-// - GlobalSearchSheet:    Searches projects, tasks, customers, quotes,
-//                          invoices, documents, photos by name.
-
-// ─────────────────────────────────────────────────────────
-// VOICE MEMO — real speech recognition (browser) with audio fallback
-// ─────────────────────────────────────────────────────────
 function VoiceMemoSheetReal({
   onClose,
   accent
 }) {
   const projects = useDB('projects');
-  const [stage, setStage] = React.useState('idle'); // idle | recording | processing | done | error
+  const [stage, setStage] = React.useState('idle');
   const [transcript, setTranscript] = React.useState('');
   const [partial, setPartial] = React.useState('');
   const [duration, setDuration] = React.useState(0);
@@ -29,13 +15,9 @@ function VoiceMemoSheetReal({
   const recRef = React.useRef(null);
   const speechRef = React.useRef(null);
   const startedAt = React.useRef(0);
-
-  // Check capabilities
   const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
   const hasSpeech = !!SR;
   const hasMedia = !!(navigator.mediaDevices && window.MediaRecorder);
-
-  // Duration tick
   React.useEffect(() => {
     if (stage !== 'recording') return;
     const t = setInterval(() => setDuration(Math.floor((Date.now() - startedAt.current) / 1000)), 250);
@@ -51,8 +33,6 @@ function VoiceMemoSheetReal({
     setDuration(0);
     startedAt.current = Date.now();
     setStage('recording');
-
-    // Start audio recording (parallel — best effort)
     if (hasMedia) {
       try {
         const stream = await navigator.mediaDevices.getUserMedia({
@@ -74,12 +54,9 @@ function VoiceMemoSheetReal({
         rec.start();
         recRef.current = rec;
       } catch (e) {
-        // permission denied → continue with speech-only
         recRef.current = null;
       }
     }
-
-    // Start speech recognition
     if (hasSpeech) {
       const sr = new SR();
       sr.lang = 'en-GB';
@@ -99,7 +76,7 @@ function VoiceMemoSheetReal({
         if (e.error === 'no-speech' || e.error === 'aborted') return;
         setErrMsg(`Speech error: ${e.error}`);
       };
-      sr.onend = () => {/* triggered after stop() */};
+      sr.onend = () => {};
       try {
         sr.start();
         speechRef.current = sr;
@@ -123,16 +100,10 @@ function VoiceMemoSheetReal({
     }
     recRef.current = null;
     setStage('processing');
-
-    // Wait briefly for any onresult or onstop to settle
     await new Promise(r => setTimeout(r, 350));
     const finalText = (transcript + ' ' + partial).trim();
     setPartial('');
-
-    // If we got nothing transcribed but did record audio, that's still OK — show the audio
     setStage('done');
-
-    // Optional: ask Claude for a quick action-item summary if we have text
     if (finalText && finalText.length > 10) {
       try {
         const prompt = `You are a UK construction site assistant. From the following dictated note, produce ONE concise sentence (≤25 words) listing the actions needed. Reply with ONLY the sentence, no preamble.\n\nNote: """${finalText}"""`;
@@ -143,11 +114,10 @@ function VoiceMemoSheetReal({
           }]
         });
         setSummary(text.trim().replace(/^["']|["']$/g, ''));
-      } catch (e) {/* ignore */}
+      } catch (e) {}
     }
   };
   const save = async () => {
-    // Persist as activity log + (optional) audio blob in photo store (re-using IndexedDB blob storage)
     const fullText = transcript.trim() || '(audio only)';
     await Backend.db.activity.create({
       who: 'You',
@@ -166,7 +136,7 @@ function VoiceMemoSheetReal({
           projectId,
           tags: ['voice']
         });
-      } catch (e) {/* ignore */}
+      } catch (e) {}
     }
     toast('Memo saved', 'success');
     onClose();
@@ -179,13 +149,12 @@ function VoiceMemoSheetReal({
     if (recRef.current && recRef.current.state !== 'inactive') try {
       recRef.current.stop();
     } catch (e) {}
-  }, []); // eslint-disable-line
-
+  }, []);
   const mmss = `${Math.floor(duration / 60).toString().padStart(2, '0')}:${(duration % 60).toString().padStart(2, '0')}`;
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -193,7 +162,7 @@ function VoiceMemoSheetReal({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -203,24 +172,24 @@ function VoiceMemoSheetReal({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Voice memo"), /*#__PURE__*/React.createElement("div", {
+  }, "Voice memo"), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '14px 16px 24px'
     }
-  }, !hasSpeech && !hasMedia && /*#__PURE__*/React.createElement("div", {
+  }, !hasSpeech && !hasMedia && React.createElement("div", {
     style: {
       background: `${T.red}1a`,
       border: `0.5px solid ${T.red}55`,
@@ -231,7 +200,7 @@ function VoiceMemoSheetReal({
       fontSize: 12,
       color: T.t1
     }
-  }, "This browser/device supports neither Web Speech nor MediaRecorder. Voice memos won't work here."), hasSpeech && !hasMedia && stage === 'idle' && /*#__PURE__*/React.createElement("div", {
+  }, "This browser/device supports neither Web Speech nor MediaRecorder. Voice memos won't work here."), hasSpeech && !hasMedia && stage === 'idle' && React.createElement("div", {
     style: {
       background: `${T.amber}14`,
       border: `0.5px solid ${T.amber}44`,
@@ -242,7 +211,7 @@ function VoiceMemoSheetReal({
       fontSize: 12,
       color: T.t1
     }
-  }, "Real-time transcription only \u2014 your device can't save the raw audio."), /*#__PURE__*/React.createElement("div", {
+  }, "Real-time transcription only \u2014 your device can't save the raw audio."), React.createElement("div", {
     style: {
       background: stage === 'recording' ? `linear-gradient(135deg, ${T.red}22, transparent)` : T.bg2,
       border: `0.5px solid ${stage === 'recording' ? T.red + '55' : T.hair}`,
@@ -250,7 +219,7 @@ function VoiceMemoSheetReal({
       padding: '22px 16px',
       textAlign: 'center'
     }
-  }, stage === 'idle' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+  }, stage === 'idle' && React.createElement(React.Fragment, null, React.createElement("button", {
     onClick: start,
     disabled: !hasSpeech && !hasMedia,
     style: {
@@ -268,21 +237,21 @@ function VoiceMemoSheetReal({
     }
   }, React.cloneElement(Ic.mic, {
     size: 44
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 14
     }
-  }, "Tap to start. Speak naturally."), /*#__PURE__*/React.createElement("div", {
+  }, "Tap to start. Speak naturally."), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3,
       marginTop: 6
     }
-  }, hasSpeech ? 'Live transcription · ' : '', hasMedia ? 'audio saved' : '')), stage === 'recording' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, hasSpeech ? 'Live transcription · ' : '', hasMedia ? 'audio saved' : '')), stage === 'recording' && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 40,
@@ -291,7 +260,7 @@ function VoiceMemoSheetReal({
       letterSpacing: -1,
       marginBottom: 18
     }
-  }, mmss), /*#__PURE__*/React.createElement("button", {
+  }, mmss), React.createElement("button", {
     onClick: stop,
     style: {
       width: 110,
@@ -307,14 +276,14 @@ function VoiceMemoSheetReal({
       boxShadow: `0 12px 30px ${T.red}55`,
       animation: 'pulse77 1.4s infinite'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
       background: '#fff',
       borderRadius: 4
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -323,17 +292,17 @@ function VoiceMemoSheetReal({
       marginTop: 14,
       letterSpacing: 0.4
     }
-  }, "\u25CF RECORDING \u2014 tap to stop")), stage === 'processing' && /*#__PURE__*/React.createElement(ShimmerRows, {
+  }, "\u25CF RECORDING \u2014 tap to stop")), stage === 'processing' && React.createElement(ShimmerRows, {
     color: T.purple,
     rows: 3
-  }), stage === 'done' && /*#__PURE__*/React.createElement("div", {
+  }), stage === 'done' && React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.green,
       fontWeight: 600
     }
-  }, "\u25CF Recorded ", mmss)), (stage === 'recording' || stage === 'done') && (transcript || partial) && /*#__PURE__*/React.createElement("div", {
+  }, "\u25CF Recorded ", mmss)), (stage === 'recording' || stage === 'done') && (transcript || partial) && React.createElement("div", {
     style: {
       marginTop: 14,
       background: T.bg2,
@@ -341,7 +310,7 @@ function VoiceMemoSheetReal({
       borderRadius: 12,
       padding: 14
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -351,22 +320,22 @@ function VoiceMemoSheetReal({
       letterSpacing: 0.5,
       marginBottom: 6
     }
-  }, "Transcript"), /*#__PURE__*/React.createElement("div", {
+  }, "Transcript"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       lineHeight: 1.55
     }
-  }, transcript, partial && /*#__PURE__*/React.createElement("span", {
+  }, transcript, partial && React.createElement("span", {
     style: {
       color: T.t3
     }
-  }, " ", partial))), audioUrl && stage === 'done' && /*#__PURE__*/React.createElement("div", {
+  }, " ", partial))), audioUrl && stage === 'done' && React.createElement("div", {
     style: {
       marginTop: 14
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -376,13 +345,13 @@ function VoiceMemoSheetReal({
       letterSpacing: 0.7,
       marginBottom: 6
     }
-  }, "Audio"), /*#__PURE__*/React.createElement("audio", {
+  }, "Audio"), React.createElement("audio", {
     src: audioUrl,
     controls: true,
     style: {
       width: '100%'
     }
-  })), summary && /*#__PURE__*/React.createElement("div", {
+  })), summary && React.createElement("div", {
     style: {
       marginTop: 14,
       background: `${T.purple}1a`,
@@ -390,20 +359,20 @@ function VoiceMemoSheetReal({
       borderRadius: 12,
       padding: 12
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 6
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.spark, {
     size: 13
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -412,14 +381,14 @@ function VoiceMemoSheetReal({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Action items")), /*#__PURE__*/React.createElement("div", {
+  }, "Action items")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13.5,
       color: T.t1,
       lineHeight: 1.45
     }
-  }, summary)), errMsg && /*#__PURE__*/React.createElement("div", {
+  }, summary)), errMsg && React.createElement("div", {
     style: {
       marginTop: 12,
       padding: 10,
@@ -430,7 +399,7 @@ function VoiceMemoSheetReal({
       fontSize: 12,
       color: T.red
     }
-  }, errMsg), stage === 'done' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, errMsg), stage === 'done' && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       marginTop: 18,
       fontFamily: SF,
@@ -441,14 +410,14 @@ function VoiceMemoSheetReal({
       letterSpacing: 0.7,
       marginBottom: 8
     }
-  }, "Project"), /*#__PURE__*/React.createElement("div", {
+  }, "Project"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       overflowX: 'auto',
       paddingBottom: 4
     }
-  }, projects.map(p => /*#__PURE__*/React.createElement("button", {
+  }, projects.map(p => React.createElement("button", {
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -464,13 +433,13 @@ function VoiceMemoSheetReal({
       whiteSpace: 'nowrap',
       cursor: 'pointer'
     }
-  }, p.name))), /*#__PURE__*/React.createElement("div", {
+  }, p.name))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 16
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: save,
     style: {
       flex: 1,
@@ -485,7 +454,7 @@ function VoiceMemoSheetReal({
       cursor: 'pointer',
       boxShadow: `0 6px 18px ${accent}44`
     }
-  }, "Save memo"), /*#__PURE__*/React.createElement("button", {
+  }, "Save memo"), React.createElement("button", {
     onClick: () => {
       setStage('idle');
       setTranscript('');
@@ -506,18 +475,14 @@ function VoiceMemoSheetReal({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Re-record")))), /*#__PURE__*/React.createElement("style", null, `@keyframes pulse77 { 0%, 100% { transform: scale(1) } 50% { transform: scale(1.04) } }`));
+  }, "Re-record")))), React.createElement("style", null, `@keyframes pulse77 { 0%, 100% { transform: scale(1) } 50% { transform: scale(1.04) } }`));
 }
-
-// ─────────────────────────────────────────────────────────
-// RECEIPT SCAN — real camera + vision OCR
-// ─────────────────────────────────────────────────────────
 function ReceiptScanSheetReal({
   onClose,
   accent
 }) {
   const projects = useDB('projects');
-  const [stage, setStage] = React.useState('pick'); // pick | scanning | result
+  const [stage, setStage] = React.useState('pick');
   const [blob, setBlob] = React.useState(null);
   const [previewUrl, setPreviewUrl] = React.useState(null);
   const [data, setData] = React.useState(null);
@@ -534,9 +499,7 @@ function ReceiptScanSheetReal({
     setStage('scanning');
     setErr('');
     try {
-      // Use Backend.vision via a custom prompt
       const prompt = `You are reading a UK trade receipt photographed on a building site. Return ONLY JSON: {"vendor":"name as printed","amount":NUMBER (total inc VAT),"vatAmount":NUMBER or null,"date":"YYYY-MM-DD or null","items":[{"d":"short","qty":NUMBER,"price":NUMBER}],"category":"Materials|Labour|Plant|Tools|Fuel|Other","confidence":0-1,"notes":"anything unclear"}. Use UK currency conventions, no £ sign in numbers. If unreadable, set confidence:0 and notes:"explanation".`;
-      // Direct vision call (Backend.vision.describePhoto would discard the structure)
       const scaled = await downscale77(f);
       const img = await toImage77(scaled);
       const raw = await window.claude.complete({
@@ -561,7 +524,6 @@ function ReceiptScanSheetReal({
       if (parsed.confidence === 0 || !parsed.vendor || !parsed.amount) {
         throw new Error(parsed.notes || 'Could not read this receipt clearly.');
       }
-      // Auto-suggest project from the existing classifier if we have one
       const aiCat = await Backend.ai.categorizeReceipt({
         vendor: parsed.vendor,
         amount: parsed.amount
@@ -590,7 +552,6 @@ function ReceiptScanSheetReal({
       notes: data.notes || '',
       items: data.items || []
     });
-    // Also save the photo for evidence
     if (blob && window.cortexxPhotoStore) {
       try {
         await window.cortexxPhotoStore.save(blob, {
@@ -598,7 +559,7 @@ function ReceiptScanSheetReal({
           projectId,
           tags: ['receipt', data.category?.toLowerCase()].filter(Boolean)
         });
-      } catch (e) {/* ignore */}
+      } catch (e) {}
     }
     toast(`Receipt saved · £${parseFloat(data.amount).toFixed(2)}`, 'success');
     onClose();
@@ -606,10 +567,10 @@ function ReceiptScanSheetReal({
   React.useEffect(() => () => {
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   }, [previewUrl]);
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, /*#__PURE__*/React.createElement("input", {
+  }, React.createElement("input", {
     ref: fileRef,
     type: "file",
     accept: "image/*",
@@ -618,7 +579,7 @@ function ReceiptScanSheetReal({
     style: {
       display: 'none'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -626,7 +587,7 @@ function ReceiptScanSheetReal({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -636,24 +597,24 @@ function ReceiptScanSheetReal({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Scan receipt"), /*#__PURE__*/React.createElement("div", {
+  }, "Scan receipt"), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '14px 16px 24px'
     }
-  }, stage === 'pick' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
+  }, stage === 'pick' && React.createElement(React.Fragment, null, React.createElement("button", {
     onClick: pick,
     style: {
       width: '100%',
@@ -670,7 +631,7 @@ function ReceiptScanSheetReal({
       justifyContent: 'center',
       gap: 14
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 72,
       height: 72,
@@ -683,13 +644,13 @@ function ReceiptScanSheetReal({
     }
   }, React.cloneElement(Ic.camera, {
     size: 36
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 700
     }
-  }, "Take or pick receipt"), /*#__PURE__*/React.createElement("div", {
+  }, "Take or pick receipt"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -698,7 +659,7 @@ function ReceiptScanSheetReal({
       textAlign: 'center',
       lineHeight: 1.5
     }
-  }, "Hold steady, fill the frame, good light. Cortex extracts vendor, total, VAT and auto-files it.")), err && /*#__PURE__*/React.createElement("div", {
+  }, "Hold steady, fill the frame, good light. Cortex extracts vendor, total, VAT and auto-files it.")), err && React.createElement("div", {
     style: {
       marginTop: 12,
       padding: 10,
@@ -709,7 +670,7 @@ function ReceiptScanSheetReal({
       fontSize: 12,
       color: T.red
     }
-  }, err)), stage === 'scanning' && previewUrl && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, err)), stage === 'scanning' && previewUrl && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       position: 'relative',
       borderRadius: 14,
@@ -718,7 +679,7 @@ function ReceiptScanSheetReal({
       maxHeight: 280,
       background: '#000'
     }
-  }, /*#__PURE__*/React.createElement("img", {
+  }, React.createElement("img", {
     src: previewUrl,
     style: {
       width: '100%',
@@ -727,7 +688,7 @@ function ReceiptScanSheetReal({
       display: 'block',
       opacity: 0.6
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -737,7 +698,7 @@ function ReceiptScanSheetReal({
       justifyContent: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 52,
       height: 52,
@@ -750,23 +711,23 @@ function ReceiptScanSheetReal({
     }
   }, React.cloneElement(Ic.spark, {
     size: 26
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: '#fff',
       fontWeight: 600
     }
-  }, "Reading receipt\u2026"), /*#__PURE__*/React.createElement("div", {
+  }, "Reading receipt\u2026"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: '#ffffffaa'
     }
-  }, "OCR + Cortex AI categorising"))), /*#__PURE__*/React.createElement(ShimmerRows, {
+  }, "OCR + Cortex AI categorising"))), React.createElement(ShimmerRows, {
     color: T.purple,
     rows: 3
-  })), stage === 'result' && data && /*#__PURE__*/React.createElement(React.Fragment, null, previewUrl && /*#__PURE__*/React.createElement("div", {
+  })), stage === 'result' && data && React.createElement(React.Fragment, null, previewUrl && React.createElement("div", {
     style: {
       borderRadius: 12,
       overflow: 'hidden',
@@ -774,7 +735,7 @@ function ReceiptScanSheetReal({
       maxHeight: 180,
       background: '#000'
     }
-  }, /*#__PURE__*/React.createElement("img", {
+  }, React.createElement("img", {
     src: previewUrl,
     style: {
       width: '100%',
@@ -782,7 +743,7 @@ function ReceiptScanSheetReal({
       objectFit: 'cover',
       display: 'block'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -790,13 +751,13 @@ function ReceiptScanSheetReal({
       padding: 14,
       marginBottom: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start'
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -805,7 +766,7 @@ function ReceiptScanSheetReal({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Vendor"), /*#__PURE__*/React.createElement("div", {
+  }, "Vendor"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 17,
@@ -813,18 +774,18 @@ function ReceiptScanSheetReal({
       color: T.t1,
       marginTop: 2
     }
-  }, data.vendor), data.date && /*#__PURE__*/React.createElement("div", {
+  }, data.vendor), data.date && React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t3,
       marginTop: 4
     }
-  }, data.date)), /*#__PURE__*/React.createElement("div", {
+  }, data.date)), React.createElement("div", {
     style: {
       textAlign: 'right'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -832,14 +793,14 @@ function ReceiptScanSheetReal({
       fontWeight: 700,
       letterSpacing: -0.5
     }
-  }, "\xA3", parseFloat(data.amount).toFixed(2)), data.vatAmount != null && /*#__PURE__*/React.createElement("div", {
+  }, "\xA3", parseFloat(data.amount).toFixed(2)), data.vatAmount != null && React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3,
       marginTop: 2
     }
-  }, "inc \xA3", parseFloat(data.vatAmount).toFixed(2), " VAT")))), data.items?.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, "inc \xA3", parseFloat(data.vatAmount).toFixed(2), " VAT")))), data.items?.length > 0 && React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -847,7 +808,7 @@ function ReceiptScanSheetReal({
       padding: 14,
       marginBottom: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -857,7 +818,7 @@ function ReceiptScanSheetReal({
       letterSpacing: 0.7,
       marginBottom: 6
     }
-  }, data.items.length, " line items"), data.items.slice(0, 6).map((it, i) => /*#__PURE__*/React.createElement("div", {
+  }, data.items.length, " line items"), data.items.slice(0, 6).map((it, i) => React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -867,20 +828,20 @@ function ReceiptScanSheetReal({
       color: T.t1,
       padding: '4px 0'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       flex: 1,
       overflow: 'hidden',
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, it.d), /*#__PURE__*/React.createElement("span", {
+  }, it.d), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       color: T.t3,
       marginLeft: 8
     }
-  }, it.qty, " \xD7 \xA3", it.price?.toFixed?.(2) ?? it.price)))), /*#__PURE__*/React.createElement("div", {
+  }, it.qty, " \xD7 \xA3", it.price?.toFixed?.(2) ?? it.price)))), React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}1a, transparent)`,
       border: `0.5px solid ${T.purple}44`,
@@ -888,13 +849,13 @@ function ReceiptScanSheetReal({
       padding: 14,
       marginBottom: 12
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       marginBottom: 8
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -903,48 +864,48 @@ function ReceiptScanSheetReal({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Cortex suggests"), /*#__PURE__*/React.createElement("span", {
+  }, "Cortex suggests"), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t2
     }
-  }, Math.round((data.confidence ?? 0.85) * 100), "% sure")), /*#__PURE__*/React.createElement("div", {
+  }, Math.round((data.confidence ?? 0.85) * 100), "% sure")), React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 8
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       width: 60
     }
-  }, "Category"), /*#__PURE__*/React.createElement(Pill, {
+  }, "Category"), React.createElement(Pill, {
     c: accent
-  }, data.category || 'Materials')), /*#__PURE__*/React.createElement("div", {
+  }, data.category || 'Materials')), React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       width: 60
     }
-  }, "Project"), /*#__PURE__*/React.createElement("div", {
+  }, "Project"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 5,
       overflowX: 'auto'
     }
-  }, projects.filter(p => p.status !== 'completed').map(p => /*#__PURE__*/React.createElement("button", {
+  }, projects.filter(p => p.status !== 'completed').map(p => React.createElement("button", {
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -960,7 +921,7 @@ function ReceiptScanSheetReal({
       whiteSpace: 'nowrap',
       cursor: 'pointer'
     }
-  }, p.name))))), data.notes && /*#__PURE__*/React.createElement("div", {
+  }, p.name))))), data.notes && React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11.5,
@@ -968,12 +929,12 @@ function ReceiptScanSheetReal({
       marginBottom: 12,
       fontStyle: 'italic'
     }
-  }, data.notes), /*#__PURE__*/React.createElement("div", {
+  }, data.notes), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: save,
     style: {
       flex: 1,
@@ -988,7 +949,7 @@ function ReceiptScanSheetReal({
       cursor: 'pointer',
       boxShadow: `0 6px 18px ${accent}44`
     }
-  }, "Save & file"), /*#__PURE__*/React.createElement("button", {
+  }, "Save & file"), React.createElement("button", {
     onClick: pick,
     style: {
       background: 'transparent',
@@ -1003,8 +964,6 @@ function ReceiptScanSheetReal({
     }
   }, "Re-scan")))));
 }
-
-// helpers — duplicated lightly so 77 doesn't depend on 75's internals
 async function downscale77(blob, maxDim = 1600) {
   return new Promise(resolve => {
     const img = new Image();
@@ -1045,10 +1004,6 @@ function toImage77(blob) {
     fr.readAsDataURL(blob);
   });
 }
-
-// ─────────────────────────────────────────────────────────
-// GLOBAL SEARCH — over all DB tables
-// ─────────────────────────────────────────────────────────
 function GlobalSearchSheet({
   onClose,
   accent
@@ -1110,10 +1065,10 @@ function GlobalSearchSheet({
     });
     return g;
   }, [results]);
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -1121,13 +1076,13 @@ function GlobalSearchSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.t3
     }
   }, React.cloneElement(Ic.search, {
     size: 18
-  })), /*#__PURE__*/React.createElement("input", {
+  })), React.createElement("input", {
     ref: ref,
     value: q,
     onChange: e => setQ(e.target.value),
@@ -1141,7 +1096,7 @@ function GlobalSearchSheet({
       fontFamily: SF,
       fontSize: 16
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -1151,13 +1106,13 @@ function GlobalSearchSheet({
       fontSize: 14,
       cursor: 'pointer'
     }
-  }, "Cancel")), /*#__PURE__*/React.createElement("div", {
+  }, "Cancel")), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '8px 0'
     }
-  }, !norm && /*#__PURE__*/React.createElement("div", {
+  }, !norm && React.createElement("div", {
     style: {
       padding: '40px 20px',
       textAlign: 'center',
@@ -1166,7 +1121,7 @@ function GlobalSearchSheet({
       fontSize: 13,
       lineHeight: 1.5
     }
-  }, "Start typing to search across all your data:", /*#__PURE__*/React.createElement("br", null), "projects, tasks, customers, quotes, invoices, documents, team, services, improvements."), norm && results.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, "Start typing to search across all your data:", React.createElement("br", null), "projects, tasks, customers, quotes, invoices, documents, team, services, improvements."), norm && results.length === 0 && React.createElement("div", {
     style: {
       padding: '40px 20px',
       textAlign: 'center',
@@ -1174,16 +1129,16 @@ function GlobalSearchSheet({
       fontFamily: SF,
       fontSize: 13
     }
-  }, "Nothing matches \"", /*#__PURE__*/React.createElement("span", {
+  }, "Nothing matches \"", React.createElement("span", {
     style: {
       color: T.t1
     }
-  }, q), "\"."), Object.entries(grouped).map(([group, items]) => /*#__PURE__*/React.createElement("div", {
+  }, q), "\"."), Object.entries(grouped).map(([group, items]) => React.createElement("div", {
     key: group,
     style: {
       marginBottom: 6
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '10px 16px 4px',
       fontFamily: SF,
@@ -1193,7 +1148,7 @@ function GlobalSearchSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.7
     }
-  }, group, " \xB7 ", items.length), items.map((r, i) => /*#__PURE__*/React.createElement("div", {
+  }, group, " \xB7 ", items.length), items.map((r, i) => React.createElement("div", {
     key: i,
     onClick: () => {
       r.action();
@@ -1207,7 +1162,7 @@ function GlobalSearchSheet({
       cursor: 'pointer',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -1221,12 +1176,12 @@ function GlobalSearchSheet({
     }
   }, React.cloneElement(r.icon, {
     size: 15
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       minWidth: 0,
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -1235,7 +1190,7 @@ function GlobalSearchSheet({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, r.label), /*#__PURE__*/React.createElement("div", {
+  }, r.label), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11.5,
@@ -1244,7 +1199,7 @@ function GlobalSearchSheet({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, r.sub)), /*#__PURE__*/React.createElement("span", {
+  }, r.sub)), React.createElement("span", {
     style: {
       color: T.t3
     }

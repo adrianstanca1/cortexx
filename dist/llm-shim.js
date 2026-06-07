@@ -27,15 +27,17 @@
 
 (function () {
   if (window.CortexLLM) return;
-  var API_BASE = function () {
+
+  var API_BASE = (function () {
     try {
       var saved = localStorage.getItem('cortexx_llm_api_base');
       if (saved) return saved.replace(/\/+$/, '');
     } catch (e) {}
     // Same-origin /api by default — matches deploy.sh / docker-compose
     return '';
-  }();
-  var MODE = function () {
+  })();
+
+  var MODE = (function () {
     try {
       var qs = new URLSearchParams(location.search);
       if (qs.get('local') === '1') return 'local';
@@ -46,7 +48,8 @@
     // Default: 'auto' — use whatever's present (prototype env keeps Claude;
     // production deploy with no Claude entry point uses local).
     return 'auto';
-  }();
+  })();
+
   var TIMEOUT_MS = 30000;
   var SERVER_PROBE_MS = 3500; // fail fast when server LLM unreachable so we can fall through
   var lastTier = null;
@@ -55,63 +58,47 @@
   function isMultimodal(messages) {
     try {
       return messages.some(function (m) {
-        return Array.isArray(m.content) && m.content.some(function (p) {
-          return p && p.type === 'image';
-        });
+        return Array.isArray(m.content) && m.content.some(function (p) { return p && p.type === 'image'; });
       });
-    } catch (e) {
-      return false;
-    }
+    } catch (e) { return false; }
   }
+
   function normaliseForServer(messages) {
     // Convert Anthropic-style messages to a plain shape the server can
     // pass to Ollama or any OpenAI-compatible runtime.
     return messages.map(function (m) {
-      if (typeof m.content === 'string') return {
-        role: m.role,
-        content: m.content
-      };
+      if (typeof m.content === 'string') return { role: m.role, content: m.content };
       // Multimodal: concatenate text parts and pull images out
-      var text = '',
-        images = [];
+      var text = '', images = [];
       (m.content || []).forEach(function (p) {
         if (!p) return;
-        if (p.type === 'text') text += (text ? '\n' : '') + p.text;else if (p.type === 'image' && p.source && p.source.type === 'base64') {
+        if (p.type === 'text') text += (text ? '\n' : '') + p.text;
+        else if (p.type === 'image' && p.source && p.source.type === 'base64') {
           images.push(p.source.data);
         }
       });
-      var out = {
-        role: m.role,
-        content: text
-      };
+      var out = { role: m.role, content: text };
       if (images.length) out.images = images; // Ollama vision (llava) supports this
       return out;
     });
   }
+
   async function serverComplete(messages) {
     if (!navigator.onLine) return null;
     try {
       var ctrl = new AbortController();
-      var timer = setTimeout(function () {
-        ctrl.abort();
-      }, SERVER_PROBE_MS);
+      var timer = setTimeout(function () { ctrl.abort(); }, SERVER_PROBE_MS);
       var r = await fetch(API_BASE + '/api/llm', {
         method: 'POST',
-        headers: {
-          'content-type': 'application/json'
-        },
-        body: JSON.stringify({
-          messages: normaliseForServer(messages)
-        }),
-        signal: ctrl.signal
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ messages: normaliseForServer(messages) }),
+        signal: ctrl.signal,
       });
       clearTimeout(timer);
       if (!r.ok) return null;
       var j = await r.json();
-      return j && (j.text || j.message || j.content) || null;
-    } catch (e) {
-      return null;
-    }
+      return (j && (j.text || j.message || j.content)) || null;
+    } catch (e) { return null; }
   }
 
   // ── Tier 2: WebLLM (via existing CortexLocalAgent) ─────────────────
@@ -128,56 +115,46 @@
     }).join('\n\n');
     try {
       var res = await agent.respond(combined);
-      return typeof res === 'string' && res.trim() ? res : null;
-    } catch (e) {
-      return null;
-    }
+      return (typeof res === 'string' && res.trim()) ? res : null;
+    } catch (e) { return null; }
   }
 
   // ── The shim itself ────────────────────────────────────────────────
   async function complete(opts) {
-    var messages = opts && opts.messages || [];
+    var messages = (opts && opts.messages) || [];
 
     // Server LLM (preferred for production)
     var fromServer = await serverComplete(messages);
-    if (fromServer) {
-      lastTier = 'server';
-      return fromServer;
-    }
+    if (fromServer) { lastTier = 'server'; return fromServer; }
 
     // Local WebLLM
     var fromLocal = await webllmComplete(messages);
-    if (fromLocal) {
-      lastTier = 'webllm';
-      return fromLocal;
-    }
+    if (fromLocal) { lastTier = 'webllm'; return fromLocal; }
 
     // Deterministic last-resort: extract any text from the last user message,
     // hand it to the deterministic engine. Callers all wrap this in try/catch
     // and have their own JSON-failure fallbacks, so a usable string is enough.
     try {
       var last = messages[messages.length - 1] || {};
-      var q = typeof last.content === 'string' ? last.content : (last.content || []).filter(function (p) {
-        return p && p.type === 'text';
-      }).map(function (p) {
-        return p.text;
-      }).join(' ');
+      var q = typeof last.content === 'string' ? last.content :
+        (last.content || []).filter(function (p) { return p && p.type === 'text'; }).map(function (p) { return p.text; }).join(' ');
       if (window.CortexLocalAgent) {
         // Prefer the deterministic engine directly — calling .respond() here
         // would re-enter window.claude.complete (the shim) and loop.
-        var det = typeof CortexLocalAgent.localReason === 'function' ? CortexLocalAgent.localReason(q) : null;
-        if (typeof det === 'string' && det.trim()) {
-          lastTier = 'deterministic';
-          return det;
-        }
+        var det = (typeof CortexLocalAgent.localReason === 'function')
+          ? CortexLocalAgent.localReason(q)
+          : null;
+        if (typeof det === 'string' && det.trim()) { lastTier = 'deterministic'; return det; }
       }
     } catch (e) {}
+
     throw new Error('LLM unavailable: no local tier responded');
   }
 
   // ── Install ────────────────────────────────────────────────────────
   var nativeClaude = window.claude;
   var nativeComplete = nativeClaude && nativeClaude.complete;
+
   function installShim() {
     window.claude = window.claude || {};
     window.claude.complete = complete;
@@ -190,38 +167,32 @@
   }
 
   // Decide based on MODE
-  if (MODE === 'local') installShim();else if (MODE === 'cloud') {/* keep native if present */} else {
-    // 'auto'
+  if (MODE === 'local') installShim();
+  else if (MODE === 'cloud') { /* keep native if present */ }
+  else { // 'auto'
     if (!nativeComplete) installShim(); // no native: install local
     // else: native is present (prototype env) — leave it
   }
+
   window.CortexLLM = {
     useLocal: function () {
-      try {
-        localStorage.setItem('cortexx_llm_mode', 'local');
-      } catch (e) {}
+      try { localStorage.setItem('cortexx_llm_mode', 'local'); } catch (e) {}
       installShim();
     },
     useCloud: function () {
-      try {
-        localStorage.setItem('cortexx_llm_mode', 'cloud');
-      } catch (e) {}
+      try { localStorage.setItem('cortexx_llm_mode', 'cloud'); } catch (e) {}
       restoreNative();
     },
     useAuto: function () {
-      try {
-        localStorage.setItem('cortexx_llm_mode', 'auto');
-      } catch (e) {}
-      if (!nativeComplete) installShim();else restoreNative();
+      try { localStorage.setItem('cortexx_llm_mode', 'auto'); } catch (e) {}
+      if (!nativeComplete) installShim(); else restoreNative();
     },
     setApiBase: function (url) {
       API_BASE = String(url || '').replace(/\/+$/, '');
-      try {
-        localStorage.setItem('cortexx_llm_api_base', API_BASE);
-      } catch (e) {}
+      try { localStorage.setItem('cortexx_llm_api_base', API_BASE); } catch (e) {}
     },
     status: function () {
-      var st = window.CortexLocalAgent && window.CortexLocalAgent.status && window.CortexLocalAgent.status() || {};
+      var st = (window.CortexLocalAgent && window.CortexLocalAgent.status && window.CortexLocalAgent.status()) || {};
       return {
         mode: MODE,
         active: window.claude && window.claude.complete === complete ? 'shim' : 'native',
@@ -229,9 +200,9 @@
         hasNative: !!nativeComplete,
         hasWebLLM: !!st.webllm,
         hasWebGPU: !!st.webgpu,
-        apiBase: API_BASE || '(same-origin)'
+        apiBase: API_BASE || '(same-origin)',
       };
     },
-    complete: complete // exposed for testing
+    complete: complete, // exposed for testing
   };
 })();

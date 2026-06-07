@@ -1,5 +1,3 @@
-// Cortexx — Phase 34: Real charts in Reports (SVG, no deps)
-
 function LineChart({
   data,
   width = 320,
@@ -24,67 +22,67 @@ function LineChart({
   const points = data.map((d, i) => `${xFor(i)},${yFor(d.v)}`).join(' ');
   const area = `${xFor(0)},${padding.top + h} ${points} ${xFor(data.length - 1)},${padding.top + h}`;
   const ticks = [0, 0.25, 0.5, 0.75, 1].map(p => min + range * p);
-  return /*#__PURE__*/React.createElement("svg", {
+  return React.createElement("svg", {
     width: width,
     height: height,
     viewBox: `0 0 ${width} ${height}`
-  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
+  }, React.createElement("defs", null, React.createElement("linearGradient", {
     id: "areaG",
     x1: "0",
     x2: "0",
     y1: "0",
     y2: "1"
-  }, /*#__PURE__*/React.createElement("stop", {
+  }, React.createElement("stop", {
     offset: "0%",
     stopColor: color,
     stopOpacity: "0.35"
-  }), /*#__PURE__*/React.createElement("stop", {
+  }), React.createElement("stop", {
     offset: "100%",
     stopColor: color,
     stopOpacity: "0"
-  }))), ticks.reverse().map((t, i) => /*#__PURE__*/React.createElement("g", {
+  }))), ticks.reverse().map((t, i) => React.createElement("g", {
     key: i
-  }, /*#__PURE__*/React.createElement("line", {
+  }, React.createElement("line", {
     x1: padding.left,
     x2: padding.left + w,
     y1: yFor(t),
     y2: yFor(t),
     stroke: "rgba(255,255,255,0.05)",
     strokeWidth: "0.5"
-  }), /*#__PURE__*/React.createElement("text", {
+  }), React.createElement("text", {
     x: padding.left - 6,
     y: yFor(t) + 3,
     fontSize: "9",
     fontFamily: "SF Mono, monospace",
     fill: "rgba(142,168,197,0.6)",
     textAnchor: "end"
-  }, "\xA3", (t / 1000).toFixed(0), "k"))), /*#__PURE__*/React.createElement("polyline", {
+  }, "\xA3", (t / 1000).toFixed(0), "k"))), React.createElement("polyline", {
     points: area,
     fill: "url(#areaG)",
     stroke: "none"
-  }), /*#__PURE__*/React.createElement("polyline", {
+  }), React.createElement("polyline", {
     points: points,
     fill: "none",
     stroke: color,
     strokeWidth: "2",
     strokeLinecap: "round",
     strokeLinejoin: "round"
-  }), data.map((d, i) => /*#__PURE__*/React.createElement("g", {
+  }), data.map((d, i) => React.createElement("g", {
     key: i
-  }, i % Math.ceil(data.length / 6) === 0 && /*#__PURE__*/React.createElement("text", {
+  }, i % Math.ceil(data.length / 6) === 0 && React.createElement("text", {
     x: xFor(i),
     y: height - 6,
     fontSize: "9",
     fontFamily: "SF Mono, monospace",
     fill: "rgba(82,116,154,0.8)",
     textAnchor: "middle"
-  }, d.l), i === data.length - 1 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
+  }, d.l), i === data.length - 1 && React.createElement(React.Fragment, null, React.createElement("circle", {
     cx: xFor(i),
     cy: yFor(d.v),
     r: "10",
     fill: color,
     opacity: "0.2"
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: xFor(i),
     cy: yFor(d.v),
     r: "4",
@@ -107,7 +105,7 @@ function BarChart({
   const max = Math.max(...data.map(d => d.v));
   const barW = w / data.length * 0.6;
   const gap = w / data.length * 0.4;
-  return /*#__PURE__*/React.createElement("svg", {
+  return React.createElement("svg", {
     width: width,
     height: height,
     viewBox: `0 0 ${width} ${height}`
@@ -115,9 +113,9 @@ function BarChart({
     const bh = d.v / max * h;
     const x = padding.left + i * (barW + gap) + gap / 2;
     const y = padding.top + h - bh;
-    return /*#__PURE__*/React.createElement("g", {
+    return React.createElement("g", {
       key: i
-    }, /*#__PURE__*/React.createElement("rect", {
+    }, React.createElement("rect", {
       x: x,
       y: y,
       width: barW,
@@ -125,7 +123,7 @@ function BarChart({
       rx: 4,
       fill: d.c || '#2563eb',
       opacity: "0.85"
-    }), /*#__PURE__*/React.createElement("text", {
+    }), React.createElement("text", {
       x: x + barW / 2,
       y: y - 4,
       fontSize: "9",
@@ -133,7 +131,7 @@ function BarChart({
       fill: "rgba(238,243,250,0.9)",
       textAnchor: "middle",
       fontWeight: "700"
-    }, "\xA3", (d.v / 1000).toFixed(0), "k"), /*#__PURE__*/React.createElement("text", {
+    }, "\xA3", (d.v / 1000).toFixed(0), "k"), React.createElement("text", {
       x: x + barW / 2,
       y: height - 12,
       fontSize: "9",
@@ -143,13 +141,10 @@ function BarChart({
     }, d.l));
   }));
 }
-
-// Replace the Reports KPI strip with real charts after the original strip
 function ReportsCharts({
   accent
 }) {
   const projects = useDB('projects');
-  // Mock 12-week cashflow trend (would derive from real data in production)
   const cashTrend = [{
     l: 'Wk6',
     v: 12000
@@ -192,30 +187,30 @@ function ReportsCharts({
     v: p.value,
     c: STATUS_C[p.status] || accent
   }));
-  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Section, {
+  return React.createElement(React.Fragment, null, React.createElement(Section, {
     title: "Cashflow \xB7 last 12 weeks"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 12,
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement(LineChart, {
+  }, React.createElement(LineChart, {
     data: cashTrend,
     width: 320,
     height: 140,
     color: T.green
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "Project values"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 12,
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement(BarChart, {
+  }, React.createElement(BarChart, {
     data: projBars,
     width: 320,
     height: 160
