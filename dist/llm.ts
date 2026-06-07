@@ -11,10 +11,15 @@
  *   ollama serve              # if not auto-started
  */
 
-const OLLAMA_BASE_URL = process.env.OLLAMA_BASE_URL || 'http://localhost:11434'
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:3b'
+const OLLAMA_BASE_URL = (process.env.OLLAMA_BASE_URL || 'http://localhost:11434').replace(/\/+$/, '')
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5-coder:7b'
+const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'llava'
+
+const LLAMA_SERVER_BASE_URL = (process.env.LLAMA_SERVER_BASE_URL || '').replace(/\/+$/, '')
+const LLAMA_SERVER_MODEL = process.env.LLAMA_SERVER_MODEL || 'default'
 
 const REQUEST_TIMEOUT_MS = 60_000
+const VISION_TIMEOUT_MS = 120_000
 const NUM_PREDICT_MAX = 1024
 
 export interface ChatMessage {
@@ -79,32 +84,75 @@ export interface ChatOptions {
   timeoutMs?: number
 }
 
-export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Promise<LlmResponse> {
-  const url = `${OLLAMA_BASE_URL.replace(/\/+$/, '')}/api/chat`
+async function fetchWithTimeout(url: string, body: any, timeoutMs: number, signal?: AbortSignal) {
   const controller = new AbortController()
-  const timeoutMs = opts.timeoutMs ?? REQUEST_TIMEOUT_MS
   const timeout = setTimeout(() => controller.abort(), timeoutMs)
-  const model = opts.model || OLLAMA_MODEL
-  let res: Response
+  if (signal) signal.addEventListener('abort', () => controller.abort())
+
   try {
-    res = await fetch(url, {
+    const res = await fetch(url, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        model,
-        messages,
-        stream: false,
-        ...(opts.json ? { format: 'json' } : {}),
-        // Bound wall time per request. Ollama doesn't honour upstream
-        // cancellation in non-stream mode, so capping num_predict is the
-        // only way to stop a long generation from holding the model slot
-        // after the client times out.
-        options: { num_predict: NUM_PREDICT_MAX },
-      }),
+      body: JSON.stringify(body),
       signal: controller.signal,
     })
-  } catch (err) {
+    return res
+  } finally {
     clearTimeout(timeout)
+  }
+}
+
+export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Promise<LlmResponse> {
+  const hasImages = messages.some(m => m.images && m.images.length > 0)
+  const timeoutMs = opts.timeoutMs ?? (hasImages ? VISION_TIMEOUT_MS : REQUEST_TIMEOUT_MS)
+  
+  // Routing logic:
+  // 1. If images are present -> Use Ollama with Vision model (llama-server support for vision varies)
+  // 2. If NO images and Native Llama-Server is configured -> Use Llama-Server (typically faster)
+  // 3. Fallback -> Use Ollama with default model
+
+  let url: string
+  let body: any
+  let model: string
+  let isOaiCompat = false
+
+  if (hasImages) {
+    url = `${OLLAMA_BASE_URL}/api/chat`
+    model = opts.model || OLLAMA_VISION_MODEL
+    body = {
+      model,
+      messages,
+      stream: false,
+      ...(opts.json ? { format: 'json' } : {}),
+      options: { num_predict: NUM_PREDICT_MAX },
+    }
+  } else if (LLAMA_SERVER_BASE_URL) {
+    url = `${LLAMA_SERVER_BASE_URL}/v1/chat/completions`
+    model = opts.model || LLAMA_SERVER_MODEL
+    isOaiCompat = true
+    body = {
+      model,
+      messages: messages.map(m => ({ role: m.role, content: m.content })),
+      stream: false,
+      ...(opts.json ? { response_format: { type: 'json_object' } } : {}),
+      max_tokens: NUM_PREDICT_MAX,
+    }
+  } else {
+    url = `${OLLAMA_BASE_URL}/api/chat`
+    model = opts.model || OLLAMA_MODEL
+    body = {
+      model,
+      messages,
+      stream: false,
+      ...(opts.json ? { format: 'json' } : {}),
+      options: { num_predict: NUM_PREDICT_MAX },
+    }
+  }
+
+  let res: Response
+  try {
+    res = await fetchWithTimeout(url, body, timeoutMs)
+  } catch (err) {
     if (err instanceof Error && err.name === 'AbortError') {
       throw new LlmUnavailableError(`Local LLM timed out after ${Math.round(timeoutMs / 1000)}s. The model may be too large or the server is busy.`)
     }
@@ -112,7 +160,6 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
       `Cannot reach Ollama at ${OLLAMA_BASE_URL}. Is it running? Install: curl -fsSL https://ollama.com/install.sh | sh, then pull a model: ollama pull ${model}`
     )
   }
-  clearTimeout(timeout)
 
   if (!res.ok) {
     const text = await res.text().catch(() => '')
@@ -123,22 +170,24 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
     if (res.status === 404 && /not found/i.test(text)) {
       throw new LlmUnavailableError(`Model "${model}" not installed. Run: ollama pull ${model}`)
     }
-    throw new LlmUnavailableError(`Ollama returned HTTP ${res.status}: ${text.slice(0, 200)}`)
+    throw new LlmUnavailableError(`LLM Runtime returned HTTP ${res.status}: ${text.slice(0, 200)}`)
   }
 
-  let data: { message?: { role: string; content: string }; model?: string; total_duration?: number; eval_count?: number }
+  let data: any
   try {
     data = await res.json()
   } catch {
-    // Non-JSON body (e.g. proxy returned an HTML maintenance page with a 200).
-    throw new LlmUnavailableError('Ollama returned a non-JSON response. A reverse proxy may be intercepting the request.')
+    throw new LlmUnavailableError('LLM Runtime returned a non-JSON response.')
   }
-  const content = data.message?.content || ''
+
+  const content = isOaiCompat 
+    ? data.choices?.[0]?.message?.content 
+    : data.message?.content || ''
   if (!content) throw new LlmEmptyResponseError()
 
   return {
     content,
-    model: data.model || OLLAMA_MODEL,
+    model: data.model || model,
     totalDurationMs: data.total_duration ? Math.round(data.total_duration / 1_000_000) : undefined,
     evalCount: data.eval_count,
   }
