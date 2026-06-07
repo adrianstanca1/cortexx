@@ -258,11 +258,19 @@ jobs:
             # Sanitize the remote URL after fetch so the token isn't persisted on disk
             git remote set-url origin "https://github.com/adrianstanca1/cortexx.git"
 
-            # Build URL for subsequent steps
-            DB_URL="postgresql://cortexx:***@$PG_IP:5432/cortexx"
+            # Install dependencies before running any prisma commands
+            # NOTE: redirect to log files instead of piping to tail — pipefail can
+            # mask failures in some shell modes, and we need the script to abort
+            # loudly on real errors.
+            npm ci --include=dev > /tmp/cortexx-npm-ci.log 2>&1
+            tail -5 /tmp/cortexx-npm-ci.log
+
+            # Build URL for subsequent steps (must be URL-encoded for Prisma)
+            DB_PASS_ENCODED=$(node -e "console.log(encodeURIComponent(process.argv[1]))" "$DB_PASS")
+            DB_URL="postgresql://cortexx:$DB_PASS_ENCODED@$PG_IP:5432/cortexx"
 
             # ─── 5b. Migration Management ─────────────────────────────────
-            # Must run after 'cd $APP_DIR' so the Prisma schema is available.
+            # Must run after 'npm ci' so we use the pinned Prisma version.
             MIGRATION_TABLE=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
 
             if [ "$MIGRATION_TABLE" != "_prisma_migrations" ]; then
