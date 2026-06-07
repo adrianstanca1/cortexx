@@ -1,0 +1,10 @@
+{
+  "version": "1.0",
+  "purpose": "Sequential Memory Indexing",
+  "indexes": [
+    "decisions",
+    "architecture",
+    "milestones",
+    "active_context"
+  ]
+}
