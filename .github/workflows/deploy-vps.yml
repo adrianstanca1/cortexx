@@ -272,32 +272,29 @@ jobs:
             # ─── 5b. Migration Management ─────────────────────────────────
             # Must run after 'npm ci' so we use the pinned Prisma version.
             MIGRATION_TABLE=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
+            TABLE_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | xargs)
 
-            if [ "$MIGRATION_TABLE" != "_prisma_migrations" ]; then
-              # If the database is non-empty but the migrations table is missing,
-              # we must baseline it to avoid P3005 errors during deploy.
-              TABLE_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | xargs)
-              if [ -n "$TABLE_COUNT" ] && [ "$TABLE_COUNT" -gt 0 ]; then
-                echo "↻ Database is not empty but _prisma_migrations is missing — baselining all existing migrations"
-                # Mark ALL existing migrations as applied to match current DB state
-                for m in $(ls prisma/migrations/ | grep '^[0-9]'); do
-                  echo "  Baselining $m..."
+            # If the database is non-empty but the migrations table is missing or suspiciously behind,
+            # we baseline existing migrations to avoid P3005/P3018 errors.
+            if [ -n "$TABLE_COUNT" ] && [ "$TABLE_COUNT" -gt 5 ]; then
+              echo "↻ Non-empty database detected ($TABLE_COUNT tables). Ensuring all existing migrations are marked as applied."
+              for m in $(ls prisma/migrations/ | grep '^[0-9]'); do
+                # Check if this specific migration is already in the table and finished
+                ALREADY_APPLIED=""
+                if [ "$MIGRATION_TABLE" = "_prisma_migrations" ]; then
+                  ALREADY_APPLIED=$(sudo -u postgres psql cortexx -tAc "SELECT 1 FROM _prisma_migrations WHERE migration_name = '$m' AND finished_at IS NOT NULL" 2>/dev/null || echo "")
+                fi
+
+                if [ "$ALREADY_APPLIED" != "1" ]; then
+                  echo "  Baselining/Resolving $m..."
                   DATABASE_URL="$DB_URL" npx prisma migrate resolve --applied "$m" || true
-                done
-              fi
-            else
-              # ─── 3c. Self-heal stuck Prisma migrations ─────────────
-              # If a migration is marked as started but not finished, Prisma blocks.
-              # We mark these as applied to reconcile with the DB state.
-              STUCK_MIGRATIONS=$(sudo -u postgres psql cortexx -tAc "SELECT migration_name FROM _prisma_migrations WHERE finished_at IS NULL" 2>/dev/null | xargs)
-              if [ -n "$STUCK_MIGRATIONS" ]; then
-                for m in $STUCK_MIGRATIONS; do
-                  echo "↻ Marking stuck migration $m as applied..."
-                  DATABASE_URL="$DB_URL" npx prisma migrate resolve --applied "$m" || true
-                done
-                # Ensure no NULLs remain that would block the deploy
-                sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL"
-              fi
+                fi
+              done
+            fi
+
+            # Ensure no 'stuck' (NULL finished_at) rows remain in the table
+            if [ "$MIGRATION_TABLE" = "_prisma_migrations" ]; then
+               sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL" >/dev/null 2>&1 || true
             fi
 
             cat > $APP_DIR/.env.production << ENV
