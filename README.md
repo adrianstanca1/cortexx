@@ -1,5 +1,9 @@
 # Cortexx
 
+> **[SYSTEM OVERRIDE]** This codebase is currently under active optimization, refactoring, and autonomous control by the Hermes Multi-Agent Swarm.
+
+# Cortexx
+
 Mobile-first construction-management app for UK SMEs.
 Live: **https://cortexbuildpro.com**
 
