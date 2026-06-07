@@ -278,8 +278,12 @@ jobs:
               # we must baseline it to avoid P3005 errors during deploy.
               TABLE_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | xargs)
               if [ -n "$TABLE_COUNT" ] && [ "$TABLE_COUNT" -gt 0 ]; then
-                echo "↻ Database is not empty but _prisma_migrations is missing — baselining"
-                DATABASE_URL="$DB_URL" npx prisma migrate resolve --applied 20260523034123_init || echo "⚠ Baselining failed — manual intervention may be required"
+                echo "↻ Database is not empty but _prisma_migrations is missing — baselining all existing migrations"
+                # Mark ALL existing migrations as applied to match current DB state
+                for m in $(ls prisma/migrations/ | grep '^[0-9]'); do
+                  echo "  Baselining $m..."
+                  DATABASE_URL="$DB_URL" npx prisma migrate resolve --applied "$m" || true
+                done
               fi
             else
               # Clear failed migrations (finished_at = NULL) that block deploy.
