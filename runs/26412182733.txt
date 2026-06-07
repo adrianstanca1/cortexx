@@ -1,0 +1,104 @@
+run_id: 26412182733
+exit_code: 0
+completed_at: 2026-05-25T17:23:25Z
+command: |
+  echo "--- HEAD (should match latest main) ---"
+  cd /opt/cortexx && git log -1 --oneline
+  echo
+  echo "--- /opt/cortexx contents ---"
+  ls -la /opt/cortexx | head -15
+  echo
+  echo "--- pm2 (8 workers expected) ---"
+  pm2 jlist | jq -r "[.[]|.pm2_env.status]|group_by(.)|map({status:.[0],n:length})"
+  echo
+  echo "--- env has all expected keys ---"
+  for k in DATABASE_URL NEXTAUTH_SECRET REDIS_URL VAPID_PUBLIC_KEY CRON_SECRET MULTITENANT_ENFORCED; do
+    if grep -q "^${k}=" /opt/cortexx/.env.production 2>/dev/null; then echo "  $k = set"; else echo "  $k = MISSING"; fi
+  done
+  echo
+  echo "--- /etc/cron.d/cortexx-cron present after fresh deploy? ---"
+  ls -la /etc/cron.d/cortexx-cron 2>&1
+  echo
+  echo "--- migrations applied (should be 29) ---"
+  export DATABASE_URL=$(grep ^DATABASE_URL /opt/cortexx/.env.production | cut -d= -f2-)
+  psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM _prisma_migrations" 2>&1
+  echo
+  echo "--- cron smoke test ---"
+  SECRET=$(grep ^CRON_SECRET= /opt/cortexx/.env.production | cut -d= -f2-)
+  curl -sS -o /tmp/c.json -w "  cron HTTP %{http_code}\n" -X POST -H "Authorization: Bearer $SECRET" http://localhost:3010/api/cron/overdue-invoices
+  head -c 200 /tmp/c.json; echo
+  echo
+  echo "--- key public + auth routes ---"
+  for r in / /marketing /pricing /privacy /robots.txt /status /dashboard /apps /chat; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3010$r)
+    echo "  GET $r -> $code"
+  done
+  echo
+  echo "--- /api/health ---"
+  curl -s -o /dev/null -w "  HTTP %{http_code} in %{time_total}s\n" http://localhost:3010/api/health
+  echo
+  echo "--- /opt/cortexx new size ---"
+  du -sh /opt/cortexx
+---
+--- HEAD (should match latest main) ---
+5f17795 docs(launch): RUNBOOK — operational handover for cortexbuildpro.com
+
+--- /opt/cortexx contents ---
+total 652
+drwxr-xr-x  20 root root   4096 May 25 17:21 .
+drwxr-xr-x   6 root root   4096 May 25 17:21 ..
+drwxr-xr-x   3 root root   4096 May 25 17:21 .claude
+-rw-r--r--   1 root root   8611 May 25 17:21 .env.example
+-rw-------   1 root root    503 May 25 17:21 .env.production
+drwxr-xr-x   8 root root   4096 May 25 17:21 .git
+drwxr-xr-x   3 root root   4096 May 25 17:21 .github
+-rw-r--r--   1 root root    304 May 25 17:21 .gitignore
+drwxr-xr-x   9 root root   4096 May 25 17:22 .next
+-rw-r--r--   1 root root  16219 May 25 17:21 CHANGELOG.md
+-rw-r--r--   1 root root   5123 May 25 17:21 FINAL_REVIEW.md
+-rw-r--r--   1 root root   8849 May 25 17:21 README.md
+-rw-r--r--   1 root root  48287 May 25 17:21 ROADMAP.md
+drwxr-xr-x  98 root root   4096 May 25 17:21 app
+
+--- pm2 (8 workers expected) ---
+[
+  {
+    "status": "online",
+    "n": 8
+  }
+]
+
+--- env has all expected keys ---
+  DATABASE_URL = set
+  NEXTAUTH_SECRET = set
+  REDIS_URL = set
+  VAPID_PUBLIC_KEY = set
+  CRON_SECRET = MISSING
+  MULTITENANT_ENFORCED = set
+
+--- /etc/cron.d/cortexx-cron present after fresh deploy? ---
+-rw-r--r-- 1 root root 656 May 25 17:21 /etc/cron.d/cortexx-cron
+
+--- migrations applied (should be 29) ---
+29
+
+--- cron smoke test ---
+  cron HTTP 503
+{"error":"CRON_SECRET not configured"}
+
+--- key public + auth routes ---
+  GET / -> 200
+  GET /marketing -> 200
+  GET /pricing -> 200
+  GET /privacy -> 200
+  GET /robots.txt -> 200
+  GET /status -> 200
+  GET /dashboard -> 307
+  GET /apps -> 307
+  GET /chat -> 307
+
+--- /api/health ---
+  HTTP 200 in 0.010975s
+
+--- /opt/cortexx new size ---
+1.1G	/opt/cortexx

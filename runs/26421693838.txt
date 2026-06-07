@@ -1,0 +1,44 @@
+run_id: 26421693838
+exit_code: 0
+completed_at: 2026-05-25T22:10:22Z
+command: |
+  echo "--- pm2 + nginx baseline ---"
+  pm2 flush cortexx >/dev/null 2>&1
+  echo "flushed at $(date -u +%H:%M:%S)"
+  echo
+  echo "--- wait 90s, then sample for any 500 responses or tenancy errors ---"
+  sleep 90
+  echo "checking at $(date -u +%H:%M:%S)"
+  echo
+  echo "--- nginx 5xx responses in the last 90s ---"
+  awk -v cutoff="$(date -u -d '90 seconds ago' +'%d/%b/%Y:%H:%M:%S')" '$4 > "["cutoff' /var/log/nginx/access.log 2>/dev/null | grep -E '" 5[0-9][0-9] ' | tail -20
+  echo
+  echo "--- last 10 nginx access entries (any code) ---"
+  tail -10 /var/log/nginx/access.log 2>/dev/null
+  echo
+  echo "--- pm2 error log (since flush) ---"
+  pm2 logs cortexx --err --nostream --lines 40 2>/dev/null | tail -40
+---
+--- pm2 + nginx baseline ---
+flushed at 22:08:50
+
+--- wait 90s, then sample for any 500 responses or tenancy errors ---
+checking at 22:10:20
+
+--- nginx 5xx responses in the last 90s ---
+
+--- last 10 nginx access entries (any code) ---
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /dashboard HTTP/2.0" 307 57 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /api/dashboard HTTP/2.0" 401 24 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /api/events/stream HTTP/2.0" 401 24 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /pricing HTTP/2.0" 200 50948 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /onboarding HTTP/2.0" 307 58 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /legacy/Cortexx-standalone.html HTTP/2.0" 200 1737685 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /api/health HTTP/2.0" 200 236 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /legacy/Cortexx-standalone.html HTTP/1.1" 200 1737685 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET / HTTP/2.0" 200 1737685 "-" "curl/8.5.0"
+72.62.132.43 - - [25/May/2026:22:03:51 +0000] "GET /sw.js HTTP/2.0" 200 4270 "-" "curl/8.5.0"
+
+--- pm2 error log (since flush) ---
+[TAILING] Tailing last 40 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 40 lines:

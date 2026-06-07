@@ -1,0 +1,88 @@
+run_id: 26414278942
+exit_code: 0
+completed_at: 2026-05-25T18:23:17Z
+command: |
+  echo "--- recent pm2 errors (last 200 lines) ---"
+  pm2 logs cortexx --err --nostream --lines 200 2>/dev/null | tail -100
+  echo
+  echo "--- pm2 out log (last 50) ---"
+  pm2 logs cortexx --out --nostream --lines 50 2>/dev/null | tail -30
+---
+--- recent pm2 errors (last 200 lines) ---
+[TAILING] Tailing last 200 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 200 lines:
+0|cortexx  | Error: [tenancy] Invoice.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Invoice.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Rfi.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Variation.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Certification.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | [risks] GET failed: Error: [tenancy] Risk.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Snag.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | [tenders] GET failed: Error: [tenancy] Tender.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | [toolbox-talks] GET failed: Error: [tenancy] ToolboxTalk.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | [inspections] GET failed: Error: [tenancy] Inspection.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] SafetyIncident.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | [rams] GET failed: Error: [tenancy] Rams.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Lead.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Observation.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | [meetings] GET failed: Error: [tenancy] Meeting.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Invoice.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | [maintenance] GET failed: Error: [tenancy] MaintenanceSchedule.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] TimeEntry.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | [permits] GET failed: Error: [tenancy] Permit.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+0|cortexx  | Error: [tenancy] Project.findMany called without org context. Wrap with bypassTenancy() if this is intentional (cron / system task).
+0|cortexx  |     at Array.$allOperations (lib/tenancy.ts:123:17)
+
+
+--- pm2 out log (last 50) ---
+0|cortexx  | ✓ Ready in 206ms
+0|cortexx  | ▲ Next.js 16.2.6
+0|cortexx  | - Local:         http://localhost:3010
+0|cortexx  | - Network:       http://72.62.132.43:3010
+0|cortexx  | ✓ Ready in 240ms
+0|cortexx  | ▲ Next.js 16.2.6
+0|cortexx  | - Local:         http://localhost:3010
+0|cortexx  | - Network:       http://72.62.132.43:3010
+0|cortexx  | ✓ Ready in 249ms
+0|cortexx  | ▲ Next.js 16.2.6
+0|cortexx  | ▲ Next.js 16.2.6
+0|cortexx  | - Local:         http://localhost:3010
+0|cortexx  | - Network:       http://72.62.132.43:3010
+0|cortexx  | ✓ Ready in 212ms
+0|cortexx  | - Local:         http://localhost:3010
+0|cortexx  | - Network:       http://72.62.132.43:3010
+0|cortexx  | ✓ Ready in 244ms
+0|cortexx  | ▲ Next.js 16.2.6
+0|cortexx  | - Local:         http://localhost:3010
+0|cortexx  | - Network:       http://72.62.132.43:3010
+0|cortexx  | ✓ Ready in 231ms
+0|cortexx  | ▲ Next.js 16.2.6
+0|cortexx  | - Local:         http://localhost:3010
+0|cortexx  | - Network:       http://72.62.132.43:3010
+0|cortexx  | ✓ Ready in 322ms
+0|cortexx  | ▲ Next.js 16.2.6
+0|cortexx  | - Local:         http://localhost:3010
+0|cortexx  | - Network:       http://72.62.132.43:3010
+0|cortexx  | ✓ Ready in 222ms
+

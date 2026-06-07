@@ -1,0 +1,64 @@
+run_id: 26410367418
+exit_code: 0
+completed_at: 2026-05-25T16:31:59Z
+command: |
+  set -e
+  echo "--- prod HEAD ---"
+  cd /opt/cortexx && git log -1 --oneline
+  echo
+  echo "--- all 5 v1.1 migrations applied ---"
+  export DATABASE_URL=$(grep ^DATABASE_URL /opt/cortexx/.env.production | cut -d= -f2-)
+  psql "$DATABASE_URL" -tAc "SELECT migration_name FROM _prisma_migrations WHERE migration_name LIKE '20260526%' ORDER BY migration_name"
+  echo
+  echo "--- all v1.1 tables present ---"
+  for t in ProjectBookmark ActionPlan Conflict Cis300Return Conversation ChatMessage; do
+    cnt=$(psql "$DATABASE_URL" -tAc "SELECT COUNT(*) FROM \"$t\"" 2>&1)
+    printf "  %-16s %s rows\n" "$t" "$cnt"
+  done
+  echo
+  echo "--- v1.1 routes respond 200 with auth gate ---"
+  for r in /action-plans /conflicts /cis300 /chat /tomorrow /my-day /roles; do
+    code=$(curl -s -o /dev/null -w "%{http_code}" http://localhost:3010$r)
+    echo "  GET $r -> $code"
+  done
+  echo
+  echo "--- pm2 + health ---"
+  pm2 jlist | jq -r "[.[]|.pm2_env.status]|group_by(.)|map({status:.[0],n:length})"
+  curl -s -o /dev/null -w "  /api/health %{http_code} in %{time_total}s\n" http://localhost:3010/api/health
+---
+--- prod HEAD ---
+c539fec docs: v1.1.0 complete — CHANGELOG + ROADMAP mark all 10 items shipped
+
+--- all 5 v1.1 migrations applied ---
+20260526000000_add_project_bookmarks
+20260526010000_add_share_token_expiry
+20260526020000_add_action_plans
+20260526030000_add_conflicts
+20260526040000_add_cis300_returns
+20260526050000_add_team_chat
+
+--- all v1.1 tables present ---
+  ProjectBookmark  0 rows
+  ActionPlan       0 rows
+  Conflict         0 rows
+  Cis300Return     0 rows
+  Conversation     0 rows
+  ChatMessage      0 rows
+
+--- v1.1 routes respond 200 with auth gate ---
+  GET /action-plans -> 307
+  GET /conflicts -> 307
+  GET /cis300 -> 307
+  GET /chat -> 307
+  GET /tomorrow -> 307
+  GET /my-day -> 307
+  GET /roles -> 307
+
+--- pm2 + health ---
+[
+  {
+    "status": "online",
+    "n": 8
+  }
+]
+  /api/health 200 in 0.014095s

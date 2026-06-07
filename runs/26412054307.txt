@@ -1,0 +1,67 @@
+run_id: 26412054307
+exit_code: 0
+completed_at: 2026-05-25T17:19:46Z
+command: |
+  set -ex
+  echo "--- locate everything ---"
+  ls -la /opt/ 2>/dev/null | head -10
+  find /opt -maxdepth 2 -name "cortexx-db-password*" 2>/dev/null
+  find /opt -maxdepth 2 -name ".env.production" 2>/dev/null
+  echo
+  echo "--- stash directory ---"
+  ls -la /opt/cortexx-rebuild-stash/ 2>/dev/null || echo "(no stash yet)"
+  echo
+  echo "--- copy env, robustly ---"
+  mkdir -p /opt/cortexx-rebuild-stash
+  if [ -e /opt/cortexx/.env.production ]; then
+    install -m 0600 /opt/cortexx/.env.production /opt/cortexx-rebuild-stash/.env.production
+    echo "env stashed: $(wc -c < /opt/cortexx-rebuild-stash/.env.production) bytes"
+  else
+    echo "ERROR: env file not at /opt/cortexx/.env.production"
+    exit 1
+  fi
+  if [ -e /opt/cortexx-db-password ]; then
+    install -m 0600 /opt/cortexx-db-password /opt/cortexx-rebuild-stash/cortexx-db-password
+  fi
+  ls -la /opt/cortexx-rebuild-stash/
+---
+--- locate everything ---
++ echo '--- locate everything ---'
++ ls -la /opt/
++ head -10
+total 32
+drwxr-xr-x  6 root root  4096 May 25 17:18 .
+drwxr-xr-x 23 root root  4096 May 25 16:27 ..
+drwxr-xr-x 20 root root  4096 May 25 17:10 cortexx
+drwxr-xr-x  2 root root 12288 May 25 17:10 cortexx-backups
+drwxr-xr-x  2 root root  4096 May 25 17:18 cortexx-rebuild-stash
+drwxr-xr-x 17 root root  4096 May 25 17:10 whisper.cpp
++ find /opt -maxdepth 2 -name 'cortexx-db-password*'
++ find /opt -maxdepth 2 -name .env.production
+/opt/cortexx-rebuild-stash/.env.production
+/opt/cortexx/.env.production
+
+--- stash directory ---
++ echo
++ echo '--- stash directory ---'
++ ls -la /opt/cortexx-rebuild-stash/
+total 12
+drwxr-xr-x 2 root root 4096 May 25 17:18 .
+drwxr-xr-x 6 root root 4096 May 25 17:18 ..
+-rw------- 1 root root  503 May 25 17:18 .env.production
+
+--- copy env, robustly ---
++ echo
++ echo '--- copy env, robustly ---'
+env stashed: 503 bytes
+total 12
+drwxr-xr-x 2 root root 4096 May 25 17:19 .
+drwxr-xr-x 6 root root 4096 May 25 17:18 ..
+-rw------- 1 root root  503 May 25 17:19 .env.production
++ mkdir -p /opt/cortexx-rebuild-stash
++ '[' -e /opt/cortexx/.env.production ']'
++ install -m 0600 /opt/cortexx/.env.production /opt/cortexx-rebuild-stash/.env.production
+++ wc -c
++ echo 'env stashed: 503 bytes'
++ '[' -e /opt/cortexx-db-password ']'
++ ls -la /opt/cortexx-rebuild-stash/

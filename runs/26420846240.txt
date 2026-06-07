@@ -1,0 +1,54 @@
+run_id: 26420846240
+exit_code: 0
+completed_at: 2026-05-25T21:40:54Z
+command: |
+  echo "--- prod HEAD ---"
+  cd /opt/cortexx && git log -1 --oneline
+  echo
+  echo "--- pm2 ---"
+  pm2 jlist 2>/dev/null | python3 -c "import json,sys;d=json.load(sys.stdin);print(f'{len(d)} workers up, restarts: {sum(p[\"pm2_env\"][\"restart_time\"] for p in d)}')"
+  echo
+  echo "--- external HTTPS reachability ---"
+  for r in / /api/health /dashboard /api/dashboard /api/events/stream /pricing /onboarding; do
+    code=$(curl -sk -o /dev/null -w "%{http_code}" "https://cortexbuildpro.com$r" --max-time 8)
+    echo "  $r -> $code"
+  done
+  echo
+  echo "--- /api/health body ---"
+  curl -sk https://cortexbuildpro.com/api/health --max-time 10
+  echo
+  echo
+  echo "--- pm2 flush + 30s wait + fresh errors ---"
+  pm2 flush cortexx >/dev/null 2>&1
+  sleep 30
+  pm2 logs cortexx --err --nostream --lines 30 2>/dev/null | tail -30
+  echo
+  echo "--- recent app stdout (last 20 lines, post-flush) ---"
+  pm2 logs cortexx --nostream --lines 20 2>/dev/null | tail -20
+---
+--- prod HEAD ---
+17f47ff sec: fix 7 ship-blocker tenancy / auth bugs found in deep audit
+
+--- pm2 ---
+8 workers up, restarts: 0
+
+--- external HTTPS reachability ---
+  / -> 200
+  /api/health -> 200
+  /dashboard -> 307
+  /api/dashboard -> 401
+  /api/events/stream -> 401
+  /pricing -> 200
+  /onboarding -> 307
+
+--- /api/health body ---
+{"status":"ok","checks":{"database":{"ok":true,"ms":13},"disk":{"ok":true,"free_gb":350.81},"memory":{"ok":true,"rss_mb":223.7},"app":{"ok":true,"ms":13}},"uptime":391.774490613,"version":"unknown","timestamp":"2026-05-25T21:40:23.066Z"}
+
+--- pm2 flush + 30s wait + fresh errors ---
+[TAILING] Tailing last 30 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 30 lines:
+
+--- recent app stdout (last 20 lines, post-flush) ---
+[TAILING] Tailing last 20 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-out.log last 20 lines:
+/root/.pm2/logs/cortexx-error.log last 20 lines:

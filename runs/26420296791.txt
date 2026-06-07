@@ -1,0 +1,41 @@
+run_id: 26420296791
+exit_code: 0
+completed_at: 2026-05-25T21:22:58Z
+command: |
+  echo "--- prod HEAD ---"
+  cd /opt/cortexx && git log -1 --oneline
+  echo
+  echo "--- pm2 workers ---"
+  pm2 jlist 2>/dev/null | python3 -c "import json,sys;d=json.load(sys.stdin);print(f'{len(d)} workers, all online' if all(p['pm2_env']['status']=='online' for p in d) else 'DEGRADED')"
+  echo
+  echo "--- external HTTPS ---"
+  for r in / /api/health /dashboard /api/dashboard /api/events/stream; do
+    code=$(curl -sk -o /dev/null -w "%{http_code}" "https://cortexbuildpro.com$r" --max-time 8)
+    echo "  $r -> $code"
+  done
+  echo
+  echo "--- live SW version ---"
+  curl -sk https://cortexbuildpro.com/sw.js 2>&1 | grep -E "^const CACHE_VERSION"
+  echo
+  echo "--- pm2 errors (post-deploy) ---"
+  pm2 logs cortexx --err --nostream --lines 20 2>/dev/null | tail -20
+---
+--- prod HEAD ---
+74ba5bb fix(sse): re-thread org context per poll-tick in /api/events/stream
+
+--- pm2 workers ---
+8 workers, all online
+
+--- external HTTPS ---
+  / -> 200
+  /api/health -> 200
+  /dashboard -> 307
+  /api/dashboard -> 401
+  /api/events/stream -> 401
+
+--- live SW version ---
+const CACHE_VERSION = 'cortexx-v4'
+
+--- pm2 errors (post-deploy) ---
+[TAILING] Tailing last 20 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 20 lines:

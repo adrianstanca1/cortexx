@@ -1,0 +1,65 @@
+run_id: 26419574221
+exit_code: 0
+completed_at: 2026-05-25T20:59:45Z
+command: |
+  echo "--- prod HEAD on VPS ---"
+  cd /opt/cortexx && git log -1 --oneline
+  echo
+  echo "--- pm2 status ---"
+  pm2 jlist 2>/dev/null | python3 -c "import json,sys;d=json.load(sys.stdin);[print(f'  {p[\"name\"]} pid={p[\"pid\"]} status={p[\"pm2_env\"][\"status\"]} restarts={p[\"pm2_env\"][\"restart_time\"]} mem={p[\"monit\"][\"memory\"]//1024//1024}MB cpu={p[\"monit\"][\"cpu\"]}%') for p in d]"
+  echo
+  echo "--- external HTTPS reachability (cortexbuildpro.com) ---"
+  for r in / /dashboard /apps /settings /api/health /api/dashboard; do
+    code=$(curl -sk -o /dev/null -w "%{http_code}" "https://cortexbuildpro.com$r" --max-time 10)
+    echo "  GET https://cortexbuildpro.com$r -> $code"
+  done
+  echo
+  echo "--- /api/health body ---"
+  curl -sk https://cortexbuildpro.com/api/health --max-time 10
+  echo
+  echo
+  echo "--- fresh pm2 errors since flush ---"
+  pm2 logs cortexx --err --nostream --lines 40 2>/dev/null | tail -40
+  echo
+  echo "--- nginx errors (last 10) ---"
+  tail -10 /var/log/nginx/error.log 2>/dev/null || echo "(no nginx error log)"
+---
+--- prod HEAD on VPS ---
+d0cc6a5 fix(deploy): rm -rf .next before every build (prevents manifest corruption)
+
+--- pm2 status ---
+  cortexx pid=288489 status=online restarts=0 mem=241MB cpu=0.2%
+  cortexx pid=288496 status=online restarts=0 mem=254MB cpu=0.2%
+  cortexx pid=288503 status=online restarts=0 mem=242MB cpu=0.2%
+  cortexx pid=288514 status=online restarts=0 mem=263MB cpu=0.2%
+  cortexx pid=288525 status=online restarts=0 mem=240MB cpu=0.2%
+  cortexx pid=288536 status=online restarts=0 mem=244MB cpu=0.2%
+  cortexx pid=288547 status=online restarts=0 mem=232MB cpu=0.2%
+  cortexx pid=288558 status=online restarts=0 mem=241MB cpu=0.2%
+
+--- external HTTPS reachability (cortexbuildpro.com) ---
+  GET https://cortexbuildpro.com/ -> 200
+  GET https://cortexbuildpro.com/dashboard -> 307
+  GET https://cortexbuildpro.com/apps -> 307
+  GET https://cortexbuildpro.com/settings -> 307
+  GET https://cortexbuildpro.com/api/health -> 200
+  GET https://cortexbuildpro.com/api/dashboard -> 401
+
+--- /api/health body ---
+{"status":"ok","checks":{"database":{"ok":true,"ms":12},"disk":{"ok":true,"free_gb":350.81},"memory":{"ok":true,"rss_mb":254.1},"app":{"ok":true,"ms":12}},"uptime":665.702257028,"version":"unknown","timestamp":"2026-05-25T20:59:44.000Z"}
+
+--- fresh pm2 errors since flush ---
+[TAILING] Tailing last 40 lines for [cortexx] process (change the value with --lines option)
+/root/.pm2/logs/cortexx-error.log last 40 lines:
+
+--- nginx errors (last 10) ---
+2026/05/25 17:11:29 [error] 265397#265397: *13457 connect() failed (111: Connection refused) while connecting to upstream, client: 217.43.19.138, server: cortexbuildpro.com, request: "GET /dashboard?_rsc=RyuyF1BCXHHynJ0l HTTP/2.0", upstream: "http://127.0.0.1:3010/dashboard?_rsc=RyuyF1BCXHHynJ0l", host: "cortexbuildpro.com", referrer: "https://cortexbuildpro.com/check-in"
+2026/05/25 17:11:29 [error] 265397#265397: *13457 connect() failed (111: Connection refused) while connecting to upstream, client: 217.43.19.138, server: cortexbuildpro.com, request: "GET /apps?_rsc=RyuyF1BCXHHynJ0l HTTP/2.0", upstream: "http://127.0.0.1:3010/apps?_rsc=RyuyF1BCXHHynJ0l", host: "cortexbuildpro.com", referrer: "https://cortexbuildpro.com/check-in"
+2026/05/25 17:11:38 [emerg] 19370#19370: bind() to 0.0.0.0:443 failed (98: Address already in use)
+2026/05/25 17:11:38 [emerg] 19370#19370: bind() to [::]:443 failed (98: Address already in use)
+2026/05/25 17:27:04 [emerg] 19370#19370: bind() to 0.0.0.0:443 failed (98: Address already in use)
+2026/05/25 17:27:04 [emerg] 19370#19370: bind() to [::]:443 failed (98: Address already in use)
+2026/05/25 18:07:03 [emerg] 19370#19370: bind() to 0.0.0.0:443 failed (98: Address already in use)
+2026/05/25 18:07:03 [emerg] 19370#19370: bind() to [::]:443 failed (98: Address already in use)
+2026/05/25 18:21:08 [emerg] 19370#19370: bind() to 0.0.0.0:443 failed (98: Address already in use)
+2026/05/25 18:21:08 [emerg] 19370#19370: bind() to [::]:443 failed (98: Address already in use)

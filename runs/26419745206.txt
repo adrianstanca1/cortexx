@@ -1,0 +1,68 @@
+run_id: 26419745206
+exit_code: 0
+completed_at: 2026-05-25T21:05:03Z
+command: |
+  echo "--- nginx -t ---"
+  nginx -t 2>&1
+  echo
+  echo "--- nginx master + workers ---"
+  ps -ef | grep -E "nginx: (master|worker)" | grep -v grep | head -5
+  echo
+  echo "--- listeners on 443/80 ---"
+  ss -tlnp 2>/dev/null | grep -E ":443|:80" | head -10
+  echo
+  echo "--- /etc/cron.d/cortexx-cron presence ---"
+  ls -la /etc/cron.d/cortexx* 2>&1
+  echo
+  echo "--- /opt/cortexx/.env.production: required vars present? ---"
+  for v in CRON_SECRET NEXTAUTH_SECRET DATABASE_URL UPLOAD_DIR; do
+    if grep -q "^${v}=" /opt/cortexx/.env.production 2>/dev/null; then
+      echo "  $v: SET"
+    else
+      echo "  $v: MISSING"
+    fi
+  done
+  echo
+  echo "--- disk free on / and /var/lib ---"
+  df -h / /var/lib 2>&1 | tail -3
+  echo
+  echo "--- last 5 deploy commits applied ---"
+  cd /opt/cortexx && git log -5 --oneline
+---
+--- nginx -t ---
+nginx: the configuration file /etc/nginx/nginx.conf syntax is ok
+nginx: configuration file /etc/nginx/nginx.conf test is successful
+
+--- nginx master + workers ---
+root       19370       1  0 May23 ?        00:00:02 nginx: master process /usr/sbin/nginx -g daemon on; master_process on;
+www-data  288874   19370  0 20:48 ?        00:00:00 nginx: worker process
+www-data  288875   19370  0 20:48 ?        00:00:00 nginx: worker process
+www-data  288876   19370  0 20:48 ?        00:00:00 nginx: worker process
+www-data  288877   19370  0 20:48 ?        00:00:00 nginx: worker process
+
+--- listeners on 443/80 ---
+LISTEN 0      511          0.0.0.0:443        0.0.0.0:*    users:(("nginx",pid=288881,fd=25),("nginx",pid=288880,fd=25),("nginx",pid=288879,fd=25),("nginx",pid=288878,fd=25),("nginx",pid=288877,fd=25),("nginx",pid=288876,fd=25),("nginx",pid=288875,fd=25),("nginx",pid=288874,fd=25),("nginx",pid=19370,fd=25))
+LISTEN 0      511          0.0.0.0:80         0.0.0.0:*    users:(("nginx",pid=288881,fd=5),("nginx",pid=288880,fd=5),("nginx",pid=288879,fd=5),("nginx",pid=288878,fd=5),("nginx",pid=288877,fd=5),("nginx",pid=288876,fd=5),("nginx",pid=288875,fd=5),("nginx",pid=288874,fd=5),("nginx",pid=19370,fd=5))         
+LISTEN 0      511             [::]:443           [::]:*    users:(("nginx",pid=288881,fd=26),("nginx",pid=288880,fd=26),("nginx",pid=288879,fd=26),("nginx",pid=288878,fd=26),("nginx",pid=288877,fd=26),("nginx",pid=288876,fd=26),("nginx",pid=288875,fd=26),("nginx",pid=288874,fd=26),("nginx",pid=19370,fd=26))
+LISTEN 0      511             [::]:80            [::]:*    users:(("nginx",pid=288881,fd=24),("nginx",pid=288880,fd=24),("nginx",pid=288879,fd=24),("nginx",pid=288878,fd=24),("nginx",pid=288877,fd=24),("nginx",pid=288876,fd=24),("nginx",pid=288875,fd=24),("nginx",pid=288874,fd=24),("nginx",pid=19370,fd=24))
+
+--- /etc/cron.d/cortexx-cron presence ---
+-rw-r--r-- 1 root root 656 May 25 20:47 /etc/cron.d/cortexx-cron
+
+--- /opt/cortexx/.env.production: required vars present? ---
+  CRON_SECRET: SET
+  NEXTAUTH_SECRET: SET
+  DATABASE_URL: SET
+  UPLOAD_DIR: MISSING
+
+--- disk free on / and /var/lib ---
+Filesystem      Size  Used Avail Use% Mounted on
+/dev/sda1       387G   36G  351G  10% /
+/dev/sda1       387G   36G  351G  10% /
+
+--- last 5 deploy commits applied ---
+d0cc6a5 fix(deploy): rm -rf .next before every build (prevents manifest corruption)
+3a01f7c fix: more deferred — bound dashboard/team findMany + Redis-backed vision RL
+99b7e2f fix: more deferred audit findings — FK validation, enums, search rate limit
+0cf5132 fix: more deferred audit findings — race conditions + UI bugs
+b70be4d fix: pre-launch audit findings — 4 HIGH + 3 MEDIUM
