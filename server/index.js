@@ -323,7 +323,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
-const server = app.listen(PORT, () => console.log(`Cortexx API on :${PORT}`));
+const server = app.listen(PORT, '0.0.0.0', () => console.log(`Cortexx API on :${PORT}`));
 
 // ── Graceful shutdown ───────────────────────────────────────
 for (const sig of ['SIGTERM', 'SIGINT']) {
