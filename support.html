@@ -1,0 +1,113 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>Support — Cortexx</title>
+<style>
+  :root { --bg:#06101e; --bg2:#0e1828; --t1:#e8eef7; --t2:#a8bdd5; --t3:#7a9cc0; --hair:rgba(255,255,255,0.07); --blue:#60a5fa; --green:#10b981; --purple:#8b5cf6; }
+  html,body{margin:0;padding:0;background:var(--bg);color:var(--t1);font-family:-apple-system,"SF Pro Text",system-ui,sans-serif;line-height:1.6;}
+  .wrap{max-width:760px;margin:0 auto;padding:64px 24px 96px;}
+  h1{font-size:38px;font-weight:800;letter-spacing:-0.8px;margin:0 0 8px;}
+  .sub{color:var(--t3);font-size:15px;margin:0 0 40px;}
+  h2{font-size:20px;font-weight:700;margin:40px 0 14px;letter-spacing:-0.3px;}
+  p,li{font-size:15px;color:var(--t2);}
+  strong{color:var(--t1);font-weight:600;}
+  a{color:var(--blue);}
+  .back{display:inline-block;margin-bottom:32px;color:var(--t3);font-size:13px;text-decoration:none;}
+  .back:hover{color:var(--t1);}
+
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0 30px;}
+  @media(max-width:640px){.cards{grid-template-columns:1fr;}}
+  .card{background:var(--bg2);border:0.5px solid var(--hair);border-radius:14px;padding:20px 22px;text-decoration:none;color:var(--t1);display:block;}
+  .card:hover{border-color:rgba(96,165,250,0.4);}
+  .card .ico{font-size:24px;margin-bottom:10px;}
+  .card .t{font-size:16px;font-weight:700;margin-bottom:4px;}
+  .card .s{font-size:13px;color:var(--t3);}
+
+  details{background:var(--bg2);border:0.5px solid var(--hair);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  details[open]{border-color:rgba(96,165,250,0.3);}
+  summary{cursor:pointer;font-size:15px;font-weight:600;color:var(--t1);outline:none;}
+  details p{margin:10px 0 4px;}
+</style>
+</head>
+<body>
+<div class="wrap">
+  <a href="Cortexx Marketing.html" class="back">← Back to Cortexx</a>
+  <h1>Support</h1>
+  <p class="sub">Most things are quick. We aim to reply within one business day.</p>
+
+  <div class="cards">
+    <a class="card" href="mailto:support@cortexbuild.app">
+      <div class="ico">📧</div>
+      <div class="t">Email us</div>
+      <div class="s">support@cortexbuild.app</div>
+    </a>
+    <a class="card" href="Cortexx.html">
+      <div class="ico">🚀</div>
+      <div class="t">Open the app</div>
+      <div class="s">cortexbuildpro.com → Demo</div>
+    </a>
+  </div>
+
+  <h2>Common questions</h2>
+
+  <details>
+    <summary>Where's my data stored?</summary>
+    <p>On your device. Cortexx is local-first — projects, photos, invoices and notes live in your phone or tablet. We have no copy unless you switch on multi-device sync (Pro tier). Back up regularly via <strong>Settings → Database → Export</strong>.</p>
+  </details>
+
+  <details>
+    <summary>How do I install Cortexx on my iPhone without the App Store?</summary>
+    <p>Open <a href="https://cortexbuildpro.com">cortexbuildpro.com</a> in Safari on your iPhone. Tap the share button (the square with an up arrow), scroll down, tap <strong>Add to Home Screen</strong>. Cortexx installs as a real-feeling app — full-screen, offline, with its own icon.</p>
+  </details>
+
+  <details>
+    <summary>Cortex AI gave me a wrong number. What now?</summary>
+    <p>Always cross-check AI output against the real facts — quotes against your supplier prices, CIS deductions against HMRC's site, RAMS content against the site survey. Cortex AI is a fast first draft, not a qualified estimator or H&S specialist.</p>
+    <p>If you spot a consistent bug, email <a href="mailto:support@cortexbuild.app">support@cortexbuild.app</a> with what you asked and what Cortex said. We'll feed it back into our prompt tuning.</p>
+  </details>
+
+  <details>
+    <summary>I lost my data after reinstalling the app.</summary>
+    <p>If you didn't have multi-device sync turned on, we can't recover it — local-device data is exclusively under your control. Always run <strong>Settings → Database → Export</strong> before uninstalling, and re-import on the new install via <strong>Settings → Database → Import</strong>.</p>
+  </details>
+
+  <details>
+    <summary>Does Cortexx work with Xero / QuickBooks / Sage?</summary>
+    <p>The Pro tier exports CSV ledgers compatible with all three. A direct API connector is on the roadmap — email us if you want to be in the beta.</p>
+  </details>
+
+  <details>
+    <summary>How do I cancel my Pro subscription?</summary>
+    <p>In the app: <strong>Settings → Billing → Cancel subscription</strong>. You keep Pro features until the end of the current billing period.</p>
+  </details>
+
+  <details>
+    <summary>Is Cortexx CIS-compliant?</summary>
+    <p>Cortexx calculates CIS deductions correctly for the standard 20% and higher 30% rates, and lets you generate a CIS300 monthly return. It's not a replacement for an accountant — we strongly recommend a qualified accountant signs off your CIS return before filing.</p>
+  </details>
+
+  <details>
+    <summary>Is Cortexx GDPR compliant?</summary>
+    <p>Yes. See our <a href="privacy.html">Privacy Policy</a> for the detail: legal basis, retention periods, your rights, and how to exercise them.</p>
+  </details>
+
+  <details>
+    <summary>How do I get help with a specific UK construction scenario (RAMS, CSCS, planning, etc.)?</summary>
+    <p>Email <a href="mailto:support@cortexbuild.app">support@cortexbuild.app</a> with the scenario. We'll either answer or point you at the right HSE / HMRC / planning portal page. We don't give legal advice but we know the construction stack.</p>
+  </details>
+
+  <details>
+    <summary>I want a feature.</summary>
+    <p>Tell us. We read every request, and the small builders who shaped Cortexx in beta still drive the roadmap. <a href="mailto:hello@cortexbuild.app">hello@cortexbuild.app</a>.</p>
+  </details>
+
+  <h2>Status</h2>
+  <p>Live status of Cortex AI, sync, and any incidents: <a href="https://status.cortexbuild.app">status.cortexbuild.app</a> (coming soon — for now check the app's <strong>Settings → Infrastructure</strong> screen, which pings our health endpoints in real time).</p>
+
+  <h2>Security disclosures</h2>
+  <p>If you've found a security issue, please tell us privately first: <a href="mailto:security@cortexbuild.app">security@cortexbuild.app</a>. We have a responsible-disclosure policy and credit reporters in our changelog. See <a href="/.well-known/security.txt">/.well-known/security.txt</a>.</p>
+</div>
+</body>
+</html>

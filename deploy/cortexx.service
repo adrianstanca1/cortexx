@@ -1,0 +1,25 @@
+[Unit]
+# CortexBuild Pro — auto-start the whole stack on boot, restart on failure.
+# Install:
+#   sudo cp deploy/cortexx.service /etc/systemd/system/cortexx.service
+#   sudo sed -i "s|/opt/cortexx|$(pwd)|" /etc/systemd/system/cortexx.service
+#   sudo systemctl daemon-reload && sudo systemctl enable --now cortexx
+# Status:  systemctl status cortexx   ·   journalctl -u cortexx -f
+Description=CortexBuild Pro (db + api + ollama + web)
+Requires=docker.service
+After=docker.service network-online.target
+Wants=network-online.target
+
+[Service]
+Type=oneshot
+RemainAfterExit=yes
+WorkingDirectory=/opt/cortexx
+# Bring the stack up (build if needed); down on stop.
+ExecStart=/usr/bin/docker compose up -d --build
+ExecStop=/usr/bin/docker compose down
+# If the host reboots or docker restarts, re-assert the stack.
+ExecReload=/usr/bin/docker compose up -d
+TimeoutStartSec=0
+
+[Install]
+WantedBy=multi-user.target

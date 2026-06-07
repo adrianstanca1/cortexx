@@ -1,0 +1,1 @@
+set -a; source /home/hermeswebui/.hermes/.env; set +a && cd /workspace/cortexx && ~/.local/bin/aider --model openrouter/anthropic/claude-3.5-sonnet --yes --message 'Add a section at the top of README.md stating that this codebase is under active optimization and control by the Hermes autonomous swarm.' README.md

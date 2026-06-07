@@ -1,0 +1,104 @@
+# CortexBuild Pro — complete self-hosted stack (100% free software)
+# ───────────────────────────────────────────────────────────────
+# One command on your VPS:   docker compose up -d
+#
+# Brings up:
+#   • db      — PostgreSQL 16            (database)
+#   • api     — Node/Express             (REST + sync + webhooks + auth)
+#   • ollama  — local LLM runtime        (AI, no API keys, no per-call cost)
+#   • web     — Caddy                    (static app + reverse proxy + auto-HTTPS)
+#
+# No managed services. No SaaS bills. Runs entirely on the VPS you already pay for.
+# ───────────────────────────────────────────────────────────────
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cortexx
+      POSTGRES_HOST_AUTH_METHOD: trust
+    volumes:
+      - cortexx_pgdata:/var/lib/postgresql/data
+      - ./server/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./server/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cortexx"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # Reads server/.env for secrets (JWT_SECRET, WEBHOOK_SECRET, VAPID_*, etc.).
+    # The values below override DB + LLM hosts to point at the compose services.
+    env_file:
+      - path: ./server/.env
+        required: false
+    environment:
+      DATABASE_URL: postgres://postgres@db:5432/cortexx
+      PORT: 3001
+      NODE_ENV: production
+      # Point the LLM proxy at the bundled Ollama service
+      LLM_RUNTIME: ollama
+      OLLAMA_BASE: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-llava}
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - cortexx_ollama:/root/.ollama
+      # On first boot, pulls the default model so the AI works out of the box.
+      - ./server/ollama-init.sh:/ollama-init.sh:ro
+    entrypoint: ["/bin/sh", "/ollama-init.sh"]
+    expose:
+      - "11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # GPU is optional. If your VPS has an NVIDIA GPU, uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./:/srv/app:ro          # serves Cortexx.html + lib/ + dist/ statically
+      - cortexx_caddy_data:/data
+      - cortexx_caddy_config:/config
+    environment:
+      # Caddy reads ${SITE_ADDRESS} from your shell / .env (e.g. cortexbuildpro.com).
+      # Use ":80" for a plain-HTTP / IP-only deploy with no domain.
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+
+volumes:
+  cortexx_pgdata:
+  cortexx_ollama:
+  cortexx_caddy_data:
+  cortexx_caddy_config:

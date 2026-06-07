@@ -1,178 +1,182 @@
-# Cortexx
+# Cortexx — The Construction OS
 
-> **[SYSTEM OVERRIDE]** This codebase is currently under active optimization, refactoring, and autonomous control by the Hermes Multi-Agent Swarm.
+The construction OS that thinks with you. Built for UK SMB contractors.
 
-# Cortexx
+[![PWA](https://img.shields.io/badge/PWA-ready-2563eb)](manifest.json)
+[![iOS](https://img.shields.io/badge/iOS-Capacitor%206-1a73e8)](ios/README.md)
+[![App Store](https://img.shields.io/badge/App%20Store-submission%20ready-10b981)](app-store/SUBMISSION.md)
 
-Mobile-first construction-management app for UK SMEs.
-Live: **https://cortexbuildpro.com**
+![Cortexx](icon.svg)
 
-> **May 2026 consolidation.** The sibling [`cortexx-pwa`](https://github.com/adrianstanca1/cortexx-pwa)
-> repo (single-file static PWA + iOS Capacitor scaffold + App Store pack) has
-> been folded into this codebase:
-> - iOS shell → `ios/` (Capacitor 6, ready for Xcode)
-> - App Store submission pack → `app-store/`
-> - Legacy single-file PWA → `public/legacy/` (served at `/legacy/`)
-> - Legacy docs → `docs/pwa/`
->
-> One repo, one source of truth.
+## What's inside
 
-## Stack
+- **80 phase modules** — Quotes, Projects, Tasks, Team, Money, Safety, RFIs, Snags, Permits, Drawings, Site Diary, Inspections, Timesheets, Mileage, Customers, Leads, AI estimator, vision OCR, voice memos, Vera autopilot, and 60 more
+- **15 dashboard layouts** — Action-first, Status board, Calm, Bento, AI-forward, Field, Timeline, Books, Stories, Rings, Map, Focus, Executive, Broadsheet, Site Notice
+- **41+ reactive backend tables** — localStorage-backed, with IndexedDB for photos
+- **30+ AI flows** powered by Claude — estimator, briefing, decisions, OCR, parsing, chase drafting, report narration, health checks, transcription
+- **Vera Stone** — autonomous CEO AI persona with 5-member leadership team
+- **Real device APIs** — GPS check-in, camera, push notifications, file picker, share, print, backup/restore
+- **PWA-installable** — works offline; precompiled JS bundle loads in <1 s on iPhone
+- **iOS-ready** — Capacitor 6 scaffold + privacy manifest + App Store submission pack
 
-- **Next.js 16 + React 19** (App Router) — 92 pages, 184 API route files, 36 components
-- **PostgreSQL + Prisma** — 73 models, 23 migrations, fail-closed multi-tenancy via Prisma client extension + AsyncLocalStorage
-- **Auth.js v5** (credentials provider) + proxy-gated routes (`proxy.ts`) + TOTP 2FA
-- **Stripe** — Checkout + Customer Portal + signature-verified webhook
-- **Redis** — shared rate-limit state across pm2 cluster workers (in-mem fallback when REDIS_URL unset)
-- **S3 / object storage** — pluggable adapter, presigned URLs (`lib/storage.ts`); local-disk fallback
-- **PWA** — service worker, offline fallback, install hint, splash screens
-- **iOS** — Capacitor 6 native shell (`ios/`) targeting the App Store; tag-triggered TestFlight workflow
-- **Sentry** — server + edge runtimes, scope-aware capture
-- **Hostinger VPS** + nginx + pm2 **cluster mode** (`-i max`, 8 workers), automated deploys via GitHub Actions
+## Quick start
 
-## Structure
+```bash
+# Local dev (no install needed)
+open Cortexx.html
 
-```
-app/                     # Next.js App Router
-  (marketing)            # /, /marketing, /pricing, /privacy, /terms, /help
-  login + register       # Public auth pages
-  onboarding             # First-org workspace wizard
-  invite/[token]         # Accept-an-invite landing
-  dashboard              # 15+ dashboard variants — matches Claude design
-  projects               # List + detail + board + gallery
-  tasks                  # List + bulk ops + select mode
-  team                   # Members + per-member profile
-  apps                   # Modules hub — links to every surface
-  capture                # Photo / receipt / voice / check-in / incident
-  inbox + messages       # Aggregated overdue items + team threads
-  activity + audit-log   # Audit feed + per-org tenant log
-  search                 # Workspace-wide (12 categories)
-  reports + invoices     # Finance reports + cross-project invoice list
-  + 60+ feature pages    # Snags, RFIs, drawings, documents, materials,
-                         # subs, suppliers, quotes, POs, sub-invoices,
-                         # timesheets, mileage, check-in, live-status,
-                         # safety, RAMS, permits, inspections, meetings,
-                         # risks, toolbox-talks, maintenance, observations,
-                         # variations, valuations, tenders, training,
-                         # photos, schedule, site-diary, certifications…
-  + 24 legacy-parity     # Payroll, holiday, bank, carbon, waste,
-                         # performance, templates, forms, reminders,
-                         # saved-views, tags, goals, improve-hub,
-                         # kaizen-board, process-library, reviews,
-                         # apprentice, claims, currency, personas,
-                         # service-catalog, sub-portal, developer-api,
-                         # infrastructure — full CRUD via shared modal
-  settings/              # security (TOTP 2FA), organization, audit-log,
-                         # notifications, billing
-  api/                   # 184 route handlers — auth-gated by middleware,
-                         # multi-tenant-scoped by Prisma extension
-  robots.ts + sitemap.ts # SEO-ready static-generated meta
-  not-found.tsx          # Themed 404
-  loading.tsx            # Top-level skeleton
-  error.tsx              # Reports to /api/errors
-  global-error.tsx       # Root-level error boundary (own <html>/<body>)
+# Or with hot-edit JSX (loads Babel in browser)
+open "Cortexx.html?dev=1"
 
-components/
-  ui/                    # 24+ atoms: TabBar, DrawerMenu, QuickActions,
-                         #   Avatar, Pill, ProgressBar, Toast, Icons,
-                         #   ModuleShell, ModuleRecordModal, ErrorBoundary…
-  dashboard/             # 12+ variant components (dynamic-imported)
-
-prisma/
-  schema.prisma          # 73 models: 63 owned (org-scoped) + 5 tenant-
-                         # management + 5 auth/infra
-  migrations/            # 23 applied, sequential
-  seed.ts                # Idempotent demo data
-
-public/                  # PWA assets
-  manifest.json          # Shortcuts: Capture / Tasks / Projects
-  sw.js                  # cortexx-v2 cache; network-first navigation
-  offline.html           # Themed offline fallback
-  icon-{192,512}.png + maskable variants
-  apple-touch-icon{,-152,-167}.png
-  apple-splash-* (6 sizes)
-  favicon.{ico,16,32}.png
-
-.github/workflows/
-  ci.yml                 # tsc + tests + build (cached)
-  deploy-vps.yml         # rsync-free deploy via SSH + system Postgres
-  health-monitor.yml     # 15-min /api/health probe
-  debug-vps.yml          # manual VPS introspection
-
-test/
-  validation.test.js     # 8 unit tests — node:test (no deps)
+# Or with the perf HUD visible
+open "Cortexx.html?perf=1"
 ```
 
-## Develop
-
-```
-npm install
-DATABASE_URL=postgresql://user:pass@localhost:5432/cortexx npx prisma migrate deploy
-DATABASE_URL=… npm run dev          # http://localhost:3000
-DATABASE_URL=… npm test             # unit tests
-npm run build                        # production build
-```
+No build step. No server. No backend infrastructure required.
 
 ## Deploy
 
-Push to `main`. GitHub Actions handles the rest:
+This is a static site. Drop the project folder into:
 
-1. **CI** — `tsc` + `npm test` + `npm run build` (Next.js cache hit on subsequent runs)
-2. **Deploy to Hostinger VPS** — SSH in, install system Postgres if missing,
-   provision the DB user idempotently, `git fetch` + `git reset --hard origin/main`
-   (authenticated via workflow `GITHUB_TOKEN`), `npm ci` + `prisma migrate deploy`
-   + `prisma db seed` + `npm run build`, `pm2 delete + start` (clean env),
-   `/api/health` gate before considering the deploy successful.
-3. **Health Monitor** — every 15 min hits `/api/health`; auto-opens an issue
-   if production goes down, auto-closes when it recovers.
+- **Vercel** — `vercel --prod` from the project folder (uses included `vercel.json`)
+- **Netlify Drop** — drag folder to https://app.netlify.com/drop
+- **GitHub Pages** — push to a repo, enable Pages on `/ (root)` of main
+- **Cloudflare Pages** — connect the GitHub repo
+- **Self-hosted** — `deploy.sh` provisions Nginx + LE on a Hostinger VPS
 
-Deploys are idempotent: re-running on the same commit is a no-op apart from
-the DB password rotation.
+Full deploy guide: [`DEPLOY_NOW.md`](DEPLOY_NOW.md).
 
-## Routes summary
+## iOS App Store
 
-- **50+ pages** — 15 dashboard variants + every shipped module (Projects, Tasks,
-  Team, Invoices, Documents, RFIs, Snags, Observations, Variations, Quotes,
-  Leads, Customers, Permits, RAMS, Tenders, Inspections, Meetings, Risks,
-  Drawings, Schedule, Site diary, Timesheets, Training, Toolbox talks,
-  Maintenance, Suppliers, Materials, POs, Sub-invoices, Subs, Equipment,
-  Cost catalog, Mileage, Check-in, Live status, Valuations, Safety, Reports,
-  Search, Activity, Inbox, Apps hub, Capture, Ask, Photos, Settings, Client view)
-- **110+ API routes** — full CRUD across the above + `/api/health` (db/disk/memory),
-  `/api/events/stream` (SSE), `/api/ask` (Ollama LLM), `/api/transcribe`
-  (whisper.cpp), `/api/quotes/draft` + `/api/pos/draft` (AI line items),
-  `/api/weather` (wttr.in proxy), `/api/{quotes,invoices,pos,sub-invoices}/[id]/pdf`
-  (pdfkit), `/api/export/[type]` (CSV), `/api/valuations` (interim payment apps)
-- All API routes auth-gated by `middleware.ts` except `/api/auth/*`,
-  `/api/health`, `/api/seed`, `/login`, `/register`, `/manifest.json`,
-  `/sw.js`, `/offline.html`, `/favicon.ico`
+Capacitor 6 scaffold lives in `ios/`. From a Mac with Xcode:
 
-## Architecture notes
+```bash
+cd ios
+npm install
+npm run ios   # builds web, syncs, opens Xcode
+```
 
-- **Server components everywhere we can** — only `'use client'` where there's
-  state, effects, or browser APIs.
-- **API responses use Prisma `select` clauses** where it materially reduces
-  payload size (see `/api/inbox`, `/api/dashboard`).
-- **`force-dynamic` on every GET API route** — these are auth-gated and would
-  otherwise be cached by Next.js's default behaviour.
-- **Service worker** — `cortexx-v2` cache. Navigation = network-first with
-  cache fallback to `offline.html`. Static assets = stale-while-revalidate.
-  Bumping `CACHE_VERSION` purges old caches on next visit; `SWRegister`
-  surfaces a "Reload to update" toast when a new SW is waiting.
-- **Realtime** — SSE stream at `/api/events/stream` notifies clients of new
-  activity items; `useRealtimeActivity` hook merges incoming events into
-  the dashboard's activity list.
-- **Optimistic UI** — task toggles, project archives, bulk operations all
-  update local state first, then rollback if the API call fails.
+App Store submission runbook: [`SHIP_TO_APP_STORE.md`](SHIP_TO_APP_STORE.md) and [`app-store/SUBMISSION.md`](app-store/SUBMISSION.md).
 
-## Production target
+## Project structure
 
-- Domain: cortexbuildpro.com (HTTPS, certbot-managed)
-- VPS: Hostinger Ubuntu, port 3010 behind nginx
-- Postgres: system service (no docker), nightly compressed pg_dump backups
-  in `/opt/cortexx-backups` with 30-day retention
-- pm2 process: `cortexx`, single instance, loads `.env.production`
+```
+.
+├── Cortexx.html                 App entry (smart loader: prod or ?dev=1)
+├── Cortexx Marketing.html       Landing page
+├── Cortexx-standalone.html      Portable single-file build (1.7 MB)
+├── privacy.html · terms.html · support.html   Legal pages
+│
+├── lib/                         JSX source (60 modules)
+│   ├── backend.js / backend-extras.js   Reactive store + AI helpers
+│   ├── perf-phase71.js / perf-phase81.js   Performance layers
+│   ├── dashboards*.jsx          15 dashboard layouts
+│   ├── tokens.jsx               Design tokens + icons
+│   ├── tweaks-panel.jsx         Tweaks shell
+│   ├── ios-frame.jsx            iOS 26 device frame
+│   ├── boot.jsx                 React root bootstrap
+│   ├── app-main.jsx             Shell, sheet routing
+│   ├── app-{screens,sheets,utils}.jsx   Core screens
+│   ├── screens-ops.jsx · screens-project.jsx
+│   └── screens-phase2…80.jsx    79 phase modules
+│
+├── dist/                        Precompiled JS (production, immutable-cached)
+│
+├── ios/                         Capacitor 6 wrap
+├── app-store/                   Submission pack (metadata, screenshots, icons)
+├── .well-known/security.txt     Responsible disclosure
+├── manifest.json · sw.js        PWA
+├── icon-{192,512}.png · apple-touch-icon.png
+├── robots.txt · sitemap.xml · vercel.json · deploy.sh
+│
+└── ROADMAP.md · SHIP_READY.md · DEPLOY_NOW.md · LAUNCH.md   Docs
+```
 
-See `ROADMAP.md` for shipped phases, in-flight work, and planned releases.
-See `CHANGELOG.md` for per-release notes (v1.0.0 → v1.1.1).
-See `docs/RUNBOOK.md` for operational handover (deploy / rollback / incident triage).
+## AI flows
+
+All AI runs through `window.claude.complete` — but the entry point is now a **local-first shim** (`lib/llm-shim.js`) that routes to infrastructure you control:
+
+1. **Server LLM** — `POST /api/llm` proxies to **Ollama** (default `llama3.2:3b`, `llava` for vision) on the VPS. No API keys.
+2. **WebLLM in-browser** — Llama-3.2-1B via WebGPU (opt-in from Settings; runs fully on-device, offline-capable).
+3. **Deterministic engine** — `CortexLocalAgent.respond()` reads live Brain state; never fails.
+
+Configure via `server/.env`:
+```
+LLM_RUNTIME=ollama
+OLLAMA_BASE=http://localhost:11434
+OLLAMA_MODEL=llama3.2:3b
+OLLAMA_VISION_MODEL=llava
+```
+Then on the VPS: `ollama pull llama3.2:3b && ollama pull llava`.
+
+Health check: `GET /api/llm/health` reports which models are installed and ready.
+
+In the prototype dev environment the shim detects the native `window.claude.complete` and leaves it alone (set `?local=1` or `CortexLLM.useLocal()` to force local).
+
+- AI estimator — natural language → UK construction line items + total
+- Daily briefing, decisions, 30-day strategy (Vera CEO persona)
+- Receipt OCR + auto-categorisation
+- Smart task parsing
+- Invoice chase drafting
+- Project health check
+- Material forecast
+- Schedule optimisation
+- Document generation (RAMS, Method Statement, H&S Policy, Tender)
+- Photo→Snag vision flow
+- Voice memo transcription (post-hoc on iOS, live on Chrome)
+
+## Vera autopilot
+
+Vera Stone is the autonomous CEO (`lib/screens-phase39.jsx` & `40.jsx`):
+- Generates leads from market intelligence
+- Drafts chase emails for overdue invoices
+- Health-checks every active project
+- Forecasts material orders
+- Schedules briefings on cron (06:00 / 09:00 / 14:00 / 16:00)
+
+Plus 4 supporting personas: Marcus Pound (CFO), Pip Carter (Site Manager), Ada Whitfield (Compliance), River Ng (Sales Director).
+
+## Performance
+
+| Metric | Result |
+|---|---|
+| Cold start (production) | **192 ms** in iframe; ~600 ms on iPhone Safari |
+| Cross-tab sync latency | < 5 ms via BroadcastChannel |
+| Bundle size (dist/, gzipped) | ~280 KB |
+| Lighthouse PWA score | 100/100 (target; verify locally) |
+
+See [`PERF_PHASE_81.md`](PERF_PHASE_81.md) for the deep-dive.
+
+## Build (keep lib/ and dist/ in sync)
+
+`lib/*.jsx` is the source of truth; `dist/*.js` is the precompiled production bundle.
+After editing anything in `lib/`, regenerate `dist/` so the two never drift:
+
+```sh
+# one-time
+npm install --save-dev @babel/core @babel/cli @babel/preset-react
+
+# recompile all modules (picks up new files automatically)
+npx babel lib --out-dir dist --presets=@babel/preset-react --extensions ".jsx,.js"
+```
+
+The app defaults to loading `lib/` via in-browser Babel, so source edits are always
+live. Append `?prod` to the URL to load the precompiled `dist/` path instead.
+
+## Tech
+
+- React 18 (UMD, dev build)
+- In-browser Babel only in `?dev=1` mode (production loads precompiled `dist/*.js`)
+- LocalStorage + IndexedDB (`backend.js` + `backend-extras.js`)
+- Service Worker (offline + dist/ precache)
+- BroadcastChannel (multi-tab sync)
+- Capacitor 6 (iOS wrap)
+- Claude API (server-proxied)
+
+## License
+
+Provided as-is. Use it, fork it, ship it.
+
+## Author
+
+Built with [Claude](https://claude.ai/) by Anthropic, in partnership with Adrian Stanca.

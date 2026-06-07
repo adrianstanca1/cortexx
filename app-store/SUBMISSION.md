@@ -10,7 +10,7 @@ Follow this top to bottom. Don't skip steps — Apple will reject for any one of
 |---|---|---|
 | Apple Developer Program | developer.apple.com | £79/yr (UK) or $99/yr. Pay first; account verification can take 24–48h. |
 | Mac with Xcode 15.4+ | App Store on macOS | You cannot submit from Windows or Linux. Period. |
-| Bundle ID registered | developer.apple.com → Certificates, IDs & Profiles → Identifiers | Use `com.cortexbuild.app` or your own. Cannot be changed after first upload. |
+| Bundle ID registered | developer.apple.com → Certificates, IDs & Profiles → Identifiers | Use `app.cortexbuild.cortexx` or your own. Cannot be changed after first upload. |
 | App record in App Store Connect | appstoreconnect.apple.com → My Apps → + | Pick the bundle ID. SKU = any unique string (e.g. `CORTEXX-1`). |
 | DUNS number (orgs only) | dnb.com | Free for sole traders; required if filing under a company name. |
 
@@ -56,27 +56,6 @@ For each category below, declare **Data Used to Track You = NO** (Cortexx does n
 - **Diagnostics**: Crash Data, Performance Data (only if you wire crash reporting)
 
 > Cortexx's `PrivacyInfo.xcprivacy` already declares these on the binary side — App Store Connect requires the same declaration in the dashboard, separately.
-
----
-
-## 4b · GitHub Actions CI/CD Secrets
-
-For the automated `.github/workflows/release-ios.yml` workflow to sign and upload builds, add these secrets to the **cortexx** repo (Settings → Secrets and variables → Actions):
-
-| Secret name | How to get the value |
-|---|---|
-| `IOS_CERTIFICATE_BASE64` | `base64 -i Certificates.p12 \| pbcopy` |
-| `IOS_CERTIFICATE_PASSWORD` | Password you set when exporting the .p12 |
-| `IOS_KEYCHAIN_PASSWORD` | Any strong random string (used only on the runner) |
-| `IOS_PROVISIONING_PROFILE_BASE64` | `base64 -i Cortexx_AppStore.mobileprovision \| pbcopy` |
-| `APPLE_TEAM_ID` | 10-character team ID from developer.apple.com (e.g. `ABC123DEF4`) |
-| `APP_STORE_CONNECT_KEY_ID` | Key ID from App Store Connect → Users & Access → Integrations |
-| `APP_STORE_CONNECT_ISSUER_ID` | Issuer ID from the same page |
-| `APP_STORE_CONNECT_KEY_BASE64` | `base64 -i AuthKey_KEYID.p8 \| pbcopy` |
-
-Once these are set, the workflow runs on two triggers:
-- **Tag push** matching `v*-ios` (e.g. `git tag v1.0.0-ios && git push --tags`) — automatic TestFlight upload.
-- **workflow_dispatch** from the Actions tab — manual one-off builds with a toggle for whether to push to TestFlight or just archive the IPA artifact.
 
 ---
 
