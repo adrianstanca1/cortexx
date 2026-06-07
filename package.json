@@ -17,14 +17,14 @@
     "deploy:vercel": "vercel --prod"
   },
   "dependencies": {
+    "@capacitor/android": "^6.1.0",
     "@capacitor/core": "^6.1.0",
-    "@capacitor/ios": "^6.1.0",
-    "@capacitor/android": "^6.1.0"
+    "@capacitor/ios": "^6.1.0"
   },
   "devDependencies": {
-    "@capacitor/cli": "^6.1.0",
     "@babel/cli": "^7.24.0",
     "@babel/preset-react": "^7.24.0",
+    "@capacitor/cli": "^8.4.0",
     "serve": "^14.2.0"
   }
 }
