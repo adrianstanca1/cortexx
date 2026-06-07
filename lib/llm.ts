@@ -17,6 +17,7 @@ const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'llava'
 
 const LLAMA_SERVER_BASE_URL = (process.env.LLAMA_SERVER_BASE_URL || '').replace(/\/+$/, '')
 const LLAMA_SERVER_MODEL = process.env.LLAMA_SERVER_MODEL || 'default'
+const LLAMA_SERVER_VISION_BASE_URL = (process.env.LLAMA_SERVER_VISION_BASE_URL || '').replace(/\/+$/, '')
 
 const REQUEST_TIMEOUT_MS = 60_000
 const VISION_TIMEOUT_MS = 120_000
@@ -117,14 +118,32 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
   let isOaiCompat = false
 
   if (hasImages) {
-    url = `${OLLAMA_BASE_URL}/api/chat`
-    model = opts.model || OLLAMA_VISION_MODEL
-    body = {
-      model,
-      messages,
-      stream: false,
-      ...(opts.json ? { format: 'json' } : {}),
-      options: { num_predict: NUM_PREDICT_MAX },
+    if (LLAMA_SERVER_VISION_BASE_URL) {
+      url = `${LLAMA_SERVER_VISION_BASE_URL}/v1/chat/completions`
+      model = opts.model || 'moondream'
+      isOaiCompat = true
+      body = {
+        model,
+        messages: messages.map(m => ({
+          role: m.role,
+          content: m.images ? [
+            { type: 'text', text: m.content },
+            ...m.images.map(img => ({ type: 'image_url', image_url: { url: `data:image/jpeg;base64,${img}` } }))
+          ] : m.content
+        })),
+        stream: false,
+        max_tokens: NUM_PREDICT_MAX,
+      }
+    } else {
+      url = `${OLLAMA_BASE_URL}/api/chat`
+      model = opts.model || OLLAMA_VISION_MODEL
+      body = {
+        model,
+        messages,
+        stream: false,
+        ...(opts.json ? { format: 'json' } : {}),
+        options: { num_predict: NUM_PREDICT_MAX },
+      }
     }
   } else if (LLAMA_SERVER_BASE_URL) {
     url = `${LLAMA_SERVER_BASE_URL}/v1/chat/completions`
