@@ -1,0 +1,9 @@
+#!/bin/bash
+# Terminal entrypoint hook to instantly trigger a swarm delegation
+if [ -z "$1" ]; then
+  echo "Usage: ./swarm-orchestrate \"<your raw instruction>\""
+  exit 1
+fi
+
+echo "[SWARM HOOK] Analyzing and enhancing instructions..."
+hermes chat -q "Load the swarm-director skill. Execute the Master Swarm Hook. The raw user instruction is: '$*'. Analyze it, enhance it, plan it, and aggressively delegate it to subagents to achieve the absolute best outcome."
