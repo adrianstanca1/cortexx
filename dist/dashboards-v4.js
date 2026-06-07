@@ -58,10 +58,10 @@ function DashV14_Broadsheet({
   const outstanding = useComputed('outstanding');
   const weekMiles = useComputed('weekMiles');
   const pipeline = useComputed('pipelineValue');
-  const todo = tasks.filter(t => !t.done);
+  const pendingTasks = tasks.filter(t => !t.done);
   const onSite = team.filter(t => t.status === 'on-site').length;
   const active = projects.filter(p => p.status === 'active').slice(0, 4);
-  const focus = todo.sort((a, b) => ({
+  const focus = pendingTasks.sort((a, b) => ({
     high: 0,
     med: 1,
     low: 2
@@ -81,7 +81,7 @@ function DashV14_Broadsheet({
 
   // The "lead story" — synthesised from real numbers
   const leadHeadline = focus ? focus.t.length > 60 ? focus.t.slice(0, 58) + '…' : focus.t : 'A quiet day on the books';
-  const leadDeck = focus ? `${focus.prio === 'high' ? 'High-priority' : focus.prio === 'med' ? 'Routine' : 'Backlog'} item awaits attention · ${onSite} hands on site this morning` : `${onSite} hands on site, ${todo.length} items in the queue, business as usual`;
+  const leadDeck = focus ? `${focus.prio === 'high' ? 'High-priority' : focus.prio === 'med' ? 'Routine' : 'Backlog'} item awaits attention · ${onSite} hands on site this morning` : `${onSite} hands on site, ${pendingTasks.length} items in the queue, business as usual`;
   const setNav = (k, p) => window.cortexxNav && window.cortexxNav(k, p);
   return /*#__PURE__*/React.createElement("div", {
     style: {
@@ -428,7 +428,7 @@ function DashV14_Broadsheet({
     }
   }, /*#__PURE__*/React.createElement(DeskLink14, {
     label: "Tasks",
-    sub: `${todo.length} open`,
+    sub: `${pendingTasks.length} open`,
     onClick: () => setNav('tab', 'tasks')
   }), /*#__PURE__*/React.createElement(DeskLink14, {
     label: "Quotes",

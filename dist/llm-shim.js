@@ -89,6 +89,7 @@
     });
   }
   async function serverComplete(messages) {
+    if (!navigator.onLine) return null;
     try {
       var ctrl = new AbortController();
       var timer = setTimeout(function () {
