@@ -1,14 +1,5 @@
-// CortexBuild Pro — Phase 111: v1.7 Field Productivity
-// ─────────────────────────────────────────────────────────────────────────
-// 1. ToolboxTalkSheet   — log a safety briefing with digital team sign-off
-// 2. DeliveryConfirmSheet — mark a PO delivery received with photo+notes
-// 3. WeeklyReportSheet  — AI-narrated weekly summary (diary+timesheets+progress)
-// 4. DayEndReportSheet  — quick end-of-day summary form
-
 (function () {
   if (!window.Backend) return;
-
-  // ── Shared helpers ─────────────────────────────────────────────
   const inp = extra => ({
     width: '100%',
     padding: '10px 12px',
@@ -112,10 +103,6 @@
       padding: '20px 20px 0'
     }
   }, children));
-
-  // ══════════════════════════════════════════════════════════════════════
-  // 1. TOOLBOX TALK SHEET
-  // ══════════════════════════════════════════════════════════════════════
   const TALK_TOPICS = ['Manual handling', 'Working at height', 'Electrical safety', 'Fire safety', 'PPE requirements', 'Asbestos awareness', 'COSHH', 'Hot works', 'Confined spaces', 'Site induction', 'Plant & machinery', 'Excavations', 'Traffic management', 'First aid', 'Mental health', 'Environmental controls'];
   window.ToolboxTalkSheet = function ({
     onClose,
@@ -256,9 +243,7 @@
       placeholder: 'Key points, actions, hazards covered…',
       value: form.notes,
       onChange: e => set('notes', e.target.value)
-    })),
-    // Attendee sign-off
-    React.createElement('div', {
+    })), React.createElement('div', {
       style: {
         marginBottom: 16
       }
@@ -301,10 +286,6 @@
       }
     }, 'No team members found — add team first.')));
   };
-
-  // ══════════════════════════════════════════════════════════════════════
-  // 2. DELIVERY CONFIRMATION SHEET
-  // ══════════════════════════════════════════════════════════════════════
   window.DeliveryConfirmSheet = function ({
     onClose,
     accent
@@ -477,10 +458,6 @@
       onChange: e => set('notes', e.target.value)
     }))));
   };
-
-  // ══════════════════════════════════════════════════════════════════════
-  // 3. WEEKLY REPORT SHEET
-  // ══════════════════════════════════════════════════════════════════════
   window.WeeklyReportSheet = function ({
     onClose,
     accent
@@ -642,10 +619,6 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
       }
     }, '↻ Regenerate'))));
   };
-
-  // ══════════════════════════════════════════════════════════════════════
-  // 4. DAY-END REPORT SHEET
-  // ══════════════════════════════════════════════════════════════════════
   window.DayEndReportSheet = function ({
     onClose,
     accent
@@ -668,8 +641,6 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
       ...f,
       [k]: v
     }));
-
-    // Auto-fill from clock entries
     React.useEffect(() => {
       const today = form.date;
       const entries = Backend.db.snapshot().clockEntries || [];

@@ -1,10 +1,3 @@
-// Cortexx — Accounting ledger CSV export (Phase 93)
-// Real Xero / QuickBooks / Sage-compatible CSV from live invoices + receipts.
-// UK VAT-aware: standard 20%, zero-rated, or CIS domestic reverse charge.
-//
-// Each format profile emits the exact column headers that package expects on
-// import, so the file drops straight into the accountant's software.
-
 (function () {
   if (window.CortexLedger) return;
   const VAT = 0.20;
@@ -18,8 +11,6 @@
     const d = new Date(iso);
     return isNaN(d) ? iso : `${String(d.getDate()).padStart(2, '0')}/${String(d.getMonth() + 1).padStart(2, '0')}/${d.getFullYear()}`;
   };
-
-  // Split a gross (VAT-inclusive) amount into net + VAT under a treatment.
   function splitVat(gross, treatment) {
     if (treatment === 'zero' || treatment === 'cis') return {
       net: gross,
@@ -47,15 +38,12 @@
       zero: 'T0',
       cis: 'T21'
     },
-    // T21 = CIS reverse charge (Sage)
     qb: {
       standard: 'Standard 20%',
       zero: 'Zero Rated 0%',
       cis: 'Reverse Charge CIS'
     }
   };
-
-  // Build normalised ledger lines from live state.
   function lines(opts) {
     const s = window.Backend && window.Backend.db && window.Backend.db.snapshot ? window.Backend.db.snapshot() : {};
     const projName = id => {
@@ -127,21 +115,19 @@
       body = L.map(l => {
         const sale = l.kind === 'sale';
         const tt = (sale ? taxCode.xero : taxCode.xeroExp)[opts.vat] || '';
-        const acct = sale ? '200' : '300'; // 200 sales, 300 cost of goods
+        const acct = sale ? '200' : '300';
         return row([l.contact, l.ref, ddmmyyyy(l.date), ddmmyyyy(l.due), l.desc, '1', money(l.net), acct, tt, 'GBP']);
       });
     } else if (format === 'qb') {
       header = ['Date', 'Transaction Type', 'No.', 'Customer/Vendor', 'Description', 'Net', 'VAT', 'Total', 'VAT Code', 'Project'];
       body = L.map(l => row([ddmmyyyy(l.date), l.kind === 'sale' ? 'Invoice' : 'Expense', l.ref, l.contact, l.desc, money(l.net), money(l.vat), money(l.gross), taxCode.qb[opts.vat] || '', l.project]));
     } else if (format === 'sage') {
-      // Sage 50 audit-trail import layout
       header = ['Type', 'Account Reference', 'Nominal A/C Ref', 'Date', 'Reference', 'Details', 'Net Amount', 'Tax Code', 'Tax Amount'];
       body = L.map(l => {
         const sale = l.kind === 'sale';
         return row([sale ? 'SI' : 'PI', (l.contact || '').slice(0, 8).toUpperCase().replace(/\s/g, ''), sale ? '4000' : '5000', ddmmyyyy(l.date), l.ref, l.desc, money(l.net), taxCode.sage[opts.vat] || 'T1', money(l.vat)]);
       });
     } else {
-      // generic
       header = ['Date', 'Type', 'Reference', 'Name', 'Description', 'Net', 'VAT', 'Gross', 'Status', 'Project'];
       body = L.map(l => row([ddmmyyyy(l.date), l.kind === 'sale' ? 'Sales' : 'Purchase', l.ref, l.contact, l.desc, money(l.net), money(l.vat), money(l.gross), l.status, l.project]));
     }
@@ -219,7 +205,6 @@ function LedgerExportScreen({
         to: null
       };
     }
-    // UK financial year starts 6 April
     const fyStart = now.getMonth() > 3 || now.getMonth() === 3 && now.getDate() >= 6 ? new Date(now.getFullYear(), 3, 6) : new Date(now.getFullYear() - 1, 3, 6);
     return {
       from: fyStart.toISOString().slice(0, 10),
@@ -298,7 +283,7 @@ function LedgerExportScreen({
     active,
     onClick,
     children
-  }) => /*#__PURE__*/React.createElement("button", {
+  }) => React.createElement("button", {
     onClick: onClick,
     style: {
       padding: '8px 14px',
@@ -313,22 +298,22 @@ function LedgerExportScreen({
       fontWeight: 600
     }
   }, children);
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Ledger export",
     subtitle: "Accountant-ready CSV \xB7 Xero \xB7 QuickBooks \xB7 Sage"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -338,13 +323,13 @@ function LedgerExportScreen({
       letterSpacing: 0.6,
       margin: '6px 2px 8px'
     }
-  }, "Accounting package"), /*#__PURE__*/React.createElement("div", {
+  }, "Accounting package"), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, FORMATS.map(f => /*#__PURE__*/React.createElement("button", {
+  }, FORMATS.map(f => React.createElement("button", {
     key: f.k,
     onClick: () => setFormat(f.k),
     style: {
@@ -358,24 +343,24 @@ function LedgerExportScreen({
       gap: 12,
       textAlign: 'left'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, f.l), /*#__PURE__*/React.createElement("div", {
+  }, f.l), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, f.d)), /*#__PURE__*/React.createElement("div", {
+  }, f.d)), React.createElement("div", {
     style: {
       width: 20,
       height: 20,
@@ -386,14 +371,14 @@ function LedgerExportScreen({
       alignItems: 'center',
       justifyContent: 'center'
     }
-  }, format === f.k && /*#__PURE__*/React.createElement("div", {
+  }, format === f.k && React.createElement("div", {
     style: {
       width: 8,
       height: 8,
       borderRadius: 4,
       background: '#fff'
     }
-  }))))), /*#__PURE__*/React.createElement("div", {
+  }))))), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -403,7 +388,7 @@ function LedgerExportScreen({
       letterSpacing: 0.6,
       margin: '18px 2px 8px'
     }
-  }, "Include"), /*#__PURE__*/React.createElement("div", {
+  }, "Include"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
@@ -420,7 +405,7 @@ function LedgerExportScreen({
     set: setPurchases,
     l: 'Purchase receipts',
     c: sum.purchCount
-  }].map(x => /*#__PURE__*/React.createElement("button", {
+  }].map(x => React.createElement("button", {
     key: x.k,
     onClick: () => x.set(v => !v),
     style: {
@@ -432,21 +417,21 @@ function LedgerExportScreen({
       cursor: 'pointer',
       textAlign: 'left'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600,
       color: x.on ? T.t1 : T.t2
     }
-  }, x.l), /*#__PURE__*/React.createElement("div", {
+  }, x.l), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: x.on ? accent : T.t3,
       marginTop: 2
     }
-  }, x.c, " record", x.c === 1 ? '' : 's')))), /*#__PURE__*/React.createElement("div", {
+  }, x.c, " record", x.c === 1 ? '' : 's')))), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -456,18 +441,18 @@ function LedgerExportScreen({
       letterSpacing: 0.6,
       margin: '18px 2px 8px'
     }
-  }, "VAT treatment"), /*#__PURE__*/React.createElement("div", {
+  }, "VAT treatment"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       overflowX: 'auto',
       paddingBottom: 2
     }
-  }, VATS.map(v => /*#__PURE__*/React.createElement(Chip, {
+  }, VATS.map(v => React.createElement(Chip, {
     key: v.k,
     active: vat === v.k,
     onClick: () => setVat(v.k)
-  }, v.l))), /*#__PURE__*/React.createElement("div", {
+  }, v.l))), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -477,18 +462,18 @@ function LedgerExportScreen({
       letterSpacing: 0.6,
       margin: '18px 2px 8px'
     }
-  }, "Period"), /*#__PURE__*/React.createElement("div", {
+  }, "Period"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       overflowX: 'auto',
       paddingBottom: 2
     }
-  }, RANGES.map(r => /*#__PURE__*/React.createElement(Chip, {
+  }, RANGES.map(r => React.createElement(Chip, {
     key: r.k,
     active: range === r.k,
     onClick: () => setRange(r.k)
-  }, r.l))), /*#__PURE__*/React.createElement("div", {
+  }, r.l))), React.createElement("div", {
     style: {
       marginTop: 18,
       background: T.bg2,
@@ -496,7 +481,7 @@ function LedgerExportScreen({
       borderRadius: 14,
       padding: 16
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -506,67 +491,67 @@ function LedgerExportScreen({
       letterSpacing: 0.5,
       marginBottom: 12
     }
-  }, "Export summary"), sales && /*#__PURE__*/React.createElement("div", {
+  }, "Export summary"), sales && React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       padding: '7px 0',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2
     }
-  }, "Sales (net / VAT)"), /*#__PURE__*/React.createElement("span", {
+  }, "Sales (net / VAT)"), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, gbp(sum.salesNet), " / ", gbp(sum.salesVat))), purchases && /*#__PURE__*/React.createElement("div", {
+  }, gbp(sum.salesNet), " / ", gbp(sum.salesVat))), purchases && React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       padding: '7px 0',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2
     }
-  }, "Purchases (net / VAT)"), /*#__PURE__*/React.createElement("span", {
+  }, "Purchases (net / VAT)"), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, gbp(sum.purchNet), " / ", gbp(sum.purchVat))), /*#__PURE__*/React.createElement("div", {
+  }, gbp(sum.purchNet), " / ", gbp(sum.purchVat))), React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       padding: '10px 0 2px'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 700
     }
-  }, vat === 'cis' ? 'VAT (reverse charge)' : 'Net VAT due to HMRC'), /*#__PURE__*/React.createElement("span", {
+  }, vat === 'cis' ? 'VAT (reverse charge)' : 'Net VAT due to HMRC'), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 14,
       color: vat === 'cis' ? T.t2 : sum.vatDue >= 0 ? T.amber : T.green,
       fontWeight: 700
     }
-  }, vat === 'cis' ? '£0.00' : gbp(sum.vatDue)))), /*#__PURE__*/React.createElement("div", {
+  }, vat === 'cis' ? '£0.00' : gbp(sum.vatDue)))), React.createElement("div", {
     style: {
       marginTop: 14,
       background: T.bg0,
@@ -575,7 +560,7 @@ function LedgerExportScreen({
       padding: 12,
       overflowX: 'auto'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
@@ -583,7 +568,7 @@ function LedgerExportScreen({
       whiteSpace: 'pre',
       lineHeight: 1.7
     }
-  }, preview.csv.split('\r\n').slice(0, 4).join('\n') || 'No data', preview.count > 3 ? `\n… +${preview.count - 3} more line${preview.count - 3 === 1 ? '' : 's'}` : '')), /*#__PURE__*/React.createElement("button", {
+  }, preview.csv.split('\r\n').slice(0, 4).join('\n') || 'No data', preview.count > 3 ? `\n… +${preview.count - 3} more line${preview.count - 3 === 1 ? '' : 's'}` : '')), React.createElement("button", {
     onClick: doExport,
     disabled: busy,
     style: {
@@ -606,7 +591,7 @@ function LedgerExportScreen({
     }
   }, React.cloneElement(Ic.download, {
     size: 16
-  }), " ", busy ? 'Generating…' : `Export ${preview.count} line${preview.count === 1 ? '' : 's'} · ${FORMATS.find(f => f.k === format).l}`), /*#__PURE__*/React.createElement("div", {
+  }), " ", busy ? 'Generating…' : `Export ${preview.count} line${preview.count === 1 ? '' : 's'} · ${FORMATS.find(f => f.k === format).l}`), React.createElement("div", {
     style: {
       marginTop: 12,
       padding: 12,
@@ -622,7 +607,7 @@ function LedgerExportScreen({
   }, React.cloneElement(Ic.shield, {
     size: 14,
     color: T.green
-  }), /*#__PURE__*/React.createElement("span", null, "UTF-8 BOM + CRLF so Excel and accounting tools parse columns cleanly. CIS reverse charge sets output VAT to \xA30 and tags lines with the reverse-charge code your package expects.")))));
+  }), React.createElement("span", null, "UTF-8 BOM + CRLF so Excel and accounting tools parse columns cleanly. CIS reverse charge sets output VAT to \xA30 and tags lines with the reverse-charge code your package expects.")))));
 }
 Object.assign(window, {
   LedgerExportScreen
