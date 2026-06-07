@@ -1,9 +1,0 @@
-run_id: 26420013227
-exit_code: 0
-completed_at: 2026-05-25T21:13:46Z
-command: |
-  echo "--- live sw.js CACHE_VERSION ---"
-  curl -sk https://cortexbuildpro.com/sw.js 2>&1 | grep -E "^const CACHE_VERSION"
----
---- live sw.js CACHE_VERSION ---
-const CACHE_VERSION = 'cortexx-v4'
