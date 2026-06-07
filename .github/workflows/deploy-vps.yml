@@ -176,12 +176,15 @@ jobs:
 
             EXISTING_PASS=""
             if [ -f /opt/cortexx/.env.production ]; then
-              EXISTING_PASS=$(grep -oP 'DATABASE_URL=postgresql://cortexx:\K[^@]+' /opt/cortexx/.env.production || echo "")
+              # Extract the password part of the URL (between : and @)
+              EXISTING_PASS=$(grep '^DATABASE_URL=' /opt/cortexx/.env.production | sed -E 's|.*://cortexx:([^@]+)@.*|\1|' || echo "")
             fi
 
             DB_PASS=""
-            if [ -n "$EXISTING_PASS" ] && [ "$HAS_USER" = "1" ] && PGPASSWORD="$EXISTING_PASS" psql "postgresql://cortexx:$EXISTING_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>/dev/null | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
-              DB_PASS="$EXISTING_PASS"
+            # Test connection using the connection string directly (psql decodes the URL-encoded password)
+            if [ -n "$EXISTING_PASS" ] && [ "$HAS_USER" = "1" ] && psql "postgresql://cortexx:$EXISTING_PASS@$PG_IP:5432/postgres" -tAc "SELECT 1" >/dev/null 2>&1; then
+              # Connection worked! Use Node to get the RAW decoded password for PGPASSWORD and future steps.
+              DB_PASS=$(node -e "console.log(decodeURIComponent(process.argv[1]))" "$EXISTING_PASS")
               echo "✓ Reusing existing password from .env.production"
             else
               DB_PASS="$DB_PASS_CANDIDATE"
@@ -202,7 +205,7 @@ jobs:
             sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;" >/dev/null
 
             # verify auth actually works before proceeding
-            if ! PGPASSWORD="$DB_PASS" psql "postgresql://cortexx:***@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>/dev/null | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
+            if ! PGPASSWORD="$DB_PASS" psql -h "$PG_IP" -U cortexx -d postgres -tAc "SELECT 1" >/dev/null 2>&1; then
               echo "✗ DB auth verification failed — credentials are not actually working"
               exit 1
             fi
