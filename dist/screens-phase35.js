@@ -1,3 +1,5 @@
+// Cortexx — Phase 35: Cortex AI conversation memory
+
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
@@ -16,7 +18,7 @@
       s[n] = [{
         ...d,
         id: Math.max(0, ...ids) + 1
-      }, ...s[n]].slice(0, 50);
+      }, ...s[n]].slice(0, 50); // keep last 50
       try {
         localStorage.setItem('cortexx_db_v1', JSON.stringify(s));
       } catch (e) {}
@@ -34,6 +36,8 @@
     }
   });
   Backend.db.aiHistory = mk('aiHistory');
+
+  // Wrap ai.ask so every call writes to history
   const origAsk = Backend.ai.ask;
   Backend.ai.ask = async (userMsg, opts = {}) => {
     const result = await origAsk(userMsg, opts);
@@ -51,30 +55,30 @@ function AIHistoryScreen({
   accent
 }) {
   const history = useDB('aiHistory');
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Conversation history",
     subtitle: `${history.length} past chats with Cortex`,
-    right: history.length > 0 && React.createElement(HeaderBtn, {
+    right: history.length > 0 && /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.trash,
       onClick: async () => {
         await Backend.db.aiHistory.clear();
         toast('History cleared', 'success');
       }
     })
-  }), history.length === 0 ? React.createElement("div", {
+  }), history.length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 60,
       height: 60,
@@ -88,21 +92,21 @@ function AIHistoryScreen({
     }
   }, React.cloneElement(Ic.spark, {
     size: 30
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       color: T.t1,
       fontWeight: 600
     }
-  }, "No history yet"), React.createElement("div", {
+  }, "No history yet"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 6
     }
-  }, "Ask Cortex anything \u2014 chats appear here"), React.createElement("button", {
+  }, "Ask Cortex anything \u2014 chats appear here"), /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav('ai'),
     style: {
       marginTop: 20,
@@ -116,14 +120,14 @@ function AIHistoryScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Start a chat")) : React.createElement("div", {
+  }, "Start a chat")) : /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: 10
     }
-  }, history.map(h => React.createElement("div", {
+  }, history.map(h => /*#__PURE__*/React.createElement("div", {
     key: h.id,
     style: {
       background: T.bg2,
@@ -131,20 +135,20 @@ function AIHistoryScreen({
       padding: 12,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 8
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t3
     }
   }, React.cloneElement(Ic.search, {
     size: 11
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
@@ -155,7 +159,7 @@ function AIHistoryScreen({
     month: 'short',
     hour: '2-digit',
     minute: '2-digit'
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -163,7 +167,7 @@ function AIHistoryScreen({
       fontWeight: 600,
       marginBottom: 8
     }
-  }, "\"", h.userMsg, "\""), React.createElement("div", {
+  }, "\"", h.userMsg, "\""), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'flex-start',
@@ -171,7 +175,7 @@ function AIHistoryScreen({
       paddingTop: 8,
       borderTop: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 20,
       height: 20,
@@ -185,7 +189,7 @@ function AIHistoryScreen({
     }
   }, React.cloneElement(Ic.spark, {
     size: 11
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       fontFamily: SF,

@@ -1,3 +1,7 @@
+// Cortexx — Notification digests (Phase 91)
+// A scheduled summary of what matters to a member: tasks due, overdue invoices,
+// approvals waiting, safety expiries. Live-compiled from Backend data, per tenant.
+
 (function () {
   if (window.CortexDigest) return;
   const KEY = () => 'cortexx_digest__' + (window.CortexTenant ? window.CortexTenant.active() : 'default');
@@ -31,6 +35,7 @@
         localStorage.setItem(KEY(), JSON.stringify(p));
       } catch (e) {}
     },
+    // Compile the live digest from current Backend state.
     compile() {
       const db = window.Backend && window.Backend.db;
       const out = {
@@ -70,7 +75,7 @@ function DigestScreen({
 }) {
   const [cfg, setCfg] = React.useState(window.CortexDigest.get());
   useDB('tasks');
-  useDB('invoices');
+  useDB('invoices'); // re-render on data change
   const digest = window.CortexDigest.compile();
   const save = c => {
     setCfg(c);
@@ -91,7 +96,7 @@ function DigestScreen({
   const Switch = ({
     on,
     onClick
-  }) => React.createElement("button", {
+  }) => /*#__PURE__*/React.createElement("button", {
     onClick: onClick,
     style: {
       width: 44,
@@ -104,7 +109,7 @@ function DigestScreen({
       position: 'relative',
       transition: 'background 0.2s'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       position: 'absolute',
       top: 3,
@@ -122,11 +127,11 @@ function DigestScreen({
     color,
     items,
     render
-  }) => items.length === 0 ? null : React.createElement("div", {
+  }) => items.length === 0 ? null : /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -136,14 +141,14 @@ function DigestScreen({
       letterSpacing: 0.6,
       marginBottom: 7
     }
-  }, title, " \xB7 ", items.length), React.createElement("div", {
+  }, title, " \xB7 ", items.length), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 12,
       border: `0.5px solid ${T.hair}`,
       overflow: 'hidden'
     }
-  }, items.map((it, i) => React.createElement("div", {
+  }, items.map((it, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       padding: '10px 13px',
@@ -152,7 +157,7 @@ function DigestScreen({
       alignItems: 'center',
       gap: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 6,
       height: 6,
@@ -165,30 +170,30 @@ function DigestScreen({
     if (window.cortexxToast) window.cortexxToast(`Digest sent · ${total} items`, 'success');
     if (window.CortexAudit) window.CortexAudit.log('You', `sent test digest (${total} items)`, 'Settings');
   };
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Digests",
     subtitle: "Your scheduled summary",
     ws: true
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 14,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -197,12 +202,12 @@ function DigestScreen({
       letterSpacing: 0.5,
       marginBottom: 8
     }
-  }, "Frequency"), React.createElement("div", {
+  }, "Frequency"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6
     }
-  }, FREQ.map(f => React.createElement("button", {
+  }, FREQ.map(f => /*#__PURE__*/React.createElement("button", {
     key: f.k,
     onClick: () => save({
       ...cfg,
@@ -220,17 +225,17 @@ function DigestScreen({
       fontSize: 13,
       fontWeight: 700
     }
-  }, f.l))), cfg.freq !== 'off' && React.createElement("div", {
+  }, f.l))), cfg.freq !== 'off' && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 10,
       marginTop: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -239,7 +244,7 @@ function DigestScreen({
       letterSpacing: 0.5,
       marginBottom: 5
     }
-  }, "Time"), React.createElement("input", {
+  }, "Time"), /*#__PURE__*/React.createElement("input", {
     type: "time",
     value: cfg.time,
     onChange: e => save({
@@ -258,11 +263,11 @@ function DigestScreen({
       outline: 'none',
       boxSizing: 'border-box'
     }
-  })), cfg.freq === 'weekly' && React.createElement("div", {
+  })), cfg.freq === 'weekly' && /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1.4
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -271,7 +276,7 @@ function DigestScreen({
       letterSpacing: 0.5,
       marginBottom: 5
     }
-  }, "Day"), React.createElement("select", {
+  }, "Day"), /*#__PURE__*/React.createElement("select", {
     value: cfg.day,
     onChange: e => save({
       ...cfg,
@@ -289,10 +294,10 @@ function DigestScreen({
       outline: 'none',
       boxSizing: 'border-box'
     }
-  }, DAYS.map(d => React.createElement("option", {
+  }, DAYS.map(d => /*#__PURE__*/React.createElement("option", {
     key: d,
     value: d
-  }, d))))), cfg.freq !== 'off' && React.createElement("div", {
+  }, d))))), cfg.freq !== 'off' && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 12,
       paddingTop: 12,
@@ -301,20 +306,20 @@ function DigestScreen({
       flexDirection: 'column',
       gap: 10
     }
-  }, [['email', 'Email digest'], ['push', 'Push summary']].map(([k, l]) => React.createElement("div", {
+  }, [['email', 'Email digest'], ['push', 'Push summary']].map(([k, l]) => /*#__PURE__*/React.createElement("div", {
     key: k,
     style: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1
     }
-  }, l), React.createElement(Switch, {
+  }, l), /*#__PURE__*/React.createElement(Switch, {
     on: cfg.channels[k],
     onClick: () => save({
       ...cfg,
@@ -323,7 +328,7 @@ function DigestScreen({
         [k]: !cfg.channels[k]
       }
     })
-  }))))), cfg.freq !== 'off' && React.createElement("div", {
+  }))))), cfg.freq !== 'off' && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -331,13 +336,13 @@ function DigestScreen({
       textAlign: 'center',
       margin: '12px 0 4px'
     }
-  }, "Next: ", cfg.freq === 'daily' ? `every day at ${cfg.time}` : `every ${cfg.day} at ${cfg.time}`)), React.createElement(Section, {
+  }, "Next: ", cfg.freq === 'daily' ? `every day at ${cfg.time}` : `every ${cfg.day} at ${cfg.time}`)), /*#__PURE__*/React.createElement(Section, {
     title: `Preview · ${total} item${total === 1 ? '' : 's'}`
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, total === 0 ? React.createElement("div", {
+  }, total === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '24px 16px',
       textAlign: 'center',
@@ -345,23 +350,23 @@ function DigestScreen({
       fontSize: 13,
       color: T.t3
     }
-  }, "Nothing needs attention right now \u2014 your digest is clear. \uD83C\uDF89") : React.createElement(React.Fragment, null, React.createElement(Group, {
+  }, "Nothing needs attention right now \u2014 your digest is clear. \uD83C\uDF89") : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Group, {
     title: "Tasks due soon",
     color: T.amber,
     items: digest.tasks,
-    render: t => React.createElement("div", {
+    render: t => /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1,
         fontWeight: 500
       }
-    }, t.t || t.title), React.createElement("div", {
+    }, t.t || t.title), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
@@ -371,24 +376,24 @@ function DigestScreen({
       day: '2-digit',
       month: 'short'
     })))
-  }), React.createElement(Group, {
+  }), /*#__PURE__*/React.createElement(Group, {
     title: "Invoices outstanding",
     color: T.red,
     items: digest.invoices,
-    render: iv => React.createElement("div", {
+    render: iv => /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1
       }
-    }, iv.client), React.createElement("span", {
+    }, iv.client), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 12,
@@ -396,59 +401,59 @@ function DigestScreen({
         fontWeight: 700
       }
     }, "\xA3", (iv.amount || 0).toLocaleString()))
-  }), React.createElement(Group, {
+  }), /*#__PURE__*/React.createElement(Group, {
     title: "Quotes awaiting reply",
     color: T.purple,
     items: digest.approvals,
-    render: q => React.createElement("div", {
+    render: q => /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1
       }
-    }, q.client || q.title), React.createElement("span", {
+    }, q.client || q.title), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 12,
         color: T.t2
       }
     }, "\xA3", ((q.total || 0) / 1000).toFixed(1), "k"))
-  }), React.createElement(Group, {
+  }), /*#__PURE__*/React.createElement(Group, {
     title: "Certs to check",
     color: T.cyan,
     items: digest.safety,
-    render: m => React.createElement("div", {
+    render: m => /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'center'
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1
       }
-    }, m.n || m.name), React.createElement("span", {
+    }, m.n || m.name), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t3
       }
     }, m.cscs || 'CSCS'))
-  })))), React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 0'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: sendTest,
     disabled: total === 0,
     style: {

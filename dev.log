@@ -1,0 +1,7 @@
+
+> cortexx@2.0.0 dev
+> npx serve .
+
+ INFO  Accepting connections at http://localhost:35881
+ HTTP  6/7/2026 6:44:47 AM ::1 GET /
+ HTTP  6/7/2026 6:44:47 AM ::1 Returned 200 in 49 ms

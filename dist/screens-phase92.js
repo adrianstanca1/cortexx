@@ -1,3 +1,8 @@
+// Cortexx — Client messages inbox (Phase 92)
+// Surfaces messages clients send from the standalone portal (portal.html),
+// which write to localStorage['cortexx_portal_messages']. Contractor can read,
+// mark replied, and clear. Closes the client-portal communication loop.
+
 (function () {
   if (window.CortexPortalMsgs) return;
   const KEY = 'cortexx_portal_messages';
@@ -43,6 +48,7 @@
       save(load().filter(x => x.id !== id));
       return load();
     },
+    // Dev/demo seed so the screen isn't empty on first open.
     seedIfEmpty() {
       if (load().length) return;
       save([{
@@ -71,10 +77,13 @@ function ClientMessagesScreen({
 }) {
   window.CortexPortalMsgs.seedIfEmpty();
   const [msgs, setMsgs] = React.useState(window.CortexPortalMsgs.list());
-  const [reply, setReply] = React.useState(null);
+  const [reply, setReply] = React.useState(null); // message being replied to
   const [draft, setDraft] = React.useState('');
   const [cloudOn, setCloudOn] = React.useState(false);
   const refresh = () => setMsgs(window.CortexPortalMsgs.list());
+
+  // Pull server-backed portal inbox when signed in to the cloud, and merge
+  // into the local store (so localStorage + server messages live together).
   React.useEffect(() => {
     const cloud = window.cortexxCloud;
     if (!cloud || !cloud.status().authed) return;
@@ -127,6 +136,7 @@ function ClientMessagesScreen({
   const sendReply = () => {
     if (!draft.trim() || !reply) return;
     window.CortexPortalMsgs.markReplied(reply.id);
+    // If this message came from the server, post the reply back to the API.
     if (reply._server && window.cortexxCloud && window.cortexxCloud.status().authed) {
       const srvId = String(reply.id).replace(/^srv-/, '');
       const api = window.cortexxCloud.status().apiUrl;
@@ -164,23 +174,23 @@ function ClientMessagesScreen({
     });
   };
   const unread = msgs.filter(m => !m.read).length;
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Client messages",
     subtitle: (unread ? `${unread} unread · ` : '') + (cloudOn ? 'synced from cloud + portals' : 'from your client portals'),
     ws: true
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, msgs.length === 0 ? React.createElement("div", {
+  }, msgs.length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '40px 16px',
       textAlign: 'center',
@@ -188,13 +198,13 @@ function ClientMessagesScreen({
       fontSize: 13,
       color: T.t3
     }
-  }, "No client messages yet. When a client sends a note from their portal, it lands here.") : React.createElement("div", {
+  }, "No client messages yet. When a client sends a note from their portal, it lands here.") : /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, msgs.map(m => React.createElement("div", {
+  }, msgs.map(m => /*#__PURE__*/React.createElement("div", {
     key: m.id,
     onClick: () => open(m),
     style: {
@@ -205,36 +215,36 @@ function ClientMessagesScreen({
       border: `0.5px solid ${m.read ? T.hair : accent}`,
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10,
       marginBottom: 8
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: m.client,
     size: 32,
     c: accent
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, m.client), React.createElement("div", {
+  }, m.client), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t3
     }
-  }, m.project, " \xB7 ", fmtWhen(m.when))), !m.read && React.createElement("div", {
+  }, m.project, " \xB7 ", fmtWhen(m.when))), !m.read && /*#__PURE__*/React.createElement("div", {
     style: {
       width: 9,
       height: 9,
@@ -242,13 +252,13 @@ function ClientMessagesScreen({
       background: accent,
       flexShrink: 0
     }
-  }), m.kind === 'approval' && React.createElement(Pill, {
+  }), m.kind === 'approval' && /*#__PURE__*/React.createElement(Pill, {
     c: T.green,
     size: "xs"
-  }, "APPROVED"), m.replied && React.createElement(Pill, {
+  }, "APPROVED"), m.replied && /*#__PURE__*/React.createElement(Pill, {
     c: T.green,
     size: "xs"
-  }, "REPLIED")), React.createElement("div", {
+  }, "REPLIED")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -256,41 +266,41 @@ function ClientMessagesScreen({
       lineHeight: 1.45,
       opacity: 0.92
     }
-  }, m.text)))))), reply && React.createElement(Sheet, {
+  }, m.text)))))), reply && /*#__PURE__*/React.createElement(Sheet, {
     onClose: () => setReply(null)
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '20px 20px 30px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10,
       marginBottom: 14
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: reply.client,
     size: 40,
     c: accent
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
       fontWeight: 700,
       color: T.t1
     }
-  }, reply.client), React.createElement("div", {
+  }, reply.client), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2
     }
-  }, reply.project)), React.createElement("button", {
+  }, reply.project)), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       remove(reply.id);
       setReply(null);
@@ -305,7 +315,7 @@ function ClientMessagesScreen({
     }
   }, React.cloneElement(Ic.trash || Ic.x, {
     size: 16
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 12,
@@ -316,7 +326,7 @@ function ClientMessagesScreen({
       lineHeight: 1.5,
       marginBottom: 14
     }
-  }, reply.text), React.createElement("div", {
+  }, reply.text), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -325,7 +335,7 @@ function ClientMessagesScreen({
       letterSpacing: 0.5,
       marginBottom: 6
     }
-  }, "Your reply"), React.createElement("textarea", {
+  }, "Your reply"), /*#__PURE__*/React.createElement("textarea", {
     value: draft,
     onChange: e => setDraft(e.target.value),
     rows: 4,
@@ -343,7 +353,7 @@ function ClientMessagesScreen({
       resize: 'vertical',
       boxSizing: 'border-box'
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: sendReply,
     disabled: !draft.trim(),
     style: {

@@ -1,3 +1,8 @@
+// CortexBuild Pro — Push / E2EE / CIS300 UI (Phase 105)
+
+// ════════════════════════════════════════════════════════════════════
+// PUSH NOTIFICATIONS SETTINGS
+// ════════════════════════════════════════════════════════════════════
 function PushSettingsScreen({
   accent
 }) {
@@ -29,9 +34,9 @@ function PushSettingsScreen({
     await refresh();
     setBusy(false);
   };
-  if (!st) return React.createElement(ScreenBg, {
+  if (!st) return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
@@ -41,7 +46,7 @@ function PushSettingsScreen({
   const Pill = ({
     ok,
     t: txt
-  }) => React.createElement("span", {
+  }) => /*#__PURE__*/React.createElement("span", {
     style: {
       display: 'inline-flex',
       alignItems: 'center',
@@ -55,17 +60,17 @@ function PushSettingsScreen({
       fontFamily: SFMono
     }
   }, txt);
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Push notifications",
     subtitle: "Web Push (VAPID) \xB7 iOS/Android via Capacitor"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 14,
@@ -73,68 +78,68 @@ function PushSettingsScreen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700
     }
-  }, "Status"), React.createElement(Pill, {
+  }, "Status"), /*#__PURE__*/React.createElement(Pill, {
     ok: st.subscribed,
     t: st.subscribed ? 'SUBSCRIBED' : 'NOT SUBSCRIBED'
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr auto',
       rowGap: 8,
       fontSize: 13
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2
     }
-  }, "Supported"), React.createElement("div", {
+  }, "Supported"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 600,
       color: st.supported ? T.green : T.red
     }
-  }, st.supported ? 'Yes' : 'No'), React.createElement("div", {
+  }, st.supported ? 'Yes' : 'No'), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2
     }
-  }, "Mode"), React.createElement("div", {
+  }, "Mode"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 600,
       fontFamily: SFMono,
       fontSize: 12
     }
-  }, st.mode || '—'), React.createElement("div", {
+  }, st.mode || '—'), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2
     }
-  }, "Permission"), React.createElement("div", {
+  }, "Permission"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 600,
       fontFamily: SFMono,
       fontSize: 12
     }
-  }, st.permission || '—'), React.createElement("div", {
+  }, st.permission || '—'), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2
     }
-  }, "VAPID key"), React.createElement("div", {
+  }, "VAPID key"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 600,
       color: st.vapidLoaded ? T.green : T.amber,
       fontSize: 12
     }
-  }, st.vapidLoaded ? 'Loaded' : 'Server must set'))), !st.subscribed && st.supported && React.createElement("button", {
+  }, st.vapidLoaded ? 'Loaded' : 'Server must set'))), !st.subscribed && st.supported && /*#__PURE__*/React.createElement("button", {
     onClick: subscribe,
     disabled: busy,
     style: {
@@ -150,7 +155,7 @@ function PushSettingsScreen({
       fontWeight: 700,
       opacity: busy ? 0.7 : 1
     }
-  }, busy ? 'Subscribing…' : 'Enable notifications'), st.subscribed && React.createElement("button", {
+  }, busy ? 'Subscribing…' : 'Enable notifications'), st.subscribed && /*#__PURE__*/React.createElement("button", {
     onClick: unsub,
     disabled: busy,
     style: {
@@ -165,7 +170,7 @@ function PushSettingsScreen({
       fontSize: 14,
       fontWeight: 700
     }
-  }, "Unsubscribe"), React.createElement("div", {
+  }, "Unsubscribe"), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 16,
       padding: 12,
@@ -173,20 +178,24 @@ function PushSettingsScreen({
       color: T.t2,
       lineHeight: 1.5
     }
-  }, "On the server: ", React.createElement("code", {
+  }, "On the server: ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
-  }, "VAPID_PUBLIC_KEY"), " / ", React.createElement("code", {
+  }, "VAPID_PUBLIC_KEY"), " / ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
-  }, "VAPID_PRIVATE_KEY"), " generated via ", React.createElement("code", {
+  }, "VAPID_PRIVATE_KEY"), " generated via ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
   }, "npx web-push generate-vapid-keys"), ". Inside iOS the Capacitor wrapper handles APNs registration automatically.")));
 }
+
+// ════════════════════════════════════════════════════════════════════
+// END-TO-END ENCRYPTION SETTINGS
+// ════════════════════════════════════════════════════════════════════
 function E2EEScreen({
   accent
 }) {
@@ -194,9 +203,9 @@ function E2EEScreen({
   const [pass, setPass] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [, force] = React.useReducer(x => x + 1, 0);
-  if (!E || !E.available) return React.createElement(ScreenBg, {
+  if (!E || !E.available) return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 40,
       color: T.t2,
@@ -232,17 +241,17 @@ function E2EEScreen({
   };
   const enabled = E.isEnabled(),
     unlocked = E.isUnlocked();
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "End-to-end encryption",
     subtitle: 'AES-GCM 256 · PBKDF2 ' + E.iterations / 1000 + 'k iters'
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 14,
@@ -250,18 +259,18 @@ function E2EEScreen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       marginBottom: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700
     }
-  }, "Status"), React.createElement("span", {
+  }, "Status"), /*#__PURE__*/React.createElement("span", {
     style: {
       padding: '4px 10px',
       borderRadius: 999,
@@ -271,13 +280,13 @@ function E2EEScreen({
       background: enabled ? unlocked ? 'rgba(34,197,94,.1)' : 'rgba(245,158,11,.1)' : 'rgba(127,127,127,.1)',
       color: enabled ? unlocked ? T.green : T.amber : T.t2
     }
-  }, enabled ? unlocked ? 'UNLOCKED' : 'LOCKED' : 'OFF')), React.createElement("div", {
+  }, enabled ? unlocked ? 'UNLOCKED' : 'LOCKED' : 'OFF')), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
       color: T.t2,
       lineHeight: 1.55
     }
-  }, "Encrypts record payloads before they leave the device on cloud sync. The server only sees ciphertext. Your passphrase NEVER leaves the device \u2014 if you forget it, encrypted records are unrecoverable.")), !unlocked && React.createElement("div", {
+  }, "Encrypts record payloads before they leave the device on cloud sync. The server only sees ciphertext. Your passphrase NEVER leaves the device \u2014 if you forget it, encrypted records are unrecoverable.")), !unlocked && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 14,
@@ -285,7 +294,7 @@ function E2EEScreen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -293,7 +302,7 @@ function E2EEScreen({
       marginBottom: 8,
       letterSpacing: 0.6
     }
-  }, enabled ? 'UNLOCK' : 'SET PASSPHRASE'), React.createElement("input", {
+  }, enabled ? 'UNLOCK' : 'SET PASSPHRASE'), /*#__PURE__*/React.createElement("input", {
     type: "password",
     value: pass,
     onChange: e => setPass(e.target.value),
@@ -309,7 +318,7 @@ function E2EEScreen({
       fontSize: 14,
       boxSizing: 'border-box'
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: enable,
     disabled: busy || pass.length < 8,
     style: {
@@ -324,7 +333,7 @@ function E2EEScreen({
       fontWeight: 700,
       opacity: busy || pass.length < 8 ? 0.5 : 1
     }
-  }, busy ? 'Deriving…' : enabled ? 'Unlock' : 'Enable E2EE')), unlocked && React.createElement("button", {
+  }, busy ? 'Deriving…' : enabled ? 'Unlock' : 'Enable E2EE')), unlocked && /*#__PURE__*/React.createElement("button", {
     onClick: lock,
     style: {
       marginTop: 14,
@@ -337,7 +346,7 @@ function E2EEScreen({
       fontSize: 14,
       fontWeight: 700
     }
-  }, "Lock now"), enabled && React.createElement("button", {
+  }, "Lock now"), enabled && /*#__PURE__*/React.createElement("button", {
     onClick: forgetAll,
     style: {
       marginTop: 8,
@@ -352,10 +361,15 @@ function E2EEScreen({
     }
   }, "Forget passphrase (start over)")));
 }
+
+// ════════════════════════════════════════════════════════════════════
+// CIS300 MONTHLY RETURN
+// ════════════════════════════════════════════════════════════════════
 function CIS300Screen({
   accent
 }) {
   const today = new Date();
+  // Default to last month-end 5th
   const dflt = function () {
     const d = new Date(today.getFullYear(), today.getMonth(), 5);
     if (today.getDate() < 6) d.setMonth(d.getMonth() - 1);
@@ -369,8 +383,9 @@ function CIS300Screen({
     utr: '',
     aoRef: ''
   });
+  // HMRC submission state
   const [hmrcCfg, setHmrcCfg] = React.useState(null);
-  const [submitState, setSubmitState] = React.useState(null);
+  const [submitState, setSubmitState] = React.useState(null); // null | {phase, correlationId, elapsed, errors, attempt}
   const [submitting, setSubmitting] = React.useState(false);
   React.useEffect(() => {
     if (window.CortexCIS300) setRet(window.CortexCIS300.compute(monthEnd));
@@ -392,6 +407,7 @@ function CIS300Screen({
     });
     try {
       const xml = window.CortexCIS300.toHMRCXml(ret, empRefs);
+      // Strip the GovTalk wrapper — server adds its own. Send only the IRenvelope body.
       const r = await window.CortexHMRC.submitCIS300(xml, monthEnd);
       if (r.errors) {
         setSubmitState({
@@ -408,6 +424,7 @@ function CIS300Screen({
         correlationId: r.correlationId,
         attempt: 0
       });
+      // Poll until done
       const final = await window.CortexHMRC.pollUntilDone(r.correlationId, {
         interval: r.pollInterval || 5,
         maxAttempts: 24,
@@ -448,40 +465,40 @@ function CIS300Screen({
     window.CortexCIS300.download('cis300-' + monthEnd + '.csv', window.CortexCIS300.toCSV(ret), 'text/csv');
     if (window.cortexxToast) window.cortexxToast('Accountant CSV downloaded', 'success');
   };
-  if (!ret) return React.createElement(ScreenBg, {
+  if (!ret) return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 40,
       color: T.t2,
       textAlign: 'center'
     }
   }, "Loading\u2026"));
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "CIS300 monthly return",
     subtitle: 'Period · ' + ret.start + ' to ' + ret.end
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       display: 'flex',
       alignItems: 'center',
       gap: 10
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 11,
       fontWeight: 700,
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "MONTH END"), React.createElement("input", {
+  }, "MONTH END"), /*#__PURE__*/React.createElement("input", {
     type: "date",
     value: monthEnd,
     onChange: e => setMonthEnd(e.target.value),
@@ -494,7 +511,7 @@ function CIS300Screen({
       color: T.t1,
       fontFamily: SFMono
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 14,
@@ -502,7 +519,7 @@ function CIS300Screen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(2,1fr)',
@@ -510,46 +527,46 @@ function CIS300Screen({
       columnGap: 14,
       fontSize: 13
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2,
       fontSize: 11
     }
-  }, "Subcontractors paid"), React.createElement("div", {
+  }, "Subcontractors paid"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 700
     }
-  }, ret.totals.subs)), React.createElement("div", null, React.createElement("div", {
+  }, ret.totals.subs)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2,
       fontSize: 11
     }
-  }, "Total gross"), React.createElement("div", {
+  }, "Total gross"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 700,
       fontFamily: SFMono
     }
-  }, "\xA3", ret.totals.gross.toLocaleString())), React.createElement("div", null, React.createElement("div", {
+  }, "\xA3", ret.totals.gross.toLocaleString())), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2,
       fontSize: 11
     }
-  }, "Materials"), React.createElement("div", {
+  }, "Materials"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 700,
       fontFamily: SFMono
     }
-  }, "\xA3", ret.totals.materials.toLocaleString())), React.createElement("div", null, React.createElement("div", {
+  }, "\xA3", ret.totals.materials.toLocaleString())), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2,
       fontSize: 11
     }
-  }, "Labour"), React.createElement("div", {
+  }, "Labour"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 700,
       fontFamily: SFMono
     }
-  }, "\xA3", ret.totals.labour.toLocaleString())), React.createElement("div", {
+  }, "\xA3", ret.totals.labour.toLocaleString())), /*#__PURE__*/React.createElement("div", {
     style: {
       gridColumn: '1/3',
       padding: 8,
@@ -557,19 +574,19 @@ function CIS300Screen({
       background: T.green + '15',
       marginTop: 4
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2,
       fontSize: 11
     }
-  }, "Total deducted (payable to HMRC)"), React.createElement("div", {
+  }, "Total deducted (payable to HMRC)"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 800,
       fontFamily: SFMono,
       color: T.green,
       fontSize: 18
     }
-  }, "\xA3", ret.totals.deductions.toLocaleString())))), React.createElement("div", {
+  }, "\xA3", ret.totals.deductions.toLocaleString())))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -577,13 +594,13 @@ function CIS300Screen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "SUBCONTRACTORS"), ret.subs.length === 0 && React.createElement("div", {
+  }, "SUBCONTRACTORS"), ret.subs.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 14,
       fontSize: 13,
       color: T.t2
     }
-  }, "No subcontractor payments in this period. Add subs + payments in the Subs sheet."), ret.subs.map(s => React.createElement("div", {
+  }, "No subcontractor payments in this period. Add subs + payments in the Subs sheet."), ret.subs.map(s => /*#__PURE__*/React.createElement("div", {
     key: s.utr || s.name,
     style: {
       marginTop: 8,
@@ -592,40 +609,40 @@ function CIS300Screen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700
     }
-  }, s.name), React.createElement("div", {
+  }, s.name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.t2,
       fontFamily: SFMono
     }
-  }, "UTR ", s.utr || '—', " \xB7 ", s.verified ? 'verified' : '30% (unverified)')), React.createElement("div", {
+  }, "UTR ", s.utr || '—', " \xB7 ", s.verified ? 'verified' : '30% (unverified)')), /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'right'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700,
       fontFamily: SFMono
     }
-  }, "\xA3", s.gross.toLocaleString()), React.createElement("div", {
+  }, "\xA3", s.gross.toLocaleString()), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.red,
       fontFamily: SFMono
     }
-  }, "\u2212\xA3", s.deduction.toLocaleString()))))), React.createElement("div", {
+  }, "\u2212\xA3", s.deduction.toLocaleString()))))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 14,
@@ -633,7 +650,7 @@ function CIS300Screen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -657,7 +674,7 @@ function CIS300Screen({
     k: 'aoRef',
     label: 'AO ref',
     ph: '123PA00012345'
-  }].map(f => React.createElement("div", {
+  }].map(f => /*#__PURE__*/React.createElement("div", {
     key: f.k,
     style: {
       display: 'flex',
@@ -665,13 +682,13 @@ function CIS300Screen({
       gap: 10,
       marginBottom: 8
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
       fontSize: 12,
       color: T.t2
     }
-  }, f.label), React.createElement("input", {
+  }, f.label), /*#__PURE__*/React.createElement("input", {
     value: empRefs[f.k],
     onChange: e => setEmpRefs({
       ...empRefs,
@@ -688,13 +705,13 @@ function CIS300Screen({
       fontFamily: SFMono,
       fontSize: 12
     }
-  })))), React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 18
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: downloadCsv,
     style: {
       flex: 1,
@@ -706,7 +723,7 @@ function CIS300Screen({
       fontSize: 13,
       fontWeight: 700
     }
-  }, "CSV (accountant)"), React.createElement("button", {
+  }, "CSV (accountant)"), /*#__PURE__*/React.createElement("button", {
     onClick: downloadXml,
     disabled: !ret.subs.length,
     style: {
@@ -720,7 +737,7 @@ function CIS300Screen({
       fontWeight: 700,
       opacity: ret.subs.length ? 1 : 0.5
     }
-  }, "CIS300 XML (HMRC)")), hmrcCfg && hmrcCfg.configured && React.createElement("button", {
+  }, "CIS300 XML (HMRC)")), hmrcCfg && hmrcCfg.configured && /*#__PURE__*/React.createElement("button", {
     onClick: submitToHMRC,
     disabled: submitting || !ret.subs.length || !empRefs.utr,
     style: {
@@ -736,7 +753,7 @@ function CIS300Screen({
       fontWeight: 800,
       opacity: submitting || !ret.subs.length || !empRefs.utr ? 0.5 : 1
     }
-  }, submitting ? 'Submitting…' : `Submit to HMRC (${hmrcCfg.env.toUpperCase()})`), hmrcCfg && !hmrcCfg.configured && React.createElement("div", {
+  }, submitting ? 'Submitting…' : `Submit to HMRC (${hmrcCfg.env.toUpperCase()})`), hmrcCfg && !hmrcCfg.configured && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
       padding: 10,
@@ -746,15 +763,15 @@ function CIS300Screen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, "HMRC Gateway not configured on server. Set ", React.createElement("code", {
+  }, "HMRC Gateway not configured on server. Set ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
-  }, "HMRC_GATEWAY_USER"), " + ", React.createElement("code", {
+  }, "HMRC_GATEWAY_USER"), " + ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
-  }, "HMRC_GATEWAY_PASS"), " to enable direct submission."), submitState && React.createElement("div", {
+  }, "HMRC_GATEWAY_PASS"), " to enable direct submission."), submitState && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 14,
@@ -762,7 +779,7 @@ function CIS300Screen({
       background: submitState.phase === 'accepted' ? 'rgba(34,197,94,.08)' : submitState.phase === 'rejected' || submitState.phase === 'error' ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.06)',
       border: '1px solid ' + (submitState.phase === 'accepted' ? T.green + '40' : submitState.phase === 'rejected' || submitState.phase === 'error' ? 'rgba(239,68,68,.3)' : 'rgba(245,158,11,.25)')
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -770,31 +787,31 @@ function CIS300Screen({
       letterSpacing: 0.6,
       marginBottom: 6
     }
-  }, "HMRC SUBMISSION"), React.createElement("div", {
+  }, "HMRC SUBMISSION"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 800,
       color: submitState.phase === 'accepted' ? T.green : submitState.phase === 'rejected' || submitState.phase === 'error' ? T.red : T.amber
     }
-  }, submitState.phase === 'submitting' && 'Sending…', submitState.phase === 'polling' && 'Polling HMRC · attempt ' + (submitState.attempt || 0) + ' · ' + (submitState.elapsed || 0) + 's', submitState.phase === 'accepted' && '✓ Accepted by HMRC', submitState.phase === 'rejected' && '✗ Rejected', submitState.phase === 'error' && '✗ ' + (submitState.error || 'Error')), submitState.correlationId && React.createElement("div", {
+  }, submitState.phase === 'submitting' && 'Sending…', submitState.phase === 'polling' && 'Polling HMRC · attempt ' + (submitState.attempt || 0) + ' · ' + (submitState.elapsed || 0) + 's', submitState.phase === 'accepted' && '✓ Accepted by HMRC', submitState.phase === 'rejected' && '✗ Rejected', submitState.phase === 'error' && '✗ ' + (submitState.error || 'Error')), submitState.correlationId && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 6,
       fontSize: 11,
       color: T.t2
     }
-  }, "Correlation ID: ", React.createElement("span", {
+  }, "Correlation ID: ", /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       color: T.t1
     }
-  }, submitState.correlationId)), submitState.errors && submitState.errors.map((e, i) => React.createElement("div", {
+  }, submitState.correlationId)), submitState.errors && submitState.errors.map((e, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       marginTop: 6,
       fontSize: 12,
       color: T.red
     }
-  }, "#", e.number, ": ", e.text))), React.createElement("div", {
+  }, "#", e.number, ": ", e.text))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 16,
       padding: 12,
@@ -802,7 +819,7 @@ function CIS300Screen({
       color: T.t2,
       lineHeight: 1.5
     }
-  }, "The XML matches HMRC's CISReturns v2.0 schema. Submission needs your Gateway credentials and signing \u2014 wrap this body in ", React.createElement("code", {
+  }, "The XML matches HMRC's CISReturns v2.0 schema. Submission needs your Gateway credentials and signing \u2014 wrap this body in ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }

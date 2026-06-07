@@ -192,7 +192,8 @@ router.post('/banking/disconnect', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     if (!pool) return res.status(503).json({ error: 'no pool' });
-    await pool.query('DELETE FROM bank_connections WHERE id=$1', [req.body.connectionId]);
+    const wsId = (req.user && req.user.ws) || null;
+    await pool.query('DELETE FROM bank_connections WHERE id=$1 AND (workspace_id=$2 OR workspace_id IS NULL)', [req.body.connectionId, wsId]);
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });

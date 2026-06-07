@@ -1,3 +1,8 @@
+// Cortexx — operations screens (Quotes, Timesheets, Calendar, Materials, Subs, Equipment)
+
+// ═══════════════════════════════════════════════════════════════════
+// QUOTES
+// ═══════════════════════════════════════════════════════════════════
 const QUOTE_STATUS_C = {
   draft: T.t3,
   sent: T.blue,
@@ -13,18 +18,18 @@ function QuotesScreen({
   const activeValue = useComputed('activeQuotesValue');
   const [seg, setSeg] = React.useState('all');
   const filtered = seg === 'all' ? quotes : seg === 'open' ? quotes.filter(q => ['draft', 'sent'].includes(q.status)) : quotes.filter(q => q.status === 'accepted');
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Quotes",
     subtitle: `${quotes.filter(q => q.status === 'sent').length} sent · £${(activeValue / 1000).toFixed(0)}k pipeline`,
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       onClick: onAdd,
       style: {
         width: 36,
@@ -41,11 +46,11 @@ function QuotesScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement(SegControl, {
+  }, /*#__PURE__*/React.createElement(SegControl, {
     value: seg,
     onChange: setSeg,
     options: [{
@@ -61,14 +66,14 @@ function QuotesScreen({
       l: 'Closed',
       n: quotes.filter(q => ['accepted', 'rejected'].includes(q.status)).length
     }]
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, filtered.map(q => React.createElement("div", {
+  }, filtered.map(q => /*#__PURE__*/React.createElement("div", {
     key: q.id,
     onClick: () => onOpen && onOpen(q),
     style: {
@@ -78,42 +83,42 @@ function QuotesScreen({
       border: `0.5px solid ${T.hair}`,
       cursor: 'pointer'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       gap: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, q.title), React.createElement("div", {
+  }, q.title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 2
     }
-  }, q.client, " \xB7 ", q.id)), React.createElement(Pill, {
+  }, q.client, " \xB7 ", q.id)), /*#__PURE__*/React.createElement(Pill, {
     c: QUOTE_STATUS_C[q.status]
-  }, q.status)), React.createElement("div", {
+  }, q.status)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-end',
       marginTop: 12
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -121,7 +126,7 @@ function QuotesScreen({
       fontWeight: 700,
       letterSpacing: -0.5
     }
-  }, "\xA3", q.total.toLocaleString()), React.createElement("span", {
+  }, "\xA3", q.total.toLocaleString()), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -137,16 +142,16 @@ function QuoteDetailSheet({
   const projects = useDB('projects');
   if (!quote) return null;
   const proj = projects.find(p => p.id == quote.projectId);
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -156,14 +161,14 @@ function QuoteDetailSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), React.createElement("div", {
+  }, "Close"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, quote.id), React.createElement("button", {
+  }, quote.id), /*#__PURE__*/React.createElement("button", {
     style: {
       background: 'none',
       border: 'none',
@@ -184,18 +189,18 @@ function QuoteDetailSheet({
     }
   }, React.cloneElement(Ic.share, {
     size: 16
-  }), " Send")), React.createElement("div", {
+  }), " Send")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 20px 18px'
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     c: QUOTE_STATUS_C[quote.status]
-  }, quote.status), React.createElement("div", {
+  }, quote.status), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 22,
@@ -204,14 +209,14 @@ function QuoteDetailSheet({
       letterSpacing: -0.4,
       marginTop: 8
     }
-  }, quote.title), React.createElement("div", {
+  }, quote.title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 4
     }
-  }, quote.client, proj ? ` · ${proj.addr}` : ''), React.createElement("div", {
+  }, quote.client, proj ? ` · ${proj.addr}` : ''), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 36,
@@ -220,22 +225,22 @@ function QuoteDetailSheet({
       marginTop: 16,
       letterSpacing: -1
     }
-  }, "\xA3", quote.total.toLocaleString(), React.createElement("span", {
+  }, "\xA3", quote.total.toLocaleString(), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 14,
       color: T.t2,
       marginLeft: 6
     }
-  }, "excl. VAT"))), quote.items.length > 0 && React.createElement(Section, {
+  }, "excl. VAT"))), quote.items.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: "Line items"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       border: `0.5px solid ${T.hair}`,
       overflow: 'hidden'
     }
-  }, quote.items.map((it, i) => React.createElement("div", {
+  }, quote.items.map((it, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       padding: '10px 14px',
@@ -244,35 +249,35 @@ function QuoteDetailSheet({
       gap: 10,
       borderBottom: i === quote.items.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 500
     }
-  }, it.d), React.createElement("div", {
+  }, it.d), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3,
       marginTop: 2
     }
-  }, it.qty, " ", it.unit, " @ \xA3", it.rate.toLocaleString())), React.createElement("span", {
+  }, it.qty, " ", it.unit, " @ \xA3", it.rate.toLocaleString())), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, "\xA3", (it.qty * it.rate).toLocaleString()))))), React.createElement(Section, {
+  }, "\xA3", (it.qty * it.rate).toLocaleString()))))), /*#__PURE__*/React.createElement(Section, {
     title: "Actions"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.mail,
     iconBg: accent,
     title: "Send to client",
@@ -284,7 +289,7 @@ function QuoteDetailSheet({
       toast(`Quote sent to ${quote.client}`, 'success');
       onClose();
     }
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.check,
     iconBg: T.green,
     title: "Convert to project",
@@ -308,13 +313,13 @@ function QuoteDetailSheet({
       toast(`Project created from ${quote.id}`, 'success');
       onClose();
     }
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.print,
     iconBg: T.cyan,
     title: "Export as PDF",
     sub: "A4 quotation with company header",
     onClick: () => window.cortexxQuotePDF ? window.cortexxQuotePDF(quote) : window.print()
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.copy,
     iconBg: T.purple,
     title: "Duplicate quote",
@@ -329,7 +334,7 @@ function QuoteDetailSheet({
       toast(`Duplicated as ${next}`, 'success');
       onClose();
     }
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.trash,
     iconBg: T.red,
     title: "Delete quote",
@@ -342,6 +347,8 @@ function QuoteDetailSheet({
     }
   })))));
 }
+
+// AI Estimator — natural language → quote
 function AIEstimatorSheet({
   onClose,
   accent
@@ -371,16 +378,16 @@ function AIEstimatorSheet({
     });
     onClose();
   };
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -390,7 +397,7 @@ function AIEstimatorSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Cancel"), React.createElement("div", {
+  }, "Cancel"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
@@ -402,17 +409,17 @@ function AIEstimatorSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 14
-  }), " AI Estimator"), React.createElement("div", {
+  }), " AI Estimator"), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 50
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '0 16px 24px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -420,7 +427,7 @@ function AIEstimatorSheet({
       marginBottom: 10,
       lineHeight: 1.5
     }
-  }, "Describe the job. Cortex will draft realistic UK line items, quantities, and rates."), React.createElement("textarea", {
+  }, "Describe the job. Cortex will draft realistic UK line items, quantities, and rates."), /*#__PURE__*/React.createElement("textarea", {
     value: brief,
     onChange: e => {
       setBrief(e.target.value);
@@ -442,11 +449,11 @@ function AIEstimatorSheet({
       outline: 'none',
       resize: 'vertical'
     }
-  }), !result && !estimating && React.createElement("div", {
+  }), !result && !estimating && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -456,7 +463,7 @@ function AIEstimatorSheet({
       letterSpacing: 0.5,
       marginBottom: 4
     }
-  }, "Examples"), examples.map((ex, i) => React.createElement("button", {
+  }, "Examples"), examples.map((ex, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
     onClick: () => setBrief(ex),
     style: {
@@ -471,7 +478,7 @@ function AIEstimatorSheet({
       padding: '5px 0',
       cursor: 'pointer'
     }
-  }, "\"", ex, "\""))), React.createElement("button", {
+  }, "\"", ex, "\""))), /*#__PURE__*/React.createElement("button", {
     onClick: estimate,
     disabled: !brief.trim() || estimating,
     style: {
@@ -493,7 +500,7 @@ function AIEstimatorSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 15
-  }), " ", estimating ? 'Estimating…' : 'Estimate with Cortex'), result && React.createElement("div", {
+  }), " ", estimating ? 'Estimating…' : 'Estimate with Cortex'), result && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 16,
       background: T.bg2,
@@ -501,14 +508,14 @@ function AIEstimatorSheet({
       padding: 14,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, result.title), React.createElement("div", {
+  }, result.title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 28,
@@ -517,13 +524,13 @@ function AIEstimatorSheet({
       marginTop: 6,
       letterSpacing: -0.5
     }
-  }, "\xA3", result.total.toLocaleString()), result.items.length > 0 && React.createElement("div", {
+  }, "\xA3", result.total.toLocaleString()), result.items.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
       paddingTop: 10,
       borderTop: `0.5px solid ${T.hair}`
     }
-  }, result.items.map((it, i) => React.createElement("div", {
+  }, result.items.map((it, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -532,17 +539,17 @@ function AIEstimatorSheet({
       fontFamily: SF,
       fontSize: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       color: T.t1
     }
-  }, it.d), React.createElement("div", {
+  }, it.d), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       color: T.t2
     }
-  }, it.qty, it.unit && ` ${it.unit}`, " @ \xA3", it.rate), React.createElement("div", {
+  }, it.qty, it.unit && ` ${it.unit}`, " @ \xA3", it.rate), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       color: T.t1,
@@ -551,7 +558,7 @@ function AIEstimatorSheet({
       width: 60,
       textAlign: 'right'
     }
-  }, "\xA3", (it.qty * it.rate).toLocaleString())))), result.assumptions && result.assumptions.length > 0 && React.createElement("div", {
+  }, "\xA3", (it.qty * it.rate).toLocaleString())))), result.assumptions && result.assumptions.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
       paddingTop: 10,
@@ -560,7 +567,7 @@ function AIEstimatorSheet({
       fontSize: 11,
       color: T.t2
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontWeight: 600,
       color: T.purple,
@@ -568,14 +575,14 @@ function AIEstimatorSheet({
       letterSpacing: 0.4,
       marginBottom: 4
     }
-  }, "Assumptions"), React.createElement("ul", {
+  }, "Assumptions"), /*#__PURE__*/React.createElement("ul", {
     style: {
       margin: 0,
       paddingLeft: 18
     }
-  }, result.assumptions.map((a, i) => React.createElement("li", {
+  }, result.assumptions.map((a, i) => /*#__PURE__*/React.createElement("li", {
     key: i
-  }, a)))), React.createElement("button", {
+  }, a)))), /*#__PURE__*/React.createElement("button", {
     onClick: save,
     style: {
       width: '100%',
@@ -592,7 +599,11 @@ function AIEstimatorSheet({
     }
   }, "Save as draft quote"))));
 }
-const CIS_RATE = 0.20;
+
+// ═══════════════════════════════════════════════════════════════════
+// TIMESHEETS
+// ═══════════════════════════════════════════════════════════════════
+const CIS_RATE = 0.20; // 20% CIS deduction for verified subbies
 function TimesheetsScreen({
   accent
 }) {
@@ -607,18 +618,18 @@ function TimesheetsScreen({
   const approveAll = () => pending.forEach(t => Backend.db.timesheets.update(t.id, {
     status: 'approved'
   }));
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Timesheets",
     subtitle: `Week ${week.split('-W')[1]} · ${total}h total`,
-    right: pending.length > 0 ? React.createElement("button", {
+    right: pending.length > 0 ? /*#__PURE__*/React.createElement("button", {
       onClick: approveAll,
       style: {
         background: T.green,
@@ -636,11 +647,11 @@ function TimesheetsScreen({
       }
     }, React.cloneElement(Ic.check, {
       size: 13
-    }), " Approve ", pending.length) : React.createElement(HeaderBtn, {
+    }), " Approve ", pending.length) : /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.calendar,
       onClick: () => window.cortexxNav('calendar')
     })
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'grid',
@@ -659,7 +670,7 @@ function TimesheetsScreen({
     l: 'CIS due',
     v: '£' + sheets.filter(t => t.cis).reduce((s, t) => s + ((t.mon || 0) + (t.tue || 0) + (t.wed || 0) + (t.thu || 0) + (t.fri || 0) + (t.sat || 0) + (t.sun || 0)) * 22 * CIS_RATE, 0).toFixed(0),
     c: T.purple
-  }].map((s, i) => React.createElement("div", {
+  }].map((s, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -667,7 +678,7 @@ function TimesheetsScreen({
       padding: '8px 10px',
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 9,
@@ -676,7 +687,7 @@ function TimesheetsScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, s.l), React.createElement("div", {
+  }, s.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 16,
@@ -685,7 +696,7 @@ function TimesheetsScreen({
       marginTop: 2,
       letterSpacing: -0.3
     }
-  }, s.v)))), React.createElement("div", {
+  }, s.v)))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -696,7 +707,7 @@ function TimesheetsScreen({
     const days = [t.mon, t.tue, t.wed, t.thu, t.fri, t.sat, t.sun];
     const hrs = days.reduce((s, x) => s + (x || 0), 0);
     const project = projects.find(p => p.id === t.projectId);
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: t.id,
       style: {
         background: T.bg2,
@@ -704,50 +715,50 @@ function TimesheetsScreen({
         padding: 12,
         border: `0.5px solid ${T.hair}`
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 10,
         marginBottom: 10
       }
-    }, React.createElement(Avatar, {
+    }, /*#__PURE__*/React.createElement(Avatar, {
       name: t.name,
       size: 32
-    }), React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         fontWeight: 600,
         color: T.t1
       }
-    }, t.name), React.createElement("div", {
+    }, t.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2
       }
-    }, project?.name || '—', " ", t.cis && React.createElement("span", {
+    }, project?.name || '—', " ", t.cis && /*#__PURE__*/React.createElement("span", {
       style: {
         color: T.purple,
         marginLeft: 4
       }
-    }, "\xB7 CIS"))), React.createElement("div", {
+    }, "\xB7 CIS"))), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'right'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 17,
         fontWeight: 700,
         color: T.t1
       }
-    }, hrs, "h"), t.status === 'pending' ? React.createElement("button", {
+    }, hrs, "h"), t.status === 'pending' ? /*#__PURE__*/React.createElement("button", {
       onClick: () => approve(t.id),
       style: {
         background: T.green,
@@ -761,29 +772,29 @@ function TimesheetsScreen({
         fontWeight: 700,
         marginTop: 2
       }
-    }, "Approve") : React.createElement(Pill, {
+    }, "Approve") : /*#__PURE__*/React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, React.cloneElement(Ic.check, {
       size: 10
-    }), " approved"))), React.createElement("div", {
+    }), " approved"))), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'grid',
         gridTemplateColumns: 'repeat(7, 1fr)',
         gap: 3
       }
-    }, ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => React.createElement("div", {
+    }, ['M', 'T', 'W', 'T', 'F', 'S', 'S'].map((d, i) => /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
         textAlign: 'center'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
         color: T.t3
       }
-    }, d), React.createElement("div", {
+    }, d), /*#__PURE__*/React.createElement("div", {
       style: {
         background: days[i] ? `${accent}22` : T.bg3,
         color: days[i] ? accent : T.t3,
@@ -797,12 +808,17 @@ function TimesheetsScreen({
     }, days[i] || '—')))));
   }))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// CALENDAR / SCHEDULE
+// ═══════════════════════════════════════════════════════════════════
 function CalendarScreen({
   accent
 }) {
   const team = useDB('team');
   const projects = useDB('projects');
   const days = ['Mon 25', 'Tue 26', 'Wed 27', 'Thu 28', 'Fri 29', 'Sat 30', 'Sun 31'];
+  // Mock assignments
   const ASSIGN = {
     'Tom Reilly': [1, 1, 1, 1, 1, 0, 0],
     'Aisha Begum': [1, 1, 1, 2, 2, 0, 0],
@@ -824,27 +840,27 @@ function CalendarScreen({
       setHint(s);
     })();
   }, []);
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Schedule",
     subtitle: "Next week \xB7 drag to reassign",
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addtask')
     })
-  }), hint && React.createElement("div", {
+  }), hint && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}22, ${accent}0a)`,
       border: `0.5px solid ${T.purple}44`,
@@ -854,14 +870,14 @@ function CalendarScreen({
       alignItems: 'flex-start',
       gap: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.purple,
       marginTop: 1
     }
   }, React.cloneElement(Ic.spark, {
     size: 16
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       fontFamily: SF,
@@ -869,14 +885,14 @@ function CalendarScreen({
       color: T.t1,
       lineHeight: 1.4
     }
-  }, hint))), React.createElement("div", {
+  }, hint))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 12px',
       display: 'flex',
       gap: 8,
       flexWrap: 'wrap'
     }
-  }, projects.filter(p => ['active', 'snagging'].includes(p.status)).slice(0, 3).map((p, i) => React.createElement("div", {
+  }, projects.filter(p => ['active', 'snagging'].includes(p.status)).slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement("div", {
     key: p.id,
     style: {
       display: 'flex',
@@ -886,30 +902,30 @@ function CalendarScreen({
       fontSize: 11,
       color: T.t2
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 8,
       height: 8,
       borderRadius: 4,
       background: projColor(p.id)
     }
-  }), p.name.split(' ').slice(0, 2).join(' ')))), React.createElement("div", {
+  }), p.name.split(' ').slice(0, 2).join(' ')))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 8px',
       overflowX: 'auto'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       minWidth: 540
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '120px repeat(7, 1fr)',
       gap: 2,
       marginBottom: 4
     }
-  }, React.createElement("div", null), days.map(d => React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null), days.map(d => /*#__PURE__*/React.createElement("div", {
     key: d,
     style: {
       textAlign: 'center',
@@ -919,7 +935,7 @@ function CalendarScreen({
       color: T.t3,
       fontWeight: 600
     }
-  }, d))), team.map(m => React.createElement("div", {
+  }, d))), team.map(m => /*#__PURE__*/React.createElement("div", {
     key: m.id,
     style: {
       display: 'grid',
@@ -927,18 +943,18 @@ function CalendarScreen({
       gap: 2,
       marginBottom: 3
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       padding: '4px 6px'
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: m.n,
     size: 20,
     c: m.color
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -948,7 +964,7 @@ function CalendarScreen({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, m.n.split(' ')[0])), (ASSIGN[m.n] || [0, 0, 0, 0, 0, 0, 0]).map((pid, i) => React.createElement("div", {
+  }, m.n.split(' ')[0])), (ASSIGN[m.n] || [0, 0, 0, 0, 0, 0, 0]).map((pid, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: pid ? `${projColor(pid)}33` : T.bg2,
@@ -959,7 +975,7 @@ function CalendarScreen({
       alignItems: 'center',
       justifyContent: 'center'
     }
-  }, pid > 0 && React.createElement("div", {
+  }, pid > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       width: 6,
       height: 6,
@@ -968,6 +984,10 @@ function CalendarScreen({
     }
   })))))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// MATERIALS
+// ═══════════════════════════════════════════════════════════════════
 function MaterialsScreen({
   accent
 }) {
@@ -975,27 +995,27 @@ function MaterialsScreen({
   const projects = useDB('projects');
   const lowStock = useComputed('lowStock');
   const [forecast, setForecast] = React.useState(null);
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Materials",
     subtitle: `${materials.length} SKUs · ${lowStock} low stock`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addmaterial')
     })
-  }), lowStock > 0 && React.createElement("div", {
+  }), lowStock > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 12px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     onClick: async () => {
       if (!forecast) {
         setForecast('thinking');
@@ -1010,43 +1030,43 @@ function MaterialsScreen({
       padding: '10px 14px',
       cursor: 'pointer'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.red
     }
   }, React.cloneElement(Ic.alert, {
     size: 18
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, lowStock, " items below minimum"), React.createElement("div", {
+  }, lowStock, " items below minimum"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 1
     }
-  }, forecast === 'thinking' ? 'Cortex thinking…' : forecast ? forecast : 'Tap for AI restock advice')), !forecast && React.createElement("div", {
+  }, forecast === 'thinking' ? 'Cortex thinking…' : forecast ? forecast : 'Tap for AI restock advice')), !forecast && /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.spark, {
     size: 14
-  }))))), React.createElement("div", {
+  }))))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -1056,7 +1076,7 @@ function MaterialsScreen({
   }, materials.map(m => {
     const low = m.stock < m.min;
     const pct = Math.min(m.stock / m.min, 1);
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: m.id,
       style: {
         background: T.bg2,
@@ -1067,7 +1087,7 @@ function MaterialsScreen({
         alignItems: 'center',
         gap: 12
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 36,
         height: 36,
@@ -1081,12 +1101,12 @@ function MaterialsScreen({
       }
     }, React.cloneElement(Ic.box, {
       size: 18
-    })), React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
@@ -1096,36 +1116,36 @@ function MaterialsScreen({
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap'
       }
-    }, m.name), React.createElement("div", {
+    }, m.name), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 8,
         marginTop: 4
       }
-    }, React.createElement(Bar, {
+    }, /*#__PURE__*/React.createElement(Bar, {
       pct: pct * 100,
       c: low ? T.red : T.green,
       h: 3
-    })), React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 10,
         color: T.t3,
         marginTop: 3
       }
-    }, m.sku, " \xB7 min ", m.min, " ", m.unit)), React.createElement("div", {
+    }, m.sku, " \xB7 min ", m.min, " ", m.unit)), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'right'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 16,
         color: low ? T.red : T.t1,
         fontWeight: 700
       }
-    }, m.stock), React.createElement("div", {
+    }, m.stock), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 9,
@@ -1134,34 +1154,38 @@ function MaterialsScreen({
     }, m.unit)));
   }))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// SUBCONTRACTORS
+// ═══════════════════════════════════════════════════════════════════
 function SubsScreen({
   accent
 }) {
   const subs = useDB('subs');
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Subcontractors",
     subtitle: `${subs.length} on books · ${subs.filter(s => s.insured && s.cscs).length} fully verified`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addsub')
     })
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, subs.map(s => React.createElement("div", {
+  }, subs.map(s => /*#__PURE__*/React.createElement("div", {
     key: s.id,
     style: {
       background: T.bg2,
@@ -1169,75 +1193,75 @@ function SubsScreen({
       padding: 14,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       gap: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       fontWeight: 600
     }
-  }, s.name), React.createElement("div", {
+  }, s.name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 2
     }
-  }, s.trade, " \xB7 ", s.contact)), React.createElement("div", {
+  }, s.trade, " \xB7 ", s.contact)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 3
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.amber
     }
   }, React.cloneElement(Ic.star, {
     size: 13,
     fill: 'currentColor'
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 12,
       color: T.t1,
       fontWeight: 600
     }
-  }, s.rating))), React.createElement("div", {
+  }, s.rating))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 4,
       marginTop: 10
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     c: s.insured ? T.green : T.red,
     size: "xs"
-  }, s.insured ? '✓ Insured' : '✗ No insurance'), React.createElement(Pill, {
+  }, s.insured ? '✓ Insured' : '✗ No insurance'), /*#__PURE__*/React.createElement(Pill, {
     c: s.cscs ? T.blue : T.amber,
     size: "xs"
-  }, s.cscs ? '✓ CSCS' : '? CSCS'), React.createElement(Pill, {
+  }, s.cscs ? '✓ CSCS' : '? CSCS'), /*#__PURE__*/React.createElement(Pill, {
     c: T.t3,
     size: "xs"
-  }, s.jobsDone, " jobs \xB7 since ", s.since)), React.createElement("div", {
+  }, s.jobsDone, " jobs \xB7 since ", s.since)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginTop: 12
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => toast(`Calling ${s.contact}…`, 'info'),
     style: {
       flex: 1,
@@ -1257,7 +1281,7 @@ function SubsScreen({
     }
   }, React.cloneElement(Ic.phone, {
     size: 12
-  }), " Call"), React.createElement("button", {
+  }), " Call"), /*#__PURE__*/React.createElement("button", {
     onClick: () => toast(`Message draft started for ${s.contact}`, 'success'),
     style: {
       flex: 1,
@@ -1279,48 +1303,52 @@ function SubsScreen({
     size: 12
   }), " Message")))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// EQUIPMENT
+// ═══════════════════════════════════════════════════════════════════
 function EquipmentScreen({
   accent
 }) {
   const equipment = useDB('equipment');
   const cats = [...new Set(equipment.map(e => e.category))];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Equipment",
     subtitle: `${equipment.length} items · ${equipment.filter(e => e.status === 'service-due').length} need service`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addequipment')
     })
   }), cats.map(cat => {
     const items = equipment.filter(e => e.category === cat);
-    return React.createElement(Section, {
+    return /*#__PURE__*/React.createElement(Section, {
       key: cat,
       title: cat
-    }, React.createElement(GroupedList, null, items.map((e, i, a) => {
+    }, /*#__PURE__*/React.createElement(GroupedList, null, items.map((e, i, a) => {
       const statusC = e.status === 'on-site' ? T.green : e.status === 'service-due' ? T.red : T.t3;
-      return React.createElement(Row, {
+      return /*#__PURE__*/React.createElement(Row, {
         key: e.id,
         icon: Ic.tool,
         iconBg: statusC,
         title: e.name,
         sub: `${e.serial} · ${e.location}`,
-        right: React.createElement("div", {
+        right: /*#__PURE__*/React.createElement("div", {
           style: {
             textAlign: 'right'
           }
-        }, React.createElement(Pill, {
+        }, /*#__PURE__*/React.createElement(Pill, {
           c: statusC,
           size: "xs"
-        }, e.status === 'service-due' ? 'SERVICE' : e.status.toUpperCase()), React.createElement("div", {
+        }, e.status === 'service-due' ? 'SERVICE' : e.status.toUpperCase()), /*#__PURE__*/React.createElement("div", {
           style: {
             fontFamily: SFMono,
             fontSize: 9,

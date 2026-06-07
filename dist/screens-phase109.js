@@ -1,10 +1,12 @@
+// CortexBuild Pro — Observability inspector screen (Phase 109)
+
 function ObservabilityScreen({
   accent
 }) {
   const O = window.CortexObs;
-  if (!O) return React.createElement(ScreenBg, {
+  if (!O) return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
@@ -22,7 +24,7 @@ function ObservabilityScreen({
   const events = O.recent(40).filter(e => e.kind === 'span').reverse();
   const Card = ({
     children
-  }) => React.createElement("div", {
+  }) => /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 14,
       borderRadius: 14,
@@ -35,7 +37,7 @@ function ObservabilityScreen({
     v,
     c,
     sub
-  }) => React.createElement("div", {
+  }) => /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       padding: 10,
@@ -44,14 +46,14 @@ function ObservabilityScreen({
       textAlign: 'center',
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
       color: T.t2,
       marginBottom: 4,
       letterSpacing: 0.4
     }
-  }, l), React.createElement("div", {
+  }, l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 16,
       fontWeight: 800,
@@ -59,7 +61,7 @@ function ObservabilityScreen({
       fontFamily: SFMono,
       letterSpacing: -0.4
     }
-  }, v == null ? '—' : v), sub && React.createElement("div", {
+  }, v == null ? '—' : v), sub && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 9,
       color: T.t2,
@@ -81,7 +83,7 @@ function ObservabilityScreen({
   const Pill = ({
     level,
     children
-  }) => React.createElement("span", {
+  }) => /*#__PURE__*/React.createElement("span", {
     style: {
       padding: '2px 7px',
       borderRadius: 5,
@@ -93,17 +95,17 @@ function ObservabilityScreen({
       color: level === 'error' ? T.red : level === 'warning' ? T.amber : T.t2
     }
   }, children);
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Observability",
     subtitle: "Live breadcrumbs \xB7 vitals \xB7 spans"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       fontSize: 11,
@@ -111,46 +113,46 @@ function ObservabilityScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "WEB VITALS"), React.createElement("div", {
+  }, "WEB VITALS"), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8,
       display: 'flex',
       gap: 6
     }
-  }, React.createElement(Stat, {
+  }, /*#__PURE__*/React.createElement(Stat, {
     l: "TTFB",
     v: v.ttfb != null ? v.ttfb + 'ms' : null,
     c: vitalsBucket('ttfb')
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "FCP",
     v: v.fcp != null ? v.fcp + 'ms' : null,
     c: vitalsBucket('fcp')
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "LCP",
     v: v.lcp != null ? v.lcp + 'ms' : null,
     c: vitalsBucket('lcp')
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "INP",
     v: v.inp != null ? v.inp + 'ms' : null,
     c: vitalsBucket('inp')
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8,
       display: 'flex',
       gap: 6
     }
-  }, React.createElement(Stat, {
+  }, /*#__PURE__*/React.createElement(Stat, {
     l: "CLS",
     v: v.cls
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "LONG TASKS",
     v: v.longTasks,
     c: v.longTasks > 5 ? T.amber : T.t1
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "HEAP",
     v: v.heapMB != null ? v.heapMB + 'mb' : null,
     sub: v.heapLimitMB ? 'of ' + v.heapLimitMB + 'mb' : ''
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -158,39 +160,39 @@ function ObservabilityScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "SESSION COUNTERS"), React.createElement("div", {
+  }, "SESSION COUNTERS"), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8,
       display: 'flex',
       gap: 6
     }
-  }, React.createElement(Stat, {
+  }, /*#__PURE__*/React.createElement(Stat, {
     l: "CLICKS",
     v: counters.click
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "NAV",
     v: counters.nav
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "FETCH",
     v: counters.fetch
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "ERRORS",
     v: counters.error,
     c: counters.error > 0 ? T.red : T.t1
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8,
       display: 'flex',
       gap: 6
     }
-  }, React.createElement(Stat, {
+  }, /*#__PURE__*/React.createElement(Stat, {
     l: "SPANS",
     v: counters.txTotal
-  }), React.createElement(Stat, {
+  }), /*#__PURE__*/React.createElement(Stat, {
     l: "SLOW (>1.5s)",
     v: counters.txSlow,
     c: counters.txSlow > 0 ? T.amber : T.t1
-  })), events.length > 0 && React.createElement(React.Fragment, null, React.createElement("div", {
+  })), events.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -198,11 +200,11 @@ function ObservabilityScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "RECENT SPANS \xB7 ", events.length), React.createElement("div", {
+  }, "RECENT SPANS \xB7 ", events.length), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8
     }
-  }, events.slice(0, 12).map((e, i) => React.createElement("div", {
+  }, events.slice(0, 12).map((e, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       marginTop: 4,
@@ -214,7 +216,7 @@ function ObservabilityScreen({
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
       fontSize: 12,
@@ -224,16 +226,16 @@ function ObservabilityScreen({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, e.name), React.createElement("span", {
+  }, e.name), /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 11,
       fontFamily: SFMono,
       color: e.slow ? T.amber : e.ok === false ? T.red : T.t2,
       marginLeft: 8
     }
-  }, e.ms, "ms"), e.ok === false && React.createElement(Pill, {
+  }, e.ms, "ms"), e.ok === false && /*#__PURE__*/React.createElement(Pill, {
     level: "error"
-  }, "FAIL"))))), React.createElement("div", {
+  }, "FAIL"))))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -243,7 +245,7 @@ function ObservabilityScreen({
       display: 'flex',
       justifyContent: 'space-between'
     }
-  }, React.createElement("span", null, "BREADCRUMBS \xB7 ", crumbs.length), React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", null, "BREADCRUMBS \xB7 ", crumbs.length), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       O.clear();
       force();
@@ -258,7 +260,7 @@ function ObservabilityScreen({
       fontFamily: SF,
       cursor: 'pointer'
     }
-  }, "Clear")), React.createElement("div", {
+  }, "Clear")), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 6,
       padding: 10,
@@ -268,7 +270,7 @@ function ObservabilityScreen({
       maxHeight: 380,
       overflow: 'auto'
     }
-  }, crumbs.map((c, i) => React.createElement("div", {
+  }, crumbs.map((c, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       padding: '6px 0',
@@ -277,7 +279,7 @@ function ObservabilityScreen({
       gap: 8,
       alignItems: 'flex-start'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 50,
       fontSize: 9,
@@ -290,14 +292,14 @@ function ObservabilityScreen({
     hour: '2-digit',
     minute: '2-digit',
     second: '2-digit'
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       width: 110,
       flexShrink: 0
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     level: c.level
-  }, c.category)), React.createElement("span", {
+  }, c.category)), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
       fontSize: 11,
@@ -305,14 +307,14 @@ function ObservabilityScreen({
       lineHeight: 1.4,
       wordBreak: 'break-word'
     }
-  }, c.message))), crumbs.length === 0 && React.createElement("div", {
+  }, c.message))), crumbs.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 14,
       textAlign: 'center',
       color: T.t2,
       fontSize: 12
     }
-  }, "No breadcrumbs yet \u2014 interact with the app.")), React.createElement("div", {
+  }, "No breadcrumbs yet \u2014 interact with the app.")), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 16,
       padding: 12,
@@ -320,7 +322,7 @@ function ObservabilityScreen({
       color: T.t2,
       lineHeight: 1.5
     }
-  }, "All in-memory \xB7 auto-attached to error reports when CortexCrash has a DSN. Use ", React.createElement("code", {
+  }, "All in-memory \xB7 auto-attached to error reports when CortexCrash has a DSN. Use ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }

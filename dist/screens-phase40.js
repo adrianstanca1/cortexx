@@ -1,5 +1,9 @@
+// Cortexx — Phase 40: Vera autonomous actions + scheduled execution
+
 (function () {
   if (!window.Backend?.vera) return;
+
+  // Vera's action log — what she's done autonomously
   const snap = Backend.db.snapshot();
   if (!snap.veraActions) {
     snap.veraActions = [{
@@ -60,6 +64,8 @@
     remove: async () => {}
   });
   Backend.db.veraActions = mk('veraActions');
+
+  // Autonomous action — find leads
   Backend.vera.autoHuntLeads = async (count = 3) => {
     const found = [];
     for (let i = 0; i < count; i++) {
@@ -74,6 +80,8 @@
     });
     return found;
   };
+
+  // Autonomous action — chase overdue invoices
   Backend.vera.autoChaseOverdue = async () => {
     const invs = Backend.db.snapshot().invoices.filter(i => i.status === 'overdue');
     const drafted = [];
@@ -94,6 +102,8 @@
     }
     return drafted;
   };
+
+  // Autonomous action — health-check all active projects
   Backend.vera.autoHealthCheck = async () => {
     const projects = Backend.db.snapshot().projects.filter(p => ['active', 'snagging'].includes(p.status));
     const results = [];
@@ -113,6 +123,8 @@
     });
     return results;
   };
+
+  // Autonomous action — flag low stock for ordering
   Backend.vera.autoOrderMaterials = async () => {
     const lowStock = Backend.db.snapshot().materials.filter(m => m.stock < m.min);
     if (lowStock.length === 0) return null;
@@ -128,6 +140,8 @@
       forecast
     };
   };
+
+  // Run all autonomous tasks
   Backend.vera.runAll = async () => {
     const results = {};
     results.healthCheck = await Backend.vera.autoHealthCheck();
@@ -158,36 +172,36 @@ function VeraActionsScreen({
     }
     setRunning(null);
   };
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Vera \xB7 autopilot",
     subtitle: "Autonomous actions on your business"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}33, ${accent}11)`,
       border: `0.5px solid ${T.purple}44`,
       borderRadius: 16,
       padding: 16
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 8
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 8,
       height: 8,
@@ -196,21 +210,21 @@ function VeraActionsScreen({
       boxShadow: `0 0 8px ${T.green}`,
       animation: 'pulse-dot 2s infinite'
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.green,
       fontWeight: 700
     }
-  }, "AUTOPILOT ACTIVE")), React.createElement("div", {
+  }, "AUTOPILOT ACTIVE")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       lineHeight: 1.5
     }
-  }, "Vera runs these autonomously. Tap to trigger now, or schedule recurring runs."), React.createElement("button", {
+  }, "Vera runs these autonomously. Tap to trigger now, or schedule recurring runs."), /*#__PURE__*/React.createElement("button", {
     onClick: () => run('all', 'full sweep'),
     disabled: running,
     style: {
@@ -232,9 +246,9 @@ function VeraActionsScreen({
     }
   }, React.cloneElement(Ic.spark, {
     size: 16
-  }), " ", running === 'all' ? 'Vera working…' : 'Run full sweep now'))), React.createElement(Section, {
+  }), " ", running === 'all' ? 'Vera working…' : 'Run full sweep now'))), /*#__PURE__*/React.createElement(Section, {
     title: "\u25C6 Individual jobs"
-  }, React.createElement(GroupedList, null, [{
+  }, /*#__PURE__*/React.createElement(GroupedList, null, [{
     k: 'leads',
     l: 'Hunt new leads',
     d: '3 AI-generated qualified leads',
@@ -254,13 +268,13 @@ function VeraActionsScreen({
     l: 'Forecast material orders',
     d: 'Flag low stock with AI advice',
     i: Ic.box
-  }].map((a, i, arr) => React.createElement(Row, {
+  }].map((a, i, arr) => /*#__PURE__*/React.createElement(Row, {
     key: a.k,
     icon: a.i,
     iconBg: accent,
     title: a.l,
     sub: a.d,
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       onClick: e => {
         e.stopPropagation();
         run(a.k, a.l);
@@ -279,15 +293,15 @@ function VeraActionsScreen({
       }
     }, running === a.k ? '…' : 'Run'),
     isLast: i === arr.length - 1
-  })))), React.createElement(Section, {
+  })))), /*#__PURE__*/React.createElement(Section, {
     title: "\u25C6 Vera's action log"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 6
     }
-  }, actions.length === 0 ? React.createElement("div", {
+  }, actions.length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 20,
       textAlign: 'center',
@@ -297,7 +311,7 @@ function VeraActionsScreen({
     }
   }, "No actions yet \xB7 trigger one above") : actions.map(a => {
     const sc = a.status === 'completed' ? T.green : a.status === 'pending-review' ? T.amber : T.t3;
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: a.id,
       style: {
         background: T.bg2,
@@ -308,7 +322,7 @@ function VeraActionsScreen({
         alignItems: 'center',
         gap: 12
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 32,
         height: 32,
@@ -321,19 +335,19 @@ function VeraActionsScreen({
       }
     }, React.cloneElement(Ic.spark, {
       size: 16
-    })), React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1,
         fontWeight: 600
       }
-    }, a.action), React.createElement("div", {
+    }, a.action), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 10,
@@ -345,14 +359,14 @@ function VeraActionsScreen({
       month: 'short',
       hour: '2-digit',
       minute: '2-digit'
-    }))), React.createElement("div", {
+    }))), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'right'
       }
-    }, React.createElement(Pill, {
+    }, /*#__PURE__*/React.createElement(Pill, {
       c: sc,
       size: "xs"
-    }, a.status), React.createElement("div", {
+    }, a.status), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 11,
@@ -361,46 +375,46 @@ function VeraActionsScreen({
         marginTop: 4
       }
     }, a.impact)));
-  }))), React.createElement(Section, {
+  }))), /*#__PURE__*/React.createElement(Section, {
     title: "\u25C6 Scheduled runs"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.sun,
     iconBg: T.amber,
     title: "Morning briefing",
     sub: "Every weekday 06:30",
-    right: React.createElement(Pill, {
+    right: /*#__PURE__*/React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, "ON")
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.trend,
     iconBg: T.cyan,
     title: "Lead hunt",
     sub: "Every Mon/Thu 09:00",
-    right: React.createElement(Pill, {
+    right: /*#__PURE__*/React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, "ON")
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.mail,
     iconBg: T.red,
     title: "Overdue chase sweep",
     sub: "Daily 16:00",
-    right: React.createElement(Pill, {
+    right: /*#__PURE__*/React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, "ON")
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.shield,
     iconBg: T.blue,
     title: "Project health check",
     sub: "Every Friday 14:00",
-    right: React.createElement(Pill, {
+    right: /*#__PURE__*/React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, "ON"),
     isLast: true
-  }))), React.createElement("style", null, `@keyframes pulse-dot { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }`)));
+  }))), /*#__PURE__*/React.createElement("style", null, `@keyframes pulse-dot { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }`)));
 }
 Object.assign(window, {
   VeraActionsScreen

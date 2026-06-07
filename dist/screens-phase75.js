@@ -1,5 +1,18 @@
+// Cortexx — Phase 75: Photo vision, library activation, site photo + incident flows
+//
+// Adds:
+//   • Backend.vision.*       — wraps window.claude.complete with vision (base64 image input)
+//   • SiteProgressPhotoSheet — capture/upload, geo-tag, AI describe + tag, save to library
+//   • IncidentReportSheet    — incident form with photo, severity, RIDDOR check, autosaves
+//   • Enhanced PhotosV2Screen — per-photo "Analyse with Cortex" with hazard / progress / snag intel
+
+// ─────────────────────────────────────────────────────────
+// VISION BACKEND
+// ─────────────────────────────────────────────────────────
 (function () {
   if (!window.Backend) return;
+
+  // Convert a Blob to a {mediaType, dataB64} pair Claude expects
   const toClaudeImage = blob => new Promise((resolve, reject) => {
     const reader = new FileReader();
     reader.onerror = () => reject(reader.error);
@@ -12,6 +25,8 @@
     };
     reader.readAsDataURL(blob);
   });
+
+  // Lossless-ish downscale via canvas to keep payload modest (vision tier ~4MB max)
   const downscale = (blob, maxDim = 1280) => new Promise(resolve => {
     const img = new Image();
     const url = URL.createObjectURL(blob);
@@ -59,6 +74,8 @@
       }]
     });
   };
+
+  // tolerant JSON extractor
   const parseJSON = raw => {
     try {
       const m = raw.match(/\{[\s\S]*\}/);
@@ -68,6 +85,7 @@
     }
   };
   Backend.vision = {
+    // Free-form description for the photo library
     async describePhoto(blob) {
       const prompt = `You are looking at a photo from a UK construction site. Return ONLY JSON: {"summary":"one sentence describing what's in the photo","stage":"first fix|second fix|snagging|complete|exterior|other","tags":["tag1","tag2","tag3"],"colors":["dominant color words"]}`;
       try {
@@ -88,6 +106,7 @@
         };
       }
     },
+    // Detect hazards / safety issues for incident form
     async detectHazards(blob) {
       const prompt = `You are a UK CDM 2015 site safety inspector. Look at this photo and return ONLY JSON: {"hazards":[{"hazard":"...","severity":"low|med|high","reg":"PUWER 1998|Working at Height Regs 2005|COSHH 2002|CDM 2015|HSWA 1974|other"}],"ppe":["item","item"],"summary":"one-sentence assessment"}. Be specific and concise. If no hazards visible, return empty arrays.`;
       try {
@@ -106,6 +125,7 @@
         };
       }
     },
+    // Detect snags
     async detectSnagsInPhoto(blob) {
       const prompt = `You are inspecting a UK construction site for defects ("snags"). Return ONLY JSON: {"snags":[{"title":"short snag title","area":"e.g. kitchen ceiling","priority":"low|med|high"}],"summary":"sentence"}. Empty array if perfect.`;
       try {
@@ -124,6 +144,10 @@
     }
   };
 })();
+
+// ─────────────────────────────────────────────────────────
+// Shared photo upload helper — opens native picker (camera on mobile)
+// ─────────────────────────────────────────────────────────
 function usePhotoPicker(onPicked) {
   const ref = React.useRef(null);
   const trigger = () => ref.current?.click();
@@ -132,7 +156,7 @@ function usePhotoPicker(onPicked) {
     if (file) onPicked(file);
     e.target.value = '';
   };
-  const input = React.createElement("input", {
+  const input = /*#__PURE__*/React.createElement("input", {
     ref: ref,
     type: "file",
     accept: "image/*",
@@ -144,6 +168,8 @@ function usePhotoPicker(onPicked) {
   });
   return [trigger, input];
 }
+
+// Geolocation (best-effort) with timeout
 function getGeo() {
   return new Promise(resolve => {
     if (!navigator.geolocation) return resolve(null);
@@ -165,6 +191,10 @@ function getGeo() {
     });
   });
 }
+
+// ─────────────────────────────────────────────────────────
+// SITE PROGRESS PHOTO
+// ─────────────────────────────────────────────────────────
 function SiteProgressPhotoSheet({
   onClose,
   accent
@@ -181,6 +211,7 @@ function SiteProgressPhotoSheet({
     setBlob(file);
     setPreviewUrl(URL.createObjectURL(file));
     setAnalysis(null);
+    // kick off geo + AI in parallel
     getGeo().then(setGeo);
     setAnalysing(true);
     const result = await Backend.vision.describePhoto(file);
@@ -207,10 +238,10 @@ function SiteProgressPhotoSheet({
     toast(`Photo saved to ${project?.name || 'project'}`, 'success');
     onClose();
   };
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, input, React.createElement("div", {
+  }, input, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -218,7 +249,7 @@ function SiteProgressPhotoSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -231,14 +262,14 @@ function SiteProgressPhotoSheet({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", React.createElement("span", null, "Back")), React.createElement("div", {
+  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Site photo"), React.createElement("button", {
+  }, "Site photo"), /*#__PURE__*/React.createElement("button", {
     onClick: save,
     disabled: !blob || saving,
     style: {
@@ -250,13 +281,13 @@ function SiteProgressPhotoSheet({
       fontWeight: 600,
       cursor: blob && !saving ? 'pointer' : 'default'
     }
-  }, saving ? '…' : 'Save')), React.createElement("div", {
+  }, saving ? '…' : 'Save')), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '14px 16px 24px'
     }
-  }, !previewUrl ? React.createElement("button", {
+  }, !previewUrl ? /*#__PURE__*/React.createElement("button", {
     onClick: trigger,
     style: {
       width: '100%',
@@ -272,7 +303,7 @@ function SiteProgressPhotoSheet({
       justifyContent: 'center',
       gap: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 64,
       height: 64,
@@ -285,26 +316,26 @@ function SiteProgressPhotoSheet({
     }
   }, React.cloneElement(Ic.camera, {
     size: 32
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600
     }
-  }, "Take or pick photo"), React.createElement("div", {
+  }, "Take or pick photo"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t3
     }
-  }, "Camera or library \xB7 GPS-tagged \xB7 AI-analysed")) : React.createElement("div", {
+  }, "Camera or library \xB7 GPS-tagged \xB7 AI-analysed")) : /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
       borderRadius: 14,
       overflow: 'hidden',
       background: '#000'
     }
-  }, React.createElement("img", {
+  }, /*#__PURE__*/React.createElement("img", {
     src: previewUrl,
     style: {
       width: '100%',
@@ -312,7 +343,7 @@ function SiteProgressPhotoSheet({
       maxHeight: 340,
       objectFit: 'cover'
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: trigger,
     style: {
       position: 'absolute',
@@ -333,18 +364,18 @@ function SiteProgressPhotoSheet({
     }
   }, React.cloneElement(Ic.camera, {
     size: 12
-  }), " Retake")), previewUrl && React.createElement("div", {
+  }), " Retake")), previewUrl && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginTop: 10,
       flexWrap: 'wrap'
     }
-  }, React.createElement(MetaPill, {
+  }, /*#__PURE__*/React.createElement(MetaPill, {
     icon: Ic.pin,
     color: T.green,
     text: geo ? `GPS · ${geo.lat.toFixed(3)}, ${geo.lng.toFixed(3)}` : 'GPS · finding…'
-  }), React.createElement(MetaPill, {
+  }), /*#__PURE__*/React.createElement(MetaPill, {
     icon: Ic.clock,
     color: T.cyan,
     text: new Date().toLocaleString('en-GB', {
@@ -353,18 +384,18 @@ function SiteProgressPhotoSheet({
       day: '2-digit',
       month: 'short'
     })
-  })), previewUrl && React.createElement("div", {
+  })), previewUrl && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18
     }
-  }, React.createElement(SectionLabel75, null, "Project"), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(SectionLabel75, null, "Project"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       overflowX: 'auto',
       paddingBottom: 4
     }
-  }, projects.filter(p => p.status !== 'completed').map(p => React.createElement("button", {
+  }, projects.filter(p => p.status !== 'completed').map(p => /*#__PURE__*/React.createElement("button", {
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -380,34 +411,34 @@ function SiteProgressPhotoSheet({
       whiteSpace: 'nowrap',
       cursor: 'pointer'
     }
-  }, p.name)))), previewUrl && React.createElement("div", {
+  }, p.name)))), previewUrl && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18
     }
-  }, React.createElement(SectionLabel75, null, "Cortex vision"), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(SectionLabel75, null, "Cortex vision"), /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}14, ${accent}06)`,
       border: `0.5px solid ${T.purple}44`,
       borderRadius: 12,
       padding: 14
     }
-  }, analysing ? React.createElement(ShimmerRows, {
+  }, analysing ? /*#__PURE__*/React.createElement(ShimmerRows, {
     color: T.purple,
     rows: 3
-  }) : analysis ? React.createElement(React.Fragment, null, React.createElement("div", {
+  }) : analysis ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 8
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.spark, {
     size: 14
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -416,27 +447,27 @@ function SiteProgressPhotoSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "What Cortex sees")), React.createElement("div", {
+  }, "What Cortex sees")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13.5,
       color: T.t1,
       lineHeight: 1.45
     }
-  }, analysis.summary), analysis.tags?.length > 0 && React.createElement("div", {
+  }, analysis.summary), analysis.tags?.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 5,
       marginTop: 10
     }
-  }, analysis.stage && analysis.stage !== 'other' && React.createElement(Pill, {
+  }, analysis.stage && analysis.stage !== 'other' && /*#__PURE__*/React.createElement(Pill, {
     c: T.green
-  }, analysis.stage), analysis.tags.slice(0, 6).map((t, i) => React.createElement(Pill, {
+  }, analysis.stage), analysis.tags.slice(0, 6).map((t, i) => /*#__PURE__*/React.createElement(Pill, {
     key: i,
     c: accent,
     size: "xs"
-  }, t)))) : null)), previewUrl && React.createElement("button", {
+  }, t)))) : null)), previewUrl && /*#__PURE__*/React.createElement("button", {
     onClick: save,
     disabled: saving,
     style: {
@@ -466,7 +497,7 @@ function MetaPill({
   color,
   text
 }) {
-  return React.createElement("span", {
+  return /*#__PURE__*/React.createElement("span", {
     style: {
       display: 'inline-flex',
       alignItems: 'center',
@@ -480,7 +511,7 @@ function MetaPill({
       color,
       fontWeight: 600
     }
-  }, React.createElement("span", null, React.cloneElement(icon, {
+  }, /*#__PURE__*/React.createElement("span", null, React.cloneElement(icon, {
     size: 11
   })), text);
 }
@@ -488,13 +519,13 @@ function ShimmerRows({
   color,
   rows = 3
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, [100, 84, 64].slice(0, rows).map((w, i) => React.createElement("div", {
+  }, [100, 84, 64].slice(0, rows).map((w, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       height: 9,
@@ -504,12 +535,12 @@ function ShimmerRows({
       backgroundSize: '200% 100%',
       animation: `shimmer75 1.4s ease-in-out infinite ${i * 0.1}s`
     }
-  })), React.createElement("style", null, `@keyframes shimmer75 { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`));
+  })), /*#__PURE__*/React.createElement("style", null, `@keyframes shimmer75 { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }`));
 }
 function SectionLabel75({
   children
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -521,6 +552,10 @@ function SectionLabel75({
     }
   }, children);
 }
+
+// ─────────────────────────────────────────────────────────
+// INCIDENT REPORT
+// ─────────────────────────────────────────────────────────
 const INCIDENT_SEV = [{
   v: 'near-miss',
   l: 'Near miss',
@@ -631,10 +666,10 @@ function IncidentReportSheet({
     onClose();
   };
   const sev = INCIDENT_SEV.find(s => s.v === severity);
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, input, React.createElement("div", {
+  }, input, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -642,7 +677,7 @@ function IncidentReportSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -652,14 +687,14 @@ function IncidentReportSheet({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Cancel"), React.createElement("div", {
+  }, "Cancel"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Incident report"), React.createElement("button", {
+  }, "Incident report"), /*#__PURE__*/React.createElement("button", {
     onClick: save,
     style: {
       background: 'none',
@@ -670,13 +705,13 @@ function IncidentReportSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Submit")), React.createElement("div", {
+  }, "Submit")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '14px 16px 24px'
     }
-  }, React.createElement(SectionLabel75, null, "Severity"), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(SectionLabel75, null, "Severity"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -685,7 +720,7 @@ function IncidentReportSheet({
     }
   }, INCIDENT_SEV.map(s => {
     const active = severity === s.v;
-    return React.createElement("button", {
+    return /*#__PURE__*/React.createElement("button", {
       key: s.v,
       onClick: () => setSeverity(s.v),
       style: {
@@ -697,14 +732,14 @@ function IncidentReportSheet({
         color: T.t1,
         cursor: 'pointer'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         fontWeight: 700,
         color: active ? s.c : T.t1
       }
-    }, s.l), React.createElement("div", {
+    }, s.l), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 10.5,
@@ -712,7 +747,7 @@ function IncidentReportSheet({
         marginTop: 2
       }
     }, s.desc));
-  })), isRiddor && React.createElement("div", {
+  })), isRiddor && /*#__PURE__*/React.createElement("div", {
     style: {
       background: `${T.purple}1a`,
       border: `0.5px solid ${T.purple}55`,
@@ -724,11 +759,11 @@ function IncidentReportSheet({
       fontSize: 12,
       lineHeight: 1.45
     }
-  }, React.createElement("strong", {
+  }, /*#__PURE__*/React.createElement("strong", {
     style: {
       color: T.purple
     }
-  }, "Reportable under RIDDOR 2013"), " \xB7 this incident will be queued for HSE notification within 10 days. Specified injuries, dangerous occurrences, and 7+ day absences fall under reg 4\u20137."), React.createElement(SectionLabel75, null, "What happened"), React.createElement("textarea", {
+  }, "Reportable under RIDDOR 2013"), " \xB7 this incident will be queued for HSE notification within 10 days. Specified injuries, dangerous occurrences, and 7+ day absences fall under reg 4\u20137."), /*#__PURE__*/React.createElement(SectionLabel75, null, "What happened"), /*#__PURE__*/React.createElement("textarea", {
     value: what,
     onChange: e => setWhat(e.target.value),
     placeholder: "Be specific: who, what, where, when, immediate action taken.",
@@ -749,7 +784,7 @@ function IncidentReportSheet({
       outline: 'none',
       marginBottom: 14
     }
-  }), React.createElement(SectionLabel75, null, "Project"), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(SectionLabel75, null, "Project"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
@@ -757,7 +792,7 @@ function IncidentReportSheet({
       paddingBottom: 4,
       marginBottom: 14
     }
-  }, projects.map(p => React.createElement("button", {
+  }, projects.map(p => /*#__PURE__*/React.createElement("button", {
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -773,7 +808,7 @@ function IncidentReportSheet({
       whiteSpace: 'nowrap',
       cursor: 'pointer'
     }
-  }, p.name))), React.createElement(SectionLabel75, null, "Witness (optional)"), React.createElement("input", {
+  }, p.name))), /*#__PURE__*/React.createElement(SectionLabel75, null, "Witness (optional)"), /*#__PURE__*/React.createElement("input", {
     value: witness,
     onChange: e => setWitness(e.target.value),
     placeholder: "Name of anyone who saw it",
@@ -790,7 +825,7 @@ function IncidentReportSheet({
       fontSize: 13.5,
       outline: 'none'
     }
-  }), React.createElement(SectionLabel75, null, "Photo (optional, AI hazard scan)"), !previewUrl ? React.createElement("button", {
+  }), /*#__PURE__*/React.createElement(SectionLabel75, null, "Photo (optional, AI hazard scan)"), !previewUrl ? /*#__PURE__*/React.createElement("button", {
     onClick: trigger,
     style: {
       width: '100%',
@@ -805,19 +840,19 @@ function IncidentReportSheet({
       justifyContent: 'center',
       gap: 8
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: accent
     }
   }, React.cloneElement(Ic.camera, {
     size: 18
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600
     }
-  }, "Attach photo of scene")) : React.createElement(React.Fragment, null, React.createElement("div", {
+  }, "Attach photo of scene")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
       borderRadius: 10,
@@ -825,7 +860,7 @@ function IncidentReportSheet({
       background: '#000',
       marginBottom: 10
     }
-  }, React.createElement("img", {
+  }, /*#__PURE__*/React.createElement("img", {
     src: previewUrl,
     style: {
       width: '100%',
@@ -833,7 +868,7 @@ function IncidentReportSheet({
       maxHeight: 220,
       objectFit: 'cover'
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: trigger,
     style: {
       position: 'absolute',
@@ -849,27 +884,27 @@ function IncidentReportSheet({
       fontSize: 11,
       fontWeight: 600
     }
-  }, "Change")), React.createElement("div", {
+  }, "Change")), /*#__PURE__*/React.createElement("div", {
     style: {
       background: `${T.amber}1a`,
       border: `0.5px solid ${T.amber}44`,
       borderRadius: 10,
       padding: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 6
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.amber
     }
   }, React.cloneElement(Ic.shield, {
     size: 14
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -878,9 +913,9 @@ function IncidentReportSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Vision hazard scan")), analysing ? React.createElement(ShimmerRows, {
+  }, "Vision hazard scan")), analysing ? /*#__PURE__*/React.createElement(ShimmerRows, {
     color: T.amber
-  }) : hazards ? React.createElement(React.Fragment, null, React.createElement("div", {
+  }) : hazards ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -888,13 +923,13 @@ function IncidentReportSheet({
       marginBottom: 6,
       lineHeight: 1.4
     }
-  }, hazards.summary), hazards.hazards.length > 0 && React.createElement("div", {
+  }, hazards.summary), hazards.hazards.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 4
     }
-  }, hazards.hazards.slice(0, 4).map((h, i) => React.createElement("div", {
+  }, hazards.hazards.slice(0, 4).map((h, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -904,20 +939,20 @@ function IncidentReportSheet({
       fontSize: 11.5,
       color: T.t1
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     c: h.severity === 'high' ? T.red : h.severity === 'med' ? T.amber : T.t3,
     size: "xs"
-  }, h.severity), React.createElement("span", {
+  }, h.severity), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1
     }
-  }, h.hazard), h.reg && React.createElement("span", {
+  }, h.hazard), h.reg && /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
       color: T.t3
     }
-  }, h.reg))))) : null)), geo && React.createElement("div", {
+  }, h.reg))))) : null)), geo && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       fontFamily: SFMono,
@@ -926,6 +961,10 @@ function IncidentReportSheet({
     }
   }, "\uD83D\uDCCD ", geo.lat.toFixed(4), ", ", geo.lng.toFixed(4), " \xB7 \xB1", geo.acc, "m \xB7 ", new Date().toLocaleString('en-GB'))));
 }
+
+// ─────────────────────────────────────────────────────────
+// Enhanced photo viewer — add "Analyse with Cortex" to the existing PhotosV2Screen
+// ─────────────────────────────────────────────────────────
 function PhotoVisionAction({
   blob,
   accent
@@ -948,18 +987,18 @@ function PhotoVisionAction({
     setBusy(false);
     if (r.snags?.length) toast(`${r.snags.length} potential snag${r.snags.length > 1 ? 's' : ''} found`, 'ai');
   };
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 16,
       color: '#fff'
     }
-  }, !result && !busy && React.createElement("div", {
+  }, !result && !busy && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: analyse,
     style: {
       background: `${T.purple}33`,
@@ -978,7 +1017,7 @@ function PhotoVisionAction({
     }
   }, React.cloneElement(Ic.spark, {
     size: 13
-  }), " Analyse"), React.createElement("button", {
+  }), " Analyse"), /*#__PURE__*/React.createElement("button", {
     onClick: findSnags,
     style: {
       background: `${T.amber}33`,
@@ -997,9 +1036,9 @@ function PhotoVisionAction({
     }
   }, React.cloneElement(Ic.alert, {
     size: 13
-  }), " Find snags")), busy && React.createElement(ShimmerRows, {
+  }), " Find snags")), busy && /*#__PURE__*/React.createElement(ShimmerRows, {
     color: T.purple
-  }), result && !busy && React.createElement("div", {
+  }), result && !busy && /*#__PURE__*/React.createElement("div", {
     style: {
       background: 'rgba(255,255,255,0.06)',
       borderRadius: 10,
@@ -1008,39 +1047,39 @@ function PhotoVisionAction({
       fontSize: 12.5,
       lineHeight: 1.45
     }
-  }, result.summary && React.createElement("div", {
+  }, result.summary && /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 8
     }
-  }, result.summary), result.tags?.length > 0 && React.createElement("div", {
+  }, result.summary), result.tags?.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 4,
       marginBottom: 6
     }
-  }, result.tags.slice(0, 6).map((t, i) => React.createElement(Pill, {
+  }, result.tags.slice(0, 6).map((t, i) => /*#__PURE__*/React.createElement(Pill, {
     key: i,
     c: accent,
     size: "xs"
-  }, t))), result.snags?.length > 0 && React.createElement("div", {
+  }, t))), result.snags?.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 6,
       display: 'flex',
       flexDirection: 'column',
       gap: 3
     }
-  }, result.snags.map((s, i) => React.createElement("div", {
+  }, result.snags.map((s, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     c: s.priority === 'high' ? T.red : s.priority === 'med' ? T.amber : T.t3,
     size: "xs"
-  }, s.priority), React.createElement("span", null, s.title, " ", React.createElement("span", {
+  }, s.priority), /*#__PURE__*/React.createElement("span", null, s.title, " ", /*#__PURE__*/React.createElement("span", {
     style: {
       opacity: 0.6
     }

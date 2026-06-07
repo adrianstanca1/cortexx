@@ -1,3 +1,8 @@
+// Cortexx — Per-tenant audit log + SSO/login with role selection (Phase 85)
+
+// ═══════════════════════════════════════════════════════════════════
+// AUDIT LOG — append-only, per tenant
+// ═══════════════════════════════════════════════════════════════════
 (function () {
   if (window.CortexAudit) return;
   const KEY = () => 'cortexx_audit__' + (window.CortexTenant ? window.CortexTenant.active() : 'default');
@@ -78,25 +83,25 @@ function AuditScreen({
     Money: T.green,
     Photos: T.cyan
   };
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Audit log",
     subtitle: `${entries.length} events · append-only`
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 12px',
       display: 'flex',
       gap: 6,
       overflowX: 'auto'
     }
-  }, areas.map(a => React.createElement("button", {
+  }, areas.map(a => /*#__PURE__*/React.createElement("button", {
     key: a,
     onClick: () => setFilter(a),
     style: {
@@ -112,12 +117,12 @@ function AuditScreen({
       whiteSpace: 'nowrap',
       flexShrink: 0
     }
-  }, a))), React.createElement("div", {
+  }, a))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       left: 31,
@@ -126,7 +131,7 @@ function AuditScreen({
       width: 1.5,
       background: T.hair
     }
-  }), shown.map(e => React.createElement("div", {
+  }), shown.map(e => /*#__PURE__*/React.createElement("div", {
     key: e.id,
     style: {
       display: 'flex',
@@ -134,7 +139,7 @@ function AuditScreen({
       paddingBottom: 14,
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -150,34 +155,34 @@ function AuditScreen({
     }
   }, React.cloneElement(e.who.includes('AI') ? Ic.spark : Ic.check, {
     size: 14
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       paddingTop: 3
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       lineHeight: 1.4
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontWeight: 600
     }
-  }, e.who), " ", React.createElement("span", {
+  }, e.who), " ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, e.action)), React.createElement("div", {
+  }, e.action)), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3,
       marginTop: 2
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: areaC[e.area] || accent
     }
@@ -188,6 +193,10 @@ function AuditScreen({
     minute: '2-digit'
   }))))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// SSO / LOGIN with role + workspace selection
+// ═══════════════════════════════════════════════════════════════════
 function SSOLoginScreen({
   accent,
   onClose
@@ -212,10 +221,10 @@ function SSOLoginScreen({
     c: '#fff',
     i: ''
   }];
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       display: 'flex',
@@ -223,12 +232,12 @@ function SSOLoginScreen({
       padding: '40px 24px',
       justifyContent: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'center',
       marginBottom: 32
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 64,
       height: 64,
@@ -242,7 +251,7 @@ function SSOLoginScreen({
   }, React.cloneElement(Ic.spark, {
     size: 32,
     color: '#fff'
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 24,
@@ -250,20 +259,20 @@ function SSOLoginScreen({
       color: T.t1,
       letterSpacing: -0.5
     }
-  }, "Sign in to CortexBuild Pro"), React.createElement("div", {
+  }, "Sign in to CortexBuild Pro"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 6
     }
-  }, "Construction OS \xB7 UK SMB")), stage === 'providers' && React.createElement("div", {
+  }, "Construction OS \xB7 UK SMB")), stage === 'providers' && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 10
     }
-  }, providers.map(p => React.createElement("button", {
+  }, providers.map(p => /*#__PURE__*/React.createElement("button", {
     key: p.k,
     onClick: () => setStage('workspace'),
     style: {
@@ -281,7 +290,7 @@ function SSOLoginScreen({
       justifyContent: 'center',
       gap: 10
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 20,
       height: 20,
@@ -294,32 +303,32 @@ function SSOLoginScreen({
       fontSize: 12,
       fontWeight: 800
     }
-  }, p.k === 'apple' ? '' : p.i), p.l)), React.createElement("div", {
+  }, p.k === 'apple' ? '' : p.i), p.l)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10,
       margin: '8px 0'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       height: 1,
       background: T.hair
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t3
     }
-  }, "or email"), React.createElement("div", {
+  }, "or email"), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       height: 1,
       background: T.hair
     }
-  })), React.createElement("input", {
+  })), /*#__PURE__*/React.createElement("input", {
     value: email,
     onChange: e => setEmail(e.target.value),
     placeholder: "you@company.co.uk",
@@ -333,7 +342,7 @@ function SSOLoginScreen({
       fontSize: 14,
       outline: 'none'
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: () => setStage('workspace'),
     disabled: !email.trim(),
     style: {
@@ -348,7 +357,7 @@ function SSOLoginScreen({
       cursor: email.trim() ? 'pointer' : 'default',
       opacity: email.trim() ? 1 : 0.5
     }
-  }, "Continue")), stage === 'workspace' && React.createElement("div", null, React.createElement("div", {
+  }, "Continue")), stage === 'workspace' && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -356,13 +365,13 @@ function SSOLoginScreen({
       textAlign: 'center',
       marginBottom: 14
     }
-  }, "Choose your workspace"), React.createElement("div", {
+  }, "Choose your workspace"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, tenants.map(t => React.createElement("button", {
+  }, tenants.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.id,
     onClick: () => setTenant(t.id),
     style: {
@@ -376,35 +385,35 @@ function SSOLoginScreen({
       gap: 12,
       textAlign: 'left'
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: t.name,
     size: 36,
     c: t.color
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, t.name), React.createElement("div", {
+  }, t.name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, t.role, " \xB7 ", t.plan)), tenant === t.id && React.createElement("span", {
+  }, t.role, " \xB7 ", t.plan)), tenant === t.id && /*#__PURE__*/React.createElement("span", {
     style: {
       color: accent
     }
   }, React.cloneElement(Ic.check, {
     size: 18,
     sw: 3
-  }))))), React.createElement("button", {
+  }))))), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       if (window.CortexTenant && tenant !== window.CortexTenant.active()) {
         window.CortexTenant.switch(tenant);
@@ -426,7 +435,7 @@ function SSOLoginScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Enter workspace"), React.createElement("button", {
+  }, "Enter workspace"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setStage('providers'),
     style: {
       width: '100%',
@@ -439,7 +448,7 @@ function SSOLoginScreen({
       cursor: 'pointer',
       padding: 8
     }
-  }, "Back")), React.createElement("div", {
+  }, "Back")), /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'center',
       marginTop: 24,
@@ -448,7 +457,7 @@ function SSOLoginScreen({
       color: T.t3,
       lineHeight: 1.5
     }
-  }, "SSO ready \xB7 SAML / OIDC for Enterprise.", React.createElement("br", null), "By continuing you agree to the Terms & Privacy Policy.")));
+  }, "SSO ready \xB7 SAML / OIDC for Enterprise.", /*#__PURE__*/React.createElement("br", null), "By continuing you agree to the Terms & Privacy Policy.")));
 }
 Object.assign(window, {
   AuditScreen,

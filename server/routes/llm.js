@@ -10,6 +10,8 @@
 //   OPENAI_COMPAT_BASE=http://localhost:8080
 //   OPENAI_COMPAT_MODEL=default
 //
+//   NATIVE_LLAMA_BASE=http://localhost:8080
+//
 // No API keys. All inference stays on the box you control.
 
 const express = require('express');
@@ -21,6 +23,7 @@ const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5-coder:7b';
 const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'llava';
 const OAI_BASE = (process.env.OPENAI_COMPAT_BASE || '').replace(/\/+$/, '');
 const OAI_MODEL = process.env.OPENAI_COMPAT_MODEL || 'default';
+const NATIVE_LLAMA_BASE = (process.env.NATIVE_LLAMA_BASE || '').replace(/\/+$/, '');
 const TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT_MS || '60000', 10);
 
 function abortableFetch(url, opts) {
@@ -70,14 +73,37 @@ async function openaiCompatChat(messages) {
   return (j && j.choices && j.choices[0] && j.choices[0].message && j.choices[0].message.content) || '';
 }
 
+async function smartChat(messages) {
+  const vision = hasImages(messages);
+  
+  // Priority 1: Vision task -> Ollama (vision model)
+  if (vision) {
+    return await ollamaChat(messages);
+  }
+  
+  // Priority 2: Native llama-server (if configured)
+  if (NATIVE_LLAMA_BASE) {
+    // Temporarily swap OAI_BASE to NATIVE_LLAMA_BASE for the call
+    const originalOaiBase = process.env.OPENAI_COMPAT_BASE;
+    process.env.OPENAI_COMPAT_BASE = NATIVE_LLAMA_BASE;
+    try {
+      return await openaiCompatChat(messages);
+    } finally {
+      process.env.OPENAI_COMPAT_BASE = originalOaiBase;
+    }
+  }
+
+  // Fallback: Ollama
+  return await ollamaChat(messages);
+}
+
 router.post('/llm', async (req, res) => {
   try {
     const messages = Array.isArray(req.body && req.body.messages) ? req.body.messages : null;
     if (!messages || !messages.length) return res.status(400).json({ error: 'messages[] required' });
-    const text = RUNTIME === 'openai_compat' && OAI_BASE
-      ? await openaiCompatChat(messages)
-      : await ollamaChat(messages);
-    res.json({ text, runtime: RUNTIME, model: hasImages(messages) ? OLLAMA_VISION_MODEL : OLLAMA_MODEL });
+    const text = await smartChat(messages);
+    const model = hasImages(messages) ? OLLAMA_VISION_MODEL : (NATIVE_LLAMA_BASE ? 'native' : OLLAMA_MODEL);
+    res.json({ text, runtime: 'smart', model });
   } catch (e) {
     const status = e.status || (e.name === 'AbortError' ? 504 : 502);
     res.status(status).json({ error: e.message || 'LLM call failed' });
@@ -107,11 +133,9 @@ router.get('/llm/health', async (_req, res) => {
 
 // Shared helper so other routes (e.g. the legacy /api/ai proxy) can reuse the
 // same local-LLM path without re-implementing runtime selection.
-async function chat(messages) {
-  return RUNTIME === 'openai_compat' && OAI_BASE
-    ? await openaiCompatChat(messages)
-    : await ollamaChat(messages);
-}
+const chat = smartChat;
 
 module.exports = router;
-module.exports.chat = chat;
+module.exports.chat = smartChat;
+module.exports.hasImages = hasImages;
+module.exports.smartChat = smartChat;
