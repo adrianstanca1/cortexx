@@ -1,6 +1,22 @@
+// Cortexx — Phase 79: Auto-audit logging + Photo→Snag flow + print styles
+//
+// 1. Auto-audit: every Backend.db.<table>.create/update/remove now writes a
+//    signed entry into auditLog so the existing Audit Trail screen actually
+//    reflects real activity instead of just the seed.
+// 2. PhotoToSnagSheet: take/pick a photo → Backend.vision.detectSnagsInPhoto
+//    → user picks which detected defects to file → batch-creates real snag
+//    records linked to the chosen project, with the photo as evidence.
+// 3. Print stylesheet: when window.print() is used (Reports, Quote PDF,
+//    Training matrix), strip UI chrome and lay content out as A4-clean.
+
+// ─────────────────────────────────────────────────────────
+// AUTO-AUDIT LOGGING
+// ─────────────────────────────────────────────────────────
 (function () {
   if (!window.Backend || Backend._auditWrapped) return;
   Backend._auditWrapped = true;
+
+  // Hash chain helper — last entry's hash is mixed in so tampering breaks the chain.
   const hash = s => {
     let h = 5381;
     for (let i = 0; i < s.length; i++) h = (h << 5) + h + s.charCodeAt(i) | 0;
@@ -25,8 +41,10 @@
         icon,
         color
       });
-    } catch (e) {}
+    } catch (e) {/* silent */}
   };
+
+  // Map table name → (action, payload) → audit phrase
   const phraseFor = (table, op, before, after) => {
     const id = after?.id ?? before?.id;
     const colors = {
@@ -40,6 +58,7 @@
       remove: 'trash'
     };
     const verb = op === 'create' ? 'added' : op === 'update' ? 'updated' : 'removed';
+    // Where = project name if we can resolve, else the table label
     let where = table;
     try {
       const projId = after?.projectId ?? before?.projectId;
@@ -85,7 +104,10 @@
       icon: icons[op]
     };
   };
-  const skipTables = new Set(['user', 'settings', 'activity', 'auditLog', 'docGens', 'computed', 'aiHistory']);
+
+  // Wrap every existing CRUD table (and any registered later via Backend.db.table).
+  const skipTables = new Set(['user', 'settings', 'activity', 'auditLog', 'docGens', 'computed', 'aiHistory' // ephemeral / derived
+  ]);
   function wrapTable(name, tbl) {
     if (!tbl || tbl._audited || skipTables.has(name)) return;
     tbl._audited = true;
@@ -131,11 +153,15 @@
       return r;
     };
   }
+
+  // First pass — wrap current tables
   Object.entries(Backend.db).forEach(([name, tbl]) => {
     if (tbl && typeof tbl === 'object' && (tbl.create || tbl.update || tbl.remove)) {
       wrapTable(name, tbl);
     }
   });
+
+  // Hook future Backend.db.table() factory so newly seeded tables also get wrapped
   const origTable = Backend.db.table;
   if (origTable) {
     Backend.db.table = (name, opts) => {
@@ -145,6 +171,10 @@
     };
   }
 })();
+
+// ─────────────────────────────────────────────────────────
+// PHOTO → SNAG
+// ─────────────────────────────────────────────────────────
 (function () {
   if (!window.Backend) return;
   const s = Backend.db.snapshot();
@@ -161,7 +191,7 @@ function PhotoToSnagSheet({
   accent
 }) {
   const projects = useDB('projects');
-  const [stage, setStage] = React.useState('pick');
+  const [stage, setStage] = React.useState('pick'); // pick | scanning | review
   const [blob, setBlob] = React.useState(null);
   const [previewUrl, setPreviewUrl] = React.useState(null);
   const [result, setResult] = React.useState(null);
@@ -183,6 +213,7 @@ function PhotoToSnagSheet({
       const r = await Backend.vision.detectSnagsInPhoto(f);
       if (!r || !r.snags) throw new Error('No data');
       setResult(r);
+      // Pre-pick everything by default
       setPicked(new Set((r.snags || []).map((_, i) => i)));
       setStage('review');
     } catch (e) {
@@ -227,10 +258,10 @@ function PhotoToSnagSheet({
     if (previewUrl) URL.revokeObjectURL(previewUrl);
   }, [previewUrl]);
   const priColor = p => p === 'high' ? T.red : p === 'med' ? T.amber : T.t3;
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("input", {
     ref: fileRef,
     type: "file",
     accept: "image/*",
@@ -239,7 +270,7 @@ function PhotoToSnagSheet({
     style: {
       display: 'none'
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -247,7 +278,7 @@ function PhotoToSnagSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -257,24 +288,24 @@ function PhotoToSnagSheet({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Close"), React.createElement("div", {
+  }, "Close"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Photo \u2192 Snag"), React.createElement("div", {
+  }, "Photo \u2192 Snag"), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 50
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '14px 16px 24px'
     }
-  }, stage === 'pick' && React.createElement(React.Fragment, null, React.createElement("button", {
+  }, stage === 'pick' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("button", {
     onClick: pick,
     style: {
       width: '100%',
@@ -290,7 +321,7 @@ function PhotoToSnagSheet({
       justifyContent: 'center',
       gap: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 64,
       height: 64,
@@ -303,13 +334,13 @@ function PhotoToSnagSheet({
     }
   }, React.cloneElement(Ic.alert, {
     size: 32
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 700
     }
-  }, "Photograph the defect"), React.createElement("div", {
+  }, "Photograph the defect"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -318,7 +349,7 @@ function PhotoToSnagSheet({
       lineHeight: 1.5,
       padding: '0 30px'
     }
-  }, "Cortex vision will list every defect it can see \u2014 cracked tiles, paint runs, gaps, alignment issues \u2014 and file each as a separate snag.")), err && React.createElement("div", {
+  }, "Cortex vision will list every defect it can see \u2014 cracked tiles, paint runs, gaps, alignment issues \u2014 and file each as a separate snag.")), err && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 12,
       padding: 10,
@@ -329,7 +360,7 @@ function PhotoToSnagSheet({
       fontSize: 12,
       color: T.red
     }
-  }, err)), stage === 'scanning' && previewUrl && React.createElement(React.Fragment, null, React.createElement("div", {
+  }, err)), stage === 'scanning' && previewUrl && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
       borderRadius: 14,
@@ -337,7 +368,7 @@ function PhotoToSnagSheet({
       marginBottom: 14,
       background: '#000'
     }
-  }, React.createElement("img", {
+  }, /*#__PURE__*/React.createElement("img", {
     src: previewUrl,
     style: {
       width: '100%',
@@ -346,7 +377,7 @@ function PhotoToSnagSheet({
       display: 'block',
       opacity: 0.55
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -356,7 +387,7 @@ function PhotoToSnagSheet({
       justifyContent: 'center',
       gap: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 52,
       height: 52,
@@ -369,17 +400,17 @@ function PhotoToSnagSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 26
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: '#fff',
       fontWeight: 600
     }
-  }, "Scanning for defects\u2026"))), React.createElement(ShimmerRows, {
+  }, "Scanning for defects\u2026"))), /*#__PURE__*/React.createElement(ShimmerRows, {
     color: T.purple,
     rows: 3
-  })), stage === 'review' && result && React.createElement(React.Fragment, null, previewUrl && React.createElement("div", {
+  })), stage === 'review' && result && /*#__PURE__*/React.createElement(React.Fragment, null, previewUrl && /*#__PURE__*/React.createElement("div", {
     style: {
       borderRadius: 12,
       overflow: 'hidden',
@@ -387,7 +418,7 @@ function PhotoToSnagSheet({
       maxHeight: 180,
       background: '#000'
     }
-  }, React.createElement("img", {
+  }, /*#__PURE__*/React.createElement("img", {
     src: previewUrl,
     style: {
       width: '100%',
@@ -395,7 +426,7 @@ function PhotoToSnagSheet({
       objectFit: 'cover',
       display: 'block'
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -403,7 +434,7 @@ function PhotoToSnagSheet({
       lineHeight: 1.45,
       marginBottom: 14
     }
-  }, result.summary || 'Defects detected:'), result.snags.length === 0 && React.createElement("div", {
+  }, result.summary || 'Defects detected:'), result.snags.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 28,
       textAlign: 'center',
@@ -411,7 +442,7 @@ function PhotoToSnagSheet({
       fontSize: 13,
       color: T.t3
     }
-  }, "Nothing to file \u2014 this looks clean \u2713"), React.createElement("div", {
+  }, "Nothing to file \u2014 this looks clean \u2713"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -419,7 +450,7 @@ function PhotoToSnagSheet({
     }
   }, result.snags.map((sn, i) => {
     const sel = picked.has(i);
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: i,
       onClick: () => toggle(i),
       style: {
@@ -432,7 +463,7 @@ function PhotoToSnagSheet({
         alignItems: 'flex-start',
         gap: 10
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 20,
         height: 20,
@@ -445,35 +476,35 @@ function PhotoToSnagSheet({
         alignItems: 'center',
         justifyContent: 'center'
       }
-    }, sel && React.createElement("span", {
+    }, sel && /*#__PURE__*/React.createElement("span", {
       style: {
         color: '#fff'
       }
     }, React.cloneElement(Ic.check, {
       size: 12,
       sw: 3
-    }))), React.createElement("div", {
+    }))), /*#__PURE__*/React.createElement("div", {
       style: {
         minWidth: 0,
         flex: 1
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 6,
         marginBottom: 2
       }
-    }, React.createElement(Pill, {
+    }, /*#__PURE__*/React.createElement(Pill, {
       c: priColor(sn.priority),
       size: "xs"
-    }, sn.priority), sn.area && React.createElement("span", {
+    }, sn.priority), sn.area && /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SF,
         fontSize: 10.5,
         color: T.t3
       }
-    }, sn.area)), React.createElement("div", {
+    }, sn.area)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13.5,
@@ -481,7 +512,7 @@ function PhotoToSnagSheet({
         lineHeight: 1.35
       }
     }, sn.title)));
-  })), result.snags.length > 0 && React.createElement(React.Fragment, null, React.createElement("div", {
+  })), result.snags.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 16,
       fontFamily: SF,
@@ -492,14 +523,14 @@ function PhotoToSnagSheet({
       letterSpacing: 0.7,
       marginBottom: 6
     }
-  }, "Project"), React.createElement("div", {
+  }, "Project"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       overflowX: 'auto',
       paddingBottom: 4
     }
-  }, projects.filter(p => p.status !== 'completed').map(p => React.createElement("button", {
+  }, projects.filter(p => p.status !== 'completed').map(p => /*#__PURE__*/React.createElement("button", {
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -515,7 +546,7 @@ function PhotoToSnagSheet({
       whiteSpace: 'nowrap',
       cursor: 'pointer'
     }
-  }, p.name))), React.createElement("button", {
+  }, p.name))), /*#__PURE__*/React.createElement("button", {
     onClick: fileSelected,
     disabled: picked.size === 0,
     style: {
@@ -539,7 +570,7 @@ function PhotoToSnagSheet({
     }
   }, React.cloneElement(Ic.check, {
     size: 15
-  }), "File ", picked.size, " snag", picked.size !== 1 ? 's' : ''), React.createElement("button", {
+  }), "File ", picked.size, " snag", picked.size !== 1 ? 's' : ''), /*#__PURE__*/React.createElement("button", {
     onClick: pick,
     style: {
       marginTop: 8,

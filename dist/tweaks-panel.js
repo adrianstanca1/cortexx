@@ -1,3 +1,44 @@
+// tweaks-panel.jsx
+// Reusable Tweaks shell + form-control helpers.
+//
+// Owns the host protocol (listens for __activate_edit_mode / __deactivate_edit_mode,
+// posts __edit_mode_available / __edit_mode_set_keys / __edit_mode_dismissed) so
+// individual prototypes don't re-roll it. Ships a consistent set of controls so you
+// don't hand-draw <input type="range">, segmented radios, steppers, etc.
+//
+// Usage (in an HTML file that loads React + Babel):
+//
+//   const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+//     "primaryColor": "#D97757",
+//     "fontSize": 16,
+//     "density": "regular",
+//     "dark": false
+//   }/*EDITMODE-END*/;
+//
+//   function App() {
+//     const [t, setTweak] = useTweaks(TWEAK_DEFAULTS);
+//     return (
+//       <div style={{ fontSize: t.fontSize, color: t.primaryColor }}>
+//         Hello
+//         <TweaksPanel>
+//           <TweakSection label="Typography" />
+//           <TweakSlider label="Font size" value={t.fontSize} min={10} max={32} unit="px"
+//                        onChange={(v) => setTweak('fontSize', v)} />
+//           <TweakRadio  label="Density" value={t.density}
+//                        options={['compact', 'regular', 'comfy']}
+//                        onChange={(v) => setTweak('density', v)} />
+//           <TweakSection label="Theme" />
+//           <TweakColor  label="Primary" value={t.primaryColor}
+//                        onChange={(v) => setTweak('primaryColor', v)} />
+//           <TweakToggle label="Dark mode" value={t.dark}
+//                        onChange={(v) => setTweak('dark', v)} />
+//         </TweaksPanel>
+//       </div>
+//     );
+//   }
+//
+// ─────────────────────────────────────────────────────────────────────────────
+
 const __TWEAKS_STYLE = `
   .twk-panel{position:fixed;right:16px;bottom:16px;z-index:2147483646;width:280px;
     max-height:calc(100vh - 32px);display:flex;flex-direction:column;
@@ -90,8 +131,15 @@ const __TWEAKS_STYLE = `
   .twk-swatch::-webkit-color-swatch{border:0;border-radius:5.5px}
   .twk-swatch::-moz-color-swatch{border:0;border-radius:5.5px}
 `;
+
+// ── useTweaks ───────────────────────────────────────────────────────────────
+// Single source of truth for tweak values. setTweak persists via the host
+// (__edit_mode_set_keys → host rewrites the EDITMODE block on disk).
 function useTweaks(defaults) {
   const [values, setValues] = React.useState(defaults);
+  // Accepts either setTweak('key', value) or setTweak({ key: value, ... }) so a
+  // useState-style call doesn't write a "[object Object]" key into the persisted
+  // JSON block.
   const setTweak = React.useCallback((keyOrEdits, val) => {
     const edits = typeof keyOrEdits === 'object' && keyOrEdits !== null ? keyOrEdits : {
       [keyOrEdits]: val
@@ -107,6 +155,14 @@ function useTweaks(defaults) {
   }, []);
   return [values, setTweak];
 }
+
+// ── TweaksPanel ─────────────────────────────────────────────────────────────
+// Floating shell. Registers the protocol listener BEFORE announcing
+// availability — if the announce ran first, the host's activate could land
+// before our handler exists and the toolbar toggle would silently no-op.
+// The close button posts __edit_mode_dismissed so the host's toolbar toggle
+// flips off in lockstep; the host echoes __deactivate_edit_mode back which
+// is what actually hides the panel.
 function TweaksPanel({
   title = 'Tweaks',
   children
@@ -183,7 +239,7 @@ function TweaksPanel({
     window.addEventListener('mouseup', up);
   };
   if (!open) return null;
-  return React.createElement(React.Fragment, null, React.createElement("style", null, __TWEAKS_STYLE), React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("style", null, __TWEAKS_STYLE), /*#__PURE__*/React.createElement("div", {
     ref: dragRef,
     className: "twk-panel",
     "data-noncommentable": "",
@@ -191,23 +247,26 @@ function TweaksPanel({
       right: offsetRef.current.x,
       bottom: offsetRef.current.y
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "twk-hd",
     onMouseDown: onDragStart
-  }, React.createElement("b", null, title), React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("b", null, title), /*#__PURE__*/React.createElement("button", {
     className: "twk-x",
     "aria-label": "Close tweaks",
     onMouseDown: e => e.stopPropagation(),
     onClick: dismiss
-  }, "\u2715")), React.createElement("div", {
+  }, "\u2715")), /*#__PURE__*/React.createElement("div", {
     className: "twk-body"
   }, children)));
 }
+
+// ── Layout helpers ──────────────────────────────────────────────────────────
+
 function TweakSection({
   label,
   children
 }) {
-  return React.createElement(React.Fragment, null, React.createElement("div", {
+  return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     className: "twk-sect"
   }, label), children);
 }
@@ -217,14 +276,17 @@ function TweakRow({
   children,
   inline = false
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     className: inline ? 'twk-row twk-row-h' : 'twk-row'
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "twk-lbl"
-  }, React.createElement("span", null, label), value != null && React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, label), value != null && /*#__PURE__*/React.createElement("span", {
     className: "twk-val"
   }, value)), children);
 }
+
+// ── Controls ────────────────────────────────────────────────────────────────
+
 function TweakSlider({
   label,
   value,
@@ -234,10 +296,10 @@ function TweakSlider({
   unit = '',
   onChange
 }) {
-  return React.createElement(TweakRow, {
+  return /*#__PURE__*/React.createElement(TweakRow, {
     label: label,
     value: `${value}${unit}`
-  }, React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("input", {
     type: "range",
     className: "twk-slider",
     min: min,
@@ -252,18 +314,18 @@ function TweakToggle({
   value,
   onChange
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     className: "twk-row twk-row-h"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "twk-lbl"
-  }, React.createElement("span", null, label)), React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("span", null, label)), /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: "twk-toggle",
     "data-on": value ? '1' : '0',
     role: "switch",
     "aria-checked": !!value,
     onClick: () => onChange(!value)
-  }, React.createElement("i", null)));
+  }, /*#__PURE__*/React.createElement("i", null)));
 }
 function TweakRadio({
   label,
@@ -279,6 +341,9 @@ function TweakRadio({
   });
   const idx = Math.max(0, opts.findIndex(o => o.value === value));
   const n = opts.length;
+
+  // The active value is read by pointer-move handlers attached for the lifetime
+  // of a drag — ref it so a stale closure doesn't fire onChange for every move.
   const valueRef = React.useRef(value);
   valueRef.current = value;
   const segAt = clientX => {
@@ -304,20 +369,20 @@ function TweakRadio({
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
-  return React.createElement(TweakRow, {
+  return /*#__PURE__*/React.createElement(TweakRow, {
     label: label
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     ref: trackRef,
     role: "radiogroup",
     onPointerDown: onPointerDown,
     className: dragging ? 'twk-seg dragging' : 'twk-seg'
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "twk-seg-thumb",
     style: {
       left: `calc(2px + ${idx} * (100% - 4px) / ${n})`,
       width: `calc((100% - 4px) / ${n})`
     }
-  }), opts.map(o => React.createElement("button", {
+  }), opts.map(o => /*#__PURE__*/React.createElement("button", {
     key: o.value,
     type: "button",
     role: "radio",
@@ -330,16 +395,16 @@ function TweakSelect({
   options,
   onChange
 }) {
-  return React.createElement(TweakRow, {
+  return /*#__PURE__*/React.createElement(TweakRow, {
     label: label
-  }, React.createElement("select", {
+  }, /*#__PURE__*/React.createElement("select", {
     className: "twk-field",
     value: value,
     onChange: e => onChange(e.target.value)
   }, options.map(o => {
     const v = typeof o === 'object' ? o.value : o;
     const l = typeof o === 'object' ? o.label : o;
-    return React.createElement("option", {
+    return /*#__PURE__*/React.createElement("option", {
       key: v,
       value: v
     }, l);
@@ -351,9 +416,9 @@ function TweakText({
   placeholder,
   onChange
 }) {
-  return React.createElement(TweakRow, {
+  return /*#__PURE__*/React.createElement(TweakRow, {
     label: label
-  }, React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("input", {
     className: "twk-field",
     type: "text",
     value: value,
@@ -399,19 +464,19 @@ function TweakNumber({
     window.addEventListener('pointermove', move);
     window.addEventListener('pointerup', up);
   };
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     className: "twk-num"
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     className: "twk-num-lbl",
     onPointerDown: onScrubStart
-  }, label), React.createElement("input", {
+  }, label), /*#__PURE__*/React.createElement("input", {
     type: "number",
     value: value,
     min: min,
     max: max,
     step: step,
     onChange: e => onChange(clamp(Number(e.target.value)))
-  }), unit && React.createElement("span", {
+  }), unit && /*#__PURE__*/React.createElement("span", {
     className: "twk-num-unit"
   }, unit));
 }
@@ -420,11 +485,11 @@ function TweakColor({
   value,
   onChange
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     className: "twk-row twk-row-h"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     className: "twk-lbl"
-  }, React.createElement("span", null, label)), React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("span", null, label)), /*#__PURE__*/React.createElement("input", {
     type: "color",
     className: "twk-swatch",
     value: value,
@@ -436,7 +501,7 @@ function TweakButton({
   onClick,
   secondary = false
 }) {
-  return React.createElement("button", {
+  return /*#__PURE__*/React.createElement("button", {
     type: "button",
     className: secondary ? 'twk-btn secondary' : 'twk-btn',
     onClick: onClick

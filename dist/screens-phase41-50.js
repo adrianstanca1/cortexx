@@ -1,3 +1,8 @@
+// Cortexx — Phases 41-50 (batched): intelligence + ops depth
+
+// ═══════════════════════════════════════════════════════════════════
+// P41: Vera scheduled cron
+// ═══════════════════════════════════════════════════════════════════
 (function () {
   if (!window.Backend?.vera) return;
   let cronTimer = null;
@@ -15,6 +20,10 @@
     cronTimer = null;
   };
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+// P42: Multi-agent personas
+// ═══════════════════════════════════════════════════════════════════
 (function () {
   if (!window.Backend) return;
   Backend.personas = {
@@ -65,6 +74,10 @@
     });
   };
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+// P43: Predictive cashflow (P44 alias)
+// ═══════════════════════════════════════════════════════════════════
 Backend.ai.forecastCash = async (weeks = 8) => {
   const b = Backend.brain.snapshot();
   const prompt = `Forecast UK construction SMB 8-week cashflow. State: cash £${b.money.cash}, outstanding £${b.money.outstanding}, pipeline £${b.money.pipeline}. Reply ONLY JSON: [{"week":"Wk N","balance":NNNNN,"confidence":"high|med|low"}] for ${weeks} weeks ahead.`;
@@ -80,6 +93,10 @@ Backend.ai.forecastCash = async (weeks = 8) => {
     return [];
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// P45: Bid/no-bid scoring
+// ═══════════════════════════════════════════════════════════════════
 Backend.ai.bidScore = async brief => {
   const b = Backend.brain.snapshot();
   const prompt = `You are a UK construction estimator. Given a tender brief and our state, output ONLY JSON {"recommendation":"BID|NO BID","winProbability":0-100,"suggestedPrice":NNNNN,"reasoning":"1 sentence"}. State: ${b.projects.active} active, avg margin ${b.money.avgMargin}%. Brief: ${brief}.`;
@@ -95,6 +112,10 @@ Backend.ai.bidScore = async brief => {
     return null;
   }
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// P46: Sub performance scoring
+// ═══════════════════════════════════════════════════════════════════
 Backend.computed.subScore = subId => {
   const sub = Backend.db.snapshot().subs.find(s => s.id == subId);
   if (!sub) return 0;
@@ -104,10 +125,18 @@ Backend.computed.subScore = subId => {
   score += Math.min(sub.rating * 4, 20);
   return Math.min(score, 100);
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// P47: Customer LTV
+// ═══════════════════════════════════════════════════════════════════
 Backend.computed.customerLTV = customerId => {
   const c = Backend.db.snapshot().customers.find(c => c.id == customerId);
   return c ? c.totalValue : 0;
 };
+
+// ═══════════════════════════════════════════════════════════════════
+// P49: Geofencing
+// ═══════════════════════════════════════════════════════════════════
 (function () {
   let watchId = null;
   window.cortexxGeofence = {
@@ -150,6 +179,10 @@ Backend.computed.customerLTV = customerId => {
     }
   };
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+// Persona consultation screen
+// ═══════════════════════════════════════════════════════════════════
 function PersonasScreen({
   accent
 }) {
@@ -165,25 +198,25 @@ function PersonasScreen({
     setLoading(false);
   };
   const personas = Backend.personas;
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Leadership team",
     subtitle: "5 AI personas \xB7 always available"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'flex',
       gap: 6,
       overflowX: 'auto'
     }
-  }, Object.entries(personas).map(([k, p]) => React.createElement("button", {
+  }, Object.entries(personas).map(([k, p]) => /*#__PURE__*/React.createElement("button", {
     key: k,
     onClick: () => {
       setActive(k);
@@ -202,7 +235,7 @@ function PersonasScreen({
       gap: 4,
       minWidth: 78
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 36,
       height: 36,
@@ -216,31 +249,31 @@ function PersonasScreen({
       fontSize: 12,
       fontWeight: 700
     }
-  }, p.initials), React.createElement("div", {
+  }, p.initials), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t1,
       fontWeight: 600
     }
-  }, p.name.split(' ')[0]), React.createElement("div", {
+  }, p.name.split(' ')[0]), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 9,
       color: T.t3
     }
-  }, p.role)))), React.createElement("div", {
+  }, p.role)))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
       borderRadius: 14,
       padding: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -249,7 +282,7 @@ function PersonasScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, personas[active].role), React.createElement("div", {
+  }, personas[active].role), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
@@ -257,18 +290,18 @@ function PersonasScreen({
       color: T.t1,
       marginTop: 4
     }
-  }, personas[active].name), React.createElement("div", {
+  }, personas[active].name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 4
     }
-  }, personas[active].style))), React.createElement("div", {
+  }, personas[active].style))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("input", {
     value: q,
     onChange: e => setQ(e.target.value),
     placeholder: `Ask ${personas[active].name.split(' ')[0]} anything…`,
@@ -287,7 +320,7 @@ function PersonasScreen({
       fontSize: 14,
       outline: 'none'
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: ask,
     disabled: loading || !q.trim(),
     style: {
@@ -304,25 +337,25 @@ function PersonasScreen({
       cursor: 'pointer',
       opacity: loading || !q.trim() ? 0.5 : 1
     }
-  }, loading ? 'Thinking…' : `Ask ${personas[active].name.split(' ')[0]}`)), a && React.createElement("div", {
+  }, loading ? 'Thinking…' : `Ask ${personas[active].name.split(' ')[0]}`)), a && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `${personas[active].c}11`,
       border: `0.5px solid ${personas[active].c}33`,
       borderRadius: 14,
       padding: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 24,
       height: 24,
@@ -336,14 +369,14 @@ function PersonasScreen({
       fontSize: 10,
       fontWeight: 700
     }
-  }, personas[active].initials), React.createElement("span", {
+  }, personas[active].initials), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: personas[active].c,
       fontWeight: 700
     }
-  }, personas[active].name)), React.createElement("div", {
+  }, personas[active].name)), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,

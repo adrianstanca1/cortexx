@@ -5,7 +5,7 @@
 // Configure via server/.env:
 //   LLM_RUNTIME=ollama        (default) | openai_compat
 //   OLLAMA_BASE=http://localhost:11434
-//   OLLAMA_MODEL=llama3.2:3b
+//   OLLAMA_MODEL=qwen2.5-coder:7b
 //   OLLAMA_VISION_MODEL=llava
 //   OPENAI_COMPAT_BASE=http://localhost:8080
 //   OPENAI_COMPAT_MODEL=default
@@ -17,7 +17,7 @@ const router = express.Router();
 
 const RUNTIME = process.env.LLM_RUNTIME || 'ollama';
 const OLLAMA_BASE = (process.env.OLLAMA_BASE || 'http://localhost:11434').replace(/\/+$/, '');
-const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:3b';
+const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'qwen2.5-coder:7b';
 const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'llava';
 const OAI_BASE = (process.env.OPENAI_COMPAT_BASE || '').replace(/\/+$/, '');
 const OAI_MODEL = process.env.OPENAI_COMPAT_MODEL || 'default';

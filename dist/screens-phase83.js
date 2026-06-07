@@ -1,5 +1,9 @@
+// Cortexx — Per-tenant roles/permissions + org admin dashboard (Phase 83)
+
 (function () {
   if (window.CortexRBAC) return;
+
+  // Role → permission matrix
   const ROLE_PERMS = {
     Owner: ['*'],
     Director: ['*'],
@@ -22,6 +26,8 @@
       return p.includes('*') || p.includes(area);
     }
   };
+
+  // Per-tenant members store
   const KEY = () => 'cortexx_members__' + (window.CortexTenant ? window.CortexTenant.active() : 'default');
   const seed = [{
     id: 1,
@@ -125,18 +131,18 @@ function AdminScreen({
     Subcontractor: T.t2,
     Client: T.t3
   };
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Org admin",
     subtitle: `${tenant.name} · ${members.length} members`,
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       onClick: () => setInviteOpen(!inviteOpen),
       style: {
         width: 36,
@@ -153,7 +159,7 @@ function AdminScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'grid',
@@ -172,7 +178,7 @@ function AdminScreen({
     l: 'Invited',
     v: members.filter(m => m.status === 'invited').length,
     c: T.amber
-  }].map((s, i) => React.createElement("div", {
+  }].map((s, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -180,7 +186,7 @@ function AdminScreen({
       padding: '10px 12px',
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 9,
@@ -189,7 +195,7 @@ function AdminScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, s.l), React.createElement("div", {
+  }, s.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -197,11 +203,11 @@ function AdminScreen({
       fontWeight: 700,
       marginTop: 2
     }
-  }, s.v)))), inviteOpen && React.createElement("div", {
+  }, s.v)))), inviteOpen && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hairMid}`,
@@ -211,27 +217,27 @@ function AdminScreen({
       flexDirection: 'column',
       gap: 8
     }
-  }, React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("input", {
     value: iName,
     onChange: e => setIName(e.target.value),
     placeholder: "Name",
     style: inp()
-  }), React.createElement("input", {
+  }), /*#__PURE__*/React.createElement("input", {
     value: iEmail,
     onChange: e => setIEmail(e.target.value),
     placeholder: "Email",
     style: inp()
-  }), React.createElement("select", {
+  }), /*#__PURE__*/React.createElement("select", {
     value: iRole,
     onChange: e => setIRole(e.target.value),
     style: {
       ...inp(),
       appearance: 'none'
     }
-  }, roles.map(r => React.createElement("option", {
+  }, roles.map(r => /*#__PURE__*/React.createElement("option", {
     key: r,
     value: r
-  }, r))), React.createElement("button", {
+  }, r))), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       if (!iName.trim()) {
         toast('Name required', 'error');
@@ -255,46 +261,46 @@ function AdminScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Send invite"))), React.createElement(Section, {
+  }, "Send invite"))), /*#__PURE__*/React.createElement(Section, {
     title: "Members & roles"
-  }, React.createElement(GroupedList, null, members.map((m, i) => React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, members.map((m, i) => /*#__PURE__*/React.createElement("div", {
     key: m.id,
     style: {
       padding: '12px 14px',
       borderBottom: i === members.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 12
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: m.name,
     size: 38,
     c: m.color
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, m.name), React.createElement("div", {
+  }, m.name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, m.email)), m.status === 'invited' && React.createElement(Pill, {
+  }, m.email)), m.status === 'invited' && /*#__PURE__*/React.createElement(Pill, {
     c: T.amber,
     size: "xs"
-  }, "invited"), React.createElement("button", {
+  }, "invited"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setEditing(editing === m.id ? null : m.id),
     style: {
       background: `${roleC[m.role] || accent}22`,
@@ -307,14 +313,14 @@ function AdminScreen({
       fontSize: 11,
       fontWeight: 700
     }
-  }, m.role, " \u25BE")), editing === m.id && React.createElement("div", {
+  }, m.role, " \u25BE")), editing === m.id && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
       display: 'flex',
       flexWrap: 'wrap',
       gap: 5
     }
-  }, roles.map(r => React.createElement("button", {
+  }, roles.map(r => /*#__PURE__*/React.createElement("button", {
     key: r,
     onClick: () => {
       window.CortexMembers.setRole(m.id, r);
@@ -333,7 +339,7 @@ function AdminScreen({
       fontSize: 11,
       fontWeight: 600
     }
-  }, r)), React.createElement("button", {
+  }, r)), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       window.CortexMembers.remove(m.id);
       refresh();
@@ -351,20 +357,20 @@ function AdminScreen({
       fontSize: 11,
       fontWeight: 600
     }
-  }, "Remove")), React.createElement("div", {
+  }, "Remove")), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 8,
       display: 'flex',
       flexWrap: 'wrap',
       gap: 4
     }
-  }, window.CortexRBAC.can(m.role, '*') || window.CortexRBAC.perms(m.role)[0] === '*' ? React.createElement("span", {
+  }, window.CortexRBAC.can(m.role, '*') || window.CortexRBAC.perms(m.role)[0] === '*' ? /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
       color: T.green
     }
-  }, "full access") : window.CortexRBAC.perms(m.role).slice(0, 6).map(p => React.createElement("span", {
+  }, "full access") : window.CortexRBAC.perms(m.role).slice(0, 6).map(p => /*#__PURE__*/React.createElement("span", {
     key: p,
     style: {
       fontFamily: SFMono,
@@ -374,9 +380,9 @@ function AdminScreen({
       padding: '2px 6px',
       borderRadius: 4
     }
-  }, p))))))), React.createElement(Section, {
+  }, p))))))), /*#__PURE__*/React.createElement(Section, {
     title: "Role permissions"
-  }, React.createElement(GroupedList, null, roles.map((r, i) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, roles.map((r, i) => /*#__PURE__*/React.createElement(Row, {
     key: r,
     icon: Ic.shield,
     iconBg: roleC[r] || accent,

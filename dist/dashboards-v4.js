@@ -1,4 +1,14 @@
+// Cortexx — Dashboard V14: Broadsheet
+//
+// A hard commit to editorial broadsheet aesthetic: cream paper, charcoal ink,
+// serif display masthead, two-column body with column rule, drop cap on the
+// lead story, ornamental dividers, classified-ad-style KPI sidebar, weather
+// strip. Same live data as every other dashboard — completely different
+// world to live in.
+
 (function () {
+  // Lazy-load Playfair Display + Spectral + IBM Plex Mono on first paint of v14.
+  // Idempotent.
   if (typeof document === 'undefined') return;
   if (!document.getElementById('v14-fonts')) {
     const pre = document.createElement('link');
@@ -27,6 +37,7 @@ const V14 = {
   ruleMid: 'rgba(26,24,20,0.35)',
   ruleStr: 'rgba(26,24,20,0.7)',
   red: '#8a1c1c',
+  // ink red for accents (recall classic editorial)
   green: '#3d5a3d',
   gold: '#7d6b3a'
 };
@@ -67,10 +78,12 @@ function DashV14_Broadsheet({
     year: 'numeric'
   }).toUpperCase();
   const volNo = `VOL. ${(today.getFullYear() - 2020).toString().padStart(2, '0')} · NO. ${Math.floor((today - new Date(today.getFullYear(), 0, 0)) / 86400000)}`;
+
+  // The "lead story" — synthesised from real numbers
   const leadHeadline = focus ? focus.t.length > 60 ? focus.t.slice(0, 58) + '…' : focus.t : 'A quiet day on the books';
   const leadDeck = focus ? `${focus.prio === 'high' ? 'High-priority' : focus.prio === 'med' ? 'Routine' : 'Backlog'} item awaits attention · ${onSite} hands on site this morning` : `${onSite} hands on site, ${todo.length} items in the queue, business as usual`;
   const setNav = (k, p) => window.cortexxNav && window.cortexxNav(k, p);
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       background: `
         radial-gradient(at 80% 10%, ${V14.paperHi}, ${V14.paper} 40%, ${V14.paperLo})
@@ -84,7 +97,7 @@ function DashV14_Broadsheet({
       paddingBottom: 150,
       position: 'relative'
     }
-  }, React.createElement("svg", {
+  }, /*#__PURE__*/React.createElement("svg", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -94,35 +107,35 @@ function DashV14_Broadsheet({
       pointerEvents: 'none',
       mixBlendMode: 'multiply'
     }
-  }, React.createElement("defs", null, React.createElement("filter", {
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("filter", {
     id: "v14-noise"
-  }, React.createElement("feTurbulence", {
+  }, /*#__PURE__*/React.createElement("feTurbulence", {
     type: "fractalNoise",
     baseFrequency: "1.2",
     numOctaves: "2",
     stitchTiles: "stitch"
-  }), React.createElement("feColorMatrix", {
+  }), /*#__PURE__*/React.createElement("feColorMatrix", {
     values: "0 0 0 0 0   0 0 0 0 0   0 0 0 0 0   0 0 0 0.5 0"
-  }))), React.createElement("rect", {
+  }))), /*#__PURE__*/React.createElement("rect", {
     width: "100%",
     height: "100%",
     filter: "url(#v14-noise)"
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
       zIndex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px 18px 0'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       borderTop: `4px double ${V14.ink}`,
       borderBottom: `1px solid ${V14.ink}`,
       paddingTop: 4
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -134,7 +147,7 @@ function DashV14_Broadsheet({
       paddingBottom: 2,
       textTransform: 'uppercase'
     }
-  }, React.createElement("span", null, dateline), React.createElement("span", null, volNo))), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, dateline), /*#__PURE__*/React.createElement("span", null, volNo))), /*#__PURE__*/React.createElement("div", {
     style: {
       borderBottom: `2px solid ${V14.ink}`,
       paddingTop: 6,
@@ -143,7 +156,7 @@ function DashV14_Broadsheet({
       alignItems: 'baseline',
       justifyContent: 'space-between'
     }
-  }, React.createElement("h1", {
+  }, /*#__PURE__*/React.createElement("h1", {
     style: {
       fontFamily: DISPLAY,
       fontWeight: 900,
@@ -153,12 +166,12 @@ function DashV14_Broadsheet({
       margin: 0,
       color: V14.ink
     }
-  }, "The ", React.createElement("span", {
+  }, "The ", /*#__PURE__*/React.createElement("span", {
     style: {
       fontStyle: 'italic',
       fontWeight: 700
     }
-  }, "Cortexx"), " Daily")), React.createElement("div", {
+  }, "CortexBuild Pro"), " Daily")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -166,7 +179,7 @@ function DashV14_Broadsheet({
       padding: '6px 0 4px',
       borderBottom: `1px solid ${V14.ink}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: BODY,
       fontSize: 11,
@@ -174,22 +187,22 @@ function DashV14_Broadsheet({
       color: V14.ink2,
       letterSpacing: 0.3
     }
-  }, "\"Built on dirt and detail since 2021\""), React.createElement("div", {
+  }, "\"Built on dirt and detail since 2021\""), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 4
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setNav('switchworkspace'),
     title: "Switch workspace",
     style: chipBtn14()
-  }, Ic.building || Ic.layers, " ", React.createElement("span", null, (window.CortexTenant ? window.CortexTenant.activeRecord().name : 'CORTEXX').toUpperCase().slice(0, 12), " \u25BE")), React.createElement("button", {
+  }, Ic.building || Ic.layers, " ", /*#__PURE__*/React.createElement("span", null, (window.CortexTenant ? window.CortexTenant.activeRecord().name : 'CORTEXX').toUpperCase().slice(0, 12), " \u25BE")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setNav('search'),
     style: chipBtn14()
-  }, Ic.search, " ", React.createElement("span", null, "SEARCH")), React.createElement("button", {
+  }, Ic.search, " ", /*#__PURE__*/React.createElement("span", null, "SEARCH")), /*#__PURE__*/React.createElement("button", {
     onClick: () => setNav('inbox'),
     style: chipBtn14()
-  }, Ic.bell, " ", React.createElement("span", null, "WIRE"))))), React.createElement("div", {
+  }, Ic.bell, " ", /*#__PURE__*/React.createElement("span", null, "WIRE"))))), /*#__PURE__*/React.createElement("div", {
     style: {
       margin: '6px 18px 0',
       padding: '4px 0',
@@ -201,18 +214,18 @@ function DashV14_Broadsheet({
       justifyContent: 'space-between',
       textTransform: 'uppercase'
     }
-  }, React.createElement("span", null, "CAMDEN \xB7 14\xB0C \xB7 LIGHT CLOUD \xB7 WIND SW 12MPH"), React.createElement("span", null, "SUNRISE 04:51 \xB7 SUNSET 20:48")), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("span", null, "CAMDEN \xB7 14\xB0C \xB7 LIGHT CLOUD \xB7 WIND SW 12MPH"), /*#__PURE__*/React.createElement("span", null, "SUNRISE 04:51 \xB7 SUNSET 20:48")), /*#__PURE__*/React.createElement("div", {
     style: {
       margin: '14px 18px 0',
       columnCount: 1,
       columnGap: 16
     }
-  }, React.createElement("article", {
+  }, /*#__PURE__*/React.createElement("article", {
     style: {
       breakInside: 'avoid',
       marginBottom: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: DATA,
       fontSize: 9,
@@ -222,7 +235,7 @@ function DashV14_Broadsheet({
       marginBottom: 4,
       textTransform: 'uppercase'
     }
-  }, "\u25C6 Today's report \xB7 lead"), React.createElement("h2", {
+  }, "\u25C6 Today's report \xB7 lead"), /*#__PURE__*/React.createElement("h2", {
     style: {
       fontFamily: DISPLAY,
       fontWeight: 900,
@@ -233,7 +246,7 @@ function DashV14_Broadsheet({
       color: V14.ink,
       textWrap: 'balance'
     }
-  }, leadHeadline), React.createElement("div", {
+  }, leadHeadline), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: BODY,
       fontStyle: 'italic',
@@ -242,7 +255,7 @@ function DashV14_Broadsheet({
       lineHeight: 1.4,
       marginBottom: 10
     }
-  }, leadDeck), React.createElement("div", {
+  }, leadDeck), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: BODY,
       fontSize: 14,
@@ -251,7 +264,7 @@ function DashV14_Broadsheet({
       textAlign: 'justify',
       hyphens: 'auto'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: DISPLAY,
       fontWeight: 900,
@@ -262,12 +275,12 @@ function DashV14_Broadsheet({
       marginTop: 4,
       color: V14.ink
     }
-  }, (focus?.t || 'A')[0].toUpperCase()), "s of dawn, ", React.createElement("strong", null, onSite), " trades reported on site across the active portfolio. The book carries ", React.createElement("strong", null, "\xA3", (pipeline / 1000).toFixed(0), "k"), " of live pipeline against", React.createElement("strong", null, " \xA3", (outstanding / 1000).toFixed(0), "k"), " outstanding on the ledger.", focus ? React.createElement(React.Fragment, null, " The desk recommends opening with ", React.createElement("em", null, focus.t.toLowerCase()), "; estimates put the work at less than the hour.") : React.createElement(React.Fragment, null, " The desk recommends a clear-out morning \u2014 backlog grooming over fresh starts.")), focus && React.createElement("button", {
+  }, (focus?.t || 'A')[0].toUpperCase()), "s of dawn, ", /*#__PURE__*/React.createElement("strong", null, onSite), " trades reported on site across the active portfolio. The book carries ", /*#__PURE__*/React.createElement("strong", null, "\xA3", (pipeline / 1000).toFixed(0), "k"), " of live pipeline against", /*#__PURE__*/React.createElement("strong", null, " \xA3", (outstanding / 1000).toFixed(0), "k"), " outstanding on the ledger.", focus ? /*#__PURE__*/React.createElement(React.Fragment, null, " The desk recommends opening with ", /*#__PURE__*/React.createElement("em", null, focus.t.toLowerCase()), "; estimates put the work at less than the hour.") : /*#__PURE__*/React.createElement(React.Fragment, null, " The desk recommends a clear-out morning \u2014 backlog grooming over fresh starts.")), focus && /*#__PURE__*/React.createElement("button", {
     onClick: () => setNav('tab', 'tasks'),
     style: leadCTA14()
-  }, "Take it on \u2192")), React.createElement(Dingbat14, {
+  }, "Take it on \u2192")), /*#__PURE__*/React.createElement(Dingbat14, {
     label: "DESK REPORTS"
-  }), active.slice(0, 3).map((p, i) => React.createElement("article", {
+  }), active.slice(0, 3).map((p, i) => /*#__PURE__*/React.createElement("article", {
     key: p.id,
     onClick: () => setNav('project', p),
     style: {
@@ -275,7 +288,7 @@ function DashV14_Broadsheet({
       marginBottom: 12,
       cursor: 'pointer'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: DATA,
       fontSize: 8.5,
@@ -285,7 +298,7 @@ function DashV14_Broadsheet({
       textTransform: 'uppercase',
       marginBottom: 3
     }
-  }, p.client?.toUpperCase() || 'PROJECT', " \xB7 ", p.status?.toUpperCase()), React.createElement("h3", {
+  }, p.client?.toUpperCase() || 'PROJECT', " \xB7 ", p.status?.toUpperCase()), /*#__PURE__*/React.createElement("h3", {
     style: {
       fontFamily: DISPLAY,
       fontWeight: 700,
@@ -295,40 +308,40 @@ function DashV14_Broadsheet({
       margin: '0 0 4px',
       color: V14.ink
     }
-  }, p.name), React.createElement("div", {
+  }, p.name), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: BODY,
       fontSize: 12.5,
       color: V14.ink2,
       lineHeight: 1.4
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: DATA,
       fontWeight: 700,
       color: V14.ink
     }
-  }, p.pct ?? 0, "%"), ' ', "complete \xB7 margin ", React.createElement("span", {
+  }, p.pct ?? 0, "%"), ' ', "complete \xB7 margin ", /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: DATA,
       color: (p.margin ?? 0) >= 25 ? V14.green : V14.red
     }
-  }, p.margin ?? 0, "%"), p.team ? React.createElement(React.Fragment, null, " \xB7 ", p.team, " on crew") : null, p.due ? React.createElement(React.Fragment, null, " \xB7 due ", new Date(p.due).toLocaleDateString('en-GB', {
+  }, p.margin ?? 0, "%"), p.team ? /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 ", p.team, " on crew") : null, p.due ? /*#__PURE__*/React.createElement(React.Fragment, null, " \xB7 due ", new Date(p.due).toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short'
-  })) : null), React.createElement("div", {
+  })) : null), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 4,
       position: 'relative',
       height: 3
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
       background: V14.rule
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       left: 0,
@@ -337,38 +350,38 @@ function DashV14_Broadsheet({
       width: `${p.pct ?? 0}%`,
       background: V14.ink
     }
-  })))), React.createElement(Dingbat14, {
+  })))), /*#__PURE__*/React.createElement(Dingbat14, {
     label: "THE LEDGER"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8,
       marginBottom: 12
     }
-  }, React.createElement(Classified14, {
+  }, /*#__PURE__*/React.createElement(Classified14, {
     label: "Outstanding",
     value: `£${(outstanding / 1000).toFixed(1)}k`,
     note: "across the ledger"
-  }), React.createElement(Classified14, {
+  }), /*#__PURE__*/React.createElement(Classified14, {
     label: "Live pipeline",
     value: `£${(pipeline / 1000).toFixed(0)}k`,
     note: `${active.length} active`
-  }), React.createElement(Classified14, {
+  }), /*#__PURE__*/React.createElement(Classified14, {
     label: "Hands on site",
     value: onSite,
     note: `of ${team.length} on roll`
-  }), React.createElement(Classified14, {
+  }), /*#__PURE__*/React.createElement(Classified14, {
     label: "Miles, week",
     value: `${weekMiles.toFixed(0)} mi`,
     note: `£${(weekMiles * 0.45).toFixed(2)} reimbursable`
-  })), activity.length > 0 && React.createElement(React.Fragment, null, React.createElement(Dingbat14, {
+  })), activity.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Dingbat14, {
     label: "DISPATCHES"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       marginBottom: 10
     }
-  }, activity.slice(0, 4).map((a, i) => React.createElement("div", {
+  }, activity.slice(0, 4).map((a, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       fontFamily: BODY,
@@ -379,21 +392,21 @@ function DashV14_Broadsheet({
       paddingBottom: 5,
       borderBottom: i < 3 ? `1px dotted ${V14.rule}` : 'none'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: DISPLAY,
       fontWeight: 700,
       color: V14.ink
     }
-  }, a.who), ' ', React.createElement("span", {
+  }, a.who), ' ', /*#__PURE__*/React.createElement("span", {
     style: {
       color: V14.ink2
     }
-  }, a.what), a.where && React.createElement(React.Fragment, null, " ", React.createElement("em", {
+  }, a.what), a.where && /*#__PURE__*/React.createElement(React.Fragment, null, " ", /*#__PURE__*/React.createElement("em", {
     style: {
       color: V14.ink3
     }
-  }, a.where)), React.createElement("span", {
+  }, a.where)), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: DATA,
       color: V14.ink4,
@@ -403,9 +416,9 @@ function DashV14_Broadsheet({
   }, "\xB7 ", new Date(a.when).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit'
-  })))))), React.createElement(Dingbat14, {
+  })))))), /*#__PURE__*/React.createElement(Dingbat14, {
     label: "THE DESK"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -413,27 +426,27 @@ function DashV14_Broadsheet({
       border: `1px solid ${V14.ink}`,
       background: V14.paperHi
     }
-  }, React.createElement(DeskLink14, {
+  }, /*#__PURE__*/React.createElement(DeskLink14, {
     label: "Tasks",
     sub: `${todo.length} open`,
     onClick: () => setNav('tab', 'tasks')
-  }), React.createElement(DeskLink14, {
+  }), /*#__PURE__*/React.createElement(DeskLink14, {
     label: "Quotes",
     sub: "ledger",
     onClick: () => setNav('quotes'),
     rightCol: true
-  }), React.createElement(DeskLink14, {
+  }), /*#__PURE__*/React.createElement(DeskLink14, {
     label: "Receipts",
     sub: `${receipts.length} on file`,
     onClick: () => setNav('tab', 'money'),
     bottomRow: true
-  }), React.createElement(DeskLink14, {
+  }), /*#__PURE__*/React.createElement(DeskLink14, {
     label: "Cortex",
     sub: "AI desk",
     onClick: () => setNav('ai'),
     rightCol: true,
     bottomRow: true
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       paddingTop: 10,
@@ -445,7 +458,7 @@ function DashV14_Broadsheet({
       letterSpacing: 1.5,
       textTransform: 'uppercase'
     }
-  }, "\u2014 Filed from your handset \u2014 Cortexx \xB7 Print to keep \u2014"))));
+  }, "\u2014 Filed from your handset \u2014 CortexBuild Pro \xB7 Print to keep \u2014"))));
 }
 function chipBtn14() {
   return {
@@ -483,7 +496,7 @@ function leadCTA14() {
 function Dingbat14({
   label
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       breakInside: 'avoid',
       textAlign: 'center',
@@ -493,13 +506,13 @@ function Dingbat14({
       gap: 10,
       color: V14.ink2
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       height: 1,
       background: V14.rule
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: DATA,
       fontSize: 9,
@@ -507,7 +520,7 @@ function Dingbat14({
       fontWeight: 700,
       color: V14.ink3
     }
-  }, "\u2766 ", label, " \u2766"), React.createElement("div", {
+  }, "\u2766 ", label, " \u2766"), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       height: 1,
@@ -520,14 +533,14 @@ function Classified14({
   value,
   note
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       border: `1.5px solid ${V14.ink}`,
       padding: '8px 10px 10px',
       background: V14.paperHi,
       breakInside: 'avoid'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: DATA,
       fontSize: 8.5,
@@ -539,7 +552,7 @@ function Classified14({
       paddingBottom: 3,
       marginBottom: 5
     }
-  }, label), React.createElement("div", {
+  }, label), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: DISPLAY,
       fontWeight: 900,
@@ -548,7 +561,7 @@ function Classified14({
       letterSpacing: -0.5,
       color: V14.ink
     }
-  }, value), React.createElement("div", {
+  }, value), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: BODY,
       fontStyle: 'italic',
@@ -565,7 +578,7 @@ function DeskLink14({
   rightCol,
   bottomRow
 }) {
-  return React.createElement("button", {
+  return /*#__PURE__*/React.createElement("button", {
     onClick: onClick,
     style: {
       background: 'transparent',
@@ -578,7 +591,7 @@ function DeskLink14({
       fontFamily: BODY,
       color: V14.ink
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: DISPLAY,
       fontWeight: 700,
@@ -586,7 +599,7 @@ function DeskLink14({
       letterSpacing: -0.3,
       lineHeight: 1.1
     }
-  }, label), React.createElement("div", {
+  }, label), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: DATA,
       fontSize: 9.5,

@@ -1,3 +1,5 @@
+// Cortexx — Phase 36: Real photo storage via IndexedDB
+
 (function () {
   if (window.cortexxPhotoStore) return;
   const DB_NAME = 'cortexx_photos';
@@ -75,6 +77,8 @@
     }
   };
 })();
+
+// React hook for live IndexedDB photos
 function usePhotos() {
   const [photos, setPhotos] = React.useState([]);
   React.useEffect(() => {
@@ -93,6 +97,8 @@ function usePhotos() {
   };
   return [photos, refresh];
 }
+
+// Replacement Photos screen using IndexedDB
 function PhotosV2Screen({
   accent
 }) {
@@ -111,18 +117,18 @@ function PhotosV2Screen({
     if (files.length > 0) toast(`${files.length} photo${files.length > 1 ? 's' : ''} uploaded`, 'success');
     e.target.value = '';
   };
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Photos",
     subtitle: `${photos.length} stored locally · IndexedDB`,
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       onClick: () => fileInput.current?.click(),
       style: {
         width: 36,
@@ -139,7 +145,7 @@ function PhotosV2Screen({
     }, React.cloneElement(Ic.camera, {
       size: 18
     }))
-  }), React.createElement("input", {
+  }), /*#__PURE__*/React.createElement("input", {
     ref: fileInput,
     type: "file",
     accept: "image/*",
@@ -149,7 +155,7 @@ function PhotosV2Screen({
     style: {
       display: 'none'
     }
-  }), photos.length === 0 ? React.createElement("div", {
+  }), photos.length === 0 ? /*#__PURE__*/React.createElement("div", {
     onClick: () => fileInput.current?.click(),
     style: {
       margin: '4px 16px',
@@ -160,7 +166,7 @@ function PhotosV2Screen({
       textAlign: 'center',
       cursor: 'pointer'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: accent,
       fontSize: 36,
@@ -168,25 +174,25 @@ function PhotosV2Screen({
     }
   }, React.cloneElement(Ic.camera, {
     size: 36
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       fontWeight: 600
     }
-  }, "Tap to take or pick photos"), React.createElement("div", {
+  }, "Tap to take or pick photos"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 4
     }
-  }, "Stored locally \xB7 works offline")) : React.createElement("div", {
+  }, "Stored locally \xB7 works offline")) : /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
@@ -194,7 +200,7 @@ function PhotosV2Screen({
     }
   }, photos.map(p => {
     const url = window.cortexxPhotoStore.blobURL(p.blob);
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: p.id,
       onClick: () => setViewing({
         ...p,
@@ -209,7 +215,7 @@ function PhotosV2Screen({
         border: `0.5px solid ${T.hair}`,
         position: 'relative'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         bottom: 4,
@@ -222,7 +228,7 @@ function PhotosV2Screen({
         borderRadius: 3
       }
     }, Math.round(p.size / 1024), "kb"));
-  }))), viewing && React.createElement("div", {
+  }))), viewing && /*#__PURE__*/React.createElement("div", {
     onClick: () => setViewing(null),
     style: {
       position: 'absolute',
@@ -232,13 +238,13 @@ function PhotosV2Screen({
       display: 'flex',
       flexDirection: 'column'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px 16px',
       display: 'flex',
       justifyContent: 'space-between'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setViewing(null),
     style: {
       background: 'none',
@@ -248,7 +254,7 @@ function PhotosV2Screen({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Close"), React.createElement("button", {
+  }, "Close"), /*#__PURE__*/React.createElement("button", {
     onClick: async e => {
       e.stopPropagation();
       await window.cortexxPhotoStore.remove(viewing.id);
@@ -264,7 +270,7 @@ function PhotosV2Screen({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Delete")), React.createElement("div", {
+  }, "Delete")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       display: 'flex',
@@ -272,19 +278,19 @@ function PhotosV2Screen({
       justifyContent: 'center',
       padding: 16
     }
-  }, React.createElement("img", {
+  }, /*#__PURE__*/React.createElement("img", {
     src: viewing.url,
     style: {
       maxWidth: '100%',
       maxHeight: '100%',
       borderRadius: 12
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     onClick: e => e.stopPropagation()
-  }, window.PhotoVisionAction && React.createElement(PhotoVisionAction, {
+  }, window.PhotoVisionAction && /*#__PURE__*/React.createElement(PhotoVisionAction, {
     blob: viewing.blob,
     accent: accent
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 16,
       color: '#fff',
