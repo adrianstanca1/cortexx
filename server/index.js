@@ -148,7 +148,14 @@ app.get('/api/stream', wrap(async (req, res) => {
   if (!channels.has(key)) channels.set(key, new Set());
   channels.get(key).add(res);
   const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (e) {} }, 25000);
-  req.on('close', () => { clearInterval(ping); channels.get(key)?.delete(res); });
+  req.on('close', () => { 
+    clearInterval(ping);
+    const set = channels.get(key);
+    if (set) {
+      set.delete(res);
+      if (set.size === 0) channels.delete(key);
+    }
+  });
 }));
 
 // ── Mounted route modules (MUST be before the generic /api/:collection

@@ -1,13 +1,18 @@
+// Cortexx — Phase 31: Sticky AI assistant pill across the app
+
 (function () {
   if (!window.cortexxAIPill) {
     window.cortexxAIPill = true;
   }
 })();
+
+// A floating universal AI access button — installed once, surfaces on every screen
+// Wires into existing 'ai' navigation
 function FloatingAIPill({
   accent
 }) {
   const [collapsed, setCollapsed] = React.useState(false);
-  return React.createElement("button", {
+  return /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav && window.cortexxNav('ai'),
     style: {
       position: 'absolute',
@@ -32,7 +37,7 @@ function FloatingAIPill({
     }
   }, React.cloneElement(Ic.spark, {
     size: 20
-  }), !collapsed && React.createElement("span", null, "Ask Cortex"));
+  }), !collapsed && /*#__PURE__*/React.createElement("span", null, "Ask Cortex"));
 }
 Object.assign(window, {
   FloatingAIPill

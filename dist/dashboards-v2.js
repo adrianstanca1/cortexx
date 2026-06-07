@@ -1,3 +1,8 @@
+// Cortexx mobile dashboard — additional bolder variations (V7-V9)
+
+// ═══════════════════════════════════════════════════════════════════
+// V7 — TIMELINE / DAY VIEW (vertical day spine)
+// ═══════════════════════════════════════════════════════════════════
 function DashV7_Timeline({
   accent = T.blue
 }) {
@@ -47,30 +52,30 @@ function DashV7_Timeline({
     c: T.cyan,
     i: Ic.receipt
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Today",
     subtitle: "Thu 30 Apr \xB7 7 events \xB7 1 now",
     ws: true,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.bell,
       count: window.CortexPortalMsgs && window.CortexPortalMsgs.unreadCount() || 0,
       accent: accent,
       onClick: () => window.cortexxNav && window.cortexxNav('inbox')
     })
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 0',
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       left: 65,
@@ -79,7 +84,7 @@ function DashV7_Timeline({
       width: 1.5,
       background: T.hair
     }
-  }), events.map((e, i) => React.createElement("div", {
+  }), events.map((e, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -88,13 +93,13 @@ function DashV7_Timeline({
       marginBottom: 12,
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 42,
       paddingTop: 12,
       textAlign: 'right'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 12,
@@ -102,14 +107,14 @@ function DashV7_Timeline({
       color: e.now ? accent : e.done ? T.t3 : T.t2,
       letterSpacing: -0.3
     }
-  }, e.t)), React.createElement("div", {
+  }, e.t)), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
       width: 18,
       paddingTop: 14,
       flexShrink: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 14,
       height: 14,
@@ -121,7 +126,7 @@ function DashV7_Timeline({
       position: 'relative',
       zIndex: 1
     }
-  }), e.now && React.createElement("div", {
+  }), e.now && /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: 14,
@@ -134,7 +139,7 @@ function DashV7_Timeline({
       opacity: 0.4,
       animation: 'pulse 2s infinite'
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       background: e.now ? `linear-gradient(135deg, ${accent}22, ${accent}0a)` : T.bg2,
@@ -143,13 +148,13 @@ function DashV7_Timeline({
       padding: '10px 12px',
       opacity: e.done ? 0.55 : 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 24,
       height: 24,
@@ -162,11 +167,11 @@ function DashV7_Timeline({
     }
   }, React.cloneElement(e.i, {
     size: 13
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -175,47 +180,51 @@ function DashV7_Timeline({
       textDecoration: e.done ? 'line-through' : 'none',
       lineHeight: 1.2
     }
-  }, e.n), React.createElement("div", {
+  }, e.n), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 1
     }
-  }, e.d)), e.now && React.createElement(Pill, {
+  }, e.d)), e.now && /*#__PURE__*/React.createElement(Pill, {
     c: accent,
     solid: true,
     size: "xs"
-  }, "NOW"))))))), React.createElement(TabBar, {
+  }, "NOW"))))))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
-  }), React.createElement("style", null, '@keyframes pulse{0%{transform:translateX(-50%) scale(1);opacity:0.4}100%{transform:translateX(-50%) scale(2.5);opacity:0}}'));
+  }), /*#__PURE__*/React.createElement("style", null, '@keyframes pulse{0%{transform:translateX(-50%) scale(1);opacity:0.4}100%{transform:translateX(-50%) scale(2.5);opacity:0}}'));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// V8 — FINANCIAL FOCUS (cash-first, money in your face)
+// ═══════════════════════════════════════════════════════════════════
 function DashV8_Money({
   accent = T.green
 }) {
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Books",
     subtitle: "Wk 17 \xB7 CIS aware",
     ws: true,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.bell,
       count: window.CortexPortalMsgs && window.CortexPortalMsgs.unreadCount() || 0,
       accent: accent,
       onClick: () => window.cortexxNav && window.cortexxNav('inbox')
     })
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 20px 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -224,14 +233,14 @@ function DashV8_Money({
       textTransform: 'uppercase',
       letterSpacing: 1
     }
-  }, "Net cashflow \xB7 April"), React.createElement("div", {
+  }, "Net cashflow \xB7 April"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'baseline',
       gap: 8,
       marginTop: 6
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 48,
@@ -240,7 +249,7 @@ function DashV8_Money({
       letterSpacing: -1.5,
       lineHeight: 1
     }
-  }, "+\xA318.2k")), React.createElement("div", {
+  }, "+\xA318.2k")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -253,12 +262,12 @@ function DashV8_Money({
     }
   }, React.cloneElement(Ic.trend, {
     size: 14
-  }), " ", React.createElement("span", null, "+24% vs March"), React.createElement("span", {
+  }), " ", /*#__PURE__*/React.createElement("span", null, "+24% vs March"), /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t3,
       marginLeft: 4
     }
-  }, "\xB7 5 days left")), React.createElement("svg", {
+  }, "\xB7 5 days left")), /*#__PURE__*/React.createElement("svg", {
     width: "100%",
     height: "80",
     viewBox: "0 0 320 80",
@@ -266,21 +275,21 @@ function DashV8_Money({
       marginTop: 14
     },
     preserveAspectRatio: "none"
-  }, React.createElement("defs", null, React.createElement("linearGradient", {
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("linearGradient", {
     id: "sparkfill",
     x1: "0",
     x2: "0",
     y1: "0",
     y2: "1"
-  }, React.createElement("stop", {
+  }, /*#__PURE__*/React.createElement("stop", {
     offset: "0%",
     stopColor: accent,
     stopOpacity: "0.4"
-  }), React.createElement("stop", {
+  }), /*#__PURE__*/React.createElement("stop", {
     offset: "100%",
     stopColor: accent,
     stopOpacity: "0"
-  }))), [0, 20, 40, 60].map(y => React.createElement("line", {
+  }))), [0, 20, 40, 60].map(y => /*#__PURE__*/React.createElement("line", {
     key: y,
     x1: "0",
     x2: "320",
@@ -288,29 +297,29 @@ function DashV8_Money({
     y2: y,
     stroke: T.hair,
     strokeWidth: "0.5"
-  })), React.createElement("polyline", {
+  })), /*#__PURE__*/React.createElement("polyline", {
     points: "0,55 30,50 60,52 90,40 120,45 150,30 180,35 210,22 240,28 270,15 300,18 320,8",
     fill: "none",
     stroke: accent,
     strokeWidth: "2.5",
     strokeLinecap: "round",
     strokeLinejoin: "round"
-  }), React.createElement("polyline", {
+  }), /*#__PURE__*/React.createElement("polyline", {
     points: "0,55 30,50 60,52 90,40 120,45 150,30 180,35 210,22 240,28 270,15 300,18 320,8 320,80 0,80",
     fill: "url(#sparkfill)",
     stroke: "none"
-  }), React.createElement("circle", {
+  }), /*#__PURE__*/React.createElement("circle", {
     cx: "320",
     cy: "8",
     r: "4",
     fill: accent
-  }), React.createElement("circle", {
+  }), /*#__PURE__*/React.createElement("circle", {
     cx: "320",
     cy: "8",
     r: "8",
     fill: accent,
     opacity: "0.3"
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -319,29 +328,29 @@ function DashV8_Money({
       color: T.t3,
       marginTop: 4
     }
-  }, ['Apr 1', '7', '14', '21', '28', '30'].map(d => React.createElement("span", {
+  }, ['Apr 1', '7', '14', '21', '28', '30'].map(d => /*#__PURE__*/React.createElement("span", {
     key: d
-  }, d)))), React.createElement("div", {
+  }, d)))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 14px',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `${T.green}1a`,
       border: `0.5px solid ${T.green}33`,
       borderRadius: 14,
       padding: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -350,13 +359,13 @@ function DashV8_Money({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "IN"), React.createElement("span", {
+  }, "IN"), /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.green
     }
   }, React.cloneElement(Ic.arrowUp, {
     size: 14
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -365,27 +374,27 @@ function DashV8_Money({
       marginTop: 4,
       letterSpacing: -0.5
     }
-  }, "\xA342.6k"), React.createElement("div", {
+  }, "\xA342.6k"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 1
     }
-  }, "4 invoices paid")), React.createElement("div", {
+  }, "4 invoices paid")), /*#__PURE__*/React.createElement("div", {
     style: {
       background: `${T.red}1a`,
       border: `0.5px solid ${T.red}33`,
       borderRadius: 14,
       padding: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -394,14 +403,14 @@ function DashV8_Money({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "OUT"), React.createElement("span", {
+  }, "OUT"), /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.red,
       transform: 'rotate(180deg)'
     }
   }, React.cloneElement(Ic.arrowUp, {
     size: 14
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -410,21 +419,21 @@ function DashV8_Money({
       marginTop: 4,
       letterSpacing: -0.5
     }
-  }, "\xA324.4k"), React.createElement("div", {
+  }, "\xA324.4k"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 1
     }
-  }, "materials + wages"))), React.createElement("div", {
+  }, "materials + wages"))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 20px 8px',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'baseline'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -433,14 +442,14 @@ function DashV8_Money({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "Outstanding \xB7 \xA314.2k"), React.createElement("span", {
+  }, "Outstanding \xB7 \xA314.2k"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: accent,
       fontWeight: 500
     }
-  }, "Chase all")), React.createElement("div", {
+  }, "Chase all")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -465,7 +474,7 @@ function DashV8_Money({
     a: '£1,900',
     d: '12d',
     col: T.t1
-  }].map((iv, i) => React.createElement("div", {
+  }].map((iv, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -476,26 +485,26 @@ function DashV8_Money({
       alignItems: 'center',
       gap: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 4,
       alignSelf: 'stretch',
       borderRadius: 2,
       background: iv.col
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t2,
       fontWeight: 600
     }
-  }, iv.n), React.createElement("div", {
+  }, iv.n), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -503,28 +512,32 @@ function DashV8_Money({
       fontWeight: 500,
       marginTop: 1
     }
-  }, iv.c)), React.createElement("div", {
+  }, iv.c)), /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'right'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 14,
       color: iv.col,
       fontWeight: 700
     }
-  }, iv.a), React.createElement("div", {
+  }, iv.a), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t3,
       marginTop: 1
     }
-  }, iv.d)))))), React.createElement(TabBar, {
+  }, iv.d)))))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
   }));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// V9 — STORIES (horizontal swipeable site cards, IG-style)
+// ═══════════════════════════════════════════════════════════════════
 function DashV9_Stories({
   accent = T.purple
 }) {
@@ -552,25 +565,25 @@ function DashV9_Stories({
     c: T.t3,
     plus: true
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Sites",
     subtitle: "Swipe through \xB7 5 active",
     ws: true,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.bell,
       count: window.CortexPortalMsgs && window.CortexPortalMsgs.unreadCount() || 0,
       accent: accent,
       onClick: () => window.cortexxNav && window.cortexxNav('inbox')
     })
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 16px',
       display: 'flex',
@@ -578,14 +591,14 @@ function DashV9_Stories({
       overflowX: 'auto',
       scrollbarWidth: 'none'
     }
-  }, stories.map((s, i) => React.createElement("div", {
+  }, stories.map((s, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       flexShrink: 0,
       textAlign: 'center',
       width: 64
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 60,
       height: 60,
@@ -595,7 +608,7 @@ function DashV9_Stories({
       border: s.plus ? `1.5px dashed ${T.t3}` : 'none',
       boxSizing: 'border-box'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: '100%',
       height: '100%',
@@ -609,7 +622,7 @@ function DashV9_Stories({
       fontWeight: 700,
       color: s.plus ? T.t3 : '#fff'
     }
-  }, s.plus ? '+' : s.n[0])), React.createElement("div", {
+  }, s.plus ? '+' : s.n[0])), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -617,17 +630,17 @@ function DashV9_Stories({
       fontWeight: 500,
       marginTop: 5
     }
-  }, s.n), React.createElement("div", {
+  }, s.n), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
       color: T.t3
     }
-  }, s.sub)))), React.createElement("div", {
+  }, s.sub)))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(160deg, ${accent}33, ${T.bg2} 60%)`,
       borderRadius: 18,
@@ -636,17 +649,17 @@ function DashV9_Stories({
       position: 'relative',
       overflow: 'hidden'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start'
     }
-  }, React.createElement("div", null, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Pill, {
     c: accent,
     solid: true,
     size: "xs"
-  }, "FEATURED"), React.createElement("div", {
+  }, "FEATURED"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 20,
@@ -655,14 +668,14 @@ function DashV9_Stories({
       marginTop: 8,
       letterSpacing: -0.4
     }
-  }, "Camden Mews Refurb"), React.createElement("div", {
+  }, "Camden Mews Refurb"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 2
     }
-  }, "J. Patterson \xB7 NW1")), React.createElement("div", {
+  }, "J. Patterson \xB7 NW1")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 28,
@@ -670,19 +683,19 @@ function DashV9_Stories({
       color: accent,
       letterSpacing: -1
     }
-  }, "68", React.createElement("span", {
+  }, "68", /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 16,
       color: T.t2
     }
-  }, "%"))), React.createElement("div", {
+  }, "%"))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: 'repeat(5,1fr)',
       gap: 4,
       marginTop: 14
     }
-  }, [1, 1, 1, 0.5, 0].map((p, i) => React.createElement("div", {
+  }, [1, 1, 1, 0.5, 0].map((p, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       height: 4,
@@ -690,7 +703,7 @@ function DashV9_Stories({
       background: p === 0 ? T.hair : T.green,
       opacity: p === 0.5 ? 0.5 : 1
     }
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -699,9 +712,9 @@ function DashV9_Stories({
       color: T.t3,
       marginTop: 6
     }
-  }, ['Strip', '1st fix', 'Plaster', '2nd fix', 'Snag'].map(s => React.createElement("span", {
+  }, ['Strip', '1st fix', 'Plaster', '2nd fix', 'Snag'].map(s => /*#__PURE__*/React.createElement("span", {
     key: s
-  }, s))), React.createElement("div", {
+  }, s))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -710,32 +723,32 @@ function DashV9_Stories({
       paddingTop: 12,
       borderTop: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex'
     }
-  }, ['Tom Reilly', 'Aisha B', 'Jack M', 'Sara K'].map((n, i) => React.createElement("div", {
+  }, ['Tom Reilly', 'Aisha B', 'Jack M', 'Sara K'].map((n, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       marginLeft: i ? -8 : 0,
       border: `2px solid ${T.bg0}`,
       borderRadius: '50%'
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: n,
     size: 26,
     c: [T.blue, T.amber, T.green, T.purple][i]
-  })))), React.createElement("span", {
+  })))), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, "4 on site now"), React.createElement("div", {
+  }, "4 on site now"), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       background: '#fff',
@@ -748,11 +761,11 @@ function DashV9_Stories({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Open")))), React.createElement("div", {
+  }, "Open")))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 20px 8px'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -761,7 +774,7 @@ function DashV9_Stories({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "Activity feed")), React.createElement("div", {
+  }, "Activity feed")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -789,7 +802,7 @@ function DashV9_Stories({
     t: '2 hr',
     c: T.amber,
     i: Ic.check
-  }].map((a, i) => React.createElement("div", {
+  }].map((a, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -800,45 +813,45 @@ function DashV9_Stories({
       alignItems: 'center',
       gap: 10
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: a.who,
     size: 32,
     c: a.c
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       lineHeight: 1.3
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontWeight: 600
     }
-  }, a.who), " ", React.createElement("span", {
+  }, a.who), " ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, a.act)), React.createElement("div", {
+  }, a.act)), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t3,
       marginTop: 1
     }
-  }, a.loc, " \xB7 ", a.t, " ago")), React.createElement("div", {
+  }, a.loc, " \xB7 ", a.t, " ago")), /*#__PURE__*/React.createElement("div", {
     style: {
       color: a.c,
       opacity: 0.7
     }
   }, React.cloneElement(a.i, {
     size: 14
-  })))))), React.createElement(TabBar, {
+  })))))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
   }));
 }

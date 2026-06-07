@@ -1,5 +1,11 @@
+// Cortexx — Phase 39: Cortex Brain + Autonomous CEO persona ("Vera")
+
 (function () {
   if (!window.Backend) return;
+
+  // ═══════════════════════════════════════════════════════════════════
+  // BRAIN — aggregates everything the company knows
+  // ═══════════════════════════════════════════════════════════════════
   Backend.brain = {
     snapshot() {
       const s = Backend.db.snapshot();
@@ -57,11 +63,16 @@
         timestamp: new Date().toISOString()
       };
     },
+    // Embed UK construction regulations into the brain
     knowledge: {
       ukRegs: ['CDM 2015 — Construction (Design and Management) Regulations', 'Building Safety Act 2022', 'Health and Safety at Work Act 1974', 'Building Regulations 2010 (Approved Documents A–R)', 'Working at Height Regulations 2005', 'Control of Substances Hazardous to Health 2002 (COSHH)', 'Manual Handling Operations Regulations 1992', 'PPE at Work Regulations 1992 + 2022 amendments', 'Fire Safety Order 2005', 'CIS 2007 — Construction Industry Scheme', 'PAS 2035 — Retrofitting dwellings', 'BS 7671 — Wiring Regulations (18th Edition)', 'Party Wall Act 1996'],
       safetyPractices: ['Daily site briefings before work starts', 'RAMS reviewed weekly + before high-risk tasks', 'CSCS card check on entry', 'Permit-to-work for hot/confined/height tasks', 'First-aider on site at all times for ≥5 workers', 'PPE: hi-vis, hard hat, steel-toe boots minimum', 'Asbestos survey before disturbing pre-2000 materials', 'Scaffold inspections weekly + after weather events', 'Welfare facilities per HSE L24']
     }
   };
+
+  // ═══════════════════════════════════════════════════════════════════
+  // VERA — autonomous CEO persona
+  // ═══════════════════════════════════════════════════════════════════
   Backend.vera = {
     profile: {
       name: 'Vera Stone',
@@ -148,6 +159,10 @@ Write a 4-paragraph 30-day strategic plan: (1) financial target & how to hit it,
     }
   };
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+// VERA SCREEN — CEO command centre
+// ═══════════════════════════════════════════════════════════════════
 function VeraScreen({
   accent
 }) {
@@ -222,22 +237,22 @@ function VeraScreen({
       estimate: false
     }));
   };
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Vera Stone",
     subtitle: "Autonomous CEO \xB7 permanently online"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}33, ${accent}11)`,
       border: `0.5px solid ${T.purple}44`,
@@ -247,7 +262,7 @@ function VeraScreen({
       alignItems: 'center',
       gap: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 56,
       height: 56,
@@ -261,24 +276,24 @@ function VeraScreen({
       fontSize: 22,
       fontWeight: 700
     }
-  }, "VS"), React.createElement("div", {
+  }, "VS"), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 17,
       fontWeight: 700,
       color: T.t1
     }
-  }, "Vera Stone"), React.createElement("span", {
+  }, "Vera Stone"), /*#__PURE__*/React.createElement("span", {
     style: {
       width: 8,
       height: 8,
@@ -286,14 +301,14 @@ function VeraScreen({
       background: T.green,
       boxShadow: `0 0 8px ${T.green}`
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, "Autonomous CEO \xB7 Brain-connected"), React.createElement("div", {
+  }, "Autonomous CEO \xB7 Brain-connected"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -301,39 +316,39 @@ function VeraScreen({
       marginTop: 6,
       lineHeight: 1.4
     }
-  }, "20 yrs UK construction \xB7 CDM 2015 \xB7 BS 7671 \xB7 NHBC")))), React.createElement(Section, {
+  }, "20 yrs UK construction \xB7 CDM 2015 \xB7 BS 7671 \xB7 NHBC")))), /*#__PURE__*/React.createElement(Section, {
     title: "\u25C6 Run Vera"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: runBriefing,
     disabled: loading.briefing,
     style: veraBtn(T.blue)
   }, React.cloneElement(Ic.sun, {
     size: 16
-  }), " ", loading.briefing ? 'Reading…' : 'Daily briefing'), React.createElement("button", {
+  }), " ", loading.briefing ? 'Reading…' : 'Daily briefing'), /*#__PURE__*/React.createElement("button", {
     onClick: runDecisions,
     disabled: loading.decisions,
     style: veraBtn(T.amber)
   }, React.cloneElement(Ic.alert, {
     size: 16
-  }), " ", loading.decisions ? 'Thinking…' : 'Decisions'), React.createElement("button", {
+  }), " ", loading.decisions ? 'Thinking…' : 'Decisions'), /*#__PURE__*/React.createElement("button", {
     onClick: runStrategy,
     disabled: loading.strategy,
     style: veraBtn(T.green)
   }, React.cloneElement(Ic.flag, {
     size: 16
-  }), " ", loading.strategy ? 'Drafting…' : '30-day strategy'), React.createElement("button", {
+  }), " ", loading.strategy ? 'Drafting…' : '30-day strategy'), /*#__PURE__*/React.createElement("button", {
     onClick: runLead,
     disabled: loading.lead,
     style: veraBtn(T.purple)
   }, React.cloneElement(Ic.trend, {
     size: 16
-  }), " ", loading.lead ? 'Hunting…' : 'Find a lead'), React.createElement("button", {
+  }), " ", loading.lead ? 'Hunting…' : 'Find a lead'), /*#__PURE__*/React.createElement("button", {
     onClick: runEstimate,
     disabled: loading.estimate,
     style: {
@@ -342,16 +357,16 @@ function VeraScreen({
     }
   }, React.cloneElement(Ic.calc || Ic.spark, {
     size: 16
-  }), " ", loading.estimate ? 'Estimating…' : 'Auto-quote new leads'))), briefing && React.createElement(Section, {
+  }), " ", loading.estimate ? 'Estimating…' : 'Auto-quote new leads'))), briefing && /*#__PURE__*/React.createElement(Section, {
     title: "Today's briefing"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
       borderRadius: 14,
       padding: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -361,7 +376,7 @@ function VeraScreen({
       letterSpacing: 0.5,
       marginBottom: 8
     }
-  }, "\u25C6 Vera says"), React.createElement("div", {
+  }, "\u25C6 Vera says"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -369,15 +384,15 @@ function VeraScreen({
       lineHeight: 1.6,
       whiteSpace: 'pre-wrap'
     }
-  }, briefing))), decisions && decisions.length > 0 && React.createElement(Section, {
+  }, briefing))), decisions && decisions.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: "Decisions to make"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, decisions.map((d, i) => React.createElement("div", {
+  }, decisions.map((d, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -385,20 +400,20 @@ function VeraScreen({
       borderRadius: 12,
       padding: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       gap: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     c: d.urgency === 'high' ? T.red : d.urgency === 'med' ? T.amber : T.t3,
     size: "xs"
-  }, d.urgency), React.createElement("div", {
+  }, d.urgency), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -407,7 +422,7 @@ function VeraScreen({
       marginTop: 6,
       lineHeight: 1.3
     }
-  }, d.q), React.createElement("div", {
+  }, d.q), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -415,11 +430,11 @@ function VeraScreen({
       marginTop: 4,
       lineHeight: 1.4
     }
-  }, d.why)), React.createElement("div", {
+  }, d.why)), /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'right'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
@@ -427,7 +442,7 @@ function VeraScreen({
       fontWeight: 700,
       textTransform: 'uppercase'
     }
-  }, "IMPACT"), React.createElement("div", {
+  }, "IMPACT"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 13,
@@ -435,13 +450,13 @@ function VeraScreen({
       fontWeight: 700,
       marginTop: 2
     }
-  }, d.impact))), React.createElement("div", {
+  }, d.impact))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginTop: 10
     }
-  }, (d.options || ['Yes', 'No', 'Later']).map((opt, j) => React.createElement("button", {
+  }, (d.options || ['Yes', 'No', 'Later']).map((opt, j) => /*#__PURE__*/React.createElement("button", {
     key: j,
     onClick: () => toast(`"${opt}" recorded`, 'success'),
     style: {
@@ -456,16 +471,16 @@ function VeraScreen({
       fontSize: 11,
       fontWeight: 700
     }
-  }, opt))))))), strategy && React.createElement(Section, {
+  }, opt))))))), strategy && /*#__PURE__*/React.createElement(Section, {
     title: "30-day strategic plan"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.green}11, ${accent}08)`,
       border: `0.5px solid ${T.green}44`,
       borderRadius: 14,
       padding: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -473,23 +488,23 @@ function VeraScreen({
       lineHeight: 1.6,
       whiteSpace: 'pre-wrap'
     }
-  }, strategy))), React.createElement(Section, {
+  }, strategy))), /*#__PURE__*/React.createElement(Section, {
     title: "\u25C6 Brain connection"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
       borderRadius: 14,
       padding: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 10
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 8,
       height: 8,
@@ -498,55 +513,55 @@ function VeraScreen({
       boxShadow: `0 0 8px ${T.green}`,
       animation: 'pulse-dot 2s infinite'
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.green,
       fontWeight: 700
     }
-  }, "LIVE"), React.createElement("span", {
+  }, "LIVE"), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
       fontFamily: SF,
       fontSize: 12,
       color: T.t2
     }
-  }, "Vera sees everything Cortex knows")), React.createElement("div", {
+  }, "Vera sees everything Cortex knows")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t2,
       lineHeight: 1.8
     }
-  }, Object.entries(Backend.brain.snapshot()).filter(([k]) => k !== 'timestamp').map(([k, v]) => React.createElement("div", {
+  }, Object.entries(Backend.brain.snapshot()).filter(([k]) => k !== 'timestamp').map(([k, v]) => /*#__PURE__*/React.createElement("div", {
     key: k
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.blueL
     }
-  }, k), ": ", React.createElement("span", {
+  }, k), ": ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t1
     }
-  }, typeof v === 'object' && !Array.isArray(v) ? Object.keys(v).length + ' fields' : JSON.stringify(v).slice(0, 60))))))), React.createElement(Section, {
+  }, typeof v === 'object' && !Array.isArray(v) ? Object.keys(v).length + ' fields' : JSON.stringify(v).slice(0, 60))))))), /*#__PURE__*/React.createElement(Section, {
     title: "\u25C6 AI document generator"
-  }, React.createElement(DocGenLauncher, {
+  }, /*#__PURE__*/React.createElement(DocGenLauncher, {
     accent: accent
-  })), React.createElement(Section, {
+  })), /*#__PURE__*/React.createElement(Section, {
     title: "\u25C6 UK regs Vera knows"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 5,
       padding: '0 4px'
     }
-  }, Backend.brain.knowledge.ukRegs.map((r, i) => React.createElement(Pill, {
+  }, Backend.brain.knowledge.ukRegs.map((r, i) => /*#__PURE__*/React.createElement(Pill, {
     key: i,
     c: T.blue,
     size: "xs"
-  }, r)))), React.createElement("style", null, `@keyframes pulse-dot { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }`)));
+  }, r)))), /*#__PURE__*/React.createElement("style", null, `@keyframes pulse-dot { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }`)));
 }
 const veraBtn = c => ({
   background: T.bg2,

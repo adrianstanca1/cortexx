@@ -1,3 +1,6 @@
+// Cortexx — bootstrap (renders <App/> into #root).
+// This file is loaded LAST by the smart loader in Cortexx.html.
+
 (function () {
   const {
     createRoot
@@ -19,7 +22,7 @@
     }
     render() {
       if (this.state.error) {
-        return React.createElement("div", {
+        return /*#__PURE__*/React.createElement("div", {
           style: {
             padding: 20,
             background: '#2a0a0a',
@@ -30,7 +33,7 @@
             fontFamily: 'monospace',
             fontSize: 12
           }
-        }, React.createElement("h3", null, "Error"), React.createElement("pre", {
+        }, /*#__PURE__*/React.createElement("h3", null, "Error"), /*#__PURE__*/React.createElement("pre", {
           style: {
             whiteSpace: 'pre-wrap',
             overflow: 'auto'
@@ -40,6 +43,8 @@
       return this.props.children;
     }
   }
+
+  // Recoverable per-screen boundary — a crashed sheet shows a card, app stays alive.
   class ScreenBoundary extends React.Component {
     constructor(props) {
       super(props);
@@ -57,7 +62,7 @@
     }
     render() {
       if (this.state.error) {
-        return React.createElement("div", {
+        return /*#__PURE__*/React.createElement("div", {
           style: {
             padding: '40px 24px',
             textAlign: 'center',
@@ -70,7 +75,7 @@
             justifyContent: 'center',
             gap: 12
           }
-        }, React.createElement("div", {
+        }, /*#__PURE__*/React.createElement("div", {
           style: {
             width: 56,
             height: 56,
@@ -82,19 +87,19 @@
             justifyContent: 'center',
             fontSize: 28
           }
-        }, "\u26A0"), React.createElement("div", {
+        }, "\u26A0"), /*#__PURE__*/React.createElement("div", {
           style: {
             fontSize: 15,
             fontWeight: 600,
             color: '#eef3fa'
           }
-        }, "This screen hit a snag"), React.createElement("div", {
+        }, "This screen hit a snag"), /*#__PURE__*/React.createElement("div", {
           style: {
             fontSize: 12,
             lineHeight: 1.5,
             maxWidth: 260
           }
-        }, "The rest of CortexBuild Pro is fine. Close and reopen this screen, or tap retry."), React.createElement("button", {
+        }, "The rest of CortexBuild Pro is fine. Close and reopen this screen, or tap retry."), /*#__PURE__*/React.createElement("button", {
           onClick: () => this.setState({
             error: null
           }),
@@ -115,10 +120,10 @@
     }
   }
   window.CortexScreenBoundary = ScreenBoundary;
-  const TWEAK_DEFAULTS = {
+  const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
     "accent": "#2563eb",
     "dashboard": "v15"
-  };
+  } /*EDITMODE-END*/;
   const ACCENTS = [{
     value: '#2563eb',
     label: 'Blue'
@@ -141,31 +146,31 @@
       value: k,
       label: `${k.toUpperCase()} · ${v.l}`
     }));
-    return React.createElement(React.Fragment, null, React.createElement(IOSDevice, {
+    return /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(IOSDevice, {
       dark: true,
       width: 402,
       height: 874
-    }, React.createElement(ToastProvider, null, React.createElement(CortexxApp, {
+    }, /*#__PURE__*/React.createElement(ToastProvider, null, /*#__PURE__*/React.createElement(CortexxApp, {
       dashboardId: tweaks.dashboard,
       accent: tweaks.accent,
       onChangeDashboard: v => setTweak('dashboard', v)
-    }))), React.createElement(TweaksPanel, {
+    }))), /*#__PURE__*/React.createElement(TweaksPanel, {
       title: "Tweaks"
-    }, React.createElement(TweakSection, {
+    }, /*#__PURE__*/React.createElement(TweakSection, {
       title: "Dashboard layout"
-    }, React.createElement(TweakSelect, {
+    }, /*#__PURE__*/React.createElement(TweakSelect, {
       value: tweaks.dashboard,
       onChange: v => setTweak('dashboard', v),
       options: DASH_OPTS
-    })), React.createElement(TweakSection, {
+    })), /*#__PURE__*/React.createElement(TweakSection, {
       title: "Accent color"
-    }, React.createElement(TweakColor, {
+    }, /*#__PURE__*/React.createElement(TweakColor, {
       value: tweaks.accent,
       onChange: v => setTweak('accent', v),
       options: ACCENTS.map(a => a.value)
-    })), React.createElement(TweakSection, {
+    })), /*#__PURE__*/React.createElement(TweakSection, {
       title: "Performance"
-    }, React.createElement("button", {
+    }, /*#__PURE__*/React.createElement("button", {
       onClick: () => window.cortexxPerfOverlay && window.cortexxPerfOverlay(),
       style: {
         width: '100%',
@@ -181,11 +186,17 @@
       }
     }, "Toggle perf overlay \xB7 \u2318\u21E7P"))));
   }
+
+  // Expose a boot function — called by the smart loader once all modules are ready.
   window.__cortexxBootApp = function () {
-    createRoot(document.getElementById('root')).render(React.createElement(ErrorBoundary, null, React.createElement(App, null)));
+    createRoot(document.getElementById('root')).render(/*#__PURE__*/React.createElement(ErrorBoundary, null, /*#__PURE__*/React.createElement(App, null)));
+    // Mark the interactive milestone for the perf overlay (deterministic — not
+    // dependent on polling)
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (window.cortexxPerf && !window.cortexxPerf.interactive) {
+          // perf-phase81 doesn't expose a setter, but we can update via the
+          // shared module-scope marks via a public hook.
           if (typeof window.__cortexxMarkInteractive === 'function') {
             window.__cortexxMarkInteractive();
           }

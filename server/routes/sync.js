@@ -89,7 +89,7 @@ module.exports = function syncRoutes(pool, auth) {
     const body = (req.body.body || '').toString().slice(0, 4000);
     const src = await pool.query('SELECT project_id, client FROM portal_messages WHERE id=$1 AND workspace_id=$2', [req.params.id, req.user.ws]);
     if (!src.rows[0]) return res.status(404).json({ error: 'not_found' });
-    await pool.query('UPDATE portal_messages SET read=true, replied=true WHERE id=$1', [req.params.id]);
+    await pool.query('UPDATE portal_messages SET read=true, replied=true WHERE id=$1 AND workspace_id=$2', [req.params.id, req.user.ws]);
     await pool.query(
       `INSERT INTO portal_messages(workspace_id, project_id, client, body, kind, direction)
        VALUES($1,$2,$3,$4,'message','out')`,

@@ -1,3 +1,17 @@
+// Cortexx — Phase 74: Operations & tasks activation
+// Turns toast-only "+" buttons and card taps into real flows.
+//
+// Adds:
+//   • AddHolidaySheet      — replaces the Holiday + toast
+//   • AddClaimSheet        — replaces the Insurance claim + toast
+//   • AddImprovementSheet  — replaces the Kaizen + toast (with AI-suggest)
+//   • ImprovementDetailSheet — replaces the toast on Kaizen cards
+//
+// Each saves into the right table via Backend.db so the lists react live.
+
+// ─────────────────────────────────────────────────────────
+// HOLIDAY — new leave request
+// ─────────────────────────────────────────────────────────
 function AddHolidaySheet({
   onClose,
   accent
@@ -14,6 +28,7 @@ function AddHolidaySheet({
     const s = new Date(form.start),
       e = new Date(form.end);
     const diff = Math.round((e - s) / 86400000) + 1;
+    // count weekdays only
     let w = 0;
     for (let i = 0; i < diff; i++) {
       const d = new Date(s);
@@ -41,12 +56,12 @@ function AddHolidaySheet({
     toast(`Leave request · ${days} day${days !== 1 ? 's' : ''} pending approval`, 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "Request leave",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormSelect, {
+  }, /*#__PURE__*/React.createElement(FormSelect, {
     label: "Team member",
     v: form.userId,
     onChange: v => setForm(f => ({
@@ -57,13 +72,13 @@ function AddHolidaySheet({
       v: m.id,
       l: `${m.n} · ${m.r}`
     }))
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 10
     }
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Start",
     type: "date",
     v: form.start,
@@ -71,7 +86,7 @@ function AddHolidaySheet({
       ...f,
       start: v
     }))
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "End",
     type: "date",
     v: form.end,
@@ -79,7 +94,7 @@ function AddHolidaySheet({
       ...f,
       end: v
     }))
-  })), React.createElement(FormSelect, {
+  })), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Reason",
     v: form.reason,
     onChange: v => setForm(f => ({
@@ -102,7 +117,7 @@ function AddHolidaySheet({
       v: 'Unpaid',
       l: 'Unpaid'
     }]
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       background: `${accent}11`,
       border: `0.5px solid ${accent}44`,
@@ -115,7 +130,7 @@ function AddHolidaySheet({
       fontSize: 13,
       color: T.t1
     }
-  }, React.createElement("span", null, "Working days requested"), React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, "Working days requested"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 18,
@@ -124,6 +139,10 @@ function AddHolidaySheet({
     }
   }, days)));
 }
+
+// ─────────────────────────────────────────────────────────
+// CLAIM — new insurance claim
+// ─────────────────────────────────────────────────────────
 function AddClaimSheet({
   onClose,
   accent
@@ -157,12 +176,12 @@ function AddClaimSheet({
     toast(`Claim ${next} submitted to ${form.insurer}`, 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "New claim",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -174,12 +193,12 @@ function AddClaimSheet({
       fontSize: 12,
       color: T.t2
     }
-  }, React.createElement("span", null, "Reference"), React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", null, "Reference"), /*#__PURE__*/React.createElement("span", {
     style: {
       color: accent,
       fontWeight: 700
     }
-  }, next)), React.createElement(FormSelect, {
+  }, next)), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Project",
     v: form.projectId,
     onChange: v => setForm(f => ({
@@ -190,7 +209,7 @@ function AddClaimSheet({
       v: p.id,
       l: p.name
     }))
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Kind",
     v: form.kind,
     onChange: v => setForm(f => ({
@@ -216,13 +235,13 @@ function AddClaimSheet({
       v: 'Weather',
       l: 'Weather'
     }]
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 10
     }
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Amount (\xA3)",
     type: "number",
     v: form.amount,
@@ -231,7 +250,7 @@ function AddClaimSheet({
       amount: v
     })),
     placeholder: "1240"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Date",
     type: "date",
     v: form.when,
@@ -239,7 +258,7 @@ function AddClaimSheet({
       ...f,
       when: v
     }))
-  })), React.createElement(FormSelect, {
+  })), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Insurer",
     v: form.insurer,
     onChange: v => setForm(f => ({
@@ -262,7 +281,7 @@ function AddClaimSheet({
       v: 'NIG',
       l: 'NIG'
     }]
-  }), React.createElement(FormTextarea, {
+  }), /*#__PURE__*/React.createElement(FormTextarea, {
     label: "Notes",
     v: form.notes,
     onChange: v => setForm(f => ({
@@ -272,6 +291,10 @@ function AddClaimSheet({
     placeholder: "What happened, witnesses, photos uploaded\u2026"
   }));
 }
+
+// ─────────────────────────────────────────────────────────
+// IMPROVEMENT — log a Kaizen idea (with optional Vera-AI suggest)
+// ─────────────────────────────────────────────────────────
 function AddImprovementSheet({
   onClose,
   accent
@@ -340,12 +363,12 @@ function AddImprovementSheet({
     toast('Idea added to backlog', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "New improvement",
     onClose: onClose,
     accent: accent,
     onSave: save,
-    extraBtn: React.createElement("button", {
+    extraBtn: /*#__PURE__*/React.createElement("button", {
       onClick: suggest,
       disabled: suggesting,
       style: {
@@ -365,7 +388,7 @@ function AddImprovementSheet({
     }, React.cloneElement(Ic.spark, {
       size: 13
     }), suggesting ? 'Vera is thinking…' : 'Ask Vera for an idea')
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Title",
     v: form.title,
     onChange: v => setForm(f => ({
@@ -373,7 +396,7 @@ function AddImprovementSheet({
       title: v
     })),
     placeholder: "e.g. Auto-chase overdue invoices"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Process targeted",
     v: form.procId,
     onChange: v => setForm(f => ({
@@ -384,13 +407,13 @@ function AddImprovementSheet({
       v: p.id,
       l: p.name
     }))
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '2fr 1fr 1fr',
       gap: 10
     }
-  }, React.createElement(FormSelect, {
+  }, /*#__PURE__*/React.createElement(FormSelect, {
     label: "Metric",
     v: form.metric,
     onChange: v => setForm(f => ({
@@ -413,7 +436,7 @@ function AddImprovementSheet({
       v: 'response',
       l: 'Response'
     }]
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Baseline",
     type: "number",
     v: form.before,
@@ -422,7 +445,7 @@ function AddImprovementSheet({
       before: v
     })),
     placeholder: "48"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Unit",
     v: form.unit,
     onChange: v => setForm(f => ({
@@ -442,7 +465,7 @@ function AddImprovementSheet({
       v: '£',
       l: '£'
     }]
-  })), React.createElement(FormInput, {
+  })), /*#__PURE__*/React.createElement(FormInput, {
     label: "Expected impact",
     v: form.impact,
     onChange: v => setForm(f => ({
@@ -450,7 +473,7 @@ function AddImprovementSheet({
       impact: v
     })),
     placeholder: "e.g. tgt \u221224h, +\xA38k/yr, +12% win rate"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Owner",
     v: form.owner,
     onChange: v => setForm(f => ({
@@ -469,6 +492,10 @@ function AddImprovementSheet({
     }]
   }));
 }
+
+// ─────────────────────────────────────────────────────────
+// IMPROVEMENT DETAIL — open from a Kaizen card
+// ─────────────────────────────────────────────────────────
 const LANES = ['idea', 'doing', 'testing', 'live'];
 const LANE_C = {
   idea: '#52749a',
@@ -532,10 +559,10 @@ function ImprovementDetailSheet({
     }));
     toast('Measurement logged', 'success');
   };
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -544,7 +571,7 @@ function ImprovementDetailSheet({
       borderBottom: `0.5px solid ${T.hair}`,
       background: T.bg0
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -557,24 +584,24 @@ function ImprovementDetailSheet({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", React.createElement("span", null, "Back")), React.createElement("div", {
+  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Improvement"), React.createElement("div", {
+  }, "Improvement"), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 60
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '14px 16px 24px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -582,14 +609,14 @@ function ImprovementDetailSheet({
       borderRadius: 14,
       padding: '14px 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 8
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       padding: '3px 9px',
       borderRadius: 10,
@@ -601,13 +628,13 @@ function ImprovementDetailSheet({
       letterSpacing: 0.4,
       textTransform: 'uppercase'
     }
-  }, draft.lane), React.createElement("span", {
+  }, draft.lane), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t3
     }
-  }, "\xB7 started ", draft.started)), React.createElement("div", {
+  }, "\xB7 started ", draft.started)), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 19,
@@ -616,32 +643,32 @@ function ImprovementDetailSheet({
       lineHeight: 1.25,
       letterSpacing: -0.3
     }
-  }, draft.title), React.createElement("div", {
+  }, draft.title), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 6
     }
-  }, "Owner: ", React.createElement("span", {
+  }, "Owner: ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t1
     }
-  }, draft.owner), " \xB7 process: ", React.createElement("span", {
+  }, draft.owner), " \xB7 process: ", /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t1
     }
-  }, proc?.name || '—'))), React.createElement("div", {
+  }, proc?.name || '—'))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18
     }
-  }, React.createElement(SectionLabel74, null, "Status"), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(SectionLabel74, null, "Status"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginBottom: 10
     }
-  }, LANES.map((L, i) => React.createElement("div", {
+  }, LANES.map((L, i) => /*#__PURE__*/React.createElement("div", {
     key: L,
     style: {
       flex: 1,
@@ -656,35 +683,35 @@ function ImprovementDetailSheet({
       color: i <= laneIdx ? LANE_C[L] : T.t3,
       textTransform: 'capitalize'
     }
-  }, L))), React.createElement("div", {
+  }, L))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: back,
     disabled: laneIdx <= 0,
     style: btnSecondary74(accent, laneIdx <= 0)
   }, React.cloneElement(Ic.chevL, {
     size: 14
-  }), " Back"), React.createElement("button", {
+  }), " Back"), /*#__PURE__*/React.createElement("button", {
     onClick: advance,
     disabled: laneIdx >= LANES.length - 1,
     style: btnPrimary74(LANE_C[LANES[Math.min(LANES.length - 1, laneIdx + 1)]], laneIdx >= LANES.length - 1)
   }, "Move to ", LANES[Math.min(LANES.length - 1, laneIdx + 1)], " ", React.cloneElement(Ic.chevR, {
     size: 14
-  })))), React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18
     }
-  }, React.createElement(SectionLabel74, null, "Measurement"), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(SectionLabel74, null, "Measurement"), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
       borderRadius: 12,
       padding: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -693,24 +720,24 @@ function ImprovementDetailSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, draft.metric), React.createElement("div", {
+  }, draft.metric), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 12,
       marginTop: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3
     }
-  }, "BEFORE"), React.createElement("div", {
+  }, "BEFORE"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -718,43 +745,43 @@ function ImprovementDetailSheet({
       fontWeight: 700,
       textDecoration: draft.after != null ? 'line-through' : 'none'
     }
-  }, draft.before, React.createElement("span", {
+  }, draft.before, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 14
     }
-  }, draft.unit))), React.createElement("div", {
+  }, draft.unit))), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t3
     }
-  }, Ic.arrowRight), React.createElement("div", {
+  }, Ic.arrowRight), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       textAlign: 'right'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3
     }
-  }, "AFTER"), draft.after != null ? React.createElement("div", {
+  }, "AFTER"), draft.after != null ? /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
       color: T.green,
       fontWeight: 700
     }
-  }, draft.after, React.createElement("span", {
+  }, draft.after, /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 14
     }
-  }, draft.unit)) : React.createElement("div", {
+  }, draft.unit)) : /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 14,
       color: T.t3
     }
-  }, "not yet measured"))), draft.delta != null && React.createElement("div", {
+  }, "not yet measured"))), draft.delta != null && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
       padding: '6px 10px',
@@ -766,7 +793,7 @@ function ImprovementDetailSheet({
       fontWeight: 700,
       display: 'inline-block'
     }
-  }, draft.delta > 0 ? '+' : '', draft.delta, "% \xB7 ", draft.wins, " win", draft.wins !== 1 ? 's' : '', " logged"), React.createElement("button", {
+  }, draft.delta > 0 ? '+' : '', draft.delta, "% \xB7 ", draft.wins, " win", draft.wins !== 1 ? 's' : '', " logged"), /*#__PURE__*/React.createElement("button", {
     onClick: logWin,
     style: {
       marginTop: 12,
@@ -787,11 +814,11 @@ function ImprovementDetailSheet({
     }
   }, React.cloneElement(Ic.check, {
     size: 14
-  }), " Log new measurement"))), React.createElement("div", {
+  }), " Log new measurement"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18
     }
-  }, React.createElement(SectionLabel74, null, "Expected impact"), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(SectionLabel74, null, "Expected impact"), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -806,7 +833,7 @@ function ImprovementDetailSheet({
 function SectionLabel74({
   children
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,

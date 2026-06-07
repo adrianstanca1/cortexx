@@ -1,3 +1,8 @@
+// Cortexx — Phase 2: RFIs, Reports, Gantt Timeline
+
+// ═══════════════════════════════════════════════════════════════════
+// BACKEND EXTENSION — RFIs + Reports
+// ═══════════════════════════════════════════════════════════════════
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
@@ -129,6 +134,9 @@
       when: '2026-05-20T11:00'
     }]
   }];
+
+  // Seed independently — guarding only on `rfis` left `messages` undefined for
+  // any localStorage snapshot created before `messages` existed (migration gap → crash).
   let _seedDirty = false;
   if (!snap.rfis) {
     snap.rfis = RFI_SEED;
@@ -143,6 +151,10 @@
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));
     } catch (e) {}
   }
+
+  // Make tables
+  // `arr` guarantees the underlying array exists even if a table was never
+  // seeded in an older snapshot (prevents "spread of undefined" crashes).
   const arr = name => {
     const s = Backend.db.snapshot();
     if (!Array.isArray(s[name])) s[name] = [];
@@ -195,6 +207,8 @@
   Backend.db.messages = makeT('messages');
   Backend.computed.openRFIs = () => (Backend.db.snapshot().rfis || []).filter(r => r.status === 'open').length;
   Backend.computed.unreadMessages = () => (Backend.db.snapshot().messages || []).reduce((s, m) => s + (m.unread || 0), 0);
+
+  // AI: suggest RFI response
   Backend.ai.suggestRFIResponse = async rfi => {
     const lastMsg = rfi.messages[rfi.messages.length - 1];
     const prompt = `You are a UK construction project manager. An open RFI from ${rfi.from} on a UK refurbishment site: subject "${rfi.subject}". Last message: "${lastMsg.t}". Draft a brief, decisive professional response (1-2 sentences, UK English). Reply with just the response text.`;
@@ -202,6 +216,8 @@
       system: prompt
     });
   };
+
+  // AI: generate report
   Backend.ai.generateReport = async kind => {
     const s = Backend.db.snapshot();
     let context;
@@ -218,6 +234,10 @@
     });
   };
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+// RFIs SCREEN
+// ═══════════════════════════════════════════════════════════════════
 const RFI_STATUS_C = {
   open: T.amber,
   answered: T.blue,
@@ -231,18 +251,18 @@ function RFIsScreen({
   const projects = useDB('projects');
   const [seg, setSeg] = React.useState('open');
   const filtered = seg === 'all' ? rfis : rfis.filter(r => r.status === seg);
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "RFIs",
     subtitle: `${rfis.filter(r => r.status === 'open').length} open · ${rfis.length} total`,
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       onClick: () => window.cortexxNav('addrfi'),
       style: {
         width: 36,
@@ -259,11 +279,11 @@ function RFIsScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement(SegControl, {
+  }, /*#__PURE__*/React.createElement(SegControl, {
     value: seg,
     onChange: setSeg,
     options: [{
@@ -279,7 +299,7 @@ function RFIsScreen({
       l: 'Closed',
       n: rfis.filter(r => r.status === 'closed').length
     }]
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -288,7 +308,7 @@ function RFIsScreen({
     }
   }, filtered.map(r => {
     const proj = projects.find(p => p.id == r.projectId);
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: r.id,
       onClick: () => onOpen && onOpen(r),
       style: {
@@ -298,35 +318,35 @@ function RFIsScreen({
         border: `0.5px solid ${T.hair}`,
         cursor: 'pointer'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         gap: 8
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 6
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 11,
         color: T.t3,
         fontWeight: 600
       }
-    }, r.id), React.createElement(Pill, {
+    }, r.id), /*#__PURE__*/React.createElement(Pill, {
       c: PRIO_C[r.priority],
       size: "xs"
-    }, r.priority)), React.createElement("div", {
+    }, r.priority)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
@@ -335,16 +355,16 @@ function RFIsScreen({
         marginTop: 4,
         lineHeight: 1.3
       }
-    }, r.subject), React.createElement("div", {
+    }, r.subject), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2,
         marginTop: 4
       }
-    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 from ", r.from)), React.createElement(Pill, {
+    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 from ", r.from)), /*#__PURE__*/React.createElement(Pill, {
       c: RFI_STATUS_C[r.status]
-    }, r.status)), React.createElement("div", {
+    }, r.status)), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -353,13 +373,13 @@ function RFIsScreen({
         paddingTop: 10,
         borderTop: `0.5px solid ${T.hair}`
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         color: T.t3
       }
     }, React.cloneElement(Ic.mail, {
       size: 12
-    })), React.createElement("span", {
+    })), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SF,
         fontSize: 11,
@@ -399,10 +419,10 @@ function RFIDetailSheet({
     toast('Reply sent', 'success');
     setReply('');
   };
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -410,7 +430,7 @@ function RFIDetailSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -423,18 +443,18 @@ function RFIDetailSheet({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", React.createElement("span", null, "Back")), React.createElement("div", {
+  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       textAlign: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3
     }
-  }, rfi.id), React.createElement("div", {
+  }, rfi.id), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -442,14 +462,14 @@ function RFIDetailSheet({
       color: T.t1,
       marginTop: 1
     }
-  }, proj?.name?.split(' ').slice(0, 2).join(' '))), React.createElement(Pill, {
+  }, proj?.name?.split(' ').slice(0, 2).join(' '))), /*#__PURE__*/React.createElement(Pill, {
     c: RFI_STATUS_C[rfi.status]
-  }, rfi.status)), React.createElement("div", {
+  }, rfi.status)), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 17,
@@ -457,22 +477,22 @@ function RFIDetailSheet({
       color: T.t1,
       lineHeight: 1.25
     }
-  }, rfi.subject), React.createElement("div", {
+  }, rfi.subject), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 6
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     c: PRIO_C[rfi.priority],
     size: "xs"
-  }, rfi.priority), React.createElement("span", {
+  }, rfi.priority), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, "from ", rfi.from))), React.createElement("div", {
+  }, "from ", rfi.from))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
@@ -483,13 +503,13 @@ function RFIDetailSheet({
     }
   }, rfi.messages.map((m, i) => {
     const mine = m.who === 'You';
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
         alignSelf: mine ? 'flex-end' : 'flex-start',
         maxWidth: '84%'
       }
-    }, !mine && React.createElement("div", {
+    }, !mine && /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
@@ -498,7 +518,7 @@ function RFIDetailSheet({
         marginBottom: 3,
         paddingLeft: 12
       }
-    }, m.who), React.createElement("div", {
+    }, m.who), /*#__PURE__*/React.createElement("div", {
       style: {
         background: mine ? accent : T.bg2,
         color: mine ? '#fff' : T.t1,
@@ -511,7 +531,7 @@ function RFIDetailSheet({
         lineHeight: 1.5,
         border: !mine ? `0.5px solid ${T.hair}` : 'none'
       }
-    }, m.t), React.createElement("div", {
+    }, m.t), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
@@ -525,19 +545,19 @@ function RFIDetailSheet({
       hour: '2-digit',
       minute: '2-digit'
     }), " \xB7 ", _formatRelDate(m.when.slice(0, 10))));
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 12px 30px',
       borderTop: `0.5px solid ${T.hair}`,
       background: T.bg0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       alignItems: 'flex-end'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       background: T.bg2,
@@ -548,7 +568,7 @@ function RFIDetailSheet({
       alignItems: 'center',
       gap: 8
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: aiSuggest,
     disabled: suggesting,
     style: {
@@ -563,7 +583,7 @@ function RFIDetailSheet({
     title: "AI suggest reply"
   }, React.cloneElement(Ic.spark, {
     size: 16
-  })), React.createElement("input", {
+  })), /*#__PURE__*/React.createElement("input", {
     value: reply,
     onChange: e => setReply(e.target.value),
     placeholder: suggesting ? 'Cortex drafting…' : 'Type a reply or tap ✨',
@@ -576,7 +596,7 @@ function RFIDetailSheet({
       fontSize: 14,
       outline: 'none'
     }
-  })), React.createElement("button", {
+  })), /*#__PURE__*/React.createElement("button", {
     onClick: send,
     disabled: !reply.trim(),
     style: {
@@ -596,23 +616,27 @@ function RFIDetailSheet({
     size: 16
   })))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// MESSAGES SCREEN
+// ═══════════════════════════════════════════════════════════════════
 function MessagesScreen({
   accent,
   onOpen
 }) {
   const msgs = useDB('messages');
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Messages",
     subtitle: `${msgs.length} threads · ${msgs.reduce((s, m) => s + (m.unread || 0), 0)} unread`,
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       onClick: async () => {
         await Backend.db.messages.create({
           kind: 'team',
@@ -645,7 +669,7 @@ function MessagesScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px',
       display: 'flex',
@@ -654,7 +678,7 @@ function MessagesScreen({
     }
   }, msgs.map(m => {
     const c = m.kind === 'team' ? T.blue : m.kind === 'client' ? T.green : T.purple;
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: m.id,
       onClick: () => onOpen && onOpen(m),
       style: {
@@ -668,7 +692,7 @@ function MessagesScreen({
         gap: 12,
         position: 'relative'
       }
-    }, m.unread > 0 && React.createElement("div", {
+    }, m.unread > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         top: 10,
@@ -686,33 +710,33 @@ function MessagesScreen({
         alignItems: 'center',
         justifyContent: 'center'
       }
-    }, m.unread), React.createElement(Avatar, {
+    }, m.unread), /*#__PURE__*/React.createElement(Avatar, {
       name: m.name,
       size: 40,
       c: c
-    }), React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0,
         paddingRight: m.unread > 0 ? 20 : 0
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'baseline'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
         color: T.t1,
         fontWeight: m.unread > 0 ? 700 : 600
       }
-    }, m.name), React.createElement(Pill, {
+    }, m.name), /*#__PURE__*/React.createElement(Pill, {
       c: c,
       size: "xs"
-    }, m.kind)), React.createElement("div", {
+    }, m.kind)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 12,
@@ -722,11 +746,11 @@ function MessagesScreen({
         textOverflow: 'ellipsis',
         whiteSpace: 'nowrap'
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         color: T.t3
       }
-    }, m.lastWho, ": "), m.lastMsg), React.createElement("div", {
+    }, m.lastWho, ": "), m.lastMsg), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
@@ -766,14 +790,15 @@ function MessageThreadSheet({
     });
   };
   React.useEffect(() => {
+    // Mark read on open
     if (thread.unread > 0) Backend.db.messages.update(thread.id, {
       unread: 0
     });
   }, [thread.id]);
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -781,7 +806,7 @@ function MessageThreadSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -794,28 +819,28 @@ function MessageThreadSheet({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", React.createElement("span", null, "Back")), React.createElement("div", {
+  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       textAlign: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, thread.name), thread.members.length > 0 && React.createElement("div", {
+  }, thread.name), thread.members.length > 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, thread.members.length, " on this site")), React.createElement(Pill, {
+  }, thread.members.length, " on this site")), /*#__PURE__*/React.createElement(Pill, {
     c: thread.kind === 'team' ? T.blue : thread.kind === 'client' ? T.green : T.purple,
     size: "xs"
-  }, thread.kind)), React.createElement("div", {
+  }, thread.kind)), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
@@ -826,13 +851,13 @@ function MessageThreadSheet({
     }
   }, msgs.map((m, i) => {
     const mine = m.who === 'You';
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
         alignSelf: mine ? 'flex-end' : 'flex-start',
         maxWidth: '84%'
       }
-    }, !mine && React.createElement("div", {
+    }, !mine && /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
@@ -841,7 +866,7 @@ function MessageThreadSheet({
         marginBottom: 3,
         paddingLeft: 12
       }
-    }, m.who), React.createElement("div", {
+    }, m.who), /*#__PURE__*/React.createElement("div", {
       style: {
         background: mine ? accent : T.bg2,
         color: mine ? '#fff' : T.t1,
@@ -855,7 +880,7 @@ function MessageThreadSheet({
         border: !mine ? `0.5px solid ${T.hair}` : 'none'
       }
     }, m.t));
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 12px 30px',
       borderTop: `0.5px solid ${T.hair}`,
@@ -863,7 +888,7 @@ function MessageThreadSheet({
       gap: 8,
       background: T.bg0
     }
-  }, React.createElement("input", {
+  }, /*#__PURE__*/React.createElement("input", {
     value: input,
     onChange: e => setInput(e.target.value),
     placeholder: "Type a message\u2026",
@@ -881,7 +906,7 @@ function MessageThreadSheet({
       fontSize: 14,
       outline: 'none'
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: send,
     disabled: !input.trim(),
     style: {
@@ -900,6 +925,10 @@ function MessageThreadSheet({
     size: 16
   }))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// REPORTS — AI-narrated business reports
+// ═══════════════════════════════════════════════════════════════════
 function ReportsScreen({
   accent
 }) {
@@ -937,18 +966,18 @@ function ReportsScreen({
     i: Ic.shield,
     c: T.amber
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Reports",
     subtitle: "AI-narrated business reports",
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       onClick: () => {
         const rep = reports.find(r => r.k === picked) || {};
         if (window.cortexxReportPDF) {
@@ -992,7 +1021,7 @@ function ReportsScreen({
     }, React.cloneElement(Ic.print, {
       size: 12
     }), " Export PDF")
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'grid',
@@ -1017,7 +1046,7 @@ function ReportsScreen({
     l: 'Avg margin',
     v: `${margin.toFixed(1)}%`,
     c: T.purple
-  }].map((k, i) => React.createElement("div", {
+  }].map((k, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -1025,7 +1054,7 @@ function ReportsScreen({
       padding: '10px 12px',
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -1034,7 +1063,7 @@ function ReportsScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, k.l), React.createElement("div", {
+  }, k.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 20,
@@ -1043,17 +1072,17 @@ function ReportsScreen({
       marginTop: 2,
       letterSpacing: -0.5
     }
-  }, k.v)))), React.createElement(ReportsCharts, {
+  }, k.v)))), /*#__PURE__*/React.createElement(ReportsCharts, {
     accent: accent
-  }), React.createElement(Section, {
+  }), /*#__PURE__*/React.createElement(Section, {
     title: "Generate a report"
-  }, React.createElement(GroupedList, null, reports.map((r, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, reports.map((r, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: r.k,
     icon: r.i,
     iconBg: r.c,
     title: r.l,
     sub: r.d,
-    right: picked === r.k ? React.createElement("span", {
+    right: picked === r.k ? /*#__PURE__*/React.createElement("span", {
       style: {
         color: accent
       }
@@ -1063,11 +1092,11 @@ function ReportsScreen({
       setPicked(r.k);
       setNarrative(null);
     }
-  })))), React.createElement("div", {
+  })))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: generate,
     disabled: loading,
     style: {
@@ -1088,31 +1117,31 @@ function ReportsScreen({
     }
   }, React.cloneElement(Ic.spark, {
     size: 15
-  }), " ", loading ? 'Cortex writing…' : 'Generate with AI')), narrative && React.createElement("div", {
+  }), " ", loading ? 'Cortex writing…' : 'Generate with AI')), narrative && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 16,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.spark, {
     size: 14
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -1121,7 +1150,7 @@ function ReportsScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Cortex says")), React.createElement("div", {
+  }, "Cortex says")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -1129,13 +1158,13 @@ function ReportsScreen({
       lineHeight: 1.6,
       whiteSpace: 'pre-wrap'
     }
-  }, narrative), React.createElement("div", {
+  }, narrative), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginTop: 14
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => window.print(),
     style: {
       flex: 1,
@@ -1155,7 +1184,7 @@ function ReportsScreen({
     }
   }, React.cloneElement(Ic.print, {
     size: 13
-  }), " Export PDF"), React.createElement("button", {
+  }), " Export PDF"), /*#__PURE__*/React.createElement("button", {
     onClick: async () => {
       try {
         await navigator.share({
@@ -1192,11 +1221,16 @@ function ReportsScreen({
     size: 13
   }), " Share"))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// GANTT TIMELINE — multi-project visual schedule
+// ═══════════════════════════════════════════════════════════════════
 function TimelineScreen({
   accent
 }) {
   const projects = useDB('projects');
   const active = projects.filter(p => ['active', 'snagging', 'quoting'].includes(p.status));
+  // Mock month grid: May, Jun, Jul, Aug
   const months = [{
     l: 'MAY',
     days: 31
@@ -1211,70 +1245,75 @@ function TimelineScreen({
     days: 31
   }];
   const totalDays = months.reduce((s, m) => s + m.days, 0);
+  // Each project: start day offset from May 1, end day offset.
   const BARS = {
     1: {
       start: 0,
       end: 90,
       c: T.blue
     },
+    // Camden: May - July
     2: {
       start: 30,
       end: 122,
       c: T.amber
     },
+    // Hackney: Jun - Aug end
     3: {
       start: 0,
       end: 28,
       c: T.green
     },
+    // Brixton: May (snagging)
     4: {
       start: 60,
       end: 120,
       c: T.purple
-    }
+    } // Islington: Jul - mid Aug (quote)
   };
-  const dayWidth = 6;
+  const dayWidth = 6; // 6px per day
   const totalW = totalDays * dayWidth;
-  const todayOffset = 22;
-  return React.createElement(ScreenBg, {
+  const todayOffset = 22; // May 22
+
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Timeline",
     subtitle: `${active.length} projects · May → Aug`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.calendar,
       onClick: () => window.cortexxNav('calendar')
     })
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       fontFamily: SF,
       fontSize: 12,
       color: T.t2
     }
-  }, "Drag horizontally to scroll. Today is highlighted."), React.createElement("div", {
+  }, "Drag horizontally to scroll. Today is highlighted."), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       overflowX: 'auto'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       minWidth: totalW + 140
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 0,
       marginBottom: 8,
       paddingLeft: 140
     }
-  }, months.map(m => React.createElement("div", {
+  }, months.map(m => /*#__PURE__*/React.createElement("div", {
     key: m.l,
     style: {
       width: m.days * dayWidth,
@@ -1287,11 +1326,11 @@ function TimelineScreen({
       paddingLeft: 4,
       paddingBottom: 4
     }
-  }, m.l))), React.createElement("div", {
+  }, m.l))), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: 0,
@@ -1303,7 +1342,7 @@ function TimelineScreen({
       boxShadow: `0 0 8px ${accent}`,
       zIndex: 2
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: -16,
@@ -1319,14 +1358,14 @@ function TimelineScreen({
       end: 30,
       c: T.t3
     };
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: p.id,
       style: {
         display: 'flex',
         alignItems: 'center',
         marginBottom: 8
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 140,
         paddingRight: 8,
@@ -1339,7 +1378,7 @@ function TimelineScreen({
         whiteSpace: 'nowrap',
         borderRight: `0.5px solid ${T.hair}`
       }
-    }, p.name), React.createElement("div", {
+    }, p.name), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         height: 28,
@@ -1347,7 +1386,7 @@ function TimelineScreen({
       }
     }, months.map((m, mi) => {
       const offset = months.slice(0, mi).reduce((s, x) => s + x.days, 0) * dayWidth;
-      return React.createElement("div", {
+      return /*#__PURE__*/React.createElement("div", {
         key: mi,
         style: {
           position: 'absolute',
@@ -1358,7 +1397,7 @@ function TimelineScreen({
           borderLeft: `0.5px solid ${T.hair}`
         }
       });
-    }), React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         left: bar.start * dayWidth,
@@ -1372,14 +1411,14 @@ function TimelineScreen({
         alignItems: 'center',
         padding: '0 8px'
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
         color: '#fff',
         fontWeight: 700
       }
-    }, p.pct, "%"), React.createElement("div", {
+    }, p.pct, "%"), /*#__PURE__*/React.createElement("div", {
       style: {
         position: 'absolute',
         left: 0,
@@ -1390,19 +1429,19 @@ function TimelineScreen({
         borderRadius: 5
       }
     }))));
-  })))), React.createElement(Section, {
+  })))), /*#__PURE__*/React.createElement(Section, {
     title: "Status"
-  }, React.createElement(GroupedList, null, active.map((p, i, a) => {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, active.map((p, i, a) => {
     const bar = BARS[p.id] || {
       c: T.t3
     };
-    return React.createElement(Row, {
+    return /*#__PURE__*/React.createElement(Row, {
       key: p.id,
       icon: Ic.projects,
       iconBg: bar.c,
       title: p.name,
       sub: `${p.client} · ${p.status} · ${p.pct}%`,
-      right: React.createElement("span", {
+      right: /*#__PURE__*/React.createElement("span", {
         style: {
           fontFamily: SFMono,
           fontSize: 11,
@@ -1415,6 +1454,10 @@ function TimelineScreen({
     });
   })))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// ADD RFI sheet
+// ═══════════════════════════════════════════════════════════════════
 function AddRFISheet({
   onClose,
   accent
@@ -1449,12 +1492,12 @@ function AddRFISheet({
     toast('RFI raised', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "Raise RFI",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormSelect, {
+  }, /*#__PURE__*/React.createElement(FormSelect, {
     label: "Project",
     v: form.projectId,
     onChange: v => setForm(f => ({
@@ -1465,7 +1508,7 @@ function AddRFISheet({
       v: p.id,
       l: p.name
     }))
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Subject",
     v: form.subject,
     onChange: v => setForm(f => ({
@@ -1473,7 +1516,7 @@ function AddRFISheet({
       subject: v
     })),
     placeholder: "Quick summary of the question"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Priority",
     v: form.priority,
     onChange: v => setForm(f => ({
@@ -1490,7 +1533,7 @@ function AddRFISheet({
       v: 'high',
       l: 'High'
     }]
-  }), React.createElement(FormTextarea, {
+  }), /*#__PURE__*/React.createElement(FormTextarea, {
     label: "Question",
     v: form.message,
     onChange: v => setForm(f => ({

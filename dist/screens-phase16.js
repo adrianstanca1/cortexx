@@ -1,6 +1,9 @@
+// Cortexx — Phase 16: Enhanced team member profiles with certs/qualifications/photos
+
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
+  // Augment existing team with extended data
   if (snap.team && !snap.team[0].certificates) {
     const ext = {
       1: {
@@ -215,6 +218,8 @@
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));
     } catch (e) {}
   }
+
+  // Helper: add cert to a member
   Backend.db.addCertificate = async (memberId, cert) => {
     const s = Backend.db.snapshot();
     s.team = s.team.map(m => m.id == memberId ? {
@@ -252,6 +257,10 @@
     Backend.db.user.update({});
   };
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+// TEAM MEMBER DETAIL — with certs, qualifications, photos
+// ═══════════════════════════════════════════════════════════════════
 const CERT_STATUS_C = {
   valid: T.green,
   expiring: T.amber,
@@ -275,6 +284,7 @@ function TeamMemberSheet({
     setDraft(member);
   }, [member?.id]);
   const team = useDB('team');
+  // re-read latest version of this member
   const live = team.find(m => m.id === member?.id) || member;
   if (!member) return null;
   const tabs = ['Profile', 'Certificates', 'Qualifications', 'Photos'];
@@ -292,16 +302,16 @@ function TeamMemberSheet({
     toast('Member updated', 'success');
     setEditing(false);
   };
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -311,14 +321,14 @@ function TeamMemberSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), React.createElement("div", {
+  }, "Close"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Team member"), React.createElement("button", {
+  }, "Team member"), /*#__PURE__*/React.createElement("button", {
     onClick: editing ? save : () => setEditing(true),
     style: {
       background: 'none',
@@ -329,50 +339,50 @@ function TeamMemberSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, editing ? 'Save' : 'Edit')), React.createElement("div", {
+  }, editing ? 'Save' : 'Edit')), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 20px 16px'
     }
-  }, editing ? React.createElement("div", {
+  }, editing ? /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 10
     }
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Name",
     v: draft.n,
     onChange: v => setDraft({
       ...draft,
       n: v
     })
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Role",
     v: draft.r,
     onChange: v => setDraft({
       ...draft,
       r: v
     })
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Phone",
     v: draft.phone || '',
     onChange: v => setDraft({
       ...draft,
       phone: v
     })
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Email",
     v: draft.email || '',
     onChange: v => setDraft({
       ...draft,
       email: v
     })
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Day rate (\xA3)",
     v: String(draft.dayRate || ''),
     type: "number",
@@ -380,42 +390,42 @@ function TeamMemberSheet({
       ...draft,
       dayRate: v
     })
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Address",
     v: draft.address || '',
     onChange: v => setDraft({
       ...draft,
       address: v
     })
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Emergency contact",
     v: draft.emergency || '',
     onChange: v => setDraft({
       ...draft,
       emergency: v
     })
-  }), React.createElement(FormTextarea, {
+  }), /*#__PURE__*/React.createElement(FormTextarea, {
     label: "Bio",
     v: draft.bio || '',
     onChange: v => setDraft({
       ...draft,
       bio: v
     })
-  })) : React.createElement(React.Fragment, null, React.createElement("div", {
+  })) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 14,
       alignItems: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative'
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: live.n,
     size: 72,
     c: live.color
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: -2,
@@ -426,11 +436,11 @@ function TeamMemberSheet({
       background: live.status === 'on-site' ? T.green : T.t3,
       border: `3px solid ${T.bg0}`
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 22,
@@ -438,30 +448,30 @@ function TeamMemberSheet({
       color: T.t1,
       letterSpacing: -0.4
     }
-  }, live.n), React.createElement("div", {
+  }, live.n), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 2
     }
-  }, live.r), React.createElement("div", {
+  }, live.r), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 5,
       marginTop: 8,
       flexWrap: 'wrap'
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     c: CSCS_RANK[live.cscs] || T.blue,
     size: "xs"
-  }, "CSCS ", live.cscs), React.createElement(Pill, {
+  }, "CSCS ", live.cscs), /*#__PURE__*/React.createElement(Pill, {
     c: live.status === 'on-site' ? T.green : T.t3,
     size: "xs"
-  }, live.status === 'on-site' ? '● On site' : 'Off'), live.dayRate && React.createElement(Pill, {
+  }, live.status === 'on-site' ? '● On site' : 'Off'), live.dayRate && /*#__PURE__*/React.createElement(Pill, {
     c: T.purple,
     size: "xs"
-  }, "\xA3", live.dayRate, "/day")))), live.bio && React.createElement("div", {
+  }, "\xA3", live.dayRate, "/day")))), live.bio && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -469,7 +479,7 @@ function TeamMemberSheet({
       marginTop: 14,
       lineHeight: 1.5
     }
-  }, live.bio))), !editing && React.createElement(React.Fragment, null, React.createElement("div", {
+  }, live.bio))), !editing && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -480,7 +490,7 @@ function TeamMemberSheet({
       background: T.bg0,
       zIndex: 5
     }
-  }, tabs.map(t => React.createElement("button", {
+  }, tabs.map(t => /*#__PURE__*/React.createElement("button", {
     key: t,
     onClick: () => setTab(t),
     style: {
@@ -495,66 +505,66 @@ function TeamMemberSheet({
       marginBottom: -1,
       cursor: 'pointer'
     }
-  }, t))), React.createElement("div", {
+  }, t))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px 0'
     }
-  }, tab === 'Profile' && React.createElement(React.Fragment, null, React.createElement(Section, {
+  }, tab === 'Profile' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Section, {
     title: "Contact"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.phone,
     iconBg: T.green,
     title: live.phone || '—',
     sub: "Phone",
     onClick: () => live.phone && toast(`Calling ${live.n}…`, 'info')
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.mail,
     iconBg: T.blue,
     title: live.email || '—',
     sub: "Email",
     onClick: () => live.email && toast(`Email composer for ${live.email}`, 'info')
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.pin,
     iconBg: T.amber,
     title: live.address || '—',
     sub: "Address",
     isLast: true
-  }))), React.createElement(Section, {
+  }))), /*#__PURE__*/React.createElement(Section, {
     title: "Employment"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.briefcase,
     iconBg: accent,
     title: `Started ${live.startDate || 'N/A'}`,
     sub: "Start date"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.money,
     iconBg: T.green,
     title: live.dayRate ? `£${live.dayRate} / day` : '—',
     sub: "Day rate"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.pin,
     iconBg: T.cyan,
     title: live.site,
     sub: "Current site"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.clock,
     iconBg: T.purple,
     title: `${live.hours}h`,
     sub: "This week",
     isLast: true
-  }))), React.createElement(Section, {
+  }))), /*#__PURE__*/React.createElement(Section, {
     title: "Emergency"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.alert,
     iconBg: T.red,
     title: live.emergency || '—',
     sub: "Emergency contact",
     isLast: true
-  })))), tab === 'Certificates' && React.createElement(React.Fragment, null, React.createElement("div", {
+  })))), tab === 'Certificates' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 12px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav('addcert', live),
     style: {
       width: '100%',
@@ -574,7 +584,7 @@ function TeamMemberSheet({
     }
   }, React.cloneElement(Ic.plus, {
     size: 14
-  }), " Add certificate")), React.createElement(Section, null, (live.certificates || []).length === 0 ? React.createElement("div", {
+  }), " Add certificate")), /*#__PURE__*/React.createElement(Section, null, (live.certificates || []).length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 30,
       textAlign: 'center',
@@ -582,7 +592,7 @@ function TeamMemberSheet({
       fontSize: 13,
       color: T.t3
     }
-  }, "No certificates uploaded") : React.createElement("div", {
+  }, "No certificates uploaded") : /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -590,7 +600,7 @@ function TeamMemberSheet({
     }
   }, (live.certificates || []).map(c => {
     const sc = CERT_STATUS_C[c.status] || T.green;
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: c.id,
       style: {
         background: T.bg2,
@@ -598,29 +608,29 @@ function TeamMemberSheet({
         padding: 14,
         border: `0.5px solid ${T.hair}`
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 6
       }
-    }, React.createElement(Pill, {
+    }, /*#__PURE__*/React.createElement(Pill, {
       c: sc,
       size: "xs"
-    }, c.status), c.verified && React.createElement(Pill, {
+    }, c.status), c.verified && /*#__PURE__*/React.createElement(Pill, {
       c: T.green,
       size: "xs"
-    }, "\u2713 Verified")), React.createElement("div", {
+    }, "\u2713 Verified")), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
@@ -628,14 +638,14 @@ function TeamMemberSheet({
         color: T.t1,
         marginTop: 6
       }
-    }, c.name), React.createElement("div", {
+    }, c.name), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2,
         marginTop: 2
       }
-    }, c.issuer, " \xB7 Issued ", c.issued), React.createElement("div", {
+    }, c.issuer, " \xB7 Issued ", c.issued), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 11,
@@ -643,13 +653,13 @@ function TeamMemberSheet({
         fontWeight: 600,
         marginTop: 4
       }
-    }, "Expires ", c.expires)), React.createElement("div", {
+    }, "Expires ", c.expires)), /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         flexDirection: 'column',
         gap: 4
       }
-    }, React.createElement("button", {
+    }, /*#__PURE__*/React.createElement("button", {
       onClick: () => toast(`Viewing ${c.name} cert`, 'info'),
       style: {
         background: 'transparent',
@@ -662,7 +672,7 @@ function TeamMemberSheet({
         fontSize: 10,
         fontWeight: 600
       }
-    }, "View"), React.createElement("button", {
+    }, "View"), /*#__PURE__*/React.createElement("button", {
       onClick: async () => {
         await Backend.db.removeCertificate(live.id, c.id);
         toast('Certificate removed', 'success');
@@ -679,9 +689,9 @@ function TeamMemberSheet({
         fontWeight: 600
       }
     }, "Remove"))));
-  })))), tab === 'Qualifications' && React.createElement(React.Fragment, null, React.createElement(Section, {
+  })))), tab === 'Qualifications' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Section, {
     title: "Formal qualifications"
-  }, React.createElement(GroupedList, null, (live.qualifications || []).length === 0 ? React.createElement("div", {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, (live.qualifications || []).length === 0 ? /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 20,
       textAlign: 'center',
@@ -689,30 +699,30 @@ function TeamMemberSheet({
       fontSize: 13,
       color: T.t3
     }
-  }, "None recorded") : (live.qualifications || []).map((q, i, a) => React.createElement(Row, {
+  }, "None recorded") : (live.qualifications || []).map((q, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: i,
     icon: Ic.book,
     iconBg: T.blue,
     title: q,
     isLast: i === a.length - 1
-  })))), React.createElement(Section, {
+  })))), /*#__PURE__*/React.createElement(Section, {
     title: "Skills"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 6
     }
-  }, (live.skills || []).map((s, i) => React.createElement(Pill, {
+  }, (live.skills || []).map((s, i) => /*#__PURE__*/React.createElement(Pill, {
     key: i,
     c: accent
-  }, s)), (!live.skills || live.skills.length === 0) && React.createElement("div", {
+  }, s)), (!live.skills || live.skills.length === 0) && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t3
     }
-  }, "No skills tagged")))), tab === 'Photos' && React.createElement(Section, null, React.createElement("div", {
+  }, "No skills tagged")))), tab === 'Photos' && /*#__PURE__*/React.createElement(Section, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
@@ -720,7 +730,7 @@ function TeamMemberSheet({
     }
   }, Array.from({
     length: 6
-  }).map((_, i) => React.createElement("div", {
+  }).map((_, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       aspectRatio: '1',
@@ -735,7 +745,7 @@ function TeamMemberSheet({
     }
   }, React.cloneElement(Ic.camera, {
     size: 24
-  })))), React.createElement("button", {
+  })))), /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav('upload'),
     style: {
       width: '100%',
@@ -758,6 +768,10 @@ function TeamMemberSheet({
     size: 14
   }), " Upload photo"))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// ADD CERTIFICATE SHEET
+// ═══════════════════════════════════════════════════════════════════
 function AddCertSheet({
   member,
   onClose,
@@ -780,12 +794,12 @@ function AddCertSheet({
     toast('Certificate added', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: `New certificate · ${member?.n}`,
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormSelect, {
+  }, /*#__PURE__*/React.createElement(FormSelect, {
     label: "Type",
     v: f.name,
     onChange: v => setF({
@@ -841,7 +855,7 @@ function AddCertSheet({
       v: 'Other',
       l: 'Other (custom)'
     }]
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Issuing body",
     v: f.issuer,
     onChange: v => setF({
@@ -849,13 +863,13 @@ function AddCertSheet({
       issuer: v
     }),
     placeholder: "CITB / City & Guilds / NICEIC\u2026"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Issued",
     v: f.issued,
     onChange: v => setF({
@@ -863,7 +877,7 @@ function AddCertSheet({
       issued: v
     }),
     placeholder: "YYYY-MM"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Expires",
     v: f.expires,
     onChange: v => setF({
@@ -871,7 +885,7 @@ function AddCertSheet({
       expires: v
     }),
     placeholder: "YYYY-MM or 'lifetime'"
-  })), React.createElement(FormSelect, {
+  })), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Status",
     v: f.status,
     onChange: v => setF({
@@ -888,14 +902,14 @@ function AddCertSheet({
       v: 'expired',
       l: 'Expired'
     }]
-  }), React.createElement(FormToggle, {
+  }), /*#__PURE__*/React.createElement(FormToggle, {
     label: "Verified by you",
     v: f.verified,
     onChange: v => setF({
       ...f,
       verified: v
     })
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: () => toast('Open file picker to attach scan/photo', 'info'),
     style: {
       background: T.bg2,
