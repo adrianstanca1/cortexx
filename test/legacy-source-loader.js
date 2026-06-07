@@ -37,7 +37,7 @@ const path = require('node:path');
 const vm = require('node:vm');
 const Babel = require('@babel/standalone');
 
-const LEGACY_LIB = path.resolve(__dirname, '..', 'public', 'legacy', 'lib');
+const LEGACY_LIB = path.resolve(__dirname, '..', 'lib');
 
 /**
  * Build a fresh sandbox of stubs for the globals the legacy lib files

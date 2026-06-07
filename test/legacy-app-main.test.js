@@ -173,8 +173,10 @@ test('CortexxApp — exported as a top-level function', () => {
  *   states[0] = tab,
  *   states[1] = sheet,
  *   states[2] = activeProject,
- *   states[3] = activeInvoice,
- *   states[4] = activeQuote
+ *   states[3] = checkoutPlan,
+ *   states[4] = activeInvoice,
+ *   states[5] = nfcCheckin,
+ *   states[6] = activeQuote
  */
 function mountCortexxApp(searchOverride) {
   const states = [];
@@ -232,7 +234,11 @@ test('cortexxNav — "quote" sets activeQuote and opens quote sheet', () => {
   const { sandbox, states } = mountCortexxApp();
   const q = { id: 'Q-2117' };
   sandbox.window.cortexxNav('quote', q);
-  assert.deepEqual(states[4].setterCalls, [q]);        // activeQuote
+  if (states[6].setterCalls.length === 0) {
+    console.log('DEBUG: states mapping:');
+    states.forEach((s, i) => console.log(`  index ${i}: initial=${s.initial}, calls=${JSON.stringify(s.setterCalls)}`));
+  }
+  assert.deepEqual(states[6].setterCalls, [q]);        // activeQuote
   assert.deepEqual(states[1].setterCalls, ['quote']);  // sheet
 });
 
@@ -240,7 +246,7 @@ test('cortexxNav — "chase" sets activeInvoice and opens chase sheet', () => {
   const { sandbox, states } = mountCortexxApp();
   const inv = { id: 'INV-9', status: 'overdue' };
   sandbox.window.cortexxNav('chase', inv);
-  assert.deepEqual(states[3].setterCalls, [inv]);      // activeInvoice
+  assert.deepEqual(states[4].setterCalls, [inv]);      // activeInvoice
   assert.deepEqual(states[1].setterCalls, ['chase']);
 });
 
