@@ -1,3 +1,8 @@
+// Cortexx — Phases 21-30 batched: feature breadth completion
+
+// ═══════════════════════════════════════════════════════════════════
+// P21: Multi-currency
+// ═══════════════════════════════════════════════════════════════════
 const CURRENCIES = {
   GBP: {
     sym: '£',
@@ -21,26 +26,26 @@ function CurrencyScreen({
 }) {
   const settings = useDB('settings');
   const cur = settings.currency || 'GBP';
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Currency",
     subtitle: "Display values in your home currency"
-  }), React.createElement(Section, {
+  }), /*#__PURE__*/React.createElement(Section, {
     title: "Active currency"
-  }, React.createElement(GroupedList, null, Object.entries(CURRENCIES).map(([code, info], i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, Object.entries(CURRENCIES).map(([code, info], i, a) => /*#__PURE__*/React.createElement(Row, {
     key: code,
     icon: Ic.money,
     iconBg: cur === code ? T.green : T.t3,
     title: `${info.sym} ${code}`,
     sub: `1 GBP = ${info.rate} ${code}`,
-    right: cur === code ? React.createElement(Pill, {
+    right: cur === code ? /*#__PURE__*/React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, "ACTIVE") : null,
@@ -51,9 +56,9 @@ function CurrencyScreen({
       });
       toast(`Switched to ${code}`, 'success');
     }
-  })))), React.createElement(Section, {
+  })))), /*#__PURE__*/React.createElement(Section, {
     title: "FX rates"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -63,28 +68,32 @@ function CurrencyScreen({
     }
   }, "Rates auto-updated daily from Bank of England open data. Quote/invoice amounts stay in original currency on documents."))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P22: API & developer
+// ═══════════════════════════════════════════════════════════════════
 function APIScreen({
   accent
 }) {
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "API & developer",
     subtitle: "Build on CortexBuild Pro \xB7 webhooks \xB7 keys"
-  }), React.createElement(Section, {
+  }), /*#__PURE__*/React.createElement(Section, {
     title: "API access"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.zap,
     iconBg: accent,
     title: "API key",
     sub: "cxx_live_\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20223f42",
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       onClick: async () => {
         try {
           await navigator.clipboard.writeText('cxx_live_demo_key_3f42');
@@ -105,32 +114,32 @@ function APIScreen({
         cursor: 'pointer'
       }
     }, "COPY")
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.swap,
     iconBg: T.purple,
     title: "Webhooks",
     sub: "3 endpoints configured",
     onClick: () => window.open('https://cortexx.app/docs/webhooks', '_blank')
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.book,
     iconBg: T.cyan,
     title: "API docs",
     sub: "api.cortexx.app/docs",
     isLast: true,
     onClick: () => window.open('https://api.cortexx.app/docs', '_blank')
-  }))), React.createElement(Section, {
+  }))), /*#__PURE__*/React.createElement(Section, {
     title: "Recent activity"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.check,
     iconBg: T.green,
     title: "POST /projects",
     sub: "200 \xB7 47ms \xB7 2 min ago"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.check,
     iconBg: T.green,
     title: "GET /invoices",
     sub: "200 \xB7 12ms \xB7 5 min ago"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.alert,
     iconBg: T.amber,
     title: "POST /webhooks/xero",
@@ -138,6 +147,10 @@ function APIScreen({
     isLast: true
   })))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P23: Templates library (quote/email/letter templates)
+// ═══════════════════════════════════════════════════════════════════
 function TemplateLibScreen({
   accent
 }) {
@@ -184,29 +197,29 @@ function TemplateLibScreen({
     c: T.amber,
     used: 11
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Template library",
     subtitle: `${tpls.length} reusable templates`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addtemplate')
     })
-  }), React.createElement(Section, null, React.createElement(GroupedList, null, tpls.map((t, i, a) => React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Section, null, /*#__PURE__*/React.createElement(GroupedList, null, tpls.map((t, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: t.k,
     icon: t.i,
     iconBg: t.c,
     title: t.l,
     sub: `Used ${t.used} times`,
-    right: React.createElement("button", {
+    right: /*#__PURE__*/React.createElement("button", {
       style: {
         background: T.bg3,
         color: T.t1,
@@ -223,26 +236,30 @@ function TemplateLibScreen({
     onClick: () => toast(`Using "${t.l}"`, 'success')
   }))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P24: Audit trail (read-only event log)
+// ═══════════════════════════════════════════════════════════════════
 function AuditTrailScreen({
   accent
 }) {
   const log = useDB('auditLog');
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Audit trail",
     subtitle: `${log.length} signed events · tamper-evident`
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.green}22, ${accent}11)`,
       border: `0.5px solid ${T.green}44`,
@@ -252,13 +269,13 @@ function AuditTrailScreen({
       alignItems: 'center',
       gap: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.green
     }
   }, React.cloneElement(Ic.shield, {
     size: 16
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       fontFamily: SF,
@@ -266,17 +283,17 @@ function AuditTrailScreen({
       color: T.t1,
       lineHeight: 1.4
     }
-  }, "Every entry hash-chained. Tamper-evident under UK CDM & ISO 27001 controls."))), React.createElement("div", {
+  }, "Every entry hash-chained. Tamper-evident under UK CDM & ISO 27001 controls."))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement(GroupedList, null, log.map((ev, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, log.map((ev, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: ev.id,
     icon: Ic.check,
     iconBg: ev.color,
     title: `${ev.who} · ${ev.what}`,
     sub: `${ev.where} · ${new Date(ev.when).toLocaleString('en-GB')}`,
-    right: React.createElement("span", {
+    right: /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
@@ -286,6 +303,10 @@ function AuditTrailScreen({
     isLast: i === a.length - 1
   }))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P25: Tags & labels
+// ═══════════════════════════════════════════════════════════════════
 function TagsScreen({
   accent
 }) {
@@ -314,29 +335,29 @@ function TagsScreen({
     c: T.green,
     count: 1
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Tags",
     subtitle: `${TAGS.length} active labels`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addtag')
     })
-  }), React.createElement(Section, null, React.createElement("div", {
+  }), /*#__PURE__*/React.createElement(Section, null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 6
     }
-  }, TAGS.map((t, i) => React.createElement("div", {
+  }, TAGS.map((t, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -347,21 +368,21 @@ function TagsScreen({
       borderRadius: 14,
       padding: '8px 12px'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 10,
       height: 10,
       borderRadius: 5,
       background: t.c
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t1,
       fontWeight: 600
     }
-  }, t.l), React.createElement("span", {
+  }, t.l), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
@@ -369,6 +390,10 @@ function TagsScreen({
     }
   }, t.count)))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P26: Saved views (filter presets)
+// ═══════════════════════════════════════════════════════════════════
 function SavedViewsScreen({
   accent
 }) {
@@ -398,29 +423,29 @@ function SavedViewsScreen({
     n: 6,
     c: T.green
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Saved views",
     subtitle: `${VIEWS.length} smart filters`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addview')
     })
-  }), React.createElement(Section, null, React.createElement(GroupedList, null, VIEWS.map((v, i, a) => React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Section, null, /*#__PURE__*/React.createElement(GroupedList, null, VIEWS.map((v, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: i,
     icon: Ic.filter,
     iconBg: v.c,
     title: v.l,
     sub: v.d,
-    right: React.createElement("span", {
+    right: /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 13,
@@ -432,6 +457,10 @@ function SavedViewsScreen({
     onClick: () => toast(`Applying "${v.l}"`, 'info')
   }))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P27: Roles & permissions
+// ═══════════════════════════════════════════════════════════════════
 function RolesScreen({
   accent
 }) {
@@ -472,66 +501,70 @@ function RolesScreen({
     c: T.t3,
     perms: ['Client portal']
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Roles & permissions",
     subtitle: `${ROLES.length} roles · ${ROLES.reduce((s, r) => s + r.members, 0)} seats`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.open('mailto:hello@cortexbuildpro.com?subject=Custom%20role%20request', '_blank')
     })
-  }), ROLES.map((r, i) => React.createElement(Section, {
+  }), ROLES.map((r, i) => /*#__PURE__*/React.createElement(Section, {
     key: i
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 14,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start'
     }
-  }, React.createElement("div", null, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Pill, {
     c: r.c
-  }, r.l), React.createElement("div", {
+  }, r.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 6
     }
-  }, r.d)), React.createElement("div", {
+  }, r.d)), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 16,
       color: T.t1,
       fontWeight: 700
     }
-  }, r.members)), React.createElement("div", {
+  }, r.members)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 4,
       marginTop: 10
     }
-  }, r.perms.map((p, j) => React.createElement(Pill, {
+  }, r.perms.map((p, j) => /*#__PURE__*/React.createElement(Pill, {
     key: j,
     c: r.c,
     size: "xs"
   }, p))))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P28: Onboarding tour (interactive)
+// ═══════════════════════════════════════════════════════════════════
 function TourSheet({
   onClose,
   accent
@@ -564,23 +597,23 @@ function TourSheet({
     c: T.amber
   }];
   const s = STEPS[step];
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       padding: '40px 28px',
       display: 'flex',
       flexDirection: 'column'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 4,
       marginBottom: 30
     }
-  }, STEPS.map((_, i) => React.createElement("div", {
+  }, STEPS.map((_, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       flex: 1,
@@ -588,14 +621,14 @@ function TourSheet({
       borderRadius: 2,
       background: i <= step ? accent : T.bg3
     }
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
       justifyContent: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 80,
       height: 80,
@@ -609,7 +642,7 @@ function TourSheet({
     }
   }, React.cloneElement(s.i, {
     size: 40
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 30,
@@ -619,7 +652,7 @@ function TourSheet({
       marginTop: 24,
       lineHeight: 1.15
     }
-  }, s.t), React.createElement("div", {
+  }, s.t), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
@@ -627,12 +660,12 @@ function TourSheet({
       marginTop: 14,
       lineHeight: 1.5
     }
-  }, s.d)), React.createElement("div", {
+  }, s.d)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
     }
-  }, step > 0 && React.createElement("button", {
+  }, step > 0 && /*#__PURE__*/React.createElement("button", {
     onClick: () => setStep(step - 1),
     style: {
       background: T.bg2,
@@ -645,7 +678,7 @@ function TourSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Back"), React.createElement("button", {
+  }, "Back"), /*#__PURE__*/React.createElement("button", {
     onClick: () => step < STEPS.length - 1 ? setStep(step + 1) : onClose(),
     style: {
       flex: 1,
@@ -660,7 +693,7 @@ function TourSheet({
       cursor: 'pointer',
       boxShadow: `0 6px 18px ${accent}55`
     }
-  }, step < STEPS.length - 1 ? 'Next' : 'Get started')), React.createElement("button", {
+  }, step < STEPS.length - 1 ? 'Next' : 'Get started')), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -674,6 +707,10 @@ function TourSheet({
     }
   }, "Skip tour")));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P29: Cost catalog (price book)
+// ═══════════════════════════════════════════════════════════════════
 function CostCatalogScreen({
   accent
 }) {
@@ -720,32 +757,32 @@ function CostCatalogScreen({
     unit: 'sheet',
     src: 'Wickes'
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Cost catalog",
     subtitle: `${ITEMS.length} items in price book`,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addcost')
     })
-  }), ['Materials', 'Labour', 'Plant'].map(cat => React.createElement(Section, {
+  }), ['Materials', 'Labour', 'Plant'].map(cat => /*#__PURE__*/React.createElement(Section, {
     key: cat,
     title: cat
-  }, React.createElement(GroupedList, null, ITEMS.filter(i => i.cat === cat).map((it, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, ITEMS.filter(i => i.cat === cat).map((it, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: i,
     icon: Ic.box,
     iconBg: accent,
     title: it.l,
     sub: `${it.src}`,
-    right: React.createElement("span", {
+    right: /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 13,
@@ -756,6 +793,10 @@ function CostCatalogScreen({
     isLast: i === a.length - 1
   })))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// P30: Day plan / Tomorrow's brief (AI)
+// ═══════════════════════════════════════════════════════════════════
 function TomorrowSheet({
   onClose,
   accent
@@ -780,16 +821,16 @@ function TomorrowSheet({
     }
     setLoading(false);
   };
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -799,7 +840,7 @@ function TomorrowSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), React.createElement("div", {
+  }, "Close"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
@@ -811,17 +852,17 @@ function TomorrowSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 14
-  }), " Tomorrow"), React.createElement("div", {
+  }), " Tomorrow"), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 50
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '0 16px 24px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: generate,
     disabled: loading,
     style: {
@@ -836,7 +877,7 @@ function TomorrowSheet({
       fontWeight: 700,
       cursor: loading ? 'default' : 'pointer'
     }
-  }, loading ? 'Cortex thinking…' : 'Generate tomorrow\'s plan'), brief && React.createElement("div", {
+  }, loading ? 'Cortex thinking…' : 'Generate tomorrow\'s plan'), brief && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 16,
       background: T.bg2,
@@ -844,7 +885,7 @@ function TomorrowSheet({
       borderRadius: 14,
       padding: 16
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -854,7 +895,7 @@ function TomorrowSheet({
       letterSpacing: 0.5,
       marginBottom: 10
     }
-  }, "\u25C6 AI brief"), React.createElement("div", {
+  }, "\u25C6 AI brief"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,

@@ -29,7 +29,9 @@
   // Cold-start instrumentation
   // ───────────────────────────────────────────────────────────
   const T0 = window.__cortexxBoot || performance.now();
-  const marks = { t0: T0 };
+  const marks = {
+    t0: T0
+  };
   // Best-effort: when the app's root has children, consider it "interactive"
   const markInteractive = () => {
     if (marks.interactive) return;
@@ -54,8 +56,9 @@
   // ───────────────────────────────────────────────────────────
   const tabId = Math.random().toString(36).slice(2, 8);
   let bc = null;
-  try { bc = new BroadcastChannel('cortexx-db-v1'); } catch (e) {}
-
+  try {
+    bc = new BroadcastChannel('cortexx-db-v1');
+  } catch (e) {}
   let lastBroadcastAt = 0;
   let lastReceiveAt = 0;
   let writeCount = 0;
@@ -75,12 +78,16 @@
         writeCount++;
         lastBroadcastAt = Date.now();
         try {
-          bc.postMessage({ type: 'db', from: tabId, at: lastBroadcastAt, snap: v });
+          bc.postMessage({
+            type: 'db',
+            from: tabId,
+            at: lastBroadcastAt,
+            snap: v
+          });
         } catch (e) {}
       }
     };
-
-    bc.onmessage = (ev) => {
+    bc.onmessage = ev => {
       const msg = ev.data;
       if (!msg || msg.from === tabId) return;
       if (msg.type === 'db' && typeof msg.snap === 'string') {
@@ -102,15 +109,23 @@
         flashSyncIndicator();
       }
       if (msg.type === 'hello') {
-        bc.postMessage({ type: 'hi', from: tabId, at: Date.now() });
+        bc.postMessage({
+          type: 'hi',
+          from: tabId,
+          at: Date.now()
+        });
       }
     };
-    bc.postMessage({ type: 'hello', from: tabId, at: Date.now() });
+    bc.postMessage({
+      type: 'hello',
+      from: tabId,
+      at: Date.now()
+    });
   }
 
   // Teach Backend how to apply an external snapshot (called by BroadcastChannel listener).
   if (!Backend.__applySnapshot) {
-    Backend.__applySnapshot = (incoming) => {
+    Backend.__applySnapshot = incoming => {
       try {
         const state = Backend.db.snapshot();
         // Copy every key from incoming into the existing state object so
@@ -172,7 +187,7 @@
   function startFPS() {
     if (rafActive) return;
     rafActive = true;
-    const tick = (now) => {
+    const tick = now => {
       const dt = now - lastFrame;
       lastFrame = now;
       const inst = 1000 / dt;
@@ -215,21 +230,15 @@
     startFPS();
     updateOverlay();
   }
-
   function updateOverlay() {
     if (!overlay) return;
     const body = overlay.querySelector('#cxp-body');
     if (!body) return;
-    const mem = performance.memory
-      ? `${(performance.memory.usedJSHeapSize / 1048576).toFixed(1)} MB`
-      : 'n/a';
+    const mem = performance.memory ? `${(performance.memory.usedJSHeapSize / 1048576).toFixed(1)} MB` : 'n/a';
     const fpsColor = fps >= 50 ? '#10b981' : fps >= 30 ? '#f59e0b' : '#ef4444';
     const interactive = marks.interactive ? `${marks.interactive.toFixed(0)} ms` : '—';
     const tabsAlive = bc ? '✓ live' : '✗ no BC';
-    const lastSync = lastReceiveAt
-      ? `${Math.round((Date.now() - lastReceiveAt) / 1000)}s ago`
-      : '—';
-
+    const lastSync = lastReceiveAt ? `${Math.round((Date.now() - lastReceiveAt) / 1000)}s ago` : '—';
     body.innerHTML = `
       <div style="display:grid;grid-template-columns:1fr auto;gap:4px 12px;">
         <span>FPS</span>            <span style="color:${fpsColor};font-weight:700;">${fps}</span>
@@ -242,7 +251,6 @@
       </div>
     `;
   }
-
   function toggleOverlay() {
     if (overlay) {
       overlay.remove();
@@ -253,11 +261,10 @@
       localStorage.setItem('cortexx_perf_on', '1');
     }
   }
-
   window.cortexxPerfOverlay = toggleOverlay;
 
   // Keyboard shortcut: ⌘⇧P / Ctrl⇧P
-  window.addEventListener('keydown', (e) => {
+  window.addEventListener('keydown', e => {
     if ((e.metaKey || e.ctrlKey) && e.shiftKey && e.key.toLowerCase() === 'p') {
       e.preventDefault();
       toggleOverlay();
@@ -266,7 +273,9 @@
 
   // Restore on reload
   if (localStorage.getItem('cortexx_perf_on') === '1') {
-    setTimeout(() => { if (!overlay) buildOverlay(); }, 600);
+    setTimeout(() => {
+      if (!overlay) buildOverlay();
+    }, 600);
   }
 
   // ───────────────────────────────────────────────────────────
@@ -274,21 +283,34 @@
   // ───────────────────────────────────────────────────────────
   window.cortexxIdle = (fn, timeout = 1000) => {
     if (typeof requestIdleCallback === 'function') {
-      return requestIdleCallback(fn, { timeout });
+      return requestIdleCallback(fn, {
+        timeout
+      });
     }
     return setTimeout(fn, 0);
   };
 
   // Expose timings for external probes (verifier, screenshot tests)
   window.cortexxPerf = {
-    get fps() { return fps; },
-    get interactive() { return marks.interactive; },
-    get writesOut() { return writeCount; },
-    get writesIn() { return receiveCount; },
-    get heapMB() { return performance.memory ? performance.memory.usedJSHeapSize / 1048576 : null; },
-    get realtime() { return !!bc; },
-    tabId,
+    get fps() {
+      return fps;
+    },
+    get interactive() {
+      return marks.interactive;
+    },
+    get writesOut() {
+      return writeCount;
+    },
+    get writesIn() {
+      return receiveCount;
+    },
+    get heapMB() {
+      return performance.memory ? performance.memory.usedJSHeapSize / 1048576 : null;
+    },
+    get realtime() {
+      return !!bc;
+    },
+    tabId
   };
-
   console.log('[cortexx-perf] phase 81 ready — ⌘⇧P for overlay, realtime via BroadcastChannel');
 })();

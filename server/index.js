@@ -168,7 +168,7 @@ app.use('/api', apiLimiter, require('./routes/hmrc'));                          
 // Typed collections — these have first-class DB tables. Anything else falls
 // through to the generic `documents_store` JSON catch-all.
 const NATIVE = new Set([
-  'projects', 'tasks', 'team', 'team_members', 'invoices', 'quotes',
+  'projects', 'tasks', 'team', 'team_members', 'invoices', 'quotes', 'photos',
   // v1.3 gap closure (all use TEXT id + data JSONB)
   'receipts', 'cisSubs', 'cisPayments', 'timesheets', 'diary',
   'snags', 'changeOrders', 'rfis', 'subs', 'materials',

@@ -1,31 +1,41 @@
+// Cortexx mobile — shared tokens, icons, atoms
+// Used by all 6 dashboard variations.
+
 const T = {
+  // Layered surfaces
   bg0: '#06101e',
   bg1: '#0c1a2e',
   bg2: '#152641',
   bg3: '#1a2f4e',
+  // Brand
   blue: '#2563eb',
   blueL: '#60a5fa',
   blueGlow: 'rgba(37,99,235,0.2)',
+  // Status
   green: '#10b981',
   amber: '#f59e0b',
   red: '#ef4444',
   purple: '#8b5cf6',
   cyan: '#06b6d4',
+  // Text
   t1: '#eef3fa',
   t2: '#8ea8c5',
   t3: '#52749a',
+  // Lines
   hair: 'rgba(255,255,255,0.07)',
   hairMid: 'rgba(255,255,255,0.13)',
   hairStrong: 'rgba(255,255,255,0.22)'
 };
 const SF = '-apple-system, "SF Pro Text", "SF Pro Display", system-ui, sans-serif';
 const SFMono = '"SF Mono", "JetBrains Mono", ui-monospace, monospace';
+
+// ── Icons ───────────────────────────────────────────────────
 const I = ({
   d,
   size = 22,
   sw = 1.7,
   fill = 'none'
-}) => React.createElement("svg", {
+}) => /*#__PURE__*/React.createElement("svg", {
   width: size,
   height: size,
   viewBox: "0 0 24 24",
@@ -36,26 +46,26 @@ const I = ({
   strokeLinejoin: "round"
 }, d);
 const Ic = {
-  dashboard: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("rect", {
+  dashboard: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
       x: "3",
       y: "3",
       width: "7",
       height: "9",
       rx: "1.5"
-    }), React.createElement("rect", {
+    }), /*#__PURE__*/React.createElement("rect", {
       x: "14",
       y: "3",
       width: "7",
       height: "5",
       rx: "1.5"
-    }), React.createElement("rect", {
+    }), /*#__PURE__*/React.createElement("rect", {
       x: "14",
       y: "12",
       width: "7",
       height: "9",
       rx: "1.5"
-    }), React.createElement("rect", {
+    }), /*#__PURE__*/React.createElement("rect", {
       x: "3",
       y: "16",
       width: "7",
@@ -63,734 +73,734 @@ const Ic = {
       rx: "1.5"
     }))
   }),
-  projects: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  projects: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M3 7h18v13a1 1 0 0 1-1 1H4a1 1 0 0 1-1-1z"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M8 7V5a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
     }))
   }),
-  tasks: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polyline", {
+  tasks: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
       points: "9 11 12 14 22 4"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"
     }))
   }),
-  team: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  team: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "9",
       cy: "7",
       r: "4"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M23 21v-2a4 4 0 0 0-3-3.87"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M16 3.13a4 4 0 0 1 0 7.75"
     }))
   }),
-  safety: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  safety: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
     }))
   }),
-  bell: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  bell: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M18 8a6 6 0 0 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M13.7 21a2 2 0 0 1-3.4 0"
     }))
   }),
-  search: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("circle", {
+  search: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
       cx: "11",
       cy: "11",
       r: "7"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "21",
       y1: "21",
       x2: "16.5",
       y2: "16.5"
     }))
   }),
-  chevR: React.createElement(I, {
+  chevR: /*#__PURE__*/React.createElement(I, {
     size: 18,
     sw: 2.2,
-    d: React.createElement("polyline", {
+    d: /*#__PURE__*/React.createElement("polyline", {
       points: "9 6 15 12 9 18"
     })
   }),
-  chevL: React.createElement(I, {
+  chevL: /*#__PURE__*/React.createElement(I, {
     size: 18,
     sw: 2.2,
-    d: React.createElement("polyline", {
+    d: /*#__PURE__*/React.createElement("polyline", {
       points: "15 6 9 12 15 18"
     })
   }),
-  chevDown: React.createElement(I, {
+  chevDown: /*#__PURE__*/React.createElement(I, {
     size: 16,
     sw: 2.2,
-    d: React.createElement("polyline", {
+    d: /*#__PURE__*/React.createElement("polyline", {
       points: "6 9 12 15 18 9"
     })
   }),
-  plus: React.createElement(I, {
+  plus: /*#__PURE__*/React.createElement(I, {
     sw: 2.5,
-    d: React.createElement(React.Fragment, null, React.createElement("line", {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "5",
       x2: "12",
       y2: "19"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "5",
       y1: "12",
       x2: "19",
       y2: "12"
     }))
   }),
-  alert: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  alert: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M10.3 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "9",
       x2: "12",
       y2: "13"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "17",
       x2: "12.01",
       y2: "17"
     }))
   }),
-  check: React.createElement(I, {
+  check: /*#__PURE__*/React.createElement(I, {
     sw: 2.4,
-    d: React.createElement("polyline", {
+    d: /*#__PURE__*/React.createElement("polyline", {
       points: "20 6 9 17 4 12"
     })
   }),
-  bot: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("rect", {
+  bot: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
       x: "3",
       y: "11",
       width: "18",
       height: "10",
       rx: "2"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M12 7V4M9 4h6"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "9",
       cy: "16",
       r: "1",
       fill: "currentColor"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "15",
       cy: "16",
       r: "1",
       fill: "currentColor"
     }))
   }),
-  spark: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  spark: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M12 2l2.4 7.6L22 12l-7.6 2.4L12 22l-2.4-7.6L2 12l7.6-2.4z"
     }))
   }),
-  send: React.createElement(I, {
+  send: /*#__PURE__*/React.createElement(I, {
     sw: 2,
-    d: React.createElement(React.Fragment, null, React.createElement("line", {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
       x1: "22",
       y1: "2",
       x2: "11",
       y2: "13"
-    }), React.createElement("polygon", {
+    }), /*#__PURE__*/React.createElement("polygon", {
       points: "22 2 15 22 11 13 2 9 22 2"
     }))
   }),
-  mic: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  mic: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M19 10v2a7 7 0 0 1-14 0v-2"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "19",
       x2: "12",
       y2: "23"
     }))
   }),
-  doc: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  doc: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "14 2 14 8 20 8"
     }))
   }),
-  hardhat: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  hardhat: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M4 18V12a8 8 0 0 1 16 0v6M2 18h20M9 18V8a3 3 0 0 1 6 0v10"
     }))
   }),
-  pin: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  pin: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M21 10c0 7-9 13-9 13s-9-6-9-13a9 9 0 0 1 18 0z"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "12",
       cy: "10",
       r: "3"
     }))
   }),
-  camera: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  camera: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M23 19a2 2 0 0 1-2 2H3a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h4l2-3h6l2 3h4a2 2 0 0 1 2 2z"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "12",
       cy: "13",
       r: "4"
     }))
   }),
-  receipt: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  receipt: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M4 2h16v20l-4-2-4 2-4-2-4 2z"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "8",
       x2: "16",
       y2: "8"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "13",
       x2: "14",
       y2: "13"
     }))
   }),
-  clock: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("circle", {
+  clock: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
       cx: "12",
       cy: "12",
       r: "9"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "12 7 12 12 15 14"
     }))
   }),
-  trend: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polyline", {
+  trend: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
       points: "23 6 13.5 15.5 8.5 10.5 1 18"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "17 6 23 6 23 12"
     }))
   }),
-  trendDown: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polyline", {
+  trendDown: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
       points: "23 18 13.5 8.5 8.5 13.5 1 6"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "17 18 23 18 23 12"
     }))
   }),
-  weather: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  weather: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"
     }))
   }),
-  truck: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("rect", {
+  truck: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
       x: "1",
       y: "3",
       width: "15",
       height: "13"
-    }), React.createElement("polygon", {
+    }), /*#__PURE__*/React.createElement("polygon", {
       points: "16 8 20 8 23 11 23 16 16 16 16 8"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "5.5",
       cy: "18.5",
       r: "2.5"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "18.5",
       cy: "18.5",
       r: "2.5"
     }))
   }),
-  wrench: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  wrench: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
     }))
   }),
-  flag: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  flag: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M4 15s1-1 4-1 5 2 8 2 4-1 4-1V3s-1 1-4 1-5-2-8-2-4 1-4 1z"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "4",
       y1: "22",
       x2: "4",
       y2: "15"
     }))
   }),
-  layers: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polygon", {
+  layers: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polygon", {
       points: "12 2 2 7 12 12 22 7 12 2"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "2 17 12 22 22 17"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "2 12 12 17 22 12"
     }))
   }),
-  zap: React.createElement(I, {
+  zap: /*#__PURE__*/React.createElement(I, {
     fill: "currentColor",
-    d: React.createElement("polygon", {
+    d: /*#__PURE__*/React.createElement("polygon", {
       points: "13 2 3 14 12 14 11 22 21 10 12 10 13 2"
     })
   }),
-  arrowUp: React.createElement(I, {
+  arrowUp: /*#__PURE__*/React.createElement(I, {
     sw: 2.2,
-    d: React.createElement(React.Fragment, null, React.createElement("line", {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "19",
       x2: "12",
       y2: "5"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "5 12 12 5 19 12"
     }))
   }),
-  arrowRight: React.createElement(I, {
+  arrowRight: /*#__PURE__*/React.createElement(I, {
     sw: 2.2,
-    d: React.createElement(React.Fragment, null, React.createElement("line", {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
       x1: "5",
       y1: "12",
       x2: "19",
       y2: "12"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "12 5 19 12 12 19"
     }))
   }),
-  cloud: React.createElement(I, {
-    d: React.createElement("path", {
+  cloud: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement("path", {
       d: "M18 10h-1.26A8 8 0 1 0 9 20h9a5 5 0 0 0 0-10z"
     })
   }),
-  sun: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("circle", {
+  sun: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
       cx: "12",
       cy: "12",
       r: "4"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "2",
       x2: "12",
       y2: "4"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "20",
       x2: "12",
       y2: "22"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "4.93",
       y1: "4.93",
       x2: "6.34",
       y2: "6.34"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "17.66",
       y1: "17.66",
       x2: "19.07",
       y2: "19.07"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "2",
       y1: "12",
       x2: "4",
       y2: "12"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "20",
       y1: "12",
       x2: "22",
       y2: "12"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "4.93",
       y1: "19.07",
       x2: "6.34",
       y2: "17.66"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "17.66",
       y1: "6.34",
       x2: "19.07",
       y2: "4.93"
     }))
   }),
-  filter: React.createElement(I, {
-    d: React.createElement("polygon", {
+  filter: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement("polygon", {
       points: "22 3 2 3 10 12.46 10 19 14 21 14 12.46 22 3"
     })
   }),
-  more: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("circle", {
+  more: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
       cx: "12",
       cy: "12",
       r: "1",
       fill: "currentColor"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "19",
       cy: "12",
       r: "1",
       fill: "currentColor"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "5",
       cy: "12",
       r: "1",
       fill: "currentColor"
     }))
   }),
-  fire: React.createElement(I, {
-    d: React.createElement("path", {
+  fire: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement("path", {
       d: "M8.5 14.5A2.5 2.5 0 0 0 11 17c1.7 0 3-1.3 3-3 0-2-3-2.5-3-5.5 0-3 2-5 2-5s-3 1-5 4-3 5.5-3 7c0 3 2 5.5 5 5.5"
     })
   }),
-  money: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("line", {
+  money: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "1",
       x2: "12",
       y2: "23"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"
     }))
   }),
-  me: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("circle", {
+  me: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
       cx: "12",
       cy: "8",
       r: "4"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M4 21a8 8 0 0 1 16 0"
     }))
   }),
-  cog: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("circle", {
+  cog: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
       cx: "12",
       cy: "12",
       r: "3"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09a1.65 1.65 0 0 0-1-1.51 1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09a1.65 1.65 0 0 0 1.51-1 1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06a1.65 1.65 0 0 0 1.82.33h0a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51h0a1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82v0a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"
     }))
   }),
-  signOut: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  signOut: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4M16 17l5-5-5-5M21 12H9"
     }))
   }),
-  shield: React.createElement(I, {
-    d: React.createElement("path", {
+  shield: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement("path", {
       d: "M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"
     })
   }),
-  calc: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("rect", {
+  calc: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
       x: "4",
       y: "2",
       width: "16",
       height: "20",
       rx: "2"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "6",
       x2: "16",
       y2: "6"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "10",
       x2: "10",
       y2: "10"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "10",
       x2: "14",
       y2: "10"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "16",
       y1: "10",
       x2: "16",
       y2: "10"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "14",
       x2: "10",
       y2: "14"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "14",
       x2: "14",
       y2: "14"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "16",
       y1: "14",
       x2: "16",
       y2: "14"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "18",
       x2: "10",
       y2: "18"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "18",
       x2: "16",
       y2: "18"
     }))
   }),
-  calendar: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("rect", {
+  calendar: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
       x: "3",
       y: "4",
       width: "18",
       height: "18",
       rx: "2"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "16",
       y1: "2",
       x2: "16",
       y2: "6"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "2",
       x2: "8",
       y2: "6"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "3",
       y1: "10",
       x2: "21",
       y2: "10"
     }))
   }),
-  box: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  box: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "3.27 6.96 12 12.01 20.73 6.96"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "22.08",
       x2: "12",
       y2: "12"
     }))
   }),
-  briefcase: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("rect", {
+  briefcase: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
       x: "2",
       y: "7",
       width: "20",
       height: "14",
       rx: "2"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"
     }))
   }),
-  folder: React.createElement(I, {
-    d: React.createElement("path", {
+  folder: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement("path", {
       d: "M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"
     })
   }),
-  book: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  book: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M4 19.5A2.5 2.5 0 0 1 6.5 17H20"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"
     }))
   }),
-  list: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("line", {
+  list: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "6",
       x2: "21",
       y2: "6"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "12",
       x2: "21",
       y2: "12"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "18",
       x2: "21",
       y2: "18"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "3",
       y1: "6",
       x2: "3.01",
       y2: "6"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "3",
       y1: "12",
       x2: "3.01",
       y2: "12"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "3",
       y1: "18",
       x2: "3.01",
       y2: "18"
     }))
   }),
-  swap: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polyline", {
+  swap: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
       points: "17 1 21 5 17 9"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M3 11V9a4 4 0 0 1 4-4h14"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "7 23 3 19 7 15"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M21 13v2a4 4 0 0 1-4 4H3"
     }))
   }),
-  tool: React.createElement(I, {
-    d: React.createElement("path", {
+  tool: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement("path", {
       d: "M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"
     })
   }),
-  inbox: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polyline", {
+  inbox: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
       points: "22 12 16 12 14 15 10 15 8 12 2 12"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M5.45 5.11L2 12v6a2 2 0 0 0 2 2h16a2 2 0 0 0 2-2v-6l-3.45-6.89A2 2 0 0 0 16.76 4H7.24a2 2 0 0 0-1.79 1.11z"
     }))
   }),
-  mail: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  mail: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "22 6 12 13 2 6"
     }))
   }),
-  phone: React.createElement(I, {
-    d: React.createElement("path", {
+  phone: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement("path", {
       d: "M22 16.92v3a2 2 0 0 1-2.18 2 19.79 19.79 0 0 1-8.63-3.07 19.5 19.5 0 0 1-6-6 19.79 19.79 0 0 1-3.07-8.67A2 2 0 0 1 4.11 2h3a2 2 0 0 1 2 1.72 12.84 12.84 0 0 0 .7 2.81 2 2 0 0 1-.45 2.11L8.09 9.91a16 16 0 0 0 6 6l1.27-1.27a2 2 0 0 1 2.11-.45 12.84 12.84 0 0 0 2.81.7A2 2 0 0 1 22 16.92z"
     })
   }),
-  star: React.createElement(I, {
-    d: React.createElement("polygon", {
+  star: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement("polygon", {
       points: "12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"
     })
   }),
-  print: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polyline", {
+  print: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
       points: "6 9 6 2 18 2 18 9"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M6 18H4a2 2 0 0 1-2-2v-5a2 2 0 0 1 2-2h16a2 2 0 0 1 2 2v5a2 2 0 0 1-2 2h-2"
-    }), React.createElement("rect", {
+    }), /*#__PURE__*/React.createElement("rect", {
       x: "6",
       y: "14",
       width: "12",
       height: "8"
     }))
   }),
-  share: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("circle", {
+  share: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("circle", {
       cx: "18",
       cy: "5",
       r: "3"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "6",
       cy: "12",
       r: "3"
-    }), React.createElement("circle", {
+    }), /*#__PURE__*/React.createElement("circle", {
       cx: "18",
       cy: "19",
       r: "3"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8.59",
       y1: "13.51",
       x2: "15.42",
       y2: "17.49"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "15.41",
       y1: "6.51",
       x2: "8.59",
       y2: "10.49"
     }))
   }),
-  archive: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polyline", {
+  archive: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
       points: "21 8 21 21 3 21 3 8"
-    }), React.createElement("rect", {
+    }), /*#__PURE__*/React.createElement("rect", {
       x: "1",
       y: "3",
       width: "22",
       height: "5"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "10",
       y1: "12",
       x2: "14",
       y2: "12"
     }))
   }),
-  trash: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("polyline", {
+  trash: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("polyline", {
       points: "3 6 5 6 21 6"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"
     }))
   }),
-  download: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  download: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "7 10 12 15 17 10"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "15",
       x2: "12",
       y2: "3"
     }))
   }),
-  edit: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  edit: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"
     }))
   }),
-  copy: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("rect", {
+  copy: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("rect", {
       x: "9",
       y: "9",
       width: "13",
       height: "13",
       rx: "2"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"
     }))
   }),
-  cloudOff: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  cloudOff: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M22.61 16.95A5 5 0 0 0 18 10h-1.26a8 8 0 0 0-7.05-6M5 5a8 8 0 0 0 4 15h9a5 5 0 0 0 1.7-.3"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "1",
       y1: "1",
       x2: "23",
       y2: "23"
     }))
   }),
-  rain: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("line", {
+  rain: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("line", {
       x1: "16",
       y1: "13",
       x2: "16",
       y2: "21"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "8",
       y1: "13",
       x2: "8",
       y2: "21"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "15",
       x2: "12",
       y2: "23"
-    }), React.createElement("path", {
+    }), /*#__PURE__*/React.createElement("path", {
       d: "M20 16.58A5 5 0 0 0 18 7h-1.26A8 8 0 1 0 4 15.25"
     }))
   }),
-  upload: React.createElement(I, {
-    d: React.createElement(React.Fragment, null, React.createElement("path", {
+  upload: /*#__PURE__*/React.createElement(I, {
+    d: /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("path", {
       d: "M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"
-    }), React.createElement("polyline", {
+    }), /*#__PURE__*/React.createElement("polyline", {
       points: "17 8 12 3 7 8"
-    }), React.createElement("line", {
+    }), /*#__PURE__*/React.createElement("line", {
       x1: "12",
       y1: "3",
       x2: "12",
@@ -798,13 +808,15 @@ const Ic = {
     }))
   })
 };
+
+// ── Atoms ───────────────────────────────────────────────────
 const Avatar = ({
   name,
   size = 32,
   c = T.blue
 }) => {
   const init = name.split(' ').map(n => n[0]).slice(0, 2).join('');
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       width: size,
       height: size,
@@ -826,7 +838,7 @@ const Pill = ({
   c = T.blue,
   solid = false,
   size = 'sm'
-}) => React.createElement("span", {
+}) => /*#__PURE__*/React.createElement("span", {
   style: {
     display: 'inline-flex',
     alignItems: 'center',
@@ -847,7 +859,7 @@ const Bar = ({
   c = T.blue,
   h = 4,
   bg = 'rgba(255,255,255,0.08)'
-}) => React.createElement("div", {
+}) => /*#__PURE__*/React.createElement("div", {
   style: {
     width: '100%',
     height: h,
@@ -855,7 +867,7 @@ const Bar = ({
     borderRadius: h / 2,
     overflow: 'hidden'
   }
-}, React.createElement("div", {
+}, /*#__PURE__*/React.createElement("div", {
   style: {
     width: `${pct}%`,
     height: '100%',
@@ -864,14 +876,16 @@ const Bar = ({
     transition: 'width 0.3s'
   }
 }));
+
+// Tappable workspace avatar + chevron — opens the workspace switcher.
 const WorkspaceChip = ({
   accent = T.blue
 }) => {
   const rec = window.CortexTenant ? window.CortexTenant.activeRecord() : {
-    name: 'Cortexx',
+    name: 'CortexBuild Pro',
     color: accent
   };
-  return React.createElement("button", {
+  return /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav && window.cortexxNav('switchworkspace'),
     title: "Switch workspace",
     style: {
@@ -883,7 +897,7 @@ const WorkspaceChip = ({
       cursor: 'pointer',
       padding: 0
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: rec.name,
     size: 30,
     c: rec.color || accent
@@ -892,6 +906,8 @@ const WorkspaceChip = ({
     color: T.t3
   }));
 };
+
+// Shared chrome — every variation gets these so they feel like the same app.
 function MobileHeader({
   title,
   subtitle,
@@ -899,28 +915,28 @@ function MobileHeader({
   right,
   ws
 }) {
-  const rightContent = ws ? React.createElement("div", {
+  const rightContent = ws ? /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       alignItems: 'center'
     }
-  }, React.createElement(WorkspaceChip, {
+  }, /*#__PURE__*/React.createElement(WorkspaceChip, {
     accent: accent
   }), right) : right;
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 20px 12px',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 22,
@@ -929,7 +945,7 @@ function MobileHeader({
       letterSpacing: -0.4,
       lineHeight: 1.1
     }
-  }, title), subtitle && React.createElement("div", {
+  }, title), subtitle && /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -944,7 +960,7 @@ const HeaderBtn = ({
   count,
   onClick,
   accent = T.blue
-}) => React.createElement("button", {
+}) => /*#__PURE__*/React.createElement("button", {
   onClick: onClick,
   style: {
     width: 36,
@@ -962,7 +978,7 @@ const HeaderBtn = ({
   }
 }, React.cloneElement(icon, {
   size: 18
-}), count > 0 ? React.createElement("span", {
+}), count > 0 ? /*#__PURE__*/React.createElement("span", {
   style: {
     position: 'absolute',
     top: -3,
@@ -983,7 +999,7 @@ const HeaderBtn = ({
     boxSizing: 'border-box',
     lineHeight: 1
   }
-}, count > 9 ? '9+' : count) : badge ? React.createElement("span", {
+}, count > 9 ? '9+' : count) : badge ? /*#__PURE__*/React.createElement("span", {
   style: {
     position: 'absolute',
     top: 6,
@@ -995,6 +1011,8 @@ const HeaderBtn = ({
     border: `1.5px solid ${T.bg0}`
   }
 }) : null);
+
+// Tab bar — shared across all variations, "Dashboard / Projects / + / Tasks / Team"
 function TabBar({
   active = 'dashboard',
   accent = T.blue,
@@ -1019,7 +1037,7 @@ function TabBar({
     l: 'Team',
     i: Ic.team
   }];
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 0,
@@ -1037,14 +1055,14 @@ function TabBar({
     }
   }, tabs.map(t => {
     if (t.k === '_fab') {
-      return React.createElement("div", {
+      return /*#__PURE__*/React.createElement("div", {
         key: "_fab",
         style: {
           flex: 1,
           display: 'flex',
           justifyContent: 'center'
         }
-      }, React.createElement("button", {
+      }, /*#__PURE__*/React.createElement("button", {
         onClick: onCapture,
         style: {
           width: 52,
@@ -1065,7 +1083,7 @@ function TabBar({
       })));
     }
     const isActive = active === t.k;
-    return React.createElement("button", {
+    return /*#__PURE__*/React.createElement("button", {
       key: t.k,
       style: {
         flex: 1,
@@ -1081,7 +1099,7 @@ function TabBar({
       }
     }, React.cloneElement(t.i, {
       size: 22
-    }), React.createElement("span", {
+    }), /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SF,
         fontSize: 10,
@@ -1091,10 +1109,12 @@ function TabBar({
     }, t.l));
   }));
 }
+
+// Background — subtle radial wash for the device interior
 const ScreenBg = ({
   children,
   accent = T.blue
-}) => React.createElement("div", {
+}) => /*#__PURE__*/React.createElement("div", {
   style: {
     width: '100%',
     height: '100%',

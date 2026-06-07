@@ -1,3 +1,5 @@
+// Cortexx — Phase 32: Cmd+K command palette (jump to anywhere)
+
 function CommandPalette({
   onClose,
   accent
@@ -8,6 +10,8 @@ function CommandPalette({
   React.useEffect(() => {
     inputRef.current?.focus();
   }, []);
+
+  // All routable destinations
   const ALL = [{
     l: 'Dashboard',
     k: 'tab',
@@ -363,6 +367,11 @@ function CommandPalette({
     i: Ic.zap,
     c: T.cyan
   }, {
+    l: 'AI engine',
+    k: 'aiengine',
+    i: Ic.spark,
+    c: T.purple
+  }, {
     l: 'Settings',
     k: 'settings',
     i: Ic.cog,
@@ -515,7 +524,7 @@ function CommandPalette({
   React.useEffect(() => {
     setActiveIdx(0);
   }, [q]);
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     onClick: onClose,
     style: {
       position: 'absolute',
@@ -528,7 +537,7 @@ function CommandPalette({
       paddingTop: 60,
       animation: 'fade 0.15s'
     }
-  }, React.createElement("style", null, `@keyframes fade { from { opacity: 0 } to { opacity: 1 } }`), React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("style", null, `@keyframes fade { from { opacity: 0 } to { opacity: 1 } }`), /*#__PURE__*/React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       width: '90%',
@@ -542,7 +551,7 @@ function CommandPalette({
       flexDirection: 'column',
       maxHeight: '70vh'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -550,13 +559,13 @@ function CommandPalette({
       padding: '12px 14px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t3
     }
   }, React.cloneElement(Ic.search, {
     size: 16
-  })), React.createElement("input", {
+  })), /*#__PURE__*/React.createElement("input", {
     ref: inputRef,
     value: q,
     onChange: e => setQ(e.target.value),
@@ -571,7 +580,7 @@ function CommandPalette({
       fontSize: 15,
       outline: 'none'
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
@@ -580,13 +589,13 @@ function CommandPalette({
       padding: '2px 6px',
       borderRadius: 4
     }
-  }, "ESC")), React.createElement("div", {
+  }, "ESC")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '6px 4px'
     }
-  }, results.length === 0 && React.createElement("div", {
+  }, results.length === 0 && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 30,
       textAlign: 'center',
@@ -594,7 +603,7 @@ function CommandPalette({
       fontSize: 13,
       color: T.t3
     }
-  }, "No matches for \"", q, "\""), results.map((r, i) => React.createElement("button", {
+  }, "No matches for \"", q, "\""), results.map((r, i) => /*#__PURE__*/React.createElement("button", {
     key: r.l,
     onClick: () => run(r),
     onMouseEnter: () => setActiveIdx(i),
@@ -610,7 +619,7 @@ function CommandPalette({
       textAlign: 'left',
       borderRadius: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 26,
       height: 26,
@@ -624,7 +633,7 @@ function CommandPalette({
     }
   }, React.cloneElement(r.i, {
     size: 14
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
       fontFamily: SF,
@@ -632,7 +641,7 @@ function CommandPalette({
       color: T.t1,
       fontWeight: 500
     }
-  }, r.l), i === activeIdx && React.createElement("span", {
+  }, r.l), i === activeIdx && /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
@@ -641,7 +650,7 @@ function CommandPalette({
       padding: '2px 6px',
       borderRadius: 4
     }
-  }, "\u21B5")))), React.createElement("div", {
+  }, "\u21B5")))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 14px',
       borderTop: `0.5px solid ${T.hair}`,
@@ -651,7 +660,7 @@ function CommandPalette({
       fontSize: 10,
       color: T.t3
     }
-  }, React.createElement("span", null, "\u2191\u2193 navigate \xB7 \u21B5 open"), React.createElement("span", null, results.length, " of ", ALL.length))));
+  }, /*#__PURE__*/React.createElement("span", null, "\u2191\u2193 navigate \xB7 \u21B5 open"), /*#__PURE__*/React.createElement("span", null, results.length, " of ", ALL.length))));
 }
 Object.assign(window, {
   CommandPalette
