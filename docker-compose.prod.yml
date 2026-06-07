@@ -1,0 +1,77 @@
+version: '3.8'
+
+services:
+  cortexx-api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: cortexx-api
+    restart: unless-stopped
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      # Connects to PostgreSQL natively running on the host server
+      # Adjust 'postgres:password' and database name 'cortexx' as needed.
+      - DATABASE_URL=postgres://postgres:password@host.docker.internal:5432/cortexx
+      - LLM_RUNTIME=ollama
+      - OLLAMA_BASE=http://ollama:11434
+      - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:3b}
+      - OLLAMA_VISION_MODEL=${OLLAMA_VISION_MODEL:-llava}
+    extra_hosts:
+      # Allows the container to resolve 'host.docker.internal' to the host machine's IP
+      - "host.docker.internal:host-gateway"
+    networks:
+      - default
+      - traefik_web
+    labels:
+      - "traefik.enable=true"
+      # Route traffic matching this domain to cortexx-api
+      - "traefik.http.routers.cortexx-api.rule=Host(`api.cortexbuildpro.com`)"
+      - "traefik.http.routers.cortexx-api.entrypoints=websecure"
+      - "traefik.http.routers.cortexx-api.tls=true"
+      # Assuming your Traefik Let's Encrypt resolver is named 'letsencrypt'
+      - "traefik.http.routers.cortexx-api.tls.certresolver=letsencrypt"
+      # Tell Traefik which port the service is listening on inside the container
+      - "traefik.http.services.cortexx-api.loadbalancer.server.port=3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+      - cortexx_ollama:/root/.ollama
+      # On first boot, pulls the default model so the AI works out of the box.
+      - ./server/ollama-init.sh:/ollama-init.sh:ro
+    entrypoint: ["/bin/sh", "/ollama-init.sh"]
+    expose:
+      - "11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+      - default
+    # GPU is optional. If your VPS has an NVIDIA GPU, uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+networks:
+  default:
+    driver: bridge
+  traefik_web:
+    external: true
+    name: traefik_web # Replace with the actual name of the network your Traefik container uses
+
+volumes:
+  cortexx_ollama:
