@@ -32,7 +32,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1053.0",
     "@capacitor/android": "^6.1.0",
     "@capacitor/core": "^6.1.0",
-    "@capacitor/ios": "^6.1.0",
+    "@capacitor/ios": "^8.4.0",
     "@prisma/client": "^5.22.0",
     "@sentry/nextjs": "^10.53.1",
     "@types/qrcode": "^1.5.6",
