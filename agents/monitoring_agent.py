@@ -48,9 +48,7 @@ def monitor() -> None:
         except requests.RequestException as exc:
             elapsed_ms = int((time.time() - start_time) * 1000)
             # Log the exception type and message
-            log_line = (
-                f"{timestamp} ERROR {elapsed_ms} {type(exc).__name__}: {exc}"
-            )
+            log_line = f"{timestamp} ERROR {elapsed_ms} {type(exc).__name__}: {exc}"
         log(log_line)
         # Wait 30 seconds before the next request
         time.sleep(30)
