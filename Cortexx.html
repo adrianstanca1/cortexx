@@ -121,7 +121,7 @@
   const MODULES = [
     'ios-frame', 'tweaks-panel', 'tokens',
     'dashboards', 'dashboards-v2', 'dashboards-v3', 'dashboards-v4', 'dashboards-v5',
-    'backend', 'backend-extras', 'cloud-sync', 'qrcode', 'invoice-pdf',
+    'backend', 'backend-extras', 'backend-v17', 'cloud-sync', 'qrcode', 'invoice-pdf',
     'llm-shim', 'crash', 'observability', 'push', 'e2ee', 'cis300', 'banking', 'i18n', 'riddor', 'retention', 'iap', 'hmrc',
     'perf-phase71', 'perf-phase81',
     'app-screens', 'app-sheets', 'app-screens-2', 'app-utils',
@@ -135,12 +135,12 @@
     'screens-phase36','screens-phase37','screens-phase38','screens-phase39','screens-phase40',
     'screens-phase41-50','screens-phase51-70',
     'screens-phase72','screens-phase73','screens-phase74','screens-phase75','screens-phase76',
-    'screens-phase77','screens-phase78','backend-repair','screens-phase79','screens-phase80','screens-phase82','screens-phase83','screens-phase84','screens-phase85','screens-phase87','screens-phase88','screens-phase90','screens-phase91','screens-phase92','screens-phase93','screens-phase94','screens-phase95','screens-phase96','screens-phase97','screens-phase98','screens-phase99','screens-phase100','screens-phase101','screens-phase102','screens-phase103','screens-phase106','screens-phase107','screens-phase108','screens-phase109','screens-phase110','screens-phase111',
+    'screens-phase77','screens-phase78','backend-repair','screens-phase79','screens-phase80','screens-phase82','screens-phase83','screens-phase84','screens-phase85','screens-phase87','screens-phase88','screens-phase90','screens-phase91','screens-phase92','screens-phase93','screens-phase94','screens-phase95','screens-phase96','screens-phase97','screens-phase98','screens-phase99','screens-phase100','screens-phase101','screens-phase102','screens-phase103','screens-phase106','screens-phase107','screens-phase108','screens-phase109','screens-phase110','screens-phase111','screens-phase112','screens-phase113','screens-phase114','screens-phase115','screens-phase116','screens-phase117','screens-phase118',
     'app-main',
     'boot',
   ];
   // Files that are plain JS (not JSX) — they go through <script src> even in dev.
-  const PLAIN_JS = new Set(['backend', 'backend-extras', 'backend-repair', 'cloud-sync', 'qrcode', 'invoice-pdf', 'llm-shim', 'crash', 'observability', 'push', 'e2ee', 'cis300', 'banking', 'i18n', 'riddor', 'retention', 'iap', 'hmrc', 'perf-phase71', 'perf-phase81']);
+  const PLAIN_JS = new Set(['backend', 'backend-extras', 'backend-v17', 'backend-repair', 'cloud-sync', 'qrcode', 'invoice-pdf', 'llm-shim', 'crash', 'observability', 'push', 'e2ee', 'cis300', 'banking', 'i18n', 'riddor', 'retention', 'iap', 'hmrc', 'perf-phase71', 'perf-phase81']);
 
   // 1) Load React + (dev only) Babel — with multi-CDN fallback so a single
   //    CDN outage (unpkg hiccup, blocked network) can't kill the whole app.

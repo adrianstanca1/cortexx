@@ -47,11 +47,11 @@ function DashV15_SiteNotice({ accent, dashboardId, setDashboardId }) {
   const outstanding = useComputed('outstanding');
   const pipeline    = useComputed('pipelineValue');
 
-  const pendingTasks = tasks.filter(t => !t.done);
-  const high = pendingTasks.filter(t => t.prio === 'high');
+  const todo = tasks.filter(t => !t.done);
+  const high = todo.filter(t => t.prio === 'high');
   const onSite = team.filter(t => t.status === 'on-site').length;
   const active = projects.filter(p => p.status === 'active');
-  const focus = pendingTasks.sort((a, b) => ({ high: 0, med: 1, low: 2 }[a.prio] - { high: 0, med: 1, low: 2 }[b.prio]))[0];
+  const focus = todo.sort((a, b) => ({ high: 0, med: 1, low: 2 }[a.prio] - { high: 0, med: 1, low: 2 }[b.prio]))[0];
 
   const today = new Date();
   const dateStr = today.toLocaleDateString('en-GB', { day: '2-digit', month: '2-digit', year: 'numeric' });
@@ -251,7 +251,7 @@ function DashV15_SiteNotice({ accent, dashboardId, setDashboardId }) {
       {/* SECTION 07 — DESK */}
       <SectionLabel15 num="07" label="Desk"/>
       <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 0, background: V15.bg2 }}>
-        <DeskBtn15 label="Tasks"   sub={`${pendingTasks.length} OPEN`} onClick={() => setNav('tab', 'tasks')}/>
+        <DeskBtn15 label="Tasks"   sub={`${todo.length} OPEN`} onClick={() => setNav('tab', 'tasks')}/>
         <DeskBtn15 label="Quotes"  sub="LEDGER"                onClick={() => setNav('quotes')} rightCol/>
         <DeskBtn15 label="Money"   sub="P&L"                   onClick={() => setNav('tab', 'money')} bottomRow/>
         <DeskBtn15 label="Cortex"  sub="AI DESK"               onClick={() => setNav('ai')} rightCol bottomRow/>

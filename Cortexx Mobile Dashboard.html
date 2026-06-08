@@ -1,0 +1,118 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CortexBuild Pro — Mobile Dashboard Redesign</title>
+<style>
+  html, body { margin: 0; padding: 0; height: 100%; }
+  body { font-family: -apple-system, "SF Pro Text", system-ui, sans-serif; background: #f0eee9; }
+  #root { width: 100%; height: 100vh; }
+</style>
+</head>
+<body>
+<div id="root"></div>
+
+<script src="https://unpkg.com/react@18.3.1/umd/react.development.js" integrity="sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js" integrity="sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm" crossorigin="anonymous"></script>
+<script src="https://unpkg.com/@babel/standalone@7.29.0/babel.min.js" integrity="sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y" crossorigin="anonymous"></script>
+
+<script type="text/babel" src="lib/ios-frame.jsx"></script>
+<script type="text/babel" src="lib/design-canvas.jsx"></script>
+<script type="text/babel" src="lib/tweaks-panel.jsx"></script>
+<script type="text/babel" src="lib/tokens.jsx"></script>
+<script type="text/babel" src="lib/dashboards.jsx"></script>
+<script type="text/babel" src="lib/dashboards-v2.jsx"></script>
+<script type="text/babel" src="lib/dashboards-v3.jsx"></script>
+
+<script type="text/babel">
+const { useState } = React;
+const { createRoot } = ReactDOM;
+
+const TWEAK_DEFAULTS = /*EDITMODE-BEGIN*/{
+  "accent": "#f59e0b",
+  "showFrames": true
+}/*EDITMODE-END*/;
+
+const ACCENTS = [
+  { k: '#2563eb', l: 'Blue' },
+  { k: '#f59e0b', l: 'Amber' },
+  { k: '#10b981', l: 'Green' },
+  { k: '#8b5cf6', l: 'Purple' },
+  { k: '#06b6d4', l: 'Cyan' },
+];
+
+// Wraps a dashboard in an iPhone frame
+function PhoneFrame({ children }) {
+  return (
+    <IOSDevice dark={true} width={390} height={840}>
+      {children}
+    </IOSDevice>
+  );
+}
+
+const VARIATIONS = [
+  { id: 'v1', label: '01 · Action-first', sub: '"What\'s next" hero + priority queue', Comp: DashV1_ActionFirst },
+  { id: 'v2', label: '02 · Status board', sub: 'Live blueprint readout + telemetry', Comp: DashV2_StatusBoard },
+  { id: 'v3', label: '03 · Calm', sub: 'Less data, more whitespace', Comp: DashV3_Calm },
+  { id: 'v4', label: '04 · Bento', sub: 'Modular grid, glanceable', Comp: DashV4_Bento },
+  { id: 'v5', label: '05 · AI-forward', sub: 'Cortex agent center stage', Comp: DashV5_AIForward },
+  { id: 'v6', label: '06 · Field', sub: 'Big targets, glove-friendly', Comp: DashV6_Field },
+  { id: 'v7', label: '07 · Timeline', sub: 'Day spine with NOW marker', Comp: DashV7_Timeline },
+  { id: 'v8', label: '08 · Books', sub: 'Cashflow first', Comp: DashV8_Money },
+  { id: 'v9', label: '09 · Stories', sub: 'Swipeable site cards + activity feed', Comp: DashV9_Stories },
+  { id: 'v10', label: '10 · Rings', sub: 'Activity rings for the business', Comp: DashV10_Rings },
+  { id: 'v11', label: '11 · Map', sub: 'Geographic site overview', Comp: DashV11_Map },
+  { id: 'v12', label: '12 · Focus', sub: 'One thing, no distractions', Comp: DashV12_Focus },
+];
+
+function App() {
+  const [tweaks, setTweak] = useTweaks(TWEAK_DEFAULTS);
+  const accent = tweaks.accent;
+
+  return (
+    <>
+      <DesignCanvas>
+        <DCSection
+          id="dashboards"
+          title="CortexBuild Pro — Mobile Dashboard"
+          subtitle="6 directions for the home tab. Same iOS chrome (Dashboard / Projects / + / Tasks / Team), populated state, tap any artboard to focus.">
+          {VARIATIONS.map(v => (
+            <DCArtboard
+              key={v.id}
+              id={v.id}
+              label={v.label}
+              width={390}
+              height={840}
+              data-screen-label={v.label}>
+              <PhoneFrame>
+                <v.Comp accent={accent}/>
+              </PhoneFrame>
+            </DCArtboard>
+          ))}
+        </DCSection>
+      </DesignCanvas>
+
+      <TweaksPanel title="Tweaks">
+        <TweakSection title="Accent">
+          <TweakRadio
+            value={accent}
+            onChange={v => setTweak('accent', v)}
+            options={ACCENTS.map(a => ({ value: a.k, label: a.l }))}
+          />
+        </TweakSection>
+        <TweakSection title="About">
+          <div style={{ fontSize: 12, color: 'rgba(40,30,20,0.7)', lineHeight: 1.5 }}>
+            Forked from CortexBuild iOS v2 (Today/Jobs/Capture/Money/Me) but with the screenshots' tab structure: <b>Dashboard / Projects / + / Tasks / Team</b>.
+            Each direction handles the same job — answering "what now?" — but with a different temperament.
+          </div>
+        </TweakSection>
+      </TweaksPanel>
+    </>
+  );
+}
+
+createRoot(document.getElementById('root')).render(<App/>);
+</script>
+</body>
+</html>

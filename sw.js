@@ -11,7 +11,7 @@
 // Strategy: network-first for the HTML shell (fresh code on refresh), cache-first
 // for immutable JS + CDN. Precaching is resilient — one missing file can't abort it.
 
-const CACHE = 'cortexx-v3-1-008';
+const CACHE = 'cortexx-v3-1-011';
 
 const SHELL = [
   './',
@@ -40,7 +40,8 @@ const CDN = [
 const MODULE_NAMES = [
   'ios-frame','tweaks-panel','tokens',
   'dashboards','dashboards-v2','dashboards-v3','dashboards-v4','dashboards-v5',
-  'backend','backend-extras','cloud-sync','qrcode','invoice-pdf','llm-shim',
+  'backend','backend-extras','backend-v17','cloud-sync','qrcode','invoice-pdf',
+  'llm-shim','crash','observability','push','e2ee','cis300','banking','i18n','riddor','retention','iap','hmrc',
   'perf-phase71','perf-phase81',
   'app-screens','app-sheets','app-screens-2','app-utils',
   'screens-ops','screens-project',
@@ -54,14 +55,17 @@ const MODULE_NAMES = [
   'screens-phase41-50','screens-phase51-70',
   'screens-phase72','screens-phase73','screens-phase74','screens-phase75','screens-phase76',
   'screens-phase77','screens-phase78','backend-repair','screens-phase79','screens-phase80',
+  'screens-phase82','screens-phase83','screens-phase84','screens-phase85','screens-phase87','screens-phase88',
+  'screens-phase90','screens-phase91','screens-phase92','screens-phase93','screens-phase94','screens-phase95',
+  'screens-phase96','screens-phase97','screens-phase98','screens-phase99',
   'screens-phase100','screens-phase101','screens-phase102','screens-phase103',
   'screens-phase106','screens-phase107','screens-phase108','screens-phase109',
-  'screens-phase110','screens-phase111',
+  'screens-phase110','screens-phase111','screens-phase112','screens-phase113','screens-phase114','screens-phase115','screens-phase116','screens-phase117','screens-phase118',
   'app-main','boot',
 ];
 
 // Plain-JS modules ship as .js even in dev; the rest are .jsx in lib/.
-const PLAIN_JS = new Set(['backend','backend-extras','backend-repair','cloud-sync','qrcode','invoice-pdf','llm-shim','perf-phase71','perf-phase81']);
+const PLAIN_JS = new Set(['backend','backend-extras','backend-v17','backend-repair','cloud-sync','qrcode','invoice-pdf','llm-shim','crash','observability','push','e2ee','cis300','banking','i18n','riddor','retention','iap','hmrc','perf-phase71','perf-phase81']);
 const LIB = MODULE_NAMES.map(n => `./lib/${n}.${PLAIN_JS.has(n) ? 'js' : 'jsx'}`);
 const DIST = MODULE_NAMES.map(n => `./dist/${n}.js`);
 

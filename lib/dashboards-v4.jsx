@@ -51,10 +51,10 @@ function DashV14_Broadsheet({ accent, dashboardId, setDashboardId }) {
   const weekMiles   = useComputed('weekMiles');
   const pipeline    = useComputed('pipelineValue');
 
-  const pendingTasks = tasks.filter(t => !t.done);
+  const todo = tasks.filter(t => !t.done);
   const onSite = team.filter(t => t.status === 'on-site').length;
   const active = projects.filter(p => p.status === 'active').slice(0, 4);
-  const focus = pendingTasks.sort((a, b) => ({ high: 0, med: 1, low: 2 }[a.prio] - { high: 0, med: 1, low: 2 }[b.prio]))[0];
+  const focus = todo.sort((a, b) => ({ high: 0, med: 1, low: 2 }[a.prio] - { high: 0, med: 1, low: 2 }[b.prio]))[0];
 
   const today = new Date();
   const dateline = today.toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }).toUpperCase();
@@ -66,7 +66,7 @@ function DashV14_Broadsheet({ accent, dashboardId, setDashboardId }) {
     : 'A quiet day on the books';
   const leadDeck = focus
     ? `${focus.prio === 'high' ? 'High-priority' : focus.prio === 'med' ? 'Routine' : 'Backlog'} item awaits attention · ${onSite} hands on site this morning`
-    : `${onSite} hands on site, ${pendingTasks.length} items in the queue, business as usual`;
+    : `${onSite} hands on site, ${todo.length} items in the queue, business as usual`;
 
   const setNav = (k, p) => window.cortexxNav && window.cortexxNav(k, p);
 
@@ -278,7 +278,7 @@ function DashV14_Broadsheet({ accent, dashboardId, setDashboardId }) {
             border: `1px solid ${V14.ink}`,
             background: V14.paperHi,
           }}>
-            <DeskLink14 label="Tasks" sub={`${pendingTasks.length} open`} onClick={() => setNav('tab', 'tasks')}/>
+            <DeskLink14 label="Tasks" sub={`${todo.length} open`} onClick={() => setNav('tab', 'tasks')}/>
             <DeskLink14 label="Quotes" sub="ledger" onClick={() => setNav('quotes')} rightCol/>
             <DeskLink14 label="Receipts" sub={`${receipts.length} on file`} onClick={() => setNav('tab', 'money')} bottomRow/>
             <DeskLink14 label="Cortex" sub="AI desk" onClick={() => setNav('ai')} rightCol bottomRow/>

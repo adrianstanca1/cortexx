@@ -1,8 +1,3 @@
-// Cortexx — Phase 9: Upload flow with progress, central Reviews hub, Database explorer
-
-// ═══════════════════════════════════════════════════════════════════
-// UPLOAD SHEET — animated progress + filetype simulation
-// ═══════════════════════════════════════════════════════════════════
 function UploadSheet({
   onClose,
   accent,
@@ -66,8 +61,6 @@ function UploadSheet({
       icon: 'camera'
     }]
   };
-
-  // Real file picker via <input type="file">
   const inputRef = React.useRef(null);
   const handleRealFile = e => {
     const f = e.target.files[0];
@@ -128,10 +121,10 @@ function UploadSheet({
     }, 180);
   };
   const files = FILES[target] || FILES.document;
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     height: "auto"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '8px 20px 14px',
       textAlign: 'center',
@@ -140,11 +133,11 @@ function UploadSheet({
       fontWeight: 600,
       color: T.t1
     }
-  }, stage === 'pick' && 'Upload file', stage === 'uploading' && 'Uploading…', stage === 'done' && 'Upload complete'), /*#__PURE__*/React.createElement("div", {
+  }, stage === 'pick' && 'Upload file', stage === 'uploading' && 'Uploading…', stage === 'done' && 'Upload complete'), React.createElement("div", {
     style: {
       padding: '0 16px 24px'
     }
-  }, stage === 'pick' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, stage === 'pick' && React.createElement(React.Fragment, null, React.createElement("div", {
     onClick: () => inputRef.current?.click(),
     style: {
       border: `1.5px dashed ${T.hairStrong}`,
@@ -155,7 +148,7 @@ function UploadSheet({
       marginBottom: 14,
       cursor: 'pointer'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       color: accent,
       fontSize: 36,
@@ -163,28 +156,28 @@ function UploadSheet({
     }
   }, React.cloneElement(Ic.upload, {
     size: 36
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, "Tap to pick a file"), /*#__PURE__*/React.createElement("div", {
+  }, "Tap to pick a file"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 4
     }
-  }, "PDF, DWG, XLSX, JPG, PNG \xB7 up to 50 MB"), /*#__PURE__*/React.createElement("input", {
+  }, "PDF, DWG, XLSX, JPG, PNG \xB7 up to 50 MB"), React.createElement("input", {
     ref: inputRef,
     type: "file",
     onChange: handleRealFile,
     style: {
       display: 'none'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -194,7 +187,7 @@ function UploadSheet({
       letterSpacing: 0.6,
       marginBottom: 8
     }
-  }, "Or sample files"), /*#__PURE__*/React.createElement(GroupedList, null, files.map((f, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, "Or sample files"), React.createElement(GroupedList, null, files.map((f, i, a) => React.createElement(Row, {
     key: i,
     icon: React.cloneElement(Ic[f.icon] || Ic.doc),
     iconBg: f.type === 'pdf' ? T.red : f.type === 'dwg' ? T.cyan : f.type === 'jpg' ? T.purple : T.green,
@@ -202,18 +195,18 @@ function UploadSheet({
     sub: `${f.size} MB · ${f.type.toUpperCase()}`,
     isLast: i === a.length - 1,
     onClick: () => start(f)
-  })))), stage === 'uploading' && fileMeta && /*#__PURE__*/React.createElement("div", {
+  })))), stage === 'uploading' && fileMeta && React.createElement("div", {
     style: {
       padding: '20px 0'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 12,
       marginBottom: 14
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 44,
       height: 44,
@@ -226,35 +219,35 @@ function UploadSheet({
     }
   }, React.cloneElement(Ic[fileMeta.icon] || Ic.doc, {
     size: 22
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, fileMeta.name), /*#__PURE__*/React.createElement("div", {
+  }, fileMeta.name), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t2
     }
-  }, fileMeta.size, " MB")), /*#__PURE__*/React.createElement("span", {
+  }, fileMeta.size, " MB")), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 13,
       color: accent,
       fontWeight: 700
     }
-  }, Math.round(progress), "%")), /*#__PURE__*/React.createElement(Bar, {
+  }, Math.round(progress), "%")), React.createElement(Bar, {
     pct: progress,
     c: accent,
     h: 6
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -262,12 +255,12 @@ function UploadSheet({
       textAlign: 'center',
       marginTop: 12
     }
-  }, progress < 50 ? 'Encrypting…' : progress < 90 ? 'Uploading to cloud…' : 'Finalising…')), stage === 'done' && fileMeta && /*#__PURE__*/React.createElement("div", {
+  }, progress < 50 ? 'Encrypting…' : progress < 90 ? 'Uploading to cloud…' : 'Finalising…')), stage === 'done' && fileMeta && React.createElement("div", {
     style: {
       padding: '20px 0',
       textAlign: 'center'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 60,
       height: 60,
@@ -282,21 +275,21 @@ function UploadSheet({
   }, React.cloneElement(Ic.check, {
     size: 32,
     sw: 3
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       color: T.t1,
       fontWeight: 600
     }
-  }, fileMeta.name), /*#__PURE__*/React.createElement("div", {
+  }, fileMeta.name), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 4
     }
-  }, "Available in ", target === 'drawing' ? 'Drawings' : 'Documents'), /*#__PURE__*/React.createElement("button", {
+  }, "Available in ", target === 'drawing' ? 'Drawings' : 'Documents'), React.createElement("button", {
     onClick: onClose,
     style: {
       marginTop: 20,
@@ -312,10 +305,6 @@ function UploadSheet({
     }
   }, "Done"))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// REVIEW HUB — central queue of things needing your sign-off
-// ═══════════════════════════════════════════════════════════════════
 function ReviewsScreen({
   accent
 }) {
@@ -386,22 +375,22 @@ function ReviewsScreen({
     route: 'rfis'
   }];
   const totalActions = queues.reduce((s, q) => s + q.n, 0);
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Reviews",
     subtitle: `${totalActions} items waiting on you`
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 16px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: totalActions === 0 ? `linear-gradient(135deg, ${T.green}33, ${T.green}11)` : `linear-gradient(135deg, ${accent}22, ${T.purple}11)`,
       border: `0.5px solid ${totalActions === 0 ? T.green + '55' : accent + '44'}`,
@@ -411,7 +400,7 @@ function ReviewsScreen({
       alignItems: 'center',
       gap: 14
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 56,
       height: 56,
@@ -425,11 +414,11 @@ function ReviewsScreen({
     }
   }, React.cloneElement(totalActions === 0 ? Ic.check : Ic.alert, {
     size: 28
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 32,
@@ -438,26 +427,26 @@ function ReviewsScreen({
       letterSpacing: -0.8,
       lineHeight: 1
     }
-  }, totalActions), /*#__PURE__*/React.createElement("div", {
+  }, totalActions), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 4
     }
-  }, totalActions === 0 ? 'Inbox zero · all clear' : `Items across ${queues.filter(q => q.n > 0).length} categories`)))), /*#__PURE__*/React.createElement(Section, {
+  }, totalActions === 0 ? 'Inbox zero · all clear' : `Items across ${queues.filter(q => q.n > 0).length} categories`)))), React.createElement(Section, {
     title: "Approvals queue"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, queues.filter(q => q.n > 0).map((q, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, queues.filter(q => q.n > 0).map((q, i, a) => React.createElement(Row, {
     key: q.k,
     icon: q.i,
     iconBg: q.c,
     title: q.l,
-    right: /*#__PURE__*/React.createElement(Pill, {
+    right: React.createElement(Pill, {
       c: q.c
     }, q.n),
     isLast: i === a.length - 1,
     onClick: () => q.route === 'tab' ? window.cortexxNav('tab', q.payload) : window.cortexxNav(q.route)
-  })), queues.every(q => q.n === 0) && /*#__PURE__*/React.createElement("div", {
+  })), queues.every(q => q.n === 0) && React.createElement("div", {
     style: {
       padding: 30,
       textAlign: 'center',
@@ -465,15 +454,15 @@ function ReviewsScreen({
       fontSize: 13,
       color: T.t3
     }
-  }, "Everything's reviewed. Nice work."))), /*#__PURE__*/React.createElement(Section, {
+  }, "Everything's reviewed. Nice work."))), React.createElement(Section, {
     title: "By category"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, queues.filter(q => q.n === 0).map((q, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, queues.filter(q => q.n === 0).map((q, i, a) => React.createElement(Row, {
     key: q.k,
     icon: q.i,
     iconBg: T.t3,
     title: q.l,
     sub: "All clear",
-    right: /*#__PURE__*/React.createElement(Pill, {
+    right: React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, "\u2713"),
@@ -481,10 +470,6 @@ function ReviewsScreen({
     onClick: () => q.route === 'tab' ? window.cortexxNav('tab', q.payload) : window.cortexxNav(q.route)
   }))))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// DATABASE EXPLORER — view raw data in each table
-// ═══════════════════════════════════════════════════════════════════
 function DatabaseScreen({
   accent
 }) {
@@ -492,21 +477,21 @@ function DatabaseScreen({
   const tableNames = ['projects', 'tasks', 'team', 'invoices', 'receipts', 'activity', 'quotes', 'timesheets', 'materials', 'subs', 'documents', 'diary', 'changeOrders', 'snags', 'equipment', 'notifications', 'rfis', 'messages', 'purchaseOrders', 'inspections', 'customers', 'leads', 'mileage', 'auditLog', 'jobTemplates', 'forms', 'drawings', 'permits', 'goals', 'subInvoices'].filter(n => Backend.db[n]);
   if (activeTable) {
     const rows = Backend.db[activeTable].listSync();
-    return /*#__PURE__*/React.createElement(ScreenBg, {
+    return React.createElement(ScreenBg, {
       accent: accent
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         flex: 1,
         overflowY: 'auto',
         paddingBottom: 30
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         padding: '4px 16px 12px',
         display: 'flex',
         alignItems: 'center'
       }
-    }, /*#__PURE__*/React.createElement("button", {
+    }, React.createElement("button", {
       onClick: () => setActiveTable(null),
       style: {
         background: 'none',
@@ -519,10 +504,10 @@ function DatabaseScreen({
         alignItems: 'center',
         gap: 2
       }
-    }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Tables"))), /*#__PURE__*/React.createElement(MobileHeader, {
+    }, Ic.chevL, " ", React.createElement("span", null, "Tables"))), React.createElement(MobileHeader, {
       title: activeTable,
       subtitle: `${rows.length} rows`,
-      right: /*#__PURE__*/React.createElement(HeaderBtn, {
+      right: React.createElement(HeaderBtn, {
         icon: Ic.download,
         onClick: () => {
           const blob = JSON.stringify(rows, null, 2);
@@ -530,14 +515,14 @@ function DatabaseScreen({
           toast('Copied JSON to clipboard', 'success');
         }
       })
-    }), /*#__PURE__*/React.createElement("div", {
+    }), React.createElement("div", {
       style: {
         padding: '0 16px',
         display: 'flex',
         flexDirection: 'column',
         gap: 6
       }
-    }, rows.map((row, i) => /*#__PURE__*/React.createElement("div", {
+    }, rows.map((row, i) => React.createElement("div", {
       key: i,
       style: {
         background: T.bg2,
@@ -552,47 +537,47 @@ function DatabaseScreen({
         wordBreak: 'break-word',
         lineHeight: 1.5
       }
-    }, Object.entries(row).map(([k, v]) => /*#__PURE__*/React.createElement("div", {
+    }, Object.entries(row).map(([k, v]) => React.createElement("div", {
       key: k,
       style: {
         display: 'flex',
         gap: 8
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, React.createElement("span", {
       style: {
         color: T.blueL,
         minWidth: 80
       }
-    }, k, ":"), /*#__PURE__*/React.createElement("span", {
+    }, k, ":"), React.createElement("span", {
       style: {
         color: T.t1,
         wordBreak: 'break-all'
       }
     }, typeof v === 'object' ? JSON.stringify(v) : String(v)))))))));
   }
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Database",
     subtitle: `${tableNames.length} tables · local-first`,
-    right: /*#__PURE__*/React.createElement(HeaderBtn, {
+    right: React.createElement(HeaderBtn, {
       icon: Ic.archive,
       onClick: () => {
         Backend.db.reset();
         toast('All tables reset to seed data', 'success');
       }
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.green}22, ${T.cyan}11)`,
       border: `0.5px solid ${T.green}44`,
@@ -602,13 +587,13 @@ function DatabaseScreen({
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       color: T.green
     }
   }, React.cloneElement(Ic.check, {
     size: 16
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       fontFamily: SF,
@@ -616,17 +601,17 @@ function DatabaseScreen({
       color: T.t1,
       lineHeight: 1.4
     }
-  }, "All data lives on your device. No server, no tracking. Export to JSON any time."))), /*#__PURE__*/React.createElement(Section, {
+  }, "All data lives on your device. No server, no tracking. Export to JSON any time."))), React.createElement(Section, {
     title: "Tables"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, tableNames.map((t, i, a) => {
+  }, React.createElement(GroupedList, null, tableNames.map((t, i, a) => {
     const count = Backend.db[t].listSync().length;
-    return /*#__PURE__*/React.createElement(Row, {
+    return React.createElement(Row, {
       key: t,
       icon: Ic.layers,
       iconBg: accent,
       title: t,
       sub: `${count} row${count !== 1 ? 's' : ''}`,
-      right: /*#__PURE__*/React.createElement("span", {
+      right: React.createElement("span", {
         style: {
           fontFamily: SFMono,
           fontSize: 11,
@@ -638,10 +623,6 @@ function DatabaseScreen({
     });
   })))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// COMPACT DASHBOARD (Layout 13) — executive at-a-glance
-// ═══════════════════════════════════════════════════════════════════
 function DashV13_Exec({
   accent = T.blue
 }) {
@@ -651,29 +632,29 @@ function DashV13_Exec({
   const pendingTS = useComputed('pendingTimesheets');
   const openRFIs = useComputed('openRFIs');
   const openSnags = useComputed('openSnags');
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Executive",
     subtitle: "Thu 30 Apr \xB7 Wk 17",
     ws: true,
-    right: /*#__PURE__*/React.createElement(HeaderBtn, {
+    right: React.createElement(HeaderBtn, {
       icon: Ic.bell,
       count: window.CortexPortalMsgs && window.CortexPortalMsgs.unreadCount() || 0,
       accent: accent,
       onClick: () => window.cortexxNav && window.cortexxNav('inbox')
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 18px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -682,7 +663,7 @@ function DashV13_Exec({
       textTransform: 'uppercase',
       letterSpacing: 1
     }
-  }, "Cash position"), /*#__PURE__*/React.createElement("div", {
+  }, "Cash position"), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 48,
@@ -694,7 +675,7 @@ function DashV13_Exec({
     }
   }, "\xA3", cash.toLocaleString('en-GB', {
     maximumFractionDigits: 0
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -707,12 +688,12 @@ function DashV13_Exec({
     }
   }, React.cloneElement(Ic.trend, {
     size: 14
-  }), " ", /*#__PURE__*/React.createElement("span", null, "+\xA38,420 this week"), /*#__PURE__*/React.createElement("span", {
+  }), " ", React.createElement("span", null, "+\xA38,420 this week"), React.createElement("span", {
     style: {
       color: T.t3,
       marginLeft: 6
     }
-  }, "\xA3", outstanding.toLocaleString(), " pending in"))), /*#__PURE__*/React.createElement("div", {
+  }, "\xA3", outstanding.toLocaleString(), " pending in"))), React.createElement("div", {
     style: {
       padding: '0 16px 14px',
       display: 'grid',
@@ -743,7 +724,7 @@ function DashV13_Exec({
     l: 'Team',
     v: useComputed('teamOnSite'),
     c: T.purple
-  }].map((k, i) => /*#__PURE__*/React.createElement("div", {
+  }].map((k, i) => React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -751,7 +732,7 @@ function DashV13_Exec({
       padding: '10px 12px',
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -760,7 +741,7 @@ function DashV13_Exec({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, k.l), /*#__PURE__*/React.createElement("div", {
+  }, k.l), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -769,28 +750,28 @@ function DashV13_Exec({
       marginTop: 4,
       letterSpacing: -0.5
     }
-  }, k.v)))), /*#__PURE__*/React.createElement(Section, {
+  }, k.v)))), React.createElement(Section, {
     title: "This week",
     pad: 16
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: Ic.trend,
     iconBg: T.green,
     title: "Revenue: \xA367,200",
     sub: "Target \xA380,000 \xB7 84%",
     onClick: () => window.cortexxNav('reports')
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.check,
     iconBg: T.blue,
     title: "On-time delivery 88%",
     sub: "Target 95% \xB7 slipping"
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.shield,
     iconBg: T.amber,
     title: "Safety score 92",
     sub: "Target 95 \xB7 3 to go",
     isLast: true,
     onClick: () => window.cortexxNav('safety')
-  })))), /*#__PURE__*/React.createElement(TabBar, {
+  })))), React.createElement(TabBar, {
     accent: accent
   }));
 }

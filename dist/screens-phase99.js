@@ -1,21 +1,8 @@
-// Cortexx — Phase 99: Offline site map (v1.5)
-// A real slippy map (OpenStreetMap raster tiles — free, no key) with:
-//  • pan / zoom
-//  • OFFLINE tile caching via the Cache API (download a site's tiles, then the
-//    map works with no signal)
-//  • a markup layer (pins / freehand / text) persisted to the `siteMaps`
-//    collection — which syncs through the backend like every other collection.
-//
-// Honest note: tiles come from tile.openstreetmap.org. For production swap the
-// TILE_URL for your own provider/key per OSMF usage policy.
-
 (function () {
   if (!window.Backend) return;
   const B = window.Backend;
   const TILE = 'https://tile.openstreetmap.org/{z}/{x}/{y}.png';
   const CACHE = 'cortexx-tiles-v1';
-
-  // Web-Mercator helpers
   const lon2x = (lon, z) => (lon + 180) / 360 * Math.pow(2, z);
   const lat2y = (lat, z) => {
     const r = lat * Math.PI / 180;
@@ -33,7 +20,6 @@
     x2lon,
     y2lat,
     tileUrl,
-    // Sites with coordinates (reuse geofence registry; fall back to London).
     sites() {
       const g = window.cortexxGeofence;
       const fromGeo = g && g.sites ? g.sites.map(s => ({
@@ -47,13 +33,11 @@
         lng: -0.1278
       }];
     },
-    // Estimate tile count for a bbox over a zoom range (for the download UI).
     estimateTiles(lat, lng, zMin, zMax, spanTiles = 2) {
       let count = 0;
       for (let z = zMin; z <= zMax; z++) count += (spanTiles * 2 + 1) ** 2;
       return count;
     },
-    // Download + cache the tiles around a point for offline use.
     async downloadPack(lat, lng, zMin, zMax, spanTiles, onProgress) {
       if (!('caches' in window)) return {
         ok: false,
@@ -102,13 +86,7 @@
       if ('caches' in window) await caches.delete(CACHE);
     }
   };
-
-  // siteMaps collection is registered in backend-extras (EXTRAS.siteMaps).
 })();
-
-// ═══════════════════════════════════════════════════════════
-// OFFLINE MAP SCREEN
-// ═══════════════════════════════════════════════════════════
 function OfflineMapScreen({
   accent
 }) {
@@ -116,7 +94,6 @@ function OfflineMapScreen({
   const sites = Backend.map.sites();
   const [pid, setPid] = React.useState(projects[0]?.id);
   const proj = projects.find(p => p.id == pid) || projects[0];
-  // Match project to a site coordinate by name overlap, else first site.
   const site = React.useMemo(() => {
     if (!proj) return sites[0];
     const hit = sites.find(s => proj.name.toLowerCase().includes(s.name.split(' ')[0].toLowerCase()) || (proj.addr || '').toLowerCase().includes(s.name.split(' ')[0].toLowerCase()));
@@ -127,9 +104,9 @@ function OfflineMapScreen({
     lat: site.lat,
     lng: site.lng
   });
-  const [tool, setTool] = React.useState('pan'); // pan | pin | draw | text
+  const [tool, setTool] = React.useState('pan');
   const [marks, setMarks] = React.useState([]);
-  const [dl, setDl] = React.useState(null); // download progress
+  const [dl, setDl] = React.useState(null);
   const [cached, setCached] = React.useState(0);
   const [offline, setOffline] = React.useState(!navigator.onLine);
   const W = 320,
@@ -137,16 +114,12 @@ function OfflineMapScreen({
     TS = 256;
   const canvasRef = React.useRef(null);
   const drawing = React.useRef(null);
-
-  // Recenter when site changes.
   React.useEffect(() => {
     setCenter({
       lat: site.lat,
       lng: site.lng
     });
   }, [site.lat, site.lng]);
-
-  // Load saved annotations for this project.
   React.useEffect(() => {
     const all = Backend.db.siteMaps && Backend.db.siteMaps.listSync ? Backend.db.siteMaps.listSync() : [];
     const rec = all.find(m => m.projectId == pid);
@@ -176,8 +149,6 @@ function OfflineMapScreen({
       marks: next
     });
   };
-
-  // Pixel ↔ latlng for current view.
   const centerPx = {
     x: Backend.map.lon2x(center.lng, zoom) * TS,
     y: Backend.map.lat2y(center.lat, zoom) * TS
@@ -190,8 +161,6 @@ function OfflineMapScreen({
     lat: Backend.map.y2lat((centerPx.y + sy - H / 2) / TS, zoom),
     lng: Backend.map.x2lon((centerPx.x + sx - W / 2) / TS, zoom)
   });
-
-  // Visible tiles.
   const tiles = [];
   const ctx = Backend.map.lon2x(center.lng, zoom),
     cty = Backend.map.lat2y(center.lat, zoom);
@@ -210,8 +179,6 @@ function OfflineMapScreen({
       url: Backend.map.tileUrl(zoom, tx, ty)
     });
   }
-
-  // Pointer interaction.
   const dragStart = React.useRef(null);
   const onDown = e => {
     const r = e.currentTarget.getBoundingClientRect();
@@ -303,22 +270,22 @@ function OfflineMapScreen({
     l: 'Text',
     i: Ic.doc || Ic.type
   }];
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Site map",
     subtitle: offline ? 'Offline · cached tiles' : 'Mark up & save offline'
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, /*#__PURE__*/React.createElement("select", {
+  }, React.createElement("select", {
     value: pid,
     onChange: e => setPid(Number(e.target.value)),
     style: {
@@ -334,10 +301,10 @@ function OfflineMapScreen({
       outline: 'none',
       marginBottom: 12
     }
-  }, projects.map(p => /*#__PURE__*/React.createElement("option", {
+  }, projects.map(p => React.createElement("option", {
     key: p.id,
     value: p.id
-  }, p.name))), /*#__PURE__*/React.createElement("div", {
+  }, p.name))), React.createElement("div", {
     style: {
       position: 'relative',
       width: '100%',
@@ -356,7 +323,7 @@ function OfflineMapScreen({
     onTouchStart: onDown,
     onTouchMove: onMove,
     onTouchEnd: onUp
-  }, tiles.map(t => /*#__PURE__*/React.createElement("img", {
+  }, tiles.map(t => React.createElement("img", {
     key: t.tx + '/' + t.ty,
     src: t.url,
     alt: "",
@@ -374,7 +341,7 @@ function OfflineMapScreen({
     onError: e => {
       e.target.style.opacity = 0.15;
     }
-  })), /*#__PURE__*/React.createElement("svg", {
+  })), React.createElement("svg", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -388,7 +355,7 @@ function OfflineMapScreen({
         const s = toScreen(p.lat, p.lng);
         return `${s.x},${s.y}`;
       }).join(' ');
-      return /*#__PURE__*/React.createElement("polyline", {
+      return React.createElement("polyline", {
         key: m.id,
         points: pts,
         fill: "none",
@@ -399,9 +366,9 @@ function OfflineMapScreen({
       });
     }
     const s = toScreen(m.lat, m.lng);
-    if (m.type === 'pin') return /*#__PURE__*/React.createElement("g", {
+    if (m.type === 'pin') return React.createElement("g", {
       key: m.id
-    }, /*#__PURE__*/React.createElement("circle", {
+    }, React.createElement("circle", {
       cx: s.x,
       cy: s.y,
       r: "7",
@@ -409,16 +376,16 @@ function OfflineMapScreen({
       stroke: "#fff",
       strokeWidth: "2"
     }));
-    if (m.type === 'text') return /*#__PURE__*/React.createElement("g", {
+    if (m.type === 'text') return React.createElement("g", {
       key: m.id
-    }, /*#__PURE__*/React.createElement("rect", {
+    }, React.createElement("rect", {
       x: s.x,
       y: s.y - 16,
       width: Math.max(30, m.label.length * 7 + 10),
       height: "20",
       rx: "4",
       fill: "rgba(0,0,0,.7)"
-    }), /*#__PURE__*/React.createElement("text", {
+    }), React.createElement("text", {
       x: s.x + 5,
       y: s.y - 2,
       fill: "#fff",
@@ -426,7 +393,7 @@ function OfflineMapScreen({
       fontFamily: "sans-serif"
     }, m.label));
     return null;
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       position: 'absolute',
       right: 10,
@@ -435,13 +402,13 @@ function OfflineMapScreen({
       flexDirection: 'column',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => setZoom(z => Math.min(19, z + 1)),
     style: zoomBtn
-  }, "+"), /*#__PURE__*/React.createElement("button", {
+  }, "+"), React.createElement("button", {
     onClick: () => setZoom(z => Math.max(12, z - 1)),
     style: zoomBtn
-  }, "\u2212")), offline && /*#__PURE__*/React.createElement("div", {
+  }, "\u2212")), offline && React.createElement("div", {
     style: {
       position: 'absolute',
       left: 10,
@@ -454,13 +421,13 @@ function OfflineMapScreen({
       padding: '3px 8px',
       borderRadius: 6
     }
-  }, "OFFLINE")), /*#__PURE__*/React.createElement("div", {
+  }, "OFFLINE")), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 12
     }
-  }, TOOLS.map(t => /*#__PURE__*/React.createElement("button", {
+  }, TOOLS.map(t => React.createElement("button", {
     key: t.k,
     onClick: () => setTool(t.k),
     style: {
@@ -481,7 +448,7 @@ function OfflineMapScreen({
     }
   }, t.i ? React.cloneElement(t.i, {
     size: 16
-  }) : null, t.l)), marks.length > 0 && /*#__PURE__*/React.createElement("button", {
+  }) : null, t.l)), marks.length > 0 && React.createElement("button", {
     onClick: () => saveMarks([]),
     style: {
       background: T.bg2,
@@ -494,7 +461,7 @@ function OfflineMapScreen({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Clear")), /*#__PURE__*/React.createElement("div", {
+  }, "Clear")), React.createElement("div", {
     style: {
       marginTop: 16,
       background: T.bg2,
@@ -502,27 +469,27 @@ function OfflineMapScreen({
       borderRadius: 14,
       padding: 16
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 10
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Offline tiles"), /*#__PURE__*/React.createElement("div", {
+  }, "Offline tiles"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, cached, " tiles cached on this device")), cached > 0 && /*#__PURE__*/React.createElement("button", {
+  }, cached, " tiles cached on this device")), cached > 0 && React.createElement("button", {
     onClick: async () => {
       await Backend.map.clearCache();
       setCached(0);
@@ -535,28 +502,28 @@ function OfflineMapScreen({
       fontSize: 12,
       cursor: 'pointer'
     }
-  }, "Clear")), dl ? /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, "Clear")), dl ? React.createElement("div", null, React.createElement("div", {
     style: {
       height: 8,
       borderRadius: 4,
       background: T.bg3,
       overflow: 'hidden'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: `${Math.round(dl.done / dl.total * 100)}%`,
       height: '100%',
       background: accent,
       transition: 'width .2s'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t2,
       marginTop: 6
     }
-  }, dl.done, "/", dl.total, " tiles\u2026")) : /*#__PURE__*/React.createElement("button", {
+  }, dl.done, "/", dl.total, " tiles\u2026")) : React.createElement("button", {
     onClick: download,
     style: {
       width: '100%',
@@ -576,7 +543,7 @@ function OfflineMapScreen({
     }
   }, React.cloneElement(Ic.download, {
     size: 15
-  }), " Download this area for offline"), /*#__PURE__*/React.createElement("div", {
+  }), " Download this area for offline"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,

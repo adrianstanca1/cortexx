@@ -148,14 +148,7 @@ app.get('/api/stream', wrap(async (req, res) => {
   if (!channels.has(key)) channels.set(key, new Set());
   channels.get(key).add(res);
   const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (e) {} }, 25000);
-  req.on('close', () => { 
-    clearInterval(ping);
-    const set = channels.get(key);
-    if (set) {
-      set.delete(res);
-      if (set.size === 0) channels.delete(key);
-    }
-  });
+  req.on('close', () => { clearInterval(ping); channels.get(key)?.delete(res); });
 }));
 
 // ── Mounted route modules (MUST be before the generic /api/:collection
@@ -170,12 +163,13 @@ app.use('/api', apiLimiter, require('./routes/push'));                          
 app.use('/api', apiLimiter, require('./routes/banking'));                        // Open Banking (TrueLayer) — auto-pull bank statements
 app.use('/api', apiLimiter, require('./routes/iap'));                            // In-app subscriptions (StoreKit + Stripe Checkout)
 app.use('/api', apiLimiter, require('./routes/hmrc'));                           // HMRC Transaction Engine (CIS300 + GovTalk envelope)
+app.use('/api', apiLimiter, require('./routes/intelligence')(pool, auth));       // v1.7 server-side intelligence (7 domains)
 
 // ── Generic collection REST (mirrors frontend Backend.db.*) ──
 // Typed collections — these have first-class DB tables. Anything else falls
 // through to the generic `documents_store` JSON catch-all.
 const NATIVE = new Set([
-  'projects', 'tasks', 'team', 'team_members', 'invoices', 'quotes', 'photos',
+  'projects', 'tasks', 'team', 'team_members', 'invoices', 'quotes',
   // v1.3 gap closure (all use TEXT id + data JSONB)
   'receipts', 'cisSubs', 'cisPayments', 'timesheets', 'diary',
   'snags', 'changeOrders', 'rfis', 'subs', 'materials',
@@ -211,14 +205,14 @@ app.get('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
     };
     let orderCol = ORDER[collection];
     if (!orderCol) orderCol = ['receipts','cisSubs','cisPayments','timesheets','diary','snags','changeOrders','rfis','subs','materials','documentsMeta','equipment','siteMaps'].includes(collection) ? 'updated_at' : 'id';
-    const r = await pool.query(`SELECT * FROM ${tbl} WHERE workspace_id=$1 ORDER BY ${orderCol} DESC NULLS LAST LIMIT 100`, [req.user.ws]);
+    const r = await pool.query(`SELECT * FROM ${tbl} WHERE workspace_id=$1 ORDER BY ${orderCol} DESC NULLS LAST`, [req.user.ws]);
     // Merge the JSONB `data` blob over the typed columns, drop internal bookkeeping.
     return res.json(r.rows.map(row => {
       const { data, workspace_id, ...cols } = row;
       return { ...cols, ...(data || {}) };
     }));
   }
-  const r = await pool.query('SELECT doc_id, data FROM documents_store WHERE workspace_id=$1 AND collection=$2 LIMIT 100', [req.user.ws, collection]);
+  const r = await pool.query('SELECT doc_id, data FROM documents_store WHERE workspace_id=$1 AND collection=$2', [req.user.ws, collection]);
   res.json(r.rows.map(row => ({ id: row.doc_id, ...row.data })));
 }));
 
@@ -235,7 +229,7 @@ app.post('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
     const tbl = tableFor(collection);
     await pool.query(
       `INSERT INTO ${tbl} (id, workspace_id, data) VALUES ($1,$2,$3)
-       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now() WHERE ${tbl}.workspace_id=$2`,
+       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now()`,
       [docId, req.user.ws, req.body]
     );
     bus.emit(req.user.ws, { type: 'change', collection, op: 'create', id: docId });
@@ -256,7 +250,7 @@ app.put('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
     const tbl = tableFor(collection);
     await pool.query(
       `INSERT INTO ${tbl} (id, workspace_id, data) VALUES ($1,$2,$3)
-       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now() WHERE ${tbl}.workspace_id=$2`,
+       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now()`,
       [id, req.user.ws, { ...req.body, id }]
     );
     bus.emit(req.user.ws, { type: 'change', collection, op: 'update', id });
@@ -330,7 +324,7 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
-const server = app.listen(PORT, '0.0.0.0', () => console.log(`Cortexx API on :${PORT}`));
+const server = app.listen(PORT, () => console.log(`Cortexx API on :${PORT}`));
 
 // ── Graceful shutdown ───────────────────────────────────────
 for (const sig of ['SIGTERM', 'SIGINT']) {

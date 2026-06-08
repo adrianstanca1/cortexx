@@ -54,19 +54,6 @@
   ['bankAccounts', 'payroll', 'holidays', 'apprentices', 'carbon', 'waste', 'claims'].forEach(n => { Backend.db[n] = mk(n); });
 })();
 
-// Generic mini-screen helper
-function MiniScreen({ title, subtitle, accent, items, renderItem, addRoute, addLabel }) {
-  return (
-    <ScreenBg accent={accent}><div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
-      <MobileHeader title={title} subtitle={subtitle}
-        right={addRoute && <HeaderBtn icon={Ic.plus} accent={accent} onClick={() => toast(addLabel || 'New item', 'info')}/>}/>
-      <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-        {items.length === 0 ? <div style={{ padding: 30, textAlign: 'center', fontFamily: SF, fontSize: 13, color: T.t3 }}>Nothing yet</div> : items.map(renderItem)}
-      </div>
-    </div></ScreenBg>
-  );
-}
-
 // P55: Bank accounts
 function BankScreen({ accent }) {
   const accounts = useDB('bankAccounts');

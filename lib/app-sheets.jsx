@@ -395,6 +395,15 @@ function CaptureSheet({ onClose, accent, onAction }) {
       { k: 'aihistory', t: 'AI history',    i: Ic.spark,    c: T.purple, ai: true },
       { k: 'myday',     t: 'My day',        i: Ic.sun,      c: T.amber },
     ]},
+    { title: '◆ Intelligence (v1.7)', items: [
+      { k: 'resourceplan', t: 'Resourcing',  i: Ic.calendar, c: T.blue },
+      { k: 'finintel',  t: 'Fin. intel',     i: Ic.trend,    c: T.green, ai: true },
+      { k: 'bids',      t: 'Bids & tender',  i: Ic.briefcase, c: T.purple },
+      { k: 'procurement', t: 'Procurement',  i: Ic.receipt,  c: T.amber },
+      { k: 'handover',  t: 'Quality',        i: Ic.shield,   c: T.cyan },
+      { k: 'hscommand', t: 'H&S centre',     i: Ic.hardhat,  c: T.red },
+      { k: 'clientexp', t: 'Client XP',      i: Ic.star,     c: T.green },
+    ]},
     { title: '◆ Tools', items: [
       { k: 'templates', t: 'Templates',     i: Ic.copy,     c: T.cyan },
       { k: 'templatelib', t: 'Tpl library', i: Ic.copy,     c: T.cyan },
