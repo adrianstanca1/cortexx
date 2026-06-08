@@ -1,11 +1,12 @@
 # Active Context
-**Status:** Codebase Audit & Pruning COMPLETE.
+**Status:** Final Release v1.4.0 DEPLOYED.
 
 ## Achievements
-- [x] Deleted 17MB of legacy archives and redundant artifacts.
-- [x] Reconciled all git commits and pushed to remote.
-- [x] Verified PWA dist/ manifest parity.
-- [x] Stabilized VPS deployment script with auto-baselining.
+- [x] Repaired CI/CD pipeline (Legacy loader + State indices).
+- [x] Unified versioning to v1.4.0 in package.json and CHANGELOG.md.
+- [x] Synchronized `dist/_manifest.json` with 129 distribution files.
+- [x] Successfully deployed v1.4.0 to Hostinger VPS (72.62.132.43).
+- [x] Verified system health and LLM sidecar connectivity.
 
 ## Final State
-The codebase is now lean, documented, and fully synchronized with GitHub.
+The system is stable, optimized, and fully synchronized. Codebase is pruned and documented.

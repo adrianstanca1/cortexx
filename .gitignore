@@ -1,6 +1,7 @@
 models/*.gguf
 .worktrees/
 *.log
+<<<<<<< HEAD
 __pycache__/
 *.pyc
 # Dependencies
@@ -26,3 +27,5 @@ prisma/migrations/dev.db
 /uploads/
 .aider*
 .vercel
+=======
+>>>>>>> f6d6426 (chore: lint‑fix all agents, add flake8 config, ensure clean repo)
