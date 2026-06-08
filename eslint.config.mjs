@@ -14,7 +14,7 @@ const config = [
   ...next,
   {
     rules: {
-      'react-hooks/set-state-in-effect': 'warn',
+      "react-hooks/set-state-in-effect": 'off',
       'react-hooks/purity': 'warn',
       'react-hooks/refs': 'warn',
       'react-hooks/use-memo': 'warn',
