@@ -30,9 +30,7 @@ script_path = os.path.abspath(__file__)
 try:
     st = os.stat(script_path)
     # Grant execute permission to user, group, others while preserving existing bits.
-    os.chmod(
-        script_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH
-    )
+    os.chmod(script_path, st.st_mode | stat.S_IXUSR | stat.S_IXGRP | stat.S_IXOTH)
 except Exception as exc:  # pragma: no cover – best‑effort only.
     print(
         f"Failed to set executable bit on {script_path}: {exc}",
@@ -45,9 +43,7 @@ except Exception as exc:  # pragma: no cover – best‑effort only.
 BASE_DIR = "/workspace"
 AGENTS_DIR = os.path.join(BASE_DIR, "agents")
 LOG_PATH = os.path.join(BASE_DIR, ".brain", "roadmap_orchestrator.log")
-TODO_CACHE_PATH = os.path.join(
-    BASE_DIR, ".brain", "roadmap_orchestrator_todos.json"
-)
+TODO_CACHE_PATH = os.path.join(BASE_DIR, ".brain", "roadmap_orchestrator_todos.json")
 ROADMAP_PATH = os.path.join(BASE_DIR, "cortexx", "ROADMAP.md")
 
 # Ensure directories exist.
@@ -82,12 +78,8 @@ def _load_known_tasks() -> set:
             with open(TODO_CACHE_PATH, "r", encoding="utf-8") as fp:
                 data = json.load(fp)
                 return set(data)
-        except (
-            Exception
-        ):  # pragma: no cover – log and continue with empty set.
-            logging.exception(
-                "Failed to read TODO cache; starting with empty set"
-            )
+        except Exception:  # pragma: no cover – log and continue with empty set.
+            logging.exception("Failed to read TODO cache; starting with empty set")
     return set()
 
 
@@ -134,7 +126,7 @@ def _monitor_agent(name: str, path: str) -> None:
     """Continuously watch a single agent process, restarting it if it exits.
     This runs in its own daemon thread.
     """
-    global _processes
+
     # Ensure an initial instance is running.
     if _processes.get(name) is None:
         _processes[name] = _start_agent(name, path)
@@ -147,9 +139,7 @@ def _monitor_agent(name: str, path: str) -> None:
         retcode = proc.poll()
         if retcode is not None:
             # Process terminated; log and restart.
-            logging.warning(
-                f"{name} exited with return code {retcode}. Restarting..."
-            )
+            logging.warning(f"{name} exited with return code {retcode}. Restarting...")
             _processes[name] = _start_agent(name, path)
         time.sleep(5)  # poll interval – keep the thread lightweight.
 
@@ -174,9 +164,7 @@ def _process_roadmap() -> None:
     Duplicate entries are ignored using the persisted ``_known_tasks`` set.
     """
     if not os.path.exists(ROADMAP_PATH):
-        logging.debug(
-            f"Roadmap file not found at {ROADMAP_PATH}; skipping this cycle"
-        )
+        logging.debug(f"Roadmap file not found at {ROADMAP_PATH}; skipping this cycle")
         return
     try:
         with open(ROADMAP_PATH, "r", encoding="utf-8") as fp:
@@ -232,9 +220,7 @@ def _roadmap_watcher() -> None:
 # ---------------------------------------------------------------------------
 # Signal handling – graceful shutdown of child processes.
 # ---------------------------------------------------------------------------
-def _handle_signal(
-    signum, frame
-) -> None:  # pragma: no cover – exercised by runtime.
+def _handle_signal(signum, frame) -> None:  # pragma: no cover – exercised by runtime.
     global _running
     logging.info(f"Received signal {signum} – initiating shutdown")
     _running = False
@@ -270,9 +256,7 @@ def main() -> None:
 
     # Spawn a monitoring thread for each agent.
     for name, path in AGENT_SCRIPTS.items():
-        t = threading.Thread(
-            target=_monitor_agent, args=(name, path), daemon=True
-        )
+        t = threading.Thread(target=_monitor_agent, args=(name, path), daemon=True)
         t.start()
 
     # Spawn the roadmap watcher thread.

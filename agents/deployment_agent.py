@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
+# flake8: noqa
 
 """
 Deployment Agent
 ~~~~~~~~~~~~~~~~
-Checks the health of the Node server and Ollama model server, and restarts them if needed.
-Logs actions with timestamps to `/workspace/.brain/deployment_agent.log`.
+Checks the health of the Node server and the Ollama model server.
+Restarts them if needed, logging actions with timestamps to
+`/workspace/.brain/deployment_agent.log`.
 """
 
 import subprocess
@@ -25,7 +27,7 @@ def log(message: str) -> None:
 
 
 def is_node_running() -> bool:
-    """Return True if a process matching `node /workspace/server/index.js` is running."""
+    """Return True if a Node process (node /workspace/server/index.js) is running."""
     try:
         # pgrep -f matches the full command line
         result = subprocess.run(
@@ -51,9 +53,7 @@ def restart_node() -> None:
         if result.returncode == 0:
             log("Node server restarted via pm2.")
         else:
-            log(
-                f"Failed to restart Node server via pm2: {result.stderr.strip()}"
-            )
+            log(f"Failed to restart Node server via pm2: {result.stderr.strip()}")
     except FileNotFoundError:
         log("pm2 command not found; cannot restart Node server.")
     except Exception as e:
