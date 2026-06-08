@@ -170,6 +170,19 @@ To make every write sync, the `mk()` table factory in `backend.js` calls `window
 |---|---|---|
 | GET | `/api/ledger.csv?format=xero\|qb\|sage\|generic&vat=standard\|zero\|cis&from=&to=&sales=1&purchases=1` | Stream accountant-ready CSV (UTF-8 BOM + CRLF) |
 
+### Intelligence (v1.7) — server-side authoritative metrics
+
+Mirrors `lib/backend-v17.js` computed selectors, reading the canonical
+`documents_store`. Use these so dashboards/reports/exports show numbers
+identical whether computed on-device or on the server.
+
+| Method | Path | Purpose |
+|---|---|---|
+| GET | `/api/intelligence` | Full CEO-briefing payload — all seven domains at once |
+| GET | `/api/intelligence/:domain` | One domain: `scheduling`, `financial`, `tender`, `procurement`, `quality`, `hs`, `client` |
+
+Returns, per domain: scheduling → clash detection + plant utilisation; financial → 8-week cashflow forecast, per-project P&L, margin alerts, WIP value; tender → pipeline value, win-rate, stage breakdown; procurement → PO approvals/in-transit, supplier ratings, low-stock; quality → handover readiness %, open snags; hs → near-miss trend, overdue audits, scheduled talks; client → avg satisfaction, NPS, pending variations. Client helper: `cortexxCloud.intelligence('financial')`.
+
 All data routes require `Authorization: Bearer <jwt>` and are scoped to the user's workspace. Portal routes are deliberately public but locked to one project by an opaque, revocable token.
 
 ## Hardening (v1.1)

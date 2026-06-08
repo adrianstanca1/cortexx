@@ -1,8 +1,3 @@
-// Cortexx — Phase 4: Inspections, CRM, Leads, Photo Gallery, Mileage
-
-// ═══════════════════════════════════════════════════════════════════
-// BACKEND EXTENSION
-// ═══════════════════════════════════════════════════════════════════
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
@@ -244,40 +239,28 @@
       amount: 0.54
     }]
   };
-
-  // Per-table seed guard (avoids the migration gap where a table added later
-  // never seeds because an earlier table already exists).
   let _sd4 = false;
-  for (const k of Object.keys(SEED)) {
-    if (!snap[k]) {
-      snap[k] = SEED[k];
-      _sd4 = true;
-    }
-  }
+  for (const k of Object.keys(SEED)) { if (!snap[k]) { snap[k] = SEED[k]; _sd4 = true; } }
   if (_sd4) {
     try {
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));
     } catch (e) {}
   }
-  const arr = name => {
-    const s = Backend.db.snapshot();
-    if (!Array.isArray(s[name])) s[name] = [];
-    return s[name];
-  };
+  const arr4 = name => { const s = Backend.db.snapshot(); if (!Array.isArray(s[name])) s[name] = []; return s[name]; };
   const makeT = name => ({
-    listSync: () => [...arr(name)],
-    getSync: id => arr(name).find(x => x.id == id),
-    list: async () => [...arr(name)],
-    get: async id => arr(name).find(x => x.id == id),
+    listSync: () => [...arr4(name)],
+    getSync: id => arr4(name).find(x => x.id == id),
+    list: async () => [...arr4(name)],
+    get: async id => arr4(name).find(x => x.id == id),
     create: async data => {
       const s = Backend.db.snapshot();
-      const ids = arr(name).map(x => typeof x.id === 'number' ? x.id : 0);
+      const ids = arr4(name).map(x => typeof x.id === 'number' ? x.id : 0);
       const id = data.id ?? Math.max(0, ...ids) + 1;
       const item = {
         ...data,
         id
       };
-      s[name] = [item, ...arr(name)];
+      s[name] = [item, ...arr4(name)];
       try {
         localStorage.setItem('cortexx_db_v1', JSON.stringify(s));
       } catch (e) {}
@@ -286,7 +269,7 @@
     },
     update: async (id, patch) => {
       const s = Backend.db.snapshot();
-      s[name] = arr(name).map(x => x.id == id ? {
+      s[name] = arr4(name).map(x => x.id == id ? {
         ...x,
         ...patch
       } : x);
@@ -298,7 +281,7 @@
     },
     remove: async id => {
       const s = Backend.db.snapshot();
-      s[name] = arr(name).filter(x => x.id != id);
+      s[name] = arr4(name).filter(x => x.id != id);
       try {
         localStorage.setItem('cortexx_db_v1', JSON.stringify(s));
       } catch (e) {}
@@ -314,8 +297,6 @@
   Backend.computed.newLeads = () => (Backend.db.snapshot().leads || []).filter(l => l.stage === 'new').length;
   Backend.computed.weekMiles = () => (Backend.db.snapshot().mileage || []).reduce((s, m) => s + m.miles, 0);
   Backend.computed.mileageReimburse = () => (Backend.db.snapshot().mileage || []).reduce((s, m) => s + m.amount, 0);
-
-  // AI helpers
   Backend.ai.suggestNextChecklist = async kind => {
     const prompt = `Suggest 5 inspection checklist items for a UK construction "${kind}" inspection. Reply ONLY with JSON array of strings: ["check 1", "check 2", ...]. Items should be specific, action-oriented, UK construction terminology.`;
     try {
@@ -350,10 +331,6 @@
     }
   };
 })();
-
-// ═══════════════════════════════════════════════════════════════════
-// INSPECTIONS
-// ═══════════════════════════════════════════════════════════════════
 const INSP_STATUS_C = {
   passed: T.green,
   failed: T.red,
@@ -394,26 +371,26 @@ function InspectionsScreen({
   const [projectFilter, setProjectFilter] = React.useState('all');
   const [showFilter, setShowFilter] = React.useState(false);
   const filtered = (seg === 'all' ? inspections : inspections.filter(i => i.status === seg)).filter(i => projectFilter === 'all' || i.projectId == projectFilter);
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Inspections",
     subtitle: `${inspections.filter(i => i.status === 'passed').length} passed · ${inspections.filter(i => i.status === 'failed').length} failed · ${inspections.filter(i => i.status === 'scheduled').length} scheduled`,
-    right: /*#__PURE__*/React.createElement("div", {
+    right: React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8
       }
-    }, /*#__PURE__*/React.createElement(HeaderBtn, {
+    }, React.createElement(HeaderBtn, {
       icon: Ic.filter,
       onClick: () => setShowFilter(!showFilter)
-    }), /*#__PURE__*/React.createElement("button", {
+    }), React.createElement("button", {
       onClick: () => window.cortexxNav('addinspection'),
       style: {
         width: 36,
@@ -430,18 +407,18 @@ function InspectionsScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     })))
-  }), showFilter && /*#__PURE__*/React.createElement("div", {
+  }), showFilter && React.createElement("div", {
     style: {
       padding: '0 16px 12px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hairMid}`,
       borderRadius: 12,
       padding: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -451,13 +428,13 @@ function InspectionsScreen({
       letterSpacing: 0.5,
       marginBottom: 6
     }
-  }, "Filter by project"), /*#__PURE__*/React.createElement("div", {
+  }, "Filter by project"), React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 5
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => setProjectFilter('all'),
     style: {
       background: projectFilter === 'all' ? accent : T.bg3,
@@ -470,7 +447,7 @@ function InspectionsScreen({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "All projects"), projects.map(p => /*#__PURE__*/React.createElement("button", {
+  }, "All projects"), projects.map(p => React.createElement("button", {
     key: p.id,
     onClick: () => setProjectFilter(p.id),
     style: {
@@ -485,11 +462,11 @@ function InspectionsScreen({
       cursor: 'pointer',
       whiteSpace: 'nowrap'
     }
-  }, p.name.split(' ').slice(0, 2).join(' ')))))), /*#__PURE__*/React.createElement("div", {
+  }, p.name.split(' ').slice(0, 2).join(' ')))))), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -499,14 +476,14 @@ function InspectionsScreen({
       letterSpacing: 0.6,
       marginBottom: 8
     }
-  }, "Quick start"), /*#__PURE__*/React.createElement("div", {
+  }, "Quick start"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       overflowX: 'auto',
       paddingBottom: 4
     }
-  }, INSP_TEMPLATES.map(t => /*#__PURE__*/React.createElement("button", {
+  }, INSP_TEMPLATES.map(t => React.createElement("button", {
     key: t.k,
     onClick: () => {
       toast(`New ${t.l} inspection`, 'success');
@@ -524,24 +501,24 @@ function InspectionsScreen({
       gap: 8,
       flexShrink: 0
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: accent
     }
   }, React.cloneElement(t.i, {
     size: 14
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t1,
       fontWeight: 600
     }
-  }, t.l))))), /*#__PURE__*/React.createElement("div", {
+  }, t.l))))), React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement(SegControl, {
+  }, React.createElement(SegControl, {
     value: seg,
     onChange: setSeg,
     options: [{
@@ -561,7 +538,7 @@ function InspectionsScreen({
       l: 'Due',
       n: inspections.filter(i => i.status === 'scheduled').length
     }]
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -571,7 +548,7 @@ function InspectionsScreen({
   }, filtered.map(insp => {
     const proj = projects.find(p => p.id === insp.projectId);
     const passed = insp.items.filter(it => it.ok).length;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: insp.id,
       onClick: () => onOpen && onOpen(insp),
       style: {
@@ -581,50 +558,50 @@ function InspectionsScreen({
         border: `0.5px solid ${T.hair}`,
         cursor: 'pointer'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
         fontWeight: 600,
         color: T.t1
       }
-    }, insp.kind), /*#__PURE__*/React.createElement("div", {
+    }, insp.kind), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 12,
         color: T.t2,
         marginTop: 3
       }
-    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 ", insp.inspector, " \xB7 ", _formatRelDate(insp.date))), /*#__PURE__*/React.createElement(Pill, {
+    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 ", insp.inspector, " \xB7 ", _formatRelDate(insp.date))), React.createElement(Pill, {
       c: INSP_STATUS_C[insp.status]
-    }, insp.status)), insp.items.length > 0 && /*#__PURE__*/React.createElement("div", {
+    }, insp.status)), insp.items.length > 0 && React.createElement("div", {
       style: {
         marginTop: 12,
         paddingTop: 10,
         borderTop: `0.5px solid ${T.hair}`
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 8
       }
-    }, /*#__PURE__*/React.createElement(Bar, {
+    }, React.createElement(Bar, {
       pct: passed / insp.items.length * 100,
       c: INSP_STATUS_C[insp.status],
       h: 3
-    }), /*#__PURE__*/React.createElement("span", {
+    }), React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 11,
@@ -664,16 +641,16 @@ function InspectionDetailSheet({
       }
     });
   };
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -683,14 +660,14 @@ function InspectionDetailSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Inspection"), /*#__PURE__*/React.createElement("button", {
+  }, "Inspection"), React.createElement("button", {
     onClick: sign,
     style: {
       background: 'none',
@@ -701,18 +678,18 @@ function InspectionDetailSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Sign")), /*#__PURE__*/React.createElement("div", {
+  }, "Sign")), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '4px 20px 16px'
     }
-  }, /*#__PURE__*/React.createElement(Pill, {
+  }, React.createElement(Pill, {
     c: INSP_STATUS_C[inspection.status]
-  }, inspection.status), /*#__PURE__*/React.createElement("div", {
+  }, inspection.status), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 22,
@@ -721,34 +698,34 @@ function InspectionDetailSheet({
       marginTop: 8,
       letterSpacing: -0.4
     }
-  }, inspection.kind), /*#__PURE__*/React.createElement("div", {
+  }, inspection.kind), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 4
     }
-  }, proj?.name, " \xB7 Inspector: ", inspection.inspector), /*#__PURE__*/React.createElement("div", {
+  }, proj?.name, " \xB7 Inspector: ", inspection.inspector), React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginTop: 14
     }
-  }, /*#__PURE__*/React.createElement(Bar, {
+  }, React.createElement(Bar, {
     pct: passed / Math.max(items.length, 1) * 100,
     c: allPass ? T.green : T.amber,
     h: 5
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 13,
       color: T.t1,
       fontWeight: 700
     }
-  }, passed, "/", items.length))), /*#__PURE__*/React.createElement(Section, {
+  }, passed, "/", items.length))), React.createElement(Section, {
     title: "Checklist"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, items.map((it, i) => /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, items.map((it, i) => React.createElement("div", {
     key: i,
     onClick: () => toggleItem(i),
     style: {
@@ -759,7 +736,7 @@ function InspectionDetailSheet({
       cursor: 'pointer',
       borderBottom: i === items.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 24,
       height: 24,
@@ -772,18 +749,18 @@ function InspectionDetailSheet({
       justifyContent: 'center',
       marginTop: 2
     }
-  }, it.ok && /*#__PURE__*/React.createElement("span", {
+  }, it.ok && React.createElement("span", {
     style: {
       color: '#fff'
     }
   }, React.cloneElement(Ic.check, {
     size: 14,
     sw: 3
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -791,7 +768,7 @@ function InspectionDetailSheet({
       fontWeight: 500,
       lineHeight: 1.4
     }
-  }, it.q), it.note && /*#__PURE__*/React.createElement("div", {
+  }, it.q), it.note && React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -801,10 +778,6 @@ function InspectionDetailSheet({
     }
   }, "\u21B3 ", it.note))))))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// CUSTOMERS / CRM
-// ═══════════════════════════════════════════════════════════════════
 const TAG_C = {
   Active: T.blue,
   Repeat: T.green,
@@ -819,18 +792,18 @@ function CustomersScreen({
   const [search, setSearch] = React.useState('');
   const filtered = customers.filter(c => c.name.toLowerCase().includes(search.toLowerCase()));
   const totalValue = customers.reduce((s, c) => s + c.totalValue, 0);
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Customers",
     subtitle: `${customers.length} contacts · £${(totalValue / 1000).toFixed(0)}k lifetime`,
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: () => window.cortexxNav('addcustomer'),
       style: {
         width: 36,
@@ -847,11 +820,11 @@ function CustomersScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hairMid}`,
@@ -861,13 +834,13 @@ function CustomersScreen({
       alignItems: 'center',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.t3
     }
   }, React.cloneElement(Ic.search, {
     size: 14
-  })), /*#__PURE__*/React.createElement("input", {
+  })), React.createElement("input", {
     value: search,
     onChange: e => setSearch(e.target.value),
     placeholder: "Search customers\u2026",
@@ -880,14 +853,14 @@ function CustomersScreen({
       fontSize: 13,
       outline: 'none'
     }
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, filtered.map(c => /*#__PURE__*/React.createElement("div", {
+  }, filtered.map(c => React.createElement("div", {
     key: c.id,
     onClick: () => onOpen && onOpen(c),
     style: {
@@ -900,39 +873,39 @@ function CustomersScreen({
       gap: 12,
       alignItems: 'center'
     }
-  }, /*#__PURE__*/React.createElement(Avatar, {
+  }, React.createElement(Avatar, {
     name: c.name,
     size: 44,
     c: TAG_C[c.tag] || accent
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, c.name), /*#__PURE__*/React.createElement(Pill, {
+  }, c.name), React.createElement(Pill, {
     c: TAG_C[c.tag] || accent,
     size: "xs"
-  }, c.tag)), /*#__PURE__*/React.createElement("div", {
+  }, c.tag)), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, c.email), /*#__PURE__*/React.createElement("div", {
+  }, c.email), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
@@ -949,16 +922,16 @@ function CustomerDetailSheet({
   const projects = useDB('projects');
   const custProjects = projects.filter(p => p.client === customer?.name);
   if (!customer) return null;
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -968,18 +941,18 @@ function CustomerDetailSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Customer"), /*#__PURE__*/React.createElement("button", {
+  }, "Customer"), React.createElement("button", {
     onClick: () => window.cortexxNav('editfield', {
       label: 'Customer',
       current: customer.name,
-      onSave: async v => {/* would patch */}
+      onSave: async v => {}
     }),
     style: {
       background: 'none',
@@ -989,25 +962,25 @@ function CustomerDetailSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Edit")), /*#__PURE__*/React.createElement("div", {
+  }, "Edit")), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '4px 20px 18px',
       display: 'flex',
       gap: 16,
       alignItems: 'center'
     }
-  }, /*#__PURE__*/React.createElement(Avatar, {
+  }, React.createElement(Avatar, {
     name: customer.name,
     size: 64,
     c: TAG_C[customer.tag] || accent
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Pill, {
+  }), React.createElement("div", null, React.createElement(Pill, {
     c: TAG_C[customer.tag] || accent
-  }, customer.tag), /*#__PURE__*/React.createElement("div", {
+  }, customer.tag), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 22,
@@ -1017,30 +990,30 @@ function CustomerDetailSheet({
       marginTop: 6,
       lineHeight: 1.1
     }
-  }, customer.name))), /*#__PURE__*/React.createElement(Section, {
+  }, customer.name))), React.createElement(Section, {
     title: "Contact"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: Ic.mail,
     iconBg: T.blue,
     title: customer.email,
     sub: "Email \u2014 tap to compose",
     onClick: () => window.open(`mailto:${customer.email}?subject=${encodeURIComponent(customer.name + ' — CortexBuild Pro')}`, '_blank')
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.phone,
     iconBg: T.green,
     title: customer.phone,
     sub: "Phone \u2014 tap to call",
     onClick: () => window.open(`tel:${customer.phone.replace(/\s+/g, '')}`, '_blank')
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.pin,
     iconBg: T.amber,
     title: customer.address,
     sub: "Address \u2014 tap for map",
     isLast: true,
     onClick: () => window.open(`https://maps.google.com/?q=${encodeURIComponent(customer.address)}`, '_blank')
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: `Projects · ${custProjects.length}`
-  }, custProjects.length === 0 ? /*#__PURE__*/React.createElement("div", {
+  }, custProjects.length === 0 ? React.createElement("div", {
     style: {
       padding: 20,
       fontFamily: SF,
@@ -1048,7 +1021,7 @@ function CustomerDetailSheet({
       color: T.t3,
       textAlign: 'center'
     }
-  }, "No projects yet") : /*#__PURE__*/React.createElement(GroupedList, null, custProjects.map((p, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, "No projects yet") : React.createElement(GroupedList, null, custProjects.map((p, i, a) => React.createElement(Row, {
     key: p.id,
     icon: Ic.projects,
     iconBg: STATUS_C[p.status],
@@ -1056,9 +1029,9 @@ function CustomerDetailSheet({
     sub: `${fmt(p.value)} · ${p.pct}%`,
     isLast: i === a.length - 1,
     onClick: () => window.cortexxNav('project', p)
-  })))), /*#__PURE__*/React.createElement(Section, {
+  })))), React.createElement(Section, {
     title: "Notes"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -1071,10 +1044,6 @@ function CustomerDetailSheet({
     }
   }, customer.notes))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// LEAD PIPELINE
-// ═══════════════════════════════════════════════════════════════════
 const STAGES = [{
   k: 'new',
   l: 'New',
@@ -1106,7 +1075,6 @@ function LeadsScreen({
   const advance = async lead => {
     const idx = STAGES.findIndex(s => s.k === lead.stage);
     if (idx < STAGES.length - 2) {
-      // don't advance past won
       const newStage = STAGES[idx + 1].k;
       await Backend.db.leads.update(lead.id, {
         stage: newStage
@@ -1114,18 +1082,18 @@ function LeadsScreen({
       toast(`${lead.name} → ${STAGES[idx + 1].l}`, 'success');
     }
   };
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Lead pipeline",
     subtitle: `${leads.filter(l => l.stage !== 'lost').length} active · £${(totalValue / 1000).toFixed(0)}k pipeline`,
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: () => window.cortexxNav('addlead'),
       style: {
         width: 36,
@@ -1142,7 +1110,7 @@ function LeadsScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'flex',
@@ -1151,7 +1119,7 @@ function LeadsScreen({
     }
   }, STAGES.map(s => {
     const n = leads.filter(l => l.stage === s.k).length;
-    return /*#__PURE__*/React.createElement("button", {
+    return React.createElement("button", {
       key: s.k,
       onClick: () => setActiveStage(s.k),
       style: {
@@ -1170,26 +1138,26 @@ function LeadsScreen({
         alignItems: 'center',
         gap: 5
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, React.createElement("span", {
       style: {
         width: 6,
         height: 6,
         borderRadius: 3,
         background: s.c
       }
-    }), s.l, /*#__PURE__*/React.createElement("span", {
+    }), s.l, React.createElement("span", {
       style: {
         color: T.t3
       }
     }, n));
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, inStage.length === 0 ? /*#__PURE__*/React.createElement("div", {
+  }, inStage.length === 0 ? React.createElement("div", {
     style: {
       padding: 30,
       fontFamily: SF,
@@ -1199,7 +1167,7 @@ function LeadsScreen({
     }
   }, "No leads in ", STAGES.find(s => s.k === activeStage)?.l) : inStage.map(l => {
     const stage = STAGES.find(s => s.k === l.stage);
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: l.id,
       style: {
         background: T.bg2,
@@ -1207,24 +1175,24 @@ function LeadsScreen({
         padding: 12,
         border: `0.5px solid ${T.hair}`
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         flex: 1
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
         fontWeight: 600,
         color: T.t1
       }
-    }, l.name), /*#__PURE__*/React.createElement("div", {
+    }, l.name), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 12,
@@ -1232,32 +1200,32 @@ function LeadsScreen({
         marginTop: 3,
         lineHeight: 1.3
       }
-    }, l.inquiry), /*#__PURE__*/React.createElement("div", {
+    }, l.inquiry), React.createElement("div", {
       style: {
         display: 'flex',
         gap: 5,
         marginTop: 6
       }
-    }, /*#__PURE__*/React.createElement(Pill, {
+    }, React.createElement(Pill, {
       c: T.cyan,
       size: "xs"
-    }, l.source), /*#__PURE__*/React.createElement(Pill, {
+    }, l.source), React.createElement(Pill, {
       c: T.t3,
       size: "xs"
-    }, _formatRelDate(l.updated)))), /*#__PURE__*/React.createElement("div", {
+    }, _formatRelDate(l.updated)))), React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 16,
         color: T.t1,
         fontWeight: 700
       }
-    }, "\xA3", (l.value / 1000).toFixed(0), "k")), !['won', 'lost'].includes(l.stage) && /*#__PURE__*/React.createElement("div", {
+    }, "\xA3", (l.value / 1000).toFixed(0), "k")), !['won', 'lost'].includes(l.stage) && React.createElement("div", {
       style: {
         display: 'flex',
         gap: 6,
         marginTop: 12
       }
-    }, /*#__PURE__*/React.createElement("button", {
+    }, React.createElement("button", {
       onClick: () => advance(l),
       style: {
         flex: 1,
@@ -1271,7 +1239,7 @@ function LeadsScreen({
         fontWeight: 700,
         cursor: 'pointer'
       }
-    }, "Advance \u2192"), l.stage === 'qualified' && /*#__PURE__*/React.createElement("button", {
+    }, "Advance \u2192"), l.stage === 'qualified' && React.createElement("button", {
       onClick: () => window.cortexxNav('estimator'),
       style: {
         background: 'transparent',
@@ -1289,7 +1257,7 @@ function LeadsScreen({
       }
     }, React.cloneElement(Ic.spark, {
       size: 12
-    }), " Quote"), /*#__PURE__*/React.createElement("button", {
+    }), " Quote"), React.createElement("button", {
       onClick: () => Backend.db.leads.update(l.id, {
         stage: 'lost'
       }),
@@ -1307,29 +1275,25 @@ function LeadsScreen({
     }, "Lost")));
   }))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// PHOTO GALLERY
-// ═══════════════════════════════════════════════════════════════════
 function PhotosScreen({
   accent
 }) {
   const projects = useDB('projects');
   const [activeProject, setActiveProject] = React.useState(null);
-  const totalPhotos = 64; // mock
+  const totalPhotos = 64;
   const grid = activeProject ? 12 : totalPhotos > 24 ? 24 : totalPhotos;
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Photos",
     subtitle: `${grid} of ${totalPhotos} site photos`,
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: async () => {
         await Backend.db.activity.create({
           who: 'You',
@@ -1356,14 +1320,14 @@ function PhotosScreen({
     }, React.cloneElement(Ic.camera, {
       size: 18
     }))
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'flex',
       gap: 6,
       overflowX: 'auto'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => setActiveProject(null),
     style: {
       background: !activeProject ? T.bg3 : 'transparent',
@@ -1377,7 +1341,7 @@ function PhotosScreen({
       cursor: 'pointer',
       whiteSpace: 'nowrap'
     }
-  }, "All"), projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => /*#__PURE__*/React.createElement("button", {
+  }, "All"), projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => React.createElement("button", {
     key: p.id,
     onClick: () => setActiveProject(p.id),
     style: {
@@ -1392,11 +1356,11 @@ function PhotosScreen({
       cursor: 'pointer',
       whiteSpace: 'nowrap'
     }
-  }, p.name.split(' ').slice(0, 2).join(' ')))), /*#__PURE__*/React.createElement("div", {
+  }, p.name.split(' ').slice(0, 2).join(' ')))), React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
@@ -1407,7 +1371,7 @@ function PhotosScreen({
   }).map((_, i) => {
     const palette = ['#1a3a5c', '#2c4a3e', '#3a2c5c', '#5c3a2c', '#2c3a5c', '#3a5c2c', '#4a3a5c', '#5c4a2c'];
     const tag = i < 3 ? 'NEW' : null;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: i,
       onClick: () => toast(`Photo ${i + 1} opened`, 'info'),
       style: {
@@ -1419,14 +1383,14 @@ function PhotosScreen({
         position: 'relative',
         overflow: 'hidden'
       }
-    }, /*#__PURE__*/React.createElement("svg", {
+    }, React.createElement("svg", {
       width: "100%",
       height: "100%",
       viewBox: "0 0 60 60",
       style: {
         opacity: 0.25
       }
-    }, /*#__PURE__*/React.createElement("rect", {
+    }, React.createElement("rect", {
       x: "6",
       y: "14",
       width: "48",
@@ -1434,14 +1398,14 @@ function PhotosScreen({
       fill: "none",
       stroke: "#fff",
       strokeWidth: "0.5"
-    }), /*#__PURE__*/React.createElement("line", {
+    }), React.createElement("line", {
       x1: "6",
       y1: "32",
       x2: "54",
       y2: "32",
       stroke: "#fff",
       strokeWidth: "0.5"
-    }), /*#__PURE__*/React.createElement("line", {
+    }), React.createElement("line", {
       x1: "30",
       y1: "14",
       x2: "30",
@@ -1449,7 +1413,7 @@ function PhotosScreen({
       stroke: "#fff",
       strokeWidth: "0.3",
       strokeDasharray: "2 2"
-    })), tag && /*#__PURE__*/React.createElement("div", {
+    })), tag && React.createElement("div", {
       style: {
         position: 'absolute',
         top: 4,
@@ -1463,7 +1427,7 @@ function PhotosScreen({
         borderRadius: 3,
         letterSpacing: 0.3
       }
-    }, tag), /*#__PURE__*/React.createElement("div", {
+    }, tag), React.createElement("div", {
       style: {
         position: 'absolute',
         bottom: 4,
@@ -1476,7 +1440,7 @@ function PhotosScreen({
         borderRadius: 3
       }
     }, Math.floor(i / 3) + 7, ":", i * 7 % 60 < 10 ? '0' : '', i * 7 % 60));
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       textAlign: 'center',
       padding: '20px 0',
@@ -1486,28 +1450,24 @@ function PhotosScreen({
     }
   }, grid < totalPhotos && `Showing ${grid} of ${totalPhotos} · scroll for more`))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// MILEAGE
-// ═══════════════════════════════════════════════════════════════════
 function MileageScreen({
   accent
 }) {
   const trips = useDB('mileage');
   const totalMiles = useComputed('weekMiles');
   const reimburse = useComputed('mileageReimburse');
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Mileage",
     subtitle: `${trips.length} trips logged this week`,
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: () => window.cortexxNav('starttrip'),
       style: {
         width: 36,
@@ -1524,21 +1484,21 @@ function MileageScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 12,
       padding: 12,
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -1547,7 +1507,7 @@ function MileageScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "This week"), /*#__PURE__*/React.createElement("div", {
+  }, "This week"), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 24,
@@ -1556,14 +1516,14 @@ function MileageScreen({
       marginTop: 4,
       letterSpacing: -0.5
     }
-  }, totalMiles.toFixed(1), " mi")), /*#__PURE__*/React.createElement("div", {
+  }, totalMiles.toFixed(1), " mi")), React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 12,
       padding: 12,
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -1572,7 +1532,7 @@ function MileageScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Reimburse @ 45p"), /*#__PURE__*/React.createElement("div", {
+  }, "Reimburse @ 45p"), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 24,
@@ -1581,9 +1541,9 @@ function MileageScreen({
       marginTop: 4,
       letterSpacing: -0.5
     }
-  }, "\xA3", reimburse.toFixed(2)))), /*#__PURE__*/React.createElement(Section, {
+  }, "\xA3", reimburse.toFixed(2)))), React.createElement(Section, {
     title: "Trips"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, trips.map((t, i, a) => /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, trips.map((t, i, a) => React.createElement("div", {
     key: t.id,
     style: {
       display: 'flex',
@@ -1592,7 +1552,7 @@ function MileageScreen({
       padding: '12px 14px',
       borderBottom: i === a.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -1606,37 +1566,37 @@ function MileageScreen({
     }
   }, React.cloneElement(Ic.pin, {
     size: 16
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600,
       color: T.t1
     }
-  }, t.from, " \u2192 ", t.to), /*#__PURE__*/React.createElement("div", {
+  }, t.from, " \u2192 ", t.to), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, t.purpose, " \xB7 ", t.driver, " \xB7 ", _formatRelDate(t.date))), /*#__PURE__*/React.createElement("div", {
+  }, t.purpose, " \xB7 ", t.driver, " \xB7 ", _formatRelDate(t.date))), React.createElement("div", {
     style: {
       textAlign: 'right'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 13,
       color: T.t1,
       fontWeight: 700
     }
-  }, t.miles, "mi"), /*#__PURE__*/React.createElement("div", {
+  }, t.miles, "mi"), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,

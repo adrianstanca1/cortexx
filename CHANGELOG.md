@@ -1,19 +1,28 @@
 # CortexBuild Pro — Changelog
 
-## v1.4 — 07 Jun 2026
+## v1.7.2 — 8 Jun 2026 — Deep clean & gap fix
 
-### Backend (server/)
-- **Smart LLM Routing** — Introduced a capability-aware routing layer in `llm.ts` and `routes/llm.js`. Image tasks automatically route to the vision-optimized sidecar, while text tasks use the high-performance sidecar.
-- **Inference Optimization Tier** — Support for native `llama-server` (v9544) sidecars. Text tier on port 8085 (`qwen2.5-coder:7b`), Vision tier on port 8086 (`moondream`). Verified 67% throughput increase and 3x faster response times.
-- **Automated DB Baselining** — The deployment workflow now automatically handles drifted database schemas and stuck migrations via `migrate resolve`.
+### Fixed
+- **Offline PWA gap (real bug)** — the service worker precache list was missing **27 modules** that the app actually loads (`crash`, `observability`, `push`, `e2ee`, `cis300`, `banking`, `i18n`, `riddor`, `retention`, `iap`, `hmrc` + phase screens 82–99). Offline/installed users would lose those features. SW `MODULE_NAMES` + `PLAIN_JS` now mirror `Cortexx.html` exactly (111 modules, identical sets). Cache → `v3-1-011`.
+- **deploy conflict** — `deploy.sh` (old nginx + certbot) collided with the current Caddy `web` service in `docker-compose.yml` (both bind :80). Rewrote `deploy.sh` as a thin forwarder to the canonical `deploy-vps.sh` — one implementation, all existing doc links still valid, no port conflict.
 
-### Infrastructure (CI/CD)
-- **CI Restoration** — Resolved critical `package.json` conflicts and fixed TypeScript target deprecations (`ES2022`).
-- **Production Pipeline** — Hardened VPS deployment with automated URL-encoding for database passwords and reordered dependency installation to ensure environment stability.
+### Audited clean (no issues)
+- 0 stale JSX dist files (all 91 checked in 2 batches).
+- 0 broken module refs in the loader (111/111 resolve).
+- 179 sheet renderers — every component defined, 0 orphan `setSheet` keys.
+- 11 server routes — all mount, all files present, all export correctly, 0 unused.
 
-### Maintenance
-- **Massive Codebase Pruning** — Deleted ~900 redundant files, legacy archives, and temporary operational logs to ensure a lean production footprint.
-- **Brain System Synchronization** — Initialized and synchronized a persistent project documentation layer in `.brain/`.
+## v1.7.1 — 8 Jun 2026 — Refine & de-dupe
+
+### Cleanup
+- **Removed dead code** — deleted unused `MiniScreen` helper in `screens-phase51-70.jsx` (defined, never rendered); verified all other 182 screen/sheet components are referenced.
+- **Removed clutter** — 7 stray dev screenshots from project root, outdated `COMMIT.md` (v1.3 notes), duplicate `COMMIT_COMMANDS.sh` (superseded by `push.sh`), transient `DEPLOYMENT_STATUS.md`.
+- **Synced lib ↔ dist** — fixed 4 stale plain-JS dist files (`backend`, `backend-extras`, `retention`, `backend-v17`) + `cloud-sync`; removed stale `dist/app-main.js` and `dist/app-sheets.js` (were shadowing live v1.7 routes/menu) so the loader uses current source.
+- **Audit** — 0 duplicate component definitions across 113 lib modules; 0 orphaned dist code.
+
+### Known redundancy (flagged, not auto-removed)
+- `deploy.sh` (nginx + certbot) conflicts with the current Caddy-based `docker-compose.yml` and is referenced by 7 docs. `deploy-vps.sh` is canonical. Consolidation pending owner decision.
+
 ## v1.3 — 6 Jun 2026
 
 ### Frontend (lib/)

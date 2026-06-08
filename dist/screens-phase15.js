@@ -1,9 +1,3 @@
-// Cortexx — Phase 15: Real infrastructure
-// Web Notifications · Real backup export/import · Service Worker registration
-
-// ═══════════════════════════════════════════════════════════════════
-// NOTIFICATION API
-// ═══════════════════════════════════════════════════════════════════
 window.cortexxNotify = async (title, body) => {
   if (!('Notification' in window)) return false;
   if (Notification.permission === 'granted') {
@@ -24,10 +18,6 @@ window.cortexxNotify = async (title, body) => {
   }
   return false;
 };
-
-// ═══════════════════════════════════════════════════════════════════
-// BACKUP — export & import the entire database as JSON
-// ═══════════════════════════════════════════════════════════════════
 window.cortexxBackup = () => {
   const snap = Backend.db.snapshot();
   const blob = new Blob([JSON.stringify(snap, null, 2)], {
@@ -56,10 +46,6 @@ window.cortexxRestore = file => {
   };
   reader.readAsText(file);
 };
-
-// ═══════════════════════════════════════════════════════════════════
-// INFRASTRUCTURE SHEET
-// ═══════════════════════════════════════════════════════════════════
 function InfrastructureScreen({
   accent
 }) {
@@ -70,7 +56,7 @@ function InfrastructureScreen({
   const [downloading, setDownloading] = React.useState(false);
   const inputRef = React.useRef(null);
   const requestNotif = async () => {
-    const ok = await window.cortexxNotify('CortexBuild Pro', 'Notifications enabled. You\'ll get alerts for safety, money, and AI suggestions.');
+    const ok = await window.cortexxNotify('Cortexx', 'Notifications enabled. You\'ll get alerts for safety, money, and AI suggestions.');
     setNotifGranted(ok);
     if (!ok && Notification.permission === 'denied') {
       toast('Notifications blocked in browser settings', 'error');
@@ -82,22 +68,22 @@ function InfrastructureScreen({
   };
   const installable = 'serviceWorker' in navigator;
   const isStandalone = window.matchMedia('(display-mode: standalone)').matches;
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Infrastructure",
     subtitle: "Real platform capabilities \xB7 device-native"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.green}22, ${accent}0a)`,
       border: `0.5px solid ${T.green}44`,
@@ -107,33 +93,33 @@ function InfrastructureScreen({
       alignItems: 'center',
       gap: 12
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       color: T.green
     }
   }, React.cloneElement(Ic.shield, {
     size: 22
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, "Local-first architecture"), /*#__PURE__*/React.createElement("div", {
+  }, "Local-first architecture"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, "Your data lives on your device. No server roundtrips for normal use.")))), /*#__PURE__*/React.createElement(Section, {
+  }, "Your data lives on your device. No server roundtrips for normal use.")))), React.createElement(Section, {
     title: "Device permissions"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -141,7 +127,7 @@ function InfrastructureScreen({
       padding: '12px 14px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -154,28 +140,28 @@ function InfrastructureScreen({
     }
   }, React.cloneElement(Ic.bell, {
     size: 17
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       fontWeight: 500
     }
-  }, "Push notifications"), /*#__PURE__*/React.createElement("div", {
+  }, "Push notifications"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 1
     }
-  }, notifGranted ? '✓ Granted' : 'Tap to allow alerts')), notifGranted ? /*#__PURE__*/React.createElement(Pill, {
+  }, notifGranted ? '✓ Granted' : 'Tap to allow alerts')), notifGranted ? React.createElement(Pill, {
     c: T.green,
     size: "xs"
-  }, "ON") : /*#__PURE__*/React.createElement("button", {
+  }, "ON") : React.createElement("button", {
     onClick: requestNotif,
     style: {
       background: accent,
@@ -188,22 +174,22 @@ function InfrastructureScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Allow")), /*#__PURE__*/React.createElement(Row, {
+  }, "Allow")), React.createElement(Row, {
     icon: Ic.pin,
     iconBg: T.green,
     title: "Location (GPS)",
     sub: "Used for clock-in verification",
-    right: /*#__PURE__*/React.createElement(Pill, {
+    right: React.createElement(Pill, {
       c: navigator.geolocation ? T.green : T.t3,
       size: "xs"
     }, navigator.geolocation ? 'AVAILABLE' : 'N/A'),
     onClick: () => navigator.geolocation?.getCurrentPosition(p => toast(`GPS: ${p.coords.latitude.toFixed(3)}, ${p.coords.longitude.toFixed(3)}`, 'success'), () => toast('Location denied', 'error'))
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.camera,
     iconBg: T.blue,
     title: "Camera & media",
     sub: "Used for photos & receipts",
-    right: /*#__PURE__*/React.createElement(Pill, {
+    right: React.createElement(Pill, {
       c: navigator.mediaDevices ? T.green : T.t3,
       size: "xs"
     }, navigator.mediaDevices ? 'AVAILABLE' : 'N/A'),
@@ -220,22 +206,22 @@ function InfrastructureScreen({
         toast('Camera denied', 'error');
       }
     }
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "Backup & restore"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: Ic.download,
     iconBg: accent,
     title: "Export entire workspace",
     sub: "Downloads cortexx-backup-YYYY-MM-DD.json",
     onClick: () => window.cortexxBackup()
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.upload,
     iconBg: T.cyan,
     title: "Restore from backup",
     sub: "Replaces current data with backup contents",
     isLast: true,
     onClick: () => inputRef.current?.click()
-  }), /*#__PURE__*/React.createElement("input", {
+  }), React.createElement("input", {
     ref: inputRef,
     type: "file",
     accept: "application/json",
@@ -243,15 +229,15 @@ function InfrastructureScreen({
     style: {
       display: 'none'
     }
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "Install on device"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: Ic.download,
     iconBg: T.purple,
-    title: "Install CortexBuild Pro as app",
+    title: "Install Cortexx as app",
     sub: isStandalone ? '✓ Running as installed app' : installable ? 'Use browser menu → "Add to Home Screen"' : 'Not available in this browser',
     isLast: true,
-    right: isStandalone && /*#__PURE__*/React.createElement(Pill, {
+    right: isStandalone && React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, "INSTALLED"),
@@ -259,31 +245,31 @@ function InfrastructureScreen({
       if (isStandalone) return toast('Already installed', 'info');
       toast('Use browser menu → Add to Home Screen', 'info');
     }
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "Connectivity"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: navigator.onLine ? Ic.cloud : Ic.cloudOff,
     iconBg: navigator.onLine ? T.green : T.amber,
     title: navigator.onLine ? 'Online' : 'Offline',
     sub: navigator.onLine ? 'Cloud sync available' : 'Working from local cache',
-    right: /*#__PURE__*/React.createElement(Pill, {
+    right: React.createElement(Pill, {
       c: navigator.onLine ? T.green : T.amber,
       size: "xs"
     }, navigator.onLine ? 'CONNECTED' : 'OFFLINE'),
     isLast: true
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "AI engine"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, React.createElement("div", {
     style: {
       padding: '12px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -296,31 +282,31 @@ function InfrastructureScreen({
     }
   }, React.cloneElement(Ic.spark, {
     size: 17
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       fontWeight: 600
     }
-  }, "On-device AI model"), /*#__PURE__*/React.createElement("div", {
+  }, "On-device AI model"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 1
     }
-  }, aiProgress || (navigator.gpu ? 'Llama 3.2 1B · runs fully offline' : 'Needs WebGPU — not available here'))), !navigator.gpu ? /*#__PURE__*/React.createElement(Pill, {
+  }, aiProgress || (navigator.gpu ? 'Llama 3.2 1B · runs fully offline' : 'Needs WebGPU — not available here'))), !navigator.gpu ? React.createElement(Pill, {
     c: T.t3,
     size: "xs"
-  }, "N/A") : aiReady ? /*#__PURE__*/React.createElement(Pill, {
+  }, "N/A") : aiReady ? React.createElement(Pill, {
     c: T.green,
     size: "xs"
-  }, "READY") : /*#__PURE__*/React.createElement("button", {
+  }, "READY") : React.createElement("button", {
     onClick: async () => {
       if (downloading) return;
       setDownloading(true);
@@ -351,7 +337,7 @@ function InfrastructureScreen({
       fontSize: 11,
       fontWeight: 700
     }
-  }, downloading ? '…' : 'Download')), /*#__PURE__*/React.createElement("div", {
+  }, downloading ? '…' : 'Download')), React.createElement("div", {
     style: {
       marginTop: 10,
       paddingTop: 10,
@@ -361,9 +347,9 @@ function InfrastructureScreen({
       color: T.t2,
       lineHeight: 1.5
     }
-  }, "Cortex always responds \u2014 even fully offline. It cascades: cloud AI \u2192 on-device model \u2192 live-data engine that never fails.")))), /*#__PURE__*/React.createElement(Section, {
+  }, "Cortex always responds \u2014 even fully offline. It cascades: cloud AI \u2192 on-device model \u2192 live-data engine that never fails.")))), React.createElement(Section, {
     title: "Browser capabilities"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, [{
+  }, React.createElement(GroupedList, null, [{
     l: 'Local storage',
     ok: typeof localStorage !== 'undefined'
   }, {
@@ -381,12 +367,12 @@ function InfrastructureScreen({
   }, {
     l: 'Speech recognition',
     ok: 'SpeechRecognition' in window || 'webkitSpeechRecognition' in window
-  }].map((cap, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }].map((cap, i, a) => React.createElement(Row, {
     key: i,
     icon: cap.ok ? Ic.check : Ic.alert,
     iconBg: cap.ok ? T.green : T.t3,
     title: cap.l,
-    right: /*#__PURE__*/React.createElement(Pill, {
+    right: React.createElement(Pill, {
       c: cap.ok ? T.green : T.t3,
       size: "xs"
     }, cap.ok ? '✓' : '✗'),

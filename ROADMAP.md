@@ -124,6 +124,18 @@ This is the **single source of truth** for what's done, what's in-flight, and wh
 - [x] **AI engine settings screen** — tier picker (Auto / Local / Cloud), live `/api/llm/health` probe, on-device WebLLM enable, test prompt. `screens-phase100.jsx`. ✅
 - [x] **AI agent webhooks** — `/api/triage`, `/api/webhooks/:secret/email`, `/api/webhooks/:secret/whatsapp`. `server/routes/agents.js`. ✅
 
+### v1.7 — Intelligence (shipped) ✅ COMPLETE
+- [x] **Scheduling & resource planning** — crew/plant allocation, 14-day timeline, capacity heatmap, double-booking clash detection. `screens-phase112.jsx`. ✅
+- [x] **Financial intelligence** — 8-week cashflow forecast, per-project P&L, margin alerts, WIP value. `screens-phase113.jsx`. ✅
+- [x] **Tender & bid management** — bid pipeline (kanban), takeoff measurement, supplier RFQ comparison, win/loss analytics. `screens-phase114.jsx`. ✅
+- [x] **Procurement & supply chain** — PO approval workflow, delivery tracking, supplier scorecards, stock levels. `screens-phase115.jsx`. ✅
+- [x] **Quality & handover** — O&M manuals, as-built drawings, snagging-to-completion, digital handover readiness. `screens-phase116.jsx`. ✅
+- [x] **H&S command centre** — toolbox-talk scheduler, near-miss trend chart, fatigue/competency alerts, audit calendar. `screens-phase117.jsx`. ✅
+- [x] **Client experience** — live progress feed, variation approvals, satisfaction/NPS scoring. `screens-phase118.jsx`. ✅
+- [x] **Data + compute layer** — `lib/backend-v17.js` registers 10 tables, seed data, and computed selectors for all 7 domains. Surfaced via the **All Apps → ◆ Intelligence (v1.7)** menu. ✅
+- [x] **Server-side intelligence API** — `server/routes/intelligence.js` mirrors every selector authoritatively from `documents_store`. `GET /api/intelligence` (full briefing) + `/api/intelligence/:domain`. Client helper `cortexxCloud.intelligence(domain)`. ✅
+- [x] **Routing fix** — removed stale `dist/app-main.js` that pre-dated v1.7 and was shadowing the live sheet routes; all 7 screens now reachable. SW cache → `v3-1-009`. ✅
+
 ---
 
 ## ❌ Known issues / parked

@@ -1,17 +1,6 @@
-// Cortexx — Phase 96: NFC site check-in (v1.5)
-//  • Tap-to-check-in via a URL written to an NFC tag (?checkin=<projectId>)
-//    — works on ANY phone: the OS opens the URL natively, no app needed.
-//  • Tag provisioning screen — pick a project, generate the URL, write it to a
-//    physical tag via Web NFC (Android Chrome) with a copy-the-URL fallback.
-//  • Live site-attendance board derived from clockEntries.
-// Writes to the SAME clockEntries collection the GPS check-in uses, with
-// method:'nfc', so timesheets and live status stay unified.
-
 (function () {
   if (!window.Backend) return;
   const B = window.Backend;
-
-  // Best-effort GPS (mirrors phase75) so NFC taps still carry a location stamp.
   const geo = () => new Promise(res => {
     if (!navigator.geolocation) return res(null);
     const t = setTimeout(() => res(null), 2500);
@@ -31,14 +20,10 @@
     });
   });
   B.nfc = B.nfc || {};
-
-  // Is this person currently on site? (latest entry is an 'in'/'break-in')
   B.nfc.isOnSite = (name = 'You') => {
     const e = (B.db.clockEntries.listSync() || []).filter(x => x.name === name || x.userId === 0 && name === 'You').sort((a, b) => String(b.time).localeCompare(String(a.time)))[0];
     return !!(e && (e.action === 'in' || e.action === 'break-in'));
   };
-
-  // Perform an NFC clock event. Auto-toggles in/out unless action is forced.
   B.nfc.clock = async ({
     projectId,
     name = 'You',
@@ -72,14 +57,10 @@
       project: proj?.name || 'Site'
     };
   };
-
-  // Build the tag URL for a project.
   B.nfc.tagUrl = projectId => {
     const base = location.origin + location.pathname.replace(/[^/]*$/, '');
     return `${base}Cortexx.html?checkin=${encodeURIComponent(projectId)}`;
   };
-
-  // Derive the live attendance board from clockEntries.
   B.nfc.attendance = () => {
     const entries = (B.db.clockEntries.listSync() || []).slice().sort((a, b) => String(a.time).localeCompare(String(b.time)));
     const byPerson = new Map();
@@ -104,14 +85,10 @@
     };
   };
 })();
-
-// ── URL handler: ?checkin=<projectId> opens a confirm dialog ───────────────
-// Mounted once at boot. The OS-opened tag URL lands here.
 (function () {
   function handle() {
     const pid = new URLSearchParams(location.search).get('checkin');
     if (!pid || !window.Backend || !window.Backend.nfc) return;
-    // Defer so the app shell is mounted.
     setTimeout(() => {
       try {
         window.dispatchEvent(new CustomEvent('cortexx-nfc-checkin', {
@@ -120,7 +97,6 @@
           }
         }));
       } catch (e) {}
-      // Clean the URL so a refresh doesn't re-trigger.
       try {
         history.replaceState(null, '', location.pathname);
       } catch (e) {}
@@ -128,10 +104,6 @@
   }
   if (document.readyState === 'complete') handle();else window.addEventListener('load', handle);
 })();
-
-// ═══════════════════════════════════════════════════════════
-// NFC CHECK-IN CONFIRM (auto-opens from a tag tap)
-// ═══════════════════════════════════════════════════════════
 function NfcCheckinConfirm({
   projectId,
   onDone,
@@ -153,7 +125,7 @@ function NfcCheckinConfirm({
     if (window.cortexxToast) window.cortexxToast(`${r.action === 'in' ? 'Checked in' : 'Checked out'} · ${r.project}`, 'success');
     setTimeout(onDone, 1400);
   };
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       position: 'fixed',
       inset: 0,
@@ -164,7 +136,7 @@ function NfcCheckinConfirm({
       justifyContent: 'center'
     },
     onClick: onDone
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       width: '100%',
@@ -174,7 +146,7 @@ function NfcCheckinConfirm({
       padding: '26px 22px calc(26px + env(safe-area-inset-bottom))',
       boxShadow: '0 -8px 40px rgba(0,0,0,.5)'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -182,7 +154,7 @@ function NfcCheckinConfirm({
       textAlign: 'center',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 56,
       height: 56,
@@ -196,14 +168,14 @@ function NfcCheckinConfirm({
   }, React.cloneElement(Ic.pin, {
     size: 26,
     color: accent
-  })), done ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  })), done ? React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 19,
       fontWeight: 700,
       color: T.green
     }
-  }, done.action === 'in' ? '✓ Checked in' : '✓ Checked out'), /*#__PURE__*/React.createElement("div", {
+  }, done.action === 'in' ? '✓ Checked in' : '✓ Checked out'), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -212,7 +184,7 @@ function NfcCheckinConfirm({
   }, done.project, " \xB7 ", new Date().toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit'
-  }))) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }))) : React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -221,7 +193,7 @@ function NfcCheckinConfirm({
       textTransform: 'uppercase',
       color: accent
     }
-  }, "NFC tag detected"), /*#__PURE__*/React.createElement("div", {
+  }, "NFC tag detected"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 21,
@@ -229,14 +201,14 @@ function NfcCheckinConfirm({
       color: T.t1,
       letterSpacing: -0.4
     }
-  }, proj?.name || 'Site'), /*#__PURE__*/React.createElement("div", {
+  }, proj?.name || 'Site'), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t2,
       marginBottom: 14
     }
-  }, onSite ? "You're currently on site." : 'Ready to start your shift?'), /*#__PURE__*/React.createElement("button", {
+  }, onSite ? "You're currently on site." : 'Ready to start your shift?'), React.createElement("button", {
     onClick: confirm,
     disabled: busy,
     style: {
@@ -252,7 +224,7 @@ function NfcCheckinConfirm({
       cursor: busy ? 'default' : 'pointer',
       opacity: busy ? 0.7 : 1
     }
-  }, busy ? 'Logging…' : nextAction === 'in' ? 'Check in now' : 'Check out now'), /*#__PURE__*/React.createElement("button", {
+  }, busy ? 'Logging…' : nextAction === 'in' ? 'Check in now' : 'Check out now'), React.createElement("button", {
     onClick: onDone,
     style: {
       marginTop: 8,

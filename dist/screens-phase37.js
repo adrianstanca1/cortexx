@@ -1,8 +1,3 @@
-// Cortexx — Phase 37: Inline-edit primitives + responsive sidebar
-
-// ═══════════════════════════════════════════════════════════════════
-// INLINE-EDITABLE FIELDS — drop in anywhere
-// ═══════════════════════════════════════════════════════════════════
 function InlineField({
   value,
   onSave,
@@ -24,7 +19,7 @@ function InlineField({
   };
   const fontSize = size === 'lg' ? 22 : size === 'sm' ? 12 : 14;
   if (editing) {
-    return /*#__PURE__*/React.createElement("input", {
+    return React.createElement("input", {
       ref: ref,
       value: draft,
       type: type,
@@ -52,7 +47,7 @@ function InlineField({
       }
     });
   }
-  return /*#__PURE__*/React.createElement("span", {
+  return React.createElement("span", {
     onClick: () => setEditing(true),
     style: {
       cursor: 'text',
@@ -64,17 +59,13 @@ function InlineField({
     },
     onMouseEnter: e => e.currentTarget.style.background = T.bg3,
     onMouseLeave: e => e.currentTarget.style.background = 'transparent'
-  }, value || /*#__PURE__*/React.createElement("span", {
+  }, value || React.createElement("span", {
     style: {
       color: T.t3,
       fontStyle: 'italic'
     }
   }, placeholder || 'tap to edit'));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// RESPONSIVE SIDEBAR — shows on ≥768px, replaces tabbar
-// ═══════════════════════════════════════════════════════════════════
 function ResponsiveSidebar({
   tab,
   setTab,
@@ -104,7 +95,7 @@ function ResponsiveSidebar({
     l: 'Team',
     i: Ic.team
   }];
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       position: 'fixed',
       left: 0,
@@ -119,14 +110,14 @@ function ResponsiveSidebar({
       flexDirection: 'column',
       gap: 4
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10,
       padding: '0 8px 24px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -139,7 +130,7 @@ function ResponsiveSidebar({
     }
   }, React.cloneElement(Ic.spark, {
     size: 17
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
@@ -147,7 +138,7 @@ function ResponsiveSidebar({
       color: T.t1,
       letterSpacing: -0.3
     }
-  }, "CortexBuild Pro")), tabs.map(t => /*#__PURE__*/React.createElement("button", {
+  }, "Cortexx")), tabs.map(t => React.createElement("button", {
     key: t.k,
     onClick: () => setTab(t.k),
     style: {
@@ -167,11 +158,11 @@ function ResponsiveSidebar({
     }
   }, React.cloneElement(t.i, {
     size: 17
-  }), " ", t.l)), /*#__PURE__*/React.createElement("div", {
+  }), " ", t.l)), React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: () => window.cortexxNav('cmdk'),
     style: {
       background: T.bg3,
@@ -190,11 +181,11 @@ function ResponsiveSidebar({
     }
   }, React.cloneElement(Ic.search, {
     size: 14
-  }), " ", /*#__PURE__*/React.createElement("span", {
+  }), " ", React.createElement("span", {
     style: {
       flex: 1
     }
-  }, "Quick jump"), " ", /*#__PURE__*/React.createElement("span", {
+  }, "Quick jump"), " ", React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,

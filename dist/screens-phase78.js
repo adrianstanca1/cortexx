@@ -1,16 +1,3 @@
-// Cortexx — Phase 78: Smart Parse, real notifications, task bulk-action bar
-//
-// - SmartParseSheet:   paste anything (email, voice transcript, brief),
-//                       AI extracts structured records and lets the user save
-//                       them in one tap. Routes the right form afterwards.
-// - Backend.notify.*:  real browser Notification API, permission helper,
-//                       and an `enableTaskReminders` job that fires on due tasks.
-// - TaskBulkActionBar:  floating action bar that appears when ≥1 task is
-//                       selected (the selection state already exists).
-
-// ─────────────────────────────────────────────────────────
-// SMART PARSE
-// ─────────────────────────────────────────────────────────
 function SmartParseSheet({
   onClose,
   accent
@@ -136,7 +123,6 @@ Note to parse: """${text}"""`;
     } catch (e) {
       toast('Save failed: ' + (e.message || e), 'error');
     }
-    // Mark as saved in result
     setResult(r => ({
       ...r,
       records: r.records.map(x => x === rec ? {
@@ -150,10 +136,10 @@ Note to parse: """${text}"""`;
     for (const rec of result.records) if (!rec._saved) await saveRecord(rec);
     toast('All records saved', 'success');
   };
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -161,7 +147,7 @@ Note to parse: """${text}"""`;
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -171,7 +157,7 @@ Note to parse: """${text}"""`;
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
@@ -181,23 +167,23 @@ Note to parse: """${text}"""`;
       alignItems: 'center',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.spark, {
     size: 14
-  })), " Smart parse"), /*#__PURE__*/React.createElement("div", {
+  })), " Smart parse"), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '14px 16px 24px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -205,7 +191,7 @@ Note to parse: """${text}"""`;
       lineHeight: 1.5,
       marginBottom: 10
     }
-  }, "Paste anything \u2014 an email, voice note transcript, dictated brief \u2014 and Cortex extracts the structured records to add."), /*#__PURE__*/React.createElement("textarea", {
+  }, "Paste anything \u2014 an email, voice note transcript, dictated brief \u2014 and Cortex extracts the structured records to add."), React.createElement("textarea", {
     value: text,
     onChange: e => {
       setText(e.target.value);
@@ -229,11 +215,11 @@ Note to parse: """${text}"""`;
       resize: 'vertical',
       outline: 'none'
     }
-  }), !result && !busy && /*#__PURE__*/React.createElement("div", {
+  }), !result && !busy && React.createElement("div", {
     style: {
       marginTop: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -243,13 +229,13 @@ Note to parse: """${text}"""`;
       letterSpacing: 0.7,
       marginBottom: 6
     }
-  }, "Try one of these"), /*#__PURE__*/React.createElement("div", {
+  }, "Try one of these"), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 5
     }
-  }, examples.map((ex, i) => /*#__PURE__*/React.createElement("button", {
+  }, examples.map((ex, i) => React.createElement("button", {
     key: i,
     onClick: () => {
       setText(ex);
@@ -267,7 +253,7 @@ Note to parse: """${text}"""`;
       cursor: 'pointer',
       lineHeight: 1.4
     }
-  }, ex)))), /*#__PURE__*/React.createElement("button", {
+  }, ex)))), React.createElement("button", {
     onClick: parse,
     disabled: !text.trim() || busy,
     style: {
@@ -291,7 +277,7 @@ Note to parse: """${text}"""`;
     }
   }, React.cloneElement(Ic.spark, {
     size: 15
-  }), busy ? 'Parsing…' : 'Parse with Cortex'), err && /*#__PURE__*/React.createElement("div", {
+  }), busy ? 'Parsing…' : 'Parse with Cortex'), err && React.createElement("div", {
     style: {
       marginTop: 12,
       padding: 10,
@@ -302,18 +288,18 @@ Note to parse: """${text}"""`;
       fontSize: 12,
       color: T.red
     }
-  }, err), busy && /*#__PURE__*/React.createElement("div", {
+  }, err), busy && React.createElement("div", {
     style: {
       marginTop: 16
     }
-  }, /*#__PURE__*/React.createElement(ShimmerRows, {
+  }, React.createElement(ShimmerRows, {
     color: T.purple,
     rows: 4
-  })), result && /*#__PURE__*/React.createElement("div", {
+  })), result && React.createElement("div", {
     style: {
       marginTop: 18
     }
-  }, result.summary && /*#__PURE__*/React.createElement("div", {
+  }, result.summary && React.createElement("div", {
     style: {
       background: `${T.purple}1a`,
       border: `0.5px solid ${T.purple}44`,
@@ -325,7 +311,7 @@ Note to parse: """${text}"""`;
       color: T.t1,
       lineHeight: 1.45
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -335,14 +321,14 @@ Note to parse: """${text}"""`;
       letterSpacing: 0.7,
       marginBottom: 4
     }
-  }, "Summary"), result.summary), /*#__PURE__*/React.createElement("div", {
+  }, "Summary"), result.summary), React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 8
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -351,7 +337,7 @@ Note to parse: """${text}"""`;
       textTransform: 'uppercase',
       letterSpacing: 0.7
     }
-  }, result.records.length, " record", result.records.length !== 1 ? 's' : '', " found"), result.records.some(r => !r._saved) && /*#__PURE__*/React.createElement("button", {
+  }, result.records.length, " record", result.records.length !== 1 ? 's' : '', " found"), result.records.some(r => !r._saved) && React.createElement("button", {
     onClick: saveAll,
     style: {
       background: T.bg2,
@@ -364,13 +350,13 @@ Note to parse: """${text}"""`;
       fontSize: 11,
       fontWeight: 700
     }
-  }, "Save all")), /*#__PURE__*/React.createElement("div", {
+  }, "Save all")), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, result.records.map((r, i) => /*#__PURE__*/React.createElement(ParsedRecord, {
+  }, result.records.map((r, i) => React.createElement(ParsedRecord, {
     key: i,
     rec: r,
     accent: accent,
@@ -403,7 +389,7 @@ function ParsedRecord({
   const c = TYPE_C[rec.type] || accent;
   const icon = Ic[TYPE_I[rec.type]] || Ic.doc;
   const fields = Object.entries(rec.fields || {}).filter(([, v]) => v != null && v !== '');
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -412,32 +398,32 @@ function ParsedRecord({
       padding: '11px 13px',
       opacity: rec._saved ? 0.55 : 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       minWidth: 0,
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 4
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: c
     }
   }, React.cloneElement(icon, {
     size: 13
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 9.5,
@@ -446,14 +432,14 @@ function ParsedRecord({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, rec.type), rec.confidence != null && /*#__PURE__*/React.createElement("span", {
+  }, rec.type), rec.confidence != null && React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
       color: T.t3,
       marginLeft: 'auto'
     }
-  }, Math.round(rec.confidence * 100), "% sure")), /*#__PURE__*/React.createElement("div", {
+  }, Math.round(rec.confidence * 100), "% sure")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13.5,
@@ -461,14 +447,14 @@ function ParsedRecord({
       fontWeight: 600,
       lineHeight: 1.35
     }
-  }, rec.title), fields.length > 0 && /*#__PURE__*/React.createElement("div", {
+  }, rec.title), fields.length > 0 && React.createElement("div", {
     style: {
       marginTop: 6,
       display: 'flex',
       flexWrap: 'wrap',
       gap: 4
     }
-  }, fields.slice(0, 6).map(([k, v]) => /*#__PURE__*/React.createElement("span", {
+  }, fields.slice(0, 6).map(([k, v]) => React.createElement("span", {
     key: k,
     style: {
       background: T.bg1,
@@ -479,15 +465,15 @@ function ParsedRecord({
       fontSize: 10.5,
       color: T.t2
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.t3
     }
-  }, k, ":"), " ", /*#__PURE__*/React.createElement("span", {
+  }, k, ":"), " ", React.createElement("span", {
     style: {
       color: T.t1
     }
-  }, String(v).slice(0, 40))))), rec.reason && /*#__PURE__*/React.createElement("div", {
+  }, String(v).slice(0, 40))))), rec.reason && React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -496,7 +482,7 @@ function ParsedRecord({
       fontStyle: 'italic',
       lineHeight: 1.35
     }
-  }, rec.reason))), !rec._saved ? /*#__PURE__*/React.createElement("button", {
+  }, rec.reason))), !rec._saved ? React.createElement("button", {
     onClick: onSave,
     style: {
       marginTop: 8,
@@ -515,7 +501,7 @@ function ParsedRecord({
     }
   }, React.cloneElement(Ic.plus, {
     size: 11
-  }), " Add") : /*#__PURE__*/React.createElement("div", {
+  }), " Add") : React.createElement("div", {
     style: {
       marginTop: 8,
       fontFamily: SF,
@@ -525,10 +511,6 @@ function ParsedRecord({
     }
   }, "\u25CF Saved"));
 }
-
-// ─────────────────────────────────────────────────────────
-// BROWSER NOTIFICATIONS — real, permission-gated
-// ─────────────────────────────────────────────────────────
 (function () {
   if (!window.Backend) return;
   const supported = typeof Notification !== 'undefined';
@@ -569,8 +551,6 @@ function ParsedRecord({
         return null;
       }
     },
-    // Background sweep — fires for any task due in the next 30 min that
-    // hasn't already pinged. Runs once per minute while page is open.
     _started: false,
     enableTaskReminders: () => {
       if (Backend.notify._started) return;
@@ -611,12 +591,12 @@ function NotificationToggleRow({
     return () => clearInterval(id);
   }, []);
   if (!Backend.notify?.supported) {
-    return /*#__PURE__*/React.createElement(Row, {
+    return React.createElement(Row, {
       icon: Ic.bell,
       iconBg: T.t3,
       title: "Notifications",
       sub: "Not supported by this browser",
-      right: /*#__PURE__*/React.createElement(Pill, {
+      right: React.createElement(Pill, {
         c: T.t3,
         size: "xs"
       }, "N/A")
@@ -632,24 +612,18 @@ function NotificationToggleRow({
       toast('Notifications blocked — enable in browser settings', 'error');
     }
   };
-  return /*#__PURE__*/React.createElement(Row, {
+  return React.createElement(Row, {
     icon: Ic.bell,
     iconBg: perm === 'granted' ? T.green : accent,
     title: "Notifications",
     sub: perm === 'granted' ? 'On — task reminders + RFIs' : perm === 'denied' ? 'Blocked in browser' : 'Tap to enable',
-    right: /*#__PURE__*/React.createElement(Pill, {
+    right: React.createElement(Pill, {
       c: perm === 'granted' ? T.green : perm === 'denied' ? T.red : accent,
       size: "xs"
     }, perm === 'granted' ? 'ON' : perm === 'denied' ? 'BLOCKED' : 'ASK'),
     onClick: perm === 'default' ? enable : null
   });
 }
-
-// ─────────────────────────────────────────────────────────
-// TASK BULK ACTION BAR — appears when selection is active
-// Mounted globally; reads selection from window.__cortexxTaskSel
-// (set by TasksScreen) so we don't have to refactor that screen.
-// ─────────────────────────────────────────────────────────
 function TaskBulkActionBar() {
   const [, force] = React.useReducer(x => x + 1, 0);
   React.useEffect(() => {
@@ -679,7 +653,7 @@ function TaskBulkActionBar() {
     toast(`Set ${ids.length} task${ids.length !== 1 ? 's' : ''} to ${p}`, 'success');
     sel.clear();
   };
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       position: 'fixed',
       left: 12,
@@ -697,7 +671,7 @@ function TaskBulkActionBar() {
       alignItems: 'center',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -705,23 +679,23 @@ function TaskBulkActionBar() {
       color: '#fff',
       marginRight: 4
     }
-  }, ids.length, " selected"), /*#__PURE__*/React.createElement(BulkBtn, {
+  }, ids.length, " selected"), React.createElement(BulkBtn, {
     color: T.green,
     icon: Ic.check,
     onClick: complete
-  }, "Done"), /*#__PURE__*/React.createElement(BulkBtn, {
+  }, "Done"), React.createElement(BulkBtn, {
     color: T.red,
     icon: Ic.alert,
     onClick: () => prio('high')
-  }, "!"), /*#__PURE__*/React.createElement(BulkBtn, {
+  }, "!"), React.createElement(BulkBtn, {
     color: T.amber,
     icon: Ic.flag,
     onClick: () => prio('med')
-  }, "m"), /*#__PURE__*/React.createElement(BulkBtn, {
+  }, "m"), React.createElement(BulkBtn, {
     color: T.t3,
     icon: Ic.trash,
     onClick: del
-  }, "Del"), /*#__PURE__*/React.createElement("button", {
+  }, "Del"), React.createElement("button", {
     onClick: sel.clear,
     style: {
       marginLeft: 'auto',
@@ -740,7 +714,7 @@ function BulkBtn({
   color,
   onClick
 }) {
-  return /*#__PURE__*/React.createElement("button", {
+  return React.createElement("button", {
     onClick: onClick,
     title: children,
     style: {

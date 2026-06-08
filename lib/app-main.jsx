@@ -562,6 +562,17 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       {sheet === 'addtemplate' && <AddTemplateSheet onClose={closeSheet} accent={accent}/>}
       {sheet === 'addview' && <AddViewSheet onClose={closeSheet} accent={accent}/>}
       {sheet === 'toolboxtalk' && <ToolboxTalkSheet onClose={closeSheet} accent={accent}/>}
+      {/* ── v1.7 Intelligence screens ── */}
+      {sheet === 'resourceplan' && <SheetWrap title="Resource planning" onClose={closeSheet} accent={accent}><ResourcePlanningScreen accent={accent}/></SheetWrap>}
+      {sheet === 'addallocation' && <AddAllocationSheet onClose={closeSheet} accent={accent}/>}
+      {sheet === 'finintel' && <SheetWrap title="Financial intelligence" onClose={closeSheet} accent={accent}><FinancialIntelligenceScreen accent={accent}/></SheetWrap>}
+      {sheet === 'bids' && <SheetWrap title="Bids & tender" onClose={closeSheet} accent={accent}><BidManagementScreen accent={accent}/></SheetWrap>}
+      {sheet === 'procurement' && <SheetWrap title="Procurement" onClose={closeSheet} accent={accent}><ProcurementScreen accent={accent}/></SheetWrap>}
+      {sheet === 'confirmdelivery' && <DeliveryConfirmSheet onClose={closeSheet} accent={accent}/>}
+      {sheet === 'handover' && <SheetWrap title="Quality & handover" onClose={closeSheet} accent={accent}><QualityHandoverScreen accent={accent}/></SheetWrap>}
+      {sheet === 'hscommand' && <SheetWrap title="H&S command centre" onClose={closeSheet} accent={accent}><HSCommandScreen accent={accent}/></SheetWrap>}
+      {sheet === 'clientexp' && <SheetWrap title="Client experience" onClose={closeSheet} accent={accent}><ClientExperienceScreen accent={accent}/></SheetWrap>}
+      {sheet === 'postupdate' && <PostUpdateSheet onClose={closeSheet} accent={accent}/>}
       {sheet === 'delivery' && <DeliveryConfirmSheet onClose={closeSheet} accent={accent}/>}
       {sheet === 'weeklyreport' && <WeeklyReportSheet onClose={closeSheet} accent={accent}/>}
       {sheet === 'dayend' && <DayEndReportSheet onClose={closeSheet} accent={accent}/>}
