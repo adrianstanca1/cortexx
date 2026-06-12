@@ -16,6 +16,8 @@ const config: CapacitorConfig = {
   // server: { url: 'http://192.168.1.50:5500', cleartext: true },
 
   ios: {
+    // Capacitor root is ios/ — use '.' so native project lands at ios/App/, not ios/ios/App/.
+    path: '.',
     contentInset: 'always',
     scrollEnabled: true,
     // Stop the WKWebView from showing a bounce halo that conflicts with our sheets.
