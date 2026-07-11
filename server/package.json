@@ -1,0 +1,24 @@
+{
+  "name": "cortexx-api",
+  "version": "1.1.0",
+  "description": "Cortexx backend API — Express + PostgreSQL (auth, portal, sync, realtime, ledger)",
+  "main": "index.js",
+  "scripts": {
+    "start": "node index.js",
+    "dev": "node --watch index.js",
+    "migrate": "psql $DATABASE_URL -f db/schema.sql",
+    "seed": "psql $DATABASE_URL -f db/seed.sql"
+  },
+  "dependencies": {
+    "bcryptjs": "^2.4.3",
+    "cookie-parser": "^1.4.6",
+    "cors": "^2.8.5",
+    "express": "^4.19.2",
+    "express-rate-limit": "^7.4.0",
+    "helmet": "^7.1.0",
+    "jsonwebtoken": "^9.0.2",
+    "pg": "^8.12.0",
+    "web-push": "^3.6.7"
+  },
+  "engines": { "node": ">=18" }
+}

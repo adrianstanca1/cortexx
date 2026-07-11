@@ -71,7 +71,7 @@ if (existsSync(wwwDir)) {
   warn('www/ not found — run: npm run build:web');
 }
 
-// 6. Xcode project
+// 6. Xcode project (Capacitor: ios.path '.' → App/App.xcodeproj)
 const xcodeProj = path.join(__dirname, '..', 'App', 'App.xcodeproj');
 if (existsSync(xcodeProj)) {
   ok('App.xcodeproj exists');
@@ -89,7 +89,7 @@ if (existsSync(cortexxHtml)) {
 
 console.log('\n📋  Next steps:\n');
 console.log('   npm run build:web      # copy web assets into ios/www/');
-console.log('   npx cap add ios        # first time only — creates App.xcodeproj');
-console.log('   npx cap sync ios       # sync Capacitor plugins');
-console.log('   npx cap open ios       # open in Xcode');
+console.log('   npx cap add ios        # first time only — creates App/App.xcodeproj');
+console.log('   npm run build:ios      # build web + cap sync (Podfile at App/Podfile)');
+console.log('   npm run ios            # build + sync + open Xcode');
 console.log('');

@@ -1,5 +1,0 @@
-{
-  "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "if [ -d 'nextjs_space' ]; then cd nextjs_space && npm install --legacy-peer-deps; else npm install; fi",
-  "buildCommand": "if [ -d 'nextjs_space' ]; then cd nextjs_space && npm run build; else npm run build; fi"
-}

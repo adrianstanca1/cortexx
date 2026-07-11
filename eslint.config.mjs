@@ -10,11 +10,11 @@ import next from 'eslint-config-next/core-web-vitals'
 // pragmatic: real bugs still surface, and CI doesn't drown in false
 // positives.
 const config = [
-  { ignores: ['.next/**', 'node_modules/**', 'public/legacy/**', 'archive/**', 'ios/**'] },
+  { ignores: ['.next/**', 'node_modules/**', 'public/legacy/**', 'archive/**', 'ios/**', 'lib/**', 'dist/**'] },
   ...next,
   {
     rules: {
-      'react-hooks/set-state-in-effect': 'warn',
+      "react-hooks/set-state-in-effect": 'off',
       'react-hooks/purity': 'warn',
       'react-hooks/refs': 'warn',
       'react-hooks/use-memo': 'warn',

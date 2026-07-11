@@ -1,0 +1,86 @@
+version: '3.8'
+services:
+  cortexx-api:
+    build:
+      context: ./server
+      dockerfile: Dockerfile
+    container_name: cortexx-api
+    ports:
+    - "3001:3001"
+    restart: unless-stopped
+    environment:
+    - NODE_ENV=production
+    - PORT=3001
+    - DATABASE_URL=postgres://postgres:password@host.docker.internal:5432/cortexx
+    - LLM_RUNTIME=ollama
+    - OLLAMA_BASE=http://ollama:11434
+    - OLLAMA_MODEL=${OLLAMA_MODEL:-llama3.2:3b}
+    - OLLAMA_VISION_MODEL=${OLLAMA_VISION_MODEL:-llava}
+    extra_hosts:
+    - host.docker.internal:host-gateway
+    networks:
+    - default
+    - traefik_web
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.cortexx-api.rule=Host(`api.cortexbuildpro.com`)
+    - traefik.http.routers.cortexx-api.entrypoints=websecure
+    - traefik.http.routers.cortexx-api.tls=true
+    - traefik.http.routers.cortexx-api.tls.certresolver=letsencrypt
+    - traefik.http.services.cortexx-api.loadbalancer.server.port=3001
+    healthcheck:
+      test:
+      - CMD
+      - wget
+      - -qO-
+      - http://localhost:3001/api/health
+      interval: 30s
+      timeout: 3s
+      retries: 5
+  ollama:
+    image: ollama/ollama:latest
+    container_name: ollama
+    restart: unless-stopped
+    volumes:
+    - cortexx_ollama:/root/.ollama
+    - ./server/ollama-init.sh:/ollama-init.sh:ro
+    entrypoint:
+    - /bin/sh
+    - /ollama-init.sh
+    expose:
+    - '11434'
+    healthcheck:
+      test:
+      - CMD
+      - ollama
+      - list
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    networks:
+    - default
+  cortexx-frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: cortexx-frontend
+    restart: unless-stopped
+    environment:
+    - PORT=3000
+    networks:
+    - traefik_web
+    labels:
+    - traefik.enable=true
+    - traefik.http.routers.cortexx-frontend.rule=Host(`cortexbuildpro.com`)
+    - traefik.http.routers.cortexx-frontend.entrypoints=websecure
+    - traefik.http.routers.cortexx-frontend.tls=true
+    - traefik.http.routers.cortexx-frontend.tls.certresolver=letsencrypt
+    - traefik.http.services.cortexx-frontend.loadbalancer.server.port=3000
+networks:
+  default:
+    driver: bridge
+  traefik_web:
+    external: true
+    name: traefik_web
+volumes:
+  cortexx_ollama: null
