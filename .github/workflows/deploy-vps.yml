@@ -21,7 +21,7 @@ jobs:
     permissions:
       contents: read
     steps:
-      - uses: actions/checkout@v6
+      - uses: actions/checkout@v7
 
       - name: Setup SSH
         run: |
@@ -176,12 +176,15 @@ jobs:
 
             EXISTING_PASS=""
             if [ -f /opt/cortexx/.env.production ]; then
-              EXISTING_PASS=$(grep -oP 'DATABASE_URL=postgresql://cortexx:\K[^@]+' /opt/cortexx/.env.production || echo "")
+              # Extract the password part of the URL (between : and @)
+              EXISTING_PASS=$(grep '^DATABASE_URL=' /opt/cortexx/.env.production | sed -E 's|.*://cortexx:([^@]+)@.*|\1|' || echo "")
             fi
 
             DB_PASS=""
-            if [ -n "$EXISTING_PASS" ] && [ "$HAS_USER" = "1" ] && PGPASSWORD="$EXISTING_PASS" psql "postgresql://cortexx:$EXISTING_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>/dev/null | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
-              DB_PASS="$EXISTING_PASS"
+            # Test connection using the connection string directly (psql decodes the URL-encoded password)
+            if [ -n "$EXISTING_PASS" ] && [ "$HAS_USER" = "1" ] && psql "postgresql://cortexx:$EXISTING_PASS@$PG_IP:5432/postgres" -tAc "SELECT 1" >/dev/null 2>&1; then
+              # Connection worked! Use Node to get the RAW decoded password for PGPASSWORD and future steps.
+              DB_PASS=$(node -e "console.log(decodeURIComponent(process.argv[1]))" "$EXISTING_PASS")
               echo "✓ Reusing existing password from .env.production"
             else
               DB_PASS="$DB_PASS_CANDIDATE"
@@ -194,6 +197,7 @@ jobs:
               fi
             fi
 
+
             HAS_DB=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" 2>/dev/null || echo "")
             if [ "$HAS_DB" != "1" ]; then
               sudo -u postgres psql -c "CREATE DATABASE cortexx OWNER cortexx;"
@@ -201,27 +205,12 @@ jobs:
             fi
             sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;" >/dev/null
 
-            # Verify auth actually works before proceeding
-            if ! PGPASSWORD="$DB_PASS" psql "postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx" -tAc "SELECT 1" 2>/dev/null | grep -qE '^[[:space:]]*1[[:space:]]*$'; then
+            # verify auth actually works before proceeding
+            if ! PGPASSWORD="$DB_PASS" psql -h "$PG_IP" -U cortexx -d postgres -tAc "SELECT 1" >/dev/null 2>&1; then
               echo "✗ DB auth verification failed — credentials are not actually working"
               exit 1
             fi
             echo "✓ DB ready"
-
-            # ─── 3a. Self-heal stuck Prisma migrations ────────────────────
-            # A failed migration leaves a row in _prisma_migrations with
-            # finished_at = NULL. Prisma's next migrate deploy refuses to
-            # proceed past it, so each subsequent deploy gets stuck. Clear
-            # via raw SQL (no Node deps needed at this point in the flow).
-            # Idempotent: zero stuck rows means zero deletes.
-            STUCK_TABLE_EXISTS=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
-            if [ "$STUCK_TABLE_EXISTS" = "_prisma_migrations" ]; then
-              STUCK_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT COUNT(*) FROM _prisma_migrations WHERE finished_at IS NULL" 2>/dev/null | xargs)
-              if [ -n "$STUCK_COUNT" ] && [ "$STUCK_COUNT" -gt 0 ]; then
-                echo "↻ Found $STUCK_COUNT stuck Prisma migration row(s) — clearing"
-                sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL"
-              fi
-            fi
 
             # ─── 4. Nightly backup cron (idempotent) ──────────────────────
             cat > /etc/cron.daily/cortexx-backup << 'CRON'
@@ -251,7 +240,6 @@ jobs:
             fi
 
             # ─── 5. Build URL and clone/update repo ───────────────────────
-            DB_URL="postgresql://cortexx:$DB_PASS@$PG_IP:5432/cortexx"
 
             # The repo is private — use a PAT for authenticated git operations.
             AUTH_URL="https://x-access-token:${GH_PAT}@github.com/adrianstanca1/cortexx.git"
@@ -269,6 +257,45 @@ jobs:
             fi
             # Sanitize the remote URL after fetch so the token isn't persisted on disk
             git remote set-url origin "https://github.com/adrianstanca1/cortexx.git"
+
+            # Install dependencies before running any prisma commands
+            # NOTE: redirect to log files instead of piping to tail — pipefail can
+            # mask failures in some shell modes, and we need the script to abort
+            # loudly on real errors.
+            npm ci --include=dev > /tmp/cortexx-npm-ci.log 2>&1
+            tail -5 /tmp/cortexx-npm-ci.log
+
+            # Build URL for subsequent steps (must be URL-encoded for Prisma)
+            DB_PASS_ENCODED=$(node -e "console.log(encodeURIComponent(process.argv[1]))" "$DB_PASS")
+            DB_URL="postgresql://cortexx:$DB_PASS_ENCODED@$PG_IP:5432/cortexx"
+
+            # ─── 5b. Migration Management ─────────────────────────────────
+            # Must run after 'npm ci' so we use the pinned Prisma version.
+            MIGRATION_TABLE=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
+            TABLE_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | xargs)
+
+            # If the database is non-empty but the migrations table is missing or suspiciously behind,
+            # we baseline existing migrations to avoid P3005/P3018 errors.
+            if [ -n "$TABLE_COUNT" ] && [ "$TABLE_COUNT" -gt 5 ]; then
+              echo "↻ Non-empty database detected ($TABLE_COUNT tables). Ensuring all existing migrations are marked as applied."
+              for m in $(ls prisma/migrations/ | grep '^[0-9]'); do
+                # Check if this specific migration is already in the table and finished
+                ALREADY_APPLIED=""
+                if [ "$MIGRATION_TABLE" = "_prisma_migrations" ]; then
+                  ALREADY_APPLIED=$(sudo -u postgres psql cortexx -tAc "SELECT 1 FROM _prisma_migrations WHERE migration_name = '$m' AND finished_at IS NOT NULL" 2>/dev/null || echo "")
+                fi
+
+                if [ "$ALREADY_APPLIED" != "1" ]; then
+                  echo "  Baselining/Resolving $m..."
+                  DATABASE_URL="$DB_URL" npx prisma migrate resolve --applied "$m" || true
+                fi
+              done
+            fi
+
+            # Ensure no 'stuck' (NULL finished_at) rows remain in the table
+            if [ "$MIGRATION_TABLE" = "_prisma_migrations" ]; then
+               sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL" >/dev/null 2>&1 || true
+            fi
 
             cat > $APP_DIR/.env.production << ENV
           DATABASE_URL=$DB_URL

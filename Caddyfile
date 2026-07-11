@@ -1,0 +1,27 @@
+# CortexBuild Pro — Caddy reverse proxy + static host
+# Free automatic HTTPS (Let's Encrypt) when SITE_ADDRESS is a real domain.
+# Falls back to plain HTTP on :80 for IP-only deploys.
+#
+# SITE_ADDRESS is injected from the environment by docker-compose.
+{$SITE_ADDRESS} {
+	# ── Static app (Cortexx.html + lib/ + dist/ + portal.html + assets) ──
+	root * /srv/app
+	encode gzip zstd
+
+	# ── API + realtime + webhooks → Node service ──
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	# ── Everything else → the SPA shell ──
+	handle {
+		try_files {path} /Cortexx.html
+		file_server
+	}
+
+	# Long-cache hashed assets, never cache the HTML shell
+	@static path *.js *.css *.png *.jpg *.svg *.woff2
+	header @static Cache-Control "public, max-age=31536000, immutable"
+	@html path *.html
+	header @html Cache-Control "no-cache"
+}

@@ -119,6 +119,16 @@ export async function GET(req: NextRequest) {
     const data = (await upstream.json()) as WttrResponse
     const payload = normalize(location, data)
     cache.set(location, { fetchedAt: Date.now(), payload })
+    if (cache.size > 1000) {
+      const now = Date.now()
+      for (const [k, v] of cache.entries()) {
+        if (now - v.fetchedAt > CACHE_TTL_MS) cache.delete(k)
+      }
+      if (cache.size > 1000) {
+        const first = cache.keys().next().value
+        if (first) cache.delete(first)
+      }
+    }
     return NextResponse.json({ ...payload, cached: false })
   } catch (err) {
     clearTimeout(timeout)
