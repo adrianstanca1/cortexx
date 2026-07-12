@@ -1,36 +1,42 @@
 models/*.gguf
 .worktrees/
 *.log
-<<<<<<< HEAD
-<<<<<<< HEAD
 __pycache__/
 *.pyc
+
 # Dependencies
 node_modules/
+
 # Next.js
 .next/
 out/
 tsconfig.tsbuildinfo
+
 # Environment
 .env
 .env.local
 .env.*.local
+
 # Database
 *.db
 *.sqlite
+
 # OS
 .DS_Store
+
 # Debug
 npm-debug.log*
+
 # Prisma
 prisma/migrations/dev.db
+
 # Local uploads (production points UPLOAD_DIR to /var/lib/cortexx/uploads)
 /uploads/
 .aider*
 .vercel
-=======
->>>>>>> f6d6426 (chore: lint‑fix all agents, add flake8 config, ensure clean repo)
-=======
-__pycache__/
-*.pyc
->>>>>>> cc08776 (chore: codebase inspection fixes - update .gitignore and format agents)
+
+# Generated Capacitor web bundles
+www/
+
+# Duplicate nested iOS project artifact
+ios/ios/
