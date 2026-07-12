@@ -1,3 +1,5 @@
+// Cortexx — Phase 13: Photo annotation viewer for snags
+
 function PhotoAnnotateSheet({
   snag,
   onClose,
@@ -37,10 +39,10 @@ function PhotoAnnotateSheet({
     setActivePin(null);
     toast('Annotation removed', 'info');
   };
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -48,7 +50,7 @@ function PhotoAnnotateSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -61,26 +63,26 @@ function PhotoAnnotateSheet({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", React.createElement("span", null, "Back")), React.createElement("div", {
+  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       textAlign: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600,
       color: T.t1
     }
-  }, snag?.title || 'Photo'), React.createElement("div", {
+  }, snag?.title || 'Photo'), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3,
       marginTop: 1
     }
-  }, pins.length, " annotation", pins.length !== 1 ? 's' : '')), React.createElement("button", {
+  }, pins.length, " annotation", pins.length !== 1 ? 's' : '')), /*#__PURE__*/React.createElement("button", {
     onClick: () => toast('Photo shared', 'success'),
     style: {
       background: 'none',
@@ -90,14 +92,14 @@ function PhotoAnnotateSheet({
       fontSize: 14,
       cursor: 'pointer'
     }
-  }, "Share")), React.createElement("div", {
+  }, "Share")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       background: '#0a0e16',
       position: 'relative',
       overflow: 'hidden'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     onClick: handleClick,
     style: {
       width: '100%',
@@ -108,26 +110,26 @@ function PhotoAnnotateSheet({
       backgroundImage: 'linear-gradient(135deg, rgba(255,255,255,0.04) 25%, transparent 25%), linear-gradient(225deg, rgba(255,255,255,0.04) 25%, transparent 25%)',
       backgroundSize: '60px 60px'
     }
-  }, React.createElement("svg", {
+  }, /*#__PURE__*/React.createElement("svg", {
     width: "100%",
     height: "100%",
     style: {
       position: 'absolute',
       inset: 0
     }
-  }, React.createElement("rect", {
+  }, /*#__PURE__*/React.createElement("rect", {
     x: "0",
     y: "65%",
     width: "100%",
     height: "6%",
     fill: "rgba(60,40,20,0.4)"
-  }), React.createElement("rect", {
+  }), /*#__PURE__*/React.createElement("rect", {
     x: "0",
     y: "71%",
     width: "100%",
     height: "3%",
     fill: "rgba(80,60,40,0.3)"
-  }), React.createElement("rect", {
+  }), /*#__PURE__*/React.createElement("rect", {
     x: "60%",
     y: "20%",
     width: "22%",
@@ -135,13 +137,13 @@ function PhotoAnnotateSheet({
     fill: "none",
     stroke: "rgba(255,255,255,0.15)",
     strokeWidth: "2"
-  }), React.createElement("rect", {
+  }), /*#__PURE__*/React.createElement("rect", {
     x: "60%",
     y: "20%",
     width: "22%",
     height: "55%",
     fill: "rgba(80,60,40,0.2)"
-  }), React.createElement("rect", {
+  }), /*#__PURE__*/React.createElement("rect", {
     x: "10%",
     y: "22%",
     width: "20%",
@@ -149,21 +151,21 @@ function PhotoAnnotateSheet({
     fill: "rgba(140,180,220,0.15)",
     stroke: "rgba(255,255,255,0.2)",
     strokeWidth: "2"
-  }), React.createElement("line", {
+  }), /*#__PURE__*/React.createElement("line", {
     x1: "20%",
     y1: "22%",
     x2: "20%",
     y2: "52%",
     stroke: "rgba(255,255,255,0.15)",
     strokeWidth: "1"
-  }), React.createElement("text", {
+  }), /*#__PURE__*/React.createElement("text", {
     x: "50%",
     y: "80%",
     textAnchor: "middle",
     fontSize: "9",
     fill: "rgba(255,255,255,0.3)",
     fontFamily: SFMono
-  }, "SITE PHOTO \xB7 CAMDEN \xB7 ", new Date().toLocaleDateString('en-GB'))), pins.map((p, i) => React.createElement("div", {
+  }, "SITE PHOTO \xB7 CAMDEN \xB7 ", new Date().toLocaleDateString('en-GB'))), pins.map((p, i) => /*#__PURE__*/React.createElement("div", {
     key: p.id,
     style: {
       position: 'absolute',
@@ -177,22 +179,22 @@ function PhotoAnnotateSheet({
       setActivePin(p.id);
       setPinNote(p.note);
     }
-  }, React.createElement("svg", {
+  }, /*#__PURE__*/React.createElement("svg", {
     width: "32",
     height: "42",
     viewBox: "0 0 32 42",
     style: {
       filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))'
     }
-  }, React.createElement("path", {
+  }, /*#__PURE__*/React.createElement("path", {
     d: "M16 0 C7 0 0 7 0 16 C0 28 16 42 16 42 C16 42 32 28 32 16 C32 7 25 0 16 0 Z",
     fill: T.amber
-  }), React.createElement("circle", {
+  }), /*#__PURE__*/React.createElement("circle", {
     cx: "16",
     cy: "16",
     r: "9",
     fill: "#fff"
-  }), React.createElement("text", {
+  }), /*#__PURE__*/React.createElement("text", {
     x: "16",
     y: "20",
     textAnchor: "middle",
@@ -200,7 +202,7 @@ function PhotoAnnotateSheet({
     fontWeight: "700",
     fontFamily: SF,
     fill: T.bg0
-  }, i + 1)))), activePin && React.createElement("div", {
+  }, i + 1)))), activePin && /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 90,
@@ -213,14 +215,14 @@ function PhotoAnnotateSheet({
       padding: 12,
       boxShadow: '0 10px 30px rgba(0,0,0,0.5)'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 22,
       height: 22,
@@ -234,7 +236,7 @@ function PhotoAnnotateSheet({
       fontSize: 12,
       fontWeight: 700
     }
-  }, pins.findIndex(p => p.id === activePin) + 1), React.createElement("span", {
+  }, pins.findIndex(p => p.id === activePin) + 1), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -243,11 +245,11 @@ function PhotoAnnotateSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.4
     }
-  }, "Annotation"), React.createElement("div", {
+  }, "Annotation"), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: () => deletePin(activePin),
     style: {
       background: 'none',
@@ -258,7 +260,7 @@ function PhotoAnnotateSheet({
       fontSize: 11,
       fontWeight: 600
     }
-  }, "Remove")), React.createElement("input", {
+  }, "Remove")), /*#__PURE__*/React.createElement("input", {
     value: pinNote,
     onChange: e => setPinNote(e.target.value),
     autoFocus: true,
@@ -275,13 +277,13 @@ function PhotoAnnotateSheet({
       fontSize: 13,
       outline: 'none'
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginTop: 8
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: savePin,
     style: {
       flex: 1,
@@ -295,7 +297,7 @@ function PhotoAnnotateSheet({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Save"), React.createElement("button", {
+  }, "Save"), /*#__PURE__*/React.createElement("button", {
     onClick: () => setActivePin(null),
     style: {
       background: 'transparent',
@@ -308,7 +310,7 @@ function PhotoAnnotateSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Done"))), adding && React.createElement("div", {
+  }, "Done"))), adding && /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: 16,
@@ -324,7 +326,7 @@ function PhotoAnnotateSheet({
       textAlign: 'center',
       fontWeight: 600
     }
-  }, "Tap the photo to drop a pin"))), React.createElement("div", {
+  }, "Tap the photo to drop a pin"))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '10px 12px 30px',
       borderTop: `0.5px solid ${T.hair}`,
@@ -332,7 +334,7 @@ function PhotoAnnotateSheet({
       gap: 8,
       background: T.bg0
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setAdding(!adding),
     style: {
       flex: 1,
@@ -352,7 +354,7 @@ function PhotoAnnotateSheet({
     }
   }, React.cloneElement(Ic.pin, {
     size: 14
-  }), " ", adding ? 'Cancel' : 'Add pin'), React.createElement("button", {
+  }), " ", adding ? 'Cancel' : 'Add pin'), /*#__PURE__*/React.createElement("button", {
     onClick: () => {
       setPins([]);
       toast('Cleared', 'info');
@@ -368,7 +370,7 @@ function PhotoAnnotateSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Clear"), React.createElement("button", {
+  }, "Clear"), /*#__PURE__*/React.createElement("button", {
     onClick: async () => {
       await Backend.db.activity.create({
         who: 'You',

@@ -9,22 +9,27 @@
 
 (function () {
   if (window.CortexLocalAgent) return;
-
   const TIMEOUT_MS = 12000;
 
   // ─────────────────────────────────────────────────────────────
   // Tier 3 — Deterministic local reasoning engine (the floor)
   // Reads real data from Backend.brain; pattern-matches intent.
   // ─────────────────────────────────────────────────────────────
-  const fmtGBP = (n) => '£' + Math.round(n).toLocaleString('en-GB');
-
+  const fmtGBP = n => '£' + Math.round(n).toLocaleString('en-GB');
   function localReason(q) {
     const t = (q || '').toLowerCase();
     let b = {};
-    try { b = (window.Backend && Backend.brain) ? Backend.brain.snapshot() : {}; } catch (e) { b = {}; }
-    const money = b.money || {}, proj = b.projects || {}, ops = b.ops || {}, people = b.people || {}, sales = b.sales || {};
-    const projList = (proj.list || []);
-
+    try {
+      b = window.Backend && Backend.brain ? Backend.brain.snapshot() : {};
+    } catch (e) {
+      b = {};
+    }
+    const money = b.money || {},
+      proj = b.projects || {},
+      ops = b.ops || {},
+      people = b.people || {},
+      sales = b.sales || {};
+    const projList = proj.list || [];
     const has = (...words) => words.some(w => t.includes(w));
 
     // Greeting
@@ -42,9 +47,7 @@
     }
     // Overdue / chase
     if (has('overdue', 'chase', 'unpaid', 'owe', 'owed')) {
-      return money.overdue
-        ? `${money.overdue} invoice${money.overdue > 1 ? 's are' : ' is'} overdue, ${fmtGBP(money.outstanding || 0)} outstanding in total. I'd chase the oldest first — open Money to draft a reminder.`
-        : `Nothing overdue right now. ${fmtGBP(money.outstanding || 0)} is outstanding but within terms.`;
+      return money.overdue ? `${money.overdue} invoice${money.overdue > 1 ? 's are' : ' is'} overdue, ${fmtGBP(money.outstanding || 0)} outstanding in total. I'd chase the oldest first — open Money to draft a reminder.` : `Nothing overdue right now. ${fmtGBP(money.outstanding || 0)} is outstanding but within terms.`;
     }
     // Projects
     if (has('project', 'job', 'site')) {
@@ -63,17 +66,15 @@
     }
     // Safety / compliance
     if (has('safe', 'rams', 'cscs', 'permit', 'cdm', 'compliance', 'inspection')) {
-      return `${ops.openInspections || 0} inspections scheduled, ${(b.compliance && b.compliance.permitsActive) || 0} active permits.${people.certsExpiring ? ` ${people.certsExpiring} certs expiring — book renewals.` : ' Certs all current.'} I apply CDM 2015 and BS 7671 to any docs I draft.`;
+      return `${ops.openInspections || 0} inspections scheduled, ${b.compliance && b.compliance.permitsActive || 0} active permits.${people.certsExpiring ? ` ${people.certsExpiring} certs expiring — book renewals.` : ' Certs all current.'} I apply CDM 2015 and BS 7671 to any docs I draft.`;
     }
     // Materials / stock
     if (has('material', 'stock', 'order', 'supplies')) {
-      return ops.lowStock
-        ? `${ops.lowStock} material${ops.lowStock > 1 ? 's are' : ' is'} below minimum stock. Open Materials for an AI reorder forecast.`
-        : `Stock levels are healthy — nothing below minimum.`;
+      return ops.lowStock ? `${ops.lowStock} material${ops.lowStock > 1 ? 's are' : ' is'} below minimum stock. Open Materials for an AI reorder forecast.` : `Stock levels are healthy — nothing below minimum.`;
     }
     // Leads / sales / grow
     if (has('lead', 'sales', 'grow', 'pipeline', 'win', 'new business')) {
-      return `${sales.newLeads || 0} new leads in the pipeline worth ${fmtGBP((sales.activeQuotes || 0))} in active quotes. Ask Vera to hunt for more on the CEO screen.`;
+      return `${sales.newLeads || 0} new leads in the pipeline worth ${fmtGBP(sales.activeQuotes || 0)} in active quotes. Ask Vera to hunt for more on the CEO screen.`;
     }
     // Variations / change orders
     if (has('variation', 'change order', 'extra')) {
@@ -97,7 +98,6 @@
   let webllmEngine = null;
   let webllmTried = false;
   let webllmAvailable = false;
-
   async function initWebLLM(onProgress) {
     if (webllmTried) return webllmEngine;
     webllmTried = true;
@@ -105,7 +105,9 @@
       if (!navigator.gpu) return null; // no WebGPU → skip silently
       const mod = await import('https://esm.run/@mlc-ai/web-llm');
       webllmEngine = await mod.CreateMLCEngine('Llama-3.2-1B-Instruct-q4f16_1-MLC', {
-        initProgressCallback: (p) => { if (onProgress) onProgress(p.text); },
+        initProgressCallback: p => {
+          if (onProgress) onProgress(p.text);
+        }
       });
       webllmAvailable = true;
       return webllmEngine;
@@ -114,19 +116,24 @@
       return null;
     }
   }
-
   async function webllmRespond(question, sys) {
     if (!webllmEngine) return null;
     try {
       const res = await webllmEngine.chat.completions.create({
-        messages: [
-          { role: 'system', content: sys },
-          { role: 'user', content: question },
-        ],
-        temperature: 0.6, max_tokens: 300,
+        messages: [{
+          role: 'system',
+          content: sys
+        }, {
+          role: 'user',
+          content: question
+        }],
+        temperature: 0.6,
+        max_tokens: 300
       });
       return res?.choices?.[0]?.message?.content || null;
-    } catch (e) { return null; }
+    } catch (e) {
+      return null;
+    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -138,12 +145,19 @@
     try {
       if (window.Backend && Backend.brain) sys += ' Live business state: ' + JSON.stringify(Backend.brain.snapshot()).slice(0, 1500);
     } catch (e) {}
-    const call = window.claude.complete({ messages: [{ role: 'user', content: `${sys}\n\nUser: ${question}` }] });
+    const call = window.claude.complete({
+      messages: [{
+        role: 'user',
+        content: `${sys}\n\nUser: ${question}`
+      }]
+    });
     const timeout = new Promise((_, rej) => setTimeout(() => rej(new Error('timeout')), TIMEOUT_MS));
     try {
       const res = await Promise.race([call, timeout]);
-      return (typeof res === 'string' && res.trim()) ? res.trim() : null;
-    } catch (e) { return null; }
+      return typeof res === 'string' && res.trim() ? res.trim() : null;
+    } catch (e) {
+      return null;
+    }
   }
 
   // ─────────────────────────────────────────────────────────────
@@ -156,14 +170,19 @@
       // 1) Cloud
       try {
         const cloud = await cloudRespond(q);
-        if (cloud) { this._cloudOK = true; return cloud; }
+        if (cloud) {
+          this._cloudOK = true;
+          return cloud;
+        }
       } catch (e) {}
       this._cloudOK = false;
       // 2) WebLLM (only if already initialised — don't block first answer on a download)
       try {
         if (webllmAvailable && webllmEngine) {
           let sys = 'You are Cortex, an assistant in a UK construction app. Be concise, UK English.';
-          try { if (window.Backend?.brain) sys += ' State: ' + JSON.stringify(Backend.brain.snapshot()).slice(0, 800); } catch (e) {}
+          try {
+            if (window.Backend?.brain) sys += ' State: ' + JSON.stringify(Backend.brain.snapshot()).slice(0, 800);
+          } catch (e) {}
           const local = await webllmRespond(q, sys);
           if (local) return local;
         }
@@ -172,24 +191,29 @@
       return localReason(q);
     },
     // Opt-in heavy local model (call from a settings toggle)
-    async enableWebLLM(onProgress) { return initWebLLM(onProgress); },
-    localReason: localReason, // exposed so the LLM shim can hit the deterministic tier without re-entering window.claude
+    async enableWebLLM(onProgress) {
+      return initWebLLM(onProgress);
+    },
+    localReason: localReason,
+    // exposed so the LLM shim can hit the deterministic tier without re-entering window.claude
     status() {
       return {
         cloud: this._cloudOK,
         webgpu: !!navigator.gpu,
         webllm: webllmAvailable,
-        local: true, // always
+        local: true // always
       };
-    },
+    }
   };
-
   window.CortexLocalAgent = CortexLocalAgent;
 
   // Make the existing AI layer resilient: route Backend.ai.ask through the agent
   // so EVERY AI call in the app gets the never-fail fallback for free.
   function patchBackend() {
-    if (!window.Backend || !Backend.ai) { setTimeout(patchBackend, 300); return; }
+    if (!window.Backend || !Backend.ai) {
+      setTimeout(patchBackend, 300);
+      return;
+    }
     if (Backend.ai.__resilient) return;
     const orig = Backend.ai.ask.bind(Backend.ai);
     Backend.ai.ask = async (userMsg, opts = {}) => {
@@ -198,7 +222,7 @@
         if (r && r.trim()) return r;
       } catch (e) {}
       // fall through to the local engine — guarantees a response
-      return localReason(userMsg || (opts && opts.system) || '');
+      return localReason(userMsg || opts && opts.system || '');
     };
     Backend.ai.__resilient = true;
   }

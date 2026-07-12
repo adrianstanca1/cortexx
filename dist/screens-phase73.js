@@ -1,5 +1,16 @@
+// Cortexx — Phase 73: AI Document Generator
+// Activates the six docgen buttons (RAMS / Method statement / H&S policy /
+// Tender cover / Tender response / Invoice summary).
+//
+// Before: Tapping Generate quietly saved a file and showed a toast — no preview.
+// After:  Tapping opens a proper sheet with optional context input → live
+//         generation with a typewriter cursor → preview with Copy / Save /
+//         Email / Regenerate actions.
+
 (function () {
   if (!window.Backend?.vera) return;
+
+  // Shared catalog so we can launch the same flow from multiple places.
   const DOC_KINDS = {
     'rams': {
       l: 'RAMS document',
@@ -63,6 +74,8 @@
     }
   };
   window.DOC_KINDS = DOC_KINDS;
+
+  // Stash recent generations for the "Recent" strip.
   if (!Backend.db.snapshot().docGens) {
     const s = Backend.db.snapshot();
     s.docGens = [];
@@ -87,6 +100,8 @@
     }
   };
   Backend.db.docGens = mkDocGens;
+
+  // Improved doc generator with explicit context wiring + project name pick-up.
   Backend.vera.generateDocV2 = async (kind, context = '', projectId = null) => {
     const b = Backend.brain.snapshot();
     const knowledge = Backend.brain.knowledge.ukRegs.slice(0, 5).join('; ');
@@ -144,6 +159,10 @@ Open as a short executive paragraph, then a clean text table with columns "Invoi
     });
   };
 })();
+
+// ───────────────────────────────────────────────────────────
+// DOC GEN SHEET
+// ───────────────────────────────────────────────────────────
 function DocGenSheet({
   docKind,
   onClose,
@@ -160,7 +179,7 @@ function DocGenSheet({
   };
   const projects = useDB('projects');
   const recent = useDB('docGens').filter(g => g.kind === docKind).slice(0, 3);
-  const [stage, setStage] = React.useState('input');
+  const [stage, setStage] = React.useState('input'); // input | running | done
   const [ctx, setCtx] = React.useState('');
   const [pickedProject, setPickedProject] = React.useState(null);
   const [output, setOutput] = React.useState('');
@@ -174,6 +193,7 @@ function DocGenSheet({
       const text = await Backend.vera.generateDocV2(docKind, fullCtx, pickedProject?.id);
       setOutput(text);
       setStage('done');
+      // log to recent
       await Backend.db.docGens.create({
         kind: docKind,
         title: meta.l,
@@ -187,10 +207,13 @@ function DocGenSheet({
       setStage('input');
     }
   };
+
+  // Auto-run if no context needed.
   React.useEffect(() => {
     if (!meta.needsContext && stage === 'input' && !output) {
       run();
     }
+    // eslint-disable-next-line
   }, []);
   const copyOut = async () => {
     try {
@@ -218,10 +241,10 @@ function DocGenSheet({
     const body = encodeURIComponent(output);
     window.open(`mailto:?subject=${subj}&body=${body}`, '_blank');
   };
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -232,7 +255,7 @@ function DocGenSheet({
       position: 'relative',
       zIndex: 5
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -245,7 +268,7 @@ function DocGenSheet({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", React.createElement("span", null, "Back")), React.createElement("div", {
+  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
@@ -257,33 +280,33 @@ function DocGenSheet({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, meta.l), React.createElement("div", {
+  }, meta.l), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 60
     }
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${meta.c}22, transparent)`,
       border: `0.5px solid ${meta.c}44`,
       borderRadius: 14,
       padding: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 10
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 38,
       height: 38,
@@ -296,30 +319,30 @@ function DocGenSheet({
     }
   }, React.cloneElement(Ic[meta.i] || Ic.doc, {
     size: 19
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       minWidth: 0,
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 700,
       color: T.t1
     }
-  }, meta.l), React.createElement("div", {
+  }, meta.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11.5,
       color: T.t2,
       marginTop: 2
     }
-  }, meta.d, " \xB7 drafted by Vera"))))), stage === 'input' && React.createElement("div", {
+  }, meta.d, " \xB7 drafted by Vera"))))), stage === 'input' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 16px'
     }
-  }, meta.needsContext && React.createElement(React.Fragment, null, React.createElement(SectionLabel73, null, meta.contextLabel), React.createElement("textarea", {
+  }, meta.needsContext && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SectionLabel73, null, meta.contextLabel), /*#__PURE__*/React.createElement("textarea", {
     value: ctx,
     onChange: e => setCtx(e.target.value),
     placeholder: meta.placeholder,
@@ -338,18 +361,18 @@ function DocGenSheet({
       outline: 'none'
     },
     autoFocus: true
-  })), meta.needsProject && projects.length > 0 && React.createElement(React.Fragment, null, React.createElement(SectionLabel73, {
+  })), meta.needsProject && projects.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SectionLabel73, {
     style: {
       marginTop: 14
     }
-  }, "Attach to project (optional)"), React.createElement("div", {
+  }, "Attach to project (optional)"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       overflowX: 'auto',
       paddingBottom: 4
     }
-  }, projects.filter(p => p.status !== 'completed').slice(0, 8).map(p => React.createElement("button", {
+  }, projects.filter(p => p.status !== 'completed').slice(0, 8).map(p => /*#__PURE__*/React.createElement("button", {
     key: p.id,
     onClick: () => setPickedProject(pickedProject?.id === p.id ? null : p),
     style: {
@@ -365,7 +388,7 @@ function DocGenSheet({
       whiteSpace: 'nowrap',
       cursor: 'pointer'
     }
-  }, p.name)))), err && React.createElement("div", {
+  }, p.name)))), err && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 12,
       padding: 10,
@@ -376,7 +399,7 @@ function DocGenSheet({
       fontFamily: SF,
       fontSize: 12
     }
-  }, err), React.createElement("button", {
+  }, err), /*#__PURE__*/React.createElement("button", {
     onClick: run,
     disabled: meta.needsContext && !ctx.trim(),
     style: {
@@ -400,17 +423,17 @@ function DocGenSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 16
-  }), " Generate with Cortex AI"), recent.length > 0 && React.createElement(React.Fragment, null, React.createElement(SectionLabel73, {
+  }), " Generate with Cortex AI"), recent.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(SectionLabel73, {
     style: {
       marginTop: 22
     }
-  }, "Recent"), React.createElement("div", {
+  }, "Recent"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 6
     }
-  }, recent.map(r => React.createElement("div", {
+  }, recent.map(r => /*#__PURE__*/React.createElement("div", {
     key: r.id,
     style: {
       background: T.bg2,
@@ -422,12 +445,12 @@ function DocGenSheet({
       alignItems: 'center',
       gap: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       minWidth: 0,
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12.5,
@@ -436,7 +459,7 @@ function DocGenSheet({
       textOverflow: 'ellipsis',
       whiteSpace: 'nowrap'
     }
-  }, r.ctx), React.createElement("div", {
+  }, r.ctx), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
@@ -448,11 +471,11 @@ function DocGenSheet({
     month: 'short',
     hour: '2-digit',
     minute: '2-digit'
-  }), " \xB7 ", r.chars, " chars"))))))), stage === 'running' && React.createElement("div", {
+  }), " \xB7 ", r.chars, " chars"))))))), stage === 'running' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -460,14 +483,14 @@ function DocGenSheet({
       padding: '18px 16px',
       minHeight: 220
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 14
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: meta.c,
       animation: 'spin73 1.5s linear infinite',
@@ -475,7 +498,7 @@ function DocGenSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 16
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 11.5,
@@ -483,13 +506,13 @@ function DocGenSheet({
       fontWeight: 700,
       letterSpacing: 0.4
     }
-  }, "CORTEX IS DRAFTING")), React.createElement("div", {
+  }, "CORTEX IS DRAFTING")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 7
     }
-  }, [100, 92, 96, 78, 100, 88, 60].map((w, i) => React.createElement("div", {
+  }, [100, 92, 96, 78, 100, 88, 60].map((w, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       height: 9,
@@ -499,32 +522,32 @@ function DocGenSheet({
       backgroundSize: '200% 100%',
       animation: `shimmer73 1.4s ease-in-out infinite ${i * 0.08}s`
     }
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 16,
       fontFamily: SF,
       fontSize: 11.5,
       color: T.t3
     }
-  }, "Pulling live data from your brain \xB7 ", Backend.brain.knowledge.ukRegs.length, " regs available \xB7 ", projects.length, " projects scanned."))), stage === 'done' && React.createElement("div", {
+  }, "Pulling live data from your brain \xB7 ", Backend.brain.knowledge.ukRegs.length, " regs available \xB7 ", projects.length, " projects scanned."))), stage === 'done' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 24px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
       borderRadius: 14,
       padding: '16px 16px 18px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 12
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 7,
       height: 7,
@@ -532,7 +555,7 @@ function DocGenSheet({
       background: T.green,
       boxShadow: `0 0 8px ${T.green}`
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 10.5,
@@ -540,11 +563,11 @@ function DocGenSheet({
       fontWeight: 700,
       letterSpacing: 0.4
     }
-  }, "READY \xB7 ", output.length, " CHARS"), React.createElement("span", {
+  }, "READY \xB7 ", output.length, " CHARS"), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 10.5,
@@ -555,36 +578,36 @@ function DocGenSheet({
     month: 'short',
     hour: '2-digit',
     minute: '2-digit'
-  }))), React.createElement(DocPreview, {
+  }))), /*#__PURE__*/React.createElement(DocPreview, {
     text: output
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8,
       marginTop: 12
     }
-  }, React.createElement(ActionBtn73, {
+  }, /*#__PURE__*/React.createElement(ActionBtn73, {
     icon: Ic.copy,
     label: "Copy",
     onClick: copyOut,
     color: accent
-  }), React.createElement(ActionBtn73, {
+  }), /*#__PURE__*/React.createElement(ActionBtn73, {
     icon: Ic.download,
     label: "Save to Docs",
     onClick: saveAsDoc,
     color: T.cyan
-  }), React.createElement(ActionBtn73, {
+  }), /*#__PURE__*/React.createElement(ActionBtn73, {
     icon: Ic.send,
     label: "Email",
     onClick: emailIt,
     color: T.amber
-  }), React.createElement(ActionBtn73, {
+  }), /*#__PURE__*/React.createElement(ActionBtn73, {
     icon: Ic.spark,
     label: "Regenerate",
     onClick: run,
     color: T.purple
-  })))), React.createElement("style", null, `
+  })))), /*#__PURE__*/React.createElement("style", null, `
         @keyframes shimmer73 { 0% { background-position: 200% 0 } 100% { background-position: -200% 0 } }
         @keyframes spin73 { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
       `));
@@ -593,7 +616,7 @@ function SectionLabel73({
   children,
   style
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -612,7 +635,7 @@ function ActionBtn73({
   onClick,
   color
 }) {
-  return React.createElement("button", {
+  return /*#__PURE__*/React.createElement("button", {
     onClick: onClick,
     style: {
       background: T.bg2,
@@ -629,7 +652,7 @@ function ActionBtn73({
       justifyContent: 'center',
       gap: 7
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color
     }
@@ -637,12 +660,15 @@ function ActionBtn73({
     size: 15
   })), " ", label);
 }
+
+// Format the document text into readable sections — detects numbered headings,
+// ALL-CAPS lines, and table rows.
 function DocPreview({
   text
 }) {
   if (!text) return null;
   const lines = text.split(/\r?\n/);
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -654,16 +680,17 @@ function DocPreview({
     }
   }, lines.map((raw, i) => {
     const ln = raw.trim();
-    if (!ln) return React.createElement("div", {
+    if (!ln) return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
         height: 8
       }
     });
+    // Heading: starts with number+dot or is ALL CAPS (allow 2-50 chars)
     const isNumHeading = /^\d+\.\s+[A-Z]/.test(ln);
     const isCapsHeading = ln.length >= 3 && ln.length <= 60 && ln === ln.toUpperCase() && /[A-Z]/.test(ln) && !/[.!?]$/.test(ln);
     if (isNumHeading || isCapsHeading) {
-      return React.createElement("div", {
+      return /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
           fontFamily: SF,
@@ -677,8 +704,9 @@ function DocPreview({
         }
       }, ln);
     }
+    // Bullet
     if (/^[-•*]\s+/.test(ln)) {
-      return React.createElement("div", {
+      return /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
           display: 'flex',
@@ -686,15 +714,16 @@ function DocPreview({
           paddingLeft: 4,
           marginBottom: 2
         }
-      }, React.createElement("span", {
+      }, /*#__PURE__*/React.createElement("span", {
         style: {
           color: T.t3
         }
-      }, "\u2022"), React.createElement("span", null, ln.replace(/^[-•*]\s+/, '')));
+      }, "\u2022"), /*#__PURE__*/React.createElement("span", null, ln.replace(/^[-•*]\s+/, '')));
     }
+    // Pipe-table row
     if (ln.includes(' | ') || /^\|/.test(ln)) {
       const cells = ln.replace(/^\||\|$/g, '').split('|').map(s => s.trim());
-      return React.createElement("div", {
+      return /*#__PURE__*/React.createElement("div", {
         key: i,
         style: {
           display: 'grid',
@@ -706,7 +735,7 @@ function DocPreview({
           borderBottom: `0.5px solid ${T.hair}`,
           color: T.t2
         }
-      }, cells.map((c, j) => React.createElement("div", {
+      }, cells.map((c, j) => /*#__PURE__*/React.createElement("div", {
         key: j,
         style: {
           overflow: 'hidden',
@@ -714,7 +743,7 @@ function DocPreview({
         }
       }, c)));
     }
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: i,
       style: {
         marginBottom: 4
@@ -722,11 +751,16 @@ function DocPreview({
     }, ln);
   }));
 }
+
+// ───────────────────────────────────────────────────────────
+// LAUNCHER — used by VeraScreen to replace the inline Generate buttons.
+// Tiled card grid with proper icons + colors + recent count badge.
+// ───────────────────────────────────────────────────────────
 function DocGenLauncher({
   accent
 }) {
   const allRecent = useDB('docGens');
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -734,7 +768,7 @@ function DocGenLauncher({
     }
   }, Object.entries(window.DOC_KINDS).map(([k, m]) => {
     const cnt = allRecent.filter(r => r.kind === k).length;
-    return React.createElement("button", {
+    return /*#__PURE__*/React.createElement("button", {
       key: k,
       onClick: () => window.cortexxNav('docgen', k),
       style: {
@@ -749,13 +783,13 @@ function DocGenLauncher({
         flexDirection: 'column',
         gap: 8
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 32,
         height: 32,
@@ -768,7 +802,7 @@ function DocGenLauncher({
       }
     }, React.cloneElement(Ic[m.i] || Ic.doc, {
       size: 16
-    })), cnt > 0 && React.createElement("span", {
+    })), cnt > 0 && /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 10,
@@ -778,7 +812,7 @@ function DocGenLauncher({
         borderRadius: 8,
         fontWeight: 700
       }
-    }, cnt)), React.createElement("div", null, React.createElement("div", {
+    }, cnt)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
@@ -786,7 +820,7 @@ function DocGenLauncher({
         color: T.t1,
         lineHeight: 1.2
       }
-    }, m.l), React.createElement("div", {
+    }, m.l), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 10.5,
@@ -794,7 +828,7 @@ function DocGenLauncher({
         marginTop: 2,
         lineHeight: 1.3
       }
-    }, m.d)), React.createElement("div", {
+    }, m.d)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
