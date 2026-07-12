@@ -1,5 +1,13 @@
+// Cortexx — RBAC nav gating + tenant billing/usage (Phase 84)
+
+// ═══════════════════════════════════════════════════════════════════
+// Role-based tile filter — maps app tile keys → permission areas.
+// The current user's role is the first 'active' member (demo); in prod
+// this would come from the authenticated session.
+// ═══════════════════════════════════════════════════════════════════
 (function () {
   const AREA = {
+    // money cluster
     money: 'money',
     pos: 'money',
     subinvoices: 'money',
@@ -9,6 +17,7 @@
     quotes: 'quotes',
     catalog: 'money',
     currency: 'money',
+    // project/site
     timeline: 'projects',
     calendar: 'projects',
     diary: 'diary',
@@ -18,6 +27,7 @@
     docs: 'docs',
     snags: 'snags',
     changes: 'projects',
+    // people/time
     time: 'clock',
     clock: 'clock',
     livestatus: 'team',
@@ -26,10 +36,12 @@
     admin: 'team',
     tenant: 'team',
     subportal: 'subportal',
+    // safety
     safety: 'safety',
     permits: 'safety',
     inspections: 'safety',
     audittrail: 'reports',
+    // ai/insights
     reports: 'reports',
     tomorrow: 'reports',
     performance: 'reports',
@@ -38,6 +50,7 @@
     veraauto: 'reports',
     personas: 'reports',
     myday: 'myday',
+    // sales
     leads: 'projects',
     customers: 'projects',
     portal: 'portal'
@@ -51,15 +64,18 @@
       return 'Director';
     }
   }
+
+  // Returns true if the tile is visible for the current role.
   window.__cortexxRoleFilter = function (tile) {
     try {
       const role = currentRole();
       if (!window.CortexRBAC) return true;
       if (window.CortexRBAC.can(role, '*')) return true;
+      // Always allow core/system tiles everyone needs
       const ALWAYS = ['profile', 'help', 'settings', 'ai', 'workspace', 'tenant', 'infrastructure', 'database', 'upload', 'voice', 'reminders', 'tags', 'views', 'templates', 'templatelib', 'forms', 'api', 'currency'];
       if (ALWAYS.indexOf(tile.k) >= 0) return true;
       const area = AREA[tile.k];
-      if (!area) return true;
+      if (!area) return true; // unmapped → visible
       return window.CortexRBAC.can(role, area);
     } catch (e) {
       return true;
@@ -67,6 +83,10 @@
   };
   window.__cortexxCurrentRole = currentRole;
 })();
+
+// ═══════════════════════════════════════════════════════════════════
+// BILLING & USAGE — per tenant
+// ═══════════════════════════════════════════════════════════════════
 function BillingScreen({
   accent
 }) {
@@ -121,35 +141,35 @@ function BillingScreen({
     max: null,
     c: T.cyan
   }];
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Billing & usage",
     subtitle: `${tenant.name} · ${tenant.plan} plan`
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${accent}33, ${T.purple}22)`,
       border: `0.5px solid ${accent}55`,
       borderRadius: 16,
       padding: 16
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start'
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -158,7 +178,7 @@ function BillingScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "Current plan"), React.createElement("div", {
+  }, "Current plan"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 24,
@@ -166,17 +186,17 @@ function BillingScreen({
       color: T.t1,
       marginTop: 4
     }
-  }, tenant.plan)), React.createElement(Pill, {
+  }, tenant.plan)), /*#__PURE__*/React.createElement(Pill, {
     c: T.green
-  }, "active")))), React.createElement(Section, {
+  }, "active")))), /*#__PURE__*/React.createElement(Section, {
     title: "Usage this month"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, usage.map((u, i) => React.createElement("div", {
+  }, usage.map((u, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -184,7 +204,7 @@ function BillingScreen({
       borderRadius: 12,
       padding: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -193,7 +213,7 @@ function BillingScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, u.l), React.createElement("div", {
+  }, u.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 20,
@@ -201,28 +221,28 @@ function BillingScreen({
       fontWeight: 700,
       marginTop: 4
     }
-  }, u.v, u.max ? React.createElement("span", {
+  }, u.v, u.max ? /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 12,
       color: T.t3
     }
-  }, " / ", u.max) : ''), u.max && typeof u.v === 'number' && React.createElement("div", {
+  }, " / ", u.max) : ''), u.max && typeof u.v === 'number' && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 6
     }
-  }, React.createElement(Bar, {
+  }, /*#__PURE__*/React.createElement(Bar, {
     pct: Math.min(100, u.v / u.max * 100),
     c: u.c,
     h: 3
-  })))))), React.createElement(Section, {
+  })))))), /*#__PURE__*/React.createElement(Section, {
     title: "Plans"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, plans.map(p => React.createElement("div", {
+  }, plans.map(p => /*#__PURE__*/React.createElement("div", {
     key: p.name,
     style: {
       background: p.current ? `${accent}11` : T.bg2,
@@ -230,47 +250,47 @@ function BillingScreen({
       borderRadius: 14,
       padding: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'baseline'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
       fontWeight: 700,
       color: T.t1
     }
-  }, p.name), React.createElement("div", null, React.createElement("span", {
+  }, p.name), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 18,
       fontWeight: 700,
       color: accent
     }
-  }, p.price), React.createElement("span", {
+  }, p.price), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t3
     }
-  }, p.price !== 'Custom' ? '/mo' : ''))), React.createElement("div", {
+  }, p.price !== 'Custom' ? '/mo' : ''))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, p.seats, " seats"), React.createElement("div", {
+  }, p.seats, " seats"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 4,
       marginTop: 8
     }
-  }, p.features.map(f => React.createElement("span", {
+  }, p.features.map(f => /*#__PURE__*/React.createElement("span", {
     key: f,
     style: {
       fontFamily: SF,
@@ -280,7 +300,7 @@ function BillingScreen({
       padding: '3px 7px',
       borderRadius: 5
     }
-  }, f))), !p.current && React.createElement("button", {
+  }, f))), !p.current && /*#__PURE__*/React.createElement("button", {
     onClick: () => p.name === 'Enterprise' ? toast('Sales will be in touch shortly', 'success') : window.cortexxNav && window.cortexxNav('checkout', {
       plan: p.name,
       price: p.price
@@ -298,7 +318,7 @@ function BillingScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, p.name === 'Enterprise' ? 'Contact sales' : `Upgrade to ${p.name}`), p.current && React.createElement("div", {
+  }, p.name === 'Enterprise' ? 'Contact sales' : `Upgrade to ${p.name}`), p.current && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
       fontFamily: SF,
@@ -307,9 +327,9 @@ function BillingScreen({
       fontWeight: 600,
       textAlign: 'center'
     }
-  }, "\u2713 Your current plan"))))), React.createElement(Section, {
+  }, "\u2713 Your current plan"))))), /*#__PURE__*/React.createElement(Section, {
     title: "Billing history"
-  }, React.createElement(GroupedList, null, [{
+  }, /*#__PURE__*/React.createElement(GroupedList, null, [{
     d: 'May 2026',
     a: tenant.plan === 'Free' ? '£0.00' : '£29.00',
     s: 'paid'
@@ -321,13 +341,13 @@ function BillingScreen({
     d: 'Mar 2026',
     a: tenant.plan === 'Free' ? '£0.00' : '£29.00',
     s: 'paid'
-  }].map((b, i, arr) => React.createElement(Row, {
+  }].map((b, i, arr) => /*#__PURE__*/React.createElement(Row, {
     key: i,
     icon: Ic.doc,
     iconBg: T.green,
     title: b.d,
     sub: `CortexBuild Pro ${tenant.plan}`,
-    right: React.createElement("span", {
+    right: /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 12,

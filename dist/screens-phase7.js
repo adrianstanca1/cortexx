@@ -1,3 +1,5 @@
+// Cortexx — Phase 7: Subcontractor invoice approval
+
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
@@ -116,22 +118,22 @@ function SubInvoicesScreen({
     });
     toast('Marked as paid', 'success');
   };
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Sub invoices",
     subtitle: `£${pendingTotal.toLocaleString()} pending · ${invs.filter(i => i.status === 'pending').length} awaiting approval`
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement(SegControl, {
+  }, /*#__PURE__*/React.createElement(SegControl, {
     value: seg,
     onChange: setSeg,
     options: [{
@@ -151,7 +153,7 @@ function SubInvoicesScreen({
       l: 'All',
       n: invs.length
     }]
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -161,7 +163,7 @@ function SubInvoicesScreen({
   }, filtered.map(iv => {
     const proj = projects.find(p => p.id === iv.projectId);
     const net = iv.amount - (iv.cisDeduction || 0);
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: iv.id,
       style: {
         background: T.bg2,
@@ -169,33 +171,33 @@ function SubInvoicesScreen({
         padding: 14,
         border: `0.5px solid ${T.hair}`
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 6
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 11,
         color: T.t3,
         fontWeight: 600
       }
-    }, iv.id), React.createElement(Pill, {
+    }, iv.id), /*#__PURE__*/React.createElement(Pill, {
       c: SI_STATUS_C[iv.status]
-    }, iv.status)), React.createElement("div", {
+    }, iv.status)), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
@@ -203,7 +205,7 @@ function SubInvoicesScreen({
         color: T.t1,
         marginTop: 4
       }
-    }, iv.sub), React.createElement("div", {
+    }, iv.sub), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
@@ -211,27 +213,27 @@ function SubInvoicesScreen({
         marginTop: 2,
         lineHeight: 1.4
       }
-    }, iv.desc), React.createElement("div", {
+    }, iv.desc), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 10,
         color: T.t3,
         marginTop: 4
       }
-    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 received ", _formatRelDate(iv.received))), React.createElement("div", {
+    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 received ", _formatRelDate(iv.received))), /*#__PURE__*/React.createElement("div", {
       style: {
         textAlign: 'right',
         flexShrink: 0,
         marginLeft: 8
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 18,
         color: T.t1,
         fontWeight: 700
       }
-    }, "\xA3", iv.amount.toLocaleString()), iv.cisDeduction > 0 && React.createElement("div", {
+    }, "\xA3", iv.amount.toLocaleString()), iv.cisDeduction > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 10,
@@ -239,7 +241,7 @@ function SubInvoicesScreen({
         fontWeight: 600,
         marginTop: 2
       }
-    }, "CIS \u2212\xA3", iv.cisDeduction), iv.cisDeduction > 0 && React.createElement("div", {
+    }, "CIS \u2212\xA3", iv.cisDeduction), iv.cisDeduction > 0 && /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 11,
@@ -247,7 +249,7 @@ function SubInvoicesScreen({
         fontWeight: 700,
         marginTop: 1
       }
-    }, "Net \xA3", net.toLocaleString()))), iv.status === 'pending' && React.createElement("div", {
+    }, "Net \xA3", net.toLocaleString()))), iv.status === 'pending' && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 6,
@@ -255,7 +257,7 @@ function SubInvoicesScreen({
         paddingTop: 10,
         borderTop: `0.5px solid ${T.hair}`
       }
-    }, React.createElement("button", {
+    }, /*#__PURE__*/React.createElement("button", {
       onClick: () => approve(iv.id),
       style: {
         flex: 1,
@@ -269,7 +271,7 @@ function SubInvoicesScreen({
         fontWeight: 700,
         cursor: 'pointer'
       }
-    }, "Approve"), React.createElement("button", {
+    }, "Approve"), /*#__PURE__*/React.createElement("button", {
       onClick: () => reject(iv.id),
       style: {
         background: 'transparent',
@@ -282,7 +284,7 @@ function SubInvoicesScreen({
         fontWeight: 600,
         cursor: 'pointer'
       }
-    }, "Reject"), React.createElement("button", {
+    }, "Reject"), /*#__PURE__*/React.createElement("button", {
       onClick: () => toast(`Opening ${iv.id}…`, 'info'),
       style: {
         background: 'transparent',
@@ -295,7 +297,7 @@ function SubInvoicesScreen({
         fontWeight: 600,
         cursor: 'pointer'
       }
-    }, "View")), iv.status === 'approved' && React.createElement("div", {
+    }, "View")), iv.status === 'approved' && /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 6,
@@ -303,7 +305,7 @@ function SubInvoicesScreen({
         paddingTop: 10,
         borderTop: `0.5px solid ${T.hair}`
       }
-    }, React.createElement("button", {
+    }, /*#__PURE__*/React.createElement("button", {
       onClick: () => pay(iv.id),
       style: {
         flex: 1,

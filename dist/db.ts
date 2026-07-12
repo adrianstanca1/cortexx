@@ -1,4 +1,5 @@
 import { PrismaClient } from '@prisma/client'
+import { PrismaPg } from '@prisma/adapter-pg'
 import { tenancyExtension } from './tenancy'
 
 // Extended client type — preserved so route handlers can keep importing
@@ -6,7 +7,10 @@ import { tenancyExtension } from './tenancy'
 type PrismaWithExt = ReturnType<typeof makeClient>
 
 function makeClient() {
-  return new PrismaClient({ log: ['error'] }).$extends(tenancyExtension)
+  const adapter = new PrismaPg({
+    connectionString: process.env.DATABASE_URL,
+  })
+  return new PrismaClient({ adapter, log: ['error'] }).$extends(tenancyExtension)
 }
 
 const globalForPrisma = globalThis as unknown as {

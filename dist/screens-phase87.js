@@ -1,3 +1,8 @@
+// Cortexx — Per-tenant data export + new-workspace onboarding wizard (Phase 87)
+
+// ═══════════════════════════════════════════════════════════════════
+// DATA EXPORT — export this workspace's data as JSON / CSV
+// ═══════════════════════════════════════════════════════════════════
 function DataExportScreen({
   accent
 }) {
@@ -94,22 +99,22 @@ function DataExportScreen({
     }, 600);
   };
   const count = Object.values(scope).filter(Boolean).length;
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Export data",
     subtitle: tenant ? `${tenant.name} · GDPR portable` : 'GDPR portable'
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -117,13 +122,13 @@ function DataExportScreen({
       marginBottom: 10,
       lineHeight: 1.5
     }
-  }, "Download a portable copy of this workspace. Data stays isolated to ", tenant ? tenant.name : 'your org', " \u2014 nothing leaks across tenants."), React.createElement("div", {
+  }, "Download a portable copy of this workspace. Data stays isolated to ", tenant ? tenant.name : 'your org', " \u2014 nothing leaks across tenants."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8
     }
-  }, sources.map(s => React.createElement("button", {
+  }, sources.map(s => /*#__PURE__*/React.createElement("button", {
     key: s.k,
     onClick: () => toggle(s.k),
     style: {
@@ -137,7 +142,7 @@ function DataExportScreen({
       gap: 12,
       textAlign: 'left'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 34,
       height: 34,
@@ -151,24 +156,24 @@ function DataExportScreen({
     }
   }, React.cloneElement(s.i, {
     size: 17
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, s.l), React.createElement("div", {
+  }, s.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, s.d)), React.createElement("div", {
+  }, s.d)), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 22,
       height: 22,
@@ -179,20 +184,20 @@ function DataExportScreen({
       alignItems: 'center',
       justifyContent: 'center'
     }
-  }, scope[s.k] && React.createElement("span", {
+  }, scope[s.k] && /*#__PURE__*/React.createElement("span", {
     style: {
       color: '#fff'
     }
   }, React.cloneElement(Ic.check, {
     size: 13,
     sw: 3
-  })))))), React.createElement("div", {
+  })))))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 10,
       marginTop: 18
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => doExport('json'),
     disabled: busy || !count,
     style: {
@@ -208,7 +213,7 @@ function DataExportScreen({
       cursor: count ? 'pointer' : 'default',
       opacity: count ? 1 : 0.5
     }
-  }, busy ? 'Exporting…' : `Export JSON (${count})`), React.createElement("button", {
+  }, busy ? 'Exporting…' : `Export JSON (${count})`), /*#__PURE__*/React.createElement("button", {
     onClick: () => doExport('csv'),
     disabled: busy,
     style: {
@@ -222,7 +227,7 @@ function DataExportScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "CSV")), React.createElement("div", {
+  }, "CSV")), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 12,
@@ -238,6 +243,10 @@ function DataExportScreen({
     color: T.green
   }), " Export satisfies GDPR Article 20 (data portability). Photo binaries are excluded \u2014 request a full media archive from your admin."))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// ONBOARDING WIZARD — create a new workspace
+// ═══════════════════════════════════════════════════════════════════
 function OnboardWizard({
   accent,
   onClose
@@ -280,23 +289,23 @@ function OnboardWizard({
     onClose();
   };
   const canNext = step !== 0 || data.name.trim().length > 1;
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       display: 'flex',
       flexDirection: 'column',
       padding: '32px 24px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginBottom: 28
     }
-  }, steps.map((_, i) => React.createElement("div", {
+  }, steps.map((_, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       flex: 1,
@@ -305,7 +314,7 @@ function OnboardWizard({
       background: i <= step ? accent : T.hair,
       transition: 'background 0.3s'
     }
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -314,7 +323,7 @@ function OnboardWizard({
       letterSpacing: 1,
       textTransform: 'uppercase'
     }
-  }, "Step ", step + 1, " of ", steps.length), React.createElement("div", {
+  }, "Step ", step + 1, " of ", steps.length), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 26,
@@ -323,7 +332,7 @@ function OnboardWizard({
       letterSpacing: -0.5,
       marginTop: 6
     }
-  }, steps[step].t), React.createElement("div", {
+  }, steps[step].t), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -331,11 +340,11 @@ function OnboardWizard({
       marginTop: 6,
       marginBottom: 28
     }
-  }, steps[step].d), React.createElement("div", {
+  }, steps[step].d), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, step === 0 && React.createElement("input", {
+  }, step === 0 && /*#__PURE__*/React.createElement("input", {
     autoFocus: true,
     value: data.name,
     onChange: e => set('name', e.target.value),
@@ -352,13 +361,13 @@ function OnboardWizard({
       outline: 'none',
       boxSizing: 'border-box'
     }
-  }), step === 1 && React.createElement("div", {
+  }), step === 1 && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 10
     }
-  }, trades.map(t => React.createElement("button", {
+  }, trades.map(t => /*#__PURE__*/React.createElement("button", {
     key: t,
     onClick: () => set('trade', t),
     style: {
@@ -372,13 +381,13 @@ function OnboardWizard({
       fontWeight: 600,
       color: data.trade === t ? accent : T.t1
     }
-  }, t))), step === 2 && React.createElement("div", {
+  }, t))), step === 2 && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 10
     }
-  }, sizes.map(s => React.createElement("button", {
+  }, sizes.map(s => /*#__PURE__*/React.createElement("button", {
     key: s,
     onClick: () => set('size', s),
     style: {
@@ -395,14 +404,14 @@ function OnboardWizard({
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, s, " people ", data.size === s && React.createElement("span", {
+  }, s, " people ", data.size === s && /*#__PURE__*/React.createElement("span", {
     style: {
       color: accent
     }
   }, React.cloneElement(Ic.check, {
     size: 18,
     sw: 3
-  }))))), step === 3 && React.createElement("div", null, React.createElement("div", {
+  }))))), step === 3 && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 12,
@@ -410,7 +419,7 @@ function OnboardWizard({
       justifyContent: 'center',
       marginBottom: 24
     }
-  }, colors.map(c => React.createElement("button", {
+  }, colors.map(c => /*#__PURE__*/React.createElement("button", {
     key: c,
     onClick: () => set('color', c),
     style: {
@@ -422,7 +431,7 @@ function OnboardWizard({
       boxShadow: data.color === c ? `0 0 0 2px ${c}` : 'none',
       cursor: 'pointer'
     }
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
@@ -431,30 +440,30 @@ function OnboardWizard({
       alignItems: 'center',
       gap: 12
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: data.name || 'New Workspace',
     size: 44,
     c: data.color
-  }), React.createElement("div", null, React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
       fontWeight: 700,
       color: T.t1
     }
-  }, data.name || 'New Workspace'), React.createElement("div", {
+  }, data.name || 'New Workspace'), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2
     }
-  }, data.trade, " \xB7 ", data.size, " people \xB7 Trial"))))), React.createElement("div", {
+  }, data.trade, " \xB7 ", data.size, " people \xB7 Trial"))))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 10,
       marginTop: 20
     }
-  }, step > 0 && React.createElement("button", {
+  }, step > 0 && /*#__PURE__*/React.createElement("button", {
     onClick: () => setStep(step - 1),
     style: {
       background: T.bg2,
@@ -467,7 +476,7 @@ function OnboardWizard({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Back"), React.createElement("button", {
+  }, "Back"), /*#__PURE__*/React.createElement("button", {
     onClick: () => step < steps.length - 1 ? setStep(step + 1) : finish(),
     disabled: !canNext,
     style: {

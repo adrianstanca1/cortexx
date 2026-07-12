@@ -315,7 +315,7 @@ function CortexxApp({
   const handleCapture = k => {
     setSheet(null);
     setTimeout(() => {
-      if (k === 'task') setSheet('addtask');else if (k === 'photo') setSheet('sitephoto');else if (k === 'incident') setSheet('incident');else if (k === 'estimate') setSheet('estimator');else if (k === 'photomention') setSheet('photomention');else if (k === 'triage') setSheet('triage');else if (k === 'voice') setSheet('voice');else if (k === 'receipt') setSheet('scan');else if (k === 'money') setSheet('money');else if (k === 'safety') setSheet('safety');else if (k === 'profile') setSheet('profile');else if (k === 'ai') setSheet('ai');else if (k === 'inbox') setSheet('inbox');else if (k === 'quotes') setSheet('quotes');else if (k === 'time') setSheet('time');else if (k === 'calendar') setSheet('calendar');else if (k === 'materials') setSheet('materials');else if (k === 'subs') setSheet('subs');else if (k === 'docs') setSheet('docs');else if (k === 'diary') setSheet('diary');else if (k === 'snags') setSheet('snags');else if (k === 'changes') setSheet('changes');else if (k === 'equipment') setSheet('equipment');else if (k === 'rfis') setSheet('rfis');else if (k === 'messages') setSheet('messages');else if (k === 'reports') setSheet('reports');else if (k === 'timeline') setSheet('timeline');else if (k === 'settings') setSheet('settings');else if (k === 'help') setSheet('help');else if (k === 'pos') setSheet('pos');else if (k === 'portal') setSheet('portal');else if (k === 'inspections') setSheet('inspections');else if (k === 'customers') setSheet('customers');else if (k === 'leads') setSheet('leads');else if (k === 'photos') setSheet('photos');else if (k === 'photoreview') setSheet('photoreview');else if (k === 'tenant') setSheet('tenant');else if (k === 'admin') setSheet('admin');else if (k === 'billing') setSheet('billing');else if (k === 'auditlog') setSheet('auditlog');else if (k === 'dataexport') setSheet('dataexport');else if (k === 'payments') setSheet('payments');else if (k === 'newworkspace') setSheet('newworkspace');else if (k === 'notifprefs') setSheet('notifprefs');else if (k === 'digests') setSheet('digests');else if (k === 'clientmsgs') setSheet('clientmsgs');else if (k === 'ledger') setSheet('ledger');else if (k === 'cloudsync') setSheet('cloudsync');else if (k === 'account' || k === 'auth' || k === 'login' || k === 'signin') setSheet('account');else if (k === 'inviteteam' || k === 'invite') setSheet('inviteteam');else if (k === 'diagnostics') setSheet('diagnostics');else if (k === 'aiengine') setSheet('aiengine');else if (k && k.indexOf('payinvoice:') === 0) {
+      if (k === 'task') setSheet('addtask');else if (k === 'photo') setSheet('sitephoto');else if (k === 'incident') setSheet('incident');else if (k === 'estimate') setSheet('estimator');else if (k === 'photomention') setSheet('photomention');else if (k === 'triage') setSheet('triage');else if (k === 'voice') setSheet('voice');else if (k === 'receipt') setSheet('scan');else if (k === 'money') setSheet('money');else if (k === 'safety') setSheet('safety');else if (k === 'profile') setSheet('profile');else if (k === 'ai') setSheet('ai');else if (k === 'inbox') setSheet('inbox');else if (k === 'quotes') setSheet('quotes');else if (k === 'time') setSheet('time');else if (k === 'calendar') setSheet('calendar');else if (k === 'materials') setSheet('materials');else if (k === 'subs') setSheet('subs');else if (k === 'docs') setSheet('docs');else if (k === 'diary') setSheet('diary');else if (k === 'snags') setSheet('snags');else if (k === 'changes') setSheet('changes');else if (k === 'equipment') setSheet('equipment');else if (k === 'rfis') setSheet('rfis');else if (k === 'messages') setSheet('messages');else if (k === 'reports') setSheet('reports');else if (k === 'timeline') setSheet('timeline');else if (k === 'settings') setSheet('settings');else if (k === 'help') setSheet('help');else if (k === 'pos') setSheet('pos');else if (k === 'portal') setSheet('portal');else if (k === 'inspections') setSheet('inspections');else if (k === 'customers') setSheet('customers');else if (k === 'leads') setSheet('leads');else if (k === 'photos') setSheet('photos');else if (k === 'photoreview') setSheet('photoreview');else if (k === 'tenant') setSheet('tenant');else if (k === 'admin') setSheet('admin');else if (k === 'billing') setSheet('billing');else if (k === 'auditlog') setSheet('auditlog');else if (k === 'dataexport') setSheet('dataexport');else if (k === 'payments') setSheet('payments');else if (k === 'newworkspace') setSheet('newworkspace');else if (k === 'notifprefs') setSheet('notifprefs');else if (k === 'digests') setSheet('digests');else if (k === 'clientmsgs') setSheet('clientmsgs');else if (k === 'ledger') setSheet('ledger');else if (k === 'cloudsync') setSheet('cloudsync');else if (k === 'aiengine') setSheet('aiengine');else if (k && k.indexOf('payinvoice:') === 0) {
         window.__cortexxPayInvoice = k.slice('payinvoice:'.length);
         setSheet('payinvoice');
       } else if (k === 'payinvoice') setSheet('payinvoice');else if (k === 'bankrec') setSheet('bankrec');else if (k === 'pushset') setSheet('pushset');else if (k === 'e2ee') setSheet('e2ee');else if (k === 'cis300') setSheet('cis300');else if (k === 'language') setSheet('language');else if (k === 'riddor') setSheet('riddor');else if (k === 'retention') setSheet('retention');else if (k && k.indexOf('retentioninv:') === 0) {
@@ -346,15 +346,7 @@ function CortexxApp({
     }
   }, /*#__PURE__*/React.createElement(IOSStatusBar, {
     dark: true
-  }), window.StorageCapacityBanner && /*#__PURE__*/React.createElement("div", {
-    style: {
-      position: 'absolute',
-      top: 44,
-      left: 0,
-      right: 0,
-      zIndex: 12
-    }
-  }, React.createElement(window.StorageCapacityBanner, {})), /*#__PURE__*/React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflow: 'hidden',
@@ -383,8 +375,6 @@ function CortexxApp({
   })), /*#__PURE__*/React.createElement(ResponsiveSidebar, {
     tab: tab,
     setTab: setTab,
-    accent: accent
-  }), window.GlobalSideMenu && /*#__PURE__*/React.createElement(GlobalSideMenu, {
     accent: accent
   }), /*#__PURE__*/React.createElement("div", {
     style: {
@@ -827,16 +817,7 @@ function CortexxApp({
     accent: accent
   }, /*#__PURE__*/React.createElement(CloudSyncScreen, {
     accent: accent
-  })), sheet === 'diagnostics' && window.BackendDiagnosticsScreen && /*#__PURE__*/React.createElement(BackendDiagnosticsScreen, {
-    onClose: closeSheet,
-    accent: accent
-  }), sheet === 'account' && window.AccountSheet && /*#__PURE__*/React.createElement(AccountSheet, {
-    onClose: closeSheet,
-    accent: accent
-  }), sheet === 'inviteteam' && window.InviteTeammateSheet && /*#__PURE__*/React.createElement(InviteTeammateSheet, {
-    onClose: closeSheet,
-    accent: accent
-  }), sheet === 'aiengine' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'aiengine' && /*#__PURE__*/React.createElement(SheetWrap, {
     title: "AI engine",
     onClose: closeSheet,
     accent: accent
@@ -1460,7 +1441,6 @@ function SheetWrap({
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '12px 16px',
-      paddingTop: 'calc(12px + max(env(safe-area-inset-top, 0px), 44px))',
       borderBottom: `0.5px solid ${T.hair}`,
       background: T.bg0,
       position: 'relative',
