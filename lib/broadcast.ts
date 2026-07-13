@@ -15,11 +15,13 @@
  * is purely an *additional* signal for same-origin same-browser tabs.
  */
 
+import type { BroadcastMessage } from './broadcast.types'
+
+export type { BroadcastMessage }
+
 const CHANNEL_NAME = 'cortexx-v1'
 
-export type BroadcastMessage =
-  | { type: 'data:invalidate'; scope: 'all' | 'tasks' | 'invoices' | 'projects' | 'team' | 'activity' }
-  | { type: 'auth:signout' }
+export type BroadcastScope = Exclude<BroadcastMessage, { type: 'auth:signout' } | { type: 'activity:new' }>['scope']
 
 let channel: BroadcastChannel | null = null
 
@@ -66,6 +68,6 @@ export function subscribe(handler: (msg: BroadcastMessage) => void): () => void 
  * can refetch. Optimistic-update-friendly — call after the API write
  * succeeds, not before.
  */
-export function broadcastInvalidate(scope: Exclude<BroadcastMessage, { type: 'auth:signout' }>['scope']): void {
+export function broadcastInvalidate(scope: BroadcastScope): void {
   broadcast({ type: 'data:invalidate', scope })
 }

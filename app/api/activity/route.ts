@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { createActivity } from '@/lib/activity'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,17 +65,15 @@ export async function POST(req: NextRequest) {
     if (!body.action?.trim()) {
       return NextResponse.json({ error: 'action is required' }, { status: 400 })
     }
-    // Source actor from session — never trust client-supplied actorName
-    const activity = await prisma.activity.create({
-      data: {
-        projectId: body.projectId || null,
-        actorName: sanitize(actorName(auth), 100),
-        actorType: body.actorType === 'ai' ? 'ai' : 'human',
-        action: sanitize(body.action, 200),
-        detail: body.detail ? sanitize(body.detail) : null,
-        iconType: body.iconType || 'check',
-      },
-      include: { project: true },
+    // Source actor from session — never trust client-supplied actorName.
+    // The Prisma broadcast extension auto-notifies sibling tabs.
+    const activity = await createActivity({
+      projectId: body.projectId || null,
+      actorName: sanitize(actorName(auth), 100),
+      actorType: body.actorType === 'ai' ? 'ai' : 'human',
+      action: sanitize(body.action, 200),
+      detail: body.detail ? sanitize(body.detail) : null,
+      iconType: body.iconType || 'check',
     })
     return NextResponse.json(activity, { status: 201 })
   } catch (error) {

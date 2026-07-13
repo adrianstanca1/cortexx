@@ -1,5 +1,68 @@
 # CortexBuild Pro — Changelog
 
+## v1.7.5 — 13 Jul 2026 — Documents, equipment checks, RAMS generator and role packs
+
+### Added
+- **File uploads in Documents library** — `app/documents/page.tsx` now lets you upload PDFs, photos and receipts via `/api/uploads`. Uploaded documents store the resolved URL, size and MIME type, and the existing S3/local storage adapter handles persistence.
+- **Quick document templates** — create documents pre-typed as RAMS, method statement, risk assessment or checklist from the Documents modal.
+- **Equipment checks** — new `EquipmentCheck` model, migration `20260713000000_add_equipment_checks`, and `/api/equipment-checks` CRUD routes. New `/equipment-checks` page with ready-to-use templates for scissor lifts, cherry pickers / MEWPs, telehandlers, harnesses, fall-arrest systems and ladders. Each template has pass/fail/NA items, notes, sign-off and project/equipment linkage.
+- **RAMS generator** — new `lib/rams-templates.ts` with standard UK construction templates (work at height, manual handling, hot works, excavation, electrical work) and `/api/rams/generate` endpoint. The RAMS page now has a **Generate** button that produces a draft RAMS / method statement / risk assessment from a project + work description, with optional AI enhancement through the local LLM.
+- **Role-based app bundles** — new `lib/bundles.ts` defines four packs: Site Supervisor, Site Manager, PM & Agent, and Commercial. New `/bundles` overview page, `/bundles/[slug]` dashboard, and `/api/bundles/[slug]/ask` endpoints. Each pack exposes its relevant pages and a dedicated AI agent with a tailored system prompt and workspace context.
+- **IcUpload icon** added to `components/ui/Icons.tsx` for the upload affordance.
+
+### Changed
+- **Apps directory** — added Equipment checks and Role packs to `/apps`.
+- **RAMS page** — header now shows Generate + Add buttons; uses the shared `Modal`, `FormField`, `SegmentedControl` and `Button` primitives.
+- **Documents page** — rebuilt create flow around the shared `Modal` component and added upload support.
+
+### Database
+- New migration `prisma/migrations/20260713000000_add_equipment_checks` adds the `EquipmentCheck` table with project/equipment FKs and JSONB checklist items.
+
+## v1.7.4 — 12 Jul 2026 — Training & qualifications editing
+
+### Added
+- **Reusable UI primitives** — new `Button`, `Modal`, `FormField`, and `SegmentedControl` components (`components/ui/*`) plus `lib/useMutation.ts` and `lib/withRoute.ts` for consistent forms, dialogs, and API route wrappers.
+- **Certification category model** — `Certification` now has a `category` enum (`qualification` | `training` | `course` | `licence` | `safety`) and an optional link to a `TrainingCourse` catalog. New migration `20260712000001_add_certification_category_and_courses`.
+- **Training course catalog** — new `TrainingCourse` table and `/api/training/courses` endpoints (list, create). Courses carry name, code, provider, category, validity days, and archive flag.
+- **Full edit workflow on Training page** — `app/training/page.tsx` now supports creating, editing (pencil icon), deleting, status filtering, and category filtering. Uses the shared `CertificationDialog`.
+- **Qualifications on team member detail** — `app/team/[id]/page.tsx` now lists all certifications/training for the operative/manager, shows status badges (valid / expiring / expired), and allows adding or editing records inline via the same dialog.
+- **RBAC + rate-limit hardening** — `app/api/training/*` routes now use `withRoute` for auth/org context, enforce write/manage permissions, apply `enforceRateLimit`, emit audit logs, and validate member/course existence on create/update.
+- **GET single certification** — `GET /api/training/[id]` returns a single record with member and course.
+
+### Fixed
+- **Team API certifications** — `GET /api/team` and `GET /api/team/[id]` now include `certifications` (sorted by expiry) so the member detail and any team-wide training views have the data they need.
+- **Training route org scoping** — certification routes now run inside the tenancy context set by `withRoute`, so they respect the active organization once multi-tenancy is enforced.
+- **Broadcast extension type safety** — `lib/broadcastExtension.ts` now only broadcasts activities that have an `id` and casts the Prisma extension result correctly.
+
+### Verified
+- `npm install` succeeded (872 packages, 0 vulnerabilities).
+- `npx prisma migrate deploy` applied all 32 migrations against PostgreSQL 16.
+- `npm run build` completed successfully (Next.js 16.2.9 + Turbopack).
+- `npm test` passed: 216/216.
+- `npm run lint`: 0 errors, 1 pre-existing warning in `app/activity/page.tsx` (ref update during render).
+
+### Notes
+- The `next.config.js` warning about `lib/storage.ts` tracing the whole project is pre-existing and unrelated to this vertical.
+- Local dev environment created: Node 22.23.1 + PostgreSQL 16 + `.env` with `DATABASE_URL`.
+
+## v1.7.3 — 12 Jul 2026 — Activity / broadcast / presence review
+
+### Fixed
+- **SSE cursor race** — `app/api/events/stream/route.ts` now polls `createdAt >= cursor` and deduplicates by activity id, so rows created in the same millisecond are neither dropped nor re-emitted. The seen-id map is pruned as the cursor advances.
+- **Realtime hook re-seed** — `lib/useRealtimeActivity.ts` now keys re-seeding on the full list of activity ids, so a refetch that changes content without changing length/first-id is detected.
+
+### Added
+- **Live relative timestamps** — `app/activity/page.tsx` uses new `RelativeTime` component + `useRelativeTime` hook; "2m ago" updates every 30 seconds instead of freezing at mount time.
+- **Activity icons rendered** — `components/ui/ActivityIcon.tsx` maps `iconType` to existing icon set; icons now appear under each avatar on the Activity feed.
+- **DB index** — composite index `Activity(organizationId, createdAt)` added to `prisma/schema.prisma` plus migration `20260712000000_add_activity_org_created_at_index`.
+- **Cross-tab activity fast-path** — `lib/useRealtimeActivity.ts` now also subscribes to `BroadcastChannel`, and `lib/broadcastExtension.ts` automatically broadcasts every `prisma.activity.create` from the server. Sibling tabs see new activities instantly instead of waiting for the 5 s SSE poll.
+- **Robust SSE client** — `useRealtimeActivity` now uses exponential backoff with jitter, resets backoff on successful connection, and reconnects immediately when the tab becomes visible.
+- **Infinite scroll + skeletons** — `app/activity/page.tsx` paginates with `PAGE_SIZE=25`, shows shimmer skeletons while loading, and has a "Load more" button.
+- **Real-time presence indicator** — new `lib/usePresence.ts` and `components/ui/PresencePill.tsx` show how many other tabs are currently viewing the Activity screen, using `BroadcastChannel` peer discovery.
+
+### Documented
+- **Legacy presence scripts** — added `docs/presence-legacy.md` explaining that `dist/presence.js` / `dist/presence-ui.js` are not loaded by the current Next.js app and noting options for revival or removal.
+
 ## v1.7.2 — 8 Jun 2026 — Deep clean & gap fix
 
 ### Fixed

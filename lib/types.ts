@@ -57,6 +57,7 @@ export interface TeamMember {
   createdAt: string
   hoursThisWeek?: number
   assignments?: Assignment[]
+  certifications?: Certification[]
 }
 
 export interface Assignment {
@@ -247,6 +248,37 @@ export interface Supplier {
   paymentTerms: string | null
   accountNumber: string | null
   notes: string | null
+  archivedAt: string | null
+  createdAt: string
+  updatedAt: string
+}
+
+export interface Certification {
+  id: string
+  memberId: string | null
+  holderName: string
+  type: string
+  category: 'qualification' | 'training' | 'course' | 'licence' | 'safety'
+  number: string | null
+  issuedDate: string | null
+  expiryDate: string | null
+  notes: string | null
+  courseId: string | null
+  createdAt: string
+  updatedAt: string
+  member?: TeamMember | null
+  course?: TrainingCourse | null
+  statusBucket?: 'valid' | 'expiring' | 'expired' | 'no_expiry'
+}
+
+export interface TrainingCourse {
+  id: string
+  name: string
+  code: string | null
+  provider: string | null
+  category: 'safety' | 'technical' | 'management' | 'first_aid' | 'environmental' | 'other'
+  validityDays: number | null
+  description: string | null
   archivedAt: string | null
   createdAt: string
   updatedAt: string

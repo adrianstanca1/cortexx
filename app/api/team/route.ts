@@ -1,51 +1,51 @@
 import { NextRequest, NextResponse } from 'next/server'
-
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { withRoute } from '@/lib/withRoute'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  try {
-    const now = new Date()
-    const weekStart = new Date(now)
-    weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
-    weekStart.setHours(0, 0, 0, 0)
+export const GET = withRoute(
+  async () => {
+  const now = new Date()
+  const weekStart = new Date(now)
+  weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
+  weekStart.setHours(0, 0, 0, 0)
 
-    const members = await prisma.teamMember.findMany({
-      // Cap at 500 — protects against runaway responses on big tenants.
-      // A workspace with >500 members would need a paginated view
-      // anyway; for now the cap is a backstop, not a UX requirement.
-      take: 500,
-      include: {
-        assignments: { include: { project: true } },
-        timeEntries: { where: { date: { gte: weekStart } } },
+  const members = await prisma.teamMember.findMany({
+    // Cap at 500 — protects against runaway responses on big tenants.
+    // A workspace with >500 members would need a paginated view
+    // anyway; for now the cap is a backstop, not a UX requirement.
+    take: 500,
+    include: {
+      assignments: { include: { project: true } },
+      timeEntries: { where: { date: { gte: weekStart } } },
+      certifications: {
+        orderBy: [{ expiryDate: 'asc' }, { createdAt: 'desc' }],
+        include: { course: { select: { id: true, name: true } } },
       },
-      orderBy: { name: 'asc' },
-    })
+    },
+    orderBy: { name: 'asc' },
+  })
 
-    const result = members.map((m) => ({
-      ...m,
-      hoursThisWeek: m.timeEntries.reduce((s, e) => s + e.hours, 0),
-    }))
+  const result = members.map((m) => ({
+    ...m,
+    hoursThisWeek: m.timeEntries.reduce((s, e) => s + e.hours, 0),
+  }))
 
-    return NextResponse.json({ team: result })
-  } catch (error) {
-    reportError(error)
-    return NextResponse.json({ error: 'Failed to fetch team' }, { status: 500 })
-  }
-}
+  return NextResponse.json({ team: result })
+  },
+  { requireOrg: false }
+)
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
-  try {
+export const POST = withRoute(
+  async ({ req, userId }) => {
+    const limited = await enforceRateLimit(req, 'write', userId)
+    if (limited) return limited
+
     const body = await req.json()
     if (!body.name?.trim()) {
       return NextResponse.json({ error: 'Name is required' }, { status: 400 })
@@ -56,20 +56,34 @@ export async function POST(req: NextRequest) {
     if (body.dailyRate !== undefined && body.dailyRate !== null && body.dailyRate !== '' && (!Number.isFinite(Number(body.dailyRate)) || Number(body.dailyRate) < 0)) {
       return NextResponse.json({ error: 'Daily rate must be a non-negative number' }, { status: 400 })
     }
-    const member = await prisma.teamMember.create({
-      data: {
-        name: body.name.trim(),
-        role: body.role.trim(),
-        email: body.email?.trim() || null,
-        phone: body.phone?.trim() || null,
-        avatarColor: body.avatarColor || '#2563eb',
-        dailyRate: body.dailyRate ? Number(body.dailyRate) : 0,
-        onSite: body.onSite || false,
-      },
-    })
-    return NextResponse.json(member, { status: 201 })
-  } catch (error) {
-    reportError(error)
-    return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 })
-  }
-}
+
+    try {
+      const member = await prisma.teamMember.create({
+        data: {
+          name: body.name.trim(),
+          role: body.role.trim(),
+          email: body.email?.trim() || null,
+          phone: body.phone?.trim() || null,
+          avatarColor: body.avatarColor || '#2563eb',
+          dailyRate: body.dailyRate ? Number(body.dailyRate) : 0,
+          onSite: body.onSite || false,
+        },
+      })
+      auditLog({
+        action: 'teamMember.create',
+        resourceType: 'TeamMember',
+        resourceId: member.id,
+        userId,
+        ...requestMeta(req),
+      })
+      return NextResponse.json(member, { status: 201 })
+    } catch (error) {
+      reportError(error)
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return NextResponse.json({ error: 'Team member already exists' }, { status: 409 })
+      }
+      return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 })
+    }
+  },
+  { requireOrg: false, permission: 'write' }
+)

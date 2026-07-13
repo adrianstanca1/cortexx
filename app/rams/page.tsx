@@ -4,8 +4,13 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
-import { IcHardhat, IcChevL, IcPlus, IcX, IcTrash, IcCheck } from '@/components/ui/Icons'
+import Modal from '@/components/ui/Modal'
+import FormField from '@/components/ui/FormField'
+import SegmentedControl from '@/components/ui/SegmentedControl'
+import Button from '@/components/ui/Button'
+import { IcHardhat, IcChevL, IcPlus, IcX, IcTrash, IcCheck, IcSpark } from '@/components/ui/Icons'
 import { useModalEffects } from '@/lib/useModalEffects'
+import { RAMS_TEMPLATES, RAMS_TEMPLATE_KEYS } from '@/lib/rams-templates'
 
 interface Rams {
   id: string
@@ -51,6 +56,13 @@ export default function RamsPage() {
     projectId: '', title: '', type: 'rams' as Rams['type'],
     hazards: '', controls: '', ppe: '', reviewBy: '',
   })
+
+  const [showGenerate, setShowGenerate] = useState(false)
+  const [genProjectId, setGenProjectId] = useState('')
+  const [genTemplate, setGenTemplate] = useState(RAMS_TEMPLATE_KEYS[0])
+  const [genDescription, setGenDescription] = useState('')
+  const [genAi, setGenAi] = useState(false)
+  const [genSaving, setGenSaving] = useState(false)
 
   useModalEffects(showModal, () => setShowModal(false))
 
@@ -128,6 +140,34 @@ export default function RamsPage() {
     } catch { setToast({ msg: 'Delete failed', type: 'error' }) }
   }
 
+  const generate = async () => {
+    if (!genProjectId) return setToast({ msg: 'Pick a project', type: 'error' })
+    setGenSaving(true)
+    try {
+      const res = await fetch('/api/rams/generate', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          projectId: genProjectId,
+          template: genTemplate,
+          workDescription: genDescription,
+          ai: genAi,
+        }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Generate failed')
+      setToast({ msg: 'RAMS generated', type: 'success' })
+      setShowGenerate(false)
+      setGenDescription('')
+      setGenAi(false)
+      load()
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Generate failed', type: 'error' })
+    } finally {
+      setGenSaving(false)
+    }
+  }
+
   return (
     <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
       <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
@@ -144,10 +184,16 @@ export default function RamsPage() {
               {docs.length} documents · {docs.filter(d => d.status === 'active').length} active
             </p>
           </div>
-          <button onClick={openAdd} aria-label="Add RAMS" style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-            <IcPlus size={14} color="#fff" />
-            <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Add</span>
-          </button>
+          <div style={{ display: 'flex', gap: 8 }}>
+            <button onClick={() => { setGenProjectId(projects[0]?.id || ''); setShowGenerate(true) }} aria-label="Generate RAMS" style={{ background: '#8b5cf6', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+              <IcSpark size={14} color="#fff" />
+              <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Generate</span>
+            </button>
+            <button onClick={openAdd} aria-label="Add RAMS" style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+              <IcPlus size={14} color="#fff" />
+              <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Add</span>
+            </button>
+          </div>
         </div>
       </div>
 
@@ -235,6 +281,59 @@ export default function RamsPage() {
           )
         })}
       </div>
+
+      <Modal
+        open={showGenerate}
+        title="Generate RAMS from template"
+        onClose={() => setShowGenerate(false)}
+        size="md"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 18 }}>
+            <Button variant="ghost" onClick={() => setShowGenerate(false)} disabled={genSaving}>Cancel</Button>
+            <Button variant="primary" loading={genSaving} onClick={generate}>Generate draft</Button>
+          </div>
+        }
+      >
+        <FormField
+          id="gen-project"
+          as="select"
+          label="Project *"
+          value={genProjectId}
+          onChange={e => setGenProjectId(e.target.value)}
+          options={[{ value: '', label: 'Select…' }, ...projects.map(p => ({ value: p.id, label: p.name }))]}
+        />
+
+        <FormField
+          id="gen-template"
+          as="select"
+          label="Template *"
+          value={genTemplate}
+          onChange={e => setGenTemplate(e.target.value)}
+          options={RAMS_TEMPLATE_KEYS.map(k => ({ value: k, label: RAMS_TEMPLATES[k].title }))}
+        />
+
+        <FormField
+          id="gen-desc"
+          as="textarea"
+          label="Work description"
+          value={genDescription}
+          onChange={e => setGenDescription(e.target.value)}
+          placeholder="e.g. Installing fascia boards to gable end using MEWP"
+        />
+
+        <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0' }}>
+          <input
+            id="gen-ai"
+            type="checkbox"
+            checked={genAi}
+            onChange={e => setGenAi(e.target.checked)}
+            style={{ width: 18, height: 18, accentColor: '#8b5cf6' }}
+          />
+          <label htmlFor="gen-ai" style={{ fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>
+            Enhance with AI (requires local LLM)
+          </label>
+        </div>
+      </Modal>
 
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
