@@ -23,6 +23,9 @@ npm run vault:decrypt
 
 # Load secrets into the current shell (useful for one-off commands)
 eval "$(npm run vault:load --silent)"
+
+# Authenticate gh CLI with the vaulted GitHub token and push
+./scripts/push-with-vault.sh
 ```
 
 ## How it works
