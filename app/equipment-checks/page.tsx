@@ -264,13 +264,19 @@ export default function EquipmentChecksPage() {
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcWrench size={20} color="#f59e0b" /> Equipment checks
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
-              {checks.length} checks · {checks.filter(c => c.status === 'failed').length} failed
+            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>{checks.length} checks · {checks.filter(c => c.status === 'failed').length} failed</span>
               {(() => {
                 const overdueCount = checks.filter(
                   c => c.nextDueAt && c.status !== 'passed' && new Date(c.nextDueAt) < new Date()
                 ).length
-                return overdueCount > 0 ? ` · ${overdueCount} overdue` : null
+                if (overdueCount === 0) return null
+                return (
+                  <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 99, background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontWeight: 700 }}>
+                    <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444' }} />
+                    {overdueCount} overdue
+                  </span>
+                )
               })()}
             </p>
           </div>
