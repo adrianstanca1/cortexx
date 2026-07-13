@@ -18,6 +18,7 @@ import {
   IcCheck,
   IcAlert,
   IcEdit,
+  IcEye,
 } from '@/components/ui/Icons'
 
 interface Doc {
@@ -109,6 +110,8 @@ export default function DocumentsPage() {
   const [tagInput, setTagInput] = useState('')
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
+  const [tagFilter, setTagFilter] = useState<string | null>(null)
+  const [versionFilter, setVersionFilter] = useState<'all' | 'latest' | 'outdated'>('all')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -282,7 +285,14 @@ export default function DocumentsPage() {
   }
 
   const types = Array.from(new Set(docs.map(d => d.type)))
-  const filtered = docs.filter(d => filter === 'all' || d.type === filter)
+  const allTags = Array.from(new Set(docs.flatMap(d => normalizeTags(d.tags))))
+  const filtered = docs.filter(d => {
+    if (filter !== 'all' && d.type !== filter) return false
+    if (tagFilter && !normalizeTags(d.tags).includes(tagFilter)) return false
+    if (versionFilter === 'latest' && (d.version ?? 1) > 1) return false
+    if (versionFilter === 'outdated' && (d.version ?? 1) <= 1) return false
+    return true
+  })
   const [now] = useState(() => Date.now())
   const expiringCount = docs.filter(d => d.expiresAt && new Date(d.expiresAt).getTime() < now + EXPIRY_WARN_DAYS * 86400000).length
 
@@ -316,6 +326,26 @@ export default function DocumentsPage() {
           {['all', ...types].map(t => (
             <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {t}
+            </button>
+          ))}
+        </div>
+        {allTags.length > 0 && (
+          <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingTop: 8, paddingBottom: 2 }}>
+            {allTags.map(tag => (
+              <button key={tag} onClick={() => setTagFilter(curr => curr === tag ? null : tag)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: tagFilter === tag ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.05)', color: tagFilter === tag ? '#f59e0b' : '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: tagFilter === tag ? 700 : 400, cursor: 'pointer' }}>
+                #{tag}
+              </button>
+            ))}
+          </div>
+        )}
+        <div style={{ display: 'flex', gap: 6, paddingTop: 8 }}>
+          {[
+            { value: 'all', label: 'All versions' },
+            { value: 'latest', label: 'Latest only' },
+            { value: 'outdated', label: 'Has newer version' },
+          ].map(opt => (
+            <button key={opt.value} onClick={() => setVersionFilter(opt.value as typeof versionFilter)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: versionFilter === opt.value ? 'rgba(82,116,154,0.25)' : 'rgba(255,255,255,0.05)', color: versionFilter === opt.value ? '#c1d2e8' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: versionFilter === opt.value ? 700 : 400, cursor: 'pointer' }}>
+              {opt.label}
             </button>
           ))}
         </div>
@@ -373,8 +403,9 @@ export default function DocumentsPage() {
                     <button
                       onClick={() => setPreviewUrl(d.url!)}
                       aria-label="Preview PDF"
-                      style={{ background: 'rgba(245,158,11,0.12)', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#f59e0b', fontFamily: SF, fontSize: 11, fontWeight: 700 }}
+                      style={{ background: 'rgba(245,158,11,0.12)', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: '#f59e0b', fontFamily: SF, fontSize: 11, fontWeight: 700 }}
                     >
+                      <IcEye size={13} color="#f59e0b" />
                       Preview
                     </button>
                   )}

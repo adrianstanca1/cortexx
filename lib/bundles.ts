@@ -17,6 +17,7 @@ export interface BundleAction {
   icon: string
   color: string
   api: string
+  description?: string
 }
 
 export interface Bundle {

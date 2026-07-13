@@ -47,6 +47,14 @@ const STATUS_LABEL: Record<Rams['status'], string> = {
 const FILTER_LABEL: Record<'all' | Rams['status'], string> = {
   all: 'All', ...STATUS_LABEL,
 }
+const STAGE_HELP: Partial<Record<Rams['status'], string>> = {
+  draft: 'Submit for review to move to the next stage.',
+  reviewed: 'Approver cannot be the same person as the reviewer.',
+  approved: 'Activate to make this RAMS available for site use.',
+  active: 'Reactivate? No — this RAMS is live on site.',
+  expired: 'Reopen as a draft if it needs reissuing.',
+  archived: 'Archived documents are hidden from active lists.',
+}
 const SF = 'var(--font-system)'
 
 export default function RamsPage() {
@@ -349,6 +357,11 @@ export default function RamsPage() {
                   <IcTrash size={11} color="#fca5a5" /> Delete
                 </button>
               </div>
+              {STAGE_HELP[d.status] && (
+                <div style={{ marginTop: 8, fontFamily: SF, fontSize: 11, color: '#52749a', lineHeight: 1.4 }}>
+                  {STAGE_HELP[d.status]}
+                </div>
+              )}
               {signing === d.id && signAction && (
                 <div style={{ marginTop: 10, padding: 10, background: 'rgba(16,185,129,0.1)', border: '0.5px solid rgba(16,185,129,0.4)', borderRadius: 8 }}>
                   <div style={{ fontFamily: SF, fontSize: 12, color: '#10b981', marginBottom: 6 }}>

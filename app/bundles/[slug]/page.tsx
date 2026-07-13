@@ -310,6 +310,7 @@ export default function BundlePage() {
         <Modal
           open={!!activeAction}
           title={activeAction.label}
+          description={activeAction.description || undefined}
           onClose={closeAction}
           confirmLabel="Create"
           loading={actionLoading}
