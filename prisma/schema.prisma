@@ -300,6 +300,8 @@ model Document {
   size      Int?
   mimeType  String?
   expiresAt DateTime?
+  tags      Json      @default("[]")
+  version   Int       @default(1)
   createdAt DateTime  @default(now())
   project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
 
@@ -692,21 +694,24 @@ model Equipment {
 }
 
 model EquipmentCheck {
-  id             String     @id @default(cuid())
-  projectId      String?
-  project        Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  equipmentId    String?
-  equipment      Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
-  type           String     @default("scissor_lift") // scissor_lift | cherry_picker | telehandler | harness | fall_arrest | ladder | other
-  title          String
-  status         String     @default("draft") // draft | in_progress | passed | failed
-  checklistItems Json       @default("[]")
-  overallResult  String? // pass | fail
-  conductedBy    String?
-  completedAt    DateTime?
-  notes          String?
-  createdAt      DateTime   @default(now())
-  updatedAt      DateTime   @updatedAt
+  id              String     @id @default(cuid())
+  projectId       String?
+  project         Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  equipmentId     String?
+  equipment       Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  type            String     @default("scissor_lift") // scissor_lift | cherry_picker | telehandler | harness | fall_arrest | ladder | other
+  title           String
+  status          String     @default("draft") // draft | in_progress | passed | failed
+  checklistItems  Json       @default("[]")
+  overallResult   String? // pass | fail
+  conductedBy     String?
+  completedAt     DateTime?
+  lastCompletedAt DateTime?
+  frequency       String     @default("none") // none | daily | weekly | monthly
+  nextDueAt       DateTime?
+  notes           String?
+  createdAt       DateTime   @default(now())
+  updatedAt       DateTime   @updatedAt
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -715,6 +720,7 @@ model EquipmentCheck {
   @@index([equipmentId])
   @@index([type])
   @@index([status])
+  @@index([nextDueAt])
   @@index([organizationId])
 }
 
@@ -896,27 +902,33 @@ model Permit {
 }
 
 model Rams {
-  id        String    @id @default(cuid())
-  projectId String
-  title     String
-  type      String    @default("rams") // rams, risk_assessment, method_statement
-  hazards   String?
-  controls  String?
-  ppe       String?
-  reviewBy  DateTime?
-  signedBy  String?
-  signedAt  DateTime?
-  status    String    @default("draft") // draft, active, expired, archived
-  notes     String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  project   Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id         String    @id @default(cuid())
+  projectId  String
+  title      String
+  type       String    @default("rams") // rams, risk_assessment, method_statement
+  hazards    String?
+  controls   String?
+  ppe        String?
+  reviewBy   DateTime?
+  reviewedBy String?
+  reviewedAt DateTime?
+  approvedBy String?
+  approvedAt DateTime?
+  signedBy   String?
+  signedAt   DateTime?
+  status     String    @default("draft") // draft, reviewed, approved, active, expired, archived
+  notes      String?
+  createdAt  DateTime  @default(now())
+  updatedAt  DateTime  @updatedAt
+  project    Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([projectId, status])
   @@index([reviewBy])
+  @@index([reviewedBy])
+  @@index([approvedBy])
   @@index([type])
   @@index([organizationId])
 }

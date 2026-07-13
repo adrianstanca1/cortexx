@@ -32,6 +32,9 @@ interface Check {
   overallResult?: 'pass' | 'fail' | null
   conductedBy?: string | null
   completedAt?: string | null
+  lastCompletedAt?: string | null
+  frequency?: 'none' | 'daily' | 'weekly' | 'monthly' | string
+  nextDueAt?: string | null
   notes?: string | null
   project?: { id: string; name: string } | null
   equipment?: { id: string; name: string; code: string | null } | null
@@ -54,6 +57,12 @@ const STATUS_COLOR: Record<Check['status'], string> = {
   passed: '#10b981',
   failed: '#ef4444',
 }
+const FREQUENCY_OPTIONS = [
+  { value: 'none', label: 'One-off' },
+  { value: 'daily', label: 'Daily' },
+  { value: 'weekly', label: 'Weekly' },
+  { value: 'monthly', label: 'Monthly' },
+]
 const SF = 'var(--font-system)'
 
 export default function EquipmentChecksPage() {
@@ -62,7 +71,7 @@ export default function EquipmentChecksPage() {
   const [equipment, setEquipment] = useState<Equipment[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
-  const [statusFilter, setStatusFilter] = useState<'all' | Check['status']>('all')
+  const [statusFilter, setStatusFilter] = useState<'all' | Check['status'] | 'overdue'>('all')
   const [typeFilter, setTypeFilter] = useState<'all' | string>('all')
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
 
@@ -71,6 +80,7 @@ export default function EquipmentChecksPage() {
   const [createTitle, setCreateTitle] = useState('')
   const [createProjectId, setCreateProjectId] = useState('')
   const [createEquipmentId, setCreateEquipmentId] = useState('')
+  const [createFrequency, setCreateFrequency] = useState('none')
   const [createConductedBy, setCreateConductedBy] = useState('')
   const [createNotes, setCreateNotes] = useState('')
   const [createSaving, setCreateSaving] = useState(false)
@@ -83,10 +93,13 @@ export default function EquipmentChecksPage() {
     setLoading(true)
     try {
       const params = new URLSearchParams()
-      if (statusFilter !== 'all') params.set('status', statusFilter)
+      if (statusFilter !== 'all' && statusFilter !== 'overdue') params.set('status', statusFilter)
       if (typeFilter !== 'all') params.set('type', typeFilter)
+      const checkUrl = statusFilter === 'overdue'
+        ? '/api/equipment-checks/overdue'
+        : `/api/equipment-checks?${params.toString()}`
       const [cRes, pRes, eRes] = await Promise.all([
-        fetch(`/api/equipment-checks?${params.toString()}`),
+        fetch(checkUrl),
         fetch('/api/projects?status=active'),
         fetch('/api/equipment'),
       ])
@@ -118,6 +131,7 @@ export default function EquipmentChecksPage() {
     setCreateTitle(template ? template.title : 'Equipment check')
     setCreateProjectId(projects[0]?.id || '')
     setCreateEquipmentId('')
+    setCreateFrequency('none')
     setCreateConductedBy('')
     setCreateNotes('')
     setShowCreate(true)
@@ -129,6 +143,7 @@ export default function EquipmentChecksPage() {
     setCreateTitle(c.title)
     setCreateProjectId(c.project?.id || '')
     setCreateEquipmentId(c.equipment?.id || '')
+    setCreateFrequency(c.frequency || 'none')
     setCreateConductedBy(c.conductedBy || '')
     setCreateNotes(c.notes || '')
     setShowCreate(true)
@@ -140,6 +155,7 @@ export default function EquipmentChecksPage() {
     setCreateTitle('')
     setCreateProjectId(projects[0]?.id || '')
     setCreateEquipmentId('')
+    setCreateFrequency('none')
     setCreateConductedBy('')
     setCreateNotes('')
   }
@@ -154,6 +170,7 @@ export default function EquipmentChecksPage() {
         type: createType,
         projectId: createProjectId || null,
         equipmentId: createEquipmentId || null,
+        frequency: createFrequency,
         conductedBy: createConductedBy || null,
         notes: createNotes || null,
       }
@@ -249,14 +266,20 @@ export default function EquipmentChecksPage() {
             </h1>
             <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
               {checks.length} checks · {checks.filter(c => c.status === 'failed').length} failed
+              {(() => {
+                const overdueCount = checks.filter(
+                  c => c.nextDueAt && c.status !== 'passed' && new Date(c.nextDueAt) < new Date()
+                ).length
+                return overdueCount > 0 ? ` · ${overdueCount} overdue` : null
+              })()}
             </p>
           </div>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-            {(['all', 'draft', 'in_progress', 'passed', 'failed'] as const).map(s => {
-              const color = s === 'all' ? '#8b5cf6' : STATUS_COLOR[s]
+            {(['all', 'draft', 'in_progress', 'passed', 'failed', 'overdue'] as const).map(s => {
+              const color = s === 'all' ? '#8b5cf6' : s === 'overdue' ? '#ef4444' : STATUS_COLOR[s as Check['status']]
               return (
                 <button
                   key={s}
@@ -331,20 +354,28 @@ export default function EquipmentChecksPage() {
           const total = c.checklistItems.length
           const done = c.checklistItems.filter(it => it.result).length
           const failed = c.checklistItems.filter(it => it.result === 'fail').length
+          const overdue = c.nextDueAt && c.status !== 'passed' && new Date(c.nextDueAt) < new Date()
+          const dueLabel = c.nextDueAt
+            ? `Due ${new Date(c.nextDueAt).toLocaleDateString()}${c.frequency && c.frequency !== 'none' ? ` (${c.frequency})` : ''}`
+            : c.frequency && c.frequency !== 'none'
+              ? `Repeats ${c.frequency}`
+              : null
           return (
-            <div key={c.id} style={{ background: '#152641', border: `0.5px solid ${c.status === 'failed' ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
+            <div key={c.id} style={{ background: '#152641', border: `0.5px solid ${c.status === 'failed' || overdue ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
               <div onClick={() => setExpanded(isOpen ? null : c.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                   <span style={{ background: 'rgba(255,255,255,0.08)', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'capitalize' }}>{c.type.replace(/_/g, ' ')}</span>
                   <span style={{ background: STATUS_COLOR[c.status] + '33', color: STATUS_COLOR[c.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{STATUS_LABEL[c.status]}</span>
                   {failed > 0 && c.status !== 'passed' && <span style={{ color: '#ef4444', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{failed} FAIL</span>}
+                  {overdue && <span style={{ background: '#ef444433', color: '#ef4444', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>Overdue</span>}
                 </div>
                 <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>{c.title}</div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+                <div style={{ fontFamily: SF, fontSize: 11, color: overdue ? '#fca5a5' : '#52749a', marginTop: 2 }}>
                   {c.project?.name || '—'}
                   {c.equipment && <span> · {c.equipment.name} {c.equipment.code && `(${c.equipment.code})`}</span>}
                   {c.conductedBy && <span> · {c.conductedBy}</span>}
                   <span> · {done}/{total} checked</span>
+                  {dueLabel && <span> · {dueLabel}</span>}
                 </div>
               </div>
 
@@ -467,6 +498,15 @@ export default function EquipmentChecksPage() {
           value={createEquipmentId}
           onChange={e => setCreateEquipmentId(e.target.value)}
           options={[{ value: '', label: '— Not listed —' }, ...equipment.map(e => ({ value: e.id, label: `${e.name}${e.code ? ` (${e.code})` : ''}` }))]}
+        />
+
+        <FormField
+          id="ec-frequency"
+          as="select"
+          label="Frequency"
+          value={createFrequency}
+          onChange={e => setCreateFrequency(e.target.value)}
+          options={FREQUENCY_OPTIONS}
         />
 
         <FormField

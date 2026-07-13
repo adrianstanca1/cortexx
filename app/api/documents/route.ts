@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
@@ -53,6 +54,7 @@ export async function POST(req: NextRequest) {
     if (!body.type?.trim()) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
     }
+    const tags = Array.isArray(body.tags) ? body.tags.filter((t: unknown): t is string => typeof t === 'string' && t.trim() !== '').map((t: string) => t.trim()) : []
     const document = await prisma.document.create({
       data: {
         name: body.name.trim(),
@@ -62,6 +64,7 @@ export async function POST(req: NextRequest) {
         url: typeof body.url === 'string' && body.url ? body.url : null,
         size: Number.isFinite(body.size) ? Math.floor(body.size) : null,
         mimeType: typeof body.mimeType === 'string' && body.mimeType ? body.mimeType : null,
+        tags: tags as Prisma.InputJsonValue,
       },
       include: { project: true },
     })

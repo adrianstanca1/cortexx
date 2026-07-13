@@ -5,7 +5,7 @@ import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
-import { sanitizeChecklist } from '../route'
+import { sanitizeChecklist, ALLOWED_FREQUENCY, computeNextDueAt } from '../route'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,18 +75,28 @@ export async function PATCH(req: NextRequest) {
       data.completedAt = d ?? null
     }
 
+    let frequency = existing.frequency
+    if (typeof body.frequency === 'string' && ALLOWED_FREQUENCY.has(body.frequency)) {
+      frequency = body.frequency
+      data.frequency = frequency
+    }
+
     if (typeof body.status === 'string' && ALLOWED_STATUS.has(body.status)) {
       data.status = body.status
-      if (body.status === 'passed' || body.status === 'failed') {
+      const now = new Date()
+      const isTerminal = body.status === 'passed' || body.status === 'failed'
+      if (isTerminal) {
         data.overallResult = body.status === 'passed' ? 'pass' : 'fail'
-        data.completedAt = existing.completedAt || new Date()
-      }
-      if (
-        (body.status === 'draft' || body.status === 'in_progress') &&
-        (existing.status === 'passed' || existing.status === 'failed')
-      ) {
+        data.completedAt = now
+        data.lastCompletedAt = now
+        data.nextDueAt = computeNextDueAt(now, frequency)
+      } else if (existing.status === 'passed' || existing.status === 'failed') {
         data.overallResult = null
         data.completedAt = null
+      }
+
+      if (!isTerminal && 'frequency' in body) {
+        data.nextDueAt = frequency === 'none' ? null : computeNextDueAt(now, frequency)
       }
     }
 

@@ -32,6 +32,8 @@ interface Doc {
   size?: number | null
   mimeType?: string | null
   originalName?: string | null
+  tags?: unknown[] | null
+  version?: number | null
 }
 
 interface Project { id: string; name: string }
@@ -65,6 +67,13 @@ function formatBytes(n?: number | null) {
   return `${(n / 1024 / 1024).toFixed(1)} MB`
 }
 
+function normalizeTags(value: unknown): string[] {
+  if (Array.isArray(value)) {
+    return value.filter((v): v is string => typeof v === 'string' && v.trim() !== '').map(v => v.trim())
+  }
+  return []
+}
+
 const SF = 'var(--font-system)'
 
 export default function DocumentsPage() {
@@ -91,8 +100,15 @@ export default function DocumentsPage() {
     size: null as number | null,
     mimeType: '',
     originalName: '',
+    tags: [] as string[],
+    newVersion: false,
+    version: 1,
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
+  const versionInputRef = useRef<HTMLInputElement>(null)
+  const [tagInput, setTagInput] = useState('')
+
+  const [previewUrl, setPreviewUrl] = useState<string | null>(null)
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -124,13 +140,27 @@ export default function DocumentsPage() {
   }, [])
 
   const resetForm = () => {
-    setForm({ name: '', type: 'rams', projectId: '', expiresAt: '', url: '', size: null, mimeType: '', originalName: '' })
+    setForm({ name: '', type: 'rams', projectId: '', expiresAt: '', url: '', size: null, mimeType: '', originalName: '', tags: [], newVersion: false, version: 1 })
     setModalTab('upload')
     setEditingId(null)
+    setTagInput('')
     if (fileInputRef.current) fileInputRef.current.value = ''
+    if (versionInputRef.current) versionInputRef.current.value = ''
   }
 
-  const handleFileSelect = async (file: File) => {
+  const applyUploadResult = (data: { url?: string; size?: number; mimeType?: string; originalName?: string | null }, options?: { newVersion?: boolean }) => {
+    setForm(p => ({
+      ...p,
+      name: p.name || data.originalName || '',
+      url: data.url || '',
+      size: data.size ?? null,
+      mimeType: data.mimeType || '',
+      originalName: data.originalName || p.originalName || p.name,
+      newVersion: options?.newVersion ?? false,
+    }))
+  }
+
+  const handleFileSelect = async (file: File, options?: { newVersion?: boolean }) => {
     setUploading(true)
     setUploadProgress(0)
     try {
@@ -139,15 +169,13 @@ export default function DocumentsPage() {
       const res = await fetch('/api/uploads', { method: 'POST', body: fd })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Upload failed')
-      setForm(p => ({
-        ...p,
-        name: p.name || data.originalName || file.name,
+      applyUploadResult({
         url: data.url,
         size: data.size,
         mimeType: data.mimeType,
         originalName: data.originalName || file.name,
-      }))
-      setToast({ msg: 'File uploaded', type: 'success' })
+      }, { newVersion: options?.newVersion })
+      setToast({ msg: options?.newVersion ? 'New version uploaded' : 'File uploaded', type: 'success' })
     } catch (e) {
       setToast({ msg: e instanceof Error ? e.message : 'Upload failed', type: 'error' })
     } finally {
@@ -172,9 +200,23 @@ export default function DocumentsPage() {
       size: d.size ?? null,
       mimeType: d.mimeType || '',
       originalName: d.originalName || d.name,
+      tags: normalizeTags(d.tags),
+      newVersion: false,
+      version: d.version || 1,
     })
     setModalTab(d.url ? 'upload' : 'blank')
     setShowModal(true)
+  }
+
+  const addTag = (raw: string) => {
+    const values = raw.split(/[,;]+/).map(v => v.trim()).filter(Boolean)
+    if (values.length === 0) return
+    setForm(p => ({ ...p, tags: Array.from(new Set([...p.tags, ...values])) }))
+    setTagInput('')
+  }
+
+  const removeTag = (tag: string) => {
+    setForm(p => ({ ...p, tags: p.tags.filter(t => t !== tag) }))
   }
 
   const save = async () => {
@@ -189,6 +231,8 @@ export default function DocumentsPage() {
         url: form.url || null,
         size: form.size,
         mimeType: form.mimeType || null,
+        tags: form.tags,
+        ...(editingId && form.newVersion ? { newVersion: true } : {}),
       }
       if (editingId) {
         const res = await fetch(`/api/documents/${editingId}`, {
@@ -254,8 +298,14 @@ export default function DocumentsPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Documents</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
-              {docs.length} total{expiringCount > 0 ? ` · ${expiringCount} expiring` : ''}
+            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+              <span>{docs.length} total</span>
+              {expiringCount > 0 && (
+                <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 99, background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontWeight: 700 }}>
+                  <span style={{ width: 6, height: 6, borderRadius: '50%', background: '#ef4444' }} />
+                  {expiringCount} expiring
+                </span>
+              )}
             </p>
           </div>
           <button onClick={openAdd} aria-label="Add document" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -286,6 +336,7 @@ export default function DocumentsPage() {
               const expired = exp !== null && exp < now
               const isImage = d.mimeType?.startsWith('image/')
               const isPdf = d.mimeType === 'application/pdf'
+              const tags = normalizeTags(d.tags)
               return (
                 <div key={d.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
                   {isImage && d.url ? (
@@ -305,11 +356,28 @@ export default function DocumentsPage() {
                       <span style={{ textTransform: 'capitalize' }}>{d.type}</span>
                       {d.project && <> · <Link href={`/projects/${d.project.id}`} style={{ color: '#8ea8c5', textDecoration: 'none' }}>{d.project.name}</Link></>}
                       {d.size && <span> · {formatBytes(d.size)}</span>}
+                      {typeof d.version === 'number' && d.version > 1 && <span> · v{d.version}</span>}
                       {d.expiresAt && <span style={{ color: expired ? '#ef4444' : expiring ? '#f59e0b' : '#52749a' }}>
                         {' '}· {expired ? 'Expired' : 'Expires'} {new Date(d.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>}
                     </div>
+                    {tags.length > 0 && (
+                      <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
+                        {tags.map(tag => (
+                          <span key={tag} style={{ padding: '2px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: '#8ea8c5', fontFamily: SF, fontSize: 10, fontWeight: 600 }}>{tag}</span>
+                        ))}
+                      </div>
+                    )}
                   </div>
+                  {isPdf && d.url && (
+                    <button
+                      onClick={() => setPreviewUrl(d.url!)}
+                      aria-label="Preview PDF"
+                      style={{ background: 'rgba(245,158,11,0.12)', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', color: '#f59e0b', fontFamily: SF, fontSize: 11, fontWeight: 700 }}
+                    >
+                      Preview
+                    </button>
+                  )}
                   <button
                     onClick={() => openEdit(d)}
                     aria-label="Edit document"
@@ -397,7 +465,30 @@ export default function DocumentsPage() {
 
             {form.url && (
               <div style={{ padding: 10, borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: '0.5px solid rgba(16,185,129,0.3)' }}>
-                <div style={{ fontFamily: SF, fontSize: 13, color: '#10b981' }}>Uploaded: {form.originalName || form.name} ({formatBytes(form.size)})</div>
+                <div style={{ fontFamily: SF, fontSize: 13, color: '#10b981' }}>
+                  Uploaded: {form.originalName || form.name} ({formatBytes(form.size)})
+                  {editingId && <> · v{form.version}{form.newVersion && <span style={{ color: '#f59e0b', marginLeft: 6 }}>(will become v{form.version + 1})</span>}</>}
+                </div>
+                {editingId && (
+                  <>
+                    <input
+                      ref={versionInputRef}
+                      type="file"
+                      style={{ display: 'none' }}
+                      onChange={e => {
+                        const f = e.target.files?.[0]
+                        if (f) handleFileSelect(f, { newVersion: true })
+                      }}
+                    />
+                    <button
+                      onClick={() => versionInputRef.current?.click()}
+                      disabled={uploading}
+                      style={{ marginTop: 8, padding: '6px 10px', borderRadius: 8, border: 'none', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: uploading ? 'not-allowed' : 'pointer' }}
+                    >
+                      Upload new version
+                    </button>
+                  </>
+                )}
               </div>
             )}
           </>
@@ -437,6 +528,35 @@ export default function DocumentsPage() {
           onChange={e => setForm(p => ({ ...p, expiresAt: e.target.value }))}
         />
 
+        <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+          <label htmlFor="doc-tags" style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Tags</label>
+          <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, padding: '8px 10px', borderRadius: 10, border: '1px solid rgba(255,255,255,0.1)', background: 'var(--bg3)' }}>
+            {form.tags.map(tag => (
+              <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 99, background: 'rgba(245,158,11,0.18)', color: '#f59e0b', fontFamily: SF, fontSize: 12, fontWeight: 600 }}>
+                {tag}
+                <button onClick={() => removeTag(tag)} aria-label={`Remove ${tag}`} style={{ background: 'none', border: 'none', padding: 0, color: '#f59e0b', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</button>
+              </span>
+            ))}
+            <input
+              id="doc-tags"
+              value={tagInput}
+              onChange={e => setTagInput(e.target.value)}
+              onKeyDown={e => {
+                if (e.key === 'Enter' || e.key === ',') {
+                  e.preventDefault()
+                  addTag(tagInput)
+                }
+                if (e.key === 'Backspace' && tagInput === '' && form.tags.length > 0) {
+                  setForm(p => ({ ...p, tags: p.tags.slice(0, -1) }))
+                }
+              }}
+              onBlur={() => addTag(tagInput)}
+              placeholder={form.tags.length === 0 ? 'Add tags, press Enter' : ''}
+              style={{ flex: 1, minWidth: 80, background: 'transparent', border: 'none', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none' }}
+            />
+          </div>
+        </div>
+
         <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 }}>Quick start templates</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {QUICK_TEMPLATES.map(t => {
@@ -465,7 +585,31 @@ export default function DocumentsPage() {
           })}
         </div>
       </Modal>
+
+      <Modal
+        open={!!previewUrl}
+        title="PDF preview"
+        onClose={() => setPreviewUrl(null)}
+        size="lg"
+        footer={
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+            <Button variant="ghost" onClick={() => setPreviewUrl(null)}>Close</Button>
+            {previewUrl && (
+              <a href={previewUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+                <Button variant="primary">Open in new tab</Button>
+              </a>
+            )}
+          </div>
+        }
+      >
+        {previewUrl && (
+          <iframe
+            src={previewUrl}
+            title="PDF preview"
+            style={{ width: '100%', height: 520, border: 'none', borderRadius: 12, background: '#fff' }}
+          />
+        )}
+      </Modal>
     </div>
   )
 }
-
