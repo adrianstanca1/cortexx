@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
@@ -35,6 +36,10 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (body.type !== undefined && !String(body.type).trim()) {
       return NextResponse.json({ error: 'Type cannot be empty' }, { status: 400 })
     }
+    const tags = Array.isArray(body.tags)
+      ? body.tags.filter((t: unknown): t is string => typeof t === 'string' && t.trim() !== '').map((t: string) => t.trim())
+      : undefined
+    const newVersion = body.newVersion === true && typeof body.url === 'string' && body.url
     const document = await prisma.document.update({
       where: { id: params.id },
       data: {
@@ -42,6 +47,13 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
         ...(body.type !== undefined && { type: String(body.type).trim() }),
         ...(body.projectId !== undefined && { projectId: body.projectId || null }),
         ...(body.expiresAt !== undefined && { expiresAt: body.expiresAt ? new Date(body.expiresAt) : null }),
+        ...(tags !== undefined && { tags: tags as unknown as Prisma.JsonValue }),
+        ...(newVersion && {
+          url: body.url,
+          size: Number.isFinite(body.size) ? Math.floor(body.size) : null,
+          mimeType: typeof body.mimeType === 'string' && body.mimeType ? body.mimeType : null,
+          version: { increment: 1 },
+        }),
       },
       include: { project: true },
     })

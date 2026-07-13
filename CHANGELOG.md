@@ -1,5 +1,21 @@
 # CortexBuild Pro — Changelog
 
+## v1.7.6 — 13 Jul 2026 — Role pack actions, document library, equipment scheduling and RAMS sign-off
+
+### Added
+- **Role pack quick actions** — each bundle dashboard now has action cards that create the most relevant record for that role:
+  - Site Supervisor: raise a snag, add a site-diary note, start an equipment check.
+  - Site Manager: create a RAMS/method statement, raise an RFI, log an inspection.
+  - PM & Agent: create a task, send an announcement, log a risk.
+  - Commercial: create a quote, create a variation/change order, log an invoice.
+  `lib/bundles.ts` gained a typed `actions` array; `app/bundles/[slug]/page.tsx` renders modal forms and POSTs to the existing APIs. A `POST /api/site-diary` handler was added so diary notes persist as activity records.
+- **Document library completion** — documents now support tags (JSONB), a PDF preview modal, expiry reminders via `/api/documents/expiring` and the existing cron job, and lightweight versioning (increment `version` on re-upload). New migration `20260713000001_add_document_tags`.
+- **Equipment check scheduling** — `EquipmentCheck` now has `frequency`, `nextDueAt` and `lastCompletedAt`. The create/edit modal includes a frequency selector; passing/failing a check records completion and computes the next due date. New `/api/equipment-checks/overdue` endpoint and an Overdue filter chip on `/equipment-checks`. New migration `20260713000002_equipment_check_frequency`.
+- **RAMS review/approval workflow** — RAMS documents now move through draft → reviewed → approved → active. Added `reviewedBy`, `reviewedAt`, `approvedBy`, `approvedBy` to the `Rams` model. The `/rams` page shows stage-specific actions (Submit for review / Approve / Approve & activate / Activate), and the PATCH API validates stage transitions and enforces reviewer/approver segregation. New migration `20260713000003_rams_review_approval`.
+
+### Database
+- Added migrations `20260713000001_add_document_tags`, `20260713000002_equipment_check_frequency`, `20260713000003_rams_review_approval` and applied them against PostgreSQL.
+
 ## v1.7.5 — 13 Jul 2026 — Documents, equipment checks, RAMS generator and role packs
 
 ### Added

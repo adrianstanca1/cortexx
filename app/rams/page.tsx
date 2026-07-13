@@ -21,9 +21,13 @@ interface Rams {
   controls: string | null
   ppe: string | null
   reviewBy: string | null
+  reviewedBy: string | null
+  reviewedAt: string | null
+  approvedBy: string | null
+  approvedAt: string | null
   signedBy: string | null
   signedAt: string | null
-  status: 'draft' | 'active' | 'expired' | 'archived'
+  status: 'draft' | 'reviewed' | 'approved' | 'active' | 'expired' | 'archived'
   notes: string | null
   createdAt: string
   updatedAt: string
@@ -35,7 +39,13 @@ const TYPE_LABEL: Record<Rams['type'], string> = {
   rams: 'RAMS', risk_assessment: 'Risk assessment', method_statement: 'Method statement',
 }
 const STATUS_COLOR: Record<Rams['status'], string> = {
-  draft: '#52749a', active: '#10b981', expired: '#ef4444', archived: '#8ea8c5',
+  draft: '#52749a', reviewed: '#8b5cf6', approved: '#f59e0b', active: '#10b981', expired: '#ef4444', archived: '#8ea8c5',
+}
+const STATUS_LABEL: Record<Rams['status'], string> = {
+  draft: 'Draft', reviewed: 'Reviewed', approved: 'Approved', active: 'Active', expired: 'Expired', archived: 'Archived',
+}
+const FILTER_LABEL: Record<'all' | Rams['status'], string> = {
+  all: 'All', ...STATUS_LABEL,
 }
 const SF = 'var(--font-system)'
 
@@ -50,6 +60,7 @@ export default function RamsPage() {
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [signing, setSigning] = useState<string | null>(null)
+  const [signAction, setSignAction] = useState<'review' | 'approve' | 'activate' | null>(null)
   const [signName, setSignName] = useState('')
 
   const [form, setForm] = useState({
@@ -164,12 +175,35 @@ export default function RamsPage() {
     } catch { setToast({ msg: 'Update failed', type: 'error' }) }
   }
 
+  const openSign = (d: Rams, action: 'review' | 'approve' | 'activate') => {
+    setSigning(d.id)
+    setSignAction(action)
+    setSignName('')
+  }
+
   const sign = async (id: string) => {
     if (!signName.trim()) return setToast({ msg: 'Enter your name', type: 'error' })
+    if (!signAction) return
+    const name = signName.trim()
+    const body: Record<string, unknown> = {}
+    let successMsg = ''
+    if (signAction === 'review') {
+      body.reviewedBy = name
+      body.status = 'reviewed'
+      successMsg = 'Submitted for review'
+    } else if (signAction === 'approve') {
+      body.approvedBy = name
+      body.status = 'approved'
+      successMsg = 'Approved'
+    } else {
+      body.approvedBy = name
+      body.status = 'active'
+      successMsg = 'Approved and activated'
+    }
     try {
-      const res = await fetch(`/api/rams/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ signedBy: signName.trim(), status: 'active' }) })
+      const res = await fetch(`/api/rams/${id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
       if (!res.ok) throw new Error()
-      setSigning(null); setSignName(''); setToast({ msg: 'Signed off', type: 'success' }); load()
+      setSigning(null); setSignName(''); setSignAction(null); setToast({ msg: successMsg, type: 'success' }); load()
     } catch { setToast({ msg: 'Sign-off failed', type: 'error' }) }
   }
 
@@ -239,11 +273,11 @@ export default function RamsPage() {
       </div>
 
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
-        {(['all', 'draft', 'active', 'expired', 'archived'] as const).map(s => {
+        {(['all', 'draft', 'reviewed', 'approved', 'active', 'expired', 'archived'] as const).map(s => {
           const active = statusFilter === s
           return (
             <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#22c55e' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
-              {s}
+              {FILTER_LABEL[s]}
             </button>
           )
         })}
@@ -264,13 +298,17 @@ export default function RamsPage() {
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <span style={{ background: '#1a2f4e', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[d.type]}</span>
-                    <span style={{ background: STATUS_COLOR[d.status] + '33', color: STATUS_COLOR[d.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{d.status}</span>
+                    <span style={{ background: STATUS_COLOR[d.status] + '33', color: STATUS_COLOR[d.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{STATUS_LABEL[d.status]}</span>
+                    {d.reviewedBy && <span style={{ color: '#8b5cf6', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>Reviewed by {d.reviewedBy}</span>}
+                    {d.approvedBy && <span style={{ color: '#f59e0b', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>Approved by {d.approvedBy}</span>}
                     {d.signedBy && <span style={{ color: '#10b981', fontFamily: SF, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><IcCheck size={10} color="#10b981" /> Signed</span>}
                     {reviewDue && d.status === 'active' && <span style={{ color: '#f59e0b', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>REVIEW DUE</span>}
                   </div>
                   <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
                   <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
                     {d.project?.name || '—'}{d.reviewBy ? ` · review by ${new Date(d.reviewBy).toLocaleDateString('en-GB')}` : ''}
+                    {d.reviewedBy ? ` · reviewed by ${d.reviewedBy} on ${d.reviewedAt ? new Date(d.reviewedAt).toLocaleDateString('en-GB') : ''}` : ''}
+                    {d.approvedBy ? ` · approved by ${d.approvedBy} on ${d.approvedAt ? new Date(d.approvedAt).toLocaleDateString('en-GB') : ''}` : ''}
                     {d.signedBy ? ` · signed by ${d.signedBy} on ${d.signedAt ? new Date(d.signedAt).toLocaleDateString('en-GB') : ''}` : ''}
                   </div>
                   {(d.hazards || d.controls || d.ppe) && (
@@ -283,8 +321,17 @@ export default function RamsPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                {d.status === 'draft' && !d.signedBy && (
-                  <button onClick={() => { setSigning(d.id); setSignName('') }} style={pillBtn('#10b981')}>Sign off & activate</button>
+                {d.status === 'draft' && (
+                  <button onClick={() => openSign(d, 'review')} style={pillBtn('#8b5cf6')}>Submit for review</button>
+                )}
+                {d.status === 'reviewed' && (
+                  <>
+                    <button onClick={() => openSign(d, 'approve')} style={pillBtn('#f59e0b')}>Approve</button>
+                    <button onClick={() => openSign(d, 'activate')} style={pillBtn('#10b981')}>Approve & activate</button>
+                  </>
+                )}
+                {d.status === 'approved' && (
+                  <button onClick={() => openSign(d, 'activate')} style={pillBtn('#10b981')}>Activate</button>
                 )}
                 {d.status === 'active' && (
                   <button onClick={() => setStatus(d, 'expired')} style={pillBtn('#1a2f4e', '#fca5a5')}>Expire</button>
@@ -302,13 +349,15 @@ export default function RamsPage() {
                   <IcTrash size={11} color="#fca5a5" /> Delete
                 </button>
               </div>
-              {signing === d.id && (
+              {signing === d.id && signAction && (
                 <div style={{ marginTop: 10, padding: 10, background: 'rgba(16,185,129,0.1)', border: '0.5px solid rgba(16,185,129,0.4)', borderRadius: 8 }}>
-                  <div style={{ fontFamily: SF, fontSize: 12, color: '#10b981', marginBottom: 6 }}>Sign as:</div>
+                  <div style={{ fontFamily: SF, fontSize: 12, color: '#10b981', marginBottom: 6 }}>
+                    {signAction === 'review' ? 'Submit for review as:' : signAction === 'approve' ? 'Approve as:' : 'Activate as:'}
+                  </div>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input type="text" value={signName} onChange={e => setSignName(e.target.value)} placeholder="Your name" autoFocus style={{ ...inputStyle, flex: 1 }} />
-                    <button onClick={() => setSigning(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button onClick={() => sign(d.id)} style={{ background: '#10b981', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Sign</button>
+                    <button onClick={() => { setSigning(null); setSignAction(null) }} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                    <button onClick={() => sign(d.id)} style={{ background: '#10b981', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{signAction === 'review' ? 'Submit' : 'Sign'}</button>
                   </div>
                 </div>
               )}

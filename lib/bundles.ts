@@ -11,12 +11,21 @@ export interface BundlePage {
   color: string
 }
 
+export interface BundleAction {
+  key: string
+  label: string
+  icon: string
+  color: string
+  api: string
+}
+
 export interface Bundle {
   slug: string
   title: string
   subtitle: string
   color: string
   pages: BundlePage[]
+  actions: BundleAction[]
   prompt: string
   metrics: string[]
 }
@@ -36,6 +45,11 @@ export const BUNDLES: Bundle[] = [
       { href: '/check-in', label: 'Check in/out', icon: 'pin', color: '#10b981' },
       { href: '/photos', label: 'Site progress photos', icon: 'camera', color: '#8b5cf6' },
       { href: '/snags', label: 'Snags', icon: 'alert', color: '#ef4444' },
+    ],
+    actions: [
+      { key: 'raiseSnag', label: 'Raise a snag', icon: 'alert', color: '#ef4444', api: '/api/snags' },
+      { key: 'siteDiaryEntry', label: 'Site diary entry', icon: 'doc', color: '#10b981', api: '/api/site-diary' },
+      { key: 'equipmentCheck', label: 'Start equipment check', icon: 'wrench', color: '#f59e0b', api: '/api/equipment-checks' },
     ],
     metrics: ['activeProjects', 'onSiteNow', 'openSnags', 'todayToolboxTalks'],
     prompt: `You are the Site Supervisor AI for Cortexx, a UK construction management app.
@@ -62,6 +76,11 @@ Never invent project names, people or financial figures.`,
       { href: '/rfis', label: 'RFIs', icon: 'alert', color: '#8b5cf6' },
       { href: '/toolbox-talks', label: 'Toolbox talks', icon: 'hardhat', color: '#f59e0b' },
     ],
+    actions: [
+      { key: 'createRams', label: 'Create RAMS / method statement', icon: 'hardhat', color: '#22c55e', api: '/api/rams' },
+      { key: 'raiseRfi', label: 'Raise an RFI', icon: 'alert', color: '#8b5cf6', api: '/api/rfis' },
+      { key: 'logInspection', label: 'Log an inspection', icon: 'check', color: '#10b981', api: '/api/inspections' },
+    ],
     metrics: ['activeProjects', 'onSiteNow', 'openRfis', 'overduePermits', 'failedInspections'],
     prompt: `You are the Site Manager AI for Cortexx, a UK construction management app.
 You manage project delivery: progress, labour, plant, materials, RAMS, inspections, permits, RFIs and site diary.
@@ -84,6 +103,11 @@ Do not invent people, projects, costs or dates.`,
       { href: '/safety', label: 'Accident book', icon: 'alert', color: '#ef4444' },
       { href: '/variations', label: 'Variations', icon: 'wrench', color: '#8b5cf6' },
     ],
+    actions: [
+      { key: 'createTask', label: 'Create a task', icon: 'check', color: '#10b981', api: '/api/tasks' },
+      { key: 'sendAnnouncement', label: 'Send announcement', icon: 'bell', color: '#06b6d4', api: '/api/announcements' },
+      { key: 'logRisk', label: 'Log a risk', icon: 'alert', color: '#ef4444', api: '/api/risks' },
+    ],
     metrics: ['activeProjects', 'openRisks', 'openActions', 'overdueMeetings', 'monthMargin'],
     prompt: `You are the Project Manager / Agent AI for Cortexx, a UK construction management app.
 You focus on governance, risk, programme and reporting: risk register, action logs, meeting minutes, lookahead, monthly reports, budget vs actual and variations.
@@ -105,6 +129,11 @@ Never invent project outcomes, costs or contractual dates.`,
       { href: '/valuations', label: 'Valuations', icon: 'pound', color: '#06b6d4' },
       { href: '/cost-catalog', label: 'Cost catalog', icon: 'layers', color: '#06b6d4' },
       { href: '/claims', label: 'Insurance claims', icon: 'alert', color: '#ef4444' },
+    ],
+    actions: [
+      { key: 'createQuote', label: 'Create a quote', icon: 'receipt', color: '#10b981', api: '/api/quotes' },
+      { key: 'createVariation', label: 'Create variation / change order', icon: 'wrench', color: '#8b5cf6', api: '/api/variations' },
+      { key: 'logInvoice', label: 'Log an invoice', icon: 'receipt', color: '#06b6d4', api: '/api/invoices' },
     ],
     metrics: ['outstandingInvoiceTotal', 'retentionHeld', 'pendingApprovals', 'overduePayments'],
     prompt: `You are the Commercial AI for Cortexx, a UK construction management app.

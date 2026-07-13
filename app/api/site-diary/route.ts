@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireAuth, actorName } from '@/lib/requireAuth'
+import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { createActivity } from '@/lib/activity'
 
 export const dynamic = 'force-dynamic'
 
@@ -86,5 +88,45 @@ export async function GET(req: NextRequest) {
   } catch (error) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to fetch site diary' }, { status: 500 })
+  }
+}
+
+function sanitize(s: string, maxLen = 500): string {
+  return String(s).replace(/[\x00-\x1F\x7F]/g, '').trim().slice(0, maxLen)
+}
+
+/**
+ * Create a site diary note. The diary itself is an aggregation over other
+ * records, so a new entry is stored as an activity record and immediately
+ * appears in today's diary feed.
+ */
+export async function POST(req: NextRequest) {
+  const auth = await requireAuth()
+  if (auth instanceof NextResponse) return auth
+  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (__limited) return __limited
+  try {
+    const body = await req.json()
+    const note = String(body.note || '').trim()
+    if (!note) return NextResponse.json({ error: 'note is required' }, { status: 400 })
+    const projectId = String(body.projectId || '').trim()
+    if (!projectId) return NextResponse.json({ error: 'projectId is required' }, { status: 400 })
+
+    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true, name: true } })
+    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
+
+    const activity = await createActivity({
+      projectId,
+      actorName: sanitize(actorName(auth), 100),
+      actorType: 'human',
+      action: `site diary note: ${sanitize(note, 200)}`,
+      detail: sanitize(note),
+      iconType: 'doc',
+    })
+
+    return NextResponse.json({ activity }, { status: 201 })
+  } catch (error) {
+    reportError(error)
+    return NextResponse.json({ error: 'Failed to create site diary entry' }, { status: 500 })
   }
 }

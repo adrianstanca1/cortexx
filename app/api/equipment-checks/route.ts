@@ -17,7 +17,27 @@ const ALLOWED_TYPE = new Set([
   'other',
 ])
 const ALLOWED_STATUS = new Set(['draft', 'in_progress', 'passed', 'failed'])
+export const ALLOWED_FREQUENCY = new Set(['none', 'daily', 'weekly', 'monthly'])
 const ITEM_RESULT = new Set(['pass', 'fail', 'na'])
+
+export function computeNextDueAt(from: Date | string | number | null | undefined, frequency: string): Date | null {
+  if (!from || frequency === 'none' || !ALLOWED_FREQUENCY.has(frequency)) return null
+  const base = new Date(from)
+  if (isNaN(base.getTime())) return null
+  const next = new Date(base)
+  switch (frequency) {
+    case 'daily':
+      next.setDate(next.getDate() + 1)
+      break
+    case 'weekly':
+      next.setDate(next.getDate() + 7)
+      break
+    case 'monthly':
+      next.setMonth(next.getMonth() + 1)
+      break
+  }
+  return next
+}
 
 export interface ChecklistItem {
   id: string
@@ -115,15 +135,23 @@ export async function POST(req: NextRequest) {
       if (!equipment) return NextResponse.json({ error: 'Equipment not found' }, { status: 400 })
     }
 
+    const frequency = typeof body.frequency === 'string' && ALLOWED_FREQUENCY.has(body.frequency) ? body.frequency : 'none'
+    const now = new Date()
+    const isTerminal = status === 'passed' || status === 'failed'
+    const nextDueAt = computeNextDueAt(isTerminal ? now : now, frequency)
+
     const check = await prisma.equipmentCheck.create({
       data: {
         title: title.slice(0, 200),
         type,
         status,
         checklistItems: checklistItems as unknown as object,
-        overallResult: status === 'passed' ? 'pass' : status === 'failed' ? 'fail' : null,
+        overallResult: isTerminal ? (status === 'passed' ? 'pass' : 'fail') : null,
         conductedBy: body.conductedBy ? String(body.conductedBy).slice(0, 120) : actorName(auth),
-        completedAt: status === 'passed' || status === 'failed' ? new Date() : null,
+        completedAt: isTerminal ? now : null,
+        lastCompletedAt: isTerminal ? now : null,
+        frequency,
+        nextDueAt,
         notes: typeof body.notes === 'string' && body.notes ? body.notes.slice(0, 2000) : null,
         projectId,
         equipmentId,

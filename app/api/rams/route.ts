@@ -7,7 +7,7 @@ import { enforceRateLimit } from '@/lib/rateLimit'
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_TYPE = new Set(['rams', 'risk_assessment', 'method_statement'])
-const ALLOWED_STATUS = new Set(['draft', 'active', 'expired', 'archived'])
+const ALLOWED_STATUS = new Set(['draft', 'reviewed', 'approved', 'active', 'expired', 'archived'])
 
 function parseDate(v: unknown): Date | null | undefined {
   if (v === undefined) return undefined
