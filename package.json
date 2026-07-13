@@ -16,6 +16,8 @@
     "test": "node --test test/*.test.js",
     "test:integration": "tsx --test test/integration/*.test.js",
     "precompile": "babel lib --out-dir dist --presets @babel/preset-react --copy-files --extensions \".js,.jsx\"",
+    "vault:decrypt": "./scripts/decrypt-env.sh",
+    "vault:load": "./scripts/load-env.sh",
     "postinstall": "npm run precompile --silent || true",
     "ios:add": "npx cap add ios",
     "ios:sync": "npx cap copy && npx cap sync ios",

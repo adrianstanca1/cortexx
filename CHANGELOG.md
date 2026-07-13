@@ -13,6 +13,9 @@
 - **Equipment check scheduling** — `EquipmentCheck` now has `frequency`, `nextDueAt` and `lastCompletedAt`. The create/edit modal includes a frequency selector; passing/failing a check records completion and computes the next due date. New `/api/equipment-checks/overdue` endpoint and an Overdue filter chip on `/equipment-checks`. New migration `20260713000002_equipment_check_frequency`.
 - **RAMS review/approval workflow** — RAMS documents now move through draft → reviewed → approved → active. Added `reviewedBy`, `reviewedAt`, `approvedBy`, `approvedBy` to the `Rams` model. The `/rams` page shows stage-specific actions (Submit for review / Approve / Approve & activate / Activate), and the PATCH API validates stage transitions and enforces reviewer/approver segregation. New migration `20260713000003_rams_review_approval`.
 
+### Operations
+- Added an encrypted environment vault (`age`) for the VPS: `.env.vault` holds all secrets, the age identity lives at `~/.config/cortexx/age.key`, and `npm run vault:decrypt` produces `.env`. See `VAULT.md`. This keeps credentials out of the repo while letting the encrypted vault be backed up/committed safely.
+
 ### Database
 - Added migrations `20260713000001_add_document_tags`, `20260713000002_equipment_check_frequency`, `20260713000003_rams_review_approval` and applied them against PostgreSQL.
 

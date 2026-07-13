@@ -16,6 +16,10 @@ tsconfig.tsbuildinfo
 .env
 .env.local
 .env.*.local
+.env.vault.decrypted
+.env.tmp
+*.age.key
+age.key
 
 # Database
 *.db
