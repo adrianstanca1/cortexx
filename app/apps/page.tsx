@@ -50,6 +50,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/chat',     label: 'Team chat',  Icon: IcBell,   color: '#06b6d4' },
       { href: '/rfis',     label: 'RFIs',       Icon: IcAlert,  color: '#f59e0b', badgeKey: 'rfis' },
       { href: '/ask',      label: 'Ask Cortex', Icon: IcSpark,  color: '#8b5cf6', ai: true },
+      { href: '/bundles',   label: 'Role packs', Icon: IcLayers, color: '#10b981', ai: true },
     ],
   },
   {
@@ -128,6 +129,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Quality & governance',
     items: [
       { href: '/inspections', label: 'Inspections', Icon: IcCheck, color: '#10b981', badgeKey: 'inspections' },
+      { href: '/equipment-checks', label: 'Equipment checks', Icon: IcWrench, color: '#f59e0b' },
       { href: '/action-plans', label: 'Action plans', Icon: IcCheck, color: '#10b981' },
       { href: '/conflicts', label: 'Conflicts', Icon: IcAlert, color: '#ef4444' },
       { href: '/meetings',    label: 'Meetings',    Icon: IcClock, color: '#06b6d4', badgeKey: 'meetings' },

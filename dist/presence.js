@@ -1,4 +1,6 @@
 // CortexBuild — real-time multiplayer presence (v1.8)
+// LEGACY: this file is a standalone dist/ script and is not loaded by the
+// current Next.js app. See docs/presence-legacy.md for status and decision.
 // ─────────────────────────────────────────────────────────────────
 // Genuine real-time presence with zero backend required: peers on the
 // same origin (other tabs / windows / PWA instances) discover each other

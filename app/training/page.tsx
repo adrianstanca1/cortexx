@@ -4,103 +4,86 @@ import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
-import { IcHardhat, IcChevL, IcPlus, IcX, IcCheck, IcTrash } from '@/components/ui/Icons'
-import { useModalEffects } from '@/lib/useModalEffects'
+import SegmentedControl from '@/components/ui/SegmentedControl'
+import CertificationDialog from '@/components/training/CertificationDialog'
+import { IcHardhat, IcChevL, IcPlus, IcTrash, IcEdit } from '@/components/ui/Icons'
+import type { Certification, TrainingCourse } from '@/lib/types'
 
 interface Member { id: string; name: string; role: string }
-interface Certification {
-  id: string
-  memberId: string | null
-  holderName: string
-  type: string
-  number: string | null
-  issuedDate: string | null
-  expiryDate: string | null
-  notes: string | null
-  createdAt: string
-  member?: Member | null
-  statusBucket: 'valid' | 'expiring' | 'expired' | 'no_expiry'
-}
 interface Counts { valid: number; expiring: number; expired: number; total: number }
 
 const SF = 'var(--font-system)'
-const COMMON_TYPES = ['CSCS', 'IPAF', 'PASMA', 'SSSTS', 'SMSTS', 'Asbestos Awareness', 'First Aid at Work', 'Working at Heights']
-const STATUS_COLOR: Record<Certification['statusBucket'], string> = {
+type StatusBucket = NonNullable<Certification['statusBucket']>
+const STATUS_COLOR: Record<StatusBucket, string> = {
   valid: '#10b981',
   expiring: '#f59e0b',
   expired: '#ef4444',
   no_expiry: '#52749a',
 }
-const STATUS_LABEL: Record<Certification['statusBucket'], string> = {
+const STATUS_LABEL: Record<StatusBucket, string> = {
   valid: 'Valid',
   expiring: 'Expiring',
   expired: 'Expired',
   no_expiry: 'No expiry',
 }
+const CATEGORIES = [
+  { value: 'all', label: 'All' },
+  { value: 'qualification', label: 'Qualifications' },
+  { value: 'training', label: 'Training' },
+  { value: 'course', label: 'Courses' },
+  { value: 'licence', label: 'Licences' },
+  { value: 'safety', label: 'Safety' },
+]
 
 export default function TrainingPage() {
   const [certs, setCerts] = useState<Certification[]>([])
   const [counts, setCounts] = useState<Counts>({ valid: 0, expiring: 0, expired: 0, total: 0 })
   const [team, setTeam] = useState<Member[]>([])
-  const [filter, setFilter] = useState<'all' | Certification['statusBucket']>('all')
+  const [courses, setCourses] = useState<TrainingCourse[]>([])
+  const [statusFilter, setStatusFilter] = useState<'all' | Certification['statusBucket']>('all')
+  const [categoryFilter, setCategoryFilter] = useState('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
-  const [showAdd, setShowAdd] = useState(false)
-  const [saving, setSaving] = useState(false)
+  const [dialogOpen, setDialogOpen] = useState(false)
+  const [editing, setEditing] = useState<Certification | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [form, setForm] = useState({
-    memberId: '',
-    holderName: '',
-    type: 'CSCS',
-    number: '',
-    issuedDate: '',
-    expiryDate: '',
-    notes: '',
-  })
-
-  useModalEffects(showAdd, () => setShowAdd(false))
 
   const load = useCallback(() => {
-    fetch('/api/training')
-      .then(r => { if (!r.ok) throw new Error('Failed to load certifications'); return r.json() })
-      .then(d => { setCerts(d.certifications || []); setCounts(d.counts || { valid: 0, expiring: 0, expired: 0, total: 0 }); setLoading(false) })
+    setLoading(true)
+    Promise.all([
+      fetch('/api/training').then(r => { if (!r.ok) throw new Error('Failed to load certifications'); return r.json() }),
+      fetch('/api/team').then(r => r.ok ? r.json() : null),
+      fetch('/api/training/courses').then(r => r.ok ? r.json() : null),
+    ])
+      .then(([trainingData, teamData, courseData]) => {
+        setCerts(trainingData.certifications || [])
+        setCounts(trainingData.counts || { valid: 0, expiring: 0, expired: 0, total: 0 })
+        const ts: Member[] = (teamData?.team || []).map((m: Member) => ({ id: m.id, name: m.name, role: m.role }))
+        setTeam(ts)
+        setCourses(courseData?.courses || [])
+        setLoading(false)
+      })
       .catch(e => { setError(e.message); setLoading(false) })
-    fetch('/api/team').then(r => r.ok ? r.json() : null).then(d => {
-      const ts: Member[] = (d?.team || []).map((m: { id: string; name: string; role: string }) => ({ id: m.id, name: m.name, role: m.role }))
-      setTeam(ts)
-    }).catch(() => {})
   }, [])
 
   useEffect(() => { load() }, [load])
 
-  const create = async () => {
-    if (!form.holderName.trim() || !form.type.trim()) return
-    setSaving(true)
-    try {
-      const res = await fetch('/api/training', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          memberId: form.memberId || null,
-          holderName: form.holderName.trim(),
-          type: form.type.trim(),
-          number: form.number.trim() || null,
-          issuedDate: form.issuedDate || null,
-          expiryDate: form.expiryDate || null,
-          notes: form.notes.trim() || null,
-        }),
-      })
-      if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Failed')
-      setShowAdd(false)
-      setForm({ memberId: '', holderName: '', type: 'CSCS', number: '', issuedDate: '', expiryDate: '', notes: '' })
-      load()
-      setToast({ msg: 'Certification added' })
-    } catch (e) {
-      setToast({ msg: e instanceof Error ? e.message : 'Failed to add', type: 'error' })
-    } finally {
-      setSaving(false)
+  const save = async (data: Partial<Certification>) => {
+    const url = data.id ? `/api/training/${data.id}` : '/api/training'
+    const res = await fetch(url, {
+      method: data.id ? 'PUT' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      throw new Error(j.error || 'Save failed')
     }
+    setDialogOpen(false)
+    setEditing(null)
+    load()
+    setToast({ msg: data.id ? 'Certification updated' : 'Certification added' })
   }
 
   const remove = async (id: string) => {
@@ -109,23 +92,31 @@ export default function TrainingPage() {
       setTimeout(() => setConfirmDelete(curr => curr === id ? null : curr), 3000)
       return
     }
-    setConfirmDelete(null)
     try {
-      const res = await fetch(`/api/training/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Failed')
-      load()
-    } catch {
-      setToast({ msg: 'Delete failed', type: 'error' })
+      await deleteDirect(id)
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Delete failed', type: 'error' })
     }
   }
 
-  // Auto-fill holderName when picking a member
-  const pickMember = (id: string) => {
-    const m = team.find(t => t.id === id)
-    setForm(prev => ({ ...prev, memberId: id, holderName: m?.name || prev.holderName }))
+  const deleteDirect = async (id: string) => {
+    setConfirmDelete(null)
+    const res = await fetch(`/api/training/${id}`, { method: 'DELETE' })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      throw new Error(j.error || 'Delete failed')
+    }
+    load()
   }
 
-  const filtered = filter === 'all' ? certs : certs.filter(c => c.statusBucket === filter)
+  const filtered = certs.filter(c => {
+    const statusOk = statusFilter === 'all' || c.statusBucket === statusFilter
+    const categoryOk = categoryFilter === 'all' || c.category === categoryFilter
+    return statusOk && categoryOk
+  })
+
+  const openCreate = () => { setEditing(null); setDialogOpen(true) }
+  const openEdit = (c: Certification) => { setEditing(c); setDialogOpen(true) }
 
   return (
     <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
@@ -144,19 +135,27 @@ export default function TrainingPage() {
               {counts.expiring > 0 && <span style={{ color: '#f59e0b', marginLeft: 6 }}>· {counts.expiring} expiring soon</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Add certification" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={openCreate} aria-label="Add certification" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
 
-        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 10 }}>
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
           {(['valid', 'expiring', 'expired'] as const).map(b => (
-            <button key={b} onClick={() => setFilter(filter === b ? 'all' : b)} style={{ background: filter === b ? `${STATUS_COLOR[b]}28` : 'rgba(255,255,255,0.04)', border: `0.5px solid ${filter === b ? STATUS_COLOR[b] : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer', textAlign: 'left' }}>
+            <button key={b} onClick={() => setStatusFilter(statusFilter === b ? 'all' : b)} style={{ background: statusFilter === b ? `${STATUS_COLOR[b]}28` : 'rgba(255,255,255,0.04)', border: `0.5px solid ${statusFilter === b ? STATUS_COLOR[b] : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, fontWeight: 700, color: STATUS_COLOR[b] }}>{counts[b]}</div>
               <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#52749a', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{STATUS_LABEL[b]}</div>
             </button>
           ))}
         </div>
+
+        <SegmentedControl
+          value={categoryFilter}
+          onChange={setCategoryFilter}
+          options={CATEGORIES}
+          size="sm"
+          ariaLabel="Filter by category"
+        />
       </div>
 
       {loading ? (
@@ -168,7 +167,7 @@ export default function TrainingPage() {
           <IcHardhat size={32} color="#52749a" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{certs.length === 0 ? 'No certifications recorded yet' : 'Nothing in this filter'}</p>
           {certs.length === 0 && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button onClick={openCreate} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Add first certification
             </button>
           )}
@@ -178,15 +177,22 @@ export default function TrainingPage() {
           {filtered.map(c => (
             <div key={c.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{c.holderName}</div>
+                <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{c.holderName}</div>
+                  <span style={{ padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: '#8ea8c5', fontFamily: SF, fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>{c.category}</span>
+                </div>
                 <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
                   {c.type}{c.number ? ` · #${c.number}` : ''}
+                  {c.course && <span style={{ color: '#52749a' }}> · {c.course.name}</span>}
                   {c.expiryDate && <span style={{ color: '#52749a' }}> · expires {new Date(c.expiryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
                 </div>
               </div>
-              <span style={{ flexShrink: 0, padding: '3px 9px', borderRadius: 99, background: `${STATUS_COLOR[c.statusBucket]}22`, color: STATUS_COLOR[c.statusBucket], fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${STATUS_COLOR[c.statusBucket]}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>
-                {STATUS_LABEL[c.statusBucket]}
+              <span style={{ flexShrink: 0, padding: '3px 9px', borderRadius: 99, background: `${STATUS_COLOR[c.statusBucket || 'no_expiry']}22`, color: STATUS_COLOR[c.statusBucket || 'no_expiry'], fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${STATUS_COLOR[c.statusBucket || 'no_expiry']}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+                {STATUS_LABEL[c.statusBucket || 'no_expiry']}
               </span>
+              <button onClick={() => openEdit(c)} aria-label="Edit" style={{ flexShrink: 0, background: 'none', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer' }}>
+                <IcEdit size={14} color="#8ea8c5" />
+              </button>
               <button onClick={() => remove(c.id)} aria-label={confirmDelete === c.id ? 'Confirm delete' : 'Delete'} style={{ flexShrink: 0, background: confirmDelete === c.id ? 'rgba(239,68,68,0.2)' : 'none', border: 'none', borderRadius: 4, padding: confirmDelete === c.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <IcTrash size={13} color="#ef4444" />
                 {confirmDelete === c.id && <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', fontFamily: SF }}>Sure?</span>}
@@ -198,65 +204,15 @@ export default function TrainingPage() {
 
       <TabBar />
 
-      {showAdd && (
-        <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
-            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF }}>Add certification</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Member (optional)</label>
-              <select value={form.memberId} onChange={e => pickMember(e.target.value)} style={{ ...inputStyle, appearance: 'none' }}>
-                <option value="">— Not in team list —</option>
-                {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
-            </div>
-
-            <div>
-              <label style={labelStyle}>Holder name</label>
-              <input value={form.holderName} onChange={e => setForm(p => ({ ...p, holderName: e.target.value }))} placeholder="Person on the card" style={inputStyle} />
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div>
-                <label style={labelStyle}>Type</label>
-                <select value={form.type} onChange={e => setForm(p => ({ ...p, type: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
-                  {COMMON_TYPES.map(t => <option key={t} value={t}>{t}</option>)}
-                </select>
-              </div>
-              <div>
-                <label style={labelStyle}>Card / cert number</label>
-                <input value={form.number} onChange={e => setForm(p => ({ ...p, number: e.target.value }))} placeholder="Optional" style={inputStyle} />
-              </div>
-            </div>
-
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
-              <div>
-                <label style={labelStyle}>Issued</label>
-                <input type="date" value={form.issuedDate} onChange={e => setForm(p => ({ ...p, issuedDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
-              </div>
-              <div>
-                <label style={labelStyle}>Expires</label>
-                <input type="date" value={form.expiryDate} onChange={e => setForm(p => ({ ...p, expiryDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
-              </div>
-            </div>
-
-            <button onClick={create} disabled={saving || !form.holderName.trim() || !form.type.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.holderName.trim() || !form.type.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add certification</>}
-            </button>
-          </div>
-        </div>
-      )}
+      <CertificationDialog
+        open={dialogOpen}
+        onClose={() => { setDialogOpen(false); setEditing(null) }}
+        onSave={save}
+        onDelete={editing ? async () => { await deleteDirect(editing.id); setDialogOpen(false); setEditing(null) } : undefined}
+        initial={editing}
+        team={team}
+        courses={courses}
+      />
     </div>
   )
-}
-
-const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
-}
-const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

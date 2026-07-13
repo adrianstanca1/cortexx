@@ -51,6 +51,10 @@ export async function GET(req: NextRequest) {
 
   const encoder = new TextEncoder()
   let cursor = new Date()
+  // Guard against re-emitting rows with identical createdAt. We also store
+  // the row timestamp so the map can be pruned as the cursor advances,
+  // preventing unbounded growth on a long-lived stream.
+  const seen = new Map<string, Date>()
   let intervalId: ReturnType<typeof setInterval> | null = null
   let keepAliveId: ReturnType<typeof setInterval> | null = null
   let closed = false
@@ -78,7 +82,9 @@ export async function GET(req: NextRequest) {
       send('ready', { cursor: cursor.toISOString() })
 
       const queryActivities = () => prisma.activity.findMany({
-        where: { createdAt: { gt: cursor } },
+        // Use gte so rows created in the same millisecond as the cursor are not
+        // dropped; we deduplicate by id to avoid re-emitting already-seen rows.
+        where: { createdAt: { gte: cursor } },
         include: { project: true },
         orderBy: { createdAt: 'asc' },
         take: 50,
@@ -90,11 +96,18 @@ export async function GET(req: NextRequest) {
           // Wrap in runWithOrg so the Prisma tenancy extension sees the
           // active organization on every tick — setInterval callbacks
           // don't inherit the GET handler's AsyncLocalStorage context.
-          const newActivities = orgCtx
+          const polled = orgCtx
             ? await runWithOrg(orgCtx, queryActivities)
             : await queryActivities()
+          const newActivities = polled.filter(a => !seen.has(a.id))
           if (newActivities.length > 0) {
+            newActivities.forEach(a => seen.set(a.id, a.createdAt))
             cursor = newActivities[newActivities.length - 1].createdAt
+            // Prune IDs that are now strictly behind the cursor; they can never
+            // be returned by a future gte poll.
+            for (const [id, at] of seen) {
+              if (at.getTime() < cursor.getTime()) seen.delete(id)
+            }
             send('activity', newActivities)
           }
         } catch (e) {

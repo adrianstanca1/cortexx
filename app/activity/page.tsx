@@ -4,7 +4,11 @@ import { useEffect, useState, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Avatar from '@/components/ui/Avatar'
+import Skeleton from '@/components/ui/Skeleton'
 import { IcChevL, IcSearch, IcX } from '@/components/ui/Icons'
+import ActivityIcon from '@/components/ui/ActivityIcon'
+import RelativeTime from '@/components/ui/RelativeTime'
+import PresencePill from '@/components/ui/PresencePill'
 import { useRealtimeActivity } from '@/lib/useRealtimeActivity'
 
 interface Activity {
@@ -19,16 +23,22 @@ interface Activity {
   project?: { id: string; name: string } | null
 }
 
+const PAGE_SIZE = 25
 const ACTOR_COLOR: Record<string, string> = { human: '#2563eb', ai: '#8b5cf6', system: '#52749a' }
 
 export default function ActivityPage() {
   const [activities, setActivities] = useState<Activity[]>([])
   const [loading, setLoading] = useState(true)
+  const [loadingMore, setLoadingMore] = useState(false)
+  const [hasMore, setHasMore] = useState(false)
+  const [skip, setSkip] = useState(0)
   const [actorFilter, setActorFilter] = useState<string>('all')
   const [search, setSearch] = useState('')
   const [projects, setProjects] = useState<{ id: string; name: string }[]>([])
   const [projectFilter, setProjectFilter] = useState<string>('')
   const debounceRef = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const requestIdRef = useRef(0)
+
   // Live SSE stream prepends new activities as they happen. The hook
   // reseeds whenever the `activities` reference changes (e.g. after
   // a filter-triggered refetch), so applied filters keep working.
@@ -38,31 +48,70 @@ export default function ActivityPage() {
   const liveActivities = realtime.activities as unknown as Activity[]
   const connected = realtime.connected
 
-  const load = useCallback(() => {
+  const buildParams = useCallback((pageSkip: number) => {
     const params = new URLSearchParams()
-    params.set('take', '100')
+    params.set('take', String(PAGE_SIZE))
+    params.set('skip', String(pageSkip))
     if (actorFilter !== 'all') params.set('actorType', actorFilter)
     if (projectFilter) params.set('projectId', projectFilter)
     if (search.trim().length >= 2) params.set('q', search.trim())
+    return params
+  }, [actorFilter, projectFilter, search])
+
+  const load = useCallback((reset = false) => {
+    const nextSkip = reset ? 0 : skip
+    if (reset) {
+      setLoading(true)
+      requestIdRef.current++
+    }
+    const thisRequest = requestIdRef.current
+    const params = buildParams(nextSkip)
     fetch(`/api/activity?${params.toString()}`)
       .then(r => r.json())
-      .then(d => { setActivities(d.activities || []); setLoading(false) })
-      .catch(() => setLoading(false))
+      .then(d => {
+        // Ignore stale responses (user changed filters while fetch was in flight).
+        if (thisRequest !== requestIdRef.current) return
+        const incoming = d.activities || []
+        setActivities(prev => {
+          if (reset) return incoming
+          const seen = new Set(prev.map(a => a.id))
+          return [...prev, ...incoming.filter((a: Activity) => !seen.has(a.id))]
+        })
+        setHasMore(d.hasMore ?? false)
+        if (reset) setSkip(PAGE_SIZE)
+        else setSkip(s => s + PAGE_SIZE)
+        setLoading(false)
+        setLoadingMore(false)
+      })
+      .catch(() => {
+        if (thisRequest !== requestIdRef.current) return
+        setLoading(false)
+        setLoadingMore(false)
+      })
+  }, [skip, buildParams])
+  const loadRef = useRef(load)
+  useEffect(() => {
+    loadRef.current = load
+  }, [load])
+
+  // Reset pagination whenever filters/search change.
+  useEffect(() => {
+    setSkip(0)
+    requestIdRef.current++
+    if (debounceRef.current) clearTimeout(debounceRef.current)
+    debounceRef.current = setTimeout(() => loadRef.current(true), 250)
+    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
   }, [actorFilter, projectFilter, search])
 
   useEffect(() => {
     fetch('/api/projects?take=100').then(r => r.json()).then(d => setProjects((d.projects || []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))).catch(() => {})
   }, [])
 
-  useEffect(() => {
-    if (debounceRef.current) clearTimeout(debounceRef.current)
-    debounceRef.current = setTimeout(load, 250)
-    return () => { if (debounceRef.current) clearTimeout(debounceRef.current) }
-  }, [load])
-
-  // Captured once via useState's lazy initializer so relative-time labels
-  // stay stable across re-renders.
-  const [now] = useState(() => Date.now())
+  const loadMore = useCallback(() => {
+    if (loadingMore || !hasMore) return
+    setLoadingMore(true)
+    loadRef.current(false)
+  }, [loadingMore, hasMore])
 
   return (
     <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
@@ -79,6 +128,7 @@ export default function ActivityPage() {
             title={connected ? 'Live updates connected' : 'Reconnecting…'}
             style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 6px #10b98166' : 'none', transition: 'all 0.3s' }}
           />
+          <PresencePill screen="activity" />
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '9px 14px', marginTop: 10 }}>
@@ -111,20 +161,31 @@ export default function ActivityPage() {
 
       <div style={{ padding: '12px 20px' }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 14 }}>Loading…</div>
-        ) : activities.length === 0 ? (
+          <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
+            {Array.from({ length: 6 }).map((_, i) => (
+              <div key={i} style={{ background: '#152641', borderRadius: 12, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <Skeleton width={28} height={28} borderRadius="50%" />
+                <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
+                  <Skeleton width="60%" height={13} />
+                  <Skeleton width="40%" height={11} />
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : liveActivities.length === 0 ? (
           <div style={{ padding: '40px 20px', textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)' }}>
-            No activity matches your filters.
+            {search || actorFilter !== 'all' || projectFilter ? 'No activity matches your filters.' : 'No activity yet.'}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {liveActivities.map(a => {
               const color = ACTOR_COLOR[a.actorType] || '#52749a'
-              const mins = Math.round((now - new Date(a.createdAt).getTime()) / 60000)
-              const rel = mins < 60 ? `${mins}m` : mins < 1440 ? `${Math.round(mins / 60)}h` : `${Math.round(mins / 1440)}d`
               return (
                 <div key={a.id} style={{ background: '#152641', borderRadius: 12, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
-                  <Avatar name={a.actorName} color={color} size={28} />
+                  <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+                    <Avatar name={a.actorName} color={color} size={28} />
+                    <ActivityIcon iconType={a.iconType} size={14} color={color} />
+                  </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', lineHeight: 1.3 }}>
                       <span style={{ fontWeight: 600 }}>{a.actorName}</span>{' '}
@@ -134,12 +195,33 @@ export default function ActivityPage() {
                       {a.project?.name && <Link href={`/projects/${a.project.id}`} style={{ color: '#8ea8c5', textDecoration: 'none' }}>{a.project.name}</Link>}
                       {a.project && a.detail && ' · '}
                       {a.detail}
-                      {' · '}{rel} ago
+                      {' · '}<RelativeTime date={a.createdAt} />
                     </div>
                   </div>
                 </div>
               )
             })}
+
+            {hasMore && (
+              <button
+                onClick={loadMore}
+                disabled={loadingMore}
+                style={{
+                  marginTop: 8,
+                  padding: '10px 16px',
+                  borderRadius: 12,
+                  border: '0.5px solid rgba(255,255,255,0.07)',
+                  background: '#152641',
+                  color: '#8ea8c5',
+                  fontFamily: 'var(--font-system)',
+                  fontSize: 13,
+                  cursor: loadingMore ? 'wait' : 'pointer',
+                  opacity: loadingMore ? 0.7 : 1,
+                }}
+              >
+                {loadingMore ? 'Loading…' : 'Load more'}
+              </button>
+            )}
           </div>
         )}
       </div>

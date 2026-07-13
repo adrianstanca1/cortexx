@@ -111,10 +111,11 @@ model Project {
   toolboxTalks        ToolboxTalk[]
   safetyIncidents     SafetyIncident[]
 
-  organizationId String?
-  organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  bookmarks      ProjectBookmark[]
-  conversations  Conversation[]
+  organizationId  String?
+  organization    Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  bookmarks       ProjectBookmark[]
+  conversations   Conversation[]
+  equipmentChecks EquipmentCheck[]
 
   @@index([status])
   @@index([updatedAt])
@@ -267,6 +268,7 @@ model Activity {
   @@index([projectId, createdAt])
   @@index([createdAt])
   @@index([organizationId])
+  @@index([organizationId, createdAt])
 }
 
 model Comment {
@@ -335,17 +337,20 @@ model Snag {
 }
 
 model Certification {
-  id         String      @id @default(cuid())
+  id         String          @id @default(cuid())
   memberId   String?
   holderName String
   type       String // CSCS, IPAF, PASMA, asbestos, SSSTS, SMSTS, first aid, etc.
+  category   String          @default("qualification") // qualification | training | course | licence | safety
   number     String?
   issuedDate DateTime?
   expiryDate DateTime?
   notes      String?
-  createdAt  DateTime    @default(now())
-  updatedAt  DateTime    @updatedAt
-  member     TeamMember? @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  createdAt  DateTime        @default(now())
+  updatedAt  DateTime        @updatedAt
+  member     TeamMember?     @relation(fields: [memberId], references: [id], onDelete: SetNull)
+  course     TrainingCourse? @relation(fields: [courseId], references: [id], onDelete: SetNull)
+  courseId   String?
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -353,6 +358,28 @@ model Certification {
   @@index([memberId])
   @@index([expiryDate])
   @@index([type])
+  @@index([category])
+  @@index([organizationId])
+}
+
+model TrainingCourse {
+  id             String          @id @default(cuid())
+  name           String
+  code           String?
+  provider       String?
+  category       String          @default("safety") // safety | technical | management | first_aid | environmental | other
+  validityDays   Int? // null means non-expiring
+  description    String?
+  archivedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  certifications Certification[]
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([category])
+  @@index([archivedAt])
   @@index([organizationId])
 }
 
@@ -654,12 +681,40 @@ model Equipment {
   updatedAt      DateTime              @updatedAt
   maintenances   MaintenanceSchedule[]
 
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId  String?
+  organization    Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  equipmentChecks EquipmentCheck[]
 
   @@index([status])
   @@index([nextServiceAt])
   @@index([archivedAt])
+  @@index([organizationId])
+}
+
+model EquipmentCheck {
+  id             String     @id @default(cuid())
+  projectId      String?
+  project        Project?   @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  equipmentId    String?
+  equipment      Equipment? @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  type           String     @default("scissor_lift") // scissor_lift | cherry_picker | telehandler | harness | fall_arrest | ladder | other
+  title          String
+  status         String     @default("draft") // draft | in_progress | passed | failed
+  checklistItems Json       @default("[]")
+  overallResult  String? // pass | fail
+  conductedBy    String?
+  completedAt    DateTime?
+  notes          String?
+  createdAt      DateTime   @default(now())
+  updatedAt      DateTime   @updatedAt
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId])
+  @@index([equipmentId])
+  @@index([type])
+  @@index([status])
   @@index([organizationId])
 }
 
@@ -1113,6 +1168,7 @@ model Organization {
   documents            Document[]
   snags                Snag[]
   certifications       Certification[]
+  trainingCourses      TrainingCourse[]
   rfis                 Rfi[]
   announcements        Announcement[]
   observations         Observation[]
@@ -1173,6 +1229,7 @@ model Organization {
   cis300Returns       Cis300Return[]
   conversations       Conversation[]
   chatMessages        ChatMessage[]
+  equipmentChecks     EquipmentCheck[]
 }
 
 model UserOrganization {

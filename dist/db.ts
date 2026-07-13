@@ -1,6 +1,7 @@
 import { PrismaClient } from '@prisma/client'
 import { PrismaPg } from '@prisma/adapter-pg'
 import { tenancyExtension } from './tenancy'
+import { broadcastExtension } from './broadcastExtension'
 
 // Extended client type — preserved so route handlers can keep importing
 // `prisma` without juggling the inferred extension type.
@@ -10,7 +11,9 @@ function makeClient() {
   const adapter = new PrismaPg({
     connectionString: process.env.DATABASE_URL,
   })
-  return new PrismaClient({ adapter, log: ['error'] }).$extends(tenancyExtension)
+  return new PrismaClient({ adapter, log: ['error'] })
+    .$extends(tenancyExtension)
+    .$extends(broadcastExtension)
 }
 
 const globalForPrisma = globalThis as unknown as {
