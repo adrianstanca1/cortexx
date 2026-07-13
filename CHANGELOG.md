@@ -9,6 +9,7 @@
 - **RAMS generator** — new `lib/rams-templates.ts` with standard UK construction templates (work at height, manual handling, hot works, excavation, electrical work) and `/api/rams/generate` endpoint. The RAMS page now has a **Generate** button that produces a draft RAMS / method statement / risk assessment from a project + work description, with optional AI enhancement through the local LLM.
 - **Role-based app bundles** — new `lib/bundles.ts` defines four packs: Site Supervisor, Site Manager, PM & Agent, and Commercial. New `/bundles` overview page, `/bundles/[slug]` dashboard, and `/api/bundles/[slug]/ask` endpoints. Each pack exposes its relevant pages and a dedicated AI agent with a tailored system prompt and workspace context.
 - **IcUpload icon** added to `components/ui/Icons.tsx` for the upload affordance.
+- **Edit capabilities** for the new data types: documents, equipment checks and RAMS docs now have an **Edit** action that opens the same modal pre-filled and updates via the existing `PUT`/`PATCH` endpoints.
 
 ### Changed
 - **Apps directory** — added Equipment checks and Role packs to `/apps`.
