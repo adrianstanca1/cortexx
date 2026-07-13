@@ -17,6 +17,7 @@ import {
   IcHardhat,
   IcCheck,
   IcAlert,
+  IcEdit,
 } from '@/components/ui/Icons'
 
 interface Doc {
@@ -80,6 +81,7 @@ export default function DocumentsPage() {
   const [saving, setSaving] = useState(false)
   const [uploading, setUploading] = useState(false)
   const [uploadProgress, setUploadProgress] = useState(0)
+  const [editingId, setEditingId] = useState<string | null>(null)
   const [form, setForm] = useState({
     name: '',
     type: 'rams',
@@ -124,6 +126,7 @@ export default function DocumentsPage() {
   const resetForm = () => {
     setForm({ name: '', type: 'rams', projectId: '', expiresAt: '', url: '', size: null, mimeType: '', originalName: '' })
     setModalTab('upload')
+    setEditingId(null)
     if (fileInputRef.current) fileInputRef.current.value = ''
   }
 
@@ -153,31 +156,65 @@ export default function DocumentsPage() {
     }
   }
 
-  const create = async () => {
+  const openAdd = () => {
+    resetForm()
+    setShowModal(true)
+  }
+
+  const openEdit = (d: Doc) => {
+    setEditingId(d.id)
+    setForm({
+      name: d.name,
+      type: d.type,
+      projectId: d.projectId || '',
+      expiresAt: d.expiresAt ? new Date(d.expiresAt).toISOString().split('T')[0] : '',
+      url: d.url || '',
+      size: d.size ?? null,
+      mimeType: d.mimeType || '',
+      originalName: d.originalName || d.name,
+    })
+    setModalTab(d.url ? 'upload' : 'blank')
+    setShowModal(true)
+  }
+
+  const save = async () => {
     if (!form.name.trim()) return setToast({ msg: 'Document name is required', type: 'error' })
     setSaving(true)
     try {
-      const res = await fetch('/api/documents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: form.name.trim(),
-          type: form.type,
-          projectId: form.projectId || null,
-          expiresAt: form.expiresAt || null,
-          url: form.url || null,
-          size: form.size,
-          mimeType: form.mimeType || null,
-        }),
-      })
-      if (!res.ok) throw new Error('Failed')
-      const newDoc = await res.json()
-      setDocs(prev => [newDoc, ...prev])
+      const payload = {
+        name: form.name.trim(),
+        type: form.type,
+        projectId: form.projectId || null,
+        expiresAt: form.expiresAt || null,
+        url: form.url || null,
+        size: form.size,
+        mimeType: form.mimeType || null,
+      }
+      if (editingId) {
+        const res = await fetch(`/api/documents/${editingId}`, {
+          method: 'PUT',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) throw new Error('Failed')
+        const updated = await res.json()
+        setDocs(prev => prev.map(d => d.id === editingId ? updated : d))
+        setToast({ msg: 'Document updated' })
+      } else {
+        const res = await fetch('/api/documents', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        if (!res.ok) throw new Error('Failed')
+        const newDoc = await res.json()
+        setDocs(prev => [newDoc, ...prev])
+        setToast({ msg: 'Document added' })
+      }
       setShowModal(false)
       resetForm()
-      setToast({ msg: 'Document added' })
     } catch {
-      setToast({ msg: 'Failed to add document', type: 'error' })
+      setToast({ msg: `Failed to ${editingId ? 'update' : 'add'} document`, type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -221,7 +258,7 @@ export default function DocumentsPage() {
               {docs.length} total{expiringCount > 0 ? ` · ${expiringCount} expiring` : ''}
             </p>
           </div>
-          <button onClick={() => setShowModal(true)} aria-label="Add document" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={openAdd} aria-label="Add document" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -274,6 +311,13 @@ export default function DocumentsPage() {
                     </div>
                   </div>
                   <button
+                    onClick={() => openEdit(d)}
+                    aria-label="Edit document"
+                    style={{ background: 'transparent', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
+                  >
+                    <IcEdit size={14} color="#8ea8c5" />
+                  </button>
+                  <button
                     onClick={() => remove(d.id)}
                     aria-label={confirmDelete === d.id ? 'Confirm delete' : 'Delete document'}
                     style={{ background: confirmDelete === d.id ? 'rgba(239,68,68,0.2)' : 'none', border: 'none', borderRadius: 4, padding: confirmDelete === d.id ? '4px 8px' : 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
@@ -292,7 +336,7 @@ export default function DocumentsPage() {
 
       <Modal
         open={showModal}
-        title="Add document"
+        title={editingId ? 'Edit document' : 'Add document'}
         onClose={() => { setShowModal(false); resetForm() }}
         size="md"
         footer={
@@ -300,7 +344,7 @@ export default function DocumentsPage() {
             <div>{uploading && <span style={{ fontFamily: SF, fontSize: 12, color: '#f59e0b' }}>Uploading…</span>}</div>
             <div style={{ display: 'flex', gap: 12 }}>
               <Button variant="ghost" onClick={() => { setShowModal(false); resetForm() }} disabled={saving || uploading}>Cancel</Button>
-              <Button variant="primary" loading={saving} onClick={create} disabled={uploading}>Add document</Button>
+              <Button variant="primary" loading={saving} onClick={save} disabled={uploading}>{editingId ? 'Save changes' : 'Add document'}</Button>
             </div>
           </div>
         }

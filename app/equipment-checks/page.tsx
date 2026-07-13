@@ -20,6 +20,7 @@ import {
   IcTrash,
   IcAlert,
   IcWrench,
+  IcEdit,
 } from '@/components/ui/Icons'
 
 interface Check {
@@ -71,7 +72,9 @@ export default function EquipmentChecksPage() {
   const [createProjectId, setCreateProjectId] = useState('')
   const [createEquipmentId, setCreateEquipmentId] = useState('')
   const [createConductedBy, setCreateConductedBy] = useState('')
+  const [createNotes, setCreateNotes] = useState('')
   const [createSaving, setCreateSaving] = useState(false)
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const [expanded, setExpanded] = useState<string | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
@@ -110,36 +113,73 @@ export default function EquipmentChecksPage() {
 
   const openCreate = (type: string) => {
     const template = EQUIPMENT_CHECK_TEMPLATES[type]
+    setEditingId(null)
     setCreateType(type)
     setCreateTitle(template ? template.title : 'Equipment check')
     setCreateProjectId(projects[0]?.id || '')
     setCreateEquipmentId('')
     setCreateConductedBy('')
+    setCreateNotes('')
     setShowCreate(true)
   }
 
-  const create = async () => {
+  const openEdit = (c: Check) => {
+    setEditingId(c.id)
+    setCreateType(c.type)
+    setCreateTitle(c.title)
+    setCreateProjectId(c.project?.id || '')
+    setCreateEquipmentId(c.equipment?.id || '')
+    setCreateConductedBy(c.conductedBy || '')
+    setCreateNotes(c.notes || '')
+    setShowCreate(true)
+  }
+
+  const resetCreate = () => {
+    setEditingId(null)
+    setCreateType('scissor_lift')
+    setCreateTitle('')
+    setCreateProjectId(projects[0]?.id || '')
+    setCreateEquipmentId('')
+    setCreateConductedBy('')
+    setCreateNotes('')
+  }
+
+  const save = async () => {
     const template = EQUIPMENT_CHECK_TEMPLATES[createType]
     if (!createTitle.trim()) return setToast({ msg: 'Title required', type: 'error' })
     setCreateSaving(true)
     try {
-      const res = await fetch('/api/equipment-checks', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          title: createTitle.trim(),
-          type: createType,
-          projectId: createProjectId || null,
-          equipmentId: createEquipmentId || null,
-          conductedBy: createConductedBy || null,
-          checklistItems: template ? template.items : [],
-          status: 'draft',
-        }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Failed to save')
-      setToast({ msg: 'Check created', type: 'success' })
+      const payload: Record<string, unknown> = {
+        title: createTitle.trim(),
+        type: createType,
+        projectId: createProjectId || null,
+        equipmentId: createEquipmentId || null,
+        conductedBy: createConductedBy || null,
+        notes: createNotes || null,
+      }
+      if (editingId) {
+        const res = await fetch(`/api/equipment-checks/${editingId}`, {
+          method: 'PATCH',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || 'Failed to update')
+        setToast({ msg: 'Check updated', type: 'success' })
+      } else {
+        payload.checklistItems = template ? template.items : []
+        payload.status = 'draft'
+        const res = await fetch('/api/equipment-checks', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || 'Failed to save')
+        setToast({ msg: 'Check created', type: 'success' })
+      }
       setShowCreate(false)
+      resetCreate()
       load()
     } catch (e) {
       setToast({ msg: e instanceof Error ? e.message : 'Save failed', type: 'error' })
@@ -351,6 +391,9 @@ export default function EquipmentChecksPage() {
                     {(c.status === 'passed' || c.status === 'failed') && (
                       <Button size="sm" variant="secondary" onClick={() => setStatus(c, 'in_progress')}>Reopen</Button>
                     )}
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(c)} style={{ color: '#8ea8c5' }}>
+                      <IcEdit size={11} color="#8ea8c5" /> Edit
+                    </Button>
                     <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(c.id)} style={{ color: '#fca5a5' }}>
                       <IcTrash size={11} color="#fca5a5" /> Delete
                     </Button>
@@ -376,13 +419,13 @@ export default function EquipmentChecksPage() {
 
       <Modal
         open={showCreate}
-        title={`New ${EQUIPMENT_TYPES.find(t => t.value === createType)?.label || 'equipment'} check`}
-        onClose={() => setShowCreate(false)}
+        title={editingId ? 'Edit equipment check' : `New ${EQUIPMENT_TYPES.find(t => t.value === createType)?.label || 'equipment'} check`}
+        onClose={() => { setShowCreate(false); resetCreate() }}
         size="md"
         footer={
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 18 }}>
-            <Button variant="ghost" onClick={() => setShowCreate(false)} disabled={createSaving}>Cancel</Button>
-            <Button variant="primary" loading={createSaving} onClick={create}>Create check</Button>
+            <Button variant="ghost" onClick={() => { setShowCreate(false); resetCreate() }} disabled={createSaving}>Cancel</Button>
+            <Button variant="primary" loading={createSaving} onClick={save}>{editingId ? 'Save changes' : 'Create check'}</Button>
           </div>
         }
       >
@@ -432,6 +475,16 @@ export default function EquipmentChecksPage() {
           value={createConductedBy}
           onChange={e => setCreateConductedBy(e.target.value)}
           placeholder="Name of competent person"
+        />
+
+        <FormField
+          id="ec-notes"
+          as="textarea"
+          label="Notes"
+          value={createNotes}
+          onChange={e => setCreateNotes(e.target.value)}
+          placeholder="Any observations or corrective actions…"
+          rows={3}
         />
       </Modal>
     </div>

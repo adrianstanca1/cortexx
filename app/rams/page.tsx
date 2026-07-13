@@ -8,7 +8,7 @@ import Modal from '@/components/ui/Modal'
 import FormField from '@/components/ui/FormField'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import Button from '@/components/ui/Button'
-import { IcHardhat, IcChevL, IcPlus, IcX, IcTrash, IcCheck, IcSpark } from '@/components/ui/Icons'
+import { IcHardhat, IcChevL, IcPlus, IcX, IcTrash, IcCheck, IcSpark, IcEdit } from '@/components/ui/Icons'
 import { useModalEffects } from '@/lib/useModalEffects'
 import { RAMS_TEMPLATES, RAMS_TEMPLATE_KEYS } from '@/lib/rams-templates'
 
@@ -56,6 +56,7 @@ export default function RamsPage() {
     projectId: '', title: '', type: 'rams' as Rams['type'],
     hazards: '', controls: '', ppe: '', reviewBy: '',
   })
+  const [editingId, setEditingId] = useState<string | null>(null)
 
   const [showGenerate, setShowGenerate] = useState(false)
   const [genProjectId, setGenProjectId] = useState('')
@@ -93,8 +94,27 @@ export default function RamsPage() {
   // initializer (guaranteed to run exactly once).
   const [reviewDueThreshold] = useState(() => Date.now() + 1000 * 60 * 60 * 24 * 14)
 
-  const openAdd = () => {
+  const resetForm = () => {
     setForm({ projectId: projects[0]?.id || '', title: '', type: 'rams', hazards: '', controls: '', ppe: 'Hard hat\nHi-vis\nSafety boots', reviewBy: '' })
+    setEditingId(null)
+  }
+
+  const openAdd = () => {
+    resetForm()
+    setShowModal(true)
+  }
+
+  const openEdit = (d: Rams) => {
+    setEditingId(d.id)
+    setForm({
+      projectId: d.projectId,
+      title: d.title,
+      type: d.type,
+      hazards: d.hazards || '',
+      controls: d.controls || '',
+      ppe: d.ppe || '',
+      reviewBy: d.reviewBy ? new Date(d.reviewBy).toISOString().split('T')[0] : '',
+    })
     setShowModal(true)
   }
 
@@ -103,14 +123,35 @@ export default function RamsPage() {
     if (!form.projectId) return setToast({ msg: 'Pick a project', type: 'error' })
     setSaving(true)
     try {
-      const res = await fetch('/api/rams', {
-        method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, status: 'draft' }),
-      })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Failed to save')
-      setToast({ msg: 'Document added', type: 'success' })
-      setShowModal(false); load()
+      const payload = {
+        projectId: form.projectId,
+        title: form.title.trim(),
+        type: form.type,
+        hazards: form.hazards || null,
+        controls: form.controls || null,
+        ppe: form.ppe || null,
+        reviewBy: form.reviewBy || null,
+      }
+      if (editingId) {
+        const res = await fetch(`/api/rams/${editingId}`, {
+          method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || 'Failed to update')
+        setToast({ msg: 'Document updated', type: 'success' })
+      } else {
+        const res = await fetch('/api/rams', {
+          method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ ...payload, status: 'draft' }),
+        })
+        const data = await res.json().catch(() => ({}))
+        if (!res.ok) throw new Error(data.error || 'Failed to save')
+        setToast({ msg: 'Document added', type: 'success' })
+      }
+      setShowModal(false)
+      resetForm()
+      load()
     } catch (e) { setToast({ msg: e instanceof Error ? e.message : 'Save failed', type: 'error' }) }
     finally { setSaving(false) }
   }
@@ -254,6 +295,9 @@ export default function RamsPage() {
                 {d.status !== 'archived' && (
                   <button onClick={() => setStatus(d, 'archived')} style={pillBtn('#1a2f4e', '#c1d2e8')}>Archive</button>
                 )}
+                <button onClick={() => openEdit(d)} aria-label="Edit RAMS" style={pillBtn('#1a2f4e', '#8ea8c5')}>
+                  <IcEdit size={11} color="#8ea8c5" /> Edit
+                </button>
                 <button onClick={() => setConfirmDelete(d.id)} aria-label="Delete RAMS" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                   <IcTrash size={11} color="#fca5a5" /> Delete
                 </button>
@@ -336,11 +380,11 @@ export default function RamsPage() {
       </Modal>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => { setShowModal(false); resetForm() }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Add RAMS document</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>{editingId ? 'Edit RAMS document' : 'Add RAMS document'}</h2>
+              <button onClick={() => { setShowModal(false); resetForm() }} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
                 <IcX size={18} color="#52749a" />
               </button>
             </div>
@@ -376,7 +420,7 @@ export default function RamsPage() {
                 <input type="date" value={form.reviewBy} onChange={e => setForm(f => ({ ...f, reviewBy: e.target.value }))} style={inputStyle} />
               </Field>
               <button onClick={save} disabled={saving} style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
-                {saving ? 'Saving…' : 'Save document'}
+                {saving ? 'Saving…' : (editingId ? 'Save changes' : 'Save document')}
               </button>
             </div>
           </div>
