@@ -11,6 +11,8 @@
 const express = require('express');
 const router = express.Router();
 const crypto = require('crypto');
+const jwt = require('jsonwebtoken');
+const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 
 const CID = process.env.TRUELAYER_CLIENT_ID || '';
 const CSECRET = process.env.TRUELAYER_CLIENT_SECRET || '';
@@ -125,8 +127,13 @@ router.get('/banking/status', (_req, res) => {
 
 router.get('/banking/connect', (req, res) => {
   if (!CONFIGURED) return res.status(503).json({ error: 'Open Banking not configured — set TRUELAYER_CLIENT_ID + TRUELAYER_CLIENT_SECRET + TRUELAYER_REDIRECT_URI' });
-  // Build a state cookie so the callback can verify it's our request
+  // This route is authenticated (see integrationAuth), so req.user is guaranteed.
+  // The OAuth `state` is a short-lived signed token carrying the workspace/user,
+  // so the PUBLIC callback below can bind the new connection to the right tenant.
+  // A random nonce is ALSO set as an httpOnly cookie for CSRF protection; the
+  // callback requires both the signed state AND a matching cookie nonce.
   const nonce = crypto.randomBytes(16).toString('hex');
+  const state = jwt.sign({ ws: req.user.ws, uid: req.user.uid, n: nonce }, JWT_SECRET, { expiresIn: '10m' });
   res.cookie('cortexx_bank_state', nonce, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 10 * 60 * 1000 });
   const params = new URLSearchParams({
     response_type: 'code',
@@ -134,16 +141,20 @@ router.get('/banking/connect', (req, res) => {
     scope: 'info accounts balance cards transactions direct_debits standing_orders offline_access',
     redirect_uri: REDIRECT,
     providers: 'uk-ob-all uk-oauth-all',
-    state: nonce,
+    state,
   });
   res.json({ url: AUTH_BASE + '/?' + params.toString() });
 });
 
 router.get('/banking/callback', async (req, res) => {
   if (!CONFIGURED) return res.status(503).send('Open Banking not configured');
+  // Verify the signed state (proves it originated from an authenticated /connect)
+  // and that its embedded nonce matches the CSRF cookie set at that time.
+  let st;
+  try { st = jwt.verify(String(req.query.state || ''), JWT_SECRET); }
+  catch { return res.status(400).send('Invalid or expired state'); }
   const cookieState = req.cookies && req.cookies.cortexx_bank_state;
-  const queryState = req.query.state;
-  if (!cookieState || cookieState !== queryState) return res.status(400).send('State mismatch');
+  if (!cookieState || cookieState !== st.n) return res.status(400).send('State mismatch');
   res.clearCookie('cortexx_bank_state');
   const code = req.query.code;
   if (!code) return res.status(400).send('No code');
@@ -158,9 +169,10 @@ router.get('/banking/callback', async (req, res) => {
     if (!pool) return res.status(503).send('No DB pool');
     await ensureTable(pool);
     const id = crypto.randomUUID();
-    // workspace_id + user_id come from the auth session — fall back to public if unknown
-    const wsId = (req.user && req.user.ws) || null;
-    const uid  = (req.user && req.user.id) || null;
+    // workspace_id + user_id come from the SIGNED state, not an ambient session.
+    const wsId = st.ws || null;
+    const uid  = st.uid || null;
+    if (!wsId) return res.status(400).send('State missing workspace');
     await pool.query(
       `INSERT INTO bank_connections (id, workspace_id, user_id, provider, bank_name, access_enc, refresh_enc, expires_at)
        VALUES ($1,$2,$3,$4,$5,$6,$7,$8)`,
@@ -179,9 +191,9 @@ router.get('/banking/connections', async (req, res) => {
     const pool = req.app.locals.pool;
     if (!pool) return res.status(503).json({ connections: [] });
     await ensureTable(pool);
-    const wsId = (req.user && req.user.ws) || null;
+    const wsId = req.user.ws;
     const r = await pool.query(
-      `SELECT id, provider, bank_name, expires_at, created_at FROM bank_connections WHERE workspace_id=$1 OR workspace_id IS NULL`,
+      `SELECT id, provider, bank_name, expires_at, created_at FROM bank_connections WHERE workspace_id=$1`,
       [wsId]
     );
     res.json({ connections: r.rows });
@@ -192,7 +204,9 @@ router.post('/banking/disconnect', async (req, res) => {
   try {
     const pool = req.app.locals.pool;
     if (!pool) return res.status(503).json({ error: 'no pool' });
-    await pool.query('DELETE FROM bank_connections WHERE id=$1', [req.body.connectionId]);
+    // Only allow disconnecting a connection owned by the caller's workspace.
+    const r = await pool.query('DELETE FROM bank_connections WHERE id=$1 AND workspace_id=$2', [req.body.connectionId, req.user.ws]);
+    if (!r.rowCount) return res.status(404).json({ error: 'not_found' });
     res.json({ ok: true });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
@@ -203,11 +217,11 @@ router.get('/banking/transactions', async (req, res) => {
     const pool = req.app.locals.pool;
     if (!pool) return res.status(503).json({ error: 'no pool' });
     await ensureTable(pool);
-    const wsId = (req.user && req.user.ws) || null;
+    const wsId = req.user.ws;
     const filterById = req.query.connection;
     const sql = filterById
-      ? `SELECT * FROM bank_connections WHERE id=$1 AND (workspace_id=$2 OR workspace_id IS NULL)`
-      : `SELECT * FROM bank_connections WHERE workspace_id=$1 OR workspace_id IS NULL`;
+      ? `SELECT * FROM bank_connections WHERE id=$1 AND workspace_id=$2`
+      : `SELECT * FROM bank_connections WHERE workspace_id=$1`;
     const args = filterById ? [filterById, wsId] : [wsId];
     const r = await pool.query(sql, args);
     if (!r.rows.length) return res.json({ transactions: [], connections: 0 });

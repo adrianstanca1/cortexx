@@ -177,8 +177,8 @@ router.post('/hmrc/cis300/submit', async (req, res) => {
         `INSERT INTO hmrc_submissions (workspace_id, user_id, class_name, correlation_id, period_end, status, poll_interval, next_poll_at, request_xml, response_xml, errors)
          VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11)`,
         [
-          (req.user && req.user.ws) || null,
-          (req.user && req.user.id) || null,
+          req.user.ws,
+          req.user.uid || null,
           'IR-CIS-CIS300MR',
           parsed.correlationId || null,
           periodEnd || null,
@@ -207,6 +207,15 @@ router.get('/hmrc/cis300/status', async (req, res) => {
     if (!CONFIGURED) return res.status(503).json({ error: 'HMRC not configured' });
     const correlationId = req.query.correlationId;
     if (!correlationId) return res.status(400).json({ error: 'correlationId required' });
+    // Only allow polling a submission that belongs to the caller's workspace.
+    {
+      const pool0 = req.app.locals.pool;
+      if (pool0) {
+        await ensureTable(pool0);
+        const own = await pool0.query('SELECT 1 FROM hmrc_submissions WHERE correlation_id=$1 AND workspace_id=$2 LIMIT 1', [correlationId, req.user.ws]);
+        if (!own.rows.length) return res.status(404).json({ error: 'not_found' });
+      }
+    }
     const envelope = pollEnvelope(correlationId);
     const r = await abortableFetch(HMRC_URL, {
       method: 'POST',
@@ -221,8 +230,8 @@ router.get('/hmrc/cis300/status', async (req, res) => {
       await ensureTable(pool);
       await pool.query(
         `UPDATE hmrc_submissions SET status=$1, response_xml=$2, errors=$3, updated_at=now()
-         WHERE correlation_id=$4`,
-        [status, text, parsed.errors ? parsed.errors : null, correlationId]
+         WHERE correlation_id=$4 AND workspace_id=$5`,
+        [status, text, parsed.errors ? parsed.errors : null, correlationId, req.user.ws]
       );
     }
     res.json({ status, qualifier: parsed.qualifier, errors: parsed.errors, correlationId });
@@ -234,6 +243,15 @@ router.delete('/hmrc/cis300/submission', async (req, res) => {
     if (!CONFIGURED) return res.status(503).json({ error: 'HMRC not configured' });
     const correlationId = req.query.correlationId;
     if (!correlationId) return res.status(400).json({ error: 'correlationId required' });
+    // Only allow deleting/cleaning up a submission owned by the caller's workspace.
+    {
+      const pool0 = req.app.locals.pool;
+      if (pool0) {
+        await ensureTable(pool0);
+        const own = await pool0.query('SELECT 1 FROM hmrc_submissions WHERE correlation_id=$1 AND workspace_id=$2 LIMIT 1', [correlationId, req.user.ws]);
+        if (!own.rows.length) return res.status(404).json({ error: 'not_found' });
+      }
+    }
     const envelope = deleteEnvelope(correlationId);
     const r = await abortableFetch(HMRC_URL, {
       method: 'POST',
@@ -250,10 +268,10 @@ router.get('/hmrc/cis300/history', async (req, res) => {
     const pool = req.app.locals.pool;
     if (!pool) return res.json({ submissions: [] });
     await ensureTable(pool);
-    const wsId = (req.user && req.user.ws) || null;
+    const wsId = req.user.ws;
     const r = await pool.query(
       `SELECT id, correlation_id, period_end, status, errors, created_at, updated_at
-       FROM hmrc_submissions WHERE workspace_id=$1 OR workspace_id IS NULL
+       FROM hmrc_submissions WHERE workspace_id=$1
        ORDER BY created_at DESC LIMIT 50`,
       [wsId]
     );

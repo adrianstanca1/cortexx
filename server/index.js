@@ -16,6 +16,9 @@ const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
 app.use(cors());
+// Stripe webhook needs the RAW body for signature verification, so it must be
+// parsed as a Buffer BEFORE the global JSON parser touches it.
+app.use('/api/iap/webhook', express.raw({ type: '*/*', limit: '1mb' }));
 app.use(express.json({ limit: '10mb' }));
 // cookie-parser is needed by the Open Banking OAuth callback (state cookie).
 // Optional dep — degrade gracefully if it isn't installed.
@@ -52,6 +55,22 @@ function auth(req, res, next) {
 }
 const signToken = (uid, ws) => jwt.sign({ uid, ws }, JWT_SECRET, { expiresIn: '30d' });
 const wrap = (fn) => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
+
+// The integration routers (banking/hmrc/iap/llm/payments/push) export a plain
+// express.Router() and never received `auth`, leaving them fully unauthenticated.
+// Gate every one of their endpoints behind `auth` EXCEPT the few that physically
+// cannot carry a Bearer token (server-to-server webhook / top-level OAuth redirect
+// / the public VAPID key). Those do their own verification.
+const INTEGRATION_PUBLIC = new Set([
+  'GET /banking/callback',   // TrueLayer OAuth redirect (browser top-level navigation)
+  'POST /iap/webhook',       // Stripe webhook — signature-verified inside iap.js
+  'GET /push/vapid',         // public VAPID key, safe to expose
+]);
+function integrationAuth(req, res, next) {
+  // req.path is relative to the '/api' mount point here (e.g. '/banking/callback').
+  if (INTEGRATION_PUBLIC.has(req.method + ' ' + req.path)) return next();
+  return auth(req, res, next);
+}
 
 // ── Auth routes ─────────────────────────────────────────────
 app.post('/api/auth/register', authLimiter, wrap(async (req, res) => {
@@ -160,12 +179,12 @@ app.use('/api/portal', portalLimiter, require('./routes/portal')(pool, bus));   
 app.use('/api', apiLimiter, require('./routes/sync')(pool, auth));               // sync + portal inbox
 app.use('/api', apiLimiter, require('./routes/ledger')(pool, auth));            // ledger CSV
 app.use('/api', require('./routes/agents')(pool, auth, bus));                    // AI triage + inbound webhooks
-app.use('/api', apiLimiter, require('./routes/llm'));                            // local LLM (Ollama/OpenAI-compat) — replaces third-party API
-app.use('/api', apiLimiter, require('./routes/payments'));                       // Stripe / GoCardless / bank-transfer link generation
-app.use('/api', apiLimiter, require('./routes/push'));                           // Web Push (VAPID) + native APNs/FCM passthrough
-app.use('/api', apiLimiter, require('./routes/banking'));                        // Open Banking (TrueLayer) — auto-pull bank statements
-app.use('/api', apiLimiter, require('./routes/iap'));                            // In-app subscriptions (StoreKit + Stripe Checkout)
-app.use('/api', apiLimiter, require('./routes/hmrc'));                           // HMRC Transaction Engine (CIS300 + GovTalk envelope)
+app.use('/api', apiLimiter, integrationAuth, require('./routes/llm'));           // local LLM (Ollama/OpenAI-compat) — replaces third-party API
+app.use('/api', apiLimiter, integrationAuth, require('./routes/payments'));      // Stripe / GoCardless / bank-transfer link generation
+app.use('/api', apiLimiter, integrationAuth, require('./routes/push'));          // Web Push (VAPID) + native APNs/FCM passthrough
+app.use('/api', apiLimiter, integrationAuth, require('./routes/banking'));       // Open Banking (TrueLayer) — auto-pull bank statements
+app.use('/api', apiLimiter, integrationAuth, require('./routes/iap'));           // In-app subscriptions (StoreKit + Stripe Checkout)
+app.use('/api', apiLimiter, integrationAuth, require('./routes/hmrc'));          // HMRC Transaction Engine (CIS300 + GovTalk envelope)
 app.use('/api', apiLimiter, require('./routes/intelligence')(pool, auth));       // v1.7 server-side intelligence (7 domains)
 
 // ── Generic collection REST (mirrors frontend Backend.db.*) ──
@@ -208,7 +227,12 @@ app.get('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
     };
     let orderCol = ORDER[collection];
     if (!orderCol) orderCol = ['receipts','cisSubs','cisPayments','timesheets','diary','snags','changeOrders','rfis','subs','materials','documentsMeta','equipment','siteMaps'].includes(collection) ? 'updated_at' : 'id';
-    const r = await pool.query(`SELECT * FROM ${tbl} WHERE workspace_id=$1 ORDER BY ${orderCol} DESC NULLS LAST`, [req.user.ws]);
+    // Optional pagination — default is unbounded to preserve the SPA's full-sync
+    // model, but callers can pass ?limit=&?offset= to page large collections.
+    const lim = Math.min(Math.max(parseInt(req.query.limit, 10) || 0, 0), 5000);
+    const off = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+    const page = lim ? ` LIMIT ${lim} OFFSET ${off}` : '';
+    const r = await pool.query(`SELECT * FROM ${tbl} WHERE workspace_id=$1 ORDER BY ${orderCol} DESC NULLS LAST${page}`, [req.user.ws]);
     // Merge the JSONB `data` blob over the typed columns, drop internal bookkeeping.
     return res.json(r.rows.map(row => {
       const { data, workspace_id, ...cols } = row;

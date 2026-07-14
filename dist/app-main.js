@@ -1,5 +1,3 @@
-// Cortexx — main app shell with interactive tabs and sheets
-
 function InteractiveTabBar({
   tab,
   setTab,
@@ -25,7 +23,7 @@ function InteractiveTabBar({
     l: 'Team',
     i: Ic.team
   }];
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 0,
@@ -43,14 +41,14 @@ function InteractiveTabBar({
     }
   }, tabs.map(t => {
     if (t.k === '_fab') {
-      return /*#__PURE__*/React.createElement("div", {
+      return React.createElement("div", {
         key: "_fab",
         style: {
           flex: 1,
           display: 'flex',
           justifyContent: 'center'
         }
-      }, /*#__PURE__*/React.createElement("button", {
+      }, React.createElement("button", {
         onClick: onCapture,
         style: {
           width: 52,
@@ -71,7 +69,7 @@ function InteractiveTabBar({
       })));
     }
     const isActive = tab === t.k;
-    return /*#__PURE__*/React.createElement("button", {
+    return React.createElement("button", {
       key: t.k,
       onClick: () => setTab(t.k),
       style: {
@@ -89,7 +87,7 @@ function InteractiveTabBar({
       }
     }, React.cloneElement(t.i, {
       size: 22
-    }), /*#__PURE__*/React.createElement("span", {
+    }), React.createElement("span", {
       style: {
         fontFamily: SF,
         fontSize: 10,
@@ -99,8 +97,6 @@ function InteractiveTabBar({
     }, t.l));
   }));
 }
-
-// Map of dashboard ids to components
 const DASHBOARDS = {
   v1: {
     c: 'DashV1_ActionFirst',
@@ -175,8 +171,6 @@ function CortexxApp({
   const [checkoutPlan, setCheckoutPlan] = React.useState(null);
   const [activeInvoice, setActiveInvoice] = React.useState(null);
   const [nfcCheckin, setNfcCheckin] = React.useState(null);
-
-  // NFC tag-tap check-in: a tag URL (?checkin=<projectId>) fires this event.
   React.useEffect(() => {
     const onNfc = e => {
       if (e.detail && e.detail.projectId != null) setNfcCheckin(e.detail.projectId);
@@ -186,8 +180,6 @@ function CortexxApp({
   }, []);
   const [activeQuote, setActiveQuote] = React.useState(null);
   const user = useDB('user');
-
-  // Cmd+K / Ctrl+K opens the command palette
   React.useEffect(() => {
     const onKey = e => {
       if ((e.metaKey || e.ctrlKey) && e.key.toLowerCase() === 'k') {
@@ -198,11 +190,8 @@ function CortexxApp({
     window.addEventListener('keydown', onKey);
     return () => window.removeEventListener('keydown', onKey);
   }, []);
-
-  // Global navigation exposed to all screens via window.cortexxNav
   React.useEffect(() => {
     window.cortexxNav = (key, payload) => {
-      // Auto-record navigations to consequential areas in the per-tenant audit log
       try {
         if (window.CortexAudit) {
           const me = window.__cortexxCurrentRole && window.CortexMembers ? (window.CortexMembers.list().find(m => m.status === 'active') || {}).name : null;
@@ -272,15 +261,11 @@ function CortexxApp({
     setActiveInvoice(null);
     setActiveQuote(null);
   };
-
-  // First-run onboarding trigger
   React.useEffect(() => {
     if (!localStorage.getItem('cortexx_onboarded')) {
       setTimeout(() => setSheet('onboarding'), 400);
     }
   }, []);
-
-  // PWA shortcut launch — ?action=task|receipt|ai|clock opens that sheet on cold start
   React.useEffect(() => {
     try {
       const params = new URLSearchParams(window.location.search);
@@ -296,14 +281,11 @@ function CortexxApp({
       };
       const fn = map[action];
       if (fn) setTimeout(fn, 500);
-      // Strip query so refresh doesn't re-open the sheet
       if (window.history?.replaceState) {
         window.history.replaceState({}, '', window.location.pathname);
       }
     } catch (e) {}
   }, []);
-
-  // Sign out wires through to Login
   React.useEffect(() => {
     window.cortexxSignOut = () => {
       localStorage.removeItem('cortexx_onboarded');
@@ -329,11 +311,10 @@ function CortexxApp({
         setSheet('clock');
         return;
       }
-      // other actions just close
     }, 220);
   };
   const DashComp = window[DASHBOARDS[dashboardId].c];
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       width: '100%',
       height: '100%',
@@ -344,39 +325,39 @@ function CortexxApp({
       display: 'flex',
       flexDirection: 'column'
     }
-  }, /*#__PURE__*/React.createElement(IOSStatusBar, {
+  }, React.createElement(IOSStatusBar, {
     dark: true
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1,
       overflow: 'hidden',
       position: 'relative'
     }
-  }, tab === 'dashboard' && DashComp && /*#__PURE__*/React.createElement("div", {
+  }, tab === 'dashboard' && DashComp && React.createElement("div", {
     style: {
       width: '100%',
       height: '100%'
     }
-  }, /*#__PURE__*/React.createElement(DashComp, {
+  }, React.createElement(DashComp, {
     accent: accent
-  })), tab === 'projects' && /*#__PURE__*/React.createElement(ProjectsScreen, {
+  })), tab === 'projects' && React.createElement(ProjectsScreen, {
     openProject: openProject,
     accent: accent
-  }), tab === 'tasks' && /*#__PURE__*/React.createElement(TasksScreen, {
+  }), tab === 'tasks' && React.createElement(TasksScreen, {
     accent: accent,
     onAdd: () => setSheet('addtask')
-  }), tab === 'team' && /*#__PURE__*/React.createElement(TeamScreen, {
+  }), tab === 'team' && React.createElement(TeamScreen, {
     accent: accent
-  }), tab === 'money' && /*#__PURE__*/React.createElement(MoneyScreen, {
+  }), tab === 'money' && React.createElement(MoneyScreen, {
     accent: accent,
     onChase: openChase
-  }), tab === 'safety' && /*#__PURE__*/React.createElement(SafetyScreen, {
+  }), tab === 'safety' && React.createElement(SafetyScreen, {
     accent: accent
-  })), /*#__PURE__*/React.createElement(ResponsiveSidebar, {
+  })), React.createElement(ResponsiveSidebar, {
     tab: tab,
     setTab: setTab,
     accent: accent
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 0,
@@ -384,14 +365,14 @@ function CortexxApp({
       right: 0,
       zIndex: 11
     }
-  }, /*#__PURE__*/React.createElement(InteractiveTabBar, {
+  }, React.createElement(InteractiveTabBar, {
     tab: tab,
     setTab: setTab,
     onCapture: () => setSheet('capture'),
     accent: accent
-  })), /*#__PURE__*/React.createElement(FloatingUploadPill, {
+  })), React.createElement(FloatingUploadPill, {
     accent: accent
-  }), true && /*#__PURE__*/React.createElement("button", {
+  }), true && React.createElement("button", {
     onClick: () => setSheet('ai'),
     style: {
       position: 'absolute',
@@ -412,9 +393,9 @@ function CortexxApp({
     }
   }, React.cloneElement(Ic.spark, {
     size: 22
-  })), tab === 'dashboard' && /*#__PURE__*/React.createElement(CmdKHint, {
+  })), tab === 'dashboard' && React.createElement(CmdKHint, {
     accent: accent
-  }), tab === 'dashboard' && onChangeDashboard && /*#__PURE__*/React.createElement("button", {
+  }), tab === 'dashboard' && onChangeDashboard && React.createElement("button", {
     onClick: () => setSheet('dashpick'),
     style: {
       position: 'absolute',
@@ -438,142 +419,142 @@ function CortexxApp({
       whiteSpace: 'nowrap',
       boxShadow: '0 6px 18px rgba(0,0,0,0.4)'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: accent
     }
   }, React.cloneElement(Ic.layers, {
     size: 12
-  })), dashboardId.toUpperCase(), /*#__PURE__*/React.createElement("span", {
+  })), dashboardId.toUpperCase(), React.createElement("span", {
     style: {
       color: T.t3
     }
   }, "\xB7"), DASHBOARDS[dashboardId].l, React.cloneElement(Ic.chevDown, {
     size: 11
-  })), sheet === 'project' && /*#__PURE__*/React.createElement(ProjectSheet, {
+  })), sheet === 'project' && React.createElement(ProjectSheet, {
     project: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'capture' && /*#__PURE__*/React.createElement(CaptureSheet, {
+  }), sheet === 'capture' && React.createElement(CaptureSheet, {
     onClose: closeSheet,
     accent: accent,
     onAction: handleCapture
-  }), sheet === 'ai' && /*#__PURE__*/React.createElement(AISheet, {
+  }), sheet === 'ai' && React.createElement(AISheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'safety' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'safety' && React.createElement(SheetWrap, {
     title: "Safety",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SafetyScreen, {
+  }, React.createElement(SafetyScreen, {
     accent: accent
-  })), sheet === 'money' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'money' && React.createElement(SheetWrap, {
     title: "Money",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(MoneyScreen, {
+  }, React.createElement(MoneyScreen, {
     accent: accent,
     onChase: openChase
-  })), sheet === 'profile' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'profile' && React.createElement(SheetWrap, {
     title: "Profile",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ProfileScreen, {
+  }, React.createElement(ProfileScreen, {
     accent: accent,
     onSignOut: closeSheet
-  })), sheet === 'inbox' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'inbox' && React.createElement(SheetWrap, {
     title: "Inbox",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(InboxScreen, {
+  }, React.createElement(InboxScreen, {
     accent: accent,
     onAction: a => {
       closeSheet();
       setTimeout(() => setSheet(a), 200);
     }
-  })), sheet === 'quotes' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'quotes' && React.createElement(SheetWrap, {
     title: "Quotes",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(QuotesScreen, {
+  }, React.createElement(QuotesScreen, {
     accent: accent,
     onAdd: () => {
       closeSheet();
       setTimeout(() => setSheet('estimator'), 200);
     },
     onOpen: openQuote
-  })), sheet === 'time' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'time' && React.createElement(SheetWrap, {
     title: "Timesheets",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(TimesheetsScreen, {
+  }, React.createElement(TimesheetsScreen, {
     accent: accent
-  })), sheet === 'calendar' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'calendar' && React.createElement(SheetWrap, {
     title: "Schedule",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(CalendarScreen, {
+  }, React.createElement(CalendarScreen, {
     accent: accent
-  })), sheet === 'materials' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'materials' && React.createElement(SheetWrap, {
     title: "Materials",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(MaterialsScreen, {
+  }, React.createElement(MaterialsScreen, {
     accent: accent
-  })), sheet === 'subs' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'subs' && React.createElement(SheetWrap, {
     title: "Subcontractors",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SubsScreen, {
+  }, React.createElement(SubsScreen, {
     accent: accent
-  })), sheet === 'docs' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'docs' && React.createElement(SheetWrap, {
     title: "Documents",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(DocumentsScreen, {
+  }, React.createElement(DocumentsScreen, {
     accent: accent
-  })), sheet === 'diary' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'diary' && React.createElement(SheetWrap, {
     title: "Site diary",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(DiaryScreen, {
+  }, React.createElement(DiaryScreen, {
     accent: accent
-  })), sheet === 'snags' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'snags' && React.createElement(SheetWrap, {
     title: "Snags",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SnagsScreen, {
+  }, React.createElement(SnagsScreen, {
     accent: accent
-  })), sheet === 'changes' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'changes' && React.createElement(SheetWrap, {
     title: "Variations",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ChangeOrdersScreen, {
+  }, React.createElement(ChangeOrdersScreen, {
     accent: accent
-  })), sheet === 'equipment' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'equipment' && React.createElement(SheetWrap, {
     title: "Equipment",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(EquipmentScreen, {
+  }, React.createElement(EquipmentScreen, {
     accent: accent
-  })), sheet === 'addtask' && /*#__PURE__*/React.createElement(AddTaskSheet, {
+  })), sheet === 'addtask' && React.createElement(AddTaskSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'scan' && /*#__PURE__*/React.createElement(ReceiptScanSheetReal, {
+  }), sheet === 'scan' && React.createElement(ReceiptScanSheetReal, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'chase' && activeInvoice && /*#__PURE__*/React.createElement(ChaseSheet, {
+  }), sheet === 'chase' && activeInvoice && React.createElement(ChaseSheet, {
     invoice: activeInvoice,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'estimator' && /*#__PURE__*/React.createElement(AIEstimatorSheet, {
+  }), sheet === 'estimator' && React.createElement(AIEstimatorSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'quote' && activeQuote && /*#__PURE__*/React.createElement(QuoteDetailSheet, {
+  }), sheet === 'quote' && activeQuote && React.createElement(QuoteDetailSheet, {
     quote: activeQuote,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'onboarding' && /*#__PURE__*/React.createElement(OnboardingSheet, {
+  }), sheet === 'onboarding' && React.createElement(OnboardingSheet, {
     onClose: () => {
       closeSheet();
       localStorage.setItem('cortexx_onboarded', '1');
@@ -583,352 +564,352 @@ function CortexxApp({
       }
     },
     accent: accent
-  }), sheet === 'search' && /*#__PURE__*/React.createElement(SearchSheet, {
+  }), sheet === 'search' && React.createElement(SearchSheet, {
     onClose: closeSheet,
     accent: accent,
     onNavigate: (k, p) => {
       closeSheet();
       setTimeout(() => window.cortexxNav(k, p), 200);
     }
-  }), sheet === 'addproject' && /*#__PURE__*/React.createElement(AddProjectSheet, {
+  }), sheet === 'addproject' && React.createElement(AddProjectSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addinvoice' && /*#__PURE__*/React.createElement(AddInvoiceSheet, {
+  }), sheet === 'addinvoice' && React.createElement(AddInvoiceSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addquote' && /*#__PURE__*/React.createElement(AddQuoteSheet, {
+  }), sheet === 'addquote' && React.createElement(AddQuoteSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addreceipt' && /*#__PURE__*/React.createElement(AddReceiptSheet, {
+  }), sheet === 'addreceipt' && React.createElement(AddReceiptSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addpo' && /*#__PURE__*/React.createElement(AddPOSheet, {
+  }), sheet === 'addpo' && React.createElement(AddPOSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addincident' && /*#__PURE__*/React.createElement(AddIncidentSheet, {
+  }), sheet === 'addincident' && React.createElement(AddIncidentSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addmaterial' && /*#__PURE__*/React.createElement(AddMaterialSheet, {
+  }), sheet === 'addmaterial' && React.createElement(AddMaterialSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addsub' && /*#__PURE__*/React.createElement(AddSubSheet, {
+  }), sheet === 'addsub' && React.createElement(AddSubSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addequipment' && /*#__PURE__*/React.createElement(AddEquipmentSheet, {
+  }), sheet === 'addequipment' && React.createElement(AddEquipmentSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addsnag' && /*#__PURE__*/React.createElement(AddSnagSheet, {
+  }), sheet === 'addsnag' && React.createElement(AddSnagSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addchange' && /*#__PURE__*/React.createElement(AddChangeOrderSheet, {
+  }), sheet === 'addchange' && React.createElement(AddChangeOrderSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addinspection' && /*#__PURE__*/React.createElement(AddInspectionSheet, {
+  }), sheet === 'addinspection' && React.createElement(AddInspectionSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'adddiary' && /*#__PURE__*/React.createElement(AddDiarySheet, {
+  }), sheet === 'adddiary' && React.createElement(AddDiarySheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addteam' && /*#__PURE__*/React.createElement(AddTeamMemberSheet, {
+  }), sheet === 'addteam' && React.createElement(AddTeamMemberSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'rfis' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'rfis' && React.createElement(SheetWrap, {
     title: "RFIs",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(RFIsScreen, {
+  }, React.createElement(RFIsScreen, {
     accent: accent,
     onOpen: r => {
       setActiveProject(r);
       setSheet('rfi');
     }
-  })), sheet === 'rfi' && activeProject && /*#__PURE__*/React.createElement(RFIDetailSheet, {
+  })), sheet === 'rfi' && activeProject && React.createElement(RFIDetailSheet, {
     rfi: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addrfi' && /*#__PURE__*/React.createElement(AddRFISheet, {
+  }), sheet === 'addrfi' && React.createElement(AddRFISheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'messages' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'messages' && React.createElement(SheetWrap, {
     title: "Messages",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(MessagesScreen, {
+  }, React.createElement(MessagesScreen, {
     accent: accent,
     onOpen: m => {
       setActiveProject(m);
       setSheet('msg');
     }
-  })), sheet === 'msg' && activeProject && /*#__PURE__*/React.createElement(MessageThreadSheet, {
+  })), sheet === 'msg' && activeProject && React.createElement(MessageThreadSheet, {
     thread: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'reports' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'reports' && React.createElement(SheetWrap, {
     title: "Reports",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ReportsScreen, {
+  }, React.createElement(ReportsScreen, {
     accent: accent
-  })), sheet === 'timeline' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'timeline' && React.createElement(SheetWrap, {
     title: "Timeline",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(TimelineScreen, {
+  }, React.createElement(TimelineScreen, {
     accent: accent
-  })), sheet === 'login' && /*#__PURE__*/React.createElement(LoginSheet, {
+  })), sheet === 'login' && React.createElement(LoginSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'settings' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'settings' && React.createElement(SheetWrap, {
     title: "Settings",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SettingsScreen, {
+  }, React.createElement(SettingsScreen, {
     accent: accent
-  })), sheet === 'help' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'help' && React.createElement(SheetWrap, {
     title: "Help",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(HelpScreen, {
+  }, React.createElement(HelpScreen, {
     accent: accent
-  })), sheet === 'pos' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'pos' && React.createElement(SheetWrap, {
     title: "Purchase orders",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PurchaseOrdersScreen, {
+  }, React.createElement(PurchaseOrdersScreen, {
     accent: accent
-  })), sheet === 'portal' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'portal' && React.createElement(SheetWrap, {
     title: "Client portal",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ClientPortalScreen, {
+  }, React.createElement(ClientPortalScreen, {
     accent: accent
-  })), sheet === 'inspections' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'inspections' && React.createElement(SheetWrap, {
     title: "Inspections",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(InspectionsScreen, {
+  }, React.createElement(InspectionsScreen, {
     accent: accent,
     onOpen: i => {
       setActiveProject(i);
       setSheet('inspection');
     }
-  })), sheet === 'inspection' && activeProject && /*#__PURE__*/React.createElement(InspectionDetailSheet, {
+  })), sheet === 'inspection' && activeProject && React.createElement(InspectionDetailSheet, {
     inspection: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'customers' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'customers' && React.createElement(SheetWrap, {
     title: "Customers",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(CustomersScreen, {
+  }, React.createElement(CustomersScreen, {
     accent: accent,
     onOpen: c => {
       setActiveProject(c);
       setSheet('customer');
     }
-  })), sheet === 'customer' && activeProject && /*#__PURE__*/React.createElement(CustomerDetailSheet, {
+  })), sheet === 'customer' && activeProject && React.createElement(CustomerDetailSheet, {
     customer: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'leads' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'leads' && React.createElement(SheetWrap, {
     title: "Leads",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(LeadsScreen, {
+  }, React.createElement(LeadsScreen, {
     accent: accent
-  })), sheet === 'photos' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'photos' && React.createElement(SheetWrap, {
     title: "Photos",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PhotosV2Screen, {
+  }, React.createElement(PhotosV2Screen, {
     accent: accent
-  })), sheet === 'photoreview' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'photoreview' && React.createElement(SheetWrap, {
     title: "Photo review",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PhotoReviewScreen, {
+  }, React.createElement(PhotoReviewScreen, {
     accent: accent
-  })), sheet === 'tenant' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'tenant' && React.createElement(SheetWrap, {
     title: "Workspaces",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(TenantScreen, {
+  }, React.createElement(TenantScreen, {
     accent: accent
-  })), sheet === 'admin' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'admin' && React.createElement(SheetWrap, {
     title: "Org admin",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(AdminScreen, {
+  }, React.createElement(AdminScreen, {
     accent: accent
-  })), sheet === 'billing' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'billing' && React.createElement(SheetWrap, {
     title: "Billing",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(BillingScreen, {
+  }, React.createElement(BillingScreen, {
     accent: accent
-  })), sheet === 'auditlog' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'auditlog' && React.createElement(SheetWrap, {
     title: "Audit log",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(AuditScreen, {
+  }, React.createElement(AuditScreen, {
     accent: accent
-  })), sheet === 'dataexport' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'dataexport' && React.createElement(SheetWrap, {
     title: "Export data",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(DataExportScreen, {
+  }, React.createElement(DataExportScreen, {
     accent: accent
-  })), sheet === 'payments' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'payments' && React.createElement(SheetWrap, {
     title: "Payments",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PaymentsLedgerScreen, {
+  }, React.createElement(PaymentsLedgerScreen, {
     accent: accent
-  })), sheet === 'newworkspace' && /*#__PURE__*/React.createElement(OnboardWizard, {
+  })), sheet === 'newworkspace' && React.createElement(OnboardWizard, {
     accent: accent,
     onClose: closeSheet
-  }), sheet === 'notifprefs' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'notifprefs' && React.createElement(SheetWrap, {
     title: "Notifications",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(NotificationPrefsScreen, {
+  }, React.createElement(NotificationPrefsScreen, {
     accent: accent
-  })), sheet === 'digests' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'digests' && React.createElement(SheetWrap, {
     title: "Digests",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(DigestScreen, {
+  }, React.createElement(DigestScreen, {
     accent: accent
-  })), sheet === 'clientmsgs' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'clientmsgs' && React.createElement(SheetWrap, {
     title: "Client messages",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ClientMessagesScreen, {
+  }, React.createElement(ClientMessagesScreen, {
     accent: accent
-  })), sheet === 'ledger' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'ledger' && React.createElement(SheetWrap, {
     title: "Ledger export",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(LedgerExportScreen, {
+  }, React.createElement(LedgerExportScreen, {
     accent: accent
-  })), sheet === 'cloudsync' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'cloudsync' && React.createElement(SheetWrap, {
     title: "Cloud sync",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(CloudSyncScreen, {
+  }, React.createElement(CloudSyncScreen, {
     accent: accent
-  })), sheet === 'aiengine' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'aiengine' && React.createElement(SheetWrap, {
     title: "AI engine",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(LLMSettingsScreen, {
+  }, React.createElement(LLMSettingsScreen, {
     accent: accent
-  })), sheet === 'payinvoice' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'payinvoice' && React.createElement(SheetWrap, {
     title: "Payment link",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PaymentLinkScreen, {
+  }, React.createElement(PaymentLinkScreen, {
     accent: accent,
     invoiceId: window.__cortexxPayInvoice,
     onClose: closeSheet
-  })), sheet === 'bankrec' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'bankrec' && React.createElement(SheetWrap, {
     title: "Bank reconciliation",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(BankRecScreen, {
+  }, React.createElement(BankRecScreen, {
     accent: accent
-  })), sheet === 'pushset' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'pushset' && React.createElement(SheetWrap, {
     title: "Push notifications",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PushSettingsScreen, {
+  }, React.createElement(PushSettingsScreen, {
     accent: accent
-  })), sheet === 'e2ee' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'e2ee' && React.createElement(SheetWrap, {
     title: "End-to-end encryption",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(E2EEScreen, {
+  }, React.createElement(E2EEScreen, {
     accent: accent
-  })), sheet === 'cis300' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'cis300' && React.createElement(SheetWrap, {
     title: "CIS300",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(CIS300Screen, {
+  }, React.createElement(CIS300Screen, {
     accent: accent
-  })), sheet === 'language' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'language' && React.createElement(SheetWrap, {
     title: "Language",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(LanguageSettingsScreen, {
+  }, React.createElement(LanguageSettingsScreen, {
     accent: accent
-  })), sheet === 'riddor' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'riddor' && React.createElement(SheetWrap, {
     title: "RIDDOR",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(RIDDORScreen, {
+  }, React.createElement(RIDDORScreen, {
     accent: accent
-  })), sheet === 'retention' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'retention' && React.createElement(SheetWrap, {
     title: "Retention",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(RetentionLedgerScreen, {
+  }, React.createElement(RetentionLedgerScreen, {
     accent: accent
-  })), sheet === 'retentioninv' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'retentioninv' && React.createElement(SheetWrap, {
     title: "Retention",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(RetentionSheet, {
+  }, React.createElement(RetentionSheet, {
     accent: accent,
     invoiceId: window.__cortexxRetentionInv,
     onClose: closeSheet
-  })), sheet === 'subscription' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'subscription' && React.createElement(SheetWrap, {
     title: "Subscription",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SubscriptionScreen, {
+  }, React.createElement(SubscriptionScreen, {
     accent: accent,
     onClose: closeSheet
-  })), sheet === 'observability' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'observability' && React.createElement(SheetWrap, {
     title: "Observability",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ObservabilityScreen, {
+  }, React.createElement(ObservabilityScreen, {
     accent: accent
-  })), sheet === 'photomention' && /*#__PURE__*/React.createElement(PhotoMentionSheet, {
+  })), sheet === 'photomention' && React.createElement(PhotoMentionSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'triage' && /*#__PURE__*/React.createElement(InboxTriageSheet, {
+  }), sheet === 'triage' && React.createElement(InboxTriageSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'nfctags' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'nfctags' && React.createElement(SheetWrap, {
     title: "NFC site tags",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(NfcProvisionScreen, {
+  }, React.createElement(NfcProvisionScreen, {
     accent: accent
-  })), sheet === 'attendance' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'attendance' && React.createElement(SheetWrap, {
     title: "On site now",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SiteAttendanceScreen, {
+  }, React.createElement(SiteAttendanceScreen, {
     accent: accent
-  })), sheet === 'labels' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'labels' && React.createElement(SheetWrap, {
     title: "Label printer",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(LabelPrinterScreen, {
+  }, React.createElement(LabelPrinterScreen, {
     accent: accent
-  })), sheet === 'sitemap' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'sitemap' && React.createElement(SheetWrap, {
     title: "Site map",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(OfflineMapScreen, {
+  }, React.createElement(OfflineMapScreen, {
     accent: accent
-  })), nfcCheckin != null && /*#__PURE__*/React.createElement(NfcCheckinConfirm, {
+  })), nfcCheckin != null && React.createElement(NfcCheckinConfirm, {
     projectId: nfcCheckin,
     accent: accent,
     onDone: () => setNfcCheckin(null)
-  }), sheet === 'switchworkspace' && /*#__PURE__*/React.createElement(WorkspaceSwitcher, {
+  }), sheet === 'switchworkspace' && React.createElement(WorkspaceSwitcher, {
     accent: accent,
     onClose: closeSheet
   }), sheet === 'checkout' && (() => {
@@ -936,447 +917,447 @@ function CortexxApp({
       plan: 'Pro',
       price: '£29'
     };
-    return /*#__PURE__*/React.createElement(CheckoutSheet, {
+    return React.createElement(CheckoutSheet, {
       accent: accent,
       plan: cp.plan,
       price: cp.price,
       onClose: closeSheet
     });
-  })(), sheet === 'sso' && /*#__PURE__*/React.createElement(SSOLoginScreen, {
+  })(), sheet === 'sso' && React.createElement(SSOLoginScreen, {
     accent: accent,
     onClose: closeSheet
-  }), sheet === 'mileage' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'mileage' && React.createElement(SheetWrap, {
     title: "Mileage",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(MileageScreen, {
+  }, React.createElement(MileageScreen, {
     accent: accent
-  })), sheet === 'activity' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'activity' && React.createElement(SheetWrap, {
     title: "Activity",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ActivityScreen, {
+  }, React.createElement(ActivityScreen, {
     accent: accent
-  })), sheet === 'templates' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'templates' && React.createElement(SheetWrap, {
     title: "Job templates",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(TemplatesScreen, {
+  }, React.createElement(TemplatesScreen, {
     accent: accent
-  })), sheet === 'forms' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'forms' && React.createElement(SheetWrap, {
     title: "Forms",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(FormsScreen, {
+  }, React.createElement(FormsScreen, {
     accent: accent
-  })), sheet === 'drawings' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'drawings' && React.createElement(SheetWrap, {
     title: "Drawings",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(DrawingsScreen, {
+  }, React.createElement(DrawingsScreen, {
     accent: accent,
     onOpen: d => {
       setActiveProject(d);
       setSheet('drawing');
     }
-  })), sheet === 'drawing' && activeProject && /*#__PURE__*/React.createElement(DrawingViewerSheet, {
+  })), sheet === 'drawing' && activeProject && React.createElement(DrawingViewerSheet, {
     drawing: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'permits' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'permits' && React.createElement(SheetWrap, {
     title: "Permits",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PermitsScreen, {
+  }, React.createElement(PermitsScreen, {
     accent: accent
-  })), sheet === 'goals' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'goals' && React.createElement(SheetWrap, {
     title: "Goals",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(GoalsScreen, {
+  }, React.createElement(GoalsScreen, {
     accent: accent
-  })), sheet === 'voice' && /*#__PURE__*/React.createElement(VoiceMemoSheetReal, {
+  })), sheet === 'voice' && React.createElement(VoiceMemoSheetReal, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'subinvoices' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'subinvoices' && React.createElement(SheetWrap, {
     title: "Sub invoices",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SubInvoicesScreen, {
+  }, React.createElement(SubInvoicesScreen, {
     accent: accent
-  })), sheet === 'addcustomer' && /*#__PURE__*/React.createElement(AddCustomerSheet, {
+  })), sheet === 'addcustomer' && React.createElement(AddCustomerSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addlead' && /*#__PURE__*/React.createElement(AddLeadSheet, {
+  }), sheet === 'addlead' && React.createElement(AddLeadSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addpermit' && /*#__PURE__*/React.createElement(AddPermitSheet, {
+  }), sheet === 'addpermit' && React.createElement(AddPermitSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addgoal' && /*#__PURE__*/React.createElement(AddGoalSheet, {
+  }), sheet === 'addgoal' && React.createElement(AddGoalSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'upload' && /*#__PURE__*/React.createElement(UploadSheet, {
+  }), sheet === 'upload' && React.createElement(UploadSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'reviews' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'reviews' && React.createElement(SheetWrap, {
     title: "Reviews",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ReviewsScreen, {
+  }, React.createElement(ReviewsScreen, {
     accent: accent
-  })), sheet === 'database' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'database' && React.createElement(SheetWrap, {
     title: "Database",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(DatabaseScreen, {
+  }, React.createElement(DatabaseScreen, {
     accent: accent
-  })), sheet === 'reminders' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'reminders' && React.createElement(SheetWrap, {
     title: "Reminders",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(RemindersScreen, {
+  }, React.createElement(RemindersScreen, {
     accent: accent
-  })), sheet === 'performance' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'performance' && React.createElement(SheetWrap, {
     title: "Performance",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PerformanceScreen, {
+  }, React.createElement(PerformanceScreen, {
     accent: accent
-  })), sheet === 'clock' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'clock' && React.createElement(SheetWrap, {
     title: "Check in",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(CheckInScreen, {
+  }, React.createElement(CheckInScreen, {
     accent: accent
-  })), sheet === 'livestatus' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'livestatus' && React.createElement(SheetWrap, {
     title: "Live status",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(LiveStatusScreen, {
+  }, React.createElement(LiveStatusScreen, {
     accent: accent
-  })), sheet === 'myday' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'myday' && React.createElement(SheetWrap, {
     title: "My day",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(MyDayScreen, {
+  }, React.createElement(MyDayScreen, {
     accent: accent
-  })), sheet === 'workspace' && /*#__PURE__*/React.createElement(WorkspaceSheet, {
+  })), sheet === 'workspace' && React.createElement(WorkspaceSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'annotate' && /*#__PURE__*/React.createElement(PhotoAnnotateSheet, {
+  }), sheet === 'annotate' && React.createElement(PhotoAnnotateSheet, {
     snag: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'health' && activeProject && /*#__PURE__*/React.createElement(HealthCheckSheet, {
+  }), sheet === 'health' && activeProject && React.createElement(HealthCheckSheet, {
     project: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'infrastructure' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'infrastructure' && React.createElement(SheetWrap, {
     title: "Infrastructure",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(InfrastructureScreen, {
+  }, React.createElement(InfrastructureScreen, {
     accent: accent
-  })), sheet === 'vera' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'vera' && React.createElement(SheetWrap, {
     title: "Vera \xB7 CEO",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(VeraScreen, {
+  }, React.createElement(VeraScreen, {
     accent: accent
-  })), sheet === 'veraauto' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'veraauto' && React.createElement(SheetWrap, {
     title: "Vera \xB7 autopilot",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(VeraActionsScreen, {
+  }, React.createElement(VeraActionsScreen, {
     accent: accent
-  })), sheet === 'personas' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'personas' && React.createElement(SheetWrap, {
     title: "Leadership",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PersonasScreen, {
+  }, React.createElement(PersonasScreen, {
     accent: accent
-  })), sheet === 'bank' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'bank' && React.createElement(SheetWrap, {
     title: "Banking",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(BankScreen, {
+  }, React.createElement(BankScreen, {
     accent: accent
-  })), sheet === 'payroll' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'payroll' && React.createElement(SheetWrap, {
     title: "Payroll",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(PayrollScreen, {
+  }, React.createElement(PayrollScreen, {
     accent: accent
-  })), sheet === 'holiday' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'holiday' && React.createElement(SheetWrap, {
     title: "Holiday",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(HolidayScreen, {
+  }, React.createElement(HolidayScreen, {
     accent: accent
-  })), sheet === 'apprentice' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'apprentice' && React.createElement(SheetWrap, {
     title: "Apprentices",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ApprenticeScreen, {
+  }, React.createElement(ApprenticeScreen, {
     accent: accent
-  })), sheet === 'carbon' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'carbon' && React.createElement(SheetWrap, {
     title: "Carbon",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(CarbonScreen, {
+  }, React.createElement(CarbonScreen, {
     accent: accent
-  })), sheet === 'waste' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'waste' && React.createElement(SheetWrap, {
     title: "Waste",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(WasteScreen, {
+  }, React.createElement(WasteScreen, {
     accent: accent
-  })), sheet === 'claims' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'claims' && React.createElement(SheetWrap, {
     title: "Insurance claims",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ClaimsScreen, {
+  }, React.createElement(ClaimsScreen, {
     accent: accent
-  })), sheet === 'member' && activeProject && /*#__PURE__*/React.createElement(TeamMemberSheet, {
+  })), sheet === 'member' && activeProject && React.createElement(TeamMemberSheet, {
     member: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addcert' && activeProject && /*#__PURE__*/React.createElement(AddCertSheet, {
+  }), sheet === 'addcert' && activeProject && React.createElement(AddCertSheet, {
     member: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'training' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'training' && React.createElement(SheetWrap, {
     title: "Training matrix",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(TrainingMatrixScreen, {
+  }, React.createElement(TrainingMatrixScreen, {
     accent: accent
-  })), sheet === 'launch' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'launch' && React.createElement(SheetWrap, {
     title: "About & legal",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(LaunchScreen, {
+  }, React.createElement(LaunchScreen, {
     accent: accent
-  })), sheet === 'cmdk' && /*#__PURE__*/React.createElement(CommandPalette, {
+  })), sheet === 'cmdk' && React.createElement(CommandPalette, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'aihistory' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'aihistory' && React.createElement(SheetWrap, {
     title: "AI history",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(AIHistoryScreen, {
+  }, React.createElement(AIHistoryScreen, {
     accent: accent
-  })), sheet === 'signature' && /*#__PURE__*/React.createElement(SignatureSheet, {
+  })), sheet === 'signature' && React.createElement(SignatureSheet, {
     subject: activeProject?.subject || 'Document',
     signerName: activeProject?.signerName,
     onSigned: activeProject?.onSigned,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'approval' && /*#__PURE__*/React.createElement(ApprovalSheet, {
+  }), sheet === 'approval' && React.createElement(ApprovalSheet, {
     item: activeProject,
     onApproved: activeProject?.onApproved,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'subportal' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'subportal' && React.createElement(SheetWrap, {
     title: "Sub portal",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SubPortalScreen, {
+  }, React.createElement(SubPortalScreen, {
     accent: accent
-  })), sheet === 'currency' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'currency' && React.createElement(SheetWrap, {
     title: "Currency",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(CurrencyScreen, {
+  }, React.createElement(CurrencyScreen, {
     accent: accent
-  })), sheet === 'api' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'api' && React.createElement(SheetWrap, {
     title: "API",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(APIScreen, {
+  }, React.createElement(APIScreen, {
     accent: accent
-  })), sheet === 'templatelib' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'templatelib' && React.createElement(SheetWrap, {
     title: "Templates",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(TemplateLibScreen, {
+  }, React.createElement(TemplateLibScreen, {
     accent: accent
-  })), sheet === 'audittrail' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'audittrail' && React.createElement(SheetWrap, {
     title: "Audit trail",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(AuditTrailScreen, {
+  }, React.createElement(AuditTrailScreen, {
     accent: accent
-  })), sheet === 'tags' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'tags' && React.createElement(SheetWrap, {
     title: "Tags",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(TagsScreen, {
+  }, React.createElement(TagsScreen, {
     accent: accent
-  })), sheet === 'views' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'views' && React.createElement(SheetWrap, {
     title: "Saved views",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(SavedViewsScreen, {
+  }, React.createElement(SavedViewsScreen, {
     accent: accent
-  })), sheet === 'roles' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'roles' && React.createElement(SheetWrap, {
     title: "Roles",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(RolesScreen, {
+  }, React.createElement(RolesScreen, {
     accent: accent
-  })), sheet === 'tour' && /*#__PURE__*/React.createElement(TourSheet, {
+  })), sheet === 'tour' && React.createElement(TourSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'catalog' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'catalog' && React.createElement(SheetWrap, {
     title: "Cost catalog",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(CostCatalogScreen, {
+  }, React.createElement(CostCatalogScreen, {
     accent: accent
-  })), sheet === 'tomorrow' && /*#__PURE__*/React.createElement(TomorrowSheet, {
+  })), sheet === 'tomorrow' && React.createElement(TomorrowSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'improve' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'improve' && React.createElement(SheetWrap, {
     title: "Improve",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ImproveHubScreen, {
+  }, React.createElement(ImproveHubScreen, {
     accent: accent
-  })), sheet === 'services' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'services' && React.createElement(SheetWrap, {
     title: "Services",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ServiceCatalogScreen, {
+  }, React.createElement(ServiceCatalogScreen, {
     accent: accent
-  })), sheet === 'processes' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'processes' && React.createElement(SheetWrap, {
     title: "Processes",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ProcessLibraryScreen, {
+  }, React.createElement(ProcessLibraryScreen, {
     accent: accent
-  })), sheet === 'kaizen' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'kaizen' && React.createElement(SheetWrap, {
     title: "Kaizen",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(KaizenBoardScreen, {
+  }, React.createElement(KaizenBoardScreen, {
     accent: accent
-  })), sheet === 'docgen' && /*#__PURE__*/React.createElement(DocGenSheet, {
+  })), sheet === 'docgen' && React.createElement(DocGenSheet, {
     docKind: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addholiday' && /*#__PURE__*/React.createElement(AddHolidaySheet, {
+  }), sheet === 'addholiday' && React.createElement(AddHolidaySheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addclaim' && /*#__PURE__*/React.createElement(AddClaimSheet, {
+  }), sheet === 'addclaim' && React.createElement(AddClaimSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addimprovement' && /*#__PURE__*/React.createElement(AddImprovementSheet, {
+  }), sheet === 'addimprovement' && React.createElement(AddImprovementSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'improvement' && activeProject && /*#__PURE__*/React.createElement(ImprovementDetailSheet, {
+  }), sheet === 'improvement' && activeProject && React.createElement(ImprovementDetailSheet, {
     improvement: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'sitephoto' && /*#__PURE__*/React.createElement(SiteProgressPhotoSheet, {
+  }), sheet === 'sitephoto' && React.createElement(SiteProgressPhotoSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'incident' && /*#__PURE__*/React.createElement(IncidentReportSheet, {
+  }), sheet === 'incident' && React.createElement(IncidentReportSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'editfield' && /*#__PURE__*/React.createElement(EditFieldSheet, {
+  }), sheet === 'editfield' && React.createElement(EditFieldSheet, {
     params: activeProject,
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'starttrip' && /*#__PURE__*/React.createElement(StartTripSheet, {
+  }), sheet === 'starttrip' && React.createElement(StartTripSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addtag' && /*#__PURE__*/React.createElement(AddTagSheet, {
+  }), sheet === 'addtag' && React.createElement(AddTagSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addtemplate' && /*#__PURE__*/React.createElement(AddTemplateSheet, {
+  }), sheet === 'addtemplate' && React.createElement(AddTemplateSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addview' && /*#__PURE__*/React.createElement(AddViewSheet, {
+  }), sheet === 'addview' && React.createElement(AddViewSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'toolboxtalk' && /*#__PURE__*/React.createElement(ToolboxTalkSheet, {
+  }), sheet === 'toolboxtalk' && React.createElement(ToolboxTalkSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'resourceplan' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'resourceplan' && React.createElement(SheetWrap, {
     title: "Resource planning",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ResourcePlanningScreen, {
+  }, React.createElement(ResourcePlanningScreen, {
     accent: accent
-  })), sheet === 'addallocation' && /*#__PURE__*/React.createElement(AddAllocationSheet, {
+  })), sheet === 'addallocation' && React.createElement(AddAllocationSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'finintel' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'finintel' && React.createElement(SheetWrap, {
     title: "Financial intelligence",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(FinancialIntelligenceScreen, {
+  }, React.createElement(FinancialIntelligenceScreen, {
     accent: accent
-  })), sheet === 'bids' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'bids' && React.createElement(SheetWrap, {
     title: "Bids & tender",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(BidManagementScreen, {
+  }, React.createElement(BidManagementScreen, {
     accent: accent
-  })), sheet === 'procurement' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'procurement' && React.createElement(SheetWrap, {
     title: "Procurement",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ProcurementScreen, {
+  }, React.createElement(ProcurementScreen, {
     accent: accent
-  })), sheet === 'confirmdelivery' && /*#__PURE__*/React.createElement(DeliveryConfirmSheet, {
+  })), sheet === 'confirmdelivery' && React.createElement(DeliveryConfirmSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'handover' && /*#__PURE__*/React.createElement(SheetWrap, {
+  }), sheet === 'handover' && React.createElement(SheetWrap, {
     title: "Quality & handover",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(QualityHandoverScreen, {
+  }, React.createElement(QualityHandoverScreen, {
     accent: accent
-  })), sheet === 'hscommand' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'hscommand' && React.createElement(SheetWrap, {
     title: "H&S command centre",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(HSCommandScreen, {
+  }, React.createElement(HSCommandScreen, {
     accent: accent
-  })), sheet === 'clientexp' && /*#__PURE__*/React.createElement(SheetWrap, {
+  })), sheet === 'clientexp' && React.createElement(SheetWrap, {
     title: "Client experience",
     onClose: closeSheet,
     accent: accent
-  }, /*#__PURE__*/React.createElement(ClientExperienceScreen, {
+  }, React.createElement(ClientExperienceScreen, {
     accent: accent
-  })), sheet === 'postupdate' && /*#__PURE__*/React.createElement(PostUpdateSheet, {
+  })), sheet === 'postupdate' && React.createElement(PostUpdateSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'delivery' && /*#__PURE__*/React.createElement(DeliveryConfirmSheet, {
+  }), sheet === 'delivery' && React.createElement(DeliveryConfirmSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'weeklyreport' && /*#__PURE__*/React.createElement(WeeklyReportSheet, {
+  }), sheet === 'weeklyreport' && React.createElement(WeeklyReportSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'dayend' && /*#__PURE__*/React.createElement(DayEndReportSheet, {
+  }), sheet === 'dayend' && React.createElement(DayEndReportSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'addcost' && /*#__PURE__*/React.createElement(AddCostItemSheet, {
+  }), sheet === 'addcost' && React.createElement(AddCostItemSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'smartparse' && /*#__PURE__*/React.createElement(SmartParseSheet, {
+  }), sheet === 'smartparse' && React.createElement(SmartParseSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'phototosnag' && /*#__PURE__*/React.createElement(PhotoToSnagSheet, {
+  }), sheet === 'phototosnag' && React.createElement(PhotoToSnagSheet, {
     onClose: closeSheet,
     accent: accent
-  }), sheet === 'dashpick' && /*#__PURE__*/React.createElement(Sheet, {
+  }), sheet === 'dashpick' && React.createElement(Sheet, {
     onClose: closeSheet,
     height: "auto"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '8px 20px 14px',
       textAlign: 'center',
@@ -1385,17 +1366,17 @@ function CortexxApp({
       fontWeight: 600,
       color: T.t1
     }
-  }, "Dashboard layout"), /*#__PURE__*/React.createElement("div", {
+  }, "Dashboard layout"), React.createElement("div", {
     style: {
       padding: '0 16px 28px'
     }
-  }, /*#__PURE__*/React.createElement(GroupedList, null, Object.entries(DASHBOARDS).map(([k, v], i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, Object.entries(DASHBOARDS).map(([k, v], i, a) => React.createElement(Row, {
     key: k,
     icon: Ic.layers,
     iconBg: dashboardId === k ? accent : T.t3,
     title: `${k.toUpperCase()} · ${v.l}`,
     sub: DASH_DESCRIPTIONS[k],
-    right: dashboardId === k ? /*#__PURE__*/React.createElement("span", {
+    right: dashboardId === k ? React.createElement("span", {
       style: {
         color: accent
       }
@@ -1405,7 +1386,7 @@ function CortexxApp({
       onChangeDashboard(k);
       closeSheet();
     }
-  }))))), window.TaskBulkActionBar && /*#__PURE__*/React.createElement(TaskBulkActionBar, null));
+  }))))), window.TaskBulkActionBar && React.createElement(TaskBulkActionBar, null));
 }
 const DASH_DESCRIPTIONS = {
   v1: 'Hero CTA + priority queue',
@@ -1424,18 +1405,16 @@ const DASH_DESCRIPTIONS = {
   v14: 'Broadsheet — daily paper',
   v15: 'Site Notice — brutalist plaque'
 };
-
-// SheetWrap — wraps any full screen in a sheet with a top close bar
 function SheetWrap({
   title,
   onClose,
   accent,
   children
 }) {
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -1446,7 +1425,7 @@ function SheetWrap({
       position: 'relative',
       zIndex: 5
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -1459,18 +1438,18 @@ function SheetWrap({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back")), /*#__PURE__*/React.createElement("div", {
+  }, Ic.chevL, " ", React.createElement("span", null, "Back")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, title), /*#__PURE__*/React.createElement("div", {
+  }, title), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       overflow: 'hidden',

@@ -4,6 +4,7 @@
 // inbound messages become leads automatically.
 
 const express = require('express');
+const crypto = require('crypto');
 
 // Small Claude helper (server holds the key).
 async function claude(messages) {
@@ -44,7 +45,14 @@ module.exports = function agentRoutes(pool, auth, bus) {
   // Configure WEBHOOK_SECRET in env and use /api/webhooks/<secret>/whatsapp etc.
   function secretGate(req, res, next) {
     const expected = process.env.WEBHOOK_SECRET || '';
-    if (!expected || req.params.secret !== expected) return res.status(403).json({ error: 'forbidden' });
+    // Accept the secret either in the path (Meta config compat) or an
+    // X-Webhook-Secret header. Compare in constant time to avoid leaking it
+    // via timing, and guard against length-mismatch throwing in timingSafeEqual.
+    const provided = req.get('x-webhook-secret') || req.params.secret || '';
+    if (!expected) return res.status(403).json({ error: 'forbidden' });
+    const a = Buffer.from(String(provided));
+    const b = Buffer.from(expected);
+    if (a.length !== b.length || !crypto.timingSafeEqual(a, b)) return res.status(403).json({ error: 'forbidden' });
     next();
   }
 

@@ -9,11 +9,37 @@
 // Auto-disabled if neither STRIPE_SECRET_KEY nor APPLE_SHARED_SECRET is set.
 
 const express = require('express');
+const crypto = require('crypto');
 const router = express.Router();
 
 const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
+const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
 const APPLE_SHARED_SECRET = process.env.APPLE_SHARED_SECRET || '';
 const APP_URL = process.env.PUBLIC_BASE_URL || 'https://cortexbuildpro.com';
+
+// Verify a Stripe webhook signature against the RAW request body.
+// Header format: "t=<unix>,v1=<hex hmac>[,v1=...]". We HMAC-SHA256 `${t}.${raw}`
+// with the endpoint secret and constant-time compare against any provided v1.
+function verifyStripeSignature(rawBuf, sigHeader, secret, toleranceSec = 300) {
+  if (!secret || !sigHeader || !rawBuf) return false;
+  const parts = Object.create(null);
+  for (const kv of String(sigHeader).split(',')) {
+    const i = kv.indexOf('=');
+    if (i === -1) continue;
+    const k = kv.slice(0, i).trim();
+    const v = kv.slice(i + 1).trim();
+    if (k === 'v1') (parts.v1 || (parts.v1 = [])).push(v);
+    else parts[k] = v;
+  }
+  if (!parts.t || !parts.v1 || !parts.v1.length) return false;
+  if (Math.abs(Date.now() / 1000 - Number(parts.t)) > toleranceSec) return false;
+  const expected = crypto.createHmac('sha256', secret).update(parts.t + '.' + rawBuf.toString('utf8')).digest('hex');
+  const expBuf = Buffer.from(expected, 'hex');
+  return parts.v1.some(sig => {
+    let sb; try { sb = Buffer.from(sig, 'hex'); } catch { return false; }
+    return sb.length === expBuf.length && crypto.timingSafeEqual(sb, expBuf);
+  });
+}
 
 function abortableFetch(url, opts, ms) {
   const c = new AbortController();
@@ -40,20 +66,29 @@ async function ensureTable(pool) {
     updated_at    TIMESTAMPTZ DEFAULT now()
   )`);
   await pool.query(`CREATE INDEX IF NOT EXISTS idx_iap_ws ON iap_entitlements(workspace_id, status)`);
+  // Dedup key so re-verified Apple receipts / replayed Stripe events UPDATE the
+  // existing row instead of inserting duplicates. Partial (external_id NOT NULL).
+  await pool.query(`CREATE UNIQUE INDEX IF NOT EXISTS uniq_iap_source_extid
+    ON iap_entitlements(source, external_id) WHERE external_id IS NOT NULL`);
 }
 
 async function upsertEntitlement(pool, row) {
-  await pool.query(
-    `INSERT INTO iap_entitlements (workspace_id, user_id, source, plan, product_id, external_id, status, expires_at, raw, updated_at)
-     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())
-     ON CONFLICT DO NOTHING`,
-    [row.workspace_id, row.user_id, row.source, row.plan, row.product_id, row.external_id, row.status, row.expires_at, row.raw]
-  );
-  // Also update existing row if external_id matches
-  await pool.query(
-    `UPDATE iap_entitlements SET status=$1, expires_at=$2, raw=$3, updated_at=now() WHERE external_id=$4 AND source=$5`,
-    [row.status, row.expires_at, row.raw, row.external_id, row.source]
-  );
+  if (row.external_id) {
+    await pool.query(
+      `INSERT INTO iap_entitlements (workspace_id, user_id, source, plan, product_id, external_id, status, expires_at, raw, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())
+       ON CONFLICT (source, external_id) WHERE external_id IS NOT NULL
+       DO UPDATE SET status=EXCLUDED.status, expires_at=EXCLUDED.expires_at, raw=EXCLUDED.raw,
+                     plan=EXCLUDED.plan, product_id=EXCLUDED.product_id, updated_at=now()`,
+      [row.workspace_id, row.user_id, row.source, row.plan, row.product_id, row.external_id, row.status, row.expires_at, row.raw]
+    );
+  } else {
+    await pool.query(
+      `INSERT INTO iap_entitlements (workspace_id, user_id, source, plan, product_id, external_id, status, expires_at, raw, updated_at)
+       VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9, now())`,
+      [row.workspace_id, row.user_id, row.source, row.plan, row.product_id, row.external_id, row.status, row.expires_at, row.raw]
+    );
+  }
 }
 
 // ── Apple receipt verification ────────────────────────────────────────
@@ -95,8 +130,8 @@ router.post('/iap/verify', async (req, res) => {
     if (pool) {
       await ensureTable(pool);
       await upsertEntitlement(pool, {
-        workspace_id: (req.user && req.user.ws) || null,
-        user_id: (req.user && req.user.id) || null,
+        workspace_id: req.user.ws,
+        user_id: req.user.uid || null,
         source: 'apple',
         plan: productId,
         product_id: latest.product_id,
@@ -125,7 +160,7 @@ router.post('/iap/checkout', async (req, res) => {
   const { priceId, productId } = req.body || {};
   if (!priceId) return res.status(400).json({ error: 'priceId required' });
   try {
-    const wsId = (req.user && req.user.ws) || '';
+    const wsId = req.user.ws;
     const r = await abortableFetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
@@ -154,7 +189,7 @@ router.post('/iap/portal', async (req, res) => {
   const pool = req.app.locals.pool;
   if (!pool) return res.status(503).json({ error: 'no pool' });
   await ensureTable(pool);
-  const wsId = (req.user && req.user.ws) || null;
+  const wsId = req.user.ws;
   const row = await pool.query(`SELECT raw FROM iap_entitlements WHERE workspace_id=$1 AND source='stripe' ORDER BY updated_at DESC LIMIT 1`, [wsId]);
   const customer = row.rows[0] && row.rows[0].raw && row.rows[0].raw.customer;
   if (!customer) return res.status(404).json({ error: 'No Stripe customer for this workspace' });
@@ -174,7 +209,7 @@ router.get('/iap/entitlement', async (req, res) => {
   const pool = req.app.locals.pool;
   if (!pool) return res.json({ entitled: false });
   await ensureTable(pool);
-  const wsId = (req.user && req.user.ws) || null;
+  const wsId = req.user.ws;
   const r = await pool.query(
     `SELECT source, plan, product_id, status, expires_at FROM iap_entitlements
      WHERE workspace_id=$1 AND status IN ('active','trialing') AND (expires_at IS NULL OR expires_at > now())
@@ -193,13 +228,26 @@ router.get('/iap/entitlement', async (req, res) => {
 });
 
 // ── Stripe webhook (subscription lifecycle) ─────────────────────────
-// Must mount with raw body parser — see server/index.js.
+// Mounted with express.raw() in server/index.js so req.body is a Buffer.
+// This route is PUBLIC (Stripe → us, no Bearer token), so the signature is the
+// ONLY thing that authenticates it. Fail closed if it can't be verified.
 router.post('/iap/webhook', async (req, res) => {
-  // Signature verification is required in production — set STRIPE_WEBHOOK_SECRET.
-  // We accept unverified here for dev simplicity, but reject in prod-flagged env.
   try {
-    const event = req.body && req.body.type ? req.body : null;
-    if (!event) return res.status(400).json({ error: 'bad payload' });
+    // If Stripe isn't configured on this server there is no integration to
+    // service — ack and ignore rather than trusting an unauthenticated body.
+    if (!STRIPE_KEY) return res.json({ ok: true, skipped: 'stripe not configured' });
+    // req.body is a Buffer (raw). The signature is the only authenticator for
+    // this public endpoint, so require the secret and a valid signature.
+    if (!STRIPE_WEBHOOK_SECRET) return res.status(503).json({ error: 'STRIPE_WEBHOOK_SECRET not configured' });
+    if (!verifyStripeSignature(req.body, req.headers['stripe-signature'], STRIPE_WEBHOOK_SECRET)) {
+      return res.status(400).json({ error: 'invalid signature' });
+    }
+    let event = null;
+    try {
+      const raw = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : (typeof req.body === 'string' ? req.body : JSON.stringify(req.body));
+      event = JSON.parse(raw);
+    } catch { return res.status(400).json({ error: 'bad payload' }); }
+    if (!event || !event.type || !event.data || !event.data.object) return res.status(400).json({ error: 'bad payload' });
     const pool = req.app.locals.pool;
     if (!pool) return res.json({ ok: true, skipped: 'no pool' });
     await ensureTable(pool);
