@@ -2,7 +2,7 @@
 <document type="com.apple.InterfaceBuilder3.CocoaTouch.Storyboard.XIB"
           version="3.0"
           toolsVersion="21701"
-          targetRuntime="AppleCocoa"
+          targetRuntime="iOS.CocoaTouch"
           propertyAccessControl="none"
           useAutolayout="YES"
           launchScreen="YES"
@@ -25,31 +25,24 @@
             <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
             <autoresizingMask key="autoresizingMask" widthSizable="YES" heightSizable="YES"/>
             <subviews>
-              <!-- Background: Cortexx dark navy #06101e -->
               <view contentMode="scaleToFill" translatesAutoresizingMaskIntoConstraints="NO" id="bg-view">
                 <rect key="frame" x="0.0" y="0.0" width="393" height="852"/>
                 <color key="backgroundColor" red="0.02352941176" green="0.06274509804" blue="0.11764705882" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
               </view>
-              <!-- Centred logo image view -->
-              <imageView clipsSubviews="YES"
-                         userInteractionEnabled="NO"
-                         contentMode="scaleAspectFit"
-                         image="AppIcon"
-                         translatesAutoresizingMaskIntoConstraints="NO"
-                         id="logo-view">
+              <imageView clipsSubviews="YES" userInteractionEnabled="NO" contentMode="scaleAspectFit" image="AppIcon" translatesAutoresizingMaskIntoConstraints="NO" id="logo-view">
                 <rect key="frame" x="146.5" y="376" width="100" height="100"/>
               </imageView>
             </subviews>
             <viewLayoutGuide key="safeAreaLayoutGuide" id="Bcu-3y-fUS"/>
             <color key="backgroundColor" red="0.02352941176" green="0.06274509804" blue="0.11764705882" alpha="1" colorSpace="custom" customColorSpace="sRGB"/>
             <constraints>
-              <constraint firstItem="bg-view" firstAttribute="leading"  secondItem="Ze5-6b-2t3" secondAttribute="leading"  id="bg-l"/>
+              <constraint firstItem="bg-view" firstAttribute="leading" secondItem="Ze5-6b-2t3" secondAttribute="leading" id="bg-l"/>
               <constraint firstItem="bg-view" firstAttribute="trailing" secondItem="Ze5-6b-2t3" secondAttribute="trailing" id="bg-r"/>
-              <constraint firstItem="bg-view" firstAttribute="top"      secondItem="Ze5-6b-2t3" secondAttribute="top"      id="bg-t"/>
-              <constraint firstItem="bg-view" firstAttribute="bottom"   secondItem="Ze5-6b-2t3" secondAttribute="bottom"   id="bg-b"/>
+              <constraint firstItem="bg-view" firstAttribute="top" secondItem="Ze5-6b-2t3" secondAttribute="top" id="bg-t"/>
+              <constraint firstItem="bg-view" firstAttribute="bottom" secondItem="Ze5-6b-2t3" secondAttribute="bottom" id="bg-b"/>
               <constraint firstItem="logo-view" firstAttribute="centerX" secondItem="Ze5-6b-2t3" secondAttribute="centerX" id="lc-x"/>
               <constraint firstItem="logo-view" firstAttribute="centerY" secondItem="Ze5-6b-2t3" secondAttribute="centerY" id="lc-y"/>
-              <constraint firstItem="logo-view" firstAttribute="width"  constant="100" id="lc-w"/>
+              <constraint firstItem="logo-view" firstAttribute="width" constant="100" id="lc-w"/>
               <constraint firstItem="logo-view" firstAttribute="height" constant="100" id="lc-h"/>
             </constraints>
           </view>
