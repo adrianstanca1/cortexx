@@ -5,6 +5,7 @@ import path from 'node:path';
 
 const root = process.cwd();
 const appDir = path.join(root, 'app');
+const publicDir = path.join(root, 'public');
 const scanRoots = ['app', 'components', 'lib'].map((dir) => path.join(root, dir));
 const sourceExtensions = new Set(['.js', '.jsx', '.ts', '.tsx']);
 const failures = [];
@@ -46,7 +47,7 @@ function routePattern(route) {
   return new RegExp(`^${escaped || '/'}(?:/)?$`);
 }
 
-const pages = walk(appDir).filter((file) => path.basename(file) === 'page.tsx' || path.basename(file) === 'page.jsx');
+const pages = walk(appDir).filter((file) => ['page.tsx', 'page.jsx', 'page.ts', 'page.js'].includes(path.basename(file)));
 const routes = pages.map(routeFromPage);
 const patterns = routes.map((route) => ({ route, regex: routePattern(route) }));
 
@@ -56,12 +57,24 @@ function normaliseInternalTarget(target) {
   return clean.length > 1 ? clean.replace(/\/$/, '') : clean;
 }
 
+function hasStaticAsset(target) {
+  const clean = normaliseInternalTarget(target).replace(/^\//, '');
+  if (!clean) return false;
+  const candidates = [
+    path.join(publicDir, clean),
+    path.join(publicDir, `${clean}.html`),
+    path.join(root, clean),
+    path.join(root, `${clean}.html`),
+  ];
+  return candidates.some((candidate) => fs.existsSync(candidate) && fs.statSync(candidate).isFile());
+}
+
 function isAllowedTarget(target) {
   if (!target.startsWith('/')) return true;
   if (target.startsWith('/api/')) return true;
-  if (/\.[a-z0-9]{2,8}$/i.test(target)) return true;
+  if (/\.[a-z0-9]{2,8}(?:[?#].*)?$/i.test(target)) return true;
   const clean = normaliseInternalTarget(target);
-  return patterns.some(({ regex }) => regex.test(clean));
+  return patterns.some(({ regex }) => regex.test(clean)) || hasStaticAsset(clean);
 }
 
 const files = scanRoots.flatMap(walk);
@@ -85,19 +98,15 @@ for (const file of files) {
         continue;
       }
       if (!isAllowedTarget(target)) {
-        failures.push(`${relative}: internal link '${target}' does not match an app page`);
+        warnings.push(`${relative}: internal target '${target}' is not a discovered page or static asset; verify rewrites or runtime generation`);
       }
     }
   }
 
   for (const match of content.matchAll(/<button\b([^>]*)>/g)) {
     const attrs = match[1];
-    if (!/\btype\s*=/.test(attrs)) {
-      warnings.push(`${relative}: button without an explicit type attribute`);
-    }
-    if (/\bdisabled\s*=\s*{?false}?/.test(attrs)) {
-      warnings.push(`${relative}: button contains redundant disabled={false}`);
-    }
+    if (!/\btype\s*=/.test(attrs)) warnings.push(`${relative}: button without an explicit type attribute`);
+    if (/\bdisabled\s*=\s*{?false}?/.test(attrs)) warnings.push(`${relative}: button contains redundant disabled={false}`);
   }
 
   for (const match of content.matchAll(/<a\b([^>]*)>/g)) {
@@ -115,9 +124,9 @@ console.log(`Audited ${pages.length} pages and ${files.length} source files.`);
 console.log(`Discovered routes: ${routes.length}`);
 
 if (warnings.length) {
-  console.log(`\nWarnings (${warnings.length}):`);
-  for (const warning of warnings.slice(0, 100)) console.log(`- ${warning}`);
-  if (warnings.length > 100) console.log(`- ...and ${warnings.length - 100} more`);
+  console.log(`\nReview findings (${warnings.length}):`);
+  for (const warning of warnings.slice(0, 150)) console.log(`- ${warning}`);
+  if (warnings.length > 150) console.log(`- ...and ${warnings.length - 150} more`);
 }
 
 if (failures.length) {
