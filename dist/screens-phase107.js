@@ -1,9 +1,3 @@
-// CortexBuild Pro — Retention Ledger + per-invoice settings (Phase 107)
-// Built on lib/retention.js — see that file for the core engine.
-
-// ════════════════════════════════════════════════════════════════════
-// PER-INVOICE RETENTION SHEET
-// ════════════════════════════════════════════════════════════════════
 function RetentionSheet({
   accent,
   invoiceId,
@@ -16,18 +10,18 @@ function RetentionSheet({
   const [pcDate, setPcDate] = React.useState(inv?.pcDate || '');
   const [defectsDays, setDefectsDays] = React.useState(inv?.defectsPeriodDays || 365);
   const [releaseAmt, setReleaseAmt] = React.useState('');
-  if (!inv) return /*#__PURE__*/React.createElement(ScreenBg, {
+  if (!inv) return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
       color: T.t2
     }
   }, "Invoice not found."));
-  if (!R) return /*#__PURE__*/React.createElement(ScreenBg, {
+  if (!R) return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
@@ -63,7 +57,7 @@ function RetentionSheet({
     l,
     v,
     c
-  }) => /*#__PURE__*/React.createElement("div", {
+  }) => React.createElement("div", {
     style: {
       flex: 1,
       padding: 10,
@@ -71,13 +65,13 @@ function RetentionSheet({
       background: T.bg1,
       textAlign: 'center'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 10,
       color: T.t2,
       marginBottom: 2
     }
-  }, l), /*#__PURE__*/React.createElement("div", {
+  }, l), React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 700,
@@ -85,17 +79,17 @@ function RetentionSheet({
       fontFamily: SFMono
     }
   }, v));
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Retention",
     subtitle: inv.id + ' · ' + (inv.client || '') + ' · £' + (inv.amount || 0).toLocaleString()
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 14,
@@ -103,23 +97,23 @@ function RetentionSheet({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement(Stat, {
+  }, React.createElement(Stat, {
     l: "INVOICE TOTAL",
     v: fmt(inv.amount)
-  }), /*#__PURE__*/React.createElement(Stat, {
+  }), React.createElement(Stat, {
     l: "PAYABLE NOW",
     v: fmt(enriched.payableNow),
     c: T.green
-  }), /*#__PURE__*/React.createElement(Stat, {
+  }), React.createElement(Stat, {
     l: "HELD BACK",
     v: fmt(enriched.retentionAmount),
     c: T.amber
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -127,14 +121,14 @@ function RetentionSheet({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "RETENTION %"), /*#__PURE__*/React.createElement("div", {
+  }, "RETENTION %"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginTop: 8,
       flexWrap: 'wrap'
     }
-  }, PRESET.map(p => /*#__PURE__*/React.createElement("button", {
+  }, PRESET.map(p => React.createElement("button", {
     key: p,
     onClick: () => setPct(p),
     style: {
@@ -148,14 +142,14 @@ function RetentionSheet({
       fontSize: 13,
       fontWeight: 700
     }
-  }, p, "%"))), /*#__PURE__*/React.createElement("div", {
+  }, p, "%"))), React.createElement("div", {
     style: {
       marginTop: 10,
       display: 'flex',
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("input", {
+  }, React.createElement("input", {
     type: "number",
     min: "0",
     max: "20",
@@ -173,12 +167,12 @@ function RetentionSheet({
       fontSize: 14,
       textAlign: 'center'
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       fontSize: 12,
       color: T.t2
     }
-  }, "Custom % (UK typical: 3\u20135%, max usually 10%)")), /*#__PURE__*/React.createElement("div", {
+  }, "Custom % (UK typical: 3\u20135%, max usually 10%)")), React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -186,18 +180,18 @@ function RetentionSheet({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "RELEASE SCHEDULE"), /*#__PURE__*/React.createElement("div", {
+  }, "RELEASE SCHEDULE"), React.createElement("div", {
     style: {
       marginTop: 8
     }
-  }, /*#__PURE__*/React.createElement("label", {
+  }, React.createElement("label", {
     style: {
       display: 'block',
       fontSize: 11,
       color: T.t2,
       marginBottom: 4
     }
-  }, "Practical completion date (50% released)"), /*#__PURE__*/React.createElement("input", {
+  }, "Practical completion date (50% released)"), React.createElement("input", {
     type: "date",
     value: pcDate,
     onChange: e => setPcDate(e.target.value),
@@ -212,18 +206,18 @@ function RetentionSheet({
       fontSize: 13,
       boxSizing: 'border-box'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       marginTop: 8
     }
-  }, /*#__PURE__*/React.createElement("label", {
+  }, React.createElement("label", {
     style: {
       display: 'block',
       fontSize: 11,
       color: T.t2,
       marginBottom: 4
     }
-  }, "Defects liability period (days)"), /*#__PURE__*/React.createElement("input", {
+  }, "Defects liability period (days)"), React.createElement("input", {
     type: "number",
     value: defectsDays,
     onChange: e => setDefectsDays(e.target.value),
@@ -238,13 +232,13 @@ function RetentionSheet({
       fontSize: 13,
       boxSizing: 'border-box'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.t2,
       marginTop: 4
     }
-  }, pcDate && /*#__PURE__*/React.createElement(React.Fragment, null, "Final release: ", /*#__PURE__*/React.createElement("strong", {
+  }, pcDate && React.createElement(React.Fragment, null, "Final release: ", React.createElement("strong", {
     style: {
       color: T.t1
     }
@@ -252,7 +246,7 @@ function RetentionSheet({
     const d = new Date(pcDate);
     d.setDate(d.getDate() + Number(defectsDays));
     return d.toISOString().slice(0, 10);
-  })())))), /*#__PURE__*/React.createElement("button", {
+  })())))), React.createElement("button", {
     onClick: save,
     style: {
       marginTop: 16,
@@ -266,7 +260,7 @@ function RetentionSheet({
       fontSize: 14,
       fontWeight: 700
     }
-  }, "Save retention settings"), (inv.retentionPct || 0) > 0 && /*#__PURE__*/React.createElement("div", {
+  }, "Save retention settings"), (inv.retentionPct || 0) > 0 && React.createElement("div", {
     style: {
       marginTop: 22,
       padding: 14,
@@ -274,7 +268,7 @@ function RetentionSheet({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -282,7 +276,7 @@ function RetentionSheet({
       letterSpacing: 0.6,
       marginBottom: 8
     }
-  }, "RELEASE RETENTION"), /*#__PURE__*/React.createElement("div", {
+  }, "RELEASE RETENTION"), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -290,26 +284,26 @@ function RetentionSheet({
       fontSize: 12,
       marginBottom: 10
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       color: T.t2
     }
-  }, "Currently released"), /*#__PURE__*/React.createElement("div", {
+  }, "Currently released"), React.createElement("div", {
     style: {
       fontWeight: 700,
       fontFamily: SFMono
     }
-  }, fmt(inv.retentionReleased || 0))), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, fmt(inv.retentionReleased || 0))), React.createElement("div", null, React.createElement("div", {
     style: {
       color: T.t2
     }
-  }, "Still outstanding"), /*#__PURE__*/React.createElement("div", {
+  }, "Still outstanding"), React.createElement("div", {
     style: {
       fontWeight: 700,
       fontFamily: SFMono,
       color: T.amber
     }
-  }, fmt(enriched.retentionOutstanding)))), /*#__PURE__*/React.createElement("input", {
+  }, fmt(enriched.retentionOutstanding)))), React.createElement("input", {
     type: "number",
     value: releaseAmt,
     onChange: e => setReleaseAmt(e.target.value),
@@ -325,13 +319,13 @@ function RetentionSheet({
       fontSize: 13,
       boxSizing: 'border-box'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 10
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => release('pc'),
     style: {
       flex: 1,
@@ -343,7 +337,7 @@ function RetentionSheet({
       fontSize: 13,
       fontWeight: 600
     }
-  }, "Release at PC"), /*#__PURE__*/React.createElement("button", {
+  }, "Release at PC"), React.createElement("button", {
     onClick: () => release('final'),
     style: {
       flex: 1,
@@ -357,19 +351,15 @@ function RetentionSheet({
     }
   }, "Release (final)")))));
 }
-
-// ════════════════════════════════════════════════════════════════════
-// RETENTION LEDGER — aggregate view of ALL held-back retention
-// ════════════════════════════════════════════════════════════════════
 function RetentionLedgerScreen({
   accent
 }) {
   const invoices = useDB('invoices');
   const projects = useDB('projects');
   const R = window.CortexRetention;
-  if (!R) return /*#__PURE__*/React.createElement(ScreenBg, {
+  if (!R) return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
@@ -381,7 +371,6 @@ function RetentionLedgerScreen({
     maximumFractionDigits: 0
   });
   const remindAll = () => {
-    // Push a notification + activity entry per upcoming release
     const upcoming = led.upcoming.filter(u => !u.overdue || u.overdue);
     let n = 0;
     upcoming.forEach(u => {
@@ -418,7 +407,7 @@ function RetentionLedgerScreen({
     children,
     onClick,
     accent: accentCol
-  }) => /*#__PURE__*/React.createElement("div", {
+  }) => React.createElement("div", {
     onClick: onClick,
     style: {
       marginTop: 8,
@@ -429,17 +418,17 @@ function RetentionLedgerScreen({
       cursor: onClick ? 'pointer' : 'default'
     }
   }, children);
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Retention ledger",
     subtitle: "All held-back retention across projects"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 16,
@@ -447,7 +436,7 @@ function RetentionLedgerScreen({
       background: 'linear-gradient(135deg, ' + accent + '22, ' + T.bg2 + ')',
       border: '1px solid ' + T.hair
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -455,7 +444,7 @@ function RetentionLedgerScreen({
       letterSpacing: 0.6,
       marginBottom: 6
     }
-  }, "OUTSTANDING RETENTION"), /*#__PURE__*/React.createElement("div", {
+  }, "OUTSTANDING RETENTION"), React.createElement("div", {
     style: {
       fontSize: 30,
       fontWeight: 800,
@@ -463,7 +452,7 @@ function RetentionLedgerScreen({
       color: T.amber,
       letterSpacing: -0.5
     }
-  }, fmt(led.totals.outstanding)), /*#__PURE__*/React.createElement("div", {
+  }, fmt(led.totals.outstanding)), React.createElement("div", {
     style: {
       marginTop: 8,
       display: 'flex',
@@ -471,39 +460,39 @@ function RetentionLedgerScreen({
       fontSize: 11,
       color: T.t2
     }
-  }, /*#__PURE__*/React.createElement("span", null, "Held: ", /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", null, "Held: ", React.createElement("span", {
     style: {
       fontWeight: 700,
       color: T.t1
     }
-  }, fmt(led.totals.held))), /*#__PURE__*/React.createElement("span", null, "Released: ", /*#__PURE__*/React.createElement("span", {
+  }, fmt(led.totals.held))), React.createElement("span", null, "Released: ", React.createElement("span", {
     style: {
       fontWeight: 700,
       color: T.green
     }
-  }, fmt(led.totals.released))), /*#__PURE__*/React.createElement("span", null, led.rows.length, " invoice", led.rows.length === 1 ? '' : 's'))), led.upcoming.length === 0 && led.rows.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, fmt(led.totals.released))), React.createElement("span", null, led.rows.length, " invoice", led.rows.length === 1 ? '' : 's'))), led.upcoming.length === 0 && led.rows.length === 0 && React.createElement("div", {
     style: {
       marginTop: 24,
       textAlign: 'center',
       color: T.t2
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 40,
       marginBottom: 10
     }
-  }, "\uD83E\uDE99"), /*#__PURE__*/React.createElement("div", {
+  }, "\uD83E\uDE99"), React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, "No retention held yet"), /*#__PURE__*/React.createElement("div", {
+  }, "No retention held yet"), React.createElement("div", {
     style: {
       fontSize: 12,
       marginTop: 4
     }
-  }, "Open an invoice and set a retention % to start tracking.")), led.upcoming.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "Open an invoice and set a retention % to start tracking.")), led.upcoming.length > 0 && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -511,14 +500,14 @@ function RetentionLedgerScreen({
       marginTop: 22,
       marginBottom: 8
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "UPCOMING RELEASES \xB7 ", led.upcoming.length), /*#__PURE__*/React.createElement("button", {
+  }, "UPCOMING RELEASES \xB7 ", led.upcoming.length), React.createElement("button", {
     onClick: remindAll,
     style: {
       padding: '6px 12px',
@@ -532,60 +521,60 @@ function RetentionLedgerScreen({
       letterSpacing: 0.4,
       textTransform: 'uppercase'
     }
-  }, "\uD83D\uDD14 Remind all")), led.upcoming.slice(0, 10).map((u, i) => /*#__PURE__*/React.createElement(RowCard, {
+  }, "\uD83D\uDD14 Remind all")), led.upcoming.slice(0, 10).map((u, i) => React.createElement(RowCard, {
     key: i,
     accent: u.overdue ? T.red + '60' : null,
     onClick: () => navInv(u.invoice)
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700,
       color: T.t1
     }
-  }, u.invoice, " \xB7 ", u.client || '—'), /*#__PURE__*/React.createElement("div", {
+  }, u.invoice, " \xB7 ", u.client || '—'), React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, u.kind)), /*#__PURE__*/React.createElement("div", {
+  }, u.kind)), React.createElement("div", {
     style: {
       textAlign: 'right',
       marginLeft: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 700,
       color: u.overdue ? T.red : T.t1,
       fontFamily: SFMono
     }
-  }, fmt(u.amount)), /*#__PURE__*/React.createElement("div", {
+  }, fmt(u.amount)), React.createElement("div", {
     style: {
       fontSize: 11,
       color: u.overdue ? T.red : T.t2,
       fontFamily: SFMono,
       marginTop: 2
     }
-  }, u.overdue ? 'OVERDUE · ' : '', u.dueDate))))), led.upcoming.length > 10 && /*#__PURE__*/React.createElement("div", {
+  }, u.overdue ? 'OVERDUE · ' : '', u.dueDate))))), led.upcoming.length > 10 && React.createElement("div", {
     style: {
       marginTop: 6,
       fontSize: 11,
       color: T.t2,
       textAlign: 'center'
     }
-  }, "\u2026 and ", led.upcoming.length - 10, " more")), led.byProject.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "\u2026 and ", led.upcoming.length - 10, " more")), led.byProject.length > 0 && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       marginTop: 22,
       fontSize: 11,
@@ -593,45 +582,45 @@ function RetentionLedgerScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "BY PROJECT"), led.byProject.map(p => /*#__PURE__*/React.createElement(RowCard, {
+  }, "BY PROJECT"), led.byProject.map(p => React.createElement(RowCard, {
     key: p.projectId || 'unassigned'
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700,
       color: T.t1
     }
-  }, p.projectName || 'Project ' + p.projectId), /*#__PURE__*/React.createElement("div", {
+  }, p.projectName || 'Project ' + p.projectId), React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, p.invoiceCount, " invoice", p.invoiceCount === 1 ? '' : 's')), /*#__PURE__*/React.createElement("div", {
+  }, p.invoiceCount, " invoice", p.invoiceCount === 1 ? '' : 's')), React.createElement("div", {
     style: {
       textAlign: 'right'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 700,
       color: T.amber,
       fontFamily: SFMono
     }
-  }, fmt(p.totalHeld - p.totalReleased)), /*#__PURE__*/React.createElement("div", {
+  }, fmt(p.totalHeld - p.totalReleased)), React.createElement("div", {
     style: {
       fontSize: 10,
       color: T.t2,
       fontFamily: SFMono,
       marginTop: 2
     }
-  }, "of ", fmt(p.totalHeld))))))), led.rows.length > 0 && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "of ", fmt(p.totalHeld))))))), led.rows.length > 0 && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       marginTop: 22,
       fontSize: 11,
@@ -639,33 +628,33 @@ function RetentionLedgerScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "ALL INVOICES WITH RETENTION"), led.rows.map(r => /*#__PURE__*/React.createElement(RowCard, {
+  }, "ALL INVOICES WITH RETENTION"), led.rows.map(r => React.createElement(RowCard, {
     key: r.id,
     onClick: () => navInv(r.id)
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700,
       color: T.t1
     }
-  }, r.id, " \xB7 ", r.client || '—'), /*#__PURE__*/React.createElement("div", {
+  }, r.id, " \xB7 ", r.client || '—'), React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, (r.retentionPct * 100).toFixed(1), "% of ", fmt(r.amount), " \xB7", /*#__PURE__*/React.createElement("span", {
+  }, (r.retentionPct * 100).toFixed(1), "% of ", fmt(r.amount), " \xB7", React.createElement("span", {
     style: {
       marginLeft: 6,
       padding: '1px 6px',
@@ -676,11 +665,11 @@ function RetentionLedgerScreen({
       fontSize: 9,
       letterSpacing: 0.4
     }
-  }, (r.retentionStatus || 'held').toUpperCase().replace('_', ' ')))), /*#__PURE__*/React.createElement("div", {
+  }, (r.retentionStatus || 'held').toUpperCase().replace('_', ' ')))), React.createElement("div", {
     style: {
       textAlign: 'right'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 700,

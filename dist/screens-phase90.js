@@ -1,7 +1,3 @@
-// Cortexx — Payments ledger (Phase 90)
-// Record payments against invoices, mark paid, running balances, per-tenant log.
-
-// ─── Per-tenant payment log ───────────────────────────────────────
 (function () {
   if (window.CortexPayments) return;
   const KEY = () => 'cortexx_payments__' + (window.CortexTenant ? window.CortexTenant.active() : 'default');
@@ -94,17 +90,15 @@ function RecordPaymentSheet({
     cash: Ic.money,
     cheque: Ic.doc
   };
-
-  // Success state — confirm + offer an instant receipt
   if (paidPayment) {
-    return /*#__PURE__*/React.createElement(Sheet, {
+    return React.createElement(Sheet, {
       onClose: onClose
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         padding: '36px 24px 30px',
         textAlign: 'center'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 64,
         height: 64,
@@ -119,14 +113,14 @@ function RecordPaymentSheet({
       size: 34,
       color: '#fff',
       sw: 3
-    })), /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 21,
         fontWeight: 700,
         color: T.t1
       }
-    }, paidPayment.full ? 'Payment recorded' : 'Part-payment recorded'), /*#__PURE__*/React.createElement("div", {
+    }, paidPayment.full ? 'Payment recorded' : 'Part-payment recorded'), React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 15,
@@ -134,14 +128,14 @@ function RecordPaymentSheet({
         fontWeight: 700,
         marginTop: 4
       }
-    }, "\xA3", paidPayment.amount.toLocaleString(), " \xB7 ", paidPayment.client), /*#__PURE__*/React.createElement("div", {
+    }, "\xA3", paidPayment.amount.toLocaleString(), " \xB7 ", paidPayment.client), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t2,
         marginTop: 6
       }
-    }, paidPayment.invoiceId, " ", paidPayment.full ? 'marked paid' : 'partially settled'), /*#__PURE__*/React.createElement("button", {
+    }, paidPayment.invoiceId, " ", paidPayment.full ? 'marked paid' : 'partially settled'), React.createElement("button", {
       onClick: () => window.cortexxReceiptPDF && window.cortexxReceiptPDF(paidPayment),
       style: {
         width: '100%',
@@ -162,7 +156,7 @@ function RecordPaymentSheet({
       }
     }, React.cloneElement(Ic.download, {
       size: 16
-    }), " Issue receipt (PDF)"), /*#__PURE__*/React.createElement("button", {
+    }), " Issue receipt (PDF)"), React.createElement("button", {
       onClick: onClose,
       style: {
         width: '100%',
@@ -179,20 +173,20 @@ function RecordPaymentSheet({
       }
     }, "Done")));
   }
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '20px 20px 30px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 20,
       fontWeight: 700,
       color: T.t1
     }
-  }, "Record payment"), /*#__PURE__*/React.createElement("div", {
+  }, "Record payment"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -200,7 +194,7 @@ function RecordPaymentSheet({
       marginTop: 4,
       marginBottom: 18
     }
-  }, invoice.id, " \xB7 ", invoice.client, " \xB7 invoiced \xA3", invoice.amount.toLocaleString()), /*#__PURE__*/React.createElement("div", {
+  }, invoice.id, " \xB7 ", invoice.client, " \xB7 invoiced \xA3", invoice.amount.toLocaleString()), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -209,7 +203,7 @@ function RecordPaymentSheet({
       letterSpacing: 0.5,
       marginBottom: 6
     }
-  }, "Amount received"), /*#__PURE__*/React.createElement("div", {
+  }, "Amount received"), React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -219,13 +213,13 @@ function RecordPaymentSheet({
       padding: '0 14px',
       marginBottom: 14
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
       color: T.t2
     }
-  }, "\xA3"), /*#__PURE__*/React.createElement("input", {
+  }, "\xA3"), React.createElement("input", {
     value: amount,
     onChange: e => setAmount(e.target.value.replace(/[^0-9.]/g, '')),
     inputMode: "decimal",
@@ -240,10 +234,10 @@ function RecordPaymentSheet({
       fontWeight: 700,
       outline: 'none'
     }
-  }), parseFloat(amount) < invoice.amount && parseFloat(amount) > 0 && /*#__PURE__*/React.createElement(Pill, {
+  }), parseFloat(amount) < invoice.amount && parseFloat(amount) > 0 && React.createElement(Pill, {
     c: T.amber,
     size: "xs"
-  }, "PART")), /*#__PURE__*/React.createElement("div", {
+  }, "PART")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -252,14 +246,14 @@ function RecordPaymentSheet({
       letterSpacing: 0.5,
       marginBottom: 6
     }
-  }, "Method"), /*#__PURE__*/React.createElement("div", {
+  }, "Method"), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8,
       marginBottom: 14
     }
-  }, PAY_METHODS.map(m => /*#__PURE__*/React.createElement("button", {
+  }, PAY_METHODS.map(m => React.createElement("button", {
     key: m.k,
     onClick: () => setMethod(m.k),
     style: {
@@ -278,17 +272,17 @@ function RecordPaymentSheet({
     }
   }, React.cloneElement(methodIcon[m.k], {
     size: 15
-  }), " ", m.l))), /*#__PURE__*/React.createElement("div", {
+  }), " ", m.l))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 10,
       marginBottom: 18
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -297,7 +291,7 @@ function RecordPaymentSheet({
       letterSpacing: 0.5,
       marginBottom: 6
     }
-  }, "Date"), /*#__PURE__*/React.createElement("input", {
+  }, "Date"), React.createElement("input", {
     type: "date",
     value: date,
     onChange: e => setDate(e.target.value),
@@ -313,11 +307,11 @@ function RecordPaymentSheet({
       outline: 'none',
       boxSizing: 'border-box'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -326,7 +320,7 @@ function RecordPaymentSheet({
       letterSpacing: 0.5,
       marginBottom: 6
     }
-  }, "Reference"), /*#__PURE__*/React.createElement("input", {
+  }, "Reference"), React.createElement("input", {
     value: ref,
     onChange: e => setRef(e.target.value),
     placeholder: "optional",
@@ -342,7 +336,7 @@ function RecordPaymentSheet({
       outline: 'none',
       boxSizing: 'border-box'
     }
-  }))), /*#__PURE__*/React.createElement("button", {
+  }))), React.createElement("button", {
     onClick: confirm,
     disabled: !valid || busy,
     style: {
@@ -384,30 +378,30 @@ function PaymentsLedgerScreen({
     return (order[a.status] ?? 3) - (order[b.status] ?? 3);
   });
   const methodLabel = k => (PAY_METHODS.find(m => m.k === k) || {}).l || k;
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Payments",
     subtitle: "Ledger \xB7 receipts \xB7 running balance",
     ws: true
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 18,
       padding: 18,
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -416,7 +410,7 @@ function PaymentsLedgerScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.8
     }
-  }, "Collected this period"), /*#__PURE__*/React.createElement("div", {
+  }, "Collected this period"), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 32,
@@ -425,15 +419,15 @@ function PaymentsLedgerScreen({
       marginTop: 4,
       letterSpacing: -0.8
     }
-  }, "\xA3", paid.toLocaleString()), /*#__PURE__*/React.createElement("div", {
+  }, "\xA3", paid.toLocaleString()), React.createElement("div", {
     style: {
       marginTop: 12
     }
-  }, /*#__PURE__*/React.createElement(Bar, {
+  }, React.createElement(Bar, {
     pct: pct,
     c: T.green,
     h: 6
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -441,25 +435,25 @@ function PaymentsLedgerScreen({
       fontFamily: SF,
       fontSize: 12
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, pct, "% of \xA3", invoiced.toLocaleString(), " invoiced"), /*#__PURE__*/React.createElement("span", {
+  }, pct, "% of \xA3", invoiced.toLocaleString(), " invoiced"), React.createElement("span", {
     style: {
       color: T.amber,
       fontWeight: 600
     }
-  }, "\xA3", outstanding.toLocaleString(), " outstanding")))), /*#__PURE__*/React.createElement(Section, {
+  }, "\xA3", outstanding.toLocaleString(), " outstanding")))), React.createElement(Section, {
     title: "Invoices"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 6,
       padding: '0 16px'
     }
-  }, sorted.map(iv => /*#__PURE__*/React.createElement("div", {
+  }, sorted.map(iv => React.createElement("div", {
     key: iv.id,
     style: {
       background: T.bg2,
@@ -470,36 +464,36 @@ function PaymentsLedgerScreen({
       alignItems: 'center',
       gap: 12
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 4,
       alignSelf: 'stretch',
       borderRadius: 2,
       background: STATUS_C[iv.status] || T.t3
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, iv.client), /*#__PURE__*/React.createElement("div", {
+  }, iv.client), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, iv.id, " \xB7 \xA3", iv.amount.toLocaleString())), iv.status === 'paid' ? /*#__PURE__*/React.createElement(Pill, {
+  }, iv.id, " \xB7 \xA3", iv.amount.toLocaleString())), iv.status === 'paid' ? React.createElement(Pill, {
     c: T.green,
     size: "xs"
-  }, "PAID") : /*#__PURE__*/React.createElement("button", {
+  }, "PAID") : React.createElement("button", {
     onClick: () => setPayInvoice(iv),
     style: {
       background: accent,
@@ -513,9 +507,9 @@ function PaymentsLedgerScreen({
       cursor: 'pointer',
       whiteSpace: 'nowrap'
     }
-  }, "Record payment"))))), /*#__PURE__*/React.createElement(Section, {
+  }, "Record payment"))))), React.createElement(Section, {
     title: `Payment log${payments.length ? ` · ${payments.length}` : ''}`
-  }, payments.length === 0 ? /*#__PURE__*/React.createElement("div", {
+  }, payments.length === 0 ? React.createElement("div", {
     style: {
       padding: '20px 16px',
       textAlign: 'center',
@@ -523,7 +517,7 @@ function PaymentsLedgerScreen({
       fontSize: 13,
       color: T.t3
     }
-  }, "No payments recorded yet. Record one above and it appears here.") : /*#__PURE__*/React.createElement("div", {
+  }, "No payments recorded yet. Record one above and it appears here.") : React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
@@ -531,7 +525,7 @@ function PaymentsLedgerScreen({
       overflow: 'hidden',
       margin: '0 16px'
     }
-  }, payments.map((p, i) => /*#__PURE__*/React.createElement("div", {
+  }, payments.map((p, i) => React.createElement("div", {
     key: p.id,
     style: {
       display: 'flex',
@@ -540,7 +534,7 @@ function PaymentsLedgerScreen({
       padding: '12px 14px',
       borderBottom: i === payments.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -555,19 +549,19 @@ function PaymentsLedgerScreen({
   }, React.cloneElement(Ic.check, {
     size: 15,
     sw: 3
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600,
       color: T.t1
     }
-  }, p.client, " ", p.full ? '' : '(part)'), /*#__PURE__*/React.createElement("div", {
+  }, p.client, " ", p.full ? '' : '(part)'), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
@@ -577,21 +571,21 @@ function PaymentsLedgerScreen({
   }, p.invoiceId, " \xB7 ", methodLabel(p.method), p.ref ? ` · ${p.ref}` : '', " \xB7 ", new Date(p.date).toLocaleDateString('en-GB', {
     day: '2-digit',
     month: 'short'
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       alignItems: 'flex-end',
       gap: 4
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 14,
       color: T.green,
       fontWeight: 700
     }
-  }, "\xA3", p.amount.toLocaleString()), /*#__PURE__*/React.createElement("button", {
+  }, "\xA3", p.amount.toLocaleString()), React.createElement("button", {
     onClick: () => window.cortexxReceiptPDF && window.cortexxReceiptPDF(p),
     style: {
       background: 'transparent',
@@ -609,7 +603,7 @@ function PaymentsLedgerScreen({
     }
   }, React.cloneElement(Ic.download, {
     size: 10
-  }), " Receipt"))))))), payInvoice && /*#__PURE__*/React.createElement(RecordPaymentSheet, {
+  }), " Receipt"))))))), payInvoice && React.createElement(RecordPaymentSheet, {
     invoice: payInvoice,
     accent: accent,
     onClose: () => setPayInvoice(null),

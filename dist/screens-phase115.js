@@ -1,8 +1,3 @@
-// CortexBuild Pro — Phase 115: Procurement & Supply Chain
-// ProcurementScreen — PO approval workflow, delivery tracking, supplier
-// scorecards, and stock levels. Wired to purchaseOrders, supplierScores,
-// and materials tables.
-
 (function () {
   if (!window.Backend) return;
   const card = extra => ({
@@ -71,8 +66,6 @@
         color: tab === k ? '#fff' : T.t2
       }
     }, l)));
-
-    // ── Approvals ──────────────────────────────────────────────────
     const Approvals = () => React.createElement('div', null, pending.length === 0 ? React.createElement('div', {
       style: {
         textAlign: 'center',
@@ -156,8 +149,6 @@
         cursor: 'pointer'
       }
     }, '✕ Reject')))));
-
-    // ── Delivery tracking ──────────────────────────────────────────
     const Delivery = () => React.createElement('div', null, inTransit.length === 0 ? React.createElement('p', {
       style: {
         color: T.t2,
@@ -234,8 +225,6 @@
         }
       }, '📦 Receive'))));
     }));
-
-    // ── Supplier scorecards ────────────────────────────────────────
     const bar = (pct, col) => React.createElement('div', {
       style: {
         flex: 1,
@@ -337,8 +326,6 @@
         textAlign: 'right'
       }
     }, s.qualityPct + '%')))));
-
-    // ── Stock levels ───────────────────────────────────────────────
     const Stock = () => React.createElement('div', null, lowStock.length > 0 && React.createElement('div', {
       style: card({
         marginBottom: 14,

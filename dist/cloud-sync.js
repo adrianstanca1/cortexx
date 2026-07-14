@@ -12,29 +12,19 @@
     token: 'cortexx_token',
     live: 'cortexx_live_sync',
     queue: 'cortexx_sync_queue',
-    lastPull: 'cortexx_last_pull'
+    lastPull: 'cortexx_last_pull',
   };
   let API = localStorage.getItem(LS.api) || '';
   let TOKEN = localStorage.getItem(LS.token) || '';
   let online = navigator.onLine;
-  let es = null; // EventSource
-  const listeners = new Set(); // status subscribers
+  let es = null;                 // EventSource
+  const listeners = new Set();   // status subscribers
 
-  const emit = status => listeners.forEach(fn => {
-    try {
-      fn(status());
-    } catch (e) {}
-  });
+  const emit = (status) => listeners.forEach(fn => { try { fn(status()); } catch (e) {} });
   const toast = (m, t) => window.cortexxToast && window.cortexxToast(m, t);
-  window.addEventListener('online', () => {
-    online = true;
-    flushQueue();
-    emit(status);
-  });
-  window.addEventListener('offline', () => {
-    online = false;
-    emit(status);
-  });
+
+  window.addEventListener('online', () => { online = true; flushQueue(); emit(status); });
+  window.addEventListener('offline', () => { online = false; emit(status); });
 
   // Clear the session when the server rejects our token, so the UI stops
   // claiming "signed in" and prompts a fresh sign-in (queued writes survive
@@ -42,50 +32,28 @@
   function invalidateAuth() {
     if (!TOKEN) return;
     TOKEN = '';
-    try {
-      localStorage.removeItem(LS.token);
-    } catch (e) {}
+    try { localStorage.removeItem(LS.token); } catch (e) {}
     closeStream();
     toast('Session expired — please sign in again', 'error');
     emit(status);
   }
+
   async function api(method, path, body, useAuth = true) {
     if (!API) return null;
     try {
-      const headers = {
-        'content-type': 'application/json'
-      };
+      const headers = { 'content-type': 'application/json' };
       if (useAuth && TOKEN) headers.authorization = 'Bearer ' + TOKEN;
-      const r = await fetch(API + path, {
-        method,
-        headers,
-        body: body ? JSON.stringify(body) : undefined
-      });
-      if (r.status === 401 && useAuth) {
-        invalidateAuth();
-        return {
-          __error: 401
-        };
-      }
-      if (!r.ok) return {
-        __error: r.status
-      };
+      const r = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+      if (r.status === 401 && useAuth) { invalidateAuth(); return { __error: 401 }; }
+      if (!r.ok) return { __error: r.status };
       return await r.json();
-    } catch (e) {
-      return null;
-    }
+    } catch (e) { return null; }
   }
 
   // ── Offline write queue ───────────────────────────────────
   const QUEUE_CAP = 10000;
-  const readQueue = () => {
-    try {
-      return JSON.parse(localStorage.getItem(LS.queue) || '[]');
-    } catch (e) {
-      return [];
-    }
-  };
-  const writeQueue = q => {
+  const readQueue = () => { try { return JSON.parse(localStorage.getItem(LS.queue) || '[]'); } catch (e) { return []; } };
+  const writeQueue = (q) => {
     try {
       if (q.length > QUEUE_CAP) {
         // Extended offline use overflowed the queue — warn rather than silently
@@ -99,13 +67,8 @@
     if (!API || !TOKEN || !online) return;
     const q = readQueue();
     if (!q.length) return;
-    const res = await api('POST', '/api/sync/bulk', {
-      ops: q
-    });
-    if (res && !res.__error) {
-      writeQueue([]);
-      emit(status);
-    }
+    const res = await api('POST', '/api/sync/bulk', { ops: q });
+    if (res && !res.__error) { writeQueue([]); emit(status); }
   }
 
   // ── Realtime stream (SSE) ─────────────────────────────────
@@ -113,27 +76,17 @@
     if (!API || !TOKEN || es) return;
     try {
       es = new EventSource(`${API}/api/stream?token=${encodeURIComponent(TOKEN)}`);
-      es.onmessage = ev => {
-        let msg;
-        try {
-          msg = JSON.parse(ev.data);
-        } catch (e) {
-          return;
-        }
-        if (msg.type === 'portal_message') toast(`New client message · ${msg.client || ''}`, 'info');else if (msg.type === 'portal_approval') toast(`Quote approved · ${msg.client || ''}`, 'success');else if (msg.type === 'change' && window.Backend && window.Backend.pullRemote) window.Backend.pullRemote(msg.collection);
-        window.dispatchEvent(new CustomEvent('cortexx-remote', {
-          detail: msg
-        }));
+      es.onmessage = (ev) => {
+        let msg; try { msg = JSON.parse(ev.data); } catch (e) { return; }
+        if (msg.type === 'portal_message') toast(`New client message · ${msg.client || ''}`, 'info');
+        else if (msg.type === 'portal_approval') toast(`Quote approved · ${msg.client || ''}`, 'success');
+        else if (msg.type === 'change' && window.Backend && window.Backend.pullRemote) window.Backend.pullRemote(msg.collection);
+        window.dispatchEvent(new CustomEvent('cortexx-remote', { detail: msg }));
       };
-      es.onerror = () => {/* browser auto-reconnects */};
+      es.onerror = () => { /* browser auto-reconnects */ };
     } catch (e) {}
   }
-  function closeStream() {
-    if (es) {
-      es.close();
-      es = null;
-    }
-  }
+  function closeStream() { if (es) { es.close(); es = null; } }
 
   // ── Public status object ──────────────────────────────────
   function status() {
@@ -144,65 +97,37 @@
       live: localStorage.getItem(LS.live) === '1' && !!es,
       apiUrl: API,
       queued: readQueue().length,
-      lastPull: localStorage.getItem(LS.lastPull) || null
+      lastPull: localStorage.getItem(LS.lastPull) || null,
     };
   }
+
   window.cortexxCloud = {
     status,
-    onStatus(fn) {
-      listeners.add(fn);
-      fn(status());
-      return () => listeners.delete(fn);
-    },
-    setApi(url) {
-      API = (url || '').replace(/\/$/, '');
-      localStorage.setItem(LS.api, API);
-      emit(status);
-    },
-    async health() {
-      const h = await api('GET', '/api/health', null, false);
-      return !!(h && h.status === 'ok');
-    },
+    onStatus(fn) { listeners.add(fn); fn(status()); return () => listeners.delete(fn); },
+
+    setApi(url) { API = (url || '').replace(/\/$/, ''); localStorage.setItem(LS.api, API); emit(status); },
+
+    async health() { const h = await api('GET', '/api/health', null, false); return !!(h && h.status === 'ok'); },
+
     // ── Auth ────────────────────────────────────────────────
     async loginPassword(email, password) {
-      const r = await api('POST', '/api/auth/login', {
-        email,
-        password
-      }, false);
-      if (r && r.token) {
-        return this._authed(r);
-      }
-      toast('Sign-in failed — check your details', 'error');
-      return false;
+      const r = await api('POST', '/api/auth/login', { email, password }, false);
+      if (r && r.token) { return this._authed(r); }
+      toast('Sign-in failed — check your details', 'error'); return false;
     },
     async requestMagic(email) {
-      const r = await api('POST', '/api/auth/magic/request', {
-        email
-      }, false);
-      if (r && (r.ok || r.sent)) {
-        toast('Magic link sent — check your email', 'success');
-        return r.devLink || true;
-      }
-      toast('Could not send magic link', 'error');
-      return false;
+      const r = await api('POST', '/api/auth/magic/request', { email }, false);
+      if (r && (r.ok || r.sent)) { toast('Magic link sent — check your email', 'success'); return r.devLink || true; }
+      toast('Could not send magic link', 'error'); return false;
     },
     async verifyMagic(token) {
-      const r = await api('POST', '/api/auth/magic/verify', {
-        token
-      }, false);
+      const r = await api('POST', '/api/auth/magic/verify', { token }, false);
       if (r && r.token) return this._authed(r);
-      toast('Magic link invalid or expired', 'error');
-      return false;
+      toast('Magic link invalid or expired', 'error'); return false;
     },
     _authed(r) {
-      TOKEN = r.token;
-      localStorage.setItem(LS.token, TOKEN);
-      if (r.user && window.Backend) try {
-        window.Backend.db.user.update({
-          name: r.user.name,
-          email: r.user.email
-        });
-      } catch (e) {}
+      TOKEN = r.token; localStorage.setItem(LS.token, TOKEN);
+      if (r.user && window.Backend) try { window.Backend.db.user.update({ name: r.user.name, email: r.user.email }); } catch (e) {}
       toast('Signed in to cloud', 'success');
       // Always tear down any prior account's stream before (re)opening, so a
       // second sign-in on a shared device can't keep listening on account A's SSE.
@@ -213,18 +138,15 @@
       emit(status);
       return true;
     },
-    signOut() {
-      TOKEN = '';
-      localStorage.removeItem(LS.token);
-      closeStream();
-      emit(status);
-    },
+    signOut() { TOKEN = ''; localStorage.removeItem(LS.token); closeStream(); emit(status); },
+
     // ── Live sync toggle ────────────────────────────────────
     setLive(on) {
       localStorage.setItem(LS.live, on ? '1' : '0');
-      if (on) openStream();else closeStream();
+      if (on) openStream(); else closeStream();
       emit(status);
     },
+
     // ── Data ────────────────────────────────────────────────
     async pull() {
       const since = localStorage.getItem(LS.lastPull) || '';
@@ -241,33 +163,20 @@
     // OR when an online attempt fails, so writes are never silently dropped).
     async push(collection, op, id, data) {
       if (!API || !TOKEN) return;
-      const item = {
-        collection,
-        op,
-        id,
-        data
-      };
-      const enqueue = () => {
-        const q = readQueue();
-        q.push(item);
-        writeQueue(q);
-        emit(status);
-      };
-      if (!online) {
-        enqueue();
-        return;
-      }
+      const item = { collection, op, id, data };
+      const enqueue = () => { const q = readQueue(); q.push(item); writeQueue(q); emit(status); };
+      if (!online) { enqueue(); return; }
       let res;
-      if (op === 'create' || op === 'update') res = await api(op === 'create' ? 'POST' : 'PUT', `/api/${collection}${op === 'update' ? '/' + id : ''}`, data);else if (op === 'delete') res = await api('DELETE', `/api/${collection}/${id}`);
+      if (op === 'create' || op === 'update') res = await api(op === 'create' ? 'POST' : 'PUT', `/api/${collection}${op === 'update' ? '/' + id : ''}`, data);
+      else if (op === 'delete') res = await api('DELETE', `/api/${collection}/${id}`);
       // Network error (null) or any server error (incl. 401) → keep the write in
       // the queue so it replays on reconnect or after re-auth (flushQueue).
-      if (res === null || res && res.__error) enqueue();
+      if (res === null || (res && res.__error)) enqueue();
     },
+
     // ── Portal inbox (server-backed) ────────────────────────
-    async portalInbox() {
-      const r = await api('GET', '/api/portal-inbox');
-      return Array.isArray(r) ? r : [];
-    },
+    async portalInbox() { const r = await api('GET', '/api/portal-inbox'); return Array.isArray(r) ? r : []; },
+
     // ── v1.7 server-side intelligence ───────────────────────
     // Returns authoritative metrics computed server-side from the canonical
     // store. Pass a domain (scheduling|financial|tender|procurement|quality|
@@ -278,12 +187,9 @@
       const r = await api('GET', '/api/intelligence' + (domain ? '/' + domain : ''));
       if (!r || r.__error) return null;
       return domain ? r.data : r.domains;
-    }
+    },
   };
 
   // Auto-resume a live session on load.
-  if (API && TOKEN && localStorage.getItem(LS.live) === '1') {
-    openStream();
-    flushQueue();
-  }
+  if (API && TOKEN && localStorage.getItem(LS.live) === '1') { openStream(); flushQueue(); }
 })();

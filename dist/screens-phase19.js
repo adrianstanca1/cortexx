@@ -1,8 +1,3 @@
-// Cortexx — Phase 19: Signature capture (canvas-based) + multi-approver workflows
-
-// ═══════════════════════════════════════════════════════════════════
-// SIGNATURE CANVAS
-// ═══════════════════════════════════════════════════════════════════
 function SignatureSheet({
   subject,
   signerName,
@@ -84,16 +79,16 @@ function SignatureSheet({
     onSigned && onSigned(dataUrl);
     onClose();
   };
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -103,14 +98,14 @@ function SignatureSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Cancel"), /*#__PURE__*/React.createElement("div", {
+  }, "Cancel"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Signature"), /*#__PURE__*/React.createElement("button", {
+  }, "Signature"), React.createElement("button", {
     onClick: sign,
     style: {
       background: 'none',
@@ -121,19 +116,19 @@ function SignatureSheet({
       fontWeight: 600,
       cursor: hasSignature ? 'pointer' : 'default'
     }
-  }, "Sign")), /*#__PURE__*/React.createElement("div", {
+  }, "Sign")), React.createElement("div", {
     style: {
       flex: 1,
       padding: '0 16px 24px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginBottom: 6
     }
-  }, "You're signing:"), /*#__PURE__*/React.createElement("div", {
+  }, "You're signing:"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
@@ -141,7 +136,7 @@ function SignatureSheet({
       color: T.t1,
       marginBottom: 14
     }
-  }, subject), /*#__PURE__*/React.createElement("div", {
+  }, subject), React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hairMid}`,
@@ -151,7 +146,7 @@ function SignatureSheet({
       overflow: 'hidden',
       boxShadow: 'inset 0 1px 0 rgba(255,255,255,0.04)'
     }
-  }, /*#__PURE__*/React.createElement("canvas", {
+  }, React.createElement("canvas", {
     ref: canvasRef,
     onMouseDown: start,
     onMouseMove: move,
@@ -166,7 +161,7 @@ function SignatureSheet({
       touchAction: 'none',
       cursor: 'crosshair'
     }
-  }), !hasSignature && /*#__PURE__*/React.createElement("div", {
+  }), !hasSignature && React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -180,11 +175,11 @@ function SignatureSheet({
       fontSize: 13,
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 28
     }
-  }, "\u270D\uFE0F"), /*#__PURE__*/React.createElement("div", null, "Sign here")), /*#__PURE__*/React.createElement("div", {
+  }, "\u270D\uFE0F"), React.createElement("div", null, "Sign here")), React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: '18%',
@@ -194,13 +189,13 @@ function SignatureSheet({
       background: T.hairMid,
       pointerEvents: 'none'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 14
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: clear,
     style: {
       flex: 1,
@@ -214,7 +209,7 @@ function SignatureSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Clear"), /*#__PURE__*/React.createElement("button", {
+  }, "Clear"), React.createElement("button", {
     onClick: sign,
     disabled: !hasSignature,
     style: {
@@ -236,7 +231,7 @@ function SignatureSheet({
   }, React.cloneElement(Ic.check, {
     size: 15,
     sw: 3
-  }), " Confirm signature")), /*#__PURE__*/React.createElement("div", {
+  }), " Confirm signature")), React.createElement("div", {
     style: {
       marginTop: 16,
       fontFamily: SF,
@@ -245,12 +240,8 @@ function SignatureSheet({
       textAlign: 'center',
       lineHeight: 1.5
     }
-  }, "By signing you confirm the details are accurate.", /*#__PURE__*/React.createElement("br", null), "Signed digitally \xB7 ", new Date().toLocaleString('en-GB'))));
+  }, "By signing you confirm the details are accurate.", React.createElement("br", null), "Signed digitally \xB7 ", new Date().toLocaleString('en-GB'))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// APPROVAL WORKFLOW — multi-approver chain
-// ═══════════════════════════════════════════════════════════════════
 function ApprovalSheet({
   item,
   onClose,
@@ -291,16 +282,16 @@ function ApprovalSheet({
   };
   const allDone = list.every(a => a.status !== 'pending');
   const allApproved = list.every(a => a.status === 'approved');
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -310,14 +301,14 @@ function ApprovalSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Approval chain"), /*#__PURE__*/React.createElement("button", {
+  }, "Approval chain"), React.createElement("button", {
     onClick: () => {
       onApproved && onApproved(allApproved);
       onClose();
@@ -330,13 +321,13 @@ function ApprovalSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Done")), /*#__PURE__*/React.createElement("div", {
+  }, "Done")), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '0 16px 24px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: allApproved ? `linear-gradient(135deg, ${T.green}22, ${T.green}11)` : T.bg2,
       border: `0.5px solid ${allApproved ? T.green + '44' : T.hair}`,
@@ -344,13 +335,13 @@ function ApprovalSheet({
       padding: 14,
       marginBottom: 14
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2
     }
-  }, "Item"), /*#__PURE__*/React.createElement("div", {
+  }, "Item"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
@@ -358,7 +349,7 @@ function ApprovalSheet({
       color: T.t1,
       marginTop: 4
     }
-  }, item?.title || 'Pending approval'), allDone && /*#__PURE__*/React.createElement("div", {
+  }, item?.title || 'Pending approval'), allDone && React.createElement("div", {
     style: {
       marginTop: 10,
       paddingTop: 10,
@@ -367,7 +358,7 @@ function ApprovalSheet({
       alignItems: 'center',
       gap: 8
     }
-  }, allApproved ? /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, allApproved ? React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       width: 24,
       height: 24,
@@ -381,14 +372,14 @@ function ApprovalSheet({
   }, React.cloneElement(Ic.check, {
     size: 14,
     sw: 3
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.green,
       fontWeight: 700
     }
-  }, "All approvals received")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "All approvals received")) : React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       width: 24,
       height: 24,
@@ -401,14 +392,14 @@ function ApprovalSheet({
     }
   }, React.cloneElement(Ic.alert, {
     size: 14
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.red,
       fontWeight: 700
     }
-  }, "Rejected \u2014 review needed")))), /*#__PURE__*/React.createElement("div", {
+  }, "Rejected \u2014 review needed")))), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -417,7 +408,7 @@ function ApprovalSheet({
   }, list.map((a, i) => {
     const c = a.status === 'approved' ? T.green : a.status === 'rejected' ? T.red : T.amber;
     const blocked = i > 0 && list[i - 1].status !== 'approved';
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: i,
       style: {
         background: T.bg2,
@@ -426,13 +417,13 @@ function ApprovalSheet({
         padding: 12,
         opacity: blocked && a.status === 'pending' ? 0.5 : 1
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 10
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 28,
         height: 28,
@@ -450,26 +441,26 @@ function ApprovalSheet({
     }, a.status === 'approved' ? React.cloneElement(Ic.check, {
       size: 14,
       sw: 3
-    }) : a.status === 'rejected' ? '✗' : i + 1), /*#__PURE__*/React.createElement("div", {
+    }) : a.status === 'rejected' ? '✗' : i + 1), React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1,
         fontWeight: 600
       }
-    }, a.name), /*#__PURE__*/React.createElement("div", {
+    }, a.name), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2,
         marginTop: 1
       }
-    }, a.role), a.when && /*#__PURE__*/React.createElement("div", {
+    }, a.role), a.when && React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
@@ -481,12 +472,12 @@ function ApprovalSheet({
       month: 'short',
       hour: '2-digit',
       minute: '2-digit'
-    }))), a.status === 'pending' && !blocked && /*#__PURE__*/React.createElement("div", {
+    }))), a.status === 'pending' && !blocked && React.createElement("div", {
       style: {
         display: 'flex',
         gap: 5
       }
-    }, /*#__PURE__*/React.createElement("button", {
+    }, React.createElement("button", {
       onClick: () => approve(i),
       style: {
         background: T.green,
@@ -499,7 +490,7 @@ function ApprovalSheet({
         fontSize: 11,
         fontWeight: 700
       }
-    }, "\u2713"), /*#__PURE__*/React.createElement("button", {
+    }, "\u2713"), React.createElement("button", {
       onClick: () => reject(i),
       style: {
         background: 'transparent',
@@ -512,7 +503,7 @@ function ApprovalSheet({
         fontSize: 11,
         fontWeight: 700
       }
-    }, "\u2717")), blocked && a.status === 'pending' && /*#__PURE__*/React.createElement(Pill, {
+    }, "\u2717")), blocked && a.status === 'pending' && React.createElement(Pill, {
       c: T.t3,
       size: "xs"
     }, "BLOCKED")));

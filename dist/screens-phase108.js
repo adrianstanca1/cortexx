@@ -1,13 +1,11 @@
-// CortexBuild Pro — Subscription screen (Phase 108)
-
 function SubscriptionScreen({
   accent,
   onClose
 }) {
   const IAP = window.CortexIAP;
-  if (!IAP) return /*#__PURE__*/React.createElement(ScreenBg, {
+  if (!IAP) return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
@@ -17,8 +15,6 @@ function SubscriptionScreen({
   const [plans] = React.useState(IAP.plans());
   const [stat, setStat] = React.useState(IAP.status());
   const [busy, setBusy] = React.useState(null);
-
-  // Re-check entitlement on mount (handles Stripe checkout return)
   React.useEffect(() => {
     const qs = new URLSearchParams(location.search);
     if (qs.get('iap') === 'success') {
@@ -52,17 +48,17 @@ function SubscriptionScreen({
   };
   const fmt = n => '£' + Number(n).toLocaleString();
   const native = IAP.isNative();
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Subscription",
     subtitle: native ? 'In-app purchase · StoreKit' : 'Stripe Checkout · web'
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 16,
@@ -70,7 +66,7 @@ function SubscriptionScreen({
       background: stat.entitled ? 'linear-gradient(135deg, ' + T.green + '25, ' + T.bg2 + ')' : T.bg2,
       border: '1px solid ' + (stat.entitled ? T.green + '60' : T.hair)
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -78,30 +74,30 @@ function SubscriptionScreen({
       letterSpacing: 0.6,
       marginBottom: 6
     }
-  }, "CURRENT PLAN"), /*#__PURE__*/React.createElement("div", {
+  }, "CURRENT PLAN"), React.createElement("div", {
     style: {
       fontSize: 20,
       fontWeight: 800,
       color: T.t1
     }
-  }, stat.entitled ? plans.find(p => p.id === stat.plan)?.name || stat.plan : 'Free'), stat.entitled && stat.expires && /*#__PURE__*/React.createElement("div", {
+  }, stat.entitled ? plans.find(p => p.id === stat.plan)?.name || stat.plan : 'Free'), stat.entitled && stat.expires && React.createElement("div", {
     style: {
       marginTop: 6,
       fontSize: 12,
       color: T.t2
     }
-  }, "Renews ", /*#__PURE__*/React.createElement("span", {
+  }, "Renews ", React.createElement("span", {
     style: {
       fontFamily: SFMono,
       color: T.t1
     }
-  }, new Date(stat.expires).toLocaleDateString()), stat.source && /*#__PURE__*/React.createElement("span", null, " \xB7 via ", stat.source)), !stat.entitled && /*#__PURE__*/React.createElement("div", {
+  }, new Date(stat.expires).toLocaleDateString()), stat.source && React.createElement("span", null, " \xB7 via ", stat.source)), !stat.entitled && React.createElement("div", {
     style: {
       marginTop: 6,
       fontSize: 12,
       color: T.t2
     }
-  }, "5 projects \xB7 3 team members \xB7 CSV export only \xB7 no Open Banking, no Vera CEO")), /*#__PURE__*/React.createElement("div", {
+  }, "5 projects \xB7 3 team members \xB7 CSV export only \xB7 no Open Banking, no Vera CEO")), React.createElement("div", {
     style: {
       marginTop: 22,
       fontSize: 11,
@@ -111,7 +107,7 @@ function SubscriptionScreen({
     }
   }, "CHOOSE A PLAN"), plans.map(p => {
     const isCurrent = stat.entitled && stat.plan === p.id;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: p.id,
       style: {
         marginTop: 8,
@@ -120,32 +116,32 @@ function SubscriptionScreen({
         background: isCurrent ? T.green + '15' : T.bg2,
         border: '1px solid ' + (isCurrent ? T.green : T.hair)
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         marginBottom: 8
       }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", null, React.createElement("div", {
       style: {
         fontSize: 14,
         fontWeight: 700,
         color: T.t1
       }
-    }, p.name), /*#__PURE__*/React.createElement("div", {
+    }, p.name), React.createElement("div", {
       style: {
         fontSize: 11,
         color: T.t2,
         marginTop: 2
       }
-    }, fmt(p.price), " / ", p.period, p.savePct && /*#__PURE__*/React.createElement("span", {
+    }, fmt(p.price), " / ", p.period, p.savePct && React.createElement("span", {
       style: {
         marginLeft: 6,
         color: T.green,
         fontWeight: 700
       }
-    }, "save ", p.savePct, "%"))), isCurrent ? /*#__PURE__*/React.createElement("span", {
+    }, "save ", p.savePct, "%"))), isCurrent ? React.createElement("span", {
       style: {
         padding: '4px 10px',
         borderRadius: 6,
@@ -156,7 +152,7 @@ function SubscriptionScreen({
         fontWeight: 700,
         letterSpacing: 0.4
       }
-    }, "CURRENT") : /*#__PURE__*/React.createElement("button", {
+    }, "CURRENT") : React.createElement("button", {
       onClick: () => buy(p.id),
       disabled: busy === p.id,
       style: {
@@ -170,26 +166,26 @@ function SubscriptionScreen({
         fontWeight: 700,
         opacity: busy === p.id ? 0.6 : 1
       }
-    }, busy === p.id ? '…' : native ? 'Subscribe' : 'Checkout')), p.id.includes('team') && /*#__PURE__*/React.createElement("div", {
+    }, busy === p.id ? '…' : native ? 'Subscribe' : 'Checkout')), p.id.includes('team') && React.createElement("div", {
       style: {
         fontSize: 11,
         color: T.t2,
         marginTop: 4
       }
-    }, "Unlimited projects \xB7 25 users \xB7 Vera CEO \xB7 Open Banking \xB7 CIS300"), !p.id.includes('team') && /*#__PURE__*/React.createElement("div", {
+    }, "Unlimited projects \xB7 25 users \xB7 Vera CEO \xB7 Open Banking \xB7 CIS300"), !p.id.includes('team') && React.createElement("div", {
       style: {
         fontSize: 11,
         color: T.t2,
         marginTop: 4
       }
     }, "Unlimited projects \xB7 5 users \xB7 Vera CEO \xB7 Stripe payment links"));
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 18
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: restore,
     disabled: busy === 'restore',
     style: {
@@ -203,7 +199,7 @@ function SubscriptionScreen({
       fontSize: 13,
       fontWeight: 600
     }
-  }, busy === 'restore' ? 'Restoring…' : 'Restore purchases'), stat.entitled && /*#__PURE__*/React.createElement("button", {
+  }, busy === 'restore' ? 'Restoring…' : 'Restore purchases'), stat.entitled && React.createElement("button", {
     onClick: () => IAP.cancel(),
     style: {
       flex: 1,
@@ -216,7 +212,7 @@ function SubscriptionScreen({
       fontSize: 13,
       fontWeight: 600
     }
-  }, "Manage / cancel")), /*#__PURE__*/React.createElement("div", {
+  }, "Manage / cancel")), React.createElement("div", {
     style: {
       marginTop: 16,
       padding: 12,
