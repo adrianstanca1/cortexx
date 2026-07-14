@@ -44,7 +44,7 @@ This is a static site. Drop the project folder into:
 - **Cloudflare Pages** — connect the GitHub repo
 - **Self-hosted** — `deploy.sh` provisions Nginx + LE on a Hostinger VPS
 
-Full deploy guide: [`DEPLOY_NOW.md`](DEPLOY_NOW.md).
+Full deploy guide: [`docs/RUNBOOK.md`](docs/RUNBOOK.md) (ops runbook); current self-hosted stack details live in [`CLAUDE.md`](CLAUDE.md) § Deployment.
 
 ## iOS App Store
 
@@ -56,7 +56,7 @@ npm install
 npm run ios   # builds web, syncs, opens Xcode
 ```
 
-App Store submission runbook: [`SHIP_TO_APP_STORE.md`](SHIP_TO_APP_STORE.md) and [`app-store/SUBMISSION.md`](app-store/SUBMISSION.md).
+App Store submission runbook: [`app-store/SUBMISSION.md`](app-store/SUBMISSION.md) and [`ios/README.md`](ios/README.md).
 
 ## Project structure
 
@@ -89,7 +89,7 @@ App Store submission runbook: [`SHIP_TO_APP_STORE.md`](SHIP_TO_APP_STORE.md) and
 ├── icon-{192,512}.png · apple-touch-icon.png
 ├── robots.txt · sitemap.xml · vercel.json · deploy.sh
 │
-└── ROADMAP.md · SHIP_READY.md · DEPLOY_NOW.md · LAUNCH.md   Docs
+└── ROADMAP.md · CHANGELOG.md · VAULT.md · CLAUDE.md   Docs
 ```
 
 ## AI flows

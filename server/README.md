@@ -77,9 +77,10 @@ node index.js
 
 ## Deploy the API
 
-> **Full VPS runbook:** see [`DEPLOY_VPS.md`](../DEPLOY_VPS.md) — one-box deploy of
-> frontend + API + Postgres + AI webhooks with nginx, HTTPS, and the WhatsApp/email
-> webhook registration steps.
+> **Full VPS runbook:** see [`docs/RUNBOOK.md`](../docs/RUNBOOK.md) — one-box deploy of
+> the frontend + API + Postgres + AI stack with HTTPS and the WhatsApp/email
+> webhook registration steps. Current stack details (docker-compose + Caddy +
+> Traefik) are in [`CLAUDE.md`](../CLAUDE.md) § Deployment.
 
 **Railway / Render / Fly.io** (managed Postgres + Node):
 1. Push `server/` to a repo
