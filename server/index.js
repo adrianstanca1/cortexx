@@ -15,7 +15,13 @@ const crypto = require('crypto');
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
-app.use(cors());
+// CORS: permissive by default (the API auth is Bearer-token, not cookie, so
+// wildcard origins can't ride a session; the Capacitor app also calls cross-origin).
+// Set CORS_ORIGINS=comma,separated,origins to lock it down to a known allowlist.
+const CORS_ORIGINS = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
+app.use(cors(CORS_ORIGINS.length
+  ? { origin: (origin, cb) => cb(null, !origin || CORS_ORIGINS.includes(origin)) }
+  : undefined));
 // Stripe webhook needs the RAW body for signature verification, so it must be
 // parsed as a Buffer BEFORE the global JSON parser touches it.
 app.use('/api/iap/webhook', express.raw({ type: '*/*', limit: '1mb' }));

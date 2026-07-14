@@ -21,12 +21,14 @@ module.exports = function portalRoutes(pool, bus) {
     const ctx = await resolve(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'invalid_or_revoked_token' });
 
-    const proj = await pool.query('SELECT id, name, client, value, pct, status, addr, due FROM projects WHERE id=$1', [ctx.project_id]);
+    // Also scope by the token's workspace (defense-in-depth: a token can never
+    // read another tenant's project even if a project_id were ever reused).
+    const proj = await pool.query('SELECT id, name, client, value, pct, status, addr, due FROM projects WHERE id=$1 AND workspace_id=$2', [ctx.project_id, ctx.workspace_id]);
     if (!proj.rows[0]) return res.status(404).json({ error: 'project_not_found' });
 
     const invs = await pool.query(
-      'SELECT id, amount, status, issued, due FROM invoices WHERE project_id=$1 ORDER BY issued',
-      [ctx.project_id]
+      'SELECT id, amount, status, issued, due FROM invoices WHERE project_id=$1 AND workspace_id=$2 ORDER BY issued',
+      [ctx.project_id, ctx.workspace_id]
     );
     // Recent activity lives in documents_store under 'activity'
     const acts = await pool.query(
@@ -62,7 +64,7 @@ module.exports = function portalRoutes(pool, bus) {
     const ctx = await resolve(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'invalid_or_revoked_token' });
     const client = (req.body.client || 'Client').toString().slice(0, 200);
-    const proj = await pool.query('SELECT name FROM projects WHERE id=$1', [ctx.project_id]);
+    const proj = await pool.query('SELECT name FROM projects WHERE id=$1 AND workspace_id=$2', [ctx.project_id, ctx.workspace_id]);
     const name = proj.rows[0]?.name || 'project';
     await pool.query(
       `INSERT INTO portal_messages(workspace_id, project_id, client, body, kind, direction)
@@ -70,7 +72,7 @@ module.exports = function portalRoutes(pool, bus) {
       [ctx.workspace_id, ctx.project_id, client, `✓ Approved the quote for ${name}.`]
     );
     // Flip the project out of 'quoting'
-    await pool.query(`UPDATE projects SET status='active' WHERE id=$1 AND status='quoting'`, [ctx.project_id]);
+    await pool.query(`UPDATE projects SET status='active' WHERE id=$1 AND workspace_id=$2 AND status='quoting'`, [ctx.project_id, ctx.workspace_id]);
     bus.emit(ctx.workspace_id, { type: 'portal_approval', projectId: ctx.project_id, client });
     res.json({ ok: true });
   });
