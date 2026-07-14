@@ -59,8 +59,10 @@ function LoginForm() {
           Mobile-first construction management
         </p>
 
-        <label style={labelStyle}>Email</label>
+        <label htmlFor="email" style={labelStyle}>Email</label>
         <input
+          id="email"
+          name="email"
           type="email"
           autoFocus
           autoComplete="email"
@@ -70,8 +72,10 @@ function LoginForm() {
           style={inputStyle}
         />
 
-        <label style={labelStyle}>Password</label>
+        <label htmlFor="password" style={labelStyle}>Password</label>
         <input
+          id="password"
+          name="password"
           type="password"
           autoComplete="current-password"
           required
