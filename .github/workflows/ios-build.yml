@@ -1,0 +1,76 @@
+name: iOS Build Validation
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'ios/**'
+      - 'Cortexx.html'
+      - 'dist/**'
+      - 'lib/**'
+      - 'manifest.json'
+      - 'sw.js'
+      - '.github/workflows/ios-build.yml'
+  pull_request:
+    paths:
+      - 'ios/**'
+      - 'Cortexx.html'
+      - 'dist/**'
+      - 'lib/**'
+      - 'manifest.json'
+      - 'sw.js'
+      - '.github/workflows/ios-build.yml'
+  workflow_dispatch:
+
+concurrency:
+  group: ios-validation-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  build:
+    name: Build iOS Simulator App
+    runs-on: macos-14
+    timeout-minutes: 45
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: npm
+          cache-dependency-path: ios/package-lock.json
+
+      - name: Install JavaScript dependencies
+        working-directory: ios
+        run: npm install --no-audit --no-fund
+
+      - name: Build web assets and sync Capacitor
+        working-directory: ios
+        run: npm run build:ios
+
+      - name: Install CocoaPods
+        working-directory: ios/App
+        run: pod install --repo-update
+
+      - name: Build for iOS Simulator
+        run: |
+          set -o pipefail
+          xcodebuild build \
+            -workspace ios/App/App.xcworkspace \
+            -scheme App \
+            -configuration Debug \
+            -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' \
+            CODE_SIGNING_ALLOWED=NO \
+            | tee ios-build.log
+
+      - name: Upload build log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-build-log
+          path: ios-build.log
+          retention-days: 14
