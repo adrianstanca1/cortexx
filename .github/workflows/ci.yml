@@ -15,6 +15,7 @@ concurrency:
 
 env:
   NODE_VERSION: '22'
+  DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
 
 jobs:
   typecheck-and-build:
@@ -45,7 +46,6 @@ jobs:
         run: npm test
       - name: Build
         env:
-          DATABASE_URL: postgresql://placeholder:placeholder@localhost:5432/placeholder
           NEXTAUTH_SECRET: ci-build-placeholder-secret-not-used-at-runtime
           NEXTAUTH_URL: http://localhost:3000
         run: npm run build
