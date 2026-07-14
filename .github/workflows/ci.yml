@@ -6,24 +6,32 @@ on:
   pull_request:
     branches: [main]
 
+permissions:
+  contents: read
+
+concurrency:
+  group: ci-${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+env:
+  NODE_VERSION: '22'
+
 jobs:
   typecheck-and-build:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci
       - run: npx prisma generate
       - name: Cache Next.js build
-        uses: actions/cache@v6
+        uses: actions/cache@v4
         with:
           path: ${{ github.workspace }}/.next/cache
-          # Invalidate when package-lock or source changes; restore-keys
-          # lets us reuse the most recent cache even with source changes
-          # so we still benefit from incremental compile.
           key: ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-${{ hashFiles('**/*.[jt]s', '**/*.[jt]sx') }}
           restore-keys: |
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
@@ -44,21 +52,21 @@ jobs:
 
   audit:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     continue-on-error: true
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci --ignore-scripts
       - name: Security audit (high+)
-        run: npm audit --audit-level=high --production || echo "::warning::Audit found high-severity issues"
+        run: npm audit --audit-level=high --omit=dev || echo "::warning::Audit found high-severity production dependency issues"
 
   integration-tests:
-    # Cross-org isolation tests against a real Postgres. The keystone
-    # safety check before MULTITENANT_ENFORCED=true can flip in
-    # production — without this green, every owned-model query is on
-    # the trust system.
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     services:
       postgres:
         image: postgres:16-alpine
@@ -77,11 +85,11 @@ jobs:
       DATABASE_URL: postgresql://postgres:test@localhost:5432/cortexx_test
       MULTITENANT_ENFORCED: 'true'
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v6
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
-          node-version: '20'
-          cache: 'npm'
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
       - run: npm ci
       - run: npx prisma generate
       - name: Apply migrations to test DB
