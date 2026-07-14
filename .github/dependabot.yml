@@ -5,16 +5,27 @@ updates:
     schedule:
       interval: "weekly"
       day: "monday"
-    open-pull-requests-limit: 5
+    open-pull-requests-limit: 10
     groups:
       prisma:
         patterns: ["@prisma/*", "prisma"]
+        update-types: ["minor", "patch"]
       next:
         patterns: ["next", "react", "react-dom"]
+        update-types: ["minor", "patch"]
       types:
         patterns: ["@types/*"]
-      dev:
+        update-types: ["minor", "patch"]
+      dev-safe:
         dependency-type: "development"
+        update-types: ["minor", "patch"]
+    ignore:
+      - dependency-name: "eslint"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "typescript"
+        update-types: ["version-update:semver-major"]
+      - dependency-name: "@babel/*"
+        update-types: ["version-update:semver-major"]
 
   - package-ecosystem: "github-actions"
     directory: "/"
