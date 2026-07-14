@@ -48,7 +48,18 @@ async function rmrf(p) {
   await fs.rm(p, { recursive: true, force: true });
 }
 
+// The in-browser module loader only ever fetches .js / .jsx (see Cortexx.html —
+// it tries dist/<name>.js, lib/<name>.js, lib/<name>.jsx, never .ts). Every .ts
+// file under lib/ is a Next.js server module (db, redis, requireAuth, rbac,
+// email, cron, tokens…) that would only ship internal source into the IPA.
+// Skip them (and sourcemaps) so the bundle carries client code only.
+function shouldSkip(src) {
+  const base = path.basename(src);
+  return src.endsWith('.ts') || src.endsWith('.map') || base === 'node_modules' || base === '.DS_Store';
+}
+
 async function copyRecursive(src, dest) {
+  if (shouldSkip(src)) return;
   const st = statSync(src);
   if (st.isDirectory()) {
     await fs.mkdir(dest, { recursive: true });
