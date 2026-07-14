@@ -151,6 +151,9 @@ app.get('/api/stream', wrap(async (req, res) => {
   req.on('close', () => { clearInterval(ping); channels.get(key)?.delete(res); });
 }));
 
+// ── Health (public; MUST be before /api/:collection or auth shadows it) ─────
+app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: Date.now(), streams: [...channels.values()].reduce((n, s) => n + s.size, 0) }));
+
 // ── Mounted route modules (MUST be before the generic /api/:collection
 //    handlers below, or Express would shadow these specific paths) ──────────
 app.use('/api/portal', portalLimiter, require('./routes/portal')(pool, bus));   // PUBLIC, token-scoped
@@ -310,11 +313,6 @@ app.post('/api/audit', apiLimiter, auth, wrap(async (req, res) => {
     [req.user.ws, actor, action, target, hash]);
   res.json({ ok: true, hash });
 }));
-
-// ── Mounted route modules ───────────────────────────────────
-// (mounted above, before the generic /api/:collection handlers)
-
-app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: Date.now(), streams: [...channels.values()].reduce((n, s) => n + s.size, 0) }));
 
 // ── 404 + error handler ─────────────────────────────────────
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));

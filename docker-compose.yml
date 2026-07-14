@@ -84,17 +84,24 @@ services:
     restart: unless-stopped
     depends_on:
       - api
-    ports:
-      - "80:80"
-      - "443:443"
+    # TLS + ports 80/443 are owned by the host-network traefik at /docker/traefik.
+    # Caddy serves plain HTTP on :80 inside the compose network; traefik routes
+    # cortexbuildpro.com to it via the docker provider labels below.
+    expose:
+      - "80"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cortexx.rule=Host(`cortexbuildpro.com`) || Host(`www.cortexbuildpro.com`)
+      - traefik.http.routers.cortexx.entrypoints=websecure
+      - traefik.http.routers.cortexx.tls.certresolver=letsencrypt
+      - traefik.http.services.cortexx.loadbalancer.server.port=80
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       - ./:/srv/app:ro          # serves Cortexx.html + lib/ + dist/ statically
       - cortexx_caddy_data:/data
       - cortexx_caddy_config:/config
     environment:
-      # Caddy reads ${SITE_ADDRESS} from your shell / .env (e.g. cortexbuildpro.com).
-      # Use ":80" for a plain-HTTP / IP-only deploy with no domain.
+      # Behind traefik this stays ":80" (plain HTTP inside the network).
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
 
 volumes:
