@@ -362,7 +362,7 @@ function SettingsScreen({ accent }) {
           <Section title="Links">
             <GroupedList>
               <Row icon={Ic.book} iconBg={T.blue} title="Help docs"
-                onClick={() => window.open('https://cortexx.app/help', '_blank')}/>
+                onClick={() => window.open('/help', '_blank')}/>
               <Row icon={Ic.mail} iconBg={T.green} title="Contact support" sub="hello@cortexbuildpro.com"
                 onClick={() => window.open('mailto:hello@cortexbuildpro.com', '_blank')}/>
               <Row icon={Ic.share} iconBg={T.purple} title="Share CortexBuild Pro" isLast
@@ -456,8 +456,8 @@ function HelpScreen({ accent }) {
               onClick={() => window.open('mailto:hello@cortexbuildpro.com?subject=CortexBuild%20Pro%20support', '_blank')}/>
             <Row icon={Ic.phone} iconBg={T.green} title="Call us" sub="0203 555 0123 · Mon–Fri 9–6"
               onClick={() => window.open('tel:02035550123', '_blank')}/>
-            <Row icon={Ic.book} iconBg={T.purple} title="Help centre" sub="cortexx.app/help" isLast
-              onClick={() => window.open('https://cortexx.app/help', '_blank')}/>
+            <Row icon={Ic.book} iconBg={T.purple} title="Help centre" sub="cortexbuildpro.com/help" isLast
+              onClick={() => window.open('/help', '_blank')}/>
           </GroupedList>
         </Section>
       </div>
