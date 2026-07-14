@@ -15,6 +15,13 @@ function generateNonce(): string {
   return btoa(bin)
 }
 
+// React's development build requires eval() (source-mapped stack
+// reconstruction), and webpack HMR connects over ws:// — without these two
+// dev-only relaxations `next dev` serves a page that never hydrates (inputs
+// dead, buttons stuck disabled). Production builds use neither, so the
+// shipped header is unchanged.
+const isDev = process.env.NODE_ENV === 'development'
+
 function buildCsp(nonce: string): string {
   return [
     "default-src 'self'",
@@ -23,13 +30,13 @@ function buildCsp(nonce: string): string {
     // carry the nonce. 'unsafe-inline' is kept as a fallback for browsers
     // that ignore nonces (none current — but CSP spec says nonced sources
     // override 'unsafe-inline' on compliant UAs).
-    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline'`,
+    `script-src 'self' 'nonce-${nonce}' 'strict-dynamic' 'unsafe-inline'${isDev ? " 'unsafe-eval'" : ''}`,
     // React inlines styles during SSR; replacing with hashes is a separate
     // project. style-src stays permissive for now.
     "style-src 'self' 'unsafe-inline' https://fonts.googleapis.com",
     "font-src 'self' https://fonts.gstatic.com data:",
     "img-src 'self' data: blob: https:",
-    "connect-src 'self'",
+    `connect-src 'self'${isDev ? ' ws:' : ''}`,
     "frame-ancestors 'none'",
     "base-uri 'self'",
     "form-action 'self'",
@@ -215,6 +222,9 @@ export default auth(req => {
 })
 
 export const config = {
-  // Run on everything except Next internals & common static
-  matcher: ['/((?!_next/static|_next/image|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js|woff|woff2)$).*)'],
+  // Run on everything except Next internals & common static.
+  // `_next/webpack-hmr` must be excluded: the dev HMR websocket upgrade
+  // otherwise gets answered by this proxy with a buffered HTTP response,
+  // failing the handshake (ERR_INVALID_HTTP_RESPONSE) on every dev page.
+  matcher: ['/((?!_next/static|_next/image|_next/webpack-hmr|favicon.ico|.*\\.(?:png|jpg|jpeg|svg|gif|webp|ico|css|js|woff|woff2)$).*)'],
 }

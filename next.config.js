@@ -11,6 +11,11 @@ const nextConfig = {
   reactStrictMode: true,
   compress: true,
   productionBrowserSourceMaps: false,
+  // Next 16 treats only `localhost` as same-origin for dev resources and
+  // silently blocks 127.0.0.1 — dev pages then never hydrate (dead forms,
+  // HMR websocket handshake failures). Playwright's baseURL and CI both use
+  // http://127.0.0.1:3000, so allow it. Dev-only setting; no effect on prod.
+  allowedDevOrigins: ['127.0.0.1'],
   experimental: {
     optimizePackageImports: ['@prisma/client'],
   },
