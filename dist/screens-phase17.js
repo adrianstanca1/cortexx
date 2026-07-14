@@ -1,5 +1,3 @@
-// Cortexx — Phase 17: Training matrix + Competency tracking
-
 (function () {
   if (!window.Backend) return;
   Backend.computed.certExpiring = () => {
@@ -11,18 +9,12 @@
     return team.reduce((s, m) => s + (m.certificates || []).filter(c => c.status === 'expired').length, 0);
   };
 })();
-
-// ═══════════════════════════════════════════════════════════════════
-// TRAINING MATRIX — competency × team grid
-// ═══════════════════════════════════════════════════════════════════
 function TrainingMatrixScreen({
   accent
 }) {
   const team = useDB('team');
   const expiring = useComputed('certExpiring');
   const expired = useComputed('certExpired');
-
-  // Standard competencies tracked
   const COMPS = [{
     k: 'CSCS Gold',
     short: 'CSCS-G'
@@ -58,22 +50,22 @@ function TrainingMatrixScreen({
     const c = (member.certificates || []).find(c => c.name.includes(comp) || c.name === comp);
     return c;
   };
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Training matrix",
     subtitle: `${team.length} members · ${expiring} expiring · ${expired} expired`,
-    right: /*#__PURE__*/React.createElement(HeaderBtn, {
+    right: React.createElement(HeaderBtn, {
       icon: Ic.download,
       onClick: () => window.print()
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'grid',
@@ -92,7 +84,7 @@ function TrainingMatrixScreen({
     l: 'Expired',
     v: expired,
     c: T.red
-  }].map((k, i) => /*#__PURE__*/React.createElement("div", {
+  }].map((k, i) => React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -100,7 +92,7 @@ function TrainingMatrixScreen({
       padding: '8px 10px',
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 9,
@@ -109,7 +101,7 @@ function TrainingMatrixScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, k.l), /*#__PURE__*/React.createElement("div", {
+  }, k.l), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -118,16 +110,16 @@ function TrainingMatrixScreen({
       marginTop: 2,
       letterSpacing: -0.5
     }
-  }, k.v)))), /*#__PURE__*/React.createElement("div", {
+  }, k.v)))), React.createElement("div", {
     style: {
       padding: '4px 8px 14px',
       overflowX: 'auto'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       minWidth: COMPS.length * 50 + 130
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'flex-end',
@@ -138,7 +130,7 @@ function TrainingMatrixScreen({
       background: T.bg0,
       zIndex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 122,
       flexShrink: 0,
@@ -148,7 +140,7 @@ function TrainingMatrixScreen({
       fontWeight: 700,
       letterSpacing: 0.4
     }
-  }, "MEMBER"), COMPS.map(c => /*#__PURE__*/React.createElement("div", {
+  }, "MEMBER"), COMPS.map(c => React.createElement("div", {
     key: c.k,
     style: {
       width: 48,
@@ -164,7 +156,7 @@ function TrainingMatrixScreen({
       paddingBottom: 4,
       whiteSpace: 'nowrap'
     }
-  }, c.short))), team.map((m, ri) => /*#__PURE__*/React.createElement("div", {
+  }, c.short))), team.map((m, ri) => React.createElement("div", {
     key: m.id,
     onClick: () => window.cortexxNav('member', m),
     style: {
@@ -175,7 +167,7 @@ function TrainingMatrixScreen({
       borderTop: `0.5px solid ${T.hair}`,
       cursor: 'pointer'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 122,
       flexShrink: 0,
@@ -184,11 +176,11 @@ function TrainingMatrixScreen({
       alignItems: 'center',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement(Avatar, {
+  }, React.createElement(Avatar, {
     name: m.n,
     size: 22,
     c: m.color
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -201,7 +193,7 @@ function TrainingMatrixScreen({
   }, m.n.split(' ')[0])), COMPS.map(c => {
     const cert = hasComp(m, c.k);
     const col = cert ? cert.status === 'valid' ? T.green : cert.status === 'expiring' ? T.amber : T.red : T.bg3;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: c.k,
       style: {
         width: 48,
@@ -213,38 +205,38 @@ function TrainingMatrixScreen({
         alignItems: 'center',
         justifyContent: 'center'
       }
-    }, cert && (cert.status === 'valid' ? /*#__PURE__*/React.createElement("span", {
+    }, cert && (cert.status === 'valid' ? React.createElement("span", {
       style: {
         color: T.green,
         fontSize: 14
       }
-    }, "\u2713") : cert.status === 'expiring' ? /*#__PURE__*/React.createElement("span", {
+    }, "\u2713") : cert.status === 'expiring' ? React.createElement("span", {
       style: {
         color: T.amber,
         fontSize: 13,
         fontWeight: 700
       }
-    }, "!") : /*#__PURE__*/React.createElement("span", {
+    }, "!") : React.createElement("span", {
       style: {
         color: T.red,
         fontSize: 14
       }
     }, "\u2717")));
-  }))))), expiring > 0 && /*#__PURE__*/React.createElement(Section, {
+  }))))), expiring > 0 && React.createElement(Section, {
     title: "Expiring soon"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, team.flatMap(m => (m.certificates || []).filter(c => c.status === 'expiring').map(c => ({
+  }, React.createElement(GroupedList, null, team.flatMap(m => (m.certificates || []).filter(c => c.status === 'expiring').map(c => ({
     m,
     c
   }))).map(({
     m,
     c
-  }, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, i, a) => React.createElement(Row, {
     key: `${m.id}-${c.id}`,
     icon: Ic.alert,
     iconBg: T.amber,
     title: `${m.n} · ${c.name}`,
     sub: `Expires ${c.expires}`,
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: async e => {
         e.stopPropagation();
         toast('Renewal reminder set', 'success');

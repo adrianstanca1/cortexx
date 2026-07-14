@@ -1,18 +1,3 @@
-// DesignCanvas.jsx — Figma-ish design canvas wrapper
-// Warm gray grid bg + Sections + Artboards + PostIt notes.
-// Artboards are reorderable (grip-drag), labels/titles are inline-editable,
-// and any artboard can be opened in a fullscreen focus overlay (←/→/Esc).
-// State persists to a .design-canvas.state.json sidecar via the host
-// bridge. No assets, no deps.
-//
-// Usage:
-//   <DesignCanvas>
-//     <DCSection id="onboarding" title="Onboarding" subtitle="First-run variants">
-//       <DCArtboard id="a" label="A · Dusk" width={260} height={480}>…</DCArtboard>
-//       <DCArtboard id="b" label="B · Minimal" width={260} height={480}>…</DCArtboard>
-//     </DCSection>
-//   </DesignCanvas>
-
 const DC = {
   bg: '#f0eee9',
   grid: 'rgba(0,0,0,0.06)',
@@ -23,9 +8,6 @@ const DC = {
   postitText: '#5a4a2a',
   font: '-apple-system, BlinkMacSystemFont, "Segoe UI", system-ui, sans-serif'
 };
-
-// One-time CSS injection (classes are dc-prefixed so they don't collide with
-// the hosted design's own styles).
 if (typeof document !== 'undefined' && !document.getElementById('dc-styles')) {
   const s = document.createElement('style');
   s.id = 'dc-styles';
@@ -33,17 +15,6 @@ if (typeof document !== 'undefined' && !document.getElementById('dc-styles')) {
   document.head.appendChild(s);
 }
 const DCCtx = React.createContext(null);
-
-// ─────────────────────────────────────────────────────────────
-// DesignCanvas — stateful wrapper around the pan/zoom viewport.
-// Owns runtime state (per-section order, renamed titles/labels, focused
-// artboard). Order/titles/labels persist to a .design-canvas.state.json
-// sidecar next to the HTML. Reads go via plain fetch() so the saved
-// arrangement is visible anywhere the HTML + sidecar are served together
-// (omelette preview, direct link, downloaded zip). Writes go through the
-// host's window.omelette bridge — editing requires the omelette runtime.
-// Focus is ephemeral.
-// ─────────────────────────────────────────────────────────────
 const DC_STATE_FILE = '.design-canvas.state.json';
 function DesignCanvas({
   children,
@@ -55,11 +26,6 @@ function DesignCanvas({
     sections: {},
     focus: null
   });
-  // Hold rendering until the sidecar read settles so the saved order/titles
-  // appear on first paint (no source-order flash). didRead gates writes until
-  // the read settles so the empty initial state can't clobber a slow read;
-  // skipNextWrite suppresses the one echo-write that would otherwise follow
-  // hydration.
   const [ready, setReady] = React.useState(false);
   const didRead = React.useRef(false);
   const skipNextWrite = React.useRef(false);
@@ -97,12 +63,8 @@ function DesignCanvas({
     }, 250);
     return () => clearTimeout(t);
   }, [state.sections]);
-
-  // Build registries synchronously from children so FocusOverlay can read
-  // them in the same render. Only direct DCSection > DCArtboard children are
-  // walked — wrapping them in other elements opts out of focus/reorder.
-  const registry = {}; // slotId -> { sectionId, artboard }
-  const sectionMeta = {}; // sectionId -> { title, subtitle, slotIds[] }
+  const registry = {};
+  const sectionMeta = {};
   const sectionOrder = [];
   React.Children.forEach(children, sec => {
     if (!sec || sec.type !== DCSection) return;
@@ -146,8 +108,6 @@ function DesignCanvas({
       focus: slotId
     }))
   }), [state]);
-
-  // Esc exits focus; any outside pointerdown commits an in-progress rename.
   React.useEffect(() => {
     const onKey = e => {
       if (e.key === 'Escape') api.setFocus(null);
@@ -163,32 +123,18 @@ function DesignCanvas({
       document.removeEventListener('pointerdown', onPd, true);
     };
   }, [api]);
-  return /*#__PURE__*/React.createElement(DCCtx.Provider, {
+  return React.createElement(DCCtx.Provider, {
     value: api
-  }, /*#__PURE__*/React.createElement(DCViewport, {
+  }, React.createElement(DCViewport, {
     minScale: minScale,
     maxScale: maxScale,
     style: style
-  }, ready && children), state.focus && registry[state.focus] && /*#__PURE__*/React.createElement(DCFocusOverlay, {
+  }, ready && children), state.focus && registry[state.focus] && React.createElement(DCFocusOverlay, {
     entry: registry[state.focus],
     sectionMeta: sectionMeta,
     sectionOrder: sectionOrder
   }));
 }
-
-// ─────────────────────────────────────────────────────────────
-// DCViewport — transform-based pan/zoom (internal)
-//
-// Input mapping (Figma-style):
-//   • trackpad pinch  → zoom   (ctrlKey wheel; Safari gesture* events)
-//   • trackpad scroll → pan    (two-finger)
-//   • mouse wheel     → zoom   (notched; distinguished from trackpad scroll)
-//   • middle-drag / primary-drag-on-bg → pan
-//
-// Transform state lives in a ref and is written straight to the DOM
-// (translate3d + will-change) so wheel ticks don't go through React —
-// keeps pans at 60fps on dense canvases.
-// ─────────────────────────────────────────────────────────────
 function DCViewport({
   children,
   minScale = 0.1,
@@ -221,41 +167,25 @@ function DCViewport({
       const t = tf.current;
       const next = Math.min(maxScale, Math.max(minScale, t.scale * factor));
       const k = next / t.scale;
-      // keep the world point under the cursor fixed
       t.x = px - (px - t.x) * k;
       t.y = py - (py - t.y) * k;
       t.scale = next;
       apply();
     };
-
-    // Mouse-wheel vs trackpad-scroll heuristic. A physical wheel sends
-    // line-mode deltas (Firefox) or large integer pixel deltas with no X
-    // component (Chrome/Safari, typically multiples of 100/120). Trackpad
-    // two-finger scroll sends small/fractional pixel deltas, often with
-    // non-zero deltaX. ctrlKey is set by the browser for trackpad pinch.
     const isMouseWheel = e => e.deltaMode !== 0 || e.deltaX === 0 && Number.isInteger(e.deltaY) && Math.abs(e.deltaY) >= 40;
     const onWheel = e => {
       e.preventDefault();
-      if (isGesturing) return; // Safari: gesture* owns the pinch — discard concurrent wheels
+      if (isGesturing) return;
       if (e.ctrlKey) {
-        // trackpad pinch (or explicit ctrl+wheel)
         zoomAt(e.clientX, e.clientY, Math.exp(-e.deltaY * 0.01));
       } else if (isMouseWheel(e)) {
-        // notched mouse wheel — fixed-ratio step per click
         zoomAt(e.clientX, e.clientY, Math.exp(-Math.sign(e.deltaY) * 0.18));
       } else {
-        // trackpad two-finger scroll — pan
         tf.current.x -= e.deltaX;
         tf.current.y -= e.deltaY;
         apply();
       }
     };
-
-    // Safari sends native gesture* events for trackpad pinch with a smooth
-    // e.scale; preferring these over the ctrl+wheel fallback gives a much
-    // better feel there. No-ops on other browsers. Safari also fires
-    // ctrlKey wheel events during the same pinch — isGesturing makes
-    // onWheel drop those entirely so they neither zoom nor pan.
     let gsBase = 1;
     let isGesturing = false;
     const onGestureStart = e => {
@@ -271,9 +201,6 @@ function DCViewport({
       e.preventDefault();
       isGesturing = false;
     };
-
-    // Drag-pan: middle button anywhere, or primary button on canvas
-    // background (anything that isn't an artboard or an inline editor).
     let drag = null;
     const onPointerDown = e => {
       const onBg = !e.target.closest('[data-dc-slot], .dc-editable');
@@ -329,7 +256,7 @@ function DCViewport({
     };
   }, [apply, minScale, maxScale]);
   const gridSvg = `url("data:image/svg+xml,%3Csvg width='120' height='120' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M120 0H0v120' fill='none' stroke='${encodeURIComponent(DC.grid)}' stroke-width='1'/%3E%3C/svg%3E")`;
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     ref: vpRef,
     className: "design-canvas",
     style: {
@@ -344,7 +271,7 @@ function DCViewport({
       boxSizing: 'border-box',
       ...style
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     ref: worldRef,
     style: {
       position: 'absolute',
@@ -357,7 +284,7 @@ function DCViewport({
       minHeight: '100%',
       padding: '60px 0 80px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       position: 'absolute',
       inset: -6000,
@@ -368,10 +295,6 @@ function DCViewport({
     }
   }), children));
 }
-
-// ─────────────────────────────────────────────────────────────
-// DCSection — editable title + h-row of artboards in persisted order
-// ─────────────────────────────────────────────────────────────
 function DCSection({
   id,
   title,
@@ -391,17 +314,17 @@ function DCSection({
     return [...kept, ...srcOrder.filter(k => !kept.includes(k))];
   }, [sec.order, srcOrder.join('|')]);
   const byId = Object.fromEntries(artboards.map(a => [a.props.id ?? a.props.label, a]));
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     "data-dc-section": sid,
     style: {
       marginBottom: 80,
       position: 'relative'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '0 60px 56px'
     }
-  }, /*#__PURE__*/React.createElement(DCEditable, {
+  }, React.createElement(DCEditable, {
     tag: "div",
     value: sec.title ?? title,
     onChange: v => ctx && sid && ctx.patchSection(sid, {
@@ -415,12 +338,12 @@ function DCSection({
       marginBottom: 6,
       display: 'inline-block'
     }
-  }), subtitle && /*#__PURE__*/React.createElement("div", {
+  }), subtitle && React.createElement("div", {
     style: {
       fontSize: 16,
       color: DC.subtitle
     }
-  }, subtitle)), /*#__PURE__*/React.createElement("div", {
+  }, subtitle)), React.createElement("div", {
     style: {
       display: 'flex',
       gap,
@@ -428,7 +351,7 @@ function DCSection({
       alignItems: 'flex-start',
       width: 'max-content'
     }
-  }, order.map(k => /*#__PURE__*/React.createElement(DCArtboardFrame, {
+  }, order.map(k => React.createElement(DCArtboardFrame, {
     key: k,
     sectionId: sid,
     artboard: byId[k],
@@ -446,8 +369,6 @@ function DCSection({
     onFocus: () => ctx && ctx.setFocus(`${sid}/${k}`)
   }))), rest);
 }
-
-// DCArtboard — marker; rendered by DCArtboardFrame via DCSection.
 function DCArtboard() {
   return null;
 }
@@ -470,17 +391,10 @@ function DCArtboardFrame({
   } = artboard.props;
   const id = rawId ?? rawLabel;
   const ref = React.useRef(null);
-
-  // Live drag-reorder: dragged card sticks to cursor; siblings slide into
-  // their would-be slots in real time via transforms. DOM order only
-  // changes on drop.
   const onGripDown = e => {
     e.preventDefault();
     e.stopPropagation();
     const me = ref.current;
-    // translateX is applied in local (pre-scale) space but pointer deltas and
-    // getBoundingClientRect().left are screen-space — divide by the viewport's
-    // current scale so the dragged card tracks the cursor at any zoom level.
     const scale = me.getBoundingClientRect().width / me.offsetWidth || 1;
     const peers = Array.from(document.querySelectorAll(`[data-dc-section="${sectionId}"] [data-dc-slot]`));
     const homes = peers.map(el => ({
@@ -525,8 +439,6 @@ function DCArtboardFrame({
       const finalSlot = liveOrder.indexOf(id);
       me.classList.remove('dc-dragging');
       me.style.transform = `translateX(${(slotXs[finalSlot] - homes[startIdx].x) / scale}px)`;
-      // After the settle transition, kill transitions + clear transforms +
-      // commit the reorder in the same frame so there's no visual snap-back.
       setTimeout(() => {
         for (const h of homes) {
           h.el.style.transition = 'none';
@@ -541,14 +453,14 @@ function DCArtboardFrame({
     document.addEventListener('pointermove', move);
     document.addEventListener('pointerup', up);
   };
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     ref: ref,
     "data-dc-slot": id,
     style: {
       position: 'relative',
       flexShrink: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     className: "dc-labelrow",
     style: {
       position: 'absolute',
@@ -557,44 +469,44 @@ function DCArtboardFrame({
       marginBottom: 4,
       color: DC.label
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     className: "dc-grip",
     onPointerDown: onGripDown,
     title: "Drag to reorder"
-  }, /*#__PURE__*/React.createElement("svg", {
+  }, React.createElement("svg", {
     width: "9",
     height: "13",
     viewBox: "0 0 9 13",
     fill: "currentColor"
-  }, /*#__PURE__*/React.createElement("circle", {
+  }, React.createElement("circle", {
     cx: "2",
     cy: "2",
     r: "1.1"
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: "7",
     cy: "2",
     r: "1.1"
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: "2",
     cy: "6.5",
     r: "1.1"
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: "7",
     cy: "6.5",
     r: "1.1"
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: "2",
     cy: "11",
     r: "1.1"
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: "7",
     cy: "11",
     r: "1.1"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), React.createElement("div", {
     className: "dc-labeltext",
     onClick: onFocus,
     title: "Click to focus"
-  }, /*#__PURE__*/React.createElement(DCEditable, {
+  }, React.createElement(DCEditable, {
     value: label,
     onChange: onRename,
     onClick: e => e.stopPropagation(),
@@ -604,12 +516,12 @@ function DCArtboardFrame({
       color: DC.label,
       lineHeight: 1
     }
-  }))), /*#__PURE__*/React.createElement("button", {
+  }))), React.createElement("button", {
     className: "dc-expand",
     onClick: onFocus,
     onPointerDown: e => e.stopPropagation(),
     title: "Focus"
-  }, /*#__PURE__*/React.createElement("svg", {
+  }, React.createElement("svg", {
     width: "12",
     height: "12",
     viewBox: "0 0 12 12",
@@ -617,9 +529,9 @@ function DCArtboardFrame({
     stroke: "currentColor",
     strokeWidth: "1.6",
     strokeLinecap: "round"
-  }, /*#__PURE__*/React.createElement("path", {
+  }, React.createElement("path", {
     d: "M7 1h4v4M5 11H1V7M11 1L7.5 4.5M1 11l3.5-3.5"
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), React.createElement("div", {
     className: "dc-card",
     style: {
       borderRadius: 2,
@@ -630,7 +542,7 @@ function DCArtboardFrame({
       background: '#fff',
       ...style
     }
-  }, children || /*#__PURE__*/React.createElement("div", {
+  }, children || React.createElement("div", {
     style: {
       height: '100%',
       display: 'flex',
@@ -642,8 +554,6 @@ function DCArtboardFrame({
     }
   }, id)));
 }
-
-// Inline rename — commits on blur or Enter.
 function DCEditable({
   value,
   onChange,
@@ -652,7 +562,7 @@ function DCEditable({
   onClick
 }) {
   const T = tag;
-  return /*#__PURE__*/React.createElement(T, {
+  return React.createElement(T, {
     className: "dc-editable",
     contentEditable: true,
     suppressContentEditableWarning: true,
@@ -668,11 +578,6 @@ function DCEditable({
     style: style
   }, value);
 }
-
-// ─────────────────────────────────────────────────────────────
-// Focus mode — overlay one artboard; ←/→ within section, ↑/↓ across
-// sections, Esc or backdrop click to exit.
-// ─────────────────────────────────────────────────────────────
 function DCFocusOverlay({
   entry,
   sectionMeta,
@@ -742,7 +647,7 @@ function DCFocusOverlay({
   const Arrow = ({
     dir,
     onClick
-  }) => /*#__PURE__*/React.createElement("button", {
+  }) => React.createElement("button", {
     onClick: e => {
       e.stopPropagation();
       onClick();
@@ -767,7 +672,7 @@ function DCFocusOverlay({
     },
     onMouseEnter: e => e.currentTarget.style.background = 'rgba(255,255,255,.18)',
     onMouseLeave: e => e.currentTarget.style.background = 'rgba(255,255,255,.08)'
-  }, /*#__PURE__*/React.createElement("svg", {
+  }, React.createElement("svg", {
     width: "18",
     height: "18",
     viewBox: "0 0 18 18",
@@ -775,13 +680,10 @@ function DCFocusOverlay({
     stroke: "currentColor",
     strokeWidth: "2",
     strokeLinecap: "round"
-  }, /*#__PURE__*/React.createElement("path", {
+  }, React.createElement("path", {
     d: dir === 'left' ? 'M11 3L5 9l6 6' : 'M7 3l6 6-6 6'
   })));
-
-  // Portal to body so position:fixed is the real viewport regardless of any
-  // transform on DesignCanvas's ancestors (including the canvas zoom itself).
-  return ReactDOM.createPortal(/*#__PURE__*/React.createElement("div", {
+  return ReactDOM.createPortal(React.createElement("div", {
     onClick: () => ctx.setFocus(null),
     onWheel: e => e.preventDefault(),
     style: {
@@ -793,7 +695,7 @@ function DCFocusOverlay({
       fontFamily: DC.font,
       color: '#fff'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       position: 'absolute',
@@ -806,11 +708,11 @@ function DCFocusOverlay({
       padding: '16px 20px 0',
       gap: 16
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       position: 'relative'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => setDd(o => !o),
     style: {
       border: 'none',
@@ -822,19 +724,19 @@ function DCFocusOverlay({
       textAlign: 'left',
       fontFamily: 'inherit'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontSize: 18,
       fontWeight: 600,
       letterSpacing: -0.3
     }
-  }, meta.title), /*#__PURE__*/React.createElement("svg", {
+  }, meta.title), React.createElement("svg", {
     width: "11",
     height: "11",
     viewBox: "0 0 11 11",
@@ -845,9 +747,9 @@ function DCFocusOverlay({
     style: {
       opacity: .7
     }
-  }, /*#__PURE__*/React.createElement("path", {
+  }, React.createElement("path", {
     d: "M2 4l3.5 3.5L9 4"
-  }))), meta.subtitle && /*#__PURE__*/React.createElement("span", {
+  }))), meta.subtitle && React.createElement("span", {
     style: {
       display: 'block',
       fontSize: 13,
@@ -855,7 +757,7 @@ function DCFocusOverlay({
       fontWeight: 400,
       marginTop: 2
     }
-  }, meta.subtitle)), ddOpen && /*#__PURE__*/React.createElement("div", {
+  }, meta.subtitle)), ddOpen && React.createElement("div", {
     style: {
       position: 'absolute',
       top: '100%',
@@ -868,7 +770,7 @@ function DCFocusOverlay({
       minWidth: 200,
       zIndex: 10
     }
-  }, sectionOrder.map(sid => /*#__PURE__*/React.createElement("button", {
+  }, sectionOrder.map(sid => React.createElement("button", {
     key: sid,
     onClick: () => {
       setDd(false);
@@ -889,11 +791,11 @@ function DCFocusOverlay({
       fontWeight: sid === sectionId ? 600 : 400,
       fontFamily: 'inherit'
     }
-  }, sectionMeta[sid].title)))), /*#__PURE__*/React.createElement("div", {
+  }, sectionMeta[sid].title)))), React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: () => ctx.setFocus(null),
     onMouseEnter: e => e.currentTarget.style.background = 'rgba(255,255,255,.12)',
     onMouseLeave: e => e.currentTarget.style.background = 'transparent',
@@ -909,7 +811,7 @@ function DCFocusOverlay({
       lineHeight: 1,
       transition: 'background .12s'
     }
-  }, "\xD7")), /*#__PURE__*/React.createElement("div", {
+  }, "\xD7")), React.createElement("div", {
     style: {
       position: 'absolute',
       top: 64,
@@ -922,14 +824,14 @@ function DCFocusOverlay({
       justifyContent: 'center',
       gap: 16
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       width: width * scale,
       height: height * scale,
       position: 'relative'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width,
       height,
@@ -940,7 +842,7 @@ function DCFocusOverlay({
       overflow: 'hidden',
       boxShadow: '0 20px 80px rgba(0,0,0,.4)'
     }
-  }, children || /*#__PURE__*/React.createElement("div", {
+  }, children || React.createElement("div", {
     style: {
       height: '100%',
       display: 'flex',
@@ -948,7 +850,7 @@ function DCFocusOverlay({
       justifyContent: 'center',
       color: '#bbb'
     }
-  }, aid))), /*#__PURE__*/React.createElement("div", {
+  }, aid))), React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       fontSize: 14,
@@ -956,19 +858,19 @@ function DCFocusOverlay({
       opacity: .85,
       textAlign: 'center'
     }
-  }, (sec.labels || {})[aid] ?? artboard.props.label, /*#__PURE__*/React.createElement("span", {
+  }, (sec.labels || {})[aid] ?? artboard.props.label, React.createElement("span", {
     style: {
       opacity: .5,
       marginLeft: 10,
       fontVariantNumeric: 'tabular-nums'
     }
-  }, idx + 1, " / ", peers.length))), /*#__PURE__*/React.createElement(Arrow, {
+  }, idx + 1, " / ", peers.length))), React.createElement(Arrow, {
     dir: "left",
     onClick: () => go(-1)
-  }), /*#__PURE__*/React.createElement(Arrow, {
+  }), React.createElement(Arrow, {
     dir: "right",
     onClick: () => go(1)
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       position: 'absolute',
@@ -978,7 +880,7 @@ function DCFocusOverlay({
       display: 'flex',
       gap: 8
     }
-  }, peers.map((p, i) => /*#__PURE__*/React.createElement("button", {
+  }, peers.map((p, i) => React.createElement("button", {
     key: p,
     onClick: () => ctx.setFocus(`${sectionId}/${p}`),
     style: {
@@ -992,10 +894,6 @@ function DCFocusOverlay({
     }
   })))), document.body);
 }
-
-// ─────────────────────────────────────────────────────────────
-// Post-it — absolute-positioned sticky note
-// ─────────────────────────────────────────────────────────────
 function DCPostIt({
   children,
   top,
@@ -1005,7 +903,7 @@ function DCPostIt({
   rotate = -2,
   width = 180
 }) {
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       position: 'absolute',
       top,

@@ -1,8 +1,3 @@
-// Cortexx — Phase 12: Unified "My day" + Workspace switcher
-
-// ═══════════════════════════════════════════════════════════════════
-// MY DAY — everything personal across schedule, clock, tasks, messages
-// ═══════════════════════════════════════════════════════════════════
 function MyDayScreen({
   accent
 }) {
@@ -15,25 +10,25 @@ function MyDayScreen({
   const onSite = todayClock.length > 0 && ['in', 'break-in'].includes(todayClock[0].action);
   const unreadMsg = messages.reduce((s, m) => s + (m.unread || 0), 0);
   const openRFIs = rfis.filter(r => r.status === 'open').length;
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "My day",
     subtitle: `Thu 30 Apr · ${myTasks.length + openRFIs} action${myTasks.length + openRFIs !== 1 ? 's' : ''} for you`
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => window.cortexxNav('clock'),
     style: {
       background: onSite ? `linear-gradient(135deg, ${T.green}33, ${T.green}11)` : T.bg2,
@@ -43,20 +38,20 @@ function MyDayScreen({
       cursor: 'pointer',
       textAlign: 'left'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       width: 8,
       height: 8,
       borderRadius: 4,
       background: onSite ? T.green : T.t3
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -65,7 +60,7 @@ function MyDayScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, onSite ? 'On site' : 'Off site')), /*#__PURE__*/React.createElement("div", {
+  }, onSite ? 'On site' : 'Off site')), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -73,7 +68,7 @@ function MyDayScreen({
       fontWeight: 600,
       marginTop: 6
     }
-  }, onSite ? todayClock[0].location : 'Tap to check in')), /*#__PURE__*/React.createElement("button", {
+  }, onSite ? todayClock[0].location : 'Tap to check in')), React.createElement("button", {
     onClick: () => window.cortexxNav('inbox'),
     style: {
       background: T.bg2,
@@ -83,19 +78,19 @@ function MyDayScreen({
       cursor: 'pointer',
       textAlign: 'left'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: unreadMsg + openRFIs > 0 ? T.amber : T.t3
     }
   }, React.cloneElement(Ic.bell, {
     size: 12
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -104,7 +99,7 @@ function MyDayScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Inbox")), /*#__PURE__*/React.createElement("div", {
+  }, "Inbox")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -112,9 +107,9 @@ function MyDayScreen({
       fontWeight: 600,
       marginTop: 6
     }
-  }, unreadMsg + openRFIs, " unread"))), /*#__PURE__*/React.createElement(Section, {
+  }, unreadMsg + openRFIs, " unread"))), React.createElement(Section, {
     title: `Your queue · ${myTasks.length}`
-  }, /*#__PURE__*/React.createElement(GroupedList, null, myTasks.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, myTasks.length === 0 && React.createElement("div", {
     style: {
       padding: 20,
       textAlign: 'center',
@@ -122,13 +117,13 @@ function MyDayScreen({
       fontSize: 13,
       color: T.t3
     }
-  }, "Nothing on your plate"), myTasks.map((t, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, "Nothing on your plate"), myTasks.map((t, i, a) => React.createElement(Row, {
     key: t.id,
     icon: Ic.tasks,
     iconBg: PRIO_C[t.prio],
     title: t.t,
     sub: formatTaskWhen(t.due),
-    right: /*#__PURE__*/React.createElement(Pill, {
+    right: React.createElement(Pill, {
       c: PRIO_C[t.prio],
       size: "xs"
     }, t.prio),
@@ -136,9 +131,9 @@ function MyDayScreen({
     onClick: () => Backend.db.tasks.update(t.id, {
       done: !t.done
     })
-  })))), /*#__PURE__*/React.createElement(Section, {
+  })))), React.createElement(Section, {
     title: "Quick capture"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
@@ -159,7 +154,7 @@ function MyDayScreen({
     l: 'Receipt',
     i: Ic.receipt,
     c: T.amber
-  }].map(o => /*#__PURE__*/React.createElement("button", {
+  }].map(o => React.createElement("button", {
     key: o.k,
     onClick: () => window.cortexxNav(o.k === 'task' ? 'addtask' : o.k === 'voice' ? 'voice' : 'scan'),
     style: {
@@ -173,7 +168,7 @@ function MyDayScreen({
       alignItems: 'center',
       gap: 6
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -186,7 +181,7 @@ function MyDayScreen({
     }
   }, React.cloneElement(o.i, {
     size: 17
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -195,10 +190,6 @@ function MyDayScreen({
     }
   }, o.l)))))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// WORKSPACE SWITCHER
-// ═══════════════════════════════════════════════════════════════════
 function WorkspaceSheet({
   onClose,
   accent
@@ -220,10 +211,10 @@ function WorkspaceSheet({
     current: false,
     c: T.green
   }];
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     height: "auto"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '8px 20px 14px',
       textAlign: 'center',
@@ -232,17 +223,17 @@ function WorkspaceSheet({
       fontWeight: 600,
       color: T.t1
     }
-  }, "Switch workspace"), /*#__PURE__*/React.createElement("div", {
+  }, "Switch workspace"), React.createElement("div", {
     style: {
       padding: '0 16px 28px'
     }
-  }, /*#__PURE__*/React.createElement(GroupedList, null, ws.map((w, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, ws.map((w, i, a) => React.createElement(Row, {
     key: w.name,
     icon: Ic.briefcase,
     iconBg: w.c,
     title: w.name,
     sub: w.sub,
-    right: w.current ? /*#__PURE__*/React.createElement(Pill, {
+    right: w.current ? React.createElement(Pill, {
       c: T.green,
       size: "xs"
     }, "CURRENT") : null,
@@ -251,7 +242,7 @@ function WorkspaceSheet({
       toast(w.current ? 'Already in this workspace' : `Switched to ${w.name}`, w.current ? 'info' : 'success');
       if (!w.current) onClose();
     }
-  }))), /*#__PURE__*/React.createElement("button", {
+  }))), React.createElement("button", {
     onClick: () => toast('Workspace creation needs server side — add via Settings → Workspace', 'info'),
     style: {
       width: '100%',

@@ -1,8 +1,3 @@
-// Cortexx — project-level screens (Documents, Site Diary, Snags, Change Orders) + Inbox
-
-// ═══════════════════════════════════════════════════════════════════
-// DOCUMENTS
-// ═══════════════════════════════════════════════════════════════════
 const FILE_ICON_C = {
   pdf: T.red,
   dwg: T.cyan,
@@ -18,18 +13,18 @@ function DocumentsScreen({
   const [folder, setFolder] = React.useState(null);
   const folders = [...new Set(docs.map(d => d.folder))];
   const list = folder ? docs.filter(d => d.folder === folder) : docs;
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: folder || "Documents",
     subtitle: folder ? `${list.length} files` : `${docs.length} files in ${folders.length} folders`,
-    right: folder ? /*#__PURE__*/React.createElement("button", {
+    right: folder ? React.createElement("button", {
       onClick: () => setFolder(null),
       style: {
         background: 'none',
@@ -39,16 +34,16 @@ function DocumentsScreen({
         fontSize: 13,
         cursor: 'pointer'
       }
-    }, "All") : /*#__PURE__*/React.createElement(HeaderBtn, {
+    }, "All") : React.createElement(HeaderBtn, {
       icon: Ic.upload,
       accent: accent,
       onClick: () => window.cortexxNav('upload')
     })
-  }), !folder && /*#__PURE__*/React.createElement("div", {
+  }), !folder && React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -56,7 +51,7 @@ function DocumentsScreen({
     }
   }, folders.map(f => {
     const count = docs.filter(d => d.folder === f).length;
-    return /*#__PURE__*/React.createElement("button", {
+    return React.createElement("button", {
       key: f,
       onClick: () => setFolder(f),
       style: {
@@ -70,7 +65,7 @@ function DocumentsScreen({
         alignItems: 'center',
         gap: 10
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 32,
         height: 32,
@@ -84,26 +79,26 @@ function DocumentsScreen({
       }
     }, React.cloneElement(Ic.folder, {
       size: 17
-    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", null, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1,
         fontWeight: 600
       }
-    }, f), /*#__PURE__*/React.createElement("div", {
+    }, f), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2
       }
     }, count, " ", count === 1 ? 'file' : 'files')));
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: folder ? '' : 'Recent files'
-  }, /*#__PURE__*/React.createElement(GroupedList, null, list.slice(0, folder ? 50 : 5).map((d, i, a) => {
+  }, React.createElement(GroupedList, null, list.slice(0, folder ? 50 : 5).map((d, i, a) => {
     const c = FILE_ICON_C[d.type] || T.t3;
     const p = projects.find(p => p.id === d.projectId);
-    return /*#__PURE__*/React.createElement(Row, {
+    return React.createElement(Row, {
       key: d.id,
       icon: Ic.doc,
       iconBg: c,
@@ -114,10 +109,6 @@ function DocumentsScreen({
     });
   })))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// SITE DIARY
-// ═══════════════════════════════════════════════════════════════════
 function DiaryScreen({
   accent
 }) {
@@ -125,18 +116,18 @@ function DiaryScreen({
   const projects = useDB('projects');
   const [activeProject, setActiveProject] = React.useState(null);
   const filtered = activeProject ? entries.filter(e => e.projectId === activeProject) : entries;
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Site diary",
     subtitle: `${entries.length} entries · last: ${_formatRelDate(entries[0]?.date)}`,
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: () => window.cortexxNav('adddiary'),
       style: {
         width: 36,
@@ -153,14 +144,14 @@ function DiaryScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px',
       display: 'flex',
       gap: 6,
       overflowX: 'auto'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => setActiveProject(null),
     style: {
       background: !activeProject ? T.bg3 : 'transparent',
@@ -174,7 +165,7 @@ function DiaryScreen({
       cursor: 'pointer',
       whiteSpace: 'nowrap'
     }
-  }, "All sites"), projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => /*#__PURE__*/React.createElement("button", {
+  }, "All sites"), projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => React.createElement("button", {
     key: p.id,
     onClick: () => setActiveProject(p.id),
     style: {
@@ -189,7 +180,7 @@ function DiaryScreen({
       cursor: 'pointer',
       whiteSpace: 'nowrap'
     }
-  }, p.name.split(' ').slice(0, 2).join(' ')))), /*#__PURE__*/React.createElement("div", {
+  }, p.name.split(' ').slice(0, 2).join(' ')))), React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -199,7 +190,7 @@ function DiaryScreen({
   }, filtered.map(e => {
     const proj = projects.find(p => p.id === e.projectId);
     const weatherIcon = e.weather.cond === 'Sunny' ? Ic.sun : e.weather.cond === 'Rain' ? Ic.rain : Ic.cloud;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: e.id,
       style: {
         background: T.bg2,
@@ -207,21 +198,21 @@ function DiaryScreen({
         padding: 14,
         border: `0.5px solid ${T.hair}`
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         marginBottom: 8
       }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", null, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         fontWeight: 600,
         color: T.t1
       }
-    }, proj?.name), /*#__PURE__*/React.createElement("div", {
+    }, proj?.name), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
@@ -230,7 +221,7 @@ function DiaryScreen({
       }
     }, _formatRelDate(e.date), " \xB7 ", new Date(e.date).toLocaleDateString('en-GB', {
       weekday: 'long'
-    }))), /*#__PURE__*/React.createElement("div", {
+    }))), React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -239,20 +230,20 @@ function DiaryScreen({
         fontSize: 12,
         color: T.t2
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, React.createElement("span", {
       style: {
         color: e.weather.cond === 'Sunny' ? T.amber : e.weather.cond === 'Rain' ? T.cyan : T.t2
       }
     }, React.cloneElement(weatherIcon, {
       size: 14
-    })), e.weather.temp, "\xB0")), /*#__PURE__*/React.createElement("div", {
+    })), e.weather.temp, "\xB0")), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1,
         lineHeight: 1.5
       }
-    }, e.summary), e.notes && /*#__PURE__*/React.createElement("div", {
+    }, e.summary), e.notes && React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 12,
@@ -260,7 +251,7 @@ function DiaryScreen({
         lineHeight: 1.5,
         marginTop: 6
       }
-    }, e.notes), /*#__PURE__*/React.createElement("div", {
+    }, e.notes), React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -270,7 +261,7 @@ function DiaryScreen({
         fontSize: 11,
         color: T.t3
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, React.createElement("span", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -278,7 +269,7 @@ function DiaryScreen({
       }
     }, React.cloneElement(Ic.team, {
       size: 13
-    }), " ", e.present), /*#__PURE__*/React.createElement("span", {
+    }), " ", e.present), React.createElement("span", {
       style: {
         display: 'flex',
         alignItems: 'center',
@@ -286,20 +277,16 @@ function DiaryScreen({
       }
     }, React.cloneElement(Ic.camera, {
       size: 13
-    }), " ", e.photos), e.issues.length > 0 && /*#__PURE__*/React.createElement(Pill, {
+    }), " ", e.photos), e.issues.length > 0 && React.createElement(Pill, {
       c: T.amber,
       size: "xs"
-    }, e.issues.length, " issue", e.issues.length !== 1 && 's'), /*#__PURE__*/React.createElement("div", {
+    }, e.issues.length, " issue", e.issues.length !== 1 && 's'), React.createElement("div", {
       style: {
         flex: 1
       }
     })));
   }))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// SNAGS / PUNCH LIST
-// ═══════════════════════════════════════════════════════════════════
 function SnagsScreen({
   accent
 }) {
@@ -312,18 +299,18 @@ function SnagsScreen({
   const toggle = (id, current) => Backend.db.snags.update(id, {
     status: current === 'open' ? 'fixed' : 'open'
   });
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Snags",
     subtitle: `${open.length} open · ${fixed.length} fixed`,
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: () => window.cortexxNav('addsnag'),
       style: {
         width: 36,
@@ -340,11 +327,11 @@ function SnagsScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement(SegControl, {
+  }, React.createElement(SegControl, {
     value: seg,
     onChange: setSeg,
     options: [{
@@ -356,7 +343,7 @@ function SnagsScreen({
       l: 'Fixed',
       n: fixed.length
     }]
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -365,7 +352,7 @@ function SnagsScreen({
     }
   }, list.map(s => {
     const proj = projects.find(p => p.id === s.projectId);
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: s.id,
       onClick: () => toggle(s.id, s.status),
       style: {
@@ -379,7 +366,7 @@ function SnagsScreen({
         gap: 10,
         opacity: s.status === 'fixed' ? 0.5 : 1
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 22,
         height: 22,
@@ -391,19 +378,19 @@ function SnagsScreen({
         justifyContent: 'center',
         flexShrink: 0
       }
-    }, s.status === 'fixed' && /*#__PURE__*/React.createElement("span", {
+    }, s.status === 'fixed' && React.createElement("span", {
       style: {
         color: '#fff'
       }
     }, React.cloneElement(Ic.check, {
       size: 13,
       sw: 3
-    }))), /*#__PURE__*/React.createElement("div", {
+    }))), React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
@@ -412,14 +399,14 @@ function SnagsScreen({
         lineHeight: 1.3,
         textDecoration: s.status === 'fixed' ? 'line-through' : 'none'
       }
-    }, s.title), /*#__PURE__*/React.createElement("div", {
+    }, s.title), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2,
         marginTop: 2
       }
-    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 ", s.area, " \xB7 ", s.assignee, s.photos > 0 && /*#__PURE__*/React.createElement("button", {
+    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 ", s.area, " \xB7 ", s.assignee, s.photos > 0 && React.createElement("button", {
       onClick: e => {
         e.stopPropagation();
         window.cortexxNav('annotate', s);
@@ -433,16 +420,12 @@ function SnagsScreen({
         cursor: 'pointer',
         padding: 0
       }
-    }, " \xB7 \uD83D\uDCF7 ", s.photos))), s.status === 'open' && /*#__PURE__*/React.createElement(Pill, {
+    }, " \xB7 \uD83D\uDCF7 ", s.photos))), s.status === 'open' && React.createElement(Pill, {
       c: PRIO_C[s.priority],
       size: "xs"
     }, s.priority));
   }))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// CHANGE ORDERS / VARIATIONS
-// ═══════════════════════════════════════════════════════════════════
 const CO_STATUS_C = {
   pending: T.amber,
   approved: T.green,
@@ -469,23 +452,23 @@ function ChangeOrdersScreen({
   const reject = id => Backend.db.changeOrders.update(id, {
     status: 'rejected'
   });
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Variations",
     subtitle: `${cos.length} total · £${(totalApproved / 1000).toFixed(1)}k approved`,
-    right: /*#__PURE__*/React.createElement(HeaderBtn, {
+    right: React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: () => window.cortexxNav('addchange')
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px',
       display: 'flex',
@@ -494,7 +477,7 @@ function ChangeOrdersScreen({
     }
   }, cos.map(c => {
     const proj = projects.find(p => p.id === c.projectId);
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: c.id,
       style: {
         background: T.bg2,
@@ -502,16 +485,16 @@ function ChangeOrdersScreen({
         padding: 14,
         border: `0.5px solid ${T.hair}`
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'flex-start',
         marginBottom: 8
       }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Pill, {
+    }, React.createElement("div", null, React.createElement(Pill, {
       c: CO_STATUS_C[c.status]
-    }, c.status), /*#__PURE__*/React.createElement("div", {
+    }, c.status), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
@@ -519,34 +502,34 @@ function ChangeOrdersScreen({
         color: T.t1,
         marginTop: 6
       }
-    }, c.title), /*#__PURE__*/React.createElement("div", {
+    }, c.title), React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 11,
         color: T.t2,
         marginTop: 2
       }
-    }, c.id, " \xB7 ", proj?.name?.split(' ').slice(0, 2).join(' '))), /*#__PURE__*/React.createElement("div", {
+    }, c.id, " \xB7 ", proj?.name?.split(' ').slice(0, 2).join(' '))), React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 18,
         fontWeight: 700,
         color: T.t1
       }
-    }, "+\xA3", c.amount.toLocaleString())), /*#__PURE__*/React.createElement("div", {
+    }, "+\xA3", c.amount.toLocaleString())), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 12,
         color: T.t2,
         lineHeight: 1.4
       }
-    }, c.reason), c.status === 'pending' && /*#__PURE__*/React.createElement("div", {
+    }, c.reason), c.status === 'pending' && React.createElement("div", {
       style: {
         display: 'flex',
         gap: 6,
         marginTop: 12
       }
-    }, /*#__PURE__*/React.createElement("button", {
+    }, React.createElement("button", {
       onClick: () => approve(c.id),
       style: {
         flex: 1,
@@ -560,7 +543,7 @@ function ChangeOrdersScreen({
         fontWeight: 700,
         cursor: 'pointer'
       }
-    }, "Approve"), /*#__PURE__*/React.createElement("button", {
+    }, "Approve"), React.createElement("button", {
       onClick: () => reject(c.id),
       style: {
         background: 'transparent',
@@ -573,7 +556,7 @@ function ChangeOrdersScreen({
         fontWeight: 600,
         cursor: 'pointer'
       }
-    }, "Reject")), c.approvedBy && /*#__PURE__*/React.createElement("div", {
+    }, "Reject")), c.approvedBy && React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 10,
@@ -583,10 +566,6 @@ function ChangeOrdersScreen({
     }, c.status === 'approved' ? '✓ Approved' : 'Rejected', " by ", c.approvedBy));
   }))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// INBOX / NOTIFICATIONS
-// ═══════════════════════════════════════════════════════════════════
 const NOTIF_ICON = {
   alert: Ic.alert,
   money: Ic.money,
@@ -635,18 +614,18 @@ function InboxScreen({
   const markAllRead = () => unread.forEach(n => Backend.db.notifications.update(n.id, {
     read: true
   }));
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Inbox",
     subtitle: `${unread.length} unread · ${notifs.length} total`,
-    right: unread.length > 0 ? /*#__PURE__*/React.createElement("button", {
+    right: unread.length > 0 ? React.createElement("button", {
       onClick: markAllRead,
       style: {
         background: 'transparent',
@@ -659,15 +638,15 @@ function InboxScreen({
         borderRadius: 16,
         cursor: 'pointer'
       }
-    }, "Mark read") : /*#__PURE__*/React.createElement(HeaderBtn, {
+    }, "Mark read") : React.createElement(HeaderBtn, {
       icon: Ic.cog,
       onClick: () => window.cortexxNav('profile')
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement(SegControl, {
+  }, React.createElement(SegControl, {
     value: seg,
     onChange: setSeg,
     options: [{
@@ -683,18 +662,18 @@ function InboxScreen({
       l: 'Read',
       n: notifs.length - unread.length
     }]
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: 6
     }
-  }, portalMsgs.length > 0 && seg !== 'read' && /*#__PURE__*/React.createElement("div", {
+  }, portalMsgs.length > 0 && seg !== 'read' && React.createElement("div", {
     style: {
       marginBottom: 4
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -709,13 +688,13 @@ function InboxScreen({
     }
   }, React.cloneElement(Ic.team, {
     size: 12
-  }), " Client portal messages", unreadPortal.length > 0 ? ` · ${unreadPortal.length} new` : ''), /*#__PURE__*/React.createElement("div", {
+  }), " Client portal messages", unreadPortal.length > 0 ? ` · ${unreadPortal.length} new` : ''), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 6
     }
-  }, portalMsgs.filter(m => seg === 'unread' ? !m.read : true).map(m => /*#__PURE__*/React.createElement("div", {
+  }, portalMsgs.filter(m => seg === 'unread' ? !m.read : true).map(m => React.createElement("div", {
     key: m.id,
     onClick: () => {
       markPortalRead(m.id);
@@ -728,39 +707,39 @@ function InboxScreen({
       padding: '12px 14px',
       cursor: 'pointer'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 5
     }
-  }, /*#__PURE__*/React.createElement(Avatar, {
+  }, React.createElement(Avatar, {
     name: m.client,
     size: 26,
     c: T.purple
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600,
       color: T.t1
     }
-  }, m.client), /*#__PURE__*/React.createElement("div", {
+  }, m.client), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t3
     }
-  }, m.project, " \xB7 ", timeAgo(m.when))), m.replied ? /*#__PURE__*/React.createElement(Pill, {
+  }, m.project, " \xB7 ", timeAgo(m.when))), m.replied ? React.createElement(Pill, {
     c: T.green,
     size: "xs"
-  }, "REPLIED") : !m.read && /*#__PURE__*/React.createElement("span", {
+  }, "REPLIED") : !m.read && React.createElement("span", {
     style: {
       width: 8,
       height: 8,
@@ -768,7 +747,7 @@ function InboxScreen({
       background: T.purple,
       flexShrink: 0
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -776,7 +755,7 @@ function InboxScreen({
       lineHeight: 1.45,
       paddingLeft: 34
     }
-  }, m.text), /*#__PURE__*/React.createElement("div", {
+  }, m.text), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -787,7 +766,7 @@ function InboxScreen({
     }
   }, "Reply \u2192"))))), list.map(n => {
     const Icon = NOTIF_ICON[n.kind] || Ic.bell;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: n.id,
       onClick: () => {
         markRead(n.id);
@@ -804,7 +783,7 @@ function InboxScreen({
         gap: 10,
         position: 'relative'
       }
-    }, !n.read && /*#__PURE__*/React.createElement("div", {
+    }, !n.read && React.createElement("div", {
       style: {
         position: 'absolute',
         top: 14,
@@ -814,7 +793,7 @@ function InboxScreen({
         borderRadius: 4,
         background: n.color
       }
-    }), /*#__PURE__*/React.createElement("div", {
+    }), React.createElement("div", {
       style: {
         width: 36,
         height: 36,
@@ -828,13 +807,13 @@ function InboxScreen({
       }
     }, React.cloneElement(Icon, {
       size: 17
-    })), /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0,
         paddingRight: !n.read ? 14 : 0
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
@@ -842,14 +821,14 @@ function InboxScreen({
         color: T.t1,
         lineHeight: 1.3
       }
-    }, n.t), /*#__PURE__*/React.createElement("div", {
+    }, n.t), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2,
         marginTop: 2
       }
-    }, n.sub), /*#__PURE__*/React.createElement("div", {
+    }, n.sub), React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
@@ -862,10 +841,6 @@ function InboxScreen({
     }), " \xB7 ", _formatRelDate(n.when.slice(0, 10)))));
   }))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// ONBOARDING — first-run / AI-seeded
-// ═══════════════════════════════════════════════════════════════════
 function OnboardingSheet({
   onClose,
   accent
@@ -877,7 +852,6 @@ function OnboardingSheet({
   const finish = async () => {
     if (brief.trim()) {
       setSeeding(true);
-      // pretend to seed - the demo data is already there
       await new Promise(r => setTimeout(r, 1200));
     }
     if (name.trim()) {
@@ -889,17 +863,17 @@ function OnboardingSheet({
     onClose();
   };
   if (step === 'welcome') {
-    return /*#__PURE__*/React.createElement(Sheet, {
+    return React.createElement(Sheet, {
       onClose: onClose,
       fullscreen: true
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         flex: 1,
         padding: '40px 28px',
         display: 'flex',
         flexDirection: 'column'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 80,
         height: 80,
@@ -913,7 +887,7 @@ function OnboardingSheet({
       }
     }, React.cloneElement(Ic.spark, {
       size: 40
-    })), /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 32,
@@ -923,7 +897,7 @@ function OnboardingSheet({
         lineHeight: 1.1,
         marginTop: 24
       }
-    }, "Welcome to CortexBuild Pro."), /*#__PURE__*/React.createElement("div", {
+    }, "Welcome to CortexBuild Pro."), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 15,
@@ -931,7 +905,7 @@ function OnboardingSheet({
         lineHeight: 1.5,
         marginTop: 12
       }
-    }, "The construction manager that thinks alongside you. Quotes, jobs, money, safety \u2014 all in one place, with a UK-aware AI ops lead built in."), /*#__PURE__*/React.createElement("div", {
+    }, "The construction manager that thinks alongside you. Quotes, jobs, money, safety \u2014 all in one place, with a UK-aware AI ops lead built in."), React.createElement("div", {
       style: {
         marginTop: 28,
         display: 'flex',
@@ -954,14 +928,14 @@ function OnboardingSheet({
       i: Ic.shield,
       l: 'CIS & H&S aware',
       s: 'Built for UK SMB contractors from day one'
-    }].map((f, i) => /*#__PURE__*/React.createElement("div", {
+    }].map((f, i) => React.createElement("div", {
       key: i,
       style: {
         display: 'flex',
         gap: 12,
         alignItems: 'flex-start'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 36,
         height: 36,
@@ -975,25 +949,25 @@ function OnboardingSheet({
       }
     }, React.cloneElement(f.i, {
       size: 18
-    })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", null, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
         fontWeight: 600,
         color: T.t1
       }
-    }, f.l), /*#__PURE__*/React.createElement("div", {
+    }, f.l), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 12,
         color: T.t2,
         marginTop: 1
       }
-    }, f.s))))), /*#__PURE__*/React.createElement("div", {
+    }, f.s))))), React.createElement("div", {
       style: {
         flex: 1
       }
-    }), /*#__PURE__*/React.createElement("button", {
+    }), React.createElement("button", {
       onClick: () => setStep('name'),
       style: {
         background: accent,
@@ -1007,7 +981,7 @@ function OnboardingSheet({
         cursor: 'pointer',
         boxShadow: `0 6px 18px ${accent}55`
       }
-    }, "Get started"), /*#__PURE__*/React.createElement("button", {
+    }, "Get started"), React.createElement("button", {
       onClick: onClose,
       style: {
         background: 'none',
@@ -1022,17 +996,17 @@ function OnboardingSheet({
     }, "Skip \xB7 use demo data")));
   }
   if (step === 'name') {
-    return /*#__PURE__*/React.createElement(Sheet, {
+    return React.createElement(Sheet, {
       onClose: onClose,
       fullscreen: true
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         flex: 1,
         padding: '60px 28px',
         display: 'flex',
         flexDirection: 'column'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
@@ -1041,7 +1015,7 @@ function OnboardingSheet({
         textTransform: 'uppercase',
         letterSpacing: 1.2
       }
-    }, "Step 1 of 2"), /*#__PURE__*/React.createElement("div", {
+    }, "Step 1 of 2"), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 28,
@@ -1051,7 +1025,7 @@ function OnboardingSheet({
         marginTop: 8,
         lineHeight: 1.15
       }
-    }, "What should we call you?"), /*#__PURE__*/React.createElement("div", {
+    }, "What should we call you?"), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
@@ -1059,7 +1033,7 @@ function OnboardingSheet({
         marginTop: 8,
         lineHeight: 1.5
       }
-    }, "Cortex uses your name to personalise briefings."), /*#__PURE__*/React.createElement("input", {
+    }, "Cortex uses your name to personalise briefings."), React.createElement("input", {
       value: name,
       onChange: e => setName(e.target.value),
       placeholder: "Your name",
@@ -1075,11 +1049,11 @@ function OnboardingSheet({
         fontSize: 18,
         outline: 'none'
       }
-    }), /*#__PURE__*/React.createElement("div", {
+    }), React.createElement("div", {
       style: {
         flex: 1
       }
-    }), /*#__PURE__*/React.createElement("button", {
+    }), React.createElement("button", {
       onClick: () => setStep('brief'),
       disabled: !name.trim(),
       style: {
@@ -1095,17 +1069,17 @@ function OnboardingSheet({
       }
     }, "Continue")));
   }
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       padding: '60px 28px',
       display: 'flex',
       flexDirection: 'column'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -1114,7 +1088,7 @@ function OnboardingSheet({
       textTransform: 'uppercase',
       letterSpacing: 1.2
     }
-  }, "Step 2 of 2"), /*#__PURE__*/React.createElement("div", {
+  }, "Step 2 of 2"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 28,
@@ -1124,7 +1098,7 @@ function OnboardingSheet({
       marginTop: 8,
       lineHeight: 1.15
     }
-  }, "Tell Cortex about your business."), /*#__PURE__*/React.createElement("div", {
+  }, "Tell Cortex about your business."), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -1132,7 +1106,7 @@ function OnboardingSheet({
       marginTop: 8,
       lineHeight: 1.5
     }
-  }, "Even a sentence helps \u2014 we'll seed sensible defaults you can edit."), /*#__PURE__*/React.createElement("textarea", {
+  }, "Even a sentence helps \u2014 we'll seed sensible defaults you can edit."), React.createElement("textarea", {
     value: brief,
     onChange: e => setBrief(e.target.value),
     placeholder: "e.g. SMB refurb contractor in North London, mostly residential, 4 staff + occasional subs.",
@@ -1150,11 +1124,11 @@ function OnboardingSheet({
       resize: 'none',
       lineHeight: 1.4
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: finish,
     disabled: seeding,
     style: {
@@ -1169,7 +1143,7 @@ function OnboardingSheet({
       cursor: 'pointer',
       opacity: seeding ? 0.5 : 1
     }
-  }, seeding ? 'Setting up your workspace…' : 'Finish setup'), /*#__PURE__*/React.createElement("button", {
+  }, seeding ? 'Setting up your workspace…' : 'Finish setup'), React.createElement("button", {
     onClick: finish,
     style: {
       background: 'none',
