@@ -1,3 +1,7 @@
+// CortexBuild Pro — Phase 116: Quality & Handover
+// QualityHandoverScreen — O&M manuals, as-built drawings, snagging-to-completion,
+// and a digital handover pack readiness tracker. Wired to handoverItems + snags.
+
 (function () {
   if (!window.Backend) return;
   const card = extra => ({
@@ -93,6 +97,8 @@
         color: tab === k ? '#fff' : T.t2
       }
     }, l)));
+
+    // ── Handover pack ──────────────────────────────────────────────
     const Pack = () => React.createElement('div', null, React.createElement('div', {
       style: card({
         marginBottom: 16,
@@ -241,6 +247,8 @@
         cursor: 'pointer'
       }
     }, '+ Add handover document'));
+
+    // ── Snagging to completion ─────────────────────────────────────
     const Snagging = () => {
       const closed = projSnags.filter(s => s.status === 'closed' || s.status === 'done');
       const completion = projSnags.length ? Math.round(closed.length / projSnags.length * 100) : 100;

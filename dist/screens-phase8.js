@@ -1,3 +1,6 @@
+// Cortexx — Phase 8: complete remaining demo-only flows
+// AddCustomer / AddLead / AddPermit / AddGoal / AddTemplate
+
 function AddCustomerSheet({
   onClose,
   accent
@@ -24,12 +27,12 @@ function AddCustomerSheet({
     toast(`${f.name} added`, 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "Add customer",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Name",
     v: f.name,
     onChange: v => setF({
@@ -37,7 +40,7 @@ function AddCustomerSheet({
       name: v
     }),
     placeholder: "J. Smith"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Email",
     v: f.email,
     onChange: v => setF({
@@ -45,7 +48,7 @@ function AddCustomerSheet({
       email: v
     }),
     placeholder: "email@example.com"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Phone",
     v: f.phone,
     onChange: v => setF({
@@ -53,7 +56,7 @@ function AddCustomerSheet({
       phone: v
     }),
     placeholder: "07700 900 000"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Address",
     v: f.address,
     onChange: v => setF({
@@ -61,7 +64,7 @@ function AddCustomerSheet({
       address: v
     }),
     placeholder: "District, postcode"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Tag",
     v: f.tag,
     onChange: v => setF({
@@ -81,7 +84,7 @@ function AddCustomerSheet({
       v: 'Commercial',
       l: 'Commercial'
     }]
-  }), React.createElement(FormTextarea, {
+  }), /*#__PURE__*/React.createElement(FormTextarea, {
     label: "Notes",
     v: f.notes,
     onChange: v => setF({
@@ -115,12 +118,12 @@ function AddLeadSheet({
     toast('Lead added', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "New lead",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Name",
     v: f.name,
     onChange: v => setF({
@@ -128,7 +131,7 @@ function AddLeadSheet({
       name: v
     }),
     placeholder: "Prospect name"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Inquiry",
     v: f.inquiry,
     onChange: v => setF({
@@ -136,7 +139,7 @@ function AddLeadSheet({
       inquiry: v
     }),
     placeholder: "What do they want?"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Estimated value (\xA3)",
     v: f.value,
     onChange: v => setF({
@@ -144,7 +147,7 @@ function AddLeadSheet({
       value: v
     }),
     type: "number"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Source",
     v: f.source,
     onChange: v => setF({
@@ -194,12 +197,12 @@ function AddPermitSheet({
     toast('Permit drafted', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "New permit",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormSelect, {
+  }, /*#__PURE__*/React.createElement(FormSelect, {
     label: "Type",
     v: f.kind,
     onChange: v => setF({
@@ -222,7 +225,7 @@ function AddPermitSheet({
       v: 'Excavation',
       l: 'Excavation'
     }]
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Project",
     v: f.projectId,
     onChange: v => setF({
@@ -233,7 +236,7 @@ function AddPermitSheet({
       v: p.id,
       l: p.name
     }))
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Area / location",
     v: f.area,
     onChange: v => setF({
@@ -241,7 +244,7 @@ function AddPermitSheet({
       area: v
     }),
     placeholder: "Roof / 2nd floor / basement"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Expires",
     v: f.expires,
     onChange: v => setF({
@@ -276,12 +279,12 @@ function AddGoalSheet({
     toast('Goal added', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "New goal",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Label",
     v: f.label,
     onChange: v => setF({
@@ -289,7 +292,7 @@ function AddGoalSheet({
       label: v
     }),
     placeholder: "e.g. Monthly revenue"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Target",
     v: f.target,
     onChange: v => setF({
@@ -297,7 +300,7 @@ function AddGoalSheet({
       target: v
     }),
     type: "number"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Current",
     v: f.current,
     onChange: v => setF({
@@ -305,13 +308,13 @@ function AddGoalSheet({
       current: v
     }),
     type: "number"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, React.createElement(FormSelect, {
+  }, /*#__PURE__*/React.createElement(FormSelect, {
     label: "Unit",
     v: f.unit,
     onChange: v => setF({
@@ -328,7 +331,7 @@ function AddGoalSheet({
       v: '',
       l: 'Count'
     }]
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Period",
     v: f.period,
     onChange: v => setF({

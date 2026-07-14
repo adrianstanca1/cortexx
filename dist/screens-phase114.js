@@ -1,3 +1,8 @@
+// CortexBuild Pro — Phase 114: Tender & Bid Management
+// BidManagementScreen — bid pipeline (kanban-style), takeoff measurement,
+// supplier RFQ comparison, and win/loss analytics. Wired to the `bids`,
+// `takeoffs`, and `rfqs` tables in backend-v17.js.
+
 (function () {
   if (!window.Backend) return;
   const card = extra => ({
@@ -83,6 +88,8 @@
         color: tab === k ? '#fff' : T.t2
       }
     }, l)));
+
+    // ── Pipeline ───────────────────────────────────────────────────
     const Pipeline = () => React.createElement('div', null, STAGES.map(stage => {
       const items = bids.filter(b => b.stage === stage.k);
       if (!items.length) return null;
@@ -219,6 +226,8 @@
         }
       }, '✕ Lost'))))));
     }));
+
+    // ── Takeoff ────────────────────────────────────────────────────
     const Takeoff = () => {
       const submittedBids = bids.filter(b => takeoffs.some(t => t.bidId === b.id)) || bids.slice(0, 1);
       return React.createElement('div', null, submittedBids.length === 0 && React.createElement('p', {
@@ -305,6 +314,8 @@
         }, '+ Add measurement'));
       }));
     };
+
+    // ── RFQ comparison ─────────────────────────────────────────────
     const RFQ = () => {
       const byPackage = {};
       rfqs.forEach(r => {
@@ -391,6 +402,8 @@
         }, r.selected ? '✓' : 'Select'))));
       }));
     };
+
+    // ── Win/Loss analytics ─────────────────────────────────────────
     const Analytics = () => {
       const won = bids.filter(b => b.stage === 'won');
       const lost = bids.filter(b => b.stage === 'lost');
@@ -590,6 +603,8 @@
       accent: acc
     }));
   };
+
+  // ── Bid detail sheet ─────────────────────────────────────────────
   function BidDetail({
     bid,
     onClose,

@@ -1,7 +1,10 @@
+// Cortexx — Phase 14: Deep AI project health check + per-project insights
+
 (function () {
   if (!window.Backend) return;
   Backend.ai.healthCheck = async project => {
     if (!project || project.id == null) {
+      // Fall back to the first active project so a missing/stale arg can't crash.
       const all = Backend.db.snapshot().projects || [];
       project = all.find(p => p.status === 'active') || all[0];
       if (!project) return {
@@ -59,16 +62,16 @@ function HealthCheckSheet({
   }, [project?.id]);
   if (!project) return null;
   const riskC = result?.risk === 'high' ? T.red : result?.risk === 'medium' ? T.amber : T.green;
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -78,7 +81,7 @@ function HealthCheckSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), React.createElement("div", {
+  }, "Close"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
@@ -90,7 +93,7 @@ function HealthCheckSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 14
-  }), " Health check"), React.createElement("button", {
+  }), " Health check"), /*#__PURE__*/React.createElement("button", {
     onClick: async () => {
       setLoading(true);
       const r = await Backend.ai.healthCheck(project);
@@ -105,17 +108,17 @@ function HealthCheckSheet({
       fontSize: 14,
       cursor: 'pointer'
     }
-  }, "Rerun")), React.createElement("div", {
+  }, "Rerun")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '0 16px 24px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 4px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -124,7 +127,7 @@ function HealthCheckSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "Project"), React.createElement("div", {
+  }, "Project"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 18,
@@ -132,12 +135,12 @@ function HealthCheckSheet({
       color: T.t1,
       marginTop: 4
     }
-  }, project.name)), loading ? React.createElement("div", {
+  }, project.name)), loading ? /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '60px 20px',
       textAlign: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 56,
       height: 56,
@@ -152,21 +155,21 @@ function HealthCheckSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 28
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       fontWeight: 600
     }
-  }, "Analyzing project\u2026"), React.createElement("div", {
+  }, "Analyzing project\u2026"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 6
     }
-  }, "Cortex AI reviewing tasks, RFIs, snags, invoices, variations"), React.createElement("style", null, `@keyframes pulse-scale { 0%, 100% { transform: scale(1); opacity: 1 } 50% { transform: scale(0.92); opacity: 0.7 } }`)) : result && React.createElement(React.Fragment, null, React.createElement("div", {
+  }, "Cortex AI reviewing tasks, RFIs, snags, invoices, variations"), /*#__PURE__*/React.createElement("style", null, `@keyframes pulse-scale { 0%, 100% { transform: scale(1); opacity: 1 } 50% { transform: scale(0.92); opacity: 0.7 } }`)) : result && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${riskC}33, ${riskC}11)`,
       border: `0.5px solid ${riskC}55`,
@@ -177,7 +180,7 @@ function HealthCheckSheet({
       gap: 14,
       marginBottom: 14
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 80,
       height: 80,
@@ -188,7 +191,7 @@ function HealthCheckSheet({
       justifyContent: 'center',
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 6,
@@ -202,13 +205,13 @@ function HealthCheckSheet({
       fontWeight: 700,
       color: T.t1
     }
-  }, result.score)), React.createElement("div", {
+  }, result.score)), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement(Pill, {
     c: riskC
-  }, result.risk?.toUpperCase(), " RISK"), React.createElement("div", {
+  }, result.risk?.toUpperCase(), " RISK"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -216,25 +219,25 @@ function HealthCheckSheet({
       marginTop: 8,
       lineHeight: 1.4
     }
-  }, result.headline))), result.strengths?.length > 0 && React.createElement(Section, {
+  }, result.headline))), result.strengths?.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: "\u2713 Strengths"
-  }, React.createElement(GroupedList, null, result.strengths.map((s, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, result.strengths.map((s, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: i,
     icon: Ic.check,
     iconBg: T.green,
     title: s,
     isLast: i === a.length - 1
-  })))), result.risks?.length > 0 && React.createElement(Section, {
+  })))), result.risks?.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: "\u26A0 Risks"
-  }, React.createElement(GroupedList, null, result.risks.map((s, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, result.risks.map((s, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: i,
     icon: Ic.alert,
     iconBg: T.amber,
     title: s,
     isLast: i === a.length - 1
-  })))), result.actions?.length > 0 && React.createElement(Section, {
+  })))), result.actions?.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: "\u2192 Recommended actions"
-  }, React.createElement(GroupedList, null, result.actions.map((s, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, result.actions.map((s, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: i,
     icon: Ic.zap,
     iconBg: accent,

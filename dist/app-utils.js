@@ -1,3 +1,9 @@
+// Cortexx — Toast system + add-item flows + global Search overlay
+// Brings every dead button to life.
+
+// ═══════════════════════════════════════════════════════════════════
+// TOAST — global ephemeral feedback
+// ═══════════════════════════════════════════════════════════════════
 const ToastContext = React.createContext({
   push: () => {}
 });
@@ -14,14 +20,15 @@ function ToastProvider({
     }]);
     setTimeout(() => setToasts(t => t.filter(x => x.id !== id)), 2400);
   }, []);
+  // expose globally
   React.useEffect(() => {
     window.cortexxToast = push;
   }, [push]);
-  return React.createElement(ToastContext.Provider, {
+  return /*#__PURE__*/React.createElement(ToastContext.Provider, {
     value: {
       push
     }
-  }, children, React.createElement("div", {
+  }, children, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 110,
@@ -37,7 +44,7 @@ function ToastProvider({
   }, toasts.map(t => {
     const c = t.kind === 'success' ? T.green : t.kind === 'error' ? T.red : t.kind === 'ai' ? T.purple : T.blue;
     const I = t.kind === 'success' ? Ic.check : t.kind === 'error' ? Ic.alert : t.kind === 'ai' ? Ic.spark : Ic.bell;
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       key: t.id,
       style: {
         background: 'rgba(6,16,30,0.95)',
@@ -54,13 +61,13 @@ function ToastProvider({
         animation: 'toast-in 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
         pointerEvents: 'auto'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         color: c
       }
     }, React.cloneElement(I, {
       size: 16
-    })), React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
@@ -68,9 +75,13 @@ function ToastProvider({
         fontWeight: 500
       }
     }, t.msg));
-  })), React.createElement("style", null, `@keyframes toast-in { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }`));
+  })), /*#__PURE__*/React.createElement("style", null, `@keyframes toast-in { from { transform: translateY(20px); opacity: 0 } to { transform: translateY(0); opacity: 1 } }`));
 }
 const toast = (msg, kind) => window.cortexxToast?.(msg, kind);
+
+// ═══════════════════════════════════════════════════════════════════
+// SEARCH OVERLAY — global, searches everything
+// ═══════════════════════════════════════════════════════════════════
 function SearchSheet({
   onClose,
   accent,
@@ -101,10 +112,10 @@ function SearchSheet({
     improvements: improvements.filter(i => (i.title || '').toLowerCase().includes(query))
   };
   const has = results && Object.values(results).some(arr => arr.length > 0);
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -112,13 +123,13 @@ function SearchSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t2
     }
   }, React.cloneElement(Ic.search, {
     size: 18
-  })), React.createElement("input", {
+  })), /*#__PURE__*/React.createElement("input", {
     autoFocus: true,
     value: q,
     onChange: e => setQ(e.target.value),
@@ -132,7 +143,7 @@ function SearchSheet({
       fontSize: 16,
       outline: 'none'
     }
-  }), React.createElement("button", {
+  }), /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -142,17 +153,17 @@ function SearchSheet({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Cancel")), React.createElement("div", {
+  }, "Cancel")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '12px 0'
     }
-  }, !results && React.createElement("div", {
+  }, !results && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -162,13 +173,13 @@ function SearchSheet({
       letterSpacing: 0.5,
       marginBottom: 8
     }
-  }, "Suggestions"), React.createElement("div", {
+  }, "Suggestions"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 6
     }
-  }, ['Camden', 'Tom', 'Plasterboard', 'Q-2117', 'Brixton snags'].map(s => React.createElement("button", {
+  }, ['Camden', 'Tom', 'Plasterboard', 'Q-2117', 'Brixton snags'].map(s => /*#__PURE__*/React.createElement("button", {
     key: s,
     onClick: () => setQ(s),
     style: {
@@ -182,7 +193,7 @@ function SearchSheet({
       fontWeight: 500,
       cursor: 'pointer'
     }
-  }, s)))), results && !has && React.createElement("div", {
+  }, s)))), results && !has && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '40px 20px',
       textAlign: 'center',
@@ -190,9 +201,9 @@ function SearchSheet({
       fontSize: 13,
       color: T.t3
     }
-  }, "Nothing matches \"", q, "\""), results && has && React.createElement(React.Fragment, null, results.projects.length > 0 && React.createElement(Section, {
+  }, "Nothing matches \"", q, "\""), results && has && /*#__PURE__*/React.createElement(React.Fragment, null, results.projects.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Projects · ${results.projects.length}`
-  }, React.createElement(GroupedList, null, results.projects.map((p, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.projects.map((p, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: p.id,
     icon: Ic.projects,
     iconBg: T.blue,
@@ -203,9 +214,9 @@ function SearchSheet({
       onNavigate && onNavigate('project', p);
       onClose();
     }
-  })))), results.quotes.length > 0 && React.createElement(Section, {
+  })))), results.quotes.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Quotes · ${results.quotes.length}`
-  }, React.createElement(GroupedList, null, results.quotes.map((q, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.quotes.map((q, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: q.id,
     icon: Ic.calc,
     iconBg: T.cyan,
@@ -216,45 +227,45 @@ function SearchSheet({
       onNavigate && onNavigate('quote', q);
       onClose();
     }
-  })))), results.tasks.length > 0 && React.createElement(Section, {
+  })))), results.tasks.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Tasks · ${results.tasks.length}`
-  }, React.createElement(GroupedList, null, results.tasks.slice(0, 5).map((t, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.tasks.slice(0, 5).map((t, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: t.id,
     icon: Ic.tasks,
     iconBg: T.purple,
     title: t.t,
     sub: `${t.assignee} · ${formatTaskWhen(t.due)}`,
     isLast: i === Math.min(results.tasks.length, 5) - 1
-  })))), results.team.length > 0 && React.createElement(Section, {
+  })))), results.team.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Team · ${results.team.length}`
-  }, React.createElement(GroupedList, null, results.team.map((m, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.team.map((m, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: m.id,
     icon: Ic.team,
     iconBg: m.color,
     title: m.n,
     sub: `${m.r} · ${m.site}`,
     isLast: i === a.length - 1
-  })))), results.subs.length > 0 && React.createElement(Section, {
+  })))), results.subs.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Subs · ${results.subs.length}`
-  }, React.createElement(GroupedList, null, results.subs.map((s, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.subs.map((s, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: s.id,
     icon: Ic.briefcase,
     iconBg: T.blue,
     title: s.name,
     sub: `${s.trade} · ${s.contact}`,
     isLast: i === a.length - 1
-  })))), results.docs.length > 0 && React.createElement(Section, {
+  })))), results.docs.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Documents · ${results.docs.length}`
-  }, React.createElement(GroupedList, null, results.docs.map((d, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.docs.map((d, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: d.id,
     icon: Ic.doc,
     iconBg: T.red,
     title: d.name,
     sub: `${(d.size / 1000).toFixed(1)} MB · ${d.folder}`,
     isLast: i === a.length - 1
-  })))), results.customers?.length > 0 && React.createElement(Section, {
+  })))), results.customers?.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Customers · ${results.customers.length}`
-  }, React.createElement(GroupedList, null, results.customers.map((c, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.customers.map((c, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: c.id,
     icon: Ic.me,
     iconBg: T.cyan,
@@ -265,18 +276,18 @@ function SearchSheet({
       onNavigate && onNavigate('customer', c);
       onClose();
     }
-  })))), results.invoices?.length > 0 && React.createElement(Section, {
+  })))), results.invoices?.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Invoices · ${results.invoices.length}`
-  }, React.createElement(GroupedList, null, results.invoices.map((inv, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.invoices.map((inv, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: inv.id || inv.number,
     icon: Ic.money,
     iconBg: T.green,
     title: inv.client,
     sub: `${inv.number} · £${(inv.amount || 0).toLocaleString()} · ${inv.status}`,
     isLast: i === a.length - 1
-  })))), results.services?.length > 0 && React.createElement(Section, {
+  })))), results.services?.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Services · ${results.services.length}`
-  }, React.createElement(GroupedList, null, results.services.map((s, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.services.map((s, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: s.id,
     icon: Ic.layers,
     iconBg: T.amber,
@@ -287,9 +298,9 @@ function SearchSheet({
       onNavigate && onNavigate('services');
       onClose();
     }
-  })))), results.improvements?.length > 0 && React.createElement(Section, {
+  })))), results.improvements?.length > 0 && /*#__PURE__*/React.createElement(Section, {
     title: `Improvements · ${results.improvements.length}`
-  }, React.createElement(GroupedList, null, results.improvements.map((it, i, a) => React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, results.improvements.map((it, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: it.id,
     icon: Ic.spark,
     iconBg: T.purple,
@@ -302,6 +313,12 @@ function SearchSheet({
     }
   })))))));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// GENERIC INLINE-ADD SHEETS — small, focused
+// ═══════════════════════════════════════════════════════════════════
+
+// Project create
 function AddProjectSheet({
   onClose,
   accent
@@ -330,12 +347,12 @@ function AddProjectSheet({
     toast(`Project "${form.name}" created`, 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "New project",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Project name",
     v: form.name,
     onChange: v => setForm(f => ({
@@ -343,7 +360,7 @@ function AddProjectSheet({
       name: v
     })),
     placeholder: "Camden Loft Refurb"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Client",
     v: form.client,
     onChange: v => setForm(f => ({
@@ -351,7 +368,7 @@ function AddProjectSheet({
       client: v
     })),
     placeholder: "J. Patterson"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Address",
     v: form.addr,
     onChange: v => setForm(f => ({
@@ -359,7 +376,7 @@ function AddProjectSheet({
       addr: v
     })),
     placeholder: "Camden, NW1"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Value (\xA3)",
     v: form.value,
     onChange: v => setForm(f => ({
@@ -368,7 +385,7 @@ function AddProjectSheet({
     })),
     placeholder: "185000",
     type: "number"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Status",
     v: form.status,
     onChange: v => setForm(f => ({
@@ -390,6 +407,8 @@ function AddProjectSheet({
     }]
   }));
 }
+
+// Material create
 function AddMaterialSheet({
   onClose,
   accent
@@ -416,12 +435,12 @@ function AddMaterialSheet({
     toast(`Added ${form.name}`, 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "Add material",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Name",
     v: form.name,
     onChange: v => setForm(f => ({
@@ -429,7 +448,7 @@ function AddMaterialSheet({
       name: v
     })),
     placeholder: "Plasterboard 12.5mm"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "SKU",
     v: form.sku,
     onChange: v => setForm(f => ({
@@ -437,13 +456,13 @@ function AddMaterialSheet({
       sku: v
     })),
     placeholder: "PB-12-24"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
       gap: 8
     }
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Stock",
     v: form.stock,
     onChange: v => setForm(f => ({
@@ -451,7 +470,7 @@ function AddMaterialSheet({
       stock: v
     })),
     type: "number"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Min",
     v: form.min,
     onChange: v => setForm(f => ({
@@ -459,7 +478,7 @@ function AddMaterialSheet({
       min: v
     })),
     type: "number"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Unit",
     v: form.unit,
     onChange: v => setForm(f => ({
@@ -487,6 +506,8 @@ function AddMaterialSheet({
     }]
   })));
 }
+
+// Sub create
 function AddSubSheet({
   onClose,
   accent
@@ -513,12 +534,12 @@ function AddSubSheet({
     toast(`${form.name} added`, 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "Add subcontractor",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Company name",
     v: form.name,
     onChange: v => setForm(f => ({
@@ -526,7 +547,7 @@ function AddSubSheet({
       name: v
     })),
     placeholder: "Northside Roofing Ltd"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Trade",
     v: form.trade,
     onChange: v => setForm(f => ({
@@ -534,7 +555,7 @@ function AddSubSheet({
       trade: v
     })),
     placeholder: "Roofing"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Contact",
     v: form.contact,
     onChange: v => setForm(f => ({
@@ -542,7 +563,7 @@ function AddSubSheet({
       contact: v
     })),
     placeholder: "Mike Doyle"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Phone",
     v: form.phone,
     onChange: v => setForm(f => ({
@@ -550,14 +571,14 @@ function AddSubSheet({
       phone: v
     })),
     placeholder: "07900 111 222"
-  }), React.createElement(FormToggle, {
+  }), /*#__PURE__*/React.createElement(FormToggle, {
     label: "Insured",
     v: form.insured,
     onChange: v => setForm(f => ({
       ...f,
       insured: v
     }))
-  }), React.createElement(FormToggle, {
+  }), /*#__PURE__*/React.createElement(FormToggle, {
     label: "CSCS verified",
     v: form.cscs,
     onChange: v => setForm(f => ({
@@ -566,6 +587,8 @@ function AddSubSheet({
     }))
   }));
 }
+
+// Equipment create
 function AddEquipmentSheet({
   onClose,
   accent
@@ -589,12 +612,12 @@ function AddEquipmentSheet({
     toast(`${form.name} added`, 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "Add equipment",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Name",
     v: form.name,
     onChange: v => setForm(f => ({
@@ -602,7 +625,7 @@ function AddEquipmentSheet({
       name: v
     })),
     placeholder: "Hilti SDS drill"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Serial",
     v: form.serial,
     onChange: v => setForm(f => ({
@@ -610,7 +633,7 @@ function AddEquipmentSheet({
       serial: v
     })),
     placeholder: "HT-3001"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Category",
     v: form.category,
     onChange: v => setForm(f => ({
@@ -633,7 +656,7 @@ function AddEquipmentSheet({
       v: 'Power',
       l: 'Power'
     }]
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Location",
     v: form.location,
     onChange: v => setForm(f => ({
@@ -643,6 +666,8 @@ function AddEquipmentSheet({
     placeholder: "Yard / site"
   }));
 }
+
+// Snag create (with optional AI detect)
 function AddSnagSheet({
   onClose,
   accent,
@@ -685,12 +710,12 @@ function AddSnagSheet({
     toast('Snag logged', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "Log snag",
     onClose: onClose,
     accent: accent,
     onSave: save,
-    extraBtn: React.createElement("button", {
+    extraBtn: /*#__PURE__*/React.createElement("button", {
       onClick: aiDetect,
       disabled: detecting,
       style: {
@@ -710,7 +735,7 @@ function AddSnagSheet({
     }, React.cloneElement(Ic.spark, {
       size: 12
     }), " ", detecting ? 'Detecting…' : 'AI detect')
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "What's the issue?",
     v: form.title,
     onChange: v => setForm(f => ({
@@ -718,7 +743,7 @@ function AddSnagSheet({
       title: v
     })),
     placeholder: "Skirting gap at WC threshold"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Where?",
     v: form.area,
     onChange: v => setForm(f => ({
@@ -726,7 +751,7 @@ function AddSnagSheet({
       area: v
     })),
     placeholder: "WC, kitchen, front\u2026"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Priority",
     v: form.priority,
     onChange: v => setForm(f => ({
@@ -743,7 +768,7 @@ function AddSnagSheet({
       v: 'high',
       l: 'High'
     }]
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Assignee",
     v: form.assignee,
     onChange: v => setForm(f => ({
@@ -753,6 +778,8 @@ function AddSnagSheet({
     placeholder: "Tom"
   }));
 }
+
+// Change order create
 function AddChangeOrderSheet({
   onClose,
   accent
@@ -780,12 +807,12 @@ function AddChangeOrderSheet({
     toast('Variation submitted', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "New variation",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormSelect, {
+  }, /*#__PURE__*/React.createElement(FormSelect, {
     label: "Project",
     v: form.projectId,
     onChange: v => setForm(f => ({
@@ -796,7 +823,7 @@ function AddChangeOrderSheet({
       v: p.id,
       l: p.name
     }))
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Title",
     v: form.title,
     onChange: v => setForm(f => ({
@@ -804,7 +831,7 @@ function AddChangeOrderSheet({
       title: v
     })),
     placeholder: "Upgrade kitchen sockets"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Amount (\xA3)",
     v: form.amount,
     onChange: v => setForm(f => ({
@@ -813,7 +840,7 @@ function AddChangeOrderSheet({
     })),
     type: "number",
     placeholder: "1450"
-  }), React.createElement(FormTextarea, {
+  }), /*#__PURE__*/React.createElement(FormTextarea, {
     label: "Reason / scope",
     v: form.reason,
     onChange: v => setForm(f => ({
@@ -823,6 +850,8 @@ function AddChangeOrderSheet({
     placeholder: "Client requested USB-C integrated sockets"
   }));
 }
+
+// Diary entry create
 function AddDiarySheet({
   onClose,
   accent
@@ -871,12 +900,12 @@ function AddDiarySheet({
     toast('Diary entry saved', 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "New diary entry",
     onClose: onClose,
     accent: accent,
     onSave: save,
-    extraBtn: React.createElement("button", {
+    extraBtn: /*#__PURE__*/React.createElement("button", {
       onClick: aiSummarise,
       disabled: summarising || !form.notes,
       style: {
@@ -897,7 +926,7 @@ function AddDiarySheet({
     }, React.cloneElement(Ic.spark, {
       size: 12
     }), " ", summarising ? '…' : 'AI summarise')
-  }, React.createElement(FormSelect, {
+  }, /*#__PURE__*/React.createElement(FormSelect, {
     label: "Project",
     v: form.projectId,
     onChange: v => setForm(f => ({
@@ -908,7 +937,7 @@ function AddDiarySheet({
       v: p.id,
       l: p.name
     }))
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "On site today",
     v: form.present,
     onChange: v => setForm(f => ({
@@ -916,7 +945,7 @@ function AddDiarySheet({
       present: parseInt(v) || 0
     })),
     type: "number"
-  }), React.createElement(FormTextarea, {
+  }), /*#__PURE__*/React.createElement(FormTextarea, {
     label: "Raw notes",
     v: form.notes,
     onChange: v => setForm(f => ({
@@ -924,7 +953,7 @@ function AddDiarySheet({
       notes: v
     })),
     placeholder: "What happened, who did what, any blockers\u2026"
-  }), React.createElement(FormTextarea, {
+  }), /*#__PURE__*/React.createElement(FormTextarea, {
     label: "Summary (shown to client)",
     v: form.summary,
     onChange: v => setForm(f => ({
@@ -934,6 +963,10 @@ function AddDiarySheet({
     placeholder: "Tap 'AI summarise' or write your own"
   }));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// FORM PRIMITIVES — used by all add sheets
+// ═══════════════════════════════════════════════════════════════════
 function FormSheet({
   title,
   children,
@@ -942,16 +975,16 @@ function FormSheet({
   accent,
   extraBtn
 }) {
-  return React.createElement(Sheet, {
+  return /*#__PURE__*/React.createElement(Sheet, {
     onClose: onClose
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -961,14 +994,14 @@ function FormSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Cancel"), React.createElement("div", {
+  }, "Cancel"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, title), React.createElement("button", {
+  }, title), /*#__PURE__*/React.createElement("button", {
     onClick: onSave,
     style: {
       background: 'none',
@@ -979,7 +1012,7 @@ function FormSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Save")), React.createElement("div", {
+  }, "Save")), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
@@ -988,7 +1021,7 @@ function FormSheet({
       flexDirection: 'column',
       gap: 14
     }
-  }, children, extraBtn && React.createElement("div", {
+  }, children, extraBtn && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'flex-end'
@@ -1002,7 +1035,7 @@ function FormInput({
   placeholder,
   type = 'text'
 }) {
-  return React.createElement("div", null, React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -1012,7 +1045,7 @@ function FormInput({
       letterSpacing: 0.5,
       marginBottom: 4
     }
-  }, label), React.createElement("input", {
+  }, label), /*#__PURE__*/React.createElement("input", {
     value: v,
     onChange: e => onChange(e.target.value),
     type: type,
@@ -1037,7 +1070,7 @@ function FormTextarea({
   onChange,
   placeholder
 }) {
-  return React.createElement("div", null, React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -1047,7 +1080,7 @@ function FormTextarea({
       letterSpacing: 0.5,
       marginBottom: 4
     }
-  }, label), React.createElement("textarea", {
+  }, label), /*#__PURE__*/React.createElement("textarea", {
     value: v,
     onChange: e => onChange(e.target.value),
     placeholder: placeholder,
@@ -1074,7 +1107,7 @@ function FormSelect({
   onChange,
   options
 }) {
-  return React.createElement("div", null, React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -1084,7 +1117,7 @@ function FormSelect({
       letterSpacing: 0.5,
       marginBottom: 4
     }
-  }, label), React.createElement("select", {
+  }, label), /*#__PURE__*/React.createElement("select", {
     value: v,
     onChange: e => onChange(e.target.value),
     style: {
@@ -1101,7 +1134,7 @@ function FormSelect({
       appearance: 'none',
       WebkitAppearance: 'none'
     }
-  }, options.map(o => React.createElement("option", {
+  }, options.map(o => /*#__PURE__*/React.createElement("option", {
     key: o.v,
     value: o.v
   }, o.l))));
@@ -1111,26 +1144,28 @@ function FormToggle({
   v,
   onChange
 }) {
-  return React.createElement("div", {
+  return /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '6px 0'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       fontWeight: 500
     }
-  }, label), React.createElement(Toggle, {
+  }, label), /*#__PURE__*/React.createElement(Toggle, {
     on: v,
     onChange: () => onChange(!v),
     accent: T.blue
   }));
 }
+
+// Team member create
 function AddTeamMemberSheet({
   onClose,
   accent
@@ -1155,12 +1190,12 @@ function AddTeamMemberSheet({
     toast(`${form.n} added`, 'success');
     onClose();
   };
-  return React.createElement(FormSheet, {
+  return /*#__PURE__*/React.createElement(FormSheet, {
     title: "Add team member",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, React.createElement(FormInput, {
+  }, /*#__PURE__*/React.createElement(FormInput, {
     label: "Name",
     v: form.n,
     onChange: v => setForm(f => ({
@@ -1168,7 +1203,7 @@ function AddTeamMemberSheet({
       n: v
     })),
     placeholder: "Tom Reilly"
-  }), React.createElement(FormInput, {
+  }), /*#__PURE__*/React.createElement(FormInput, {
     label: "Role",
     v: form.r,
     onChange: v => setForm(f => ({
@@ -1176,7 +1211,7 @@ function AddTeamMemberSheet({
       r: v
     })),
     placeholder: "Foreman / Electrician / Plasterer"
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "Site",
     v: form.site,
     onChange: v => setForm(f => ({
@@ -1199,7 +1234,7 @@ function AddTeamMemberSheet({
       v: 'Off',
       l: 'Off site'
     }]
-  }), React.createElement(FormSelect, {
+  }), /*#__PURE__*/React.createElement(FormSelect, {
     label: "CSCS",
     v: form.cscs,
     onChange: v => setForm(f => ({
