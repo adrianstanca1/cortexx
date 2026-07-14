@@ -5,13 +5,6 @@ import { signIn } from 'next-auth/react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import Link from 'next/link'
 
-// Open-redirect guard: only allow same-origin relative paths as the
-// post-login destination. An attacker phishing a link like
-//   /login?callbackUrl=https://evil.example/steal
-// would otherwise navigate authenticated users off-site, where the
-// attacker's page sees the new session cookie via the referer + any
-// auto-submitted form. Anything that isn't `/...` (no protocol, no
-// host) falls back to /dashboard.
 function safeCallback(raw: string | null): string {
   if (!raw) return '/dashboard'
   if (!raw.startsWith('/') || raw.startsWith('//')) return '/dashboard'
@@ -22,7 +15,6 @@ function LoginForm() {
   const router = useRouter()
   const search = useSearchParams()
   const callbackUrl = safeCallback(search.get('callbackUrl'))
-
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
   const [error, setError] = useState<string | null>(null)
@@ -41,8 +33,6 @@ function LoginForm() {
       router.push(callbackUrl)
       router.refresh()
     } catch (e) {
-      // Network errors / Auth.js internals — without try/finally, the
-      // button stayed stuck on "Signing in…" and the user couldn't retry.
       setError(e instanceof Error ? e.message : 'Sign in failed — try again.')
     } finally {
       setLoading(false)
@@ -52,65 +42,29 @@ function LoginForm() {
   return (
     <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <form onSubmit={onSubmit} style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
-          Sign in to Cortexx
-        </h1>
-        <p style={{ fontSize: 13, color: '#8ea8c5', marginBottom: 8, fontFamily: 'var(--font-system)' }}>
-          Mobile-first construction management
-        </p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>Sign in to Cortexx</h1>
+        <p style={{ fontSize: 13, color: '#8ea8c5', marginBottom: 8, fontFamily: 'var(--font-system)' }}>Mobile-first construction management</p>
 
-        <label style={labelStyle}>Email</label>
-        <input
-          type="email"
-          autoFocus
-          autoComplete="email"
-          required
-          value={email}
-          onChange={e => setEmail(e.target.value)}
-          style={inputStyle}
-        />
+        <label htmlFor="email" style={labelStyle}>Email</label>
+        <input id="email" name="email" type="email" autoFocus autoComplete="email" required value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
 
-        <label style={labelStyle}>Password</label>
-        <input
-          type="password"
-          autoComplete="current-password"
-          required
-          value={password}
-          onChange={e => setPassword(e.target.value)}
-          style={inputStyle}
-        />
+        <label htmlFor="password" style={labelStyle}>Password</label>
+        <input id="password" name="password" type="password" autoComplete="current-password" required value={password} onChange={e => setPassword(e.target.value)} style={inputStyle} />
 
-        {error && (
-          <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>
-            {error}
-          </div>
-        )}
+        {error && <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>{error}</div>}
 
-        <button
-          type="submit"
-          disabled={loading || !email || !password}
-          style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: loading || !email || !password ? 0.5 : 1 }}
-        >
+        <button type="submit" disabled={loading || !email || !password} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: loading || !email || !password ? 0.5 : 1 }}>
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
 
-        <p style={{ textAlign: 'center', fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginTop: 12 }}>
-          New?{' '}
-          <Link href="/register" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 600 }}>
-            Create an account
-          </Link>
-        </p>
+        <p style={{ textAlign: 'center', fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginTop: 12 }}>New? <Link href="/register" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 600 }}>Create an account</Link></p>
       </form>
     </div>
   )
 }
 
 export default function LoginPage() {
-  return (
-    <Suspense fallback={<div style={{ background: '#06101e', minHeight: '100dvh' }} />}>
-      <LoginForm />
-    </Suspense>
-  )
+  return <Suspense fallback={<div style={{ background: '#06101e', minHeight: '100dvh' }} />}><LoginForm /></Suspense>
 }
 
 const labelStyle: React.CSSProperties = {
@@ -121,6 +75,7 @@ const labelStyle: React.CSSProperties = {
   textTransform: 'uppercase',
   letterSpacing: 0.5,
 }
+
 const inputStyle: React.CSSProperties = {
   width: '100%',
   background: '#152641',
