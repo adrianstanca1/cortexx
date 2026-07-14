@@ -12,7 +12,7 @@
     "cap:add:ios": "cap add ios",
     "cap:sync": "cap sync ios",
     "cap:open:ios": "cap open ios",
-    "ios": "npm run build:web && npm run cap:sync && npm run cap:open:ios"
+    "ios": "npm run build:ios && npm run cap:open:ios"
   },
   "dependencies": {
     "@capacitor/app": "^6.0.1",
@@ -33,7 +33,7 @@
     "@capacitor/status-bar": "^6.0.1"
   },
   "devDependencies": {
-    "@capacitor/cli": "^8.4.0",
-    "typescript": "^6.0.3"
+    "@capacitor/cli": "^6.1.2",
+    "typescript": "^5.6.3"
   }
 }
