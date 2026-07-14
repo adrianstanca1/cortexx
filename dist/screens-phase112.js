@@ -1,3 +1,7 @@
+// CortexBuild Pro — Phase 112: Scheduling & Resource Planning
+// ResourcePlanningScreen — crew/plant allocation across projects, a 14-day
+// timeline, a capacity heatmap, and automatic double-booking (clash) detection.
+
 (function () {
   if (!window.Backend) return;
   const card = extra => ({
@@ -34,9 +38,11 @@
   }) {
     const allocations = window.useDB('allocations');
     const projects = window.useDB('projects');
-    const [tab, setTab] = React.useState('timeline');
+    const [tab, setTab] = React.useState('timeline'); // timeline | heatmap | clashes
     const acc = accent || T.blue;
     const projName = id => (projects.find(p => p.id == id) || {}).name || 'Project ' + id;
+
+    // 14-day window from today
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const days = Array.from({
@@ -48,6 +54,8 @@
     });
     const winStart = days[0],
       winEnd = days[13];
+
+    // Group allocations by resource
     const resources = {};
     allocations.forEach(a => {
       const key = a.resourceId || a.resourceName;
@@ -58,6 +66,8 @@
       };
       resources[key].items.push(a);
     });
+
+    // Clash detection: same resource, overlapping date ranges
     const clashes = [];
     Object.values(resources).forEach(r => {
       const items = [...r.items].sort((a, b) => new Date(a.start) - new Date(b.start));
@@ -73,6 +83,8 @@
         }
       }
     });
+
+    // Capacity per resource over the window (% of days allocated)
     const capacity = Object.values(resources).map(r => {
       let allocatedDays = 0;
       days.forEach(d => {
@@ -110,6 +122,8 @@
         color: tab === k ? '#fff' : T.t2
       }
     }, l))));
+
+    // ── Timeline (Gantt-lite) ──────────────────────────────────────
     const colW = 26;
     const Timeline = () => React.createElement('div', {
       style: {
@@ -120,7 +134,9 @@
       style: {
         minWidth: 130 + 14 * colW
       }
-    }, React.createElement('div', {
+    },
+    // day header
+    React.createElement('div', {
       style: {
         display: 'flex',
         marginBottom: 8,
@@ -137,7 +153,9 @@
       }
     }, React.createElement('div', null, d.toLocaleDateString('en-GB', {
       weekday: 'narrow'
-    })), React.createElement('div', null, d.getDate())))), Object.values(resources).map((r, ri) => React.createElement('div', {
+    })), React.createElement('div', null, d.getDate())))),
+    // rows
+    Object.values(resources).map((r, ri) => React.createElement('div', {
       key: ri,
       style: {
         display: 'flex',
@@ -172,7 +190,9 @@
         height: 28,
         flex: 1
       }
-    }, days.map((d, i) => React.createElement('div', {
+    },
+    // grid bg
+    days.map((d, i) => React.createElement('div', {
       key: i,
       style: {
         position: 'absolute',
@@ -183,7 +203,9 @@
         borderLeft: '1px solid ' + T.hair,
         background: d.getDay() === 0 || d.getDay() === 6 ? 'rgba(255,255,255,0.02)' : 'transparent'
       }
-    })), r.items.map((it, ii) => {
+    })),
+    // bars
+    r.items.map((it, ii) => {
       const s = new Date(it.start) < winStart ? winStart : new Date(it.start);
       const e = new Date(it.end) > winEnd ? winEnd : new Date(it.end);
       if (e < winStart || s > winEnd) return null;
@@ -217,6 +239,8 @@
         }
       }, it.role));
     }))))));
+
+    // ── Heatmap ────────────────────────────────────────────────────
     const Heatmap = () => React.createElement('div', null, React.createElement('p', {
       style: {
         fontSize: 12,
@@ -271,6 +295,8 @@
         marginTop: 6
       }
     }, c.pct >= 100 ? '⚠ Fully committed — no capacity for new work' : c.pct >= 80 ? 'Limited slack remaining' : 100 - c.pct + '% capacity available'))));
+
+    // ── Clashes ────────────────────────────────────────────────────
     const Clashes = () => React.createElement('div', null, clashes.length === 0 ? React.createElement('div', {
       style: {
         textAlign: 'center',
@@ -410,6 +436,8 @@
       }
     }, '+ Allocate crew or plant'));
   };
+
+  // ── Add allocation sheet ─────────────────────────────────────────
   window.AddAllocationSheet = function ({
     onClose,
     accent

@@ -1,39 +1,46 @@
+// Cortexx mobile dashboard — 6 variations
+// All consume tokens from window.* (T, SF, SFMono, Ic, etc.)
+
+// ═══════════════════════════════════════════════════════════════════
+// V1 — ACTION-FIRST
+// "What do I need to do RIGHT NOW" — single hero CTA + priority queue
+// ═══════════════════════════════════════════════════════════════════
 function DashV1_ActionFirst({
   accent = T.blue
 }) {
   const date = 'Thu, 30 Apr';
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Good morning, Adrian",
     subtitle: date + ' · Camden site, 14°',
     ws: true,
-    right: React.createElement("div", {
+    right: /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8,
         alignItems: 'center'
       }
-    }, React.createElement(HeaderBtn, {
+    }, /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.search,
       onClick: () => window.cortexxNav && window.cortexxNav('search')
-    }), React.createElement(HeaderBtn, {
+    }), /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.bell,
       count: window.CortexPortalMsgs && window.CortexPortalMsgs.unreadCount() || 0,
       accent: accent,
       onClick: () => window.cortexxNav && window.cortexxNav('inbox')
     }))
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 12px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${accent}, ${accent}aa 60%, ${T.purple}aa)`,
       borderRadius: 20,
@@ -42,7 +49,7 @@ function DashV1_ActionFirst({
       overflow: 'hidden',
       boxShadow: `0 12px 32px ${accent}44`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       right: -40,
@@ -52,18 +59,18 @@ function DashV1_ActionFirst({
       borderRadius: 80,
       background: 'rgba(255,255,255,0.08)'
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       marginBottom: 8
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 6,
       height: 6,
@@ -71,7 +78,7 @@ function DashV1_ActionFirst({
       background: '#fff',
       boxShadow: '0 0 8px #fff'
     }
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -80,7 +87,7 @@ function DashV1_ActionFirst({
       textTransform: 'uppercase',
       letterSpacing: 1
     }
-  }, "NEXT UP \xB7 in 24 min")), React.createElement("div", {
+  }, "NEXT UP \xB7 in 24 min")), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 24,
@@ -89,19 +96,19 @@ function DashV1_ActionFirst({
       letterSpacing: -0.5,
       marginBottom: 4
     }
-  }, "Camden Mews \u2014 first fix sign-off"), React.createElement("div", {
+  }, "Camden Mews \u2014 first fix sign-off"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: 'rgba(255,255,255,0.85)'
     }
-  }, "12 Camden Mews NW1 \xB7 Tom + 3 on site"), React.createElement("div", {
+  }, "12 Camden Mews NW1 \xB7 Tom + 3 on site"), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 14
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       flex: 1,
@@ -121,7 +128,7 @@ function DashV1_ActionFirst({
     }
   }, React.cloneElement(Ic.pin, {
     size: 15
-  }), " Check in"), React.createElement("button", {
+  }), " Check in"), /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       background: 'rgba(255,255,255,0.18)',
@@ -134,13 +141,13 @@ function DashV1_ActionFirst({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Route"))))), React.createElement("div", {
+  }, "Route"))))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 20px 8px',
       display: 'flex',
       justifyContent: 'space-between'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -149,13 +156,13 @@ function DashV1_ActionFirst({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "Then today"), React.createElement("span", {
+  }, "Then today"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t3
     }
-  }, "4 items")), React.createElement("div", {
+  }, "4 items")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -186,7 +193,7 @@ function DashV1_ActionFirst({
     sub: 'Travis Perkins · Selco · B&Q',
     c: T.cyan,
     i: Ic.receipt
-  }].map((x, i) => React.createElement("div", {
+  }].map((x, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -197,12 +204,12 @@ function DashV1_ActionFirst({
       alignItems: 'center',
       gap: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 44,
       textAlign: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 13,
@@ -210,13 +217,13 @@ function DashV1_ActionFirst({
       color: T.t1,
       letterSpacing: -0.3
     }
-  }, x.t)), React.createElement("div", {
+  }, x.t)), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 1,
       alignSelf: 'stretch',
       background: T.hair
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       width: 30,
       height: 30,
@@ -230,12 +237,12 @@ function DashV1_ActionFirst({
     }
   }, React.cloneElement(x.i, {
     size: 16
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -243,47 +250,51 @@ function DashV1_ActionFirst({
       color: T.t1,
       lineHeight: 1.2
     }
-  }, x.task), React.createElement("div", {
+  }, x.task), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, x.sub)), React.createElement("div", {
+  }, x.sub)), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t3
     }
-  }, Ic.chevR))))), React.createElement(TabBar, {
+  }, Ic.chevR))))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
   }));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// V2 — STATUS BOARD (live blueprint readout)
+// ═══════════════════════════════════════════════════════════════════
 function DashV2_StatusBoard({
   accent = T.blue
 }) {
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Site Status",
     subtitle: "LIVE \xB7 09:41 BST",
     ws: true,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.bell,
       count: window.CortexPortalMsgs && window.CortexPortalMsgs.unreadCount() || 0,
       accent: accent,
       onClick: () => window.cortexxNav && window.cortexxNav('inbox')
     })
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 12px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'relative',
       borderRadius: 16,
@@ -291,68 +302,68 @@ function DashV2_StatusBoard({
       background: T.bg2,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("svg", {
+  }, /*#__PURE__*/React.createElement("svg", {
     width: "100%",
     height: "160",
     style: {
       display: 'block',
       background: '#0a1830'
     }
-  }, React.createElement("defs", null, React.createElement("pattern", {
+  }, /*#__PURE__*/React.createElement("defs", null, /*#__PURE__*/React.createElement("pattern", {
     id: "bp",
     width: "20",
     height: "20",
     patternUnits: "userSpaceOnUse"
-  }, React.createElement("path", {
+  }, /*#__PURE__*/React.createElement("path", {
     d: "M 20 0 L 0 0 0 20",
     fill: "none",
     stroke: accent,
     strokeWidth: "0.4",
     opacity: "0.35"
-  }))), React.createElement("rect", {
+  }))), /*#__PURE__*/React.createElement("rect", {
     width: "100%",
     height: "100%",
     fill: "url(#bp)"
-  }), React.createElement("g", {
+  }), /*#__PURE__*/React.createElement("g", {
     transform: "translate(30,20)",
     stroke: accent,
     strokeWidth: "1.5",
     fill: "none"
-  }, React.createElement("rect", {
+  }, /*#__PURE__*/React.createElement("rect", {
     x: "0",
     y: "0",
     width: "180",
     height: "120",
     opacity: "0.7"
-  }), React.createElement("line", {
+  }), /*#__PURE__*/React.createElement("line", {
     x1: "80",
     y1: "0",
     x2: "80",
     y2: "60",
     opacity: "0.7"
-  }), React.createElement("line", {
+  }), /*#__PURE__*/React.createElement("line", {
     x1: "80",
     y1: "60",
     x2: "180",
     y2: "60",
     opacity: "0.7"
-  }), React.createElement("line", {
+  }), /*#__PURE__*/React.createElement("line", {
     x1: "0",
     y1: "80",
     x2: "80",
     y2: "80",
     opacity: "0.7"
-  })), React.createElement("circle", {
+  })), /*#__PURE__*/React.createElement("circle", {
     cx: "80",
     cy: "60",
     r: "4",
     fill: T.green
-  }, React.createElement("animate", {
+  }, /*#__PURE__*/React.createElement("animate", {
     attributeName: "opacity",
     values: "0.4;1;0.4",
     dur: "2s",
     repeatCount: "indefinite"
-  })), React.createElement("circle", {
+  })), /*#__PURE__*/React.createElement("circle", {
     cx: "80",
     cy: "60",
     r: "10",
@@ -360,68 +371,68 @@ function DashV2_StatusBoard({
     stroke: T.green,
     strokeWidth: "1",
     opacity: "0.4"
-  }), React.createElement("circle", {
+  }), /*#__PURE__*/React.createElement("circle", {
     cx: "160",
     cy: "100",
     r: "4",
     fill: T.amber
-  }, React.createElement("animate", {
+  }, /*#__PURE__*/React.createElement("animate", {
     attributeName: "opacity",
     values: "0.4;1;0.4",
     dur: "2s",
     repeatCount: "indefinite",
     begin: "0.5s"
-  })), React.createElement("circle", {
+  })), /*#__PURE__*/React.createElement("circle", {
     cx: "50",
     cy: "120",
     r: "4",
     fill: T.green
-  }, React.createElement("animate", {
+  }, /*#__PURE__*/React.createElement("animate", {
     attributeName: "opacity",
     values: "0.4;1;0.4",
     dur: "2s",
     repeatCount: "indefinite",
     begin: "1s"
-  })), React.createElement("circle", {
+  })), /*#__PURE__*/React.createElement("circle", {
     cx: "180",
     cy: "40",
     r: "4",
     fill: T.cyan
-  }, React.createElement("animate", {
+  }, /*#__PURE__*/React.createElement("animate", {
     attributeName: "opacity",
     values: "0.4;1;0.4",
     dur: "2s",
     repeatCount: "indefinite",
     begin: "1.5s"
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '10px 14px',
       borderTop: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Camden Mews Refurb"), React.createElement("div", {
+  }, "Camden Mews Refurb"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.green
     }
-  }, "\u25CF 4 ON SITE \xB7 68% complete")), React.createElement("div", {
+  }, "\u25CF 4 ON SITE \xB7 68% complete")), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t3
     }
-  }, Ic.chevR))))), React.createElement("div", {
+  }, Ic.chevR))))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 12px',
       display: 'grid',
@@ -448,7 +459,7 @@ function DashV2_StatusBoard({
     s: '£',
     c: T.amber,
     i: Ic.receipt
-  }].map((k, i) => React.createElement("div", {
+  }].map((k, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -457,7 +468,7 @@ function DashV2_StatusBoard({
       border: `0.5px solid ${T.hair}`,
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: k.c,
       opacity: 0.7,
@@ -465,7 +476,7 @@ function DashV2_StatusBoard({
     }
   }, React.cloneElement(k.i, {
     size: 14
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -474,7 +485,7 @@ function DashV2_StatusBoard({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, k.l), React.createElement("div", {
+  }, k.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -484,31 +495,31 @@ function DashV2_StatusBoard({
       letterSpacing: -0.5,
       lineHeight: 1
     }
-  }, k.s && React.createElement("span", {
+  }, k.s && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 13,
       color: T.t2,
       marginRight: 1
     }
-  }, k.s), k.v, k.u && React.createElement("span", {
+  }, k.s), k.v, k.u && /*#__PURE__*/React.createElement("span", {
     style: {
       fontSize: 13,
       color: T.t2
     }
-  }, k.u)), React.createElement("div", {
+  }, k.u)), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t3,
       marginTop: 2
     }
-  }, k.s !== '£' ? k.s : 'this wk')))), React.createElement("div", {
+  }, k.s !== '£' ? k.s : 'this wk')))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 20px 8px',
       display: 'flex',
       justifyContent: 'space-between'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -517,13 +528,13 @@ function DashV2_StatusBoard({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "All sites"), React.createElement("span", {
+  }, "All sites"), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.green
     }
-  }, "\u25CF\u25CF\u25CF\u25CB\u25CB live")), React.createElement("div", {
+  }, "\u25CF\u25CF\u25CF\u25CB\u25CB live")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -551,7 +562,7 @@ function DashV2_StatusBoard({
     pct: 90,
     c: T.amber,
     st: 'SNAGGING'
-  }].map((s, i) => React.createElement("div", {
+  }].map((s, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -562,53 +573,53 @@ function DashV2_StatusBoard({
       alignItems: 'center',
       gap: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       minWidth: 0
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'baseline',
       gap: 6
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600,
       color: T.t1
     }
-  }, s.n), React.createElement("span", {
+  }, s.n), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t3
     }
-  }, s.loc)), React.createElement("div", {
+  }, s.loc)), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginTop: 4
     }
-  }, React.createElement(Bar, {
+  }, /*#__PURE__*/React.createElement(Bar, {
     pct: s.pct,
     c: s.c,
     h: 3
-  }), React.createElement("span", {
+  }), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: s.c,
       fontWeight: 600
     }
-  }, s.pct, "%"))), React.createElement("div", {
+  }, s.pct, "%"))), /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'right'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
@@ -616,44 +627,48 @@ function DashV2_StatusBoard({
       fontWeight: 700,
       letterSpacing: 0.4
     }
-  }, "\u25CF ", s.st), React.createElement("div", {
+  }, "\u25CF ", s.st), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t2,
       marginTop: 2
     }
-  }, s.team, " on site")))))), React.createElement(TabBar, {
+  }, s.team, " on site")))))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
   }));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// V3 — CALM / MINIMAL
+// ═══════════════════════════════════════════════════════════════════
 function DashV3_Calm({
   accent = T.blue
 }) {
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 24px 4px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t3,
       fontWeight: 500
     }
-  }, "Thursday, 30 April")), React.createElement("div", {
+  }, "Thursday, 30 April")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 24px 28px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 30,
@@ -662,11 +677,11 @@ function DashV3_Calm({
       letterSpacing: -0.8,
       lineHeight: 1.1
     }
-  }, "Good morning,", React.createElement("br", null), "Adrian.")), React.createElement("div", {
+  }, "Good morning,", /*#__PURE__*/React.createElement("br", null), "Adrian.")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 24px 32px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -675,7 +690,7 @@ function DashV3_Calm({
       textTransform: 'uppercase',
       letterSpacing: 1.2
     }
-  }, "Today"), React.createElement("div", {
+  }, "Today"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 44,
@@ -685,7 +700,7 @@ function DashV3_Calm({
       letterSpacing: -1.2,
       lineHeight: 1
     }
-  }, "3 things"), React.createElement("div", {
+  }, "3 things"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -693,7 +708,7 @@ function DashV3_Calm({
       marginTop: 8,
       lineHeight: 1.5
     }
-  }, "One site visit, two approvals.", React.createElement("br", null), "Nothing on fire.")), React.createElement("div", {
+  }, "One site visit, two approvals.", /*#__PURE__*/React.createElement("br", null), "Nothing on fire.")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 24px',
       display: 'flex',
@@ -711,7 +726,7 @@ function DashV3_Calm({
     t: 'Sign Camden RAMS',
     d: 'Expires Saturday',
     n: '03'
-  }].map((x, i, a) => React.createElement("div", {
+  }].map((x, i, a) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       padding: '20px 0',
@@ -720,7 +735,7 @@ function DashV3_Calm({
       alignItems: 'flex-start',
       gap: 16
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
@@ -731,11 +746,11 @@ function DashV3_Calm({
       width: 16,
       flexShrink: 0
     }
-  }, x.n), React.createElement("div", {
+  }, x.n), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 17,
@@ -744,75 +759,79 @@ function DashV3_Calm({
       lineHeight: 1.3,
       letterSpacing: -0.2
     }
-  }, x.t), React.createElement("div", {
+  }, x.t), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 4
     }
-  }, x.d)), React.createElement("div", {
+  }, x.d)), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t3,
       marginTop: 4
     }
-  }, Ic.chevR)))), React.createElement("div", {
+  }, Ic.chevR)))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '32px 24px 0'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t3,
       lineHeight: 1.5
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2,
       fontWeight: 500
     }
-  }, "Cortex"), " is watching 3 active sites for you. Quiet so far."))), React.createElement(TabBar, {
+  }, "Cortex"), " is watching 3 active sites for you. Quiet so far."))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
   }));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// V4 — BENTO GRID
+// ═══════════════════════════════════════════════════════════════════
 function DashV4_Bento({
   accent = T.blue
 }) {
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Dashboard",
     subtitle: "Adrian \xB7 CortexBuild Ltd",
     ws: true,
-    right: React.createElement("div", {
+    right: /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         gap: 8
       }
-    }, React.createElement(HeaderBtn, {
+    }, /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.bell,
       count: window.CortexPortalMsgs && window.CortexPortalMsgs.unreadCount() || 0,
       accent: accent,
       onClick: () => window.cortexxNav && window.cortexxNav('inbox')
-    }), React.createElement(HeaderBtn, {
+    }), /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.search,
       onClick: () => window.cortexxNav && window.cortexxNav('search')
     }))
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px',
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       gridColumn: '1 / 3',
       background: `linear-gradient(135deg, ${accent}33, ${T.purple}22)`,
@@ -820,17 +839,17 @@ function DashV4_Bento({
       padding: 14,
       border: `0.5px solid ${accent}55`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start'
     }
-  }, React.createElement("div", null, React.createElement(Pill, {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement(Pill, {
     c: accent,
     solid: true,
     size: "xs"
-  }, "\u25CF ACTIVE NOW"), React.createElement("div", {
+  }, "\u25CF ACTIVE NOW"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 18,
@@ -839,38 +858,38 @@ function DashV4_Bento({
       marginTop: 8,
       letterSpacing: -0.3
     }
-  }, "Camden Mews"), React.createElement("div", {
+  }, "Camden Mews"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 2
     }
-  }, "4 on site \xB7 68% done")), React.createElement("div", {
+  }, "4 on site \xB7 68% done")), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       marginRight: -8
     }
-  }, ['Tom Reilly', 'Aisha B', 'Jack M', 'Sara K'].map((n, i) => React.createElement("div", {
+  }, ['Tom Reilly', 'Aisha B', 'Jack M', 'Sara K'].map((n, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       marginLeft: i ? -10 : 0,
       border: `2px solid ${T.bg0}`,
       borderRadius: '50%'
     }
-  }, React.createElement(Avatar, {
+  }, /*#__PURE__*/React.createElement(Avatar, {
     name: n,
     size: 28,
     c: [T.blue, T.amber, T.green, T.purple][i]
-  }))))), React.createElement("div", {
+  }))))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 12
     }
-  }, React.createElement(Bar, {
+  }, /*#__PURE__*/React.createElement(Bar, {
     pct: 68,
     c: accent,
     h: 5
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
@@ -881,14 +900,14 @@ function DashV4_Bento({
       flexDirection: 'column',
       justifyContent: 'space-between'
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.green,
       marginBottom: 4
     }
   }, React.cloneElement(Ic.trend, {
     size: 14
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -897,7 +916,7 @@ function DashV4_Bento({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Cash"), React.createElement("div", {
+  }, "Cash"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -906,7 +925,7 @@ function DashV4_Bento({
       marginTop: 2,
       letterSpacing: -0.5
     }
-  }, "\xA342.1k"), React.createElement("div", {
+  }, "\xA342.1k"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -914,35 +933,35 @@ function DashV4_Bento({
       marginTop: 2,
       fontWeight: 500
     }
-  }, "+\xA38.4k wk")), React.createElement("svg", {
+  }, "+\xA38.4k wk")), /*#__PURE__*/React.createElement("svg", {
     width: "100%",
     height: "36",
     viewBox: "0 0 100 36",
     preserveAspectRatio: "none"
-  }, React.createElement("polyline", {
+  }, /*#__PURE__*/React.createElement("polyline", {
     points: "0,28 14,24 28,26 42,16 56,20 70,8 84,12 100,4",
     fill: "none",
     stroke: T.green,
     strokeWidth: "1.6"
-  }), React.createElement("polyline", {
+  }), /*#__PURE__*/React.createElement("polyline", {
     points: "0,28 14,24 28,26 42,16 56,20 70,8 84,12 100,4 100,36 0,36",
     fill: `${T.green}22`,
     stroke: "none"
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 12,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.amber,
       marginBottom: 4
     }
   }, React.cloneElement(Ic.receipt, {
     size: 14
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -951,7 +970,7 @@ function DashV4_Bento({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Owed"), React.createElement("div", {
+  }, "Owed"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 18,
@@ -959,27 +978,27 @@ function DashV4_Bento({
       fontWeight: 700,
       marginTop: 2
     }
-  }, "\xA314.2k"), React.createElement("div", {
+  }, "\xA314.2k"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t3
     }
-  }, "3 invoices")), React.createElement("div", {
+  }, "3 invoices")), /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 12,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       color: accent,
       marginBottom: 4
     }
   }, React.cloneElement(Ic.clock, {
     size: 14
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -988,7 +1007,7 @@ function DashV4_Bento({
       textTransform: 'uppercase',
       letterSpacing: 0.5
     }
-  }, "Hours"), React.createElement("div", {
+  }, "Hours"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 18,
@@ -996,13 +1015,13 @@ function DashV4_Bento({
       fontWeight: 700,
       marginTop: 2
     }
-  }, "32.5h"), React.createElement("div", {
+  }, "32.5h"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t3
     }
-  }, "this week")), React.createElement("div", {
+  }, "this week")), /*#__PURE__*/React.createElement("div", {
     style: {
       gridColumn: '1 / 3',
       background: `linear-gradient(135deg, ${T.purple}26, ${accent}1a)`,
@@ -1013,7 +1032,7 @@ function DashV4_Bento({
       alignItems: 'center',
       gap: 12
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 36,
       height: 36,
@@ -1027,29 +1046,29 @@ function DashV4_Bento({
     }
   }, React.cloneElement(Ic.spark, {
     size: 18
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Ask Cortex anything"), React.createElement("div", {
+  }, "Ask Cortex anything"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 1
     }
-  }, "\"Forecast Camden cashflow\"")), React.createElement("div", {
+  }, "\"Forecast Camden cashflow\"")), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t3
     }
-  }, Ic.chevR)), React.createElement("div", {
+  }, Ic.chevR)), /*#__PURE__*/React.createElement("div", {
     style: {
       gridColumn: '1 / 3',
       background: T.bg2,
@@ -1057,14 +1076,14 @@ function DashV4_Bento({
       padding: '12px 14px',
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       marginBottom: 8
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -1073,7 +1092,7 @@ function DashV4_Bento({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "Needs attention"), React.createElement(Pill, {
+  }, "Needs attention"), /*#__PURE__*/React.createElement(Pill, {
     c: T.red,
     size: "xs"
   }, "3")), [{
@@ -1086,7 +1105,7 @@ function DashV4_Bento({
     s: 'Auto-scanned',
     c: T.purple,
     i: Ic.receipt
-  }].map((x, i, a) => React.createElement("div", {
+  }].map((x, i, a) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -1095,7 +1114,7 @@ function DashV4_Bento({
       padding: '6px 0',
       borderTop: i ? `0.5px solid ${T.hair}` : 'none'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 24,
       height: 24,
@@ -1108,57 +1127,61 @@ function DashV4_Bento({
     }
   }, React.cloneElement(x.i, {
     size: 13
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 500
     }
-  }, x.t), React.createElement("div", {
+  }, x.t), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t2
     }
-  }, x.s)), React.createElement("div", {
+  }, x.s)), /*#__PURE__*/React.createElement("div", {
     style: {
       color: T.t3
     }
-  }, Ic.chevR)))))), React.createElement(TabBar, {
+  }, Ic.chevR)))))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
   }));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// V5 — AI-FORWARD (Cortex agent center stage)
+// ═══════════════════════════════════════════════════════════════════
 function DashV5_AIForward({
   accent = T.purple
 }) {
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Cortex",
     subtitle: "Your AI site manager",
     ws: true,
-    right: React.createElement(HeaderBtn, {
+    right: /*#__PURE__*/React.createElement(HeaderBtn, {
       icon: Ic.bell,
       count: window.CortexPortalMsgs && window.CortexPortalMsgs.unreadCount() || 0,
       accent: accent,
       onClick: () => window.cortexxNav && window.cortexxNav('inbox')
     })
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 18,
@@ -1167,7 +1190,7 @@ function DashV5_AIForward({
       position: 'relative',
       overflow: 'hidden'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       position: 'absolute',
       top: -30,
@@ -1178,7 +1201,7 @@ function DashV5_AIForward({
       background: `radial-gradient(circle, ${accent}55, transparent 70%)`,
       filter: 'blur(20px)'
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -1186,7 +1209,7 @@ function DashV5_AIForward({
       marginBottom: 12,
       position: 'relative'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 40,
       height: 40,
@@ -1200,21 +1223,21 @@ function DashV5_AIForward({
     }
   }, React.cloneElement(Ic.spark, {
     size: 20
-  })), React.createElement("div", null, React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 700,
       color: T.t1
     }
-  }, "Morning briefing"), React.createElement("div", {
+  }, "Morning briefing"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.green,
       fontWeight: 500
     }
-  }, "\u25CF Updated 3 min ago"))), React.createElement("div", {
+  }, "\u25CF Updated 3 min ago"))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -1222,15 +1245,15 @@ function DashV5_AIForward({
       lineHeight: 1.5,
       position: 'relative'
     }
-  }, "You're ", React.createElement("strong", {
+  }, "You're ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: T.green
     }
-  }, "\xA38.4k up"), " this week. Camden is on track for Friday handover. I flagged ", React.createElement("strong", {
+  }, "\xA38.4k up"), " this week. Camden is on track for Friday handover. I flagged ", /*#__PURE__*/React.createElement("strong", {
     style: {
       color: T.amber
     }
-  }, "3 things"), " needing your decision today."), React.createElement("div", {
+  }, "3 things"), " needing your decision today."), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
@@ -1238,7 +1261,7 @@ function DashV5_AIForward({
       marginTop: 12,
       position: 'relative'
     }
-  }, ['Show me', 'Read out loud', 'Skip today'].map((s, i) => React.createElement("button", {
+  }, ['Show me', 'Read out loud', 'Skip today'].map((s, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
     style: {
       background: i === 0 ? accent : 'transparent',
@@ -1251,11 +1274,11 @@ function DashV5_AIForward({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, s))))), React.createElement("div", {
+  }, s))))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 20px 8px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -1264,7 +1287,7 @@ function DashV5_AIForward({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "For your decision")), React.createElement("div", {
+  }, "For your decision")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -1289,7 +1312,7 @@ function DashV5_AIForward({
     a: 'Move him',
     b: 'Ask Tom',
     c: T.cyan
-  }].map((x, i) => React.createElement("div", {
+  }].map((x, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -1297,7 +1320,7 @@ function DashV5_AIForward({
       padding: '12px 14px',
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -1305,7 +1328,7 @@ function DashV5_AIForward({
       color: T.t1,
       lineHeight: 1.3
     }
-  }, x.q), React.createElement("div", {
+  }, x.q), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -1313,13 +1336,13 @@ function DashV5_AIForward({
       marginTop: 4,
       lineHeight: 1.4
     }
-  }, x.ctx), React.createElement("div", {
+  }, x.ctx), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginTop: 10
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       flex: 1,
@@ -1333,7 +1356,7 @@ function DashV5_AIForward({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, x.a), React.createElement("button", {
+  }, x.a), /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       background: 'transparent',
@@ -1346,11 +1369,11 @@ function DashV5_AIForward({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, x.b))))), React.createElement("div", {
+  }, x.b))))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '14px 16px 0'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 22,
@@ -1360,48 +1383,52 @@ function DashV5_AIForward({
       alignItems: 'center',
       gap: 8
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t3
     }
   }, React.cloneElement(Ic.spark, {
     size: 16
-  })), React.createElement("span", {
+  })), /*#__PURE__*/React.createElement("span", {
     style: {
       flex: 1,
       fontFamily: SF,
       fontSize: 14,
       color: T.t3
     }
-  }, "Ask Cortex anything\u2026"), React.createElement("span", {
+  }, "Ask Cortex anything\u2026"), /*#__PURE__*/React.createElement("span", {
     style: {
       color: accent
     }
   }, React.cloneElement(Ic.mic, {
     size: 16
-  }))))), React.createElement(TabBar, {
+  }))))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
   }));
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// V6 — FIELD WORKER (big targets, glove-friendly)
+// ═══════════════════════════════════════════════════════════════════
 function DashV6_Field({
   accent = T.amber
 }) {
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 150
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '8px 20px 18px',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, React.createElement("div", null, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -1409,7 +1436,7 @@ function DashV6_Field({
       fontWeight: 600,
       letterSpacing: 0.3
     }
-  }, "SITE"), React.createElement("div", {
+  }, "SITE"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 22,
@@ -1423,7 +1450,7 @@ function DashV6_Field({
     }
   }, "Camden Mews ", React.cloneElement(Ic.chevDown, {
     size: 18
-  }))), React.createElement("div", {
+  }))), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -1436,7 +1463,7 @@ function DashV6_Field({
       fontSize: 12,
       fontWeight: 700
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       width: 8,
       height: 8,
@@ -1444,11 +1471,11 @@ function DashV6_Field({
       background: T.green,
       boxShadow: `0 0 6px ${T.green}`
     }
-  }), "ON SITE")), React.createElement("div", {
+  }), "ON SITE")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 12px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       width: '100%',
@@ -1463,7 +1490,7 @@ function DashV6_Field({
       gap: 14,
       boxShadow: `0 10px 24px ${accent}66`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 56,
       height: 56,
@@ -1478,19 +1505,19 @@ function DashV6_Field({
   }, React.cloneElement(Ic.camera, {
     size: 28,
     sw: 2.2
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       textAlign: 'left'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 20,
       fontWeight: 800,
       letterSpacing: -0.3
     }
-  }, "Capture progress"), React.createElement("div", {
+  }, "Capture progress"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -1498,7 +1525,7 @@ function DashV6_Field({
       opacity: 0.7,
       marginTop: 2
     }
-  }, "Photo + voice note")))), React.createElement("div", {
+  }, "Photo + voice note")))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 12px',
       display: 'grid',
@@ -1529,7 +1556,7 @@ function DashV6_Field({
     c: T.red,
     i: Ic.alert,
     route: 'incident'
-  }].map((x, i) => React.createElement("button", {
+  }].map((x, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
     onClick: () => window.cortexxNav && window.cortexxNav(x.route),
     style: {
@@ -1544,7 +1571,7 @@ function DashV6_Field({
       gap: 8,
       minHeight: 88
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 40,
       height: 40,
@@ -1558,29 +1585,29 @@ function DashV6_Field({
   }, React.cloneElement(x.i, {
     size: 22,
     sw: 2
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'left'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
       fontWeight: 700,
       color: T.t1
     }
-  }, x.l), React.createElement("div", {
+  }, x.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 1
     }
-  }, x.s))))), React.createElement("div", {
+  }, x.s))))), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 20px 8px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
@@ -1589,7 +1616,7 @@ function DashV6_Field({
       textTransform: 'uppercase',
       letterSpacing: 0.6
     }
-  }, "Today's jobs \xB7 3 left")), React.createElement("div", {
+  }, "Today's jobs \xB7 3 left")), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -1611,7 +1638,7 @@ function DashV6_Field({
     d: '14:00 today',
     done: false,
     c: T.t3
-  }].map((x, i) => React.createElement("button", {
+  }].map((x, i) => /*#__PURE__*/React.createElement("button", {
     key: i,
     onClick: () => window.cortexxNav && window.cortexxNav('tab', 'tasks'),
     style: {
@@ -1626,7 +1653,7 @@ function DashV6_Field({
       width: '100%',
       textAlign: 'left'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       width: 28,
       height: 28,
@@ -1634,11 +1661,11 @@ function DashV6_Field({
       border: `2px solid ${x.c}`,
       flexShrink: 0
     }
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
@@ -1646,14 +1673,14 @@ function DashV6_Field({
       color: T.t1,
       lineHeight: 1.2
     }
-  }, x.t), React.createElement("div", {
+  }, x.t), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 2
     }
-  }, x.d)))))), React.createElement(TabBar, {
+  }, x.d)))))), /*#__PURE__*/React.createElement(TabBar, {
     accent: accent
   }));
 }

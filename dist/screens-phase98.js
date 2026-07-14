@@ -1,4 +1,10 @@
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
+// Cortexx — Phase 98: Site label printer (v1.5)
+// Print site labels — delivery tags, asset/equipment tags, RAMS/hazard posters,
+// and scannable QR check-in labels — via the browser's native print (works on
+// any printer / AirPrint / save-as-PDF). Optional Web Bluetooth path for direct
+// thermal printing on Android Chrome.
+
 function LabelPrinterScreen({
   accent
 }) {
@@ -51,6 +57,8 @@ function LabelPrinterScreen({
     }
   }, [type, pid, checkinUrl]);
   const labelHTML = () => {
+    // Escape all user-controlled values — this HTML is written into a popup via
+    // document.write(), so unescaped project/field data would be an XSS vector.
     const esc = s => String(s == null ? '' : s).replace(/[&<>"']/g, c => ({
       '&': '&amp;',
       '<': '&lt;',
@@ -131,7 +139,7 @@ function LabelPrinterScreen({
       window.cortexxToast && window.cortexxToast('No printer selected', 'info');
     }
   };
-  const Field = props => React.createElement("input", _extends({}, props, {
+  const Field = props => /*#__PURE__*/React.createElement("input", _extends({}, props, {
     style: {
       width: '100%',
       boxSizing: 'border-box',
@@ -146,29 +154,29 @@ function LabelPrinterScreen({
       ...(props.style || {})
     }
   }));
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Label printer",
     subtitle: "Site labels, asset tags & QR check-in"
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 8,
       marginBottom: 16
     }
-  }, TYPES.map(t => React.createElement("button", {
+  }, TYPES.map(t => /*#__PURE__*/React.createElement("button", {
     key: t.k,
     onClick: () => setType(t.k),
     style: {
@@ -179,21 +187,21 @@ function LabelPrinterScreen({
       cursor: 'pointer',
       textAlign: 'left'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, t.l), React.createElement("div", {
+  }, t.l), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, t.d)))), React.createElement("div", {
+  }, t.d)))), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -203,7 +211,7 @@ function LabelPrinterScreen({
       letterSpacing: 0.6,
       margin: '6px 2px 8px'
     }
-  }, "Project"), React.createElement("select", {
+  }, "Project"), /*#__PURE__*/React.createElement("select", {
     value: pid,
     onChange: e => setPid(Number(e.target.value)),
     style: {
@@ -219,38 +227,38 @@ function LabelPrinterScreen({
       outline: 'none',
       marginBottom: 12
     }
-  }, projects.map(p => React.createElement("option", {
+  }, projects.map(p => /*#__PURE__*/React.createElement("option", {
     key: p.id,
     value: p.id
-  }, p.name))), type !== 'qr' && React.createElement("div", {
+  }, p.name))), type !== 'qr' && /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 8,
       marginBottom: 12
     }
-  }, type === 'rams' ? React.createElement(Field, {
+  }, type === 'rams' ? /*#__PURE__*/React.createElement(Field, {
     value: fields.hazard,
     onChange: e => setFields(f => ({
       ...f,
       hazard: e.target.value
     })),
     placeholder: "Primary hazard / instruction"
-  }) : React.createElement(Field, {
+  }) : /*#__PURE__*/React.createElement(Field, {
     value: fields.ref,
     onChange: e => setFields(f => ({
       ...f,
       ref: e.target.value
     })),
     placeholder: type === 'asset' ? 'Asset ID (e.g. TOOL-014)' : 'PO / delivery ref'
-  }), React.createElement(Field, {
+  }), /*#__PURE__*/React.createElement(Field, {
     value: fields.note,
     onChange: e => setFields(f => ({
       ...f,
       note: e.target.value
     })),
     placeholder: type === 'asset' ? 'Description' : type === 'rams' ? 'Notes (optional)' : 'Note (optional)'
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -260,7 +268,7 @@ function LabelPrinterScreen({
       letterSpacing: 0.6,
       margin: '8px 2px 8px'
     }
-  }, "Preview"), React.createElement("div", {
+  }, "Preview"), /*#__PURE__*/React.createElement("div", {
     style: {
       background: '#fff',
       borderRadius: 12,
@@ -270,11 +278,11 @@ function LabelPrinterScreen({
       alignItems: 'center',
       minHeight: 150
     }
-  }, type === 'qr' ? React.createElement("div", {
+  }, type === 'qr' ? /*#__PURE__*/React.createElement("div", {
     style: {
       textAlign: 'center'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -283,7 +291,7 @@ function LabelPrinterScreen({
       textTransform: 'uppercase',
       letterSpacing: 1
     }
-  }, "Scan to check in"), React.createElement("div", {
+  }, "Scan to check in"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 16,
@@ -291,13 +299,13 @@ function LabelPrinterScreen({
       color: '#111',
       margin: '2px 0 8px'
     }
-  }, proj?.name), React.createElement("div", {
+  }, proj?.name), /*#__PURE__*/React.createElement("div", {
     ref: previewRef,
     style: {
       display: 'flex',
       justifyContent: 'center'
     }
-  })) : React.createElement("div", {
+  })) : /*#__PURE__*/React.createElement("div", {
     style: {
       fontFamily: SF,
       color: '#111',
@@ -305,7 +313,7 @@ function LabelPrinterScreen({
       width: '100%',
       maxWidth: 280
     }
-  }, type === 'rams' && React.createElement("div", {
+  }, type === 'rams' && /*#__PURE__*/React.createElement("div", {
     style: {
       background: '#d4901f',
       color: '#111',
@@ -318,7 +326,7 @@ function LabelPrinterScreen({
       borderRadius: 6,
       marginBottom: 8
     }
-  }, "\u26A0 Site safety notice"), React.createElement("div", {
+  }, "\u26A0 Site safety notice"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 10,
       fontWeight: 700,
@@ -326,25 +334,25 @@ function LabelPrinterScreen({
       textTransform: 'uppercase',
       color: '#666'
     }
-  }, type === 'delivery' ? 'Delivery to' : type === 'asset' ? 'Asset tag' : ''), React.createElement("div", {
+  }, type === 'delivery' ? 'Delivery to' : type === 'asset' ? 'Asset tag' : ''), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: type === 'rams' ? 20 : 22,
       fontWeight: 800,
       margin: '3px 0'
     }
-  }, type === 'asset' ? fields.ref || 'TOOL-001' : proj?.name), type === 'rams' && React.createElement("div", {
+  }, type === 'asset' ? fields.ref || 'TOOL-001' : proj?.name), type === 'rams' && /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 15,
       fontWeight: 700,
       color: '#b00'
     }
-  }, fields.hazard), React.createElement("div", {
+  }, fields.hazard), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       color: '#333',
       marginTop: 4
     }
-  }, type === 'delivery' ? proj?.addr || '' : type === 'asset' ? fields.note || 'Equipment' : fields.note || 'Site induction & CSCS required.'))), React.createElement("button", {
+  }, type === 'delivery' ? proj?.addr || '' : type === 'asset' ? fields.note || 'Equipment' : fields.note || 'Site induction & CSCS required.'))), /*#__PURE__*/React.createElement("button", {
     onClick: print,
     style: {
       width: '100%',
@@ -365,7 +373,7 @@ function LabelPrinterScreen({
     }
   }, React.cloneElement(Ic.print || Ic.download, {
     size: 16
-  }), " Print label"), btSupported && React.createElement("button", {
+  }), " Print label"), btSupported && /*#__PURE__*/React.createElement("button", {
     onClick: connectBluetooth,
     style: {
       width: '100%',
@@ -380,7 +388,7 @@ function LabelPrinterScreen({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Pair Bluetooth thermal printer"), React.createElement("div", {
+  }, "Pair Bluetooth thermal printer"), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 12,
       padding: 12,
@@ -396,7 +404,7 @@ function LabelPrinterScreen({
   }, React.cloneElement(Ic.shield, {
     size: 14,
     color: T.green
-  }), React.createElement("span", null, "Print uses your device's normal print dialog \u2014 any AirPrint/Wi-Fi printer, or Save as PDF. The QR check-in label works with any phone camera (no app), complementing the NFC tags.")))));
+  }), /*#__PURE__*/React.createElement("span", null, "Print uses your device's normal print dialog \u2014 any AirPrint/Wi-Fi printer, or Save as PDF. The QR check-in label works with any phone camera (no app), complementing the NFC tags.")))));
 }
 Object.assign(window, {
   LabelPrinterScreen

@@ -1,3 +1,8 @@
+// CortexBuild Pro — Phase 117: H&S Command Centre
+// HSCommandScreen — toolbox-talk scheduler, near-miss trend chart, fatigue/
+// competency alerts, and an audit calendar. Wired to talkSchedule, incidents,
+// hsAudits, team, and clockEntries.
+
 (function () {
   if (!window.Backend) return;
   const card = extra => ({
@@ -23,6 +28,8 @@
     const maxTrend = Math.max(1, ...trend.map(t => t.count));
     const overdueAudits = C.overdueAudits();
     const upcomingTalks = talks.filter(t => !t.done);
+
+    // Competency/fatigue alerts derived from team certs + clock hours
     const snap = Backend.db.snapshot();
     const clock = snap.clockEntries || [];
     const fatigueAlerts = (() => {
@@ -63,6 +70,8 @@
       }
     }, l)));
     const totalAlerts = fatigueAlerts.length + competencyAlerts.length;
+
+    // ── Overview ───────────────────────────────────────────────────
     const Overview = () => React.createElement('div', null, React.createElement('div', {
       style: card({
         marginBottom: 14
@@ -189,6 +198,8 @@
         cursor: 'pointer'
       }
     }, 'Review →'))));
+
+    // ── Toolbox-talk scheduler ─────────────────────────────────────
     const Talks = () => React.createElement('div', null, talks.length === 0 ? React.createElement('p', {
       style: {
         color: T.t2,
@@ -261,6 +272,8 @@
         cursor: 'pointer'
       }
     }, '+ Schedule toolbox talk'));
+
+    // ── Alerts ─────────────────────────────────────────────────────
     const Alerts = () => React.createElement('div', null, totalAlerts === 0 && React.createElement('div', {
       style: {
         textAlign: 'center',
@@ -336,6 +349,8 @@
         color: T.t2
       }
     }, 'CSCS / cert expiring ' + (m.cscsExpiry || m.cscs || m.certExpiry))))));
+
+    // ── Audit calendar ─────────────────────────────────────────────
     const AUDIT_COL = {
       scheduled: '#3b82f6',
       overdue: '#ef4444',

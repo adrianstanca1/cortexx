@@ -1,3 +1,8 @@
+// CortexBuild Pro — Payment links (Phase 101)
+// One-tap "Pay invoice" — generates a Stripe/GoCardless link or bank-transfer
+// reference. The chosen URL/ref is persisted to the invoice so the same link
+// is reused on every share.
+
 (function () {
   if (!window.Backend || !window.Backend.payments) {
     var Backend = window.Backend;
@@ -64,7 +69,7 @@ function PaymentLinkScreen({
   }) || (invoices || []).find(function (x) {
     return x.status !== 'paid';
   });
-  var [providers, setProviders] = React.useState(null);
+  var [providers, setProviders] = React.useState(null); // null=loading, {}=loaded, false=offline
   var [busy, setBusy] = React.useState(null);
   var [result, setResult] = React.useState(null);
   var [err, setErr] = React.useState(null);
@@ -75,9 +80,9 @@ function PaymentLinkScreen({
     })();
   }, []);
   if (!inv) {
-    return React.createElement(ScreenBg, {
+    return /*#__PURE__*/React.createElement(ScreenBg, {
       accent: accent
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         padding: 40,
         textAlign: 'center',
@@ -92,6 +97,7 @@ function PaymentLinkScreen({
     setResult(null);
     try {
       var out = await window.Backend.payments.createLink(inv, provider);
+      // Persist link/ref on the invoice
       var patch = {
         payment_provider: out.provider,
         payment_link_url: out.url || null,
@@ -115,7 +121,7 @@ function PaymentLinkScreen({
     }
   };
   var Row = function (props) {
-    return React.createElement("div", {
+    return /*#__PURE__*/React.createElement("div", {
       style: {
         display: 'flex',
         justifyContent: 'space-between',
@@ -124,11 +130,11 @@ function PaymentLinkScreen({
         borderBottom: '1px solid ' + T.hair,
         fontSize: 13
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         color: T.t2
       }
-    }, props.l), React.createElement("span", {
+    }, props.l), /*#__PURE__*/React.createElement("span", {
       style: {
         fontWeight: 600,
         color: T.t1,
@@ -145,7 +151,7 @@ function PaymentLinkScreen({
         available: false
       };
     var disabled = !opts.available || busy === p;
-    return React.createElement("button", {
+    return /*#__PURE__*/React.createElement("button", {
       onClick: function () {
         generate(p);
       },
@@ -167,7 +173,7 @@ function PaymentLinkScreen({
         alignItems: 'center',
         gap: 12
       }
-    }, React.createElement("span", {
+    }, /*#__PURE__*/React.createElement("span", {
       style: {
         width: 36,
         height: 36,
@@ -179,35 +185,35 @@ function PaymentLinkScreen({
         justifyContent: 'center',
         fontSize: 16
       }
-    }, props.glyph), React.createElement("span", {
+    }, props.glyph), /*#__PURE__*/React.createElement("span", {
       style: {
         flex: 1
       }
-    }, React.createElement("div", null, props.label), React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", null, props.label), /*#__PURE__*/React.createElement("div", {
       style: {
         fontSize: 11,
         color: T.t2,
         fontWeight: 500,
         marginTop: 2
       }
-    }, opts.available ? opts.mode ? opts.mode.toUpperCase() + ' · ready' : 'ready' : 'not configured — set secret in server/.env')), busy === p && React.createElement("span", {
+    }, opts.available ? opts.mode ? opts.mode.toUpperCase() + ' · ready' : 'ready' : 'not configured — set secret in server/.env')), busy === p && /*#__PURE__*/React.createElement("span", {
       style: {
         fontSize: 11,
         color: T.t2
       }
     }, "\u2026"));
   };
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement(MobileHeader, {
+  }, /*#__PURE__*/React.createElement(MobileHeader, {
     title: "Payment link",
     subtitle: inv.id + ' · £' + Number(inv.amount).toLocaleString() + ' · ' + (inv.client || '')
-  }), React.createElement("div", {
+  }), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 14,
@@ -215,21 +221,21 @@ function PaymentLinkScreen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(Row, {
     l: "Client",
     v: inv.client || '—'
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     l: "Amount",
     v: '£' + Number(inv.amount).toLocaleString()
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     l: "Status",
     v: (inv.status || '').toUpperCase(),
     mono: true
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     l: "Due",
     v: inv.due || inv.issued || '—',
     mono: true
-  })), React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -237,34 +243,34 @@ function PaymentLinkScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "CREATE PAYMENT LINK"), providers === null && React.createElement("div", {
+  }, "CREATE PAYMENT LINK"), providers === null && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 14,
       color: T.t2,
       fontSize: 13
     }
-  }, "Loading providers\u2026"), providers === false && React.createElement("div", {
+  }, "Loading providers\u2026"), providers === false && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 14,
       color: T.amber,
       fontSize: 13
     }
-  }, "Backend not reachable \u2014 payment-link generation needs the server running."), providers && React.createElement(React.Fragment, null, React.createElement(ProviderBtn, {
+  }, "Backend not reachable \u2014 payment-link generation needs the server running."), providers && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(ProviderBtn, {
     p: "stripe",
     label: "Stripe (card)",
     color: T.purple,
     glyph: "\uD83D\uDCB3"
-  }), React.createElement(ProviderBtn, {
+  }), /*#__PURE__*/React.createElement(ProviderBtn, {
     p: "gocardless",
     label: "GoCardless (Direct Debit)",
     color: T.cyan,
     glyph: "\uD83D\uDD01"
-  }), React.createElement(ProviderBtn, {
+  }), /*#__PURE__*/React.createElement(ProviderBtn, {
     p: "bank",
     label: "UK bank transfer",
     color: T.green,
     glyph: "\uD83C\uDFE6"
-  })), result && React.createElement("div", {
+  })), result && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 14,
@@ -272,55 +278,55 @@ function PaymentLinkScreen({
       background: 'rgba(34,197,94,.06)',
       border: '1px solid rgba(34,197,94,.25)'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700,
       color: T.green,
       marginBottom: 10
     }
-  }, "\u2713 ", result.provider === 'bank' ? 'Bank details ready' : 'Payment link ready'), result.provider === 'bank' ? React.createElement("div", {
+  }, "\u2713 ", result.provider === 'bank' ? 'Bank details ready' : 'Payment link ready'), result.provider === 'bank' ? /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       lineHeight: 1.7
     }
-  }, React.createElement("div", null, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "Account name: "), React.createElement("strong", null, result.accountName)), result.sortCode && React.createElement("div", null, React.createElement("span", {
+  }, "Account name: "), /*#__PURE__*/React.createElement("strong", null, result.accountName)), result.sortCode && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "Sort code: "), React.createElement("span", {
+  }, "Sort code: "), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono
     }
-  }, result.sortCode)), result.accountNo && React.createElement("div", null, React.createElement("span", {
+  }, result.sortCode)), result.accountNo && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "Account no: "), React.createElement("span", {
+  }, "Account no: "), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono
     }
-  }, result.accountNo)), result.iban && React.createElement("div", null, React.createElement("span", {
+  }, result.accountNo)), result.iban && /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "IBAN: "), React.createElement("span", {
+  }, "IBAN: "), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono
     }
-  }, result.iban)), React.createElement("div", null, React.createElement("span", {
+  }, result.iban)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "Reference: "), React.createElement("strong", null, result.reference)), React.createElement("div", null, React.createElement("span", {
+  }, "Reference: "), /*#__PURE__*/React.createElement("strong", null, result.reference)), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "Amount: "), React.createElement("strong", null, "\xA3", result.amount)), React.createElement("button", {
+  }, "Amount: "), /*#__PURE__*/React.createElement("strong", null, "\xA3", result.amount)), /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       copy([result.accountName, result.sortCode, result.accountNo, result.iban, 'Ref: ' + result.reference, 'Amount: £' + result.amount].filter(Boolean).join('\n'), 'Bank details');
     },
@@ -335,7 +341,7 @@ function PaymentLinkScreen({
       fontSize: 12,
       fontWeight: 600
     }
-  }, "Copy all details")) : React.createElement(React.Fragment, null, React.createElement("div", {
+  }, "Copy all details")) : /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 10,
       borderRadius: 8,
@@ -346,13 +352,13 @@ function PaymentLinkScreen({
       wordBreak: 'break-all',
       color: T.t1
     }
-  }, result.url), React.createElement("div", {
+  }, result.url), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 10
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       copy(result.url, 'Link');
     },
@@ -367,7 +373,7 @@ function PaymentLinkScreen({
       fontSize: 13,
       fontWeight: 700
     }
-  }, "Copy link"), React.createElement("a", {
+  }, "Copy link"), /*#__PURE__*/React.createElement("a", {
     href: result.url,
     target: "_blank",
     rel: "noopener noreferrer",
@@ -384,7 +390,7 @@ function PaymentLinkScreen({
       textAlign: 'center',
       textDecoration: 'none'
     }
-  }, "Open")))), err && React.createElement("div", {
+  }, "Open")))), err && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 14,
@@ -392,20 +398,20 @@ function PaymentLinkScreen({
       background: 'rgba(239,68,68,.06)',
       border: '1px solid rgba(239,68,68,.2)'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 13,
       fontWeight: 700,
       color: T.red,
       marginBottom: 4
     }
-  }, "Generation failed"), React.createElement("div", {
+  }, "Generation failed"), /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 12,
       color: T.t2,
       wordBreak: 'break-word'
     }
-  }, err)), inv.payment_link_url && !result && React.createElement("div", {
+  }, err)), inv.payment_link_url && !result && /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 14,
@@ -413,7 +419,7 @@ function PaymentLinkScreen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -421,7 +427,7 @@ function PaymentLinkScreen({
       letterSpacing: 0.6,
       marginBottom: 8
     }
-  }, "EXISTING LINK (", (inv.payment_provider || 'stripe').toUpperCase(), ")"), React.createElement("div", {
+  }, "EXISTING LINK (", (inv.payment_provider || 'stripe').toUpperCase(), ")"), /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 10,
       borderRadius: 8,
@@ -432,13 +438,13 @@ function PaymentLinkScreen({
       wordBreak: 'break-all',
       color: T.t1
     }
-  }, inv.payment_link_url), React.createElement("div", {
+  }, inv.payment_link_url), /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       marginTop: 10
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: function () {
       copy(inv.payment_link_url, 'Link');
     },
@@ -453,7 +459,7 @@ function PaymentLinkScreen({
       fontSize: 12,
       fontWeight: 600
     }
-  }, "Copy"), React.createElement("a", {
+  }, "Copy"), /*#__PURE__*/React.createElement("a", {
     href: inv.payment_link_url,
     target: "_blank",
     rel: "noopener noreferrer",
@@ -470,7 +476,7 @@ function PaymentLinkScreen({
       textAlign: 'center',
       textDecoration: 'none'
     }
-  }, "Open"))), React.createElement("div", {
+  }, "Open"))), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 16,
       padding: 12,
@@ -478,23 +484,23 @@ function PaymentLinkScreen({
       color: T.t2,
       lineHeight: 1.5
     }
-  }, "Provider keys live in ", React.createElement("code", {
+  }, "Provider keys live in ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
-  }, "server/.env"), ": ", React.createElement("code", {
+  }, "server/.env"), ": ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
-  }, "STRIPE_SECRET_KEY"), ", ", React.createElement("code", {
+  }, "STRIPE_SECRET_KEY"), ", ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
-  }, "GOCARDLESS_ACCESS_TOKEN"), ", ", React.createElement("code", {
+  }, "GOCARDLESS_ACCESS_TOKEN"), ", ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
-  }, "BANK_SORT_CODE"), " / ", React.createElement("code", {
+  }, "BANK_SORT_CODE"), " / ", /*#__PURE__*/React.createElement("code", {
     style: {
       fontFamily: SFMono
     }

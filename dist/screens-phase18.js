@@ -1,3 +1,5 @@
+// Cortexx — Phase 18: Launch readiness
+// Privacy / Terms / Status / Changelog / Public app stub
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
@@ -76,22 +78,22 @@ function LaunchScreen({
     c: T.cyan
   }];
   if (section === null) {
-    return React.createElement(ScreenBg, {
+    return /*#__PURE__*/React.createElement(ScreenBg, {
       accent: accent
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1,
         overflowY: 'auto',
         paddingBottom: 30
       }
-    }, React.createElement(MobileHeader, {
+    }, /*#__PURE__*/React.createElement(MobileHeader, {
       title: "About & legal",
       subtitle: "CortexBuild Pro v2.0 \xB7 build 247 \xB7 production-ready"
-    }), React.createElement("div", {
+    }), /*#__PURE__*/React.createElement("div", {
       style: {
         padding: '4px 16px 14px'
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         background: `linear-gradient(135deg, ${T.green}22, ${accent}11)`,
         border: `0.5px solid ${T.green}55`,
@@ -101,7 +103,7 @@ function LaunchScreen({
         alignItems: 'center',
         gap: 12
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         width: 40,
         height: 40,
@@ -115,24 +117,24 @@ function LaunchScreen({
     }, React.cloneElement(Ic.check, {
       size: 22,
       sw: 3
-    })), React.createElement("div", {
+    })), /*#__PURE__*/React.createElement("div", {
       style: {
         flex: 1
       }
-    }, React.createElement("div", {
+    }, /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1,
         fontWeight: 700
       }
-    }, "All systems operational"), React.createElement("div", {
+    }, "All systems operational"), /*#__PURE__*/React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2
       }
-    }, "API \xB7 AI \xB7 Storage \xB7 99.98% uptime")))), React.createElement(Section, null, React.createElement(GroupedList, null, SECTIONS.map((s, i, a) => React.createElement(Row, {
+    }, "API \xB7 AI \xB7 Storage \xB7 99.98% uptime")))), /*#__PURE__*/React.createElement(Section, null, /*#__PURE__*/React.createElement(GroupedList, null, SECTIONS.map((s, i, a) => /*#__PURE__*/React.createElement(Row, {
       key: s.k,
       icon: s.i,
       iconBg: s.c,
@@ -142,19 +144,19 @@ function LaunchScreen({
       onClick: () => setSection(s.k)
     }))))));
   }
-  return React.createElement(ScreenBg, {
+  return /*#__PURE__*/React.createElement(ScreenBg, {
     accent: accent
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '4px 16px 8px'
     }
-  }, React.createElement("button", {
+  }, /*#__PURE__*/React.createElement("button", {
     onClick: () => setSection(null),
     style: {
       background: 'none',
@@ -167,16 +169,16 @@ function LaunchScreen({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", React.createElement("span", null, "Back"))), React.createElement(MobileHeader, {
+  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back"))), /*#__PURE__*/React.createElement(MobileHeader, {
     title: SECTIONS.find(s => s.k === section)?.l
-  }), section === 'changelog' && React.createElement("div", {
+  }), section === 'changelog' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: 14
     }
-  }, (Backend.db.snapshot().changelog || []).map(v => React.createElement("div", {
+  }, (Backend.db.snapshot().changelog || []).map(v => /*#__PURE__*/React.createElement("div", {
     key: v.id,
     style: {
       background: T.bg2,
@@ -184,33 +186,33 @@ function LaunchScreen({
       padding: 14,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'baseline'
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 18,
       fontWeight: 700,
       color: T.t1
     }
-  }, v.version), React.createElement("span", {
+  }, v.version), /*#__PURE__*/React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t3
     }
-  }, v.date)), React.createElement("div", {
+  }, v.date)), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 10,
       display: 'flex',
       flexDirection: 'column',
       gap: 6
     }
-  }, v.changes.map((c, i) => React.createElement("div", {
+  }, v.changes.map((c, i) => /*#__PURE__*/React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -221,7 +223,7 @@ function LaunchScreen({
       color: T.t1,
       lineHeight: 1.4
     }
-  }, React.createElement("span", {
+  }, /*#__PURE__*/React.createElement("span", {
     style: {
       color: T.green,
       marginTop: 2
@@ -229,13 +231,13 @@ function LaunchScreen({
   }, React.cloneElement(Ic.check, {
     size: 11,
     sw: 3
-  })), React.createElement("span", null, c))))))), section === 'status' && React.createElement("div", {
+  })), /*#__PURE__*/React.createElement("span", null, c))))))), section === 'status' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement(Section, {
+  }, /*#__PURE__*/React.createElement(Section, {
     title: "Services"
-  }, React.createElement(GroupedList, null, [{
+  }, /*#__PURE__*/React.createElement(GroupedList, null, [{
     l: 'API & Backend',
     s: 'Operational',
     c: T.green,
@@ -260,13 +262,13 @@ function LaunchScreen({
     s: 'Operational',
     c: T.green,
     up: '100%'
-  }].map((s, i, a) => React.createElement(Row, {
+  }].map((s, i, a) => /*#__PURE__*/React.createElement(Row, {
     key: i,
     icon: Ic.check,
     iconBg: s.c,
     title: s.l,
     sub: s.s,
-    right: React.createElement("span", {
+    right: /*#__PURE__*/React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 11,
@@ -274,9 +276,9 @@ function LaunchScreen({
       }
     }, s.up),
     isLast: i === a.length - 1
-  })))), React.createElement(Section, {
+  })))), /*#__PURE__*/React.createElement(Section, {
     title: "Recent incidents (last 90 days)"
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       padding: 20,
       textAlign: 'center',
@@ -286,7 +288,7 @@ function LaunchScreen({
       background: T.bg2,
       borderRadius: 14
     }
-  }, "No incidents to report \uD83C\uDF89"))), section === 'privacy' && React.createElement("div", {
+  }, "No incidents to report \uD83C\uDF89"))), section === 'privacy' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 30px',
       fontFamily: SF,
@@ -294,46 +296,46 @@ function LaunchScreen({
       color: T.t1,
       lineHeight: 1.6
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 16,
       border: `0.5px solid ${T.hair}`
     }
-  }, React.createElement("p", null, React.createElement("strong", null, "CortexBuild Pro is local-first."), " Your data lives on your device, not on our servers. We use Claude's API for AI features, with no training opt-in. Read more:"), React.createElement("ul", {
+  }, /*#__PURE__*/React.createElement("p", null, /*#__PURE__*/React.createElement("strong", null, "CortexBuild Pro is local-first."), " Your data lives on your device, not on our servers. We use Claude's API for AI features, with no training opt-in. Read more:"), /*#__PURE__*/React.createElement("ul", {
     style: {
       paddingLeft: 18,
       marginTop: 10
     }
-  }, React.createElement("li", {
+  }, /*#__PURE__*/React.createElement("li", {
     style: {
       marginBottom: 6
     }
-  }, "We store nothing unless you opt into cloud sync (Pro/Enterprise)"), React.createElement("li", {
+  }, "We store nothing unless you opt into cloud sync (Pro/Enterprise)"), /*#__PURE__*/React.createElement("li", {
     style: {
       marginBottom: 6
     }
-  }, "GPS coordinates from check-in are kept locally \u2014 never shared"), React.createElement("li", {
+  }, "GPS coordinates from check-in are kept locally \u2014 never shared"), /*#__PURE__*/React.createElement("li", {
     style: {
       marginBottom: 6
     }
-  }, "AI requests carry only your live workspace summary; no PII to third parties"), React.createElement("li", {
+  }, "AI requests carry only your live workspace summary; no PII to third parties"), /*#__PURE__*/React.createElement("li", {
     style: {
       marginBottom: 6
     }
-  }, "Photos & docs encrypted at rest (when on cloud)"), React.createElement("li", null, "You can export & delete everything from Settings \u2192 Data")), React.createElement("div", {
+  }, "Photos & docs encrypted at rest (when on cloud)"), /*#__PURE__*/React.createElement("li", null, "You can export & delete everything from Settings \u2192 Data")), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t3
     }
-  }, "Last updated: 2026-05-01 \xB7 ICO reg: ZA123456"))), section === 'terms' && React.createElement("div", {
+  }, "Last updated: 2026-05-01 \xB7 ICO reg: ZA123456"))), section === 'terms' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px 30px'
     }
-  }, React.createElement("div", {
+  }, /*#__PURE__*/React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
@@ -344,39 +346,39 @@ function LaunchScreen({
       color: T.t1,
       lineHeight: 1.6
     }
-  }, React.createElement("p", null, "By using CortexBuild Pro you agree to use it for lawful UK construction operations. You retain all rights to your data. We provide the software \"as is\" with reasonable uptime guarantees on paid plans."), React.createElement("p", {
+  }, /*#__PURE__*/React.createElement("p", null, "By using CortexBuild Pro you agree to use it for lawful UK construction operations. You retain all rights to your data. We provide the software \"as is\" with reasonable uptime guarantees on paid plans."), /*#__PURE__*/React.createElement("p", {
     style: {
       marginTop: 10
     }
-  }, "Free tier has no SLA. Pro tier: 99.5% uptime, priority support. Enterprise tier: 99.9% uptime, dedicated support, custom data residency."), React.createElement("p", {
+  }, "Free tier has no SLA. Pro tier: 99.5% uptime, priority support. Enterprise tier: 99.9% uptime, dedicated support, custom data residency."), /*#__PURE__*/React.createElement("p", {
     style: {
       marginTop: 10
     }
-  }, "You may not resell or white-label without written permission."), React.createElement("div", {
+  }, "You may not resell or white-label without written permission."), /*#__PURE__*/React.createElement("div", {
     style: {
       marginTop: 14,
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t3
     }
-  }, "Last updated: 2026-05-01 \xB7 Governing law: England & Wales"))), section === 'gdpr' && React.createElement("div", {
+  }, "Last updated: 2026-05-01 \xB7 Governing law: England & Wales"))), section === 'gdpr' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement(Section, {
+  }, /*#__PURE__*/React.createElement(Section, {
     title: "Your rights"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.download,
     iconBg: T.blue,
     title: "Right to access",
     sub: "Export all your data as JSON",
     onClick: () => window.cortexxBackup && window.cortexxBackup()
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.edit,
     iconBg: T.purple,
     title: "Right to rectify",
     sub: "Edit any field in the app"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.trash,
     iconBg: T.red,
     title: "Right to erase",
@@ -384,56 +386,56 @@ function LaunchScreen({
     danger: true,
     isLast: true,
     onClick: () => toast('Confirm via email', 'info')
-  })))), section === 'security' && React.createElement("div", {
+  })))), section === 'security' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement(Section, {
+  }, /*#__PURE__*/React.createElement(Section, {
     title: "How we protect your data"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.shield,
     iconBg: T.green,
     title: "Encryption",
     sub: "AES-256 at rest, TLS 1.3 in transit"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.check,
     iconBg: T.blue,
     title: "SOC 2 Type II",
     sub: "Audited annually (Pro/Enterprise)"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.archive,
     iconBg: T.purple,
     title: "GDPR compliant",
     sub: "ICO registered \xB7 EU/UK data residency"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.zap,
     iconBg: T.amber,
     title: "Bug bounty",
     sub: "Report vulnerabilities: security@cortexbuildpro.com",
     isLast: true
-  })))), section === 'press' && React.createElement("div", {
+  })))), section === 'press' && /*#__PURE__*/React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, React.createElement(Section, {
+  }, /*#__PURE__*/React.createElement(Section, {
     title: "Resources"
-  }, React.createElement(GroupedList, null, React.createElement(Row, {
+  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
     icon: Ic.download,
     iconBg: T.blue,
     title: "Logo pack",
     sub: "SVG \xB7 light & dark variants",
     onClick: () => toast('Logo pack downloaded', 'success')
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.camera,
     iconBg: T.purple,
     title: "Screenshots",
     sub: "High-res for press"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.doc,
     iconBg: T.cyan,
     title: "One-pager",
     sub: "PDF summary for journalists"
-  }), React.createElement(Row, {
+  }), /*#__PURE__*/React.createElement(Row, {
     icon: Ic.mail,
     iconBg: T.green,
     title: "Press contact",
