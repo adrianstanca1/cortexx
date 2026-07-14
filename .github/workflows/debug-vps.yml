@@ -5,7 +5,7 @@ jobs:
   debug:
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
     steps:
       - uses: actions/checkout@v7
       - name: Setup SSH
@@ -22,7 +22,7 @@ jobs:
           SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
         run: |
           echo "Local NEXTAUTH_SECRET length: ${#NEXTAUTH_SECRET}"
-          echo "Local ADMIN_EMAIL: $ADMIN_EMAIL"
+          echo "Local ADMIN_EMAIL length: ${#ADMIN_EMAIL}"
           echo "Local ADMIN_PASSWORD length: ${#ADMIN_PASSWORD}"
           echo "Local SEED_TOKEN length: ${#SEED_TOKEN}"
           echo ""
@@ -37,7 +37,7 @@ jobs:
               'bash -s' << 'REMOTE'
               echo "Remote env vars (length only):"
               echo "  NEXTAUTH_SECRET: ${#NEXTAUTH_SECRET}"
-              echo "  ADMIN_EMAIL: $ADMIN_EMAIL"
+              echo "  ADMIN_EMAIL: (set, length ${#ADMIN_EMAIL})"
               echo "  ADMIN_PASSWORD: ${#ADMIN_PASSWORD}"
               echo "  SEED_TOKEN: ${#SEED_TOKEN}"
           REMOTE
@@ -67,7 +67,7 @@ jobs:
               ADMIN_PASSWORD="$ADMIN_PASSWORD" \
               SEED_TOKEN="$SEED_TOKEN" \
               'bash -s' << 'REMOTE' 2>&1 || true
-              set -ex
+              set -e
               APP_DIR=/opt/cortexx
               APP_PORT=3010
               DB_PASS=$(cat /opt/cortexx-db-password 2>/dev/null)
@@ -104,8 +104,18 @@ jobs:
               echo "npm ci exit: $?"
           REMOTE
           } 2>&1 | tee debug.txt
-          git config user.email "actions@github.com"
-          git config user.name "GitHub Actions"
-          git add debug.txt
-          git commit -m "chore: deploy debug [skip ci]" || true
-          git push || true
+      - name: Upload debug log (private to this run)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: vps-debug
+          path: debug.txt
+          if-no-files-found: ignore
+          retention-days: 7
+      - name: Warn on leaked secrets
+        if: always()
+        run: |
+          echo "NOTE: This workflow previously committed debug.txt (which traced the" \
+            "DB password via 'set -x' and echoed ADMIN_EMAIL) to the main branch." \
+            "It now uploads the log as a private artifact instead. If the old behavior" \
+            "ever ran, assume the DB password and admin email are in git history and rotate them."

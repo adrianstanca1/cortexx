@@ -130,6 +130,7 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       else if (key === 'addco') setSheet('addchange');
       else if (key === 'adddiaryentry') setSheet('adddiary');
       else if (key === 'tab') { setTab(payload); setSheet(null); }
+      else if (key === 'checkout') { window.__checkoutPlan = payload; setCheckoutPlan(payload); setSheet('checkout'); }
       else { setSheet(key); }
     };
   }, []);
@@ -254,7 +255,7 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       else if (k === 'labels') setSheet('labels');
       else if (k === 'sitemap') setSheet('sitemap');
       else if (k === 'switchworkspace') setSheet('switchworkspace');
-      else if (k === 'checkout') { window.__checkoutPlan = payload; setCheckoutPlan(payload); setSheet('checkout'); }
+      else if (k === 'checkout') setSheet('checkout');
       else if (k === 'sso') setSheet('sso');
       else if (k === 'addco') setSheet('addchange');
       else if (k === 'adddiaryentry') setSheet('adddiary');

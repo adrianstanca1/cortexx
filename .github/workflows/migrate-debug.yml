@@ -8,14 +8,12 @@ on:
   workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
   debug:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    env:
-      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     steps:
       - name: Setup SSH
         run: |
@@ -65,11 +63,14 @@ jobs:
           echo "$OUT" > /tmp/migrate-out.txt
           wc -l /tmp/migrate-out.txt
 
-      - name: Commit migrate output to repo
-        run: |
-          BASE_SHA=$(gh api "repos/${{ github.repository }}/git/refs/heads/main" -q '.object.sha')
-          BLOB_SHA=$(jq -Rsn --rawfile content /tmp/migrate-out.txt '{content: $content, encoding: "utf-8"}' | gh api --method POST "repos/${{ github.repository }}/git/blobs" --input - -q '.sha')
-          TREE_SHA=$(jq -n --arg base "$BASE_SHA" --arg blob "$BLOB_SHA" '{base_tree: $base, tree: [{path: "ops/last-migrate.txt", mode: "100644", type: "blob", sha: $blob}]}' | gh api --method POST "repos/${{ github.repository }}/git/trees" --input - -q '.sha')
-          COMMIT_SHA=$(jq -n --arg tree "$TREE_SHA" --arg parent "$BASE_SHA" '{message: "ops: migrate debug output [skip ci]", tree: $tree, parents: [$parent]}' | gh api --method POST "repos/${{ github.repository }}/git/commits" --input - -q '.sha')
-          gh api --method PATCH "repos/${{ github.repository }}/git/refs/heads/main" -f sha="$COMMIT_SHA"
-          echo "✓ Committed migrate output: $COMMIT_SHA"
+      # The migrate output can include DATABASE_URL/connection strings on
+      # failure, so it must NEVER be committed to a branch. Upload it as a
+      # private run artifact instead (downloadable from the run, not the repo).
+      - name: Upload migrate log (private to this run)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: migrate-debug
+          path: /tmp/migrate-out.txt
+          if-no-files-found: ignore
+          retention-days: 7

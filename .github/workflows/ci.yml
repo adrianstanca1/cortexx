@@ -44,6 +44,13 @@ jobs:
         run: npm run lint
       - name: TypeScript check
         run: npx tsc --noEmit
+      - name: dist/ integrity gate (no server .ts/.jsx shipped, no drift)
+        # Enforces the security invariant that server-only .ts/.jsx never ship
+        # to dist/ (which is served live at cortexbuildpro.com), and that dist/
+        # matches lib/. `postinstall` masks precompile failures locally with
+        # `|| true`; this step makes a broken builder fail CI instead of
+        # silently publishing stale or over-broad dist/ to production.
+        run: npm run precompile:check
       - name: Unit tests
         run: npm test
       - name: Build

@@ -35,6 +35,14 @@ const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 // (push, banking, iap, hmrc). Without this they silently fail.
 app.locals.pool = pool;
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+// Fail-fast in production: a missing JWT_SECRET must NEVER silently fall back to
+// the hardcoded placeholder — that would let anyone forge tokens for any
+// user/workspace (full auth bypass). banking.js also derives the bank-token
+// encryption key from JWT_SECRET, so this guard protects token-at-rest too.
+if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
+  console.error('[fatal] JWT_SECRET is not set. Refusing to start in production with the insecure default.');
+  process.exit(1);
+}
 const APP_URL = process.env.APP_URL || 'http://localhost:8080';
 
 // ── Rate limits ─────────────────────────────────────────────
@@ -162,14 +170,21 @@ app.post('/api/auth/magic/verify', authLimiter, wrap(async (req, res) => {
 }));
 
 // ── Realtime stream ─────────────────────────────────────────
-app.get('/api/stream', wrap(async (req, res) => {
+// Cap concurrent SSE connections per workspace so one valid JWT can't open
+// unbounded sockets (each holds a connection + a 25s ping interval + a Map
+// entry) and exhaust FDs/memory.
+const MAX_STREAMS_PER_WS = 12;
+app.get('/api/stream', apiLimiter, wrap(async (req, res) => {
   let ws;
   try { ws = jwt.verify(req.query.token || '', JWT_SECRET).ws; }
   catch { return res.status(401).end(); }
+  const key = String(ws);
+  if ((channels.get(key)?.size || 0) >= MAX_STREAMS_PER_WS) {
+    return res.status(429).set('Retry-After', '5').json({ error: 'too_many_streams' });
+  }
   res.set({ 'Content-Type': 'text/event-stream', 'Cache-Control': 'no-cache', Connection: 'keep-alive' });
   res.flushHeaders();
   res.write(`data: ${JSON.stringify({ type: 'connected' })}\n\n`);
-  const key = String(ws);
   if (!channels.has(key)) channels.set(key, new Set());
   channels.get(key).add(res);
   const ping = setInterval(() => { try { res.write(': ping\n\n'); } catch (e) {} }, 25000);
@@ -184,7 +199,7 @@ app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: Date.now(), st
 app.use('/api/portal', portalLimiter, require('./routes/portal')(pool, bus));   // PUBLIC, token-scoped
 app.use('/api', apiLimiter, require('./routes/sync')(pool, auth));               // sync + portal inbox
 app.use('/api', apiLimiter, require('./routes/ledger')(pool, auth));            // ledger CSV
-app.use('/api', require('./routes/agents')(pool, auth, bus));                    // AI triage + inbound webhooks
+app.use('/api', apiLimiter, require('./routes/agents')(pool, auth, bus));                    // AI triage + inbound webhooks (rate-limited; /triage calls a paid upstream)
 app.use('/api', apiLimiter, integrationAuth, require('./routes/llm'));           // local LLM (Ollama/OpenAI-compat) — replaces third-party API
 app.use('/api', apiLimiter, integrationAuth, require('./routes/payments'));      // Stripe / GoCardless / bank-transfer link generation
 app.use('/api', apiLimiter, integrationAuth, require('./routes/push'));          // Web Push (VAPID) + native APNs/FCM passthrough

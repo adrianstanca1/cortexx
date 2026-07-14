@@ -45,6 +45,29 @@ function xmlEscape(s) {
   return String(s == null ? '' : s).replace(/[&<>"']/g, c => ({ '&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&apos;' }[c]));
 }
 
+// ── Validate a client-supplied IRenvelope before it is interpolated raw into
+//    the GovTalkMessage body. Without this an authenticated user could close
+//    the <Body>/<GovTalkDetails> tags and inject arbitrary GovTalk structure,
+//    filing forged content to HMRC under the company's Gateway credentials.
+//    We don't re-parse/serialize (no DOM parser in stdlib); instead we assert
+//    structural invariants that make tag-breakout impossible, and reject
+//    anything that doesn't look like exactly one IRenvelope element.
+function sanitizeIRenvelope(raw) {
+  const body = String(raw == null ? '' : raw).trim();
+  if (!body) throw new Error('empty');
+  // Must be a single <IRenvelope>…</IRenvelope> element — nothing before/after.
+  if (!/^<IRenvelope(\s[^>]*)?>/.test(body)) throw new Error('must start with <IRenvelope>');
+  if (!/<\/IRenvelope>\s*$/.test(body)) throw new Error('must end with </IRenvelope>');
+  // Exactly one opening IRenvelope tag.
+  if ((body.match(/<IRenvelope(\s[^>]*)?>/g) || []).length !== 1) throw new Error('multiple IRenvelope roots');
+  if ((body.match(/<\/IRenvelope>/g) || []).length !== 1) throw new Error('multiple IRenvelope closes');
+  // Reject any tag that could break out of the <Body> wrapper we interpolate
+  // into, or that smuggles a second GovTalkMessage/declaration.
+  const BREAKOUT = [/[<&]!\s*--/, /<\/Body>/, /<\/GovTalkDetails>/, /<\/GovTalkMessage>/, /<\/Header>/, /<\?xml/, /<GovTalkMessage/];
+  for (const re of BREAKOUT) if (re.test(body)) throw new Error('disallowed markup');
+  return body;
+}
+
 // ── Build the GovTalkMessage envelope wrapping an IRenvelope ────────
 function wrapGovTalkRequest(body, opts) {
   // opts: { className, correlationId, periodEnd }
@@ -160,9 +183,12 @@ router.post('/hmrc/cis300/submit', async (req, res) => {
     if (!CONFIGURED) return res.status(503).json({ error: 'HMRC Gateway credentials not configured — set HMRC_GATEWAY_USER + HMRC_GATEWAY_PASS' });
     const body = req.body && req.body.irEnvelope;
     const periodEnd = (req.body && req.body.periodEnd) || '';
-    if (!body || !body.includes('<IRenvelope')) return res.status(400).json({ error: 'irEnvelope required (the body from CortexCIS300.toHMRCXml)' });
+    if (!body) return res.status(400).json({ error: 'irEnvelope required (the body from CortexCIS300.toHMRCXml)' });
+    let safeBody;
+    try { safeBody = sanitizeIRenvelope(body); }
+    catch (e) { return res.status(400).json({ error: 'invalid irEnvelope: ' + e.message }); }
 
-    const envelope = wrapGovTalkRequest(body, { className: 'IR-CIS-CIS300MR' });
+    const envelope = wrapGovTalkRequest(safeBody, { className: 'IR-CIS-CIS300MR' });
     const r = await abortableFetch(HMRC_URL, {
       method: 'POST',
       headers: { 'content-type': 'text/xml; charset=utf-8', accept: 'text/xml' },
