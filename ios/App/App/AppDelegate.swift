@@ -1,4 +1,5 @@
 import UIKit
+import UserNotifications
 import Capacitor
 
 @UIApplicationMain
@@ -13,10 +14,10 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         didFinishLaunchingWithOptions launchOptions: [UIApplication.LaunchOptionsKey: Any]?
     ) -> Bool {
 
-        // Register for remote (push) notifications
+        // Register for remote (push) notifications.
         UNUserNotificationCenter.current().delegate = self
         let authOptions: UNAuthorizationOptions = [.alert, .badge, .sound]
-        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { granted, error in
+        UNUserNotificationCenter.current().requestAuthorization(options: authOptions) { _, error in
             if let error = error {
                 print("[Cortexx] Push auth error: \(error)")
             }
@@ -98,19 +99,19 @@ extension AppDelegate: UNUserNotificationCenterDelegate {
         willPresent notification: UNNotification,
         withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
     ) {
-        completionHandler([.banner, .badge, .sound])
+        // `.alert` works across the project's deployment range. On modern iOS it
+        // is presented using the system's current notification presentation UI.
+        completionHandler([.alert, .badge, .sound])
     }
 
-    /// Called when the user taps a notification.
+    /// Called when the user taps a notification. Capacitor's push-notification
+    /// plugin observes the system response; the app delegate only needs to
+    /// complete the callback here.
     func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        NotificationCenter.default.post(
-            name: .capacitorNotificationReceived,
-            object: response.notification
-        )
         completionHandler()
     }
 }
