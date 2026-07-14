@@ -35,9 +35,9 @@ function APIScreen({ accent }) {
         <Row icon={Ic.zap} iconBg={accent} title="API key" sub="cxx_live_••••••••••••3f42"
           right={<button onClick={async () => { try { await navigator.clipboard.writeText('cxx_live_demo_key_3f42'); toast('Copied', 'success'); } catch { toast('Copy failed', 'error'); } }} style={{ background: T.bg3, color: T.t1, border: 'none', borderRadius: 8, padding: '4px 10px', fontFamily: SFMono, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>COPY</button>}/>
         <Row icon={Ic.swap} iconBg={T.purple} title="Webhooks" sub="3 endpoints configured"
-          onClick={() => window.open('https://cortexx.app/docs/webhooks', '_blank')}/>
-        <Row icon={Ic.book} iconBg={T.cyan} title="API docs" sub="api.cortexx.app/docs" isLast
-          onClick={() => window.open('https://api.cortexx.app/docs', '_blank')}/>
+          onClick={() => window.open('/docs/webhooks', '_blank')}/>
+        <Row icon={Ic.book} iconBg={T.cyan} title="API docs" sub="cortexbuildpro.com/docs" isLast
+          onClick={() => window.open('/docs', '_blank')}/>
       </GroupedList>
     </Section>
     <Section title="Recent activity">

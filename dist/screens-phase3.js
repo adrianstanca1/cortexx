@@ -870,7 +870,7 @@ function SettingsScreen({
     icon: Ic.book,
     iconBg: T.blue,
     title: "Help docs",
-    onClick: () => window.open('https://cortexx.app/help', '_blank')
+    onClick: () => window.open('/help', '_blank')
   }), React.createElement(Row, {
     icon: Ic.mail,
     iconBg: T.green,
@@ -1045,9 +1045,9 @@ function HelpScreen({
     icon: Ic.book,
     iconBg: T.purple,
     title: "Help centre",
-    sub: "cortexx.app/help",
+    sub: "cortexbuildpro.com/help",
     isLast: true,
-    onClick: () => window.open('https://cortexx.app/help', '_blank')
+    onClick: () => window.open('/help', '_blank')
   })))));
 }
 const PO_STATUS_C = {
