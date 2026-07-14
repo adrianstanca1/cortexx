@@ -18,9 +18,13 @@
 	# /.env, /.env.vault, /.git/config, /server/index.js, /build-dist.js, or any
 	# *.ts would return the file's contents to the public internet. The docker
 	# compose mount is also narrowed (defense in depth), but never rely on that
-	# alone — keep this deny list explicit.
+	# alone — keep this deny list explicit. Wrapped in its own handle() and
+	# placed BEFORE the catch-all so it always wins (top-level respond would be
+	# reordered after the catch-all handle by Caddy's default directive order).
 	@blocked path /.git* /.env* /.env.production /.env.vault /server/* /build-dist.js /proxy.ts /instrumentation.ts /package.json /package-lock.json /tsconfig.json /next.config.* /tailwind.config.* /postcss.config.* /playwright.config.* /eslint.config.* *.ts *.tsx
-	respond @blocked 404
+	handle @blocked {
+		respond 404
+	}
 
 	# ── Everything else → the SPA shell ──
 	handle {
