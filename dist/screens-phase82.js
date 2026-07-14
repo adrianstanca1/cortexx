@@ -1,8 +1,3 @@
-// Cortexx — Photo review + multi-tenant layer (Phase 82)
-
-// ═══════════════════════════════════════════════════════════════════
-// MULTI-TENANT — namespace all storage per workspace/org
-// ═══════════════════════════════════════════════════════════════════
 (function () {
   if (window.CortexTenant) return;
   const TKEY = 'cortexx_active_tenant';
@@ -50,7 +45,6 @@
     activeRecord() {
       return this.list().find(t => t.id === this.active()) || this.list()[0];
     },
-    // Namespaced DB key — each tenant gets its own data store
     dbKey() {
       return 'cortexx_db_v1__' + this.active();
     },
@@ -61,7 +55,6 @@
       try {
         localStorage.setItem(TKEY, id);
       } catch (e) {}
-      // Hard reload so every store re-reads under the new namespace
       setTimeout(() => location.reload(), 350);
     },
     create(name) {
@@ -91,10 +84,6 @@
       return t;
     }
   };
-
-  // Retro-fit the existing backend to honour the active tenant's namespace.
-  // backend.js reads/writes 'cortexx_db_v1'; we shim localStorage for that key
-  // to transparently redirect to the tenant-scoped key.
   const realGet = localStorage.getItem.bind(localStorage);
   const realSet = localStorage.setItem.bind(localStorage);
   const BASE = 'cortexx_db_v1';
@@ -107,10 +96,6 @@
     return realSet(k, v);
   };
 })();
-
-// ═══════════════════════════════════════════════════════════════════
-// PHOTO REVIEW — approve / reject / annotate site photos with status
-// ═══════════════════════════════════════════════════════════════════
 function PhotoReviewScreen({
   accent
 }) {
@@ -130,7 +115,6 @@ function PhotoReviewScreen({
     load();
   }, [load]);
   const setStatus = async (id, status) => {
-    // store review status alongside the photo via meta patch
     try {
       const all = await window.cortexxPhotoStore.list();
       const p = all.find(x => x.id === id);
@@ -176,18 +160,18 @@ function PhotoReviewScreen({
     approved: T.green,
     rejected: T.red
   };
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Photo review",
     subtitle: `${counts.pending} awaiting review`,
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: () => fileInput.current && fileInput.current.click(),
       style: {
         width: 36,
@@ -204,7 +188,7 @@ function PhotoReviewScreen({
     }, React.cloneElement(Ic.camera, {
       size: 18
     }))
-  }), /*#__PURE__*/React.createElement("input", {
+  }), React.createElement("input", {
     ref: fileInput,
     type: "file",
     accept: "image/*",
@@ -214,11 +198,11 @@ function PhotoReviewScreen({
     style: {
       display: 'none'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement(SegControl, {
+  }, React.createElement(SegControl, {
     value: filter,
     onChange: setFilter,
     options: [{
@@ -234,7 +218,7 @@ function PhotoReviewScreen({
       l: 'Rejected',
       n: counts.rejected
     }]
-  })), shown.length === 0 ? /*#__PURE__*/React.createElement("div", {
+  })), shown.length === 0 ? React.createElement("div", {
     onClick: () => fileInput.current && fileInput.current.click(),
     style: {
       margin: '4px 16px',
@@ -245,7 +229,7 @@ function PhotoReviewScreen({
       textAlign: 'center',
       cursor: 'pointer'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       color: accent,
       fontSize: 34,
@@ -253,25 +237,25 @@ function PhotoReviewScreen({
     }
   }, React.cloneElement(Ic.camera, {
     size: 34
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       fontWeight: 600
     }
-  }, filter === 'pending' ? 'No photos awaiting review' : `No ${filter} photos`), /*#__PURE__*/React.createElement("div", {
+  }, filter === 'pending' ? 'No photos awaiting review' : `No ${filter} photos`), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 4
     }
-  }, "Tap to capture or upload site photos")) : /*#__PURE__*/React.createElement("div", {
+  }, "Tap to capture or upload site photos")) : React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -282,7 +266,7 @@ function PhotoReviewScreen({
     try {
       url = window.cortexxPhotoStore.blobURL(p.blob);
     } catch (e) {}
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: p.id,
       style: {
         background: T.bg2,
@@ -290,7 +274,7 @@ function PhotoReviewScreen({
         overflow: 'hidden',
         border: `0.5px solid ${T.hair}`
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       onClick: () => setViewing({
         ...p,
         url
@@ -301,22 +285,22 @@ function PhotoReviewScreen({
         cursor: 'pointer',
         position: 'relative'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         position: 'absolute',
         top: 6,
         left: 6
       }
-    }, /*#__PURE__*/React.createElement(Pill, {
+    }, React.createElement(Pill, {
       c: statusC[p.reviewStatus],
       size: "xs"
-    }, p.reviewStatus))), filter === 'pending' && /*#__PURE__*/React.createElement("div", {
+    }, p.reviewStatus))), filter === 'pending' && React.createElement("div", {
       style: {
         display: 'flex',
         gap: 4,
         padding: 6
       }
-    }, /*#__PURE__*/React.createElement("button", {
+    }, React.createElement("button", {
       onClick: () => setStatus(p.id, 'approved'),
       style: {
         flex: 1,
@@ -330,7 +314,7 @@ function PhotoReviewScreen({
         fontSize: 12,
         fontWeight: 700
       }
-    }, "\u2713"), /*#__PURE__*/React.createElement("button", {
+    }, "\u2713"), React.createElement("button", {
       onClick: () => setStatus(p.id, 'rejected'),
       style: {
         flex: 1,
@@ -345,7 +329,7 @@ function PhotoReviewScreen({
         fontWeight: 700
       }
     }, "\u2717")));
-  }))), viewing && /*#__PURE__*/React.createElement("div", {
+  }))), viewing && React.createElement("div", {
     onClick: () => setViewing(null),
     style: {
       position: 'absolute',
@@ -355,14 +339,14 @@ function PhotoReviewScreen({
       display: 'flex',
       flexDirection: 'column'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '14px 16px',
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => setViewing(null),
     style: {
       background: 'none',
@@ -372,9 +356,9 @@ function PhotoReviewScreen({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement(Pill, {
+  }, "Close"), React.createElement(Pill, {
     c: statusC[viewing.reviewStatus || 'pending']
-  }, viewing.reviewStatus || 'pending')), /*#__PURE__*/React.createElement("div", {
+  }, viewing.reviewStatus || 'pending')), React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       flex: 1,
@@ -383,7 +367,7 @@ function PhotoReviewScreen({
       justifyContent: 'center',
       padding: 16
     }
-  }, viewing.url && /*#__PURE__*/React.createElement("img", {
+  }, viewing.url && React.createElement("img", {
     src: viewing.url,
     alt: "",
     style: {
@@ -391,14 +375,14 @@ function PhotoReviewScreen({
       maxHeight: '100%',
       borderRadius: 12
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     onClick: e => e.stopPropagation(),
     style: {
       padding: 16,
       display: 'flex',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => setStatus(viewing.id, 'approved'),
     style: {
       flex: 1,
@@ -412,7 +396,7 @@ function PhotoReviewScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Approve"), /*#__PURE__*/React.createElement("button", {
+  }, "Approve"), React.createElement("button", {
     onClick: () => setStatus(viewing.id, 'rejected'),
     style: {
       flex: 1,
@@ -426,7 +410,7 @@ function PhotoReviewScreen({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Reject"), /*#__PURE__*/React.createElement("button", {
+  }, "Reject"), React.createElement("button", {
     onClick: async () => {
       await window.cortexxPhotoStore.remove(viewing.id);
       await load();
@@ -446,32 +430,28 @@ function PhotoReviewScreen({
     }
   }, "Delete")))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// TENANT SWITCHER SCREEN
-// ═══════════════════════════════════════════════════════════════════
 function TenantScreen({
   accent
 }) {
   const tenants = window.CortexTenant.list();
   const activeId = window.CortexTenant.active();
   const [newName, setNewName] = React.useState('');
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Workspaces",
     subtitle: `${tenants.length} organisations · isolated data`
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}22, ${accent}11)`,
       border: `0.5px solid ${T.purple}44`,
@@ -481,13 +461,13 @@ function TenantScreen({
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.shield, {
     size: 16
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       fontFamily: SF,
@@ -495,11 +475,11 @@ function TenantScreen({
       color: T.t1,
       lineHeight: 1.4
     }
-  }, "Each workspace has fully isolated data \u2014 projects, money, photos. Switching reloads into that tenant's namespace."))), /*#__PURE__*/React.createElement(Section, {
+  }, "Each workspace has fully isolated data \u2014 projects, money, photos. Switching reloads into that tenant's namespace."))), React.createElement(Section, {
     title: "Your workspaces"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, tenants.map((t, i) => /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, tenants.map((t, i) => React.createElement(Row, {
     key: t.id,
-    icon: React.cloneElement(/*#__PURE__*/React.createElement(Avatar, {
+    icon: React.cloneElement(React.createElement(Avatar, {
       name: t.name,
       size: 32,
       c: t.color
@@ -507,10 +487,10 @@ function TenantScreen({
     iconBg: null,
     title: t.name,
     sub: `${t.role} · ${t.plan}`,
-    right: t.id === activeId ? /*#__PURE__*/React.createElement(Pill, {
+    right: t.id === activeId ? React.createElement(Pill, {
       c: T.green,
       size: "xs"
-    }, "ACTIVE") : /*#__PURE__*/React.createElement("button", {
+    }, "ACTIVE") : React.createElement("button", {
       onClick: () => window.CortexTenant.switch(t.id),
       style: {
         background: accent,
@@ -525,16 +505,16 @@ function TenantScreen({
       }
     }, "Switch"),
     isLast: i === tenants.length - 1
-  })))), /*#__PURE__*/React.createElement(Section, {
+  })))), React.createElement(Section, {
     title: "Create workspace"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
       borderRadius: 12,
       padding: 12
     }
-  }, /*#__PURE__*/React.createElement("input", {
+  }, React.createElement("input", {
     value: newName,
     onChange: e => setNewName(e.target.value),
     placeholder: "New company name",
@@ -550,7 +530,7 @@ function TenantScreen({
       fontSize: 14,
       outline: 'none'
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: () => {
       if (!newName.trim()) {
         if (window.cortexxToast) window.cortexxToast('Enter a name', 'error');

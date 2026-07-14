@@ -1,8 +1,3 @@
-// Cortexx — Phase 11: Live check-in/out + enhanced timesheets
-
-// ═══════════════════════════════════════════════════════════════════
-// BACKEND — clock entries (each check-in/out event)
-// ═══════════════════════════════════════════════════════════════════
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
@@ -82,9 +77,7 @@
         lng: -0.057
       },
       location: 'Hackney Loft'
-    },
-    // Lunch break entries
-    {
+    }, {
       id: 7,
       userId: 1,
       name: 'Tom Reilly',
@@ -104,9 +97,7 @@
       method: 'manual',
       gps: null,
       location: 'Camden Mews'
-    },
-    // Yesterday's completed entries (for weekHours calc)
-    {
+    }, {
       id: 9,
       userId: 1,
       name: 'Tom Reilly',
@@ -198,7 +189,7 @@
   Backend.db.clockEntries = mk('clockEntries');
   Backend.computed.currentlyOnSite = () => {
     const entries = Backend.db.snapshot().clockEntries || [];
-    const today = new Date().toISOString().slice(0, 10); // ALWAYS relative — never hardcoded
+    const today = new Date().toISOString().slice(0, 10);
     const todayEntries = entries.filter(e => e && typeof e.time === 'string' && e.time.startsWith(today));
     const byUser = {};
     todayEntries.forEach(e => {
@@ -207,10 +198,6 @@
     return Object.values(byUser).filter(e => e.action === 'in' || e.action === 'break-in').length;
   };
 })();
-
-// ═══════════════════════════════════════════════════════════════════
-// CHECK-IN / OUT SCREEN — for individual user
-// ═══════════════════════════════════════════════════════════════════
 function CheckInScreen({
   accent
 }) {
@@ -225,14 +212,12 @@ function CheckInScreen({
     const t = setInterval(() => setNow(new Date()), 1000);
     return () => clearInterval(t);
   }, []);
-  // Calculate elapsed time
   const elapsed = latest && isOnSite ? Math.floor((now - new Date(latest.time)) / 1000) : 0;
   const hh = Math.floor(elapsed / 3600);
   const mm = Math.floor(elapsed % 3600 / 60);
   const ss = elapsed % 60;
   const proj = projects.find(p => p.id == selectedProject);
   const clock = async action => {
-    // Try to use real GPS
     let gps = null;
     if (navigator.geolocation) {
       try {
@@ -278,36 +263,36 @@ function CheckInScreen({
     });
     toast(`${action === 'in' ? 'Checked in' : action === 'out' ? 'Checked out' : action === 'break-out' ? 'On break' : 'Back to work'}`, 'success');
   };
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Check in",
     subtitle: isOnSite ? `On site at ${latest.location}` : 'Off site'
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 16px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: isOnSite ? `linear-gradient(135deg, ${T.green}33, ${T.green}11)` : `linear-gradient(135deg, ${T.t3}22, ${T.bg2})`,
       border: `0.5px solid ${isOnSite ? T.green + '55' : T.hairMid}`,
       borderRadius: 18,
       padding: 20
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 8
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       width: 8,
       height: 8,
@@ -316,7 +301,7 @@ function CheckInScreen({
       boxShadow: isOnSite ? `0 0 8px ${T.green}` : 'none',
       animation: isOnSite ? 'pulse-dot 2s infinite' : 'none'
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -325,7 +310,7 @@ function CheckInScreen({
       textTransform: 'uppercase',
       letterSpacing: 0.8
     }
-  }, isOnSite ? `On site · ${proj?.name}` : 'NOT CLOCKED IN')), /*#__PURE__*/React.createElement("div", {
+  }, isOnSite ? `On site · ${proj?.name}` : 'NOT CLOCKED IN')), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 48,
@@ -334,7 +319,7 @@ function CheckInScreen({
       letterSpacing: -1.5,
       lineHeight: 1
     }
-  }, isOnSite ? `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}` : '00:00:00'), /*#__PURE__*/React.createElement("div", {
+  }, isOnSite ? `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}` : '00:00:00'), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -344,11 +329,11 @@ function CheckInScreen({
   }, isOnSite ? `Started ${new Date(latest.time).toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit'
-  })}` : 'Tap below to check in'))), !isOnSite && /*#__PURE__*/React.createElement("div", {
+  })}` : 'Tap below to check in'))), !isOnSite && React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -358,13 +343,13 @@ function CheckInScreen({
       letterSpacing: 0.6,
       marginBottom: 8
     }
-  }, "Where to?"), /*#__PURE__*/React.createElement("div", {
+  }, "Where to?"), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 6
     }
-  }, projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => /*#__PURE__*/React.createElement("button", {
+  }, projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => React.createElement("button", {
     key: p.id,
     onClick: () => setSelectedProject(p.id),
     style: {
@@ -377,7 +362,7 @@ function CheckInScreen({
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 22,
       height: 22,
@@ -388,37 +373,37 @@ function CheckInScreen({
       alignItems: 'center',
       justifyContent: 'center'
     }
-  }, selectedProject === p.id && /*#__PURE__*/React.createElement("span", {
+  }, selectedProject === p.id && React.createElement("span", {
     style: {
       color: '#fff'
     }
   }, React.cloneElement(Ic.check, {
     size: 12,
     sw: 3
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), React.createElement("div", {
     style: {
       flex: 1,
       textAlign: 'left'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1,
       fontWeight: 600
     }
-  }, p.name), /*#__PURE__*/React.createElement("div", {
+  }, p.name), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, p.addr)))))), /*#__PURE__*/React.createElement("div", {
+  }, p.addr)))))), React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, !isOnSite ? /*#__PURE__*/React.createElement("button", {
+  }, !isOnSite ? React.createElement("button", {
     onClick: () => clock('in'),
     style: {
       width: '100%',
@@ -439,7 +424,7 @@ function CheckInScreen({
     }
   }, React.cloneElement(Ic.pin, {
     size: 22
-  }), " Check in") : latest.action === 'break-out' ? /*#__PURE__*/React.createElement("button", {
+  }), " Check in") : latest.action === 'break-out' ? React.createElement("button", {
     onClick: () => clock('break-in'),
     style: {
       width: '100%',
@@ -460,12 +445,12 @@ function CheckInScreen({
     }
   }, React.cloneElement(Ic.clock, {
     size: 22
-  }), " Back to work") : /*#__PURE__*/React.createElement("div", {
+  }), " Back to work") : React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => clock('break-out'),
     style: {
       flex: 1,
@@ -485,7 +470,7 @@ function CheckInScreen({
     }
   }, React.cloneElement(Ic.clock, {
     size: 16
-  }), " Lunch"), /*#__PURE__*/React.createElement("button", {
+  }), " Lunch"), React.createElement("button", {
     onClick: () => clock('out'),
     style: {
       flex: 1,
@@ -505,11 +490,11 @@ function CheckInScreen({
     }
   }, React.cloneElement(Ic.signOut, {
     size: 16
-  }), " Check out"))), isOnSite && /*#__PURE__*/React.createElement("div", {
+  }), " Check out"))), isOnSite && React.createElement("div", {
     style: {
       padding: '0 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       border: `0.5px solid ${T.hair}`,
@@ -519,7 +504,7 @@ function CheckInScreen({
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 28,
       height: 28,
@@ -533,27 +518,27 @@ function CheckInScreen({
   }, React.cloneElement(Ic.check, {
     size: 14,
     sw: 3
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t1,
       fontWeight: 600
     }
-  }, "GPS verified"), /*#__PURE__*/React.createElement("div", {
+  }, "GPS verified"), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 10,
       color: T.t2,
       marginTop: 2
     }
-  }, "51.541\xB0N, -0.143\xB0W \xB7 within 50m")))), /*#__PURE__*/React.createElement(Section, {
+  }, "51.541\xB0N, -0.143\xB0W \xB7 within 50m")))), React.createElement(Section, {
     title: "Today's log"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, myEntries.slice(0, 5).map((e, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, myEntries.slice(0, 5).map((e, i, a) => React.createElement(Row, {
     key: e.id,
     icon: e.action === 'in' ? Ic.pin : e.action === 'out' ? Ic.signOut : Ic.clock,
     iconBg: e.action === 'in' ? T.green : e.action === 'out' ? T.red : T.amber,
@@ -563,7 +548,7 @@ function CheckInScreen({
       minute: '2-digit'
     })} · ${e.method.toUpperCase()}`,
     isLast: i === Math.min(myEntries.length, 5) - 1
-  })), myEntries.length === 0 && /*#__PURE__*/React.createElement("div", {
+  })), myEntries.length === 0 && React.createElement("div", {
     style: {
       padding: 20,
       textAlign: 'center',
@@ -571,12 +556,8 @@ function CheckInScreen({
       fontSize: 13,
       color: T.t3
     }
-  }, "No clock entries yet today"))), /*#__PURE__*/React.createElement("style", null, `@keyframes pulse-dot { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }`)));
+  }, "No clock entries yet today"))), React.createElement("style", null, `@keyframes pulse-dot { 0%, 100% { opacity: 1 } 50% { opacity: 0.4 } }`)));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// LIVE TEAM STATUS — who's where right now
-// ═══════════════════════════════════════════════════════════════════
 function LiveStatusScreen({
   accent
 }) {
@@ -588,8 +569,6 @@ function LiveStatusScreen({
     const t = setInterval(() => setNow(new Date()), 30000);
     return () => clearInterval(t);
   }, []);
-
-  // Build per-user current status
   const today = new Date().toISOString().slice(0, 10);
   const todayEntries = entries.filter(e => e && typeof e.time === 'string' && e.time.startsWith(today));
   const userStatus = {};
@@ -624,26 +603,26 @@ function LiveStatusScreen({
     return groups;
   };
   const sitesOnsite = groupBySite(onSite);
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Live status",
     subtitle: `${onSite.length} on site · ${onBreak.length} on break · ${offSite.length} off`,
-    right: /*#__PURE__*/React.createElement(HeaderBtn, {
+    right: React.createElement(HeaderBtn, {
       icon: Ic.bell,
       onClick: () => toast('Notifications sent to team', 'success')
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.green}22, ${accent}11)`,
       border: `0.5px solid ${T.green}44`,
@@ -653,7 +632,7 @@ function LiveStatusScreen({
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       width: 10,
       height: 10,
@@ -662,7 +641,7 @@ function LiveStatusScreen({
       boxShadow: `0 0 10px ${T.green}`,
       animation: 'pulse-dot 2s infinite'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1,
       fontFamily: SFMono,
@@ -674,7 +653,7 @@ function LiveStatusScreen({
   }, "LIVE \xB7 ", now.toLocaleTimeString('en-GB', {
     hour: '2-digit',
     minute: '2-digit'
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -683,42 +662,42 @@ function LiveStatusScreen({
   }, "auto-refresh 30s"))), Object.keys(sitesOnsite).map(site => {
     const members = sitesOnsite[site];
     const proj = projects.find(p => p.name === site);
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: site,
       style: {
         marginBottom: 18
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         padding: '0 20px 8px',
         display: 'flex',
         justifyContent: 'space-between',
         alignItems: 'baseline'
       }
-    }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", null, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         fontWeight: 700,
         color: T.t1
       }
-    }, site), /*#__PURE__*/React.createElement("div", {
+    }, site), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.green,
         fontWeight: 600
       }
-    }, "\u25CF ", members.length, " ACTIVE")), proj && /*#__PURE__*/React.createElement(Pill, {
+    }, "\u25CF ", members.length, " ACTIVE")), proj && React.createElement(Pill, {
       c: STATUS_C[proj.status]
-    }, proj.status)), /*#__PURE__*/React.createElement("div", {
+    }, proj.status)), React.createElement("div", {
       style: {
         padding: '0 16px'
       }
-    }, /*#__PURE__*/React.createElement(GroupedList, null, members.map((m, i, a) => {
+    }, React.createElement(GroupedList, null, members.map((m, i, a) => {
       const since = m.status.time;
       const minsAgo = Math.floor((now - new Date(since)) / 60000);
-      return /*#__PURE__*/React.createElement("div", {
+      return React.createElement("div", {
         key: m.id,
         style: {
           display: 'flex',
@@ -727,36 +706,36 @@ function LiveStatusScreen({
           padding: '12px 14px',
           borderBottom: i === a.length - 1 ? 'none' : `0.5px solid ${T.hair}`
         }
-      }, /*#__PURE__*/React.createElement(Avatar, {
+      }, React.createElement(Avatar, {
         name: m.n,
         size: 36,
         c: m.color
-      }), /*#__PURE__*/React.createElement("div", {
+      }), React.createElement("div", {
         style: {
           flex: 1,
           minWidth: 0
         }
-      }, /*#__PURE__*/React.createElement("div", {
+      }, React.createElement("div", {
         style: {
           fontFamily: SF,
           fontSize: 13,
           color: T.t1,
           fontWeight: 600
         }
-      }, m.n), /*#__PURE__*/React.createElement("div", {
+      }, m.n), React.createElement("div", {
         style: {
           fontFamily: SF,
           fontSize: 11,
           color: T.t2
         }
-      }, m.r, " \xB7 in ", minsAgo, "m ago \xB7 GPS verified")), /*#__PURE__*/React.createElement(Pill, {
+      }, m.r, " \xB7 in ", minsAgo, "m ago \xB7 GPS verified")), React.createElement(Pill, {
         c: T.green,
         size: "xs"
       }, "\u25CF ACTIVE"));
     }))));
-  }), onBreak.length > 0 && /*#__PURE__*/React.createElement(Section, {
+  }), onBreak.length > 0 && React.createElement(Section, {
     title: `On break · ${onBreak.length}`
-  }, /*#__PURE__*/React.createElement(GroupedList, null, onBreak.map((m, i, a) => /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, onBreak.map((m, i, a) => React.createElement("div", {
     key: m.id,
     style: {
       display: 'flex',
@@ -765,33 +744,33 @@ function LiveStatusScreen({
       padding: '12px 14px',
       borderBottom: i === a.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement(Avatar, {
+  }, React.createElement(Avatar, {
     name: m.n,
     size: 32,
     c: m.color
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, m.n), /*#__PURE__*/React.createElement("div", {
+  }, m.n), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, m.r, " \xB7 on break")), /*#__PURE__*/React.createElement(Pill, {
+  }, m.r, " \xB7 on break")), React.createElement(Pill, {
     c: T.amber,
     size: "xs"
-  }, "\u2615 BREAK"))))), offSite.length > 0 && /*#__PURE__*/React.createElement(Section, {
+  }, "\u2615 BREAK"))))), offSite.length > 0 && React.createElement(Section, {
     title: `Off site · ${offSite.length}`
-  }, /*#__PURE__*/React.createElement(GroupedList, null, offSite.map((m, i, a) => /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, offSite.map((m, i, a) => React.createElement("div", {
     key: m.id,
     style: {
       display: 'flex',
@@ -801,33 +780,33 @@ function LiveStatusScreen({
       borderBottom: i === a.length - 1 ? 'none' : `0.5px solid ${T.hair}`,
       opacity: 0.6
     }
-  }, /*#__PURE__*/React.createElement(Avatar, {
+  }, React.createElement(Avatar, {
     name: m.n,
     size: 32,
     c: m.color
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t1,
       fontWeight: 500
     }
-  }, m.n), /*#__PURE__*/React.createElement("div", {
+  }, m.n), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2
     }
-  }, m.r)), /*#__PURE__*/React.createElement(Pill, {
+  }, m.r)), React.createElement(Pill, {
     c: T.t3,
     size: "xs"
-  }, "OFF"))))), /*#__PURE__*/React.createElement(Section, {
+  }, "OFF"))))), React.createElement(Section, {
     title: "Recent activity"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, todayEntries.slice(0, 8).map((e, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, todayEntries.slice(0, 8).map((e, i, a) => React.createElement(Row, {
     key: e.id,
     icon: e.action === 'in' ? Ic.pin : e.action === 'out' ? Ic.signOut : Ic.clock,
     iconBg: e.action === 'in' ? T.green : e.action === 'out' ? T.red : T.amber,

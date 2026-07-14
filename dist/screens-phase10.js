@@ -1,5 +1,3 @@
-// Cortexx — Phase 10: Reminders/Automations + Performance/Streaks
-
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
@@ -130,10 +128,6 @@
   Backend.db.reminders = mk('reminders');
   Backend.db.achievements = mk('achievements');
 })();
-
-// ═══════════════════════════════════════════════════════════════════
-// REMINDERS / AUTOMATIONS
-// ═══════════════════════════════════════════════════════════════════
 function RemindersScreen({
   accent
 }) {
@@ -142,18 +136,18 @@ function RemindersScreen({
   const toggle = (id, current) => Backend.db.reminders.update(id, {
     enabled: !current
   });
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Reminders",
     subtitle: `${enabled} of ${reminders.length} active automations`,
-    right: /*#__PURE__*/React.createElement(HeaderBtn, {
+    right: React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: async () => {
@@ -168,11 +162,11 @@ function RemindersScreen({
         toast('Reminder added', 'success');
       }
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}22, ${accent}0a)`,
       border: `0.5px solid ${T.purple}44`,
@@ -182,13 +176,13 @@ function RemindersScreen({
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.spark, {
     size: 16
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       fontFamily: SF,
@@ -196,9 +190,9 @@ function RemindersScreen({
       color: T.t1,
       lineHeight: 1.4
     }
-  }, "Cortex runs these in the background. Tap to disable, swap, or add new triggers."))), /*#__PURE__*/React.createElement(Section, {
+  }, "Cortex runs these in the background. Tap to disable, swap, or add new triggers."))), React.createElement(Section, {
     title: "Active automations"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, reminders.map((r, i, a) => {
+  }, React.createElement(GroupedList, null, reminders.map((r, i, a) => {
     const ICONS = {
       'RAMS expiry': Ic.shield,
       'Invoice overdue': Ic.money,
@@ -209,7 +203,7 @@ function RemindersScreen({
       'Snag overdue': Ic.list
     };
     const Icon = ICONS[r.kind] || Ic.bell;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: r.id,
       style: {
         display: 'flex',
@@ -219,7 +213,7 @@ function RemindersScreen({
         borderBottom: i === a.length - 1 ? 'none' : `0.5px solid ${T.hair}`,
         opacity: r.enabled ? 1 : 0.55
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 36,
         height: 36,
@@ -233,59 +227,59 @@ function RemindersScreen({
       }
     }, React.cloneElement(Icon, {
       size: 17
-    })), /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         fontWeight: 600,
         color: T.t1
       }
-    }, r.kind), /*#__PURE__*/React.createElement("div", {
+    }, r.kind), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2,
         marginTop: 2
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, React.createElement("span", {
       style: {
         color: T.t1
       }
-    }, "When:"), " ", r.trigger), /*#__PURE__*/React.createElement("div", {
+    }, "When:"), " ", r.trigger), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2,
         marginTop: 1
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, React.createElement("span", {
       style: {
         color: T.t1
       }
-    }, "Then:"), " ", r.action, " ", /*#__PURE__*/React.createElement("span", {
+    }, "Then:"), " ", r.action, " ", React.createElement("span", {
       style: {
         color: T.t3
       }
-    }, "\xB7 ", r.target)), r.lastRun && /*#__PURE__*/React.createElement("div", {
+    }, "\xB7 ", r.target)), r.lastRun && React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
         color: T.t3,
         marginTop: 4
       }
-    }, "Last fired ", _formatRelDate(r.lastRun))), /*#__PURE__*/React.createElement(Toggle, {
+    }, "Last fired ", _formatRelDate(r.lastRun))), React.createElement(Toggle, {
       on: r.enabled,
       onChange: () => toggle(r.id, r.enabled),
       accent: accent
     }));
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "Add a new trigger"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, [{
+  }, React.createElement(GroupedList, null, [{
     l: 'Notify when a project is X% complete',
     i: Ic.flag
   }, {
@@ -297,7 +291,7 @@ function RemindersScreen({
   }, {
     l: 'Block timesheet submission past 48h late',
     i: Ic.clock
-  }].map((s, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }].map((s, i, a) => React.createElement(Row, {
     key: i,
     icon: s.i,
     iconBg: T.purple,
@@ -307,17 +301,13 @@ function RemindersScreen({
     onClick: () => toast('Automation added', 'success')
   }))))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// PERFORMANCE / ACHIEVEMENTS / STREAKS
-// ═══════════════════════════════════════════════════════════════════
 function PerformanceScreen({
   accent
 }) {
   const achievements = useDB('achievements');
   const earned = achievements.filter(a => a.earned);
   const inProgress = achievements.filter(a => !a.earned);
-  const days = [4, 5, 8, 6, 3, 2, 7]; // mock weekly activity
+  const days = [4, 5, 8, 6, 3, 2, 7];
   const max = Math.max(...days);
   const ACHIEVEMENT_ICONS = {
     star: Ic.star,
@@ -327,22 +317,22 @@ function PerformanceScreen({
     calc: Ic.calc,
     spark: Ic.spark
   };
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Performance",
     subtitle: "Your streaks \xB7 achievements \xB7 trends"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.amber}33, ${T.red}11)`,
       border: `0.5px solid ${T.amber}55`,
@@ -352,7 +342,7 @@ function PerformanceScreen({
       alignItems: 'center',
       gap: 16
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 64,
       height: 64,
@@ -366,11 +356,11 @@ function PerformanceScreen({
     }
   }, React.cloneElement(Ic.fire, {
     size: 32
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 42,
@@ -379,23 +369,23 @@ function PerformanceScreen({
       letterSpacing: -1.5,
       lineHeight: 1
     }
-  }, "14"), /*#__PURE__*/React.createElement("div", {
+  }, "14"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 4
     }
-  }, "Day streak \xB7 best ever")))), /*#__PURE__*/React.createElement(Section, {
+  }, "Day streak \xB7 best ever")))), React.createElement(Section, {
     title: "This week's activity"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 16,
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'flex-end',
@@ -403,7 +393,7 @@ function PerformanceScreen({
       height: 80,
       justifyContent: 'space-between'
     }
-  }, days.map((v, i) => /*#__PURE__*/React.createElement("div", {
+  }, days.map((v, i) => React.createElement("div", {
     key: i,
     style: {
       flex: 1,
@@ -412,21 +402,21 @@ function PerformanceScreen({
       alignItems: 'center',
       gap: 4
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: '100%',
       height: `${v / max * 64}px`,
       background: `linear-gradient(180deg, ${accent}, ${accent}aa)`,
       borderRadius: '4px 4px 0 0'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 9,
       color: T.t3,
       fontWeight: 600
     }
-  }, ['M', 'T', 'W', 'T', 'F', 'S', 'S'][i])))), /*#__PURE__*/React.createElement("div", {
+  }, ['M', 'T', 'W', 'T', 'F', 'S', 'S'][i])))), React.createElement("div", {
     style: {
       marginTop: 12,
       paddingTop: 12,
@@ -436,18 +426,18 @@ function PerformanceScreen({
       fontFamily: SF,
       fontSize: 11
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "Actions this week"), /*#__PURE__*/React.createElement("span", {
+  }, "Actions this week"), React.createElement("span", {
     style: {
       color: T.t1,
       fontWeight: 700
     }
-  }, days.reduce((s, x) => s + x, 0))))), /*#__PURE__*/React.createElement(Section, {
+  }, days.reduce((s, x) => s + x, 0))))), React.createElement(Section, {
     title: `Earned · ${earned.length}`
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -455,7 +445,7 @@ function PerformanceScreen({
     }
   }, earned.map(a => {
     const Icon = ACHIEVEMENT_ICONS[a.icon] || Ic.star;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: a.id,
       style: {
         background: `linear-gradient(135deg, ${accent}22, ${T.purple}11)`,
@@ -463,13 +453,13 @@ function PerformanceScreen({
         borderRadius: 14,
         padding: 12
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         display: 'flex',
         alignItems: 'center',
         gap: 8
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 36,
         height: 36,
@@ -482,10 +472,10 @@ function PerformanceScreen({
       }
     }, React.cloneElement(Icon, {
       size: 18
-    })), /*#__PURE__*/React.createElement(Pill, {
+    })), React.createElement(Pill, {
       c: T.green,
       size: "xs"
-    }, "\u2713")), /*#__PURE__*/React.createElement("div", {
+    }, "\u2713")), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
@@ -493,7 +483,7 @@ function PerformanceScreen({
         color: T.t1,
         marginTop: 8
       }
-    }, a.l), /*#__PURE__*/React.createElement("div", {
+    }, a.l), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
@@ -501,7 +491,7 @@ function PerformanceScreen({
         marginTop: 2,
         lineHeight: 1.4
       }
-    }, a.d), /*#__PURE__*/React.createElement("div", {
+    }, a.d), React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 9,
@@ -509,11 +499,11 @@ function PerformanceScreen({
         marginTop: 6
       }
     }, _formatRelDate(a.date)));
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "In progress"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, inProgress.map((a, i, arr) => {
+  }, React.createElement(GroupedList, null, inProgress.map((a, i, arr) => {
     const Icon = ACHIEVEMENT_ICONS[a.icon] || Ic.star;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: a.id,
       style: {
         display: 'flex',
@@ -522,7 +512,7 @@ function PerformanceScreen({
         padding: '12px 14px',
         borderBottom: i === arr.length - 1 ? 'none' : `0.5px solid ${T.hair}`
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 36,
         height: 36,
@@ -536,34 +526,34 @@ function PerformanceScreen({
       }
     }, React.cloneElement(Icon, {
       size: 18
-    })), /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", {
       style: {
         flex: 1,
         minWidth: 0
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1,
         fontWeight: 600
       }
-    }, a.l), /*#__PURE__*/React.createElement("div", {
+    }, a.l), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2,
         marginTop: 1
       }
-    }, a.d), /*#__PURE__*/React.createElement("div", {
+    }, a.d), React.createElement("div", {
       style: {
         marginTop: 6
       }
-    }, /*#__PURE__*/React.createElement(Bar, {
+    }, React.createElement(Bar, {
       pct: a.progress,
       c: accent,
       h: 3
-    }))), /*#__PURE__*/React.createElement("span", {
+    }))), React.createElement("span", {
       style: {
         fontFamily: SFMono,
         fontSize: 13,

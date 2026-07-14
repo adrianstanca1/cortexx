@@ -1,16 +1,9 @@
-// iOS.jsx — Simplified iOS 26 (Liquid Glass) device frame
-// Based on the iOS 26 UI Kit + Figma status bar spec. No assets, no deps.
-// Exports: IOSDevice, IOSStatusBar, IOSNavBar, IOSGlassPill, IOSList, IOSListRow, IOSKeyboard
-
-// ─────────────────────────────────────────────────────────────
-// Status bar
-// ─────────────────────────────────────────────────────────────
 function IOSStatusBar({
   dark = false,
   time = '9:41'
 }) {
   const c = dark ? '#fff' : '#000';
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       display: 'flex',
       gap: 154,
@@ -22,7 +15,7 @@ function IOSStatusBar({
       zIndex: 20,
       width: '100%'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       height: 22,
@@ -31,7 +24,7 @@ function IOSStatusBar({
       justifyContent: 'center',
       paddingTop: 1.5
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: '-apple-system, "SF Pro", system-ui',
       fontWeight: 590,
@@ -39,7 +32,7 @@ function IOSStatusBar({
       lineHeight: '22px',
       color: c
     }
-  }, time)), /*#__PURE__*/React.createElement("div", {
+  }, time)), React.createElement("div", {
     style: {
       flex: 1,
       height: 22,
@@ -50,58 +43,58 @@ function IOSStatusBar({
       paddingTop: 1,
       paddingRight: 1
     }
-  }, /*#__PURE__*/React.createElement("svg", {
+  }, React.createElement("svg", {
     width: "19",
     height: "12",
     viewBox: "0 0 19 12"
-  }, /*#__PURE__*/React.createElement("rect", {
+  }, React.createElement("rect", {
     x: "0",
     y: "7.5",
     width: "3.2",
     height: "4.5",
     rx: "0.7",
     fill: c
-  }), /*#__PURE__*/React.createElement("rect", {
+  }), React.createElement("rect", {
     x: "4.8",
     y: "5",
     width: "3.2",
     height: "7",
     rx: "0.7",
     fill: c
-  }), /*#__PURE__*/React.createElement("rect", {
+  }), React.createElement("rect", {
     x: "9.6",
     y: "2.5",
     width: "3.2",
     height: "9.5",
     rx: "0.7",
     fill: c
-  }), /*#__PURE__*/React.createElement("rect", {
+  }), React.createElement("rect", {
     x: "14.4",
     y: "0",
     width: "3.2",
     height: "12",
     rx: "0.7",
     fill: c
-  })), /*#__PURE__*/React.createElement("svg", {
+  })), React.createElement("svg", {
     width: "17",
     height: "12",
     viewBox: "0 0 17 12"
-  }, /*#__PURE__*/React.createElement("path", {
+  }, React.createElement("path", {
     d: "M8.5 3.2C10.8 3.2 12.9 4.1 14.4 5.6L15.5 4.5C13.7 2.7 11.2 1.5 8.5 1.5C5.8 1.5 3.3 2.7 1.5 4.5L2.6 5.6C4.1 4.1 6.2 3.2 8.5 3.2Z",
     fill: c
-  }), /*#__PURE__*/React.createElement("path", {
+  }), React.createElement("path", {
     d: "M8.5 6.8C9.9 6.8 11.1 7.3 12 8.2L13.1 7.1C11.8 5.9 10.2 5.1 8.5 5.1C6.8 5.1 5.2 5.9 3.9 7.1L5 8.2C5.9 7.3 7.1 6.8 8.5 6.8Z",
     fill: c
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: "8.5",
     cy: "10.5",
     r: "1.5",
     fill: c
-  })), /*#__PURE__*/React.createElement("svg", {
+  })), React.createElement("svg", {
     width: "27",
     height: "13",
     viewBox: "0 0 27 13"
-  }, /*#__PURE__*/React.createElement("rect", {
+  }, React.createElement("rect", {
     x: "0.5",
     y: "0.5",
     width: "23",
@@ -110,29 +103,25 @@ function IOSStatusBar({
     stroke: c,
     strokeOpacity: "0.35",
     fill: "none"
-  }), /*#__PURE__*/React.createElement("rect", {
+  }), React.createElement("rect", {
     x: "2",
     y: "2",
     width: "20",
     height: "9",
     rx: "2",
     fill: c
-  }), /*#__PURE__*/React.createElement("path", {
+  }), React.createElement("path", {
     d: "M25 4.5V8.5C25.8 8.2 26.5 7.2 26.5 6.5C26.5 5.8 25.8 4.8 25 4.5Z",
     fill: c,
     fillOpacity: "0.4"
   }))));
 }
-
-// ─────────────────────────────────────────────────────────────
-// Liquid glass pill — blur + tint + shine
-// ─────────────────────────────────────────────────────────────
 function IOSGlassPill({
   children,
   dark = false,
   style = {}
 }) {
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       height: 44,
       minWidth: 44,
@@ -145,7 +134,7 @@ function IOSGlassPill({
       boxShadow: dark ? '0 2px 6px rgba(0,0,0,0.35), 0 6px 16px rgba(0,0,0,0.2)' : '0 1px 3px rgba(0,0,0,0.07), 0 3px 10px rgba(0,0,0,0.06)',
       ...style
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -154,7 +143,7 @@ function IOSGlassPill({
       WebkitBackdropFilter: 'blur(12px) saturate(180%)',
       background: dark ? 'rgba(120,120,128,0.28)' : 'rgba(255,255,255,0.5)'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -162,7 +151,7 @@ function IOSGlassPill({
       boxShadow: dark ? 'inset 1.5px 1.5px 1px rgba(255,255,255,0.15), inset -1px -1px 1px rgba(255,255,255,0.08)' : 'inset 1.5px 1.5px 1px rgba(255,255,255,0.7), inset -1px -1px 1px rgba(255,255,255,0.4)',
       border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       position: 'relative',
       zIndex: 1,
@@ -172,10 +161,6 @@ function IOSGlassPill({
     }
   }, children));
 }
-
-// ─────────────────────────────────────────────────────────────
-// Navigation bar — glass pills + large title
-// ─────────────────────────────────────────────────────────────
 function IOSNavBar({
   title = 'Title',
   dark = false,
@@ -183,9 +168,9 @@ function IOSNavBar({
 }) {
   const muted = dark ? 'rgba(255,255,255,0.6)' : '#404040';
   const text = dark ? '#fff' : '#000';
-  const pillIcon = content => /*#__PURE__*/React.createElement(IOSGlassPill, {
+  const pillIcon = content => React.createElement(IOSGlassPill, {
     dark: dark
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 36,
       height: 36,
@@ -194,7 +179,7 @@ function IOSNavBar({
       justifyContent: 'center'
     }
   }, content));
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -204,14 +189,14 @@ function IOSNavBar({
       position: 'relative',
       zIndex: 5
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between',
       padding: '0 16px'
     }
-  }, pillIcon(/*#__PURE__*/React.createElement("svg", {
+  }, pillIcon(React.createElement("svg", {
     width: "12",
     height: "20",
     viewBox: "0 0 12 20",
@@ -219,32 +204,32 @@ function IOSNavBar({
     style: {
       marginLeft: -1
     }
-  }, /*#__PURE__*/React.createElement("path", {
+  }, React.createElement("path", {
     d: "M10 2L2 10l8 8",
     stroke: muted,
     strokeWidth: "2.5",
     strokeLinecap: "round",
     strokeLinejoin: "round"
-  }))), trailingIcon && pillIcon(/*#__PURE__*/React.createElement("svg", {
+  }))), trailingIcon && pillIcon(React.createElement("svg", {
     width: "22",
     height: "6",
     viewBox: "0 0 22 6"
-  }, /*#__PURE__*/React.createElement("circle", {
+  }, React.createElement("circle", {
     cx: "3",
     cy: "3",
     r: "2.5",
     fill: muted
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: "11",
     cy: "3",
     r: "2.5",
     fill: muted
-  }), /*#__PURE__*/React.createElement("circle", {
+  }), React.createElement("circle", {
     cx: "19",
     cy: "3",
     r: "2.5",
     fill: muted
-  })))), /*#__PURE__*/React.createElement("div", {
+  })))), React.createElement("div", {
     style: {
       padding: '0 16px',
       fontFamily: '-apple-system, system-ui',
@@ -256,10 +241,6 @@ function IOSNavBar({
     }
   }, title));
 }
-
-// ─────────────────────────────────────────────────────────────
-// Grouped list (inset card, r:26) + row (52px)
-// ─────────────────────────────────────────────────────────────
 function IOSListRow({
   title,
   detail,
@@ -272,7 +253,7 @@ function IOSListRow({
   const sec = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
   const ter = dark ? 'rgba(235,235,245,0.3)' : 'rgba(60,60,67,0.3)';
   const sep = dark ? 'rgba(84,84,88,0.65)' : 'rgba(60,60,67,0.12)';
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -283,7 +264,7 @@ function IOSListRow({
       fontSize: 17,
       letterSpacing: -0.43
     }
-  }, icon && /*#__PURE__*/React.createElement("div", {
+  }, icon && React.createElement("div", {
     style: {
       width: 30,
       height: 30,
@@ -292,31 +273,31 @@ function IOSListRow({
       marginRight: 12,
       flexShrink: 0
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1,
       color: text
     }
-  }, title), detail && /*#__PURE__*/React.createElement("span", {
+  }, title), detail && React.createElement("span", {
     style: {
       color: sec,
       marginRight: 6
     }
-  }, detail), chevron && /*#__PURE__*/React.createElement("svg", {
+  }, detail), chevron && React.createElement("svg", {
     width: "8",
     height: "14",
     viewBox: "0 0 8 14",
     style: {
       flexShrink: 0
     }
-  }, /*#__PURE__*/React.createElement("path", {
+  }, React.createElement("path", {
     d: "M1 1l6 6-6 6",
     stroke: ter,
     strokeWidth: "2",
     fill: "none",
     strokeLinecap: "round",
     strokeLinejoin: "round"
-  })), !isLast && /*#__PURE__*/React.createElement("div", {
+  })), !isLast && React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 0,
@@ -334,7 +315,7 @@ function IOSList({
 }) {
   const hc = dark ? 'rgba(235,235,245,0.6)' : 'rgba(60,60,67,0.6)';
   const bg = dark ? '#1C1C1E' : '#fff';
-  return /*#__PURE__*/React.createElement("div", null, header && /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", null, header && React.createElement("div", {
     style: {
       fontFamily: '-apple-system, system-ui',
       fontSize: 13,
@@ -343,7 +324,7 @@ function IOSList({
       padding: '8px 36px 6px',
       letterSpacing: -0.08
     }
-  }, header), /*#__PURE__*/React.createElement("div", {
+  }, header), React.createElement("div", {
     style: {
       background: bg,
       borderRadius: 26,
@@ -352,10 +333,6 @@ function IOSList({
     }
   }, children));
 }
-
-// ─────────────────────────────────────────────────────────────
-// Device frame
-// ─────────────────────────────────────────────────────────────
 function IOSDevice({
   children,
   width = 402,
@@ -364,7 +341,7 @@ function IOSDevice({
   title,
   keyboard = false
 }) {
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       width,
       height,
@@ -376,7 +353,7 @@ function IOSDevice({
       fontFamily: '-apple-system, system-ui, sans-serif',
       WebkitFontSmoothing: 'antialiased'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       position: 'absolute',
       top: 11,
@@ -388,7 +365,7 @@ function IOSDevice({
       background: '#000',
       zIndex: 50
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       position: 'absolute',
       top: 0,
@@ -396,25 +373,25 @@ function IOSDevice({
       right: 0,
       zIndex: 10
     }
-  }, /*#__PURE__*/React.createElement(IOSStatusBar, {
+  }, React.createElement(IOSStatusBar, {
     dark: dark
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       height: '100%',
       display: 'flex',
       flexDirection: 'column'
     }
-  }, title !== undefined && /*#__PURE__*/React.createElement(IOSNavBar, {
+  }, title !== undefined && React.createElement(IOSNavBar, {
     title: title,
     dark: dark
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1,
       overflow: 'auto'
     }
-  }, children), keyboard && /*#__PURE__*/React.createElement(IOSKeyboard, {
+  }, children), keyboard && React.createElement(IOSKeyboard, {
     dark: dark
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 0,
@@ -428,7 +405,7 @@ function IOSDevice({
       paddingBottom: 8,
       pointerEvents: 'none'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 139,
       height: 5,
@@ -437,48 +414,42 @@ function IOSDevice({
     }
   })));
 }
-
-// ─────────────────────────────────────────────────────────────
-// Keyboard — iOS 26 liquid glass
-// ─────────────────────────────────────────────────────────────
 function IOSKeyboard({
   dark = false
 }) {
   const glyph = dark ? 'rgba(255,255,255,0.7)' : '#595959';
   const sugg = dark ? 'rgba(255,255,255,0.6)' : '#333';
   const keyBg = dark ? 'rgba(255,255,255,0.22)' : 'rgba(255,255,255,0.85)';
-
-  // special-key icons
   const icons = {
-    shift: /*#__PURE__*/React.createElement("svg", {
+    shift: React.createElement("svg", {
       width: "19",
       height: "17",
       viewBox: "0 0 19 17"
-    }, /*#__PURE__*/React.createElement("path", {
+    }, React.createElement("path", {
       d: "M9.5 1L1 9.5h4.5V16h8V9.5H18L9.5 1z",
       fill: glyph
     })),
-    del: /*#__PURE__*/React.createElement("svg", {
+    del: React.createElement("svg", {
       width: "23",
       height: "17",
       viewBox: "0 0 23 17"
-    }, /*#__PURE__*/React.createElement("path", {
+    }, React.createElement("path", {
       d: "M7 1h13a2 2 0 012 2v11a2 2 0 01-2 2H7l-6-7.5L7 1z",
       fill: "none",
       stroke: glyph,
       strokeWidth: "1.6",
       strokeLinejoin: "round"
-    }), /*#__PURE__*/React.createElement("path", {
+    }), React.createElement("path", {
       d: "M10 5l7 7M17 5l-7 7",
       stroke: glyph,
       strokeWidth: "1.6",
       strokeLinecap: "round"
     })),
-    ret: /*#__PURE__*/React.createElement("svg", {
+    ret: React.createElement("svg", {
       width: "20",
       height: "14",
       viewBox: "0 0 20 14"
-    }, /*#__PURE__*/React.createElement("path", {
+    }, React.createElement("path", {
       d: "M18 1v6H4m0 0l4-4M4 7l4 4",
       fill: "none",
       stroke: "#fff",
@@ -493,7 +464,7 @@ function IOSKeyboard({
     ret,
     fs = 25,
     k
-  } = {}) => /*#__PURE__*/React.createElement("div", {
+  } = {}) => React.createElement("div", {
     key: k,
     style: {
       height: 42,
@@ -512,7 +483,7 @@ function IOSKeyboard({
       color: ret ? '#fff' : glyph
     }
   }, content);
-  const row = (keys, pad = 0) => /*#__PURE__*/React.createElement("div", {
+  const row = (keys, pad = 0) => React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6.5,
@@ -523,7 +494,7 @@ function IOSKeyboard({
     flex: true,
     k: l
   })));
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       position: 'relative',
       zIndex: 15,
@@ -535,7 +506,7 @@ function IOSKeyboard({
       alignItems: 'center',
       boxShadow: dark ? '0 -2px 20px rgba(0,0,0,0.09)' : '0 -1px 6px rgba(0,0,0,0.018), 0 -3px 20px rgba(0,0,0,0.012)'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -544,7 +515,7 @@ function IOSKeyboard({
       WebkitBackdropFilter: 'blur(12px) saturate(180%)',
       background: dark ? 'rgba(120,120,128,0.14)' : 'rgba(255,255,255,0.25)'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -553,7 +524,7 @@ function IOSKeyboard({
       border: dark ? '0.5px solid rgba(255,255,255,0.15)' : '0.5px solid rgba(0,0,0,0.06)',
       pointerEvents: 'none'
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 20,
@@ -563,16 +534,16 @@ function IOSKeyboard({
       boxSizing: 'border-box',
       position: 'relative'
     }
-  }, ['"The"', 'the', 'to'].map((w, i) => /*#__PURE__*/React.createElement(React.Fragment, {
+  }, ['"The"', 'the', 'to'].map((w, i) => React.createElement(React.Fragment, {
     key: i
-  }, i > 0 && /*#__PURE__*/React.createElement("div", {
+  }, i > 0 && React.createElement("div", {
     style: {
       width: 1,
       height: 25,
       background: '#ccc',
       opacity: 0.3
     }
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       flex: 1,
       textAlign: 'center',
@@ -582,7 +553,7 @@ function IOSKeyboard({
       letterSpacing: -0.43,
       lineHeight: '22px'
     }
-  }, w)))), /*#__PURE__*/React.createElement("div", {
+  }, w)))), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -592,7 +563,7 @@ function IOSKeyboard({
       boxSizing: 'border-box',
       position: 'relative'
     }
-  }, row(['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p']), row(['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'], 20), /*#__PURE__*/React.createElement("div", {
+  }, row(['q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p']), row(['a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l'], 20), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 14.25,
@@ -601,7 +572,7 @@ function IOSKeyboard({
   }, key(icons.shift, {
     w: 45,
     k: 'shift'
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6.5,
@@ -613,7 +584,7 @@ function IOSKeyboard({
   }))), key(icons.del, {
     w: 45,
     k: 'del'
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
@@ -630,7 +601,7 @@ function IOSKeyboard({
     w: 92.25,
     ret: true,
     k: 'ret'
-  }))), /*#__PURE__*/React.createElement("div", {
+  }))), React.createElement("div", {
     style: {
       height: 56,
       width: '100%',

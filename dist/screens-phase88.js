@@ -1,9 +1,4 @@
 function _extends() { return _extends = Object.assign ? Object.assign.bind() : function (n) { for (var e = 1; e < arguments.length; e++) { var t = arguments[e]; for (var r in t) ({}).hasOwnProperty.call(t, r) && (n[r] = t[r]); } return n; }, _extends.apply(null, arguments); }
-// Cortexx — Notification prefs · workspace switcher · checkout (Phase 88)
-
-// ═══════════════════════════════════════════════════════════════════
-// NOTIFICATION PREFERENCES — per-member, per-tenant
-// ═══════════════════════════════════════════════════════════════════
 (function () {
   if (window.CortexNotifPrefs) return;
   const KEY = () => 'cortexx_notif__' + (window.CortexTenant ? window.CortexTenant.active() : 'default');
@@ -110,7 +105,7 @@ function NotificationPrefsScreen({
   const Switch = ({
     on,
     onClick
-  }) => /*#__PURE__*/React.createElement("button", {
+  }) => React.createElement("button", {
     onClick: onClick,
     style: {
       width: 44,
@@ -123,7 +118,7 @@ function NotificationPrefsScreen({
       position: 'relative',
       transition: 'background 0.2s'
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       position: 'absolute',
       top: 3,
@@ -136,33 +131,33 @@ function NotificationPrefsScreen({
       boxShadow: '0 1px 3px rgba(0,0,0,0.3)'
     }
   }));
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Notifications",
     subtitle: "Per channel \xB7 saved to this workspace"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       padding: '0 4px 8px',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -171,7 +166,7 @@ function NotificationPrefsScreen({
       width: 44,
       textAlign: 'center'
     }
-  }, "Push"), /*#__PURE__*/React.createElement("span", {
+  }, "Push"), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -180,13 +175,13 @@ function NotificationPrefsScreen({
       width: 44,
       textAlign: 'center'
     }
-  }, "Email")), /*#__PURE__*/React.createElement("div", {
+  }, "Email")), React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       overflow: 'hidden'
     }
-  }, cats.map((c, i) => /*#__PURE__*/React.createElement("div", {
+  }, cats.map((c, i) => React.createElement("div", {
     key: c.k,
     style: {
       display: 'flex',
@@ -195,7 +190,7 @@ function NotificationPrefsScreen({
       padding: '12px 14px',
       borderBottom: i === cats.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -209,7 +204,7 @@ function NotificationPrefsScreen({
     }
   }, React.cloneElement(c.i, {
     size: 16
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       fontFamily: SF,
@@ -217,52 +212,52 @@ function NotificationPrefsScreen({
       fontWeight: 600,
       color: T.t1
     }
-  }, c.l), /*#__PURE__*/React.createElement("div", {
+  }, c.l), React.createElement("div", {
     style: {
       width: 44,
       display: 'flex',
       justifyContent: 'center'
     }
-  }, /*#__PURE__*/React.createElement(Switch, {
+  }, React.createElement(Switch, {
     on: p[c.k].push,
     onClick: () => toggle(c.k, 'push')
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       width: 44,
       display: 'flex',
       justifyContent: 'center'
     }
-  }, /*#__PURE__*/React.createElement(Switch, {
+  }, React.createElement(Switch, {
     on: p[c.k].email,
     onClick: () => toggle(c.k, 'email')
-  }))))), /*#__PURE__*/React.createElement("div", {
+  }))))), React.createElement("div", {
     style: {
       marginTop: 18,
       background: T.bg2,
       borderRadius: 14,
       padding: 14
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       justifyContent: 'space-between'
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Quiet hours"), /*#__PURE__*/React.createElement("div", {
+  }, "Quiet hours"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, "Mute push between set times")), /*#__PURE__*/React.createElement(Switch, {
+  }, "Mute push between set times")), React.createElement(Switch, {
     on: p.quiet.on,
     onClick: () => save({
       ...p,
@@ -271,18 +266,18 @@ function NotificationPrefsScreen({
         on: !p.quiet.on
       }
     })
-  })), p.quiet.on && /*#__PURE__*/React.createElement("div", {
+  })), p.quiet.on && React.createElement("div", {
     style: {
       display: 'flex',
       gap: 10,
       marginTop: 12
     }
-  }, ['from', 'to'].map(k => /*#__PURE__*/React.createElement("div", {
+  }, ['from', 'to'].map(k => React.createElement("div", {
     key: k,
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -291,7 +286,7 @@ function NotificationPrefsScreen({
       letterSpacing: 0.5,
       marginBottom: 4
     }
-  }, k), /*#__PURE__*/React.createElement("input", {
+  }, k), React.createElement("input", {
     type: "time",
     value: p.quiet[k],
     onChange: e => save({
@@ -315,23 +310,19 @@ function NotificationPrefsScreen({
     }
   }))))))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// WORKSPACE SWITCHER — quick sheet to jump between tenants
-// ═══════════════════════════════════════════════════════════════════
 function WorkspaceSwitcher({
   accent,
   onClose
 }) {
   const tenants = window.CortexTenant ? window.CortexTenant.list() : [];
   const activeId = window.CortexTenant ? window.CortexTenant.active() : null;
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '20px 20px 30px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 20,
@@ -339,14 +330,14 @@ function WorkspaceSwitcher({
       color: T.t1,
       marginBottom: 4
     }
-  }, "Switch workspace"), /*#__PURE__*/React.createElement("div", {
+  }, "Switch workspace"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginBottom: 18
     }
-  }, "Each workspace keeps fully isolated data."), /*#__PURE__*/React.createElement("div", {
+  }, "Each workspace keeps fully isolated data."), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
@@ -354,7 +345,7 @@ function WorkspaceSwitcher({
     }
   }, tenants.map(t => {
     const isActive = t.id === activeId;
-    return /*#__PURE__*/React.createElement("button", {
+    return React.createElement("button", {
       key: t.id,
       onClick: () => {
         if (!isActive && window.CortexTenant) window.CortexTenant.switch(t.id);else onClose();
@@ -370,34 +361,34 @@ function WorkspaceSwitcher({
         gap: 12,
         textAlign: 'left'
       }
-    }, /*#__PURE__*/React.createElement(Avatar, {
+    }, React.createElement(Avatar, {
       name: t.name,
       size: 40,
       c: t.color
-    }), /*#__PURE__*/React.createElement("div", {
+    }), React.createElement("div", {
       style: {
         flex: 1
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 15,
         fontWeight: 600,
         color: T.t1
       }
-    }, t.name), /*#__PURE__*/React.createElement("div", {
+    }, t.name), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 11,
         color: T.t2
       }
-    }, t.role, " \xB7 ", t.plan, " plan")), isActive ? /*#__PURE__*/React.createElement(Pill, {
+    }, t.role, " \xB7 ", t.plan, " plan")), isActive ? React.createElement(Pill, {
       c: T.green
     }, "current") : React.cloneElement(Ic.chevR || Ic.chevL, {
       size: 18,
       color: T.t3
     }));
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: () => {
       onClose();
       setTimeout(() => window.cortexxNav && window.cortexxNav('newworkspace'), 250);
@@ -421,10 +412,6 @@ function WorkspaceSwitcher({
     size: 16
   }), " New workspace"))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// CHECKOUT — plan upgrade with card form (Stripe-style mock)
-// ═══════════════════════════════════════════════════════════════════
 function CheckoutSheet({
   accent,
   plan,
@@ -456,14 +443,14 @@ function CheckoutSheet({
     }, 1100);
   };
   if (done) {
-    return /*#__PURE__*/React.createElement(Sheet, {
+    return React.createElement(Sheet, {
       onClose: onClose
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         padding: '50px 24px',
         textAlign: 'center'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 72,
         height: 72,
@@ -478,14 +465,14 @@ function CheckoutSheet({
       size: 38,
       color: '#fff',
       sw: 3
-    })), /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 22,
         fontWeight: 700,
         color: T.t1
       }
-    }, "You're on ", plan), /*#__PURE__*/React.createElement("div", {
+    }, "You're on ", plan), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 14,
@@ -494,7 +481,7 @@ function CheckoutSheet({
       }
     }, "Payment confirmed \xB7 receipt emailed")));
   }
-  const Inp = props => /*#__PURE__*/React.createElement("input", _extends({}, props, {
+  const Inp = props => React.createElement("input", _extends({}, props, {
     style: {
       background: T.bg3,
       border: `0.5px solid ${T.hairMid}`,
@@ -508,20 +495,20 @@ function CheckoutSheet({
       ...props.style
     }
   }));
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '20px 20px 30px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 20,
       fontWeight: 700,
       color: T.t1
     }
-  }, "Upgrade to ", plan), /*#__PURE__*/React.createElement("div", {
+  }, "Upgrade to ", plan), React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'baseline',
@@ -529,26 +516,26 @@ function CheckoutSheet({
       marginTop: 6,
       marginBottom: 20
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 30,
       fontWeight: 700,
       color: accent
     }
-  }, price), /*#__PURE__*/React.createElement("span", {
+  }, price), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2
     }
-  }, "/month \xB7 billed monthly \xB7 cancel anytime")), /*#__PURE__*/React.createElement("div", {
+  }, "/month \xB7 billed monthly \xB7 cancel anytime")), React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -557,7 +544,7 @@ function CheckoutSheet({
       letterSpacing: 0.5,
       marginBottom: 5
     }
-  }, "Card number"), /*#__PURE__*/React.createElement(Inp, {
+  }, "Card number"), React.createElement(Inp, {
     value: card,
     onChange: e => setCard(fmtCard(e.target.value)),
     placeholder: "4242 4242 4242 4242",
@@ -565,16 +552,16 @@ function CheckoutSheet({
     style: {
       width: '100%'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -583,7 +570,7 @@ function CheckoutSheet({
       letterSpacing: 0.5,
       marginBottom: 5
     }
-  }, "Expiry"), /*#__PURE__*/React.createElement(Inp, {
+  }, "Expiry"), React.createElement(Inp, {
     value: exp,
     onChange: e => setExp(fmtExp(e.target.value)),
     placeholder: "MM/YY",
@@ -591,11 +578,11 @@ function CheckoutSheet({
     style: {
       width: '100%'
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -604,7 +591,7 @@ function CheckoutSheet({
       letterSpacing: 0.5,
       marginBottom: 5
     }
-  }, "CVC"), /*#__PURE__*/React.createElement(Inp, {
+  }, "CVC"), React.createElement(Inp, {
     value: cvc,
     onChange: e => setCvc(e.target.value.replace(/\D/g, '').slice(0, 4)),
     placeholder: "123",
@@ -612,7 +599,7 @@ function CheckoutSheet({
     style: {
       width: '100%'
     }
-  })))), /*#__PURE__*/React.createElement("button", {
+  })))), React.createElement("button", {
     onClick: pay,
     disabled: !valid || busy,
     style: {
@@ -629,7 +616,7 @@ function CheckoutSheet({
       cursor: valid ? 'pointer' : 'default',
       opacity: valid ? 1 : 0.5
     }
-  }, busy ? 'Processing…' : `Pay ${price} & upgrade`), /*#__PURE__*/React.createElement("div", {
+  }, busy ? 'Processing…' : `Pay ${price} & upgrade`), React.createElement("div", {
     style: {
       textAlign: 'center',
       marginTop: 12,

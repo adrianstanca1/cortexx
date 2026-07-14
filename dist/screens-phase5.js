@@ -1,5 +1,3 @@
-// Cortexx — Phase 5: Activity log, Job templates, Forms library, Tour overlay, Quote→Project conversion
-
 (function () {
   if (!window.Backend) return;
   const snap = Backend.db.snapshot();
@@ -206,10 +204,6 @@
   Backend.db.jobTemplates = makeT('jobTemplates');
   Backend.db.forms = makeT('forms');
 })();
-
-// ═══════════════════════════════════════════════════════════════════
-// ACTIVITY / AUDIT LOG
-// ═══════════════════════════════════════════════════════════════════
 const NOTIF_ICON_MAP = {
   check: Ic.check,
   camera: Ic.camera,
@@ -225,26 +219,26 @@ function ActivityScreen({
   const log = useDB('auditLog');
   const [filter, setFilter] = React.useState('all');
   const filtered = filter === 'all' ? log : filter === 'me' ? log.filter(l => l.who === 'You') : filter === 'ai' ? log.filter(l => l.who === 'Cortex AI') : log.filter(l => !['You', 'Cortex AI'].includes(l.who));
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Activity",
     subtitle: `${log.length} events · last 7 days`,
-    right: /*#__PURE__*/React.createElement(HeaderBtn, {
+    right: React.createElement(HeaderBtn, {
       icon: Ic.download,
       onClick: () => toast('Activity log exported', 'success')
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement(SegControl, {
+  }, React.createElement(SegControl, {
     value: filter,
     onChange: setFilter,
     options: [{
@@ -264,12 +258,12 @@ function ActivityScreen({
       l: 'AI',
       n: log.filter(l => l.who === 'Cortex AI').length
     }]
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       padding: '0 16px',
       position: 'relative'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       position: 'absolute',
       left: 32,
@@ -280,7 +274,7 @@ function ActivityScreen({
     }
   }), filtered.map((ev, i) => {
     const Icon = NOTIF_ICON_MAP[ev.icon] || Ic.bell;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: ev.id,
       style: {
         display: 'flex',
@@ -289,7 +283,7 @@ function ActivityScreen({
         padding: '12px 0',
         position: 'relative'
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         width: 34,
         height: 34,
@@ -305,27 +299,27 @@ function ActivityScreen({
       }
     }, React.cloneElement(Icon, {
       size: 15
-    })), /*#__PURE__*/React.createElement("div", {
+    })), React.createElement("div", {
       style: {
         flex: 1,
         paddingTop: 4
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 13,
         color: T.t1,
         lineHeight: 1.4
       }
-    }, /*#__PURE__*/React.createElement("span", {
+    }, React.createElement("span", {
       style: {
         fontWeight: 600
       }
-    }, ev.who), /*#__PURE__*/React.createElement("span", {
+    }, ev.who), React.createElement("span", {
       style: {
         color: T.t2
       }
-    }, " ", ev.what)), /*#__PURE__*/React.createElement("div", {
+    }, " ", ev.what)), React.createElement("div", {
       style: {
         fontFamily: SFMono,
         fontSize: 10,
@@ -338,26 +332,22 @@ function ActivityScreen({
     }), " \xB7 ", _formatRelDate(ev.when.slice(0, 10)))));
   }))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// JOB TEMPLATES
-// ═══════════════════════════════════════════════════════════════════
 function TemplatesScreen({
   accent
 }) {
   const templates = useDB('jobTemplates');
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Job templates",
     subtitle: "Reusable project blueprints",
-    right: /*#__PURE__*/React.createElement("button", {
+    right: React.createElement("button", {
       onClick: async () => {
         await Backend.db.jobTemplates.create({
           name: 'Untitled template',
@@ -383,14 +373,14 @@ function TemplatesScreen({
     }, React.cloneElement(Ic.plus, {
       size: 20
     }))
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '4px 16px',
       display: 'flex',
       flexDirection: 'column',
       gap: 10
     }
-  }, templates.map(t => /*#__PURE__*/React.createElement("div", {
+  }, templates.map(t => React.createElement("div", {
     key: t.id,
     style: {
       background: T.bg2,
@@ -398,27 +388,27 @@ function TemplatesScreen({
       padding: 14,
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start'
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, t.name), /*#__PURE__*/React.createElement("div", {
+  }, t.name), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 4
     }
-  }, t.stages, " stages \xB7 ~", t.typical_weeks, " wks \xB7 ~\xA3", (t.typical_value / 1000).toFixed(0), "k")), /*#__PURE__*/React.createElement("button", {
+  }, t.stages, " stages \xB7 ~", t.typical_weeks, " wks \xB7 ~\xA3", (t.typical_value / 1000).toFixed(0), "k")), React.createElement("button", {
     onClick: async () => {
       await Backend.db.projects.create({
         name: `New ${t.name}`,
@@ -445,7 +435,7 @@ function TemplatesScreen({
       fontSize: 11,
       fontWeight: 700
     }
-  }, "Use")), /*#__PURE__*/React.createElement("div", {
+  }, "Use")), React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
@@ -454,7 +444,7 @@ function TemplatesScreen({
       paddingTop: 10,
       borderTop: `0.5px solid ${T.hair}`
     }
-  }, t.milestones.map((m, i) => /*#__PURE__*/React.createElement("span", {
+  }, t.milestones.map((m, i) => React.createElement("span", {
     key: i,
     style: {
       fontFamily: SFMono,
@@ -467,10 +457,6 @@ function TemplatesScreen({
     }
   }, i + 1, ". ", m))))))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// FORMS LIBRARY
-// ═══════════════════════════════════════════════════════════════════
 const FORM_ICON_MAP = {
   team: Ic.team,
   shield: Ic.shield,
@@ -483,18 +469,18 @@ function FormsScreen({
   accent
 }) {
   const forms = useDB('forms');
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 30
     }
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "Forms",
     subtitle: `${forms.length} templates · ${forms.reduce((s, f) => s + f.submitted, 0)} submitted`,
-    right: /*#__PURE__*/React.createElement(HeaderBtn, {
+    right: React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
       onClick: async () => {
@@ -507,11 +493,11 @@ function FormsScreen({
         toast('Form created', 'success');
       }
     })
-  }), /*#__PURE__*/React.createElement(Section, {
+  }), React.createElement(Section, {
     title: "Available forms"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, forms.map((f, i, a) => {
+  }, React.createElement(GroupedList, null, forms.map((f, i, a) => {
     const I = FORM_ICON_MAP[f.icon] || Ic.doc;
-    return /*#__PURE__*/React.createElement(Row, {
+    return React.createElement(Row, {
       key: f.id,
       icon: I,
       iconBg: [T.blue, T.amber, T.purple, T.green, T.red, T.cyan][i % 6],
@@ -520,9 +506,9 @@ function FormsScreen({
       isLast: i === a.length - 1,
       onClick: () => toast(`Opening ${f.kind}…`, 'info')
     });
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "AI"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}22, ${accent}0a)`,
       border: `0.5px solid ${T.purple}44`,
@@ -532,31 +518,31 @@ function FormsScreen({
       alignItems: 'center',
       gap: 12
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       color: T.purple
     }
   }, React.cloneElement(Ic.spark, {
     size: 22
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Generate a custom form"), /*#__PURE__*/React.createElement("div", {
+  }, "Generate a custom form"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, "Describe what you need; Cortex builds the template")), /*#__PURE__*/React.createElement("span", {
+  }, "Describe what you need; Cortex builds the template")), React.createElement("span", {
     style: {
       color: T.t3
     }
