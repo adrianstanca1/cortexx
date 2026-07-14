@@ -12,6 +12,8 @@
     "build": "next build && npm run precompile",
     "start": "next start",
     "lint": "eslint . --max-warnings 100",
+    "audit:app": "node scripts/audit-app-integrity.mjs",
+    "quality": "npm run audit:app && npm run lint && npx tsc --noEmit && npm test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
