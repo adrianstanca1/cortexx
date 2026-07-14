@@ -3,6 +3,10 @@
   "version": "1.4.0",
   "description": "The construction OS that thinks with you. UK SMB construction management with autonomous AI CEO.",
   "private": true,
+  "engines": {
+    "node": ">=22.0.0",
+    "npm": ">=10.0.0"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build && npm run precompile",
