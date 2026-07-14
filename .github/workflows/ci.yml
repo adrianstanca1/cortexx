@@ -98,3 +98,59 @@ jobs:
         run: npx prisma migrate deploy
       - name: Run integration suite
         run: npm run test:integration
+
+  browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: cortexx_e2e
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:test@localhost:5432/cortexx_e2e
+      NEXTAUTH_URL: http://127.0.0.1:3000
+      AUTH_URL: http://127.0.0.1:3000
+      NEXTAUTH_SECRET: ci-playwright-secret-not-used-outside-ci
+      AUTH_SECRET: ci-playwright-secret-not-used-outside-ci
+      ADMIN_EMAIL: admin@cortexbuildpro.com
+      ADMIN_PASSWORD: changeme-please-1234
+      E2E_ADMIN_EMAIL: admin@cortexbuildpro.com
+      E2E_ADMIN_PASSWORD: changeme-please-1234
+      DEFAULT_ORG_SLUG: cortexbuildpro
+      DEFAULT_ORG_NAME: Cortexbuild Pro
+      MULTITENANT_ENFORCED: 'true'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+      - name: Seed deterministic organisation and admin account
+        run: npm run db:seed
+      - name: Install Playwright and Chromium
+        run: npm run e2e:install
+      - name: Run desktop and mobile browser journeys
+        run: npm run e2e
+      - name: Upload Playwright report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: playwright-report
+          path: |
+            playwright-report/
+            test-results/playwright/
+          if-no-files-found: ignore
+          retention-days: 14
