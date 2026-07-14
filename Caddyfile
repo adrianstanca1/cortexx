@@ -13,10 +13,24 @@
 		reverse_proxy api:3001
 	}
 
+	# ── Hard-block secrets, server source, and build/config files ──
+	# The repo root is mounted into /srv/app, so WITHOUT this a request for
+	# /.env, /.env.vault, /.git/config, /server/index.js, /build-dist.js, or any
+	# *.ts would return the file's contents to the public internet. The docker
+	# compose mount is also narrowed (defense in depth), but never rely on that
+	# alone — keep this deny list explicit.
+	@blocked path /.git* /.env* /.env.production /.env.vault /server/* /build-dist.js /proxy.ts /instrumentation.ts /package.json /package-lock.json /tsconfig.json /next.config.* /tailwind.config.* /postcss.config.* /playwright.config.* /eslint.config.* *.ts *.tsx
+	respond @blocked 404
+
 	# ── Everything else → the SPA shell ──
 	handle {
 		try_files {path} /Cortexx.html
-		file_server
+		file_server {
+			# Belt-and-suspenders: even if a matcher above missed something, never
+			# serve dotfiles, server source, or env/config files. Caddy's file_server
+			# only hides the active Caddyfile by default — it does NOT hide .git/.env.
+			hide .git .env .env.* server *.ts *.tsx build-dist.js proxy.ts instrumentation.ts package.json package-lock.json tsconfig.json next.config.js tailwind.config.js postcss.config.js playwright.config.js eslint.config.js
+		}
 	}
 
 	# App code in /lib and /dist is NOT content-hashed, so it must never be
@@ -26,12 +40,16 @@
 	@appcode path /lib/* /dist/*
 	header @appcode Cache-Control "no-cache, must-revalidate"
 
-	# Long-cache genuinely static assets (icons, fonts) — but exclude app code.
+	# Long-cache genuinely static assets (icons, fonts) — but exclude app code
+	# AND the service worker. sw.js MUST revalidate every load or browsers keep
+	# running the old SW (and cached app shell, including security fixes) for up
+	# to a year — defeating the whole point of the network-first strategy.
 	@static {
 		path *.js *.css *.png *.jpg *.svg *.woff2
-		not path /lib/* /dist/*
+		not path /lib/* /dist/* /sw.js
 	}
 	header @static Cache-Control "public, max-age=31536000, immutable"
+	header /sw.js Cache-Control "no-cache, must-revalidate"
 	@html path *.html
 	header @html Cache-Control "no-cache"
 }

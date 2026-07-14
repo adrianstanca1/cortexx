@@ -97,7 +97,23 @@ services:
       - traefik.http.services.cortexx.loadbalancer.server.port=80
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
-      - ./:/srv/app:ro          # serves Cortexx.html + lib/ + dist/ statically
+      # Mount ONLY the assets Caddy serves — never the repo root, which would
+      # expose .env, .env.vault, .git/, server/* and *.ts over HTTP. The Caddyfile
+      # also denies these paths, but this mount is the primary boundary.
+      - ./dist:/srv/app/dist:ro
+      - ./lib:/srv/app/lib:ro
+      - ./public:/srv/app/public:ro
+      - ./Cortexx.html:/srv/app/Cortexx.html:ro
+      - ./Cortexx Marketing.html:/srv/app/Cortexx Marketing.html:ro
+      - ./Cortexx Mobile Dashboard.html:/srv/app/Cortexx Mobile Dashboard.html:ro
+      - ./Cortexx-standalone.html:/srv/app/Cortexx-standalone.html:ro
+      - ./portal.html:/srv/app/portal.html:ro
+      - ./manifest.json:/srv/app/manifest.json:ro
+      - ./sw.js:/srv/app/sw.js:ro
+      - ./icon-192.png:/srv/app/icon-192.png:ro
+      - ./icon-512.png:/srv/app/icon-512.png:ro
+      - ./apple-touch-icon.png:/srv/app/apple-touch-icon.png:ro
+      - ./icon.svg:/srv/app/icon.svg:ro
       - cortexx_caddy_data:/data
       - cortexx_caddy_config:/config
     environment:

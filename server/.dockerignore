@@ -1,0 +1,10 @@
+# Keep secrets and host state out of the API image layer.
+.env
+.env.*
+!.env.example
+*.log
+node_modules
+db_status.log
+README.md
+Dockerfile
+.dockerignore
