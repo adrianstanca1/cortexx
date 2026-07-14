@@ -139,7 +139,7 @@ jobs:
       - name: Apply migrations
         run: npx prisma migrate deploy
       - name: Seed deterministic organisation and admin account
-        run: npm run db:seed
+        run: npx tsx scripts/seed-e2e.ts
       - name: Install Playwright and Chromium
         run: npm run e2e:install
       - name: Run desktop and mobile browser journeys
