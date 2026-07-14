@@ -1,7 +1,7 @@
 {
-  "appId": "com.cortexbuild.app",
+  "appId": "app.cortexbuild.cortexx",
   "appName": "Cortexx",
-  "webDir": ".",
+  "webDir": "dist",
   "server": {
     "iosScheme": "https"
   },
