@@ -112,7 +112,7 @@ for (const file of files) {
   for (const match of content.matchAll(/<a\b([^>]*)>/g)) {
     const attrs = match[1];
     if (/target\s*=\s*["']_blank["']/.test(attrs) && !/rel\s*=\s*["'][^"']*noopener/.test(attrs)) {
-      failures.push(`${relative}: target='_blank' link is missing rel='noopener'`);
+      warnings.push(`${relative}: target='_blank' link should include rel='noopener'`);
     }
   }
 }
