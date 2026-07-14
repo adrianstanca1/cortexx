@@ -1,10 +1,3 @@
-// Cortexx — Phase 95: AI agents (v1.4)
-//  • Estimator persona — Vera watches new leads and drafts a quote in seconds
-//  • Photo-as-mention — drop a site photo, AI extracts actions / snags / RFIs
-//  • Inbox triage — paste an email, AI categorises and auto-files the record
-// All run through window.claude.complete (proxied server-side via /api/ai when
-// the cloud is connected). Nothing here is mocked — real model calls.
-
 (function () {
   if (!window.Backend) return;
   const grabJSON = (raw, arr) => {
@@ -15,14 +8,11 @@
       return null;
     }
   };
-
-  // ── Estimator persona ─────────────────────────────────────
   Backend.vera = Backend.vera || {};
   Backend.vera.estimateLead = async lead => {
     const brief = `${lead.inquiry || lead.name}. Indicative budget around £${lead.value || 'unknown'}. UK London SMB refurb/build contractor.`;
     const est = await Backend.ai.estimateQuote(brief);
     if (!est) return null;
-    // Persist as a draft quote linked to the lead's client.
     const quote = await Backend.db.quotes.create({
       client: lead.name,
       title: est.title || lead.inquiry || 'Estimate',
@@ -33,7 +23,6 @@
       leadId: lead.id,
       _draftedBy: 'Vera'
     });
-    // Advance the lead to 'quoted'.
     try {
       await Backend.db.leads.update(lead.id, {
         stage: 'quoted',
@@ -47,7 +36,6 @@
       est
     };
   };
-  // Draft quotes for every new/qualified lead that doesn't have one yet.
   Backend.vera.autoEstimateNewLeads = async onProgress => {
     const leads = (Backend.db.leads ? Backend.db.leads.listSync() : []).filter(l => ['new', 'qualified'].includes(l.stage));
     const out = [];
@@ -61,8 +49,6 @@
     }
     return out;
   };
-
-  // ── Photo-as-mention (vision) ─────────────────────────────
   const toImg = blob => new Promise((res, rej) => {
     const r = new FileReader();
     r.onerror = () => rej(r.error);
@@ -130,8 +116,6 @@
       };
     }
   };
-
-  // ── Inbox triage ──────────────────────────────────────────
   Backend.ai.triageEmail = async text => {
     const prompt = `You triage inbound email for a UK SMB construction company. Classify the message and extract structured data.
 Reply ONLY JSON: {"category":"lead|invoice|enquiry|supplier|complaint|other","confidence":0-1,"summary":"1 sentence","suggestedAction":"what to do","extract":{"name":"person/company or null","value":"GBP number or null","inquiry":"scope or null","due":"date or null"}}.
@@ -148,7 +132,6 @@ Email: """${text.slice(0, 4000)}"""`;
       return null;
     }
   };
-  // Act on a triage result — create the right record.
   Backend.ai.fileTriage = async t => {
     const e = t.extract || {};
     const val = parseFloat(String(e.value || '').replace(/[^0-9.]/g, '')) || 0;
@@ -190,10 +173,6 @@ Email: """${text.slice(0, 4000)}"""`;
     };
   };
 })();
-
-// ═══════════════════════════════════════════════════════════
-// PHOTO-AS-MENTION SHEET
-// ═══════════════════════════════════════════════════════════
 function PhotoMentionSheet({
   onClose,
   accent
@@ -246,16 +225,16 @@ function PhotoMentionSheet({
     snag: T.amber,
     rfi: T.purple
   };
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -265,7 +244,7 @@ function PhotoMentionSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
@@ -277,17 +256,17 @@ function PhotoMentionSheet({
     }
   }, React.cloneElement(Ic.camera, {
     size: 14
-  }), " Photo \u2192 actions"), /*#__PURE__*/React.createElement("div", {
+  }), " Photo \u2192 actions"), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '0 16px 24px'
     }
-  }, /*#__PURE__*/React.createElement("input", {
+  }, React.createElement("input", {
     ref: fileRef,
     type: "file",
     accept: "image/*",
@@ -295,7 +274,7 @@ function PhotoMentionSheet({
     style: {
       display: 'none'
     }
-  }), !preview ? /*#__PURE__*/React.createElement("button", {
+  }), !preview ? React.createElement("button", {
     onClick: () => fileRef.current && fileRef.current.click(),
     style: {
       width: '100%',
@@ -316,11 +295,11 @@ function PhotoMentionSheet({
   }, React.cloneElement(Ic.camera, {
     size: 30,
     color: T.t3
-  }), "Tap to add a site photo") : /*#__PURE__*/React.createElement("div", {
+  }), "Tap to add a site photo") : React.createElement("div", {
     style: {
       position: 'relative'
     }
-  }, /*#__PURE__*/React.createElement("img", {
+  }, React.createElement("img", {
     src: preview,
     alt: "",
     style: {
@@ -328,7 +307,7 @@ function PhotoMentionSheet({
       borderRadius: 14,
       display: 'block'
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: () => fileRef.current && fileRef.current.click(),
     style: {
       position: 'absolute',
@@ -343,7 +322,7 @@ function PhotoMentionSheet({
       fontSize: 12,
       cursor: 'pointer'
     }
-  }, "Change")), preview && !result && /*#__PURE__*/React.createElement("button", {
+  }, "Change")), preview && !result && React.createElement("button", {
     onClick: analyse,
     disabled: busy,
     style: {
@@ -366,11 +345,11 @@ function PhotoMentionSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 16
-  }), " ", busy ? 'Cortex is looking…' : 'Extract actions'), result && /*#__PURE__*/React.createElement("div", {
+  }), " ", busy ? 'Cortex is looking…' : 'Extract actions'), result && React.createElement("div", {
     style: {
       marginTop: 14
     }
-  }, result.summary && /*#__PURE__*/React.createElement("div", {
+  }, result.summary && React.createElement("div", {
     style: {
       background: `${accent}11`,
       border: `0.5px solid ${accent}33`,
@@ -385,7 +364,7 @@ function PhotoMentionSheet({
   }, React.cloneElement(Ic.spark, {
     size: 12,
     color: accent
-  }), " ", result.summary), (result.items || []).length === 0 ? /*#__PURE__*/React.createElement("div", {
+  }), " ", result.summary), (result.items || []).length === 0 ? React.createElement("div", {
     style: {
       textAlign: 'center',
       fontFamily: SF,
@@ -393,7 +372,7 @@ function PhotoMentionSheet({
       color: T.t3,
       padding: 20
     }
-  }, "Nothing actionable spotted.") : (result.items || []).map((it, i) => /*#__PURE__*/React.createElement("div", {
+  }, "Nothing actionable spotted.") : (result.items || []).map((it, i) => React.createElement("div", {
     key: i,
     style: {
       display: 'flex',
@@ -405,26 +384,26 @@ function PhotoMentionSheet({
       padding: 12,
       marginBottom: 8
     }
-  }, /*#__PURE__*/React.createElement(Pill, {
+  }, React.createElement(Pill, {
     c: TYPE_C[it.type] || accent,
     size: "xs"
-  }, it.type), /*#__PURE__*/React.createElement("div", {
+  }, it.type), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
       color: T.t1
     }
-  }, it.title), /*#__PURE__*/React.createElement("div", {
+  }, it.title), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t3
     }
-  }, it.priority, " priority")), /*#__PURE__*/React.createElement("button", {
+  }, it.priority, " priority")), React.createElement("button", {
     onClick: () => file(it, i),
     disabled: filed[i],
     style: {
@@ -440,10 +419,6 @@ function PhotoMentionSheet({
     }
   }, filed[i] ? '✓ Added' : 'Create'))))));
 }
-
-// ═══════════════════════════════════════════════════════════
-// INBOX TRIAGE SHEET
-// ═══════════════════════════════════════════════════════════
 function InboxTriageSheet({
   onClose,
   accent
@@ -474,16 +449,16 @@ function InboxTriageSheet({
     complaint: T.red,
     other: T.t2
   };
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -493,7 +468,7 @@ function InboxTriageSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
@@ -505,17 +480,17 @@ function InboxTriageSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 14
-  }), " Inbox triage"), /*#__PURE__*/React.createElement("div", {
+  }), " Inbox triage"), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '0 16px 24px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
@@ -523,7 +498,7 @@ function InboxTriageSheet({
       marginBottom: 10,
       lineHeight: 1.5
     }
-  }, "Paste an inbound email (or a WhatsApp/voicemail transcript). Cortex categorises it and files the right record."), /*#__PURE__*/React.createElement("textarea", {
+  }, "Paste an inbound email (or a WhatsApp/voicemail transcript). Cortex categorises it and files the right record."), React.createElement("textarea", {
     value: text,
     onChange: e => setText(e.target.value),
     rows: 7,
@@ -541,7 +516,7 @@ function InboxTriageSheet({
       outline: 'none',
       resize: 'vertical'
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     onClick: triage,
     disabled: busy || !text.trim(),
     style: {
@@ -564,7 +539,7 @@ function InboxTriageSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 16
-  }), " ", busy ? 'Triaging…' : 'Triage'), result && /*#__PURE__*/React.createElement("div", {
+  }), " ", busy ? 'Triaging…' : 'Triage'), result && React.createElement("div", {
     style: {
       marginTop: 16,
       background: T.bg2,
@@ -572,23 +547,23 @@ function InboxTriageSheet({
       borderRadius: 14,
       padding: 16
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 8,
       marginBottom: 10
     }
-  }, /*#__PURE__*/React.createElement(Pill, {
+  }, React.createElement(Pill, {
     c: CAT_C[result.category] || T.t2,
     size: "sm"
-  }, result.category), /*#__PURE__*/React.createElement("span", {
+  }, result.category), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       fontSize: 11,
       color: T.t3
     }
-  }, Math.round((result.confidence || 0) * 100), "% confident")), /*#__PURE__*/React.createElement("div", {
+  }, Math.round((result.confidence || 0) * 100), "% confident")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 14,
@@ -596,37 +571,37 @@ function InboxTriageSheet({
       lineHeight: 1.5,
       marginBottom: 8
     }
-  }, result.summary), /*#__PURE__*/React.createElement("div", {
+  }, result.summary), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginBottom: 12
     }
-  }, "\u2192 ", result.suggestedAction), result.extract && (result.extract.name || result.extract.value) && /*#__PURE__*/React.createElement("div", {
+  }, "\u2192 ", result.suggestedAction), result.extract && (result.extract.name || result.extract.value) && React.createElement("div", {
     style: {
       display: 'flex',
       flexWrap: 'wrap',
       gap: 6,
       marginBottom: 12
     }
-  }, result.extract.name && /*#__PURE__*/React.createElement(Pill, {
+  }, result.extract.name && React.createElement(Pill, {
     c: T.bg3,
     size: "xs"
-  }, result.extract.name), result.extract.value && /*#__PURE__*/React.createElement(Pill, {
+  }, result.extract.name), result.extract.value && React.createElement(Pill, {
     c: T.bg3,
     size: "xs"
-  }, "\xA3", result.extract.value), result.extract.due && /*#__PURE__*/React.createElement(Pill, {
+  }, "\xA3", result.extract.value), result.extract.due && React.createElement(Pill, {
     c: T.bg3,
     size: "xs"
-  }, "due ", result.extract.due)), filed ? /*#__PURE__*/React.createElement("div", {
+  }, "due ", result.extract.due)), filed ? React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.green,
       fontWeight: 600
     }
-  }, "\u2713 Filed as ", filed.kind, ": ", filed.record.name || filed.record.title) : /*#__PURE__*/React.createElement("button", {
+  }, "\u2713 Filed as ", filed.kind, ": ", filed.record.name || filed.record.title) : React.createElement("button", {
     onClick: file,
     style: {
       width: '100%',

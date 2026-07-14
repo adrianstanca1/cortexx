@@ -1,8 +1,3 @@
-// CortexBuild Pro — Phase 113: Financial Intelligence
-// FinancialIntelligenceScreen — cashflow forecast, project P&L deep-dive,
-// margin alerts, and WIP (work-in-progress) reporting. Reads the computed
-// intelligence selectors registered in backend-v17.js.
-
 (function () {
   if (!window.Backend) return;
   const card = extra => ({
@@ -58,8 +53,6 @@
         color: tab === k ? '#fff' : T.t2
       }
     }, l)));
-
-    // ── Cashflow forecast ──────────────────────────────────────────
     const Cashflow = () => React.createElement('div', null, React.createElement('div', {
       style: card({
         marginBottom: 14
@@ -82,9 +75,7 @@
         color: cumulative[cumulative.length - 1] >= 0 ? T.green : T.red,
         fontWeight: 700
       }
-    }, (cumulative[cumulative.length - 1] >= 0 ? '+' : '') + money(cumulative[cumulative.length - 1]))),
-    // bar chart
-    React.createElement('div', {
+    }, (cumulative[cumulative.length - 1] >= 0 ? '+' : '') + money(cumulative[cumulative.length - 1]))), React.createElement('div', {
       style: {
         display: 'flex',
         alignItems: 'flex-end',
@@ -195,8 +186,6 @@
         textAlign: 'right'
       }
     }, (f.net >= 0 ? '+' : '') + moneyK(f.net)))));
-
-    // ── Project P&L ────────────────────────────────────────────────
     const PnL = () => React.createElement('div', null, projects.map(p => {
       const pl = C.projectPnL(p.id);
       if (pl.revenue === 0 && pl.cost === 0) return null;
@@ -256,9 +245,7 @@
           fontWeight: 800,
           color: c
         }
-      }, moneyK(v))))),
-      // cost breakdown bar
-      React.createElement('div', {
+      }, moneyK(v))))), React.createElement('div', {
         style: {
           display: 'flex',
           height: 8,
@@ -304,8 +291,6 @@
         }
       }, '● '), 'Materials ' + moneyK(pl.materials))));
     }));
-
-    // ── WIP ────────────────────────────────────────────────────────
     const WIP = () => React.createElement('div', null, React.createElement('div', {
       style: card({
         marginBottom: 14,
@@ -377,8 +362,6 @@
         }
       })));
     }));
-
-    // ── Margin alerts ──────────────────────────────────────────────
     const Alerts = () => React.createElement('div', null, alerts.length === 0 ? React.createElement('div', {
       style: {
         textAlign: 'center',

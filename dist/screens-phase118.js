@@ -1,8 +1,3 @@
-// CortexBuild Pro — Phase 118: Client Experience
-// ClientExperienceScreen — live progress feed, variation approvals, and
-// satisfaction / NPS scoring. Wired to progressFeed, changeOrders, and
-// satisfaction tables.
-
 (function () {
   if (!window.Backend) return;
   const card = extra => ({
@@ -48,8 +43,6 @@
         color: tab === k ? '#fff' : T.t2
       }
     }, l)));
-
-    // ── Live progress feed ─────────────────────────────────────────
     const Feed = () => React.createElement('div', null, React.createElement('div', {
       style: {
         fontSize: 12,
@@ -139,8 +132,6 @@
         cursor: 'pointer'
       }
     }, '+ Post progress update'));
-
-    // ── Variation approvals ────────────────────────────────────────
     const Variations = () => React.createElement('div', null, changes.length === 0 ? React.createElement('p', {
       style: {
         color: T.t2,
@@ -242,8 +233,6 @@
         }
       }, '✕ Rejected')));
     }));
-
-    // ── Satisfaction / NPS ─────────────────────────────────────────
     const Satisfaction = () => React.createElement('div', null, React.createElement('div', {
       style: {
         display: 'grid',
@@ -404,8 +393,6 @@
       }
     }, 'Pending'))), React.createElement(TabBar), tab === 'feed' && React.createElement(Feed), tab === 'variations' && React.createElement(Variations), tab === 'satisfaction' && React.createElement(Satisfaction));
   };
-
-  // ── Post progress update sheet ───────────────────────────────────
   window.PostUpdateSheet = function ({
     onClose,
     accent

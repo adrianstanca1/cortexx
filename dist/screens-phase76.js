@@ -1,22 +1,6 @@
-// Cortexx — Phase 76: Stub activation + backend hardening
-// Sweeps remaining toast('...', 'info') stubs into real flows and tightens backend.
-//
-// Adds:
-//   • EditFieldSheet       — generic single-field editor (name, phone, address, etc.)
-//   • StartTripSheet       — GPS-tracked mileage capture
-//   • AddTagSheet / AddTemplateSheet / AddViewSheet / AddCostItemSheet
-//   • mailto:/tel:/window.open wiring for support links
-//   • Backend hardening    — atomic writes via debounced queue + JSON export/import
-
-// ─────────────────────────────────────────────────────────
-// BACKEND HARDENING
-// ─────────────────────────────────────────────────────────
 (function () {
   if (!window.Backend) return;
   const KEY = 'cortexx_db_v1';
-
-  // Single source of truth for writes — already debounced upstream by perf-phase71,
-  // but we add a tolerant export/import here and a versioned safety wrap.
   Backend.db.export = () => {
     const s = Backend.db.snapshot();
     return JSON.stringify({
@@ -36,9 +20,6 @@
       toast('Import failed: ' + (e.message || e), 'error');
     }
   };
-
-  // Convenient table-level helper Backend.db.table(name) returning a CRUD facet.
-  // Many phases hand-roll this; this is a single canonical implementation.
   Backend.db.table = (name, opts = {}) => {
     const idGen = opts.idGen || (rows => Math.max(0, ...rows.map(r => typeof r.id === 'number' ? r.id : 0)) + 1);
     return {
@@ -80,8 +61,6 @@
       }
     };
   };
-
-  // Lazy-seed mini-tables for the stub sheets below
   const s = Backend.db.snapshot();
   if (!s.tags) {
     s.tags = [{
@@ -157,18 +136,11 @@
   try {
     localStorage.setItem(KEY, JSON.stringify(s));
   } catch (e) {}
-
-  // Stable refs for screens that already use useDB(name)
   if (!Backend.db.tags) Backend.db.tags = Backend.db.table('tags');
   if (!Backend.db.savedViews) Backend.db.savedViews = Backend.db.table('savedViews');
   if (!Backend.db.templates) Backend.db.templates = Backend.db.table('templates');
   if (!Backend.db.costItems) Backend.db.costItems = Backend.db.table('costItems');
 })();
-
-// ─────────────────────────────────────────────────────────
-// GENERIC SINGLE-FIELD EDIT SHEET
-// Use: cortexxNav('editfield', { label:'Phone', valuePath:['user','phone'], current:'07900 123 456' })
-// ─────────────────────────────────────────────────────────
 function EditFieldSheet({
   params,
   onClose,
@@ -180,7 +152,6 @@ function EditFieldSheet({
     if (p.onSave) {
       await p.onSave(val);
     } else if (p.valuePath?.length) {
-      // walk path into snapshot and persist
       const s = Backend.db.snapshot();
       let node = s;
       for (let i = 0; i < p.valuePath.length - 1; i++) node = node[p.valuePath[i]] = node[p.valuePath[i]] || {};
@@ -193,23 +164,23 @@ function EditFieldSheet({
     toast(`${p.label} updated`, 'success');
     onClose();
   };
-  return /*#__PURE__*/React.createElement(FormSheet, {
+  return React.createElement(FormSheet, {
     title: `Edit ${p.label || 'value'}`,
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, p.kind === 'textarea' ? /*#__PURE__*/React.createElement(FormTextarea, {
+  }, p.kind === 'textarea' ? React.createElement(FormTextarea, {
     label: p.label || 'Value',
     v: val,
     onChange: setVal,
     placeholder: p.placeholder || ''
-  }) : /*#__PURE__*/React.createElement(FormInput, {
+  }) : React.createElement(FormInput, {
     label: p.label || 'Value',
     v: val,
     onChange: setVal,
     placeholder: p.placeholder || '',
     type: p.type || 'text'
-  }), p.help && /*#__PURE__*/React.createElement("div", {
+  }), p.help && React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11.5,
@@ -218,10 +189,6 @@ function EditFieldSheet({
     }
   }, p.help));
 }
-
-// ─────────────────────────────────────────────────────────
-// START TRIP — GPS-tracked mileage
-// ─────────────────────────────────────────────────────────
 function StartTripSheet({
   onClose,
   accent
@@ -290,10 +257,10 @@ function StartTripSheet({
   React.useEffect(() => () => {
     if (watchRef.current != null) navigator.geolocation.clearWatch(watchRef.current);
   }, []);
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -301,7 +268,7 @@ function StartTripSheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -311,24 +278,24 @@ function StartTripSheet({
       fontSize: 15,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, tracking ? 'Trip in progress' : 'New trip'), /*#__PURE__*/React.createElement("div", {
+  }, tracking ? 'Trip in progress' : 'New trip'), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       padding: '14px 16px 24px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: tracking ? `linear-gradient(135deg, ${T.green}22, transparent)` : T.bg2,
       border: `0.5px solid ${tracking ? T.green + '55' : T.hair}`,
@@ -336,7 +303,7 @@ function StartTripSheet({
       padding: 16,
       textAlign: 'center'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -346,7 +313,7 @@ function StartTripSheet({
       letterSpacing: 0.6,
       marginBottom: 8
     }
-  }, tracking ? 'Tracking GPS · live' : 'Ready to track'), /*#__PURE__*/React.createElement("div", {
+  }, tracking ? 'Tracking GPS · live' : 'Ready to track'), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 56,
@@ -355,28 +322,28 @@ function StartTripSheet({
       letterSpacing: -2,
       lineHeight: 1
     }
-  }, miles.toFixed(1), /*#__PURE__*/React.createElement("span", {
+  }, miles.toFixed(1), React.createElement("span", {
     style: {
       fontSize: 22,
       color: T.t3
     }
-  }, " mi")), /*#__PURE__*/React.createElement("div", {
+  }, " mi")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 8
     }
-  }, "Reimbursement @ 45p: ", /*#__PURE__*/React.createElement("span", {
+  }, "Reimbursement @ 45p: ", React.createElement("span", {
     style: {
       color: T.green,
       fontWeight: 600
     }
-  }, "\xA3", (miles * 0.45).toFixed(2)))), !tracking && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement("div", {
+  }, "\xA3", (miles * 0.45).toFixed(2)))), !tracking && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       marginTop: 18
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10.5,
@@ -386,14 +353,14 @@ function StartTripSheet({
       letterSpacing: 0.7,
       padding: '0 2px 8px'
     }
-  }, "Destination"), /*#__PURE__*/React.createElement("div", {
+  }, "Destination"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       overflowX: 'auto',
       paddingBottom: 4
     }
-  }, projects.map(p => /*#__PURE__*/React.createElement("button", {
+  }, projects.map(p => React.createElement("button", {
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -409,11 +376,11 @@ function StartTripSheet({
       whiteSpace: 'nowrap',
       cursor: 'pointer'
     }
-  }, p.name)))), /*#__PURE__*/React.createElement("div", {
+  }, p.name)))), React.createElement("div", {
     style: {
       marginTop: 14
     }
-  }, /*#__PURE__*/React.createElement(FormSelect, {
+  }, React.createElement(FormSelect, {
     label: "Purpose",
     v: purpose,
     onChange: setPurpose,
@@ -433,7 +400,7 @@ function StartTripSheet({
       v: 'Other business',
       l: 'Other business'
     }]
-  }))), /*#__PURE__*/React.createElement("button", {
+  }))), React.createElement("button", {
     onClick: tracking ? stop : begin,
     style: {
       marginTop: 20,
@@ -453,7 +420,7 @@ function StartTripSheet({
       justifyContent: 'center',
       gap: 8
     }
-  }, tracking ? '◼  Stop & log trip' : '●  Start trip'), !tracking && /*#__PURE__*/React.createElement("div", {
+  }, tracking ? '◼  Stop & log trip' : '●  Start trip'), !tracking && React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11.5,
@@ -464,10 +431,6 @@ function StartTripSheet({
     }
   }, "Uses your phone's GPS. Logs distance, calculates HMRC reimbursement at 45p/mi, saves to mileage register.")));
 }
-
-// ─────────────────────────────────────────────────────────
-// ADD TAG / TEMPLATE / VIEW / COST ITEM
-// ─────────────────────────────────────────────────────────
 const TAG_COLORS = ['#ef4444', '#f59e0b', '#10b981', '#06b6d4', '#2563eb', '#8b5cf6', '#ec4899', '#52749a'];
 function AddTagSheet({
   onClose,
@@ -487,17 +450,17 @@ function AddTagSheet({
     toast('Tag added', 'success');
     onClose();
   };
-  return /*#__PURE__*/React.createElement(FormSheet, {
+  return React.createElement(FormSheet, {
     title: "New tag",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, /*#__PURE__*/React.createElement(FormInput, {
+  }, React.createElement(FormInput, {
     label: "Label",
     v: label,
     onChange: setLabel,
     placeholder: "e.g. Phase-2"
-  }), /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -505,13 +468,13 @@ function AddTagSheet({
       fontWeight: 600,
       marginBottom: 8
     }
-  }, "Color"), /*#__PURE__*/React.createElement("div", {
+  }, "Color"), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
       flexWrap: 'wrap'
     }
-  }, TAG_COLORS.map(c => /*#__PURE__*/React.createElement("button", {
+  }, TAG_COLORS.map(c => React.createElement("button", {
     key: c,
     onClick: () => setColor(c),
     style: {
@@ -544,17 +507,17 @@ function AddTemplateSheet({
     toast('Template added', 'success');
     onClose();
   };
-  return /*#__PURE__*/React.createElement(FormSheet, {
+  return React.createElement(FormSheet, {
     title: "New template",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, /*#__PURE__*/React.createElement(FormInput, {
+  }, React.createElement(FormInput, {
     label: "Name",
     v: name,
     onChange: setName,
     placeholder: "e.g. Bathroom fit-out"
-  }), /*#__PURE__*/React.createElement(FormSelect, {
+  }), React.createElement(FormSelect, {
     label: "Kind",
     v: kind,
     onChange: setKind,
@@ -592,17 +555,17 @@ function AddViewSheet({
     toast('View saved', 'success');
     onClose();
   };
-  return /*#__PURE__*/React.createElement(FormSheet, {
+  return React.createElement(FormSheet, {
     title: "Save current view",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, /*#__PURE__*/React.createElement(FormInput, {
+  }, React.createElement(FormInput, {
     label: "Name",
     v: name,
     onChange: setName,
     placeholder: "e.g. Overdue invoices"
-  }), /*#__PURE__*/React.createElement(FormInput, {
+  }), React.createElement(FormInput, {
     label: "Filter",
     v: filter,
     onChange: setFilter,
@@ -631,23 +594,23 @@ function AddCostItemSheet({
     toast('Cost item added', 'success');
     onClose();
   };
-  return /*#__PURE__*/React.createElement(FormSheet, {
+  return React.createElement(FormSheet, {
     title: "New cost item",
     onClose: onClose,
     accent: accent,
     onSave: save
-  }, /*#__PURE__*/React.createElement(FormInput, {
+  }, React.createElement(FormInput, {
     label: "Name",
     v: name,
     onChange: setName,
     placeholder: "e.g. MDF skirting"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement(FormSelect, {
+  }, React.createElement(FormSelect, {
     label: "Category",
     v: cat,
     onChange: setCat,
@@ -661,12 +624,12 @@ function AddCostItemSheet({
       v: 'Plant',
       l: 'Plant'
     }]
-  }), /*#__PURE__*/React.createElement(FormInput, {
+  }), React.createElement(FormInput, {
     label: "Unit",
     v: unit,
     onChange: setUnit,
     placeholder: "m / sheet / day"
-  })), /*#__PURE__*/React.createElement(FormInput, {
+  })), React.createElement(FormInput, {
     label: "Rate (\xA3)",
     type: "number",
     v: rate,

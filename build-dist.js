@@ -1,24 +1,28 @@
 #!/usr/bin/env node
 /**
- * CortexBuild Pro — Lib → Dist sync
+ * Cortexx — single source-of-truth build:  lib/ → dist/
  *
- * Walks lib/ and compiles every .jsx through Babel into dist/.js,
- * and copies every .js straight across. Idempotent — only rewrites
- * files whose source changed.
+ * This is the ONLY dist builder. `npm run precompile` calls it (and precompile
+ * is what `postinstall` and `npm run build` run), so every path produces the
+ * same deterministic output and `--check` can never disagree with a real build.
+ *
+ * Rules:
+ *   • lib/*.jsx  → Babel (classic React runtime, comments stripped) → dist/*.js
+ *   • lib/*.js   → copied verbatim → dist/*.js   (already browser-ready)
+ *   • lib/*.ts and everything else → NOT emitted. Those are server-only modules;
+ *     shipping them into dist/ would publish server source on the live site.
+ *   • dist/ is pruned: any *.js/*.ts/*.jsx (or legacy _manifest.json) with no
+ *     corresponding lib source is deleted.
  *
  * Usage:
- *   node build-dist.js        # full sync
- *   node build-dist.js --check  # report which files are out of sync, exit 1 if any
+ *   node build-dist.js          # build dist/ (write changed files, prune orphans)
+ *   node build-dist.js --check  # verify dist/ matches lib/ byte-for-byte; exit 1 on drift
  *
- * Prereq:
- *   npm install @babel/core @babel/preset-react
- *   # or, if you only have npx:
- *   npx -p @babel/core -p @babel/preset-react -c 'node build-dist.js'
+ * Prereq: npm install --save-dev @babel/core @babel/preset-react
  */
 
 const fs = require('fs');
 const path = require('path');
-const crypto = require('crypto');
 
 let babel;
 try { babel = require('@babel/core'); }
@@ -32,54 +36,72 @@ const LIB = path.join(__dirname, 'lib');
 const DIST = path.join(__dirname, 'dist');
 const CHECK_ONLY = process.argv.includes('--check');
 
-if (!fs.existsSync(DIST)) fs.mkdirSync(DIST);
+// Fixed options — the single transform every build path shares.
+const BABEL_OPTS = {
+  presets: [['@babel/preset-react', { runtime: 'classic' }]],
+  compact: false,
+  comments: false,
+  babelrc: false,
+  configFile: false,
+};
 
-const sha = (s) => crypto.createHash('sha256').update(s).digest('hex').slice(0, 16);
-const cacheFile = path.join(DIST, '.sync-cache.json');
-const cache = fs.existsSync(cacheFile) ? JSON.parse(fs.readFileSync(cacheFile, 'utf8')) : {};
-
-const entries = fs.readdirSync(LIB).filter(f => /\.(jsx?|js)$/.test(f));
-let compiled = 0, copied = 0, skipped = 0, drift = [];
-
-for (const f of entries) {
-  const src = fs.readFileSync(path.join(LIB, f), 'utf8');
-  const out = f.endsWith('.jsx') ? f.replace(/\.jsx$/, '.js') : f;
-  const distPath = path.join(DIST, out);
-  const srcHash = sha(src);
-  if (cache[f] === srcHash && fs.existsSync(distPath)) { skipped++; continue; }
-
-  if (CHECK_ONLY) {
-    drift.push(f);
-    continue;
-  }
-
-  if (f.endsWith('.jsx')) {
-    const result = babel.transformSync(src, {
-      presets: [['@babel/preset-react', { runtime: 'classic' }]],
-      compact: false,
-      comments: false,
-      babelrc: false,
-      configFile: false,
-    });
-    fs.writeFileSync(distPath, result.code);
-    compiled++;
-  } else {
-    fs.writeFileSync(distPath, src);
-    copied++;
-  }
-  cache[f] = srcHash;
+// The exact bytes dist/<out> must contain for a given lib source file.
+function render(file, src) {
+  if (file.endsWith('.jsx')) return babel.transformSync(src, BABEL_OPTS).code;
+  return src; // plain .js — verbatim
 }
 
-if (!CHECK_ONLY) fs.writeFileSync(cacheFile, JSON.stringify(cache, null, 2));
+// Build the map of expected dist outputs from lib/ (only .js and .jsx ship).
+const expected = new Map(); // distFileName -> bytes
+for (const f of fs.readdirSync(LIB)) {
+  if (!/\.(js|jsx)$/.test(f)) continue; // .ts etc. are server-only — never ship
+  const out = f.endsWith('.jsx') ? f.replace(/\.jsx$/, '.js') : f;
+  expected.set(out, render(f, fs.readFileSync(path.join(LIB, f), 'utf8')));
+}
+
+// A dist entry is prunable if it looks like source but no lib file produces it.
+const isPrunableOrphan = (name) =>
+  !name.startsWith('.') &&
+  (name === '_manifest.json' || (/\.(js|jsx|ts)$/.test(name) && !expected.has(name)));
 
 if (CHECK_ONLY) {
-  if (drift.length === 0) {
-    console.log('✓ dist/ is in sync with lib/ (' + entries.length + ' files checked)');
+  const problems = [];
+  for (const [out, bytes] of expected) {
+    const p = path.join(DIST, out);
+    if (!fs.existsSync(p)) problems.push('missing: ' + out);
+    else if (fs.readFileSync(p, 'utf8') !== bytes) problems.push('stale:   ' + out);
+  }
+  if (fs.existsSync(DIST)) {
+    for (const d of fs.readdirSync(DIST)) {
+      if (isPrunableOrphan(d)) problems.push('orphan:  ' + d);
+    }
+  }
+  if (problems.length === 0) {
+    console.log('✓ dist/ is in sync with lib/ (' + expected.size + ' modules)');
     process.exit(0);
   }
-  console.log('✗ ' + drift.length + ' file(s) out of sync:');
-  drift.forEach(f => console.log('  - ' + f));
+  console.log('✗ ' + problems.length + ' issue(s) — run `node build-dist.js` to fix:');
+  problems.forEach(p => console.log('  - ' + p));
   process.exit(1);
 }
 
-console.log('✓ ' + compiled + ' compiled, ' + copied + ' copied, ' + skipped + ' up-to-date (of ' + entries.length + ')');
+// ── Build ────────────────────────────────────────────────────────────
+if (!fs.existsSync(DIST)) fs.mkdirSync(DIST);
+
+let written = 0;
+for (const [out, bytes] of expected) {
+  const p = path.join(DIST, out);
+  const cur = fs.existsSync(p) ? fs.readFileSync(p, 'utf8') : null;
+  if (cur !== bytes) { fs.writeFileSync(p, bytes); written++; }
+}
+
+let pruned = 0;
+for (const d of fs.readdirSync(DIST)) {
+  // Drop the legacy hash cache from the old builder, and any orphaned source.
+  if (d === '.sync-cache.json' || isPrunableOrphan(d)) {
+    fs.rmSync(path.join(DIST, d));
+    pruned++;
+  }
+}
+
+console.log('✓ dist/: ' + expected.size + ' modules, ' + written + ' written, ' + pruned + ' pruned');

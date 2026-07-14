@@ -1,13 +1,10 @@
-// Cortexx — sheets (Project detail, Capture, AI, Settings)
-
-// Sheet shell with grabber
 function Sheet({
   onClose,
   height = '92%',
   children,
   fullscreen = false
 }) {
-  return /*#__PURE__*/React.createElement("div", {
+  return React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 0,
@@ -18,7 +15,7 @@ function Sheet({
       animation: 'sheet-fade 0.2s'
     },
     onClick: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: '100%',
       height: fullscreen ? '100%' : height,
@@ -30,29 +27,25 @@ function Sheet({
       animation: 'sheet-slide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
     },
     onClick: e => e.stopPropagation()
-  }, !fullscreen && /*#__PURE__*/React.createElement("div", {
+  }, !fullscreen && React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'center',
       paddingTop: 8,
       paddingBottom: 4
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 36,
       height: 5,
       borderRadius: 3,
       background: T.hairStrong
     }
-  })), children), /*#__PURE__*/React.createElement("style", null, `
+  })), children), React.createElement("style", null, `
         @keyframes sheet-fade { from { opacity: 0 } to { opacity: 1 } }
         @keyframes sheet-slide { from { transform: translateY(100%) } to { transform: translateY(0) } }
       `));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// PROJECT DETAIL SHEET
-// ═══════════════════════════════════════════════════════════════════
 function ProjectSheet({
   project,
   onClose,
@@ -72,16 +65,16 @@ function ProjectSheet({
   const projectTeam = team.filter(m => m.site === project.name || m.site === project.addr?.split(',')[0] || m.site.includes(project.name.split(' ')[0]));
   const projectTasks = tasks.filter(t => t.projectId == project.id);
   const projectInvoices = invoices.filter(iv => iv.projectId == project.id);
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -91,14 +84,14 @@ function ProjectSheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Project"), /*#__PURE__*/React.createElement("button", {
+  }, "Project"), React.createElement("button", {
     onClick: () => {
       window.cortexxNav('health', project);
     },
@@ -115,7 +108,7 @@ function ProjectSheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 13
-  }), " Health"), /*#__PURE__*/React.createElement("button", {
+  }), " Health"), React.createElement("button", {
     style: {
       background: 'none',
       border: 'none',
@@ -141,49 +134,49 @@ function ProjectSheet({
         setEditing(true);
       }
     }
-  }, editing ? 'Save' : 'Edit')), /*#__PURE__*/React.createElement("div", {
+  }, editing ? 'Save' : 'Edit')), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '4px 20px 16px'
     }
-  }, editing ? /*#__PURE__*/React.createElement("div", {
+  }, editing ? React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement(FormInput, {
+  }, React.createElement(FormInput, {
     label: "Name",
     v: draft.name,
     onChange: v => setDraft({
       ...draft,
       name: v
     })
-  }), /*#__PURE__*/React.createElement(FormInput, {
+  }), React.createElement(FormInput, {
     label: "Client",
     v: draft.client,
     onChange: v => setDraft({
       ...draft,
       client: v
     })
-  }), /*#__PURE__*/React.createElement(FormInput, {
+  }), React.createElement(FormInput, {
     label: "Address",
     v: draft.addr,
     onChange: v => setDraft({
       ...draft,
       addr: v
     })
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement(FormInput, {
+  }, React.createElement(FormInput, {
     label: "Value (\xA3)",
     v: String(draft.value),
     type: "number",
@@ -191,7 +184,7 @@ function ProjectSheet({
       ...draft,
       value: v
     })
-  }), /*#__PURE__*/React.createElement(FormInput, {
+  }), React.createElement(FormInput, {
     label: "Progress %",
     v: String(draft.pct),
     type: "number",
@@ -199,7 +192,7 @@ function ProjectSheet({
       ...draft,
       pct: v
     })
-  }), /*#__PURE__*/React.createElement(FormSelect, {
+  }), React.createElement(FormSelect, {
     label: "Status",
     v: draft.status,
     onChange: v => setDraft({
@@ -219,20 +212,20 @@ function ProjectSheet({
       v: 'complete',
       l: 'Complete'
     }]
-  }))) : /*#__PURE__*/React.createElement("div", {
+  }))) : React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start',
       gap: 12
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement(Pill, {
+  }, React.createElement(Pill, {
     c: STATUS_C[project.status]
-  }, project.status), /*#__PURE__*/React.createElement("div", {
+  }, project.status), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 24,
@@ -242,14 +235,14 @@ function ProjectSheet({
       marginTop: 8,
       lineHeight: 1.15
     }
-  }, project.name), /*#__PURE__*/React.createElement("div", {
+  }, project.name), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,
       color: T.t2,
       marginTop: 4
     }
-  }, project.client, " \xB7 ", project.addr)), /*#__PURE__*/React.createElement("div", {
+  }, project.client, " \xB7 ", project.addr)), React.createElement("div", {
     style: {
       width: 64,
       height: 64,
@@ -260,7 +253,7 @@ function ProjectSheet({
       justifyContent: 'center',
       position: 'relative'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       position: 'absolute',
       inset: 5,
@@ -274,7 +267,7 @@ function ProjectSheet({
       fontWeight: 700,
       color: T.t1
     }
-  }, project.pct, "%"))), !editing && /*#__PURE__*/React.createElement("div", {
+  }, project.pct, "%"))), !editing && React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr 1fr',
@@ -297,7 +290,7 @@ function ProjectSheet({
     l: 'Due',
     v: formatDue(project.due, project.status),
     c: T.amber
-  }].map((s, i) => /*#__PURE__*/React.createElement("div", {
+  }].map((s, i) => React.createElement("div", {
     key: i,
     style: {
       background: T.bg2,
@@ -305,7 +298,7 @@ function ProjectSheet({
       padding: '8px 10px',
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 9,
@@ -314,7 +307,7 @@ function ProjectSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.4
     }
-  }, s.l), /*#__PURE__*/React.createElement("div", {
+  }, s.l), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 14,
@@ -322,7 +315,7 @@ function ProjectSheet({
       fontWeight: 700,
       marginTop: 2
     }
-  }, s.v))))), /*#__PURE__*/React.createElement("div", {
+  }, s.v))))), React.createElement("div", {
     style: {
       padding: '0 16px',
       display: 'flex',
@@ -333,7 +326,7 @@ function ProjectSheet({
       background: T.bg0,
       zIndex: 5
     }
-  }, tabs.map(t => /*#__PURE__*/React.createElement("button", {
+  }, tabs.map(t => React.createElement("button", {
     key: t,
     onClick: () => setTab(t),
     style: {
@@ -348,13 +341,13 @@ function ProjectSheet({
       marginBottom: -1,
       cursor: 'pointer'
     }
-  }, t))), /*#__PURE__*/React.createElement("div", {
+  }, t))), React.createElement("div", {
     style: {
       padding: '14px 0'
     }
-  }, tab === 'Overview' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Section, {
+  }, tab === 'Overview' && React.createElement(React.Fragment, null, React.createElement(Section, {
     title: "Milestones"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, [{
+  }, React.createElement(GroupedList, null, [{
     t: 'Strip-out & demo',
     s: 'Apr 8 · 3 days',
     state: 'done'
@@ -374,35 +367,35 @@ function ProjectSheet({
     t: 'Snagging & handover',
     s: 'May 18-22',
     state: 'pending'
-  }].map((m, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }].map((m, i, a) => React.createElement(Row, {
     key: i,
     icon: m.state === 'done' ? Ic.check : Ic.clock,
     iconBg: m.state === 'done' ? T.green : m.state === 'active' ? accent : T.t3,
     title: m.t,
     sub: m.s,
-    right: m.state === 'active' ? /*#__PURE__*/React.createElement(Pill, {
+    right: m.state === 'active' ? React.createElement(Pill, {
       c: accent,
       size: "xs"
     }, "NOW") : null,
     isLast: i === a.length - 1
-  })))), /*#__PURE__*/React.createElement(Section, {
+  })))), React.createElement(Section, {
     title: "Team on site"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       gap: 10
     }
-  }, projectTeam.slice(0, 4).map((p, i) => /*#__PURE__*/React.createElement("div", {
+  }, projectTeam.slice(0, 4).map((p, i) => React.createElement("div", {
     key: i,
     style: {
       flex: 1,
       textAlign: 'center'
     }
-  }, /*#__PURE__*/React.createElement(Avatar, {
+  }, React.createElement(Avatar, {
     name: p.n,
     size: 44,
     c: p.color
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -410,13 +403,13 @@ function ProjectSheet({
       fontWeight: 600,
       marginTop: 6
     }
-  }, p.n.split(' ')[0]), /*#__PURE__*/React.createElement("div", {
+  }, p.n.split(' ')[0]), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
       color: T.t2
     }
-  }, p.r))), projectTeam.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, p.r))), projectTeam.length === 0 && React.createElement("div", {
     style: {
       flex: 1,
       padding: '20px 0',
@@ -427,32 +420,32 @@ function ProjectSheet({
     }
   }, "No one assigned yet"), projectTeam.length > 0 && projectTeam.length < 4 && Array.from({
     length: 4 - projectTeam.length
-  }).map((_, i) => /*#__PURE__*/React.createElement("div", {
+  }).map((_, i) => React.createElement("div", {
     key: `s${i}`,
     style: {
       flex: 1
     }
-  })))), /*#__PURE__*/React.createElement(Section, {
+  })))), React.createElement(Section, {
     title: "Recent activity"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: Ic.camera,
     iconBg: T.blue,
     title: "Tom uploaded 4 photos",
     sub: "First-fix kitchen \xB7 12 min ago"
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.check,
     iconBg: T.green,
     title: "Aisha completed first-fix electrics",
     sub: "2 hours ago"
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.receipt,
     iconBg: T.amber,
     title: "\xA3342 Travis Perkins receipt",
     sub: "Plasterboard order \xB7 yesterday",
     isLast: true
-  })))), tab === 'Tasks' && /*#__PURE__*/React.createElement(Section, {
+  })))), tab === 'Tasks' && React.createElement(Section, {
     title: `Tasks · ${projectTasks.filter(t => !t.done).length} open`
-  }, /*#__PURE__*/React.createElement(GroupedList, null, projectTasks.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, projectTasks.length === 0 && React.createElement("div", {
     style: {
       padding: 20,
       fontFamily: SF,
@@ -460,7 +453,7 @@ function ProjectSheet({
       color: T.t3,
       textAlign: 'center'
     }
-  }, "No tasks yet"), projectTasks.map((task, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, "No tasks yet"), projectTasks.map((task, i, a) => React.createElement(Row, {
     key: task.id,
     icon: task.done ? Ic.check : Ic.clock,
     iconBg: task.done ? T.green : PRIO_C[task.prio],
@@ -470,11 +463,11 @@ function ProjectSheet({
     onClick: () => Backend.db.tasks.update(task.id, {
       done: !task.done
     })
-  })))), tab === 'Photos' && /*#__PURE__*/React.createElement("div", {
+  })))), tab === 'Photos' && React.createElement("div", {
     style: {
       padding: '0 16px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => window.cortexxNav('photos'),
     style: {
       width: '100%',
@@ -495,7 +488,7 @@ function ProjectSheet({
     }
   }, React.cloneElement(Ic.camera, {
     size: 14
-  }), " Upload photo to ", project.name.split(' ')[0]), /*#__PURE__*/React.createElement("div", {
+  }), " Upload photo to ", project.name.split(' ')[0]), React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr 1fr',
@@ -503,7 +496,7 @@ function ProjectSheet({
     }
   }, Array.from({
     length: 12
-  }).map((_, i) => /*#__PURE__*/React.createElement("div", {
+  }).map((_, i) => React.createElement("div", {
     key: i,
     style: {
       aspectRatio: '1',
@@ -513,14 +506,14 @@ function ProjectSheet({
       position: 'relative',
       overflow: 'hidden'
     }
-  }, /*#__PURE__*/React.createElement("svg", {
+  }, React.createElement("svg", {
     width: "100%",
     height: "100%",
     viewBox: "0 0 60 60",
     style: {
       opacity: 0.3
     }
-  }, /*#__PURE__*/React.createElement("rect", {
+  }, React.createElement("rect", {
     x: "10",
     y: "20",
     width: "40",
@@ -528,14 +521,14 @@ function ProjectSheet({
     fill: "none",
     stroke: "#fff",
     strokeWidth: "0.5"
-  }), /*#__PURE__*/React.createElement("line", {
+  }), React.createElement("line", {
     x1: "10",
     y1: "35",
     x2: "50",
     y2: "35",
     stroke: "#fff",
     strokeWidth: "0.5"
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       position: 'absolute',
       bottom: 4,
@@ -547,22 +540,22 @@ function ProjectSheet({
       padding: '1px 4px',
       borderRadius: 3
     }
-  }, 16 + i, ":0", i % 9))))), tab === 'Money' && /*#__PURE__*/React.createElement(React.Fragment, null, /*#__PURE__*/React.createElement(Section, {
+  }, 16 + i, ":0", i % 9))))), tab === 'Money' && React.createElement(React.Fragment, null, React.createElement(Section, {
     title: "Cashflow"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
       padding: 14,
       border: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'flex-start'
     }
-  }, /*#__PURE__*/React.createElement("div", null, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 10,
@@ -571,7 +564,7 @@ function ProjectSheet({
       textTransform: 'uppercase',
       letterSpacing: 0.4
     }
-  }, "Margin"), /*#__PURE__*/React.createElement("div", {
+  }, "Margin"), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 24,
@@ -579,25 +572,25 @@ function ProjectSheet({
       fontWeight: 700,
       letterSpacing: -0.5
     }
-  }, project.margin, "%"), /*#__PURE__*/React.createElement("div", {
+  }, project.margin, "%"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       color: T.t2,
       marginTop: 2
     }
-  }, "vs quoted 26.5%")), /*#__PURE__*/React.createElement("svg", {
+  }, "vs quoted 26.5%")), React.createElement("svg", {
     width: "100",
     height: "50",
     viewBox: "0 0 100 50"
-  }, /*#__PURE__*/React.createElement("polyline", {
+  }, React.createElement("polyline", {
     points: "0,40 14,38 28,30 42,28 56,32 70,20 84,18 100,10",
     fill: "none",
     stroke: T.green,
     strokeWidth: "2"
-  }))))), /*#__PURE__*/React.createElement(Section, {
+  }))))), React.createElement(Section, {
     title: `Invoices · ${projectInvoices.length}`
-  }, /*#__PURE__*/React.createElement(GroupedList, null, projectInvoices.length === 0 && /*#__PURE__*/React.createElement("div", {
+  }, React.createElement(GroupedList, null, projectInvoices.length === 0 && React.createElement("div", {
     style: {
       padding: 20,
       fontFamily: SF,
@@ -607,13 +600,13 @@ function ProjectSheet({
     }
   }, "No invoices yet"), projectInvoices.map((iv, i, a) => {
     const c = iv.status === 'paid' ? T.green : iv.status === 'overdue' ? T.red : T.amber;
-    return /*#__PURE__*/React.createElement(Row, {
+    return React.createElement(Row, {
       key: iv.id,
       icon: Ic.doc,
       iconBg: c,
       title: `${iv.id} · ${fmt(iv.amount)}${iv.retentionPct ? ' · ' + (iv.retentionPct * 100).toFixed(1) + '% ret' : ''}`,
       sub: iv.status === 'paid' ? `Paid ${formatTaskWhen(iv.paid)}` : `${iv.status} · ${formatTaskWhen(iv.due)}`,
-      right: iv.status === 'paid' ? /*#__PURE__*/React.createElement("span", {
+      right: iv.status === 'paid' ? React.createElement("span", {
         style: {
           fontFamily: SFMono,
           fontSize: 11,
@@ -621,13 +614,13 @@ function ProjectSheet({
           fontWeight: 700,
           textTransform: 'uppercase'
         }
-      }, iv.status) : /*#__PURE__*/React.createElement("div", {
+      }, iv.status) : React.createElement("div", {
         style: {
           display: 'flex',
           gap: 6,
           alignItems: 'center'
         }
-      }, /*#__PURE__*/React.createElement("button", {
+      }, React.createElement("button", {
         onClick: e => {
           e.stopPropagation();
           window.__cortexxRetentionInv = iv.id;
@@ -646,7 +639,7 @@ function ProjectSheet({
           letterSpacing: 0.4,
           cursor: 'pointer'
         }
-      }, "Ret"), /*#__PURE__*/React.createElement("button", {
+      }, "Ret"), React.createElement("button", {
         onClick: e => {
           e.stopPropagation();
           if (window.cortexxNav) window.cortexxNav('payinvoice:' + iv.id);
@@ -667,15 +660,15 @@ function ProjectSheet({
       }, "Pay")),
       isLast: i === a.length - 1
     });
-  })))), tab === 'Docs' && /*#__PURE__*/React.createElement(Section, {
+  })))), tab === 'Docs' && React.createElement(Section, {
     title: "Project documents"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       gap: 6,
       marginBottom: 10
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => window.cortexxNav('upload'),
     style: {
       flex: 1,
@@ -695,7 +688,7 @@ function ProjectSheet({
     }
   }, React.cloneElement(Ic.upload, {
     size: 13
-  }), " Document"), /*#__PURE__*/React.createElement("button", {
+  }), " Document"), React.createElement("button", {
     onClick: () => window.cortexxNav('drawings'),
     style: {
       flex: 1,
@@ -715,7 +708,7 @@ function ProjectSheet({
     }
   }, React.cloneElement(Ic.layers, {
     size: 13
-  }), " Drawing")), /*#__PURE__*/React.createElement(GroupedList, null, [{
+  }), " Drawing")), React.createElement(GroupedList, null, [{
     n: 'RAMS_Camden_v3.pdf',
     s: '2.4 MB · Updated 2 days ago'
   }, {
@@ -730,7 +723,7 @@ function ProjectSheet({
   }, {
     n: 'Floor_plans_v2.dwg',
     s: '4.2 MB'
-  }].map((f, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }].map((f, i, a) => React.createElement(Row, {
     key: i,
     icon: Ic.doc,
     iconBg: T.red,
@@ -740,10 +733,6 @@ function ProjectSheet({
     onClick: () => toast(`Opening ${f.n}…`, 'info')
   })))))));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// CAPTURE SHEET
-// ═══════════════════════════════════════════════════════════════════
 function CaptureSheet({
   onClose,
   accent,
@@ -1429,7 +1418,7 @@ function CaptureSheet({
   }];
   const AppTile = ({
     a
-  }) => a.k === '_blank' ? /*#__PURE__*/React.createElement("div", null) : /*#__PURE__*/React.createElement("button", {
+  }) => a.k === '_blank' ? React.createElement("div", null) : React.createElement("button", {
     onClick: () => onAction(a.k),
     style: {
       background: T.bg2,
@@ -1444,7 +1433,7 @@ function CaptureSheet({
       position: 'relative',
       minHeight: 76
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 38,
       height: 38,
@@ -1457,14 +1446,14 @@ function CaptureSheet({
     }
   }, React.cloneElement(a.i, {
     size: 20
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 11,
       fontWeight: 600,
       color: T.t1
     }
-  }, a.t), a.ai && /*#__PURE__*/React.createElement("span", {
+  }, a.t), a.ai && React.createElement("span", {
     style: {
       position: 'absolute',
       top: 5,
@@ -1475,7 +1464,7 @@ function CaptureSheet({
       color: T.purple,
       letterSpacing: 0.4
     }
-  }, "AI"), a.badge > 0 && /*#__PURE__*/React.createElement("span", {
+  }, "AI"), a.badge > 0 && React.createElement("span", {
     style: {
       position: 'absolute',
       top: 6,
@@ -1494,10 +1483,10 @@ function CaptureSheet({
       justifyContent: 'center'
     }
   }, a.badge));
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     height: "92%"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '8px 20px 14px',
       textAlign: 'center',
@@ -1506,13 +1495,13 @@ function CaptureSheet({
       fontWeight: 600,
       color: T.t1
     }
-  }, "Quick actions"), /*#__PURE__*/React.createElement("div", {
+  }, "Quick actions"), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 24
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '0 20px 8px',
       fontFamily: SF,
@@ -1522,17 +1511,17 @@ function CaptureSheet({
       letterSpacing: 0.6,
       fontWeight: 600
     }
-  }, "Capture"), /*#__PURE__*/React.createElement("div", {
+  }, "Capture"), React.createElement("div", {
     style: {
       padding: '0 16px 18px'
     }
-  }, /*#__PURE__*/React.createElement(GroupedList, null, captureOpts.map((o, i, a) => /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, captureOpts.map((o, i, a) => React.createElement(Row, {
     key: o.k,
     icon: o.i,
     iconBg: o.c,
     title: o.t,
     sub: o.d,
-    right: o.ai && /*#__PURE__*/React.createElement("span", {
+    right: o.ai && React.createElement("span", {
       style: {
         color: T.purple,
         fontSize: 10,
@@ -1542,7 +1531,7 @@ function CaptureSheet({
     }, "AI"),
     isLast: i === a.length - 1,
     onClick: () => onAction ? onAction(o.k) : onClose()
-  })))), /*#__PURE__*/React.createElement("div", {
+  })))), React.createElement("div", {
     style: {
       padding: '0 20px 8px',
       fontFamily: SF,
@@ -1555,12 +1544,12 @@ function CaptureSheet({
   }, "All apps"), appGroups.map((g, gi) => {
     const items = window.__cortexxRoleFilter ? g.items.filter(window.__cortexxRoleFilter) : g.items;
     if (items.length === 0) return null;
-    return /*#__PURE__*/React.createElement("div", {
+    return React.createElement("div", {
       key: gi,
       style: {
         marginBottom: 16
       }
-    }, /*#__PURE__*/React.createElement("div", {
+    }, React.createElement("div", {
       style: {
         padding: '0 20px 8px',
         fontFamily: SF,
@@ -1569,23 +1558,19 @@ function CaptureSheet({
         fontWeight: 700,
         letterSpacing: 0.4
       }
-    }, g.title), /*#__PURE__*/React.createElement("div", {
+    }, g.title), React.createElement("div", {
       style: {
         padding: '0 16px',
         display: 'grid',
         gridTemplateColumns: 'repeat(4, 1fr)',
         gap: 8
       }
-    }, items.map(a => /*#__PURE__*/React.createElement(AppTile, {
+    }, items.map(a => React.createElement(AppTile, {
       key: a.k,
       a: a
     }))));
   })));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// AI SHEET — uses window.claude.complete
-// ═══════════════════════════════════════════════════════════════════
 function AISheet({
   onClose,
   accent
@@ -1671,7 +1656,6 @@ function AISheet({
         t: response
       }]);
     } catch (e) {
-      // Last-resort floor — never leaves the user hanging
       const fallback = window.CortexLocalAgent ? await window.CortexLocalAgent.respond(text) : "Here's what I can see — ask me about cash, projects, tasks, or team.";
       setTier('local');
       setMessages(m => [...m, {
@@ -1684,10 +1668,10 @@ function AISheet({
   React.useEffect(() => {
     if (scrollRef.current) scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
   }, [messages, thinking]);
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose,
     fullscreen: true
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
@@ -1695,7 +1679,7 @@ function AISheet({
       padding: '12px 16px',
       borderBottom: `0.5px solid ${T.hair}`
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -1708,19 +1692,19 @@ function AISheet({
       alignItems: 'center',
       gap: 2
     }
-  }, Ic.chevL, " ", /*#__PURE__*/React.createElement("span", null, "Back")), /*#__PURE__*/React.createElement("div", {
+  }, Ic.chevL, " ", React.createElement("span", null, "Back")), React.createElement("div", {
     style: {
       flex: 1,
       textAlign: 'center'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       alignItems: 'center',
       gap: 6,
       justifyContent: 'center'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 22,
       height: 22,
@@ -1733,14 +1717,14 @@ function AISheet({
     }
   }, React.cloneElement(Ic.spark, {
     size: 13
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Cortex AI")), /*#__PURE__*/React.createElement("div", {
+  }, "Cortex AI")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -1752,18 +1736,18 @@ function AISheet({
       gap: 4,
       color: tier === 'local' ? T.amber : tier === 'webllm' ? T.cyan : T.green
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       width: 6,
       height: 6,
       borderRadius: 3,
       background: 'currentColor'
     }
-  }), tier === 'local' ? 'On-device · offline ready' : tier === 'webllm' ? 'Local model' : tier === 'cloud' ? 'Cloud · online' : 'Ready · never offline')), /*#__PURE__*/React.createElement("div", {
+  }), tier === 'local' ? 'On-device · offline ready' : tier === 'webllm' ? 'Local model' : tier === 'cloud' ? 'Cloud · online' : 'Ready · never offline')), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     ref: scrollRef,
     style: {
       flex: 1,
@@ -1773,7 +1757,7 @@ function AISheet({
       flexDirection: 'column',
       gap: 10
     }
-  }, messages.map((m, i) => /*#__PURE__*/React.createElement("div", {
+  }, messages.map((m, i) => React.createElement("div", {
     key: i,
     style: {
       alignSelf: m.who === 'user' ? 'flex-end' : 'flex-start',
@@ -1782,7 +1766,7 @@ function AISheet({
       flexDirection: 'column',
       alignItems: m.who === 'user' ? 'flex-end' : 'flex-start'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: m.who === 'user' ? accent : T.bg2,
       color: m.who === 'user' ? '#fff' : T.t1,
@@ -1796,7 +1780,7 @@ function AISheet({
       border: m.who === 'ai' ? `0.5px solid ${T.hair}` : 'none',
       whiteSpace: 'pre-wrap'
     }
-  }, m.t), m.who === 'ai' && /*#__PURE__*/React.createElement("button", {
+  }, m.t), m.who === 'ai' && React.createElement("button", {
     onClick: () => speak(m.t, i),
     title: "Read aloud",
     style: {
@@ -1815,7 +1799,7 @@ function AISheet({
     }
   }, React.cloneElement(Ic.mic, {
     size: 12
-  }), " ", speakingIdx === i ? 'Stop' : 'Read aloud'))), thinking && /*#__PURE__*/React.createElement("div", {
+  }), " ", speakingIdx === i ? 'Stop' : 'Read aloud'))), thinking && React.createElement("div", {
     style: {
       alignSelf: 'flex-start',
       background: T.bg2,
@@ -1827,7 +1811,7 @@ function AISheet({
       gap: 4,
       alignItems: 'center'
     }
-  }, [0, 1, 2].map(i => /*#__PURE__*/React.createElement("div", {
+  }, [0, 1, 2].map(i => React.createElement("div", {
     key: i,
     style: {
       width: 7,
@@ -1836,14 +1820,14 @@ function AISheet({
       background: T.t2,
       animation: `bounce 1.4s infinite ${i * 0.15}s`
     }
-  })), /*#__PURE__*/React.createElement("style", null, `@keyframes bounce { 0%, 60%, 100% { opacity: 0.3 } 30% { opacity: 1 } }`)), messages.length === 1 && /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("style", null, `@keyframes bounce { 0%, 60%, 100% { opacity: 0.3 } 30% { opacity: 1 } }`)), messages.length === 1 && React.createElement("div", {
     style: {
       display: 'flex',
       flexDirection: 'column',
       gap: 6,
       marginTop: 8
     }
-  }, suggestions.map((s, i) => /*#__PURE__*/React.createElement("button", {
+  }, suggestions.map((s, i) => React.createElement("button", {
     key: i,
     onClick: () => send(s),
     style: {
@@ -1858,7 +1842,7 @@ function AISheet({
       cursor: 'pointer',
       textAlign: 'left'
     }
-  }, s)))), /*#__PURE__*/React.createElement("form", {
+  }, s)))), React.createElement("form", {
     onSubmit: e => {
       e.preventDefault();
       send(input);
@@ -1871,7 +1855,7 @@ function AISheet({
       alignItems: 'center',
       background: T.bg0
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     type: "button",
     onClick: toggleVoice,
     title: "Voice input",
@@ -1891,7 +1875,7 @@ function AISheet({
     }
   }, React.cloneElement(Ic.mic, {
     size: 16
-  })), /*#__PURE__*/React.createElement("input", {
+  })), React.createElement("input", {
     value: input,
     onChange: e => setInput(e.target.value),
     placeholder: listening ? 'Listening…' : 'Ask Cortex anything…',
@@ -1906,7 +1890,7 @@ function AISheet({
       fontSize: 14,
       outline: 'none'
     }
-  }), /*#__PURE__*/React.createElement("button", {
+  }), React.createElement("button", {
     type: "submit",
     disabled: !input.trim() || thinking,
     style: {
@@ -1925,26 +1909,22 @@ function AISheet({
     }
   }, React.cloneElement(Ic.send, {
     size: 16
-  })), /*#__PURE__*/React.createElement("style", null, `@keyframes micpulse { 0%,100% { box-shadow: 0 0 0 0 ${T.red}66 } 50% { box-shadow: 0 0 0 6px ${T.red}00 } }`)));
+  })), React.createElement("style", null, `@keyframes micpulse { 0%,100% { box-shadow: 0 0 0 0 ${T.red}66 } 50% { box-shadow: 0 0 0 6px ${T.red}00 } }`)));
 }
-
-// ═══════════════════════════════════════════════════════════════════
-// SAFETY SHEET (accessible from header on dashboard)
-// ═══════════════════════════════════════════════════════════════════
 function SafetySheet({
   onClose,
   accent
 }) {
-  return /*#__PURE__*/React.createElement(Sheet, {
+  return React.createElement(Sheet, {
     onClose: onClose
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
       alignItems: 'center',
       padding: '4px 16px 10px'
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: onClose,
     style: {
       background: 'none',
@@ -1954,28 +1934,28 @@ function SafetySheet({
       fontSize: 16,
       cursor: 'pointer'
     }
-  }, "Close"), /*#__PURE__*/React.createElement("div", {
+  }, "Close"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 600,
       color: T.t1
     }
-  }, "Safety & H&S"), /*#__PURE__*/React.createElement("div", {
+  }, "Safety & H&S"), React.createElement("div", {
     style: {
       width: 50
     }
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1,
       overflowY: 'auto',
       paddingBottom: 20
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: '8px 16px 14px'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.green}33, ${T.green}11)`,
       border: `0.5px solid ${T.green}55`,
@@ -1985,7 +1965,7 @@ function SafetySheet({
       alignItems: 'center',
       gap: 14
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 48,
       height: 48,
@@ -1998,11 +1978,11 @@ function SafetySheet({
     }
   }, React.cloneElement(Ic.shield, {
     size: 24
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 32,
@@ -2011,52 +1991,52 @@ function SafetySheet({
       letterSpacing: -1,
       lineHeight: 1
     }
-  }, "92", /*#__PURE__*/React.createElement("span", {
+  }, "92", React.createElement("span", {
     style: {
       fontSize: 16,
       color: T.t2
     }
-  }, "/100")), /*#__PURE__*/React.createElement("div", {
+  }, "/100")), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 12,
       color: T.t2,
       marginTop: 4
     }
-  }, "Safety score \xB7 last 30d")))), /*#__PURE__*/React.createElement(Section, {
+  }, "Safety score \xB7 last 30d")))), React.createElement(Section, {
     title: "Action needed"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: Ic.alert,
     iconBg: T.amber,
     title: "Camden RAMS expires",
     sub: "Sat 2 May \xB7 sign-off required"
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.alert,
     iconBg: T.amber,
     title: "Sara Khan CSCS expires",
     sub: "In 6 weeks \xB7 book renewal",
     isLast: true
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "Recent"
-  }, /*#__PURE__*/React.createElement(GroupedList, null, /*#__PURE__*/React.createElement(Row, {
+  }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: Ic.check,
     iconBg: T.green,
     title: "Toolbox talk delivered",
     sub: "Camden \xB7 4 attended \xB7 this morning"
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.check,
     iconBg: T.green,
     title: "Brixton site induction",
     sub: "Lila Owusu \xB7 2 days ago"
-  }), /*#__PURE__*/React.createElement(Row, {
+  }), React.createElement(Row, {
     icon: Ic.doc,
     iconBg: T.blue,
     title: "Q1 incident report",
     sub: "0 RIDDOR \xB7 1 near-miss logged",
     isLast: true
-  }))), /*#__PURE__*/React.createElement(Section, {
+  }))), React.createElement(Section, {
     title: "Quick actions"
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       display: 'grid',
       gridTemplateColumns: '1fr 1fr',
@@ -2078,7 +2058,7 @@ function SafetySheet({
     l: 'Site induction',
     i: Ic.hardhat,
     c: T.green
-  }].map((a, i) => /*#__PURE__*/React.createElement("button", {
+  }].map((a, i) => React.createElement("button", {
     key: i,
     style: {
       background: T.bg2,
@@ -2090,7 +2070,7 @@ function SafetySheet({
       alignItems: 'center',
       gap: 10
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       width: 32,
       height: 32,
@@ -2103,7 +2083,7 @@ function SafetySheet({
     }
   }, React.cloneElement(a.i, {
     size: 17
-  })), /*#__PURE__*/React.createElement("span", {
+  })), React.createElement("span", {
     style: {
       fontFamily: SF,
       fontSize: 13,
