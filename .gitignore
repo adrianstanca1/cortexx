@@ -16,6 +16,7 @@ tsconfig.tsbuildinfo
 .env
 .env.local
 .env.*.local
+remote.env
 
 # Database
 *.db

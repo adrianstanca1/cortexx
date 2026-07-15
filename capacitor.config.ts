@@ -1,7 +1,7 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  appId: 'com.cortexbuild.app',
+  appId: 'app.cortexbuild.cortexx',
   appName: 'Cortexx',
   webDir: '.',
   server: {
