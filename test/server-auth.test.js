@@ -18,7 +18,7 @@
  *
  * Express is not declared in package.json. The repo's own server requires it,
  * so we resolve it from the repo's node_modules; if it is absent we install
- * it into an isolated temp dir and hook module resolution — /opt/cortexx is
+ * it into an isolated temp dir and hook module resolution. The repository is
  * never mutated.
  *
  * Run with:  npm test
@@ -32,9 +32,9 @@ const http = require('node:http')
 const Module = require('node:module')
 const { execFileSync } = require('node:child_process')
 
-const REPO = '/opt/cortexx'
+const REPO = path.resolve(__dirname, '..')
 
-// ── Ensure express is resolvable without mutating /opt/cortexx ──────────
+// ── Ensure express is resolvable without mutating the repository ──────────
 let expressTmpDir = null
 function ensureExpress() {
   try { require.resolve('express'); return } catch { /* not installed locally */ }
@@ -75,9 +75,6 @@ let server, port
 before(() => {
   const app = express()
   app.use(express.json())
-  // Mount the real agents router exactly as server/index.js does (at /api),
-  // with an empty pool (the routes we exercise never touch the DB) and a
-  // no-op bus.
   app.use('/api', makeAgents({}, fakeAuth, { emit() {} }))
   server = app.listen(0)
   port = server.address().port
@@ -88,7 +85,6 @@ after(() => {
   if (expressTmpDir) { try { fs.rmSync(expressTmpDir, { recursive: true, force: true }) } catch { /* best effort */ } }
 })
 
-// ── HTTP helper ──────────────────────────────────────────────────────────
 function request(method, pathname, headers = {}, body = null) {
   return new Promise((resolve, reject) => {
     const r = http.request({ port, path: pathname, method, headers }, (res) => {
@@ -102,7 +98,6 @@ function request(method, pathname, headers = {}, body = null) {
   })
 }
 
-// ── Env save/restore (secretGate reads process.env at request time) ──────
 let envSaved
 beforeEach(() => {
   envSaved = {
@@ -124,7 +119,6 @@ function setEnv(map) {
   }
 }
 
-// ── /triage auth gate ────────────────────────────────────────────────────
 test('triage — 401 when Authorization header is missing', async () => {
   const res = await request('POST', '/api/triage')
   assert.equal(res.status, 401)
@@ -137,7 +131,6 @@ test('triage — 401 when Bearer token is wrong', async () => {
   assert.equal(JSON.parse(res.body).error, 'unauthorized')
 })
 
-// ── secretGate on the WhatsApp webhook handshake ───────────────────────
 test('webhook — 403 when WEBHOOK_SECRET is unset (gate disabled)', async () => {
   setEnv({ WEBHOOK_SECRET: '', WA_VERIFY_TOKEN: undefined })
   const res = await request('GET', '/api/webhooks/anything/whatsapp?hub.verify_token=x&hub.challenge=abc')
@@ -147,32 +140,21 @@ test('webhook — 403 when WEBHOOK_SECRET is unset (gate disabled)', async () =>
 
 test('webhook — 403 when path secret mismatches WEBHOOK_SECRET', async () => {
   setEnv({ WEBHOOK_SECRET: 's3cret', WA_VERIFY_TOKEN: undefined })
-  const res = await request(
-    'GET',
-    '/api/webhooks/wrong/whatsapp?hub.verify_token=s3cret&hub.challenge=hello'
-  )
+  const res = await request('GET', '/api/webhooks/wrong/whatsapp?hub.verify_token=s3cret&hub.challenge=hello')
   assert.equal(res.status, 403)
   assert.equal(JSON.parse(res.body).error, 'forbidden')
 })
 
 test('webhook — 200 and echoes hub.challenge when path secret + verify_token match WEBHOOK_SECRET', async () => {
   setEnv({ WEBHOOK_SECRET: 's3cret', WA_VERIFY_TOKEN: undefined })
-  const res = await request(
-    'GET',
-    '/api/webhooks/s3cret/whatsapp?hub.verify_token=s3cret&hub.challenge=hello'
-  )
+  const res = await request('GET', '/api/webhooks/s3cret/whatsapp?hub.verify_token=s3cret&hub.challenge=hello')
   assert.equal(res.status, 200)
   assert.equal(res.body, 'hello')
 })
 
 test('webhook — handshake does NOT require a Bearer auth token (independent gate)', async () => {
-  // Same happy path but explicitly proving no Authorization header is sent and
-  // the webhook route is gated by secretGate, not the bearer `auth`.
   setEnv({ WEBHOOK_SECRET: 's3cret', WA_VERIFY_TOKEN: undefined })
-  const res = await request(
-    'GET',
-    '/api/webhooks/s3cret/whatsapp?hub.verify_token=s3cret&hub.challenge=hi'
-  )
+  const res = await request('GET', '/api/webhooks/s3cret/whatsapp?hub.verify_token=s3cret&hub.challenge=hi')
   assert.equal(res.status, 200)
   assert.equal(res.body, 'hi')
 })
@@ -200,23 +182,14 @@ test('webhook — 403 when X-Webhook-Secret header is present but mismatches (he
 })
 
 test('webhook — 403 when path secret matches but hub.verify_token is wrong', async () => {
-  // secretGate passes, but the handshake handler rejects the verify token.
   setEnv({ WEBHOOK_SECRET: 's3cret', WA_VERIFY_TOKEN: undefined })
-  const res = await request(
-    'GET',
-    '/api/webhooks/s3cret/whatsapp?hub.verify_token=wrong&hub.challenge=hello'
-  )
+  const res = await request('GET', '/api/webhooks/s3cret/whatsapp?hub.verify_token=wrong&hub.challenge=hello')
   assert.equal(res.status, 403)
 })
 
 test('webhook — 200 when WA_VERIFY_TOKEN overrides WEBHOOK_SECRET for the handshake', async () => {
-  // The handler compares hub.verify_token to WA_VERIFY_TOKEN ?? WEBHOOK_SECRET,
-  // so a distinct verify token should still succeed when WA_VERIFY_TOKEN is set.
   setEnv({ WEBHOOK_SECRET: 's3cret', WA_VERIFY_TOKEN: 'waverify' })
-  const res = await request(
-    'GET',
-    '/api/webhooks/s3cret/whatsapp?hub.verify_token=waverify&hub.challenge=hello'
-  )
+  const res = await request('GET', '/api/webhooks/s3cret/whatsapp?hub.verify_token=waverify&hub.challenge=hello')
   assert.equal(res.status, 200)
   assert.equal(res.body, 'hello')
 })
