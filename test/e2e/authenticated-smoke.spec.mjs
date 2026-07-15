@@ -92,6 +92,6 @@ test('invalid credentials return a recoverable error state', async ({ page, cont
   await page.goto('/login')
   const submitButton = await enterCredentials(page, 'invalid@example.com', 'not-the-password')
   await submitButton.click()
-  await expect(page.getByRole('alert')).toContainText(/invalid email or password/i)
+  await expect(page.getByText('Invalid email or password', { exact: true })).toBeVisible()
   await expect(submitButton).toBeEnabled()
 })
