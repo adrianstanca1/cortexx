@@ -29,7 +29,7 @@
     "precompile:check": "node build-dist.js --check",
     "vault:decrypt": "./scripts/decrypt-env.sh",
     "vault:load": "./scripts/load-env.sh",
-    "postinstall": "npm run precompile --silent || true",
+    "postinstall": "prisma generate && (npm run precompile --silent || true)",
     "ios:add": "npx cap add ios",
     "ios:sync": "npx cap copy && npx cap sync ios",
     "ios:open": "npx cap open ios",
