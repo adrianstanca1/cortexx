@@ -1,8 +1,8 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
 const config: CapacitorConfig = {
-  // App ID — reverse-DNS format. Change to your registered Apple bundle id.
-  appId: 'app.cortexbuild.cortexx',
+  // Registered App Store bundle identifier.
+  appId: 'com.cortexbuild.app',
 
   // Display name shown under the icon on the home screen.
   appName: 'Cortexx',
