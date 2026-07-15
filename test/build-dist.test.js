@@ -9,9 +9,9 @@
  *   • --check exits 0 when dist/ matches lib/, exit 1 on drift
  *
  * The builder hardcodes LIB/DIST relative to __dirname, so we copy it into a
- * throwaway sandbox and run it there (cwd = sandbox). @babel/core and
- * @babel/preset-react resolve from /opt/cortexx/node_modules via NODE_PATH, so
- * the real lib/ and dist/ are never touched.
+ * throwaway sandbox and run it there (cwd = sandbox). Babel dependencies resolve
+ * from this repository's node_modules via NODE_PATH, so the real lib/ and dist/
+ * are never touched.
  *
  * Run with:  npm test
  */
@@ -22,7 +22,7 @@ const path = require('node:path')
 const os = require('node:os')
 const { execFileSync } = require('node:child_process')
 
-const REPO = '/opt/cortexx'
+const REPO = path.resolve(__dirname, '..')
 const BUILDER_SRC = path.join(REPO, 'build-dist.js')
 const NODE_MODULES = path.join(REPO, 'node_modules')
 
