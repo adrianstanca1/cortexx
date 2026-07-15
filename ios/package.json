@@ -8,7 +8,7 @@
     "postinstall": "node ./scripts/postinstall.mjs",
     "build:web": "node ./scripts/build-web.mjs",
     "build:ios": "npm run build:web && npm run cap:sync",
-    "cap:init": "cap init Cortexx app.cortexbuild.cortexx --web-dir www",
+    "cap:init": "cap init Cortexx com.cortexbuild.app --web-dir www",
     "cap:add:ios": "cap add ios",
     "cap:sync": "cap sync ios",
     "cap:open:ios": "cap open ios",
