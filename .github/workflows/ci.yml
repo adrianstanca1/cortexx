@@ -52,7 +52,17 @@ jobs:
         # silently publishing stale or over-broad dist/ to production.
         run: npm run precompile:check
       - name: Unit tests
-        run: npm test
+        run: |
+          set -o pipefail
+          npm test 2>&1 | tee unit-tests.log
+      - name: Upload unit-test log on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: unit-test-log
+          path: unit-tests.log
+          if-no-files-found: ignore
+          retention-days: 14
       - name: Build
         env:
           NEXTAUTH_SECRET: ci-build-placeholder-secret-not-used-at-runtime

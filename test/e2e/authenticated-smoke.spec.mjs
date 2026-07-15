@@ -19,12 +19,33 @@ const coreRoutes = [
   '/settings',
 ]
 
+async function enterCredentials(page, nextEmail, nextPassword) {
+  const emailInput = page.getByLabel('Email')
+  const passwordInput = page.getByLabel('Password')
+  const submitButton = page.getByRole('button', { name: /^sign in$/i })
+
+  await expect(emailInput).toBeVisible()
+  await expect(passwordInput).toBeVisible()
+
+  // Type as a user would rather than setting the DOM value in one operation.
+  // This reliably reaches React's controlled-input handlers after hydration.
+  await emailInput.click()
+  await emailInput.pressSequentially(nextEmail)
+  await passwordInput.click()
+  await passwordInput.pressSequentially(nextPassword)
+
+  await expect(emailInput).toHaveValue(nextEmail)
+  await expect(passwordInput).toHaveValue(nextPassword)
+  await expect(submitButton).toBeEnabled()
+
+  return submitButton
+}
+
 async function signIn(page) {
   await page.goto('/login')
   await expect(page.getByRole('heading', { name: /sign in to cortexx/i })).toBeVisible()
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(password)
-  await page.getByRole('button', { name: /^sign in$/i }).click()
+  const submitButton = await enterCredentials(page, email, password)
+  await submitButton.click()
   await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 30_000 })
   await expect(page).toHaveURL(/\/dashboard/)
 }
@@ -69,9 +90,8 @@ test('navigation exposes actionable controls without placeholder links', async (
 test('invalid credentials return a recoverable error state', async ({ page, context }) => {
   await context.clearCookies()
   await page.goto('/login')
-  await page.getByLabel('Email').fill('invalid@example.com')
-  await page.getByLabel('Password').fill('not-the-password')
-  await page.getByRole('button', { name: /^sign in$/i }).click()
-  await expect(page.getByRole('alert')).toContainText(/invalid email or password/i)
-  await expect(page.getByRole('button', { name: /^sign in$/i })).toBeEnabled()
+  const submitButton = await enterCredentials(page, 'invalid@example.com', 'not-the-password')
+  await submitButton.click()
+  await expect(page.getByText('Invalid email or password', { exact: true })).toBeVisible()
+  await expect(submitButton).toBeEnabled()
 })
