@@ -3,6 +3,7 @@
     "name": "CortexBuild Pro",
     "slug": "cortexbuild-pro",
     "version": "1.0.0",
+    "runtimeVersion": "1.0.0",
     "scheme": "cortexbuild",
     "orientation": "portrait",
     "userInterfaceStyle": "dark",
@@ -19,7 +20,10 @@
       "supportsTablet": true,
       "associatedDomains": [
         "applinks:cortexbuildpro.com"
-      ]
+      ],
+      "infoPlist": {
+        "ITSAppUsesNonExemptEncryption": false
+      }
     },
     "android": {
       "package": "com.cortexbuild.app",

@@ -4,29 +4,21 @@ import { SafeAreaView, StyleSheet } from 'react-native';
 import { Colors } from './theme';
 import { getToken, clearToken } from './api';
 import LoginScreen from './LoginScreen';
-import ProjectsScreen from './ProjectsScreen';
-import ProjectDetailScreen from './ProjectDetailScreen';
+import Tabs from './Tabs';
 
 export default function App() {
   const [authed, setAuthed] = useState(false);
-  const [selected, setSelected] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => { setAuthed(!!(await getToken())); })();
   }, []);
 
-  const logout = async () => { await clearToken(); setAuthed(false); setSelected(null); };
+  const logout = async () => { await clearToken(); setAuthed(false); };
 
   return (
     <SafeAreaView style={styles.safe}>
       <StatusBar style="light" />
-      {!authed ? (
-        <LoginScreen onAuthed={() => setAuthed(true)} />
-      ) : selected ? (
-        <ProjectDetailScreen id={selected} onBack={() => setSelected(null)} />
-      ) : (
-        <ProjectsScreen onSelect={setSelected} onLogout={logout} />
-      )}
+      {!authed ? <LoginScreen onAuthed={() => setAuthed(true)} /> : <Tabs onLogout={logout} />}
     </SafeAreaView>
   );
 }
