@@ -57,11 +57,3 @@
 	@html path *.html
 	header @html Cache-Control "no-cache"
 }
-
-# ── Canonical redirect: www → apex ───────────────────────────────────
-# Forces a single canonical host so SEO/cookies/sessions aren't split
-# across two origins. 308 = permanent; preserves the full request path.
-# Caddy auto-provisions a Let's Encrypt cert for www as well.
-www.cortexbuildpro.com {
-	redir https://cortexbuildpro.com{uri} 308
-}

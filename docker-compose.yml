@@ -104,6 +104,13 @@ services:
       - traefik.http.routers.cortexx.rule=Host(`cortexbuildpro.com`) || Host(`www.cortexbuildpro.com`)
       - traefik.http.routers.cortexx.entrypoints=websecure
       - traefik.http.routers.cortexx.tls.certresolver=letsencrypt
+      # Canonical redirect: www.cortexbuildpro.com -> cortexbuildpro.com (308).
+      # Traefik owns TLS + Host routing, so the redirect lives here (not in
+      # Caddy, which only serves plain HTTP behind traefik).
+      - traefik.http.middlewares.cortexx-www-redirect.redirectregex.regex=^https?://www\.(.*)
+      - traefik.http.middlewares.cortexx-www-redirect.redirectregex.replacement=https://$${1}
+      - traefik.http.middlewares.cortexx-www-redirect.redirectregex.permanent=true
+      - traefik.http.routers.cortexx.middlewares=cortexx-www-redirect
       - traefik.http.services.cortexx.loadbalancer.server.port=80
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
