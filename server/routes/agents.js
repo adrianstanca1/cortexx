@@ -18,6 +18,28 @@ async function claude(messages) {
 }
 const grab = (raw) => { try { const m = raw.match(/\{[\s\S]*\}/); return m ? JSON.parse(m[0]) : null; } catch (e) { return null; } };
 
+// ── Inbound webhook rate limit ──────────────────────────────
+// In-memory, per-process cap on inbound webhook volume. Blunts replay
+// floods / spam from a compromised upstream. (For multi-instance, swap for
+// a shared Redis counter — ioredis is already a dependency.)
+const WEBHOOK_MAX = 30;          // requests
+const WEBHOOK_WINDOW_MS = 60_000; // per minute
+let whCount = 0, whWindowStart = Date.now();
+function webhookAllowed() {
+  const now = Date.now();
+  if (now - whWindowStart > WEBHOOK_WINDOW_MS) { whCount = 0; whWindowStart = now; }
+  if (whCount >= WEBHOOK_MAX) return false;
+  whCount++;
+  return true;
+}
+
+// Stable idempotency key for an inbound message so the same text from the
+// same source can't mint duplicate leads on replay. (source, contact, hash)
+function leadIdempotencyKey(source, contact, text) {
+  const h = crypto.createHash('sha256').update(`${source}|${contact || ''}|${text || ''}`).digest('hex').slice(0, 16);
+  return `lead:${source}:${h}`;
+}
+
 async function triage(text) {
   const prompt = `You triage inbound messages for a UK SMB construction company. Classify and extract.
 Reply ONLY JSON: {"category":"lead|invoice|enquiry|supplier|complaint|other","confidence":0-1,"summary":"1 sentence","extract":{"name":"person/company or null","value":"GBP number or null","inquiry":"scope or null"}}.
@@ -65,6 +87,7 @@ module.exports = function agentRoutes(pool, auth, bus) {
   router.post('/webhooks/:secret/whatsapp', secretGate, express.json(), async (req, res) => {
     res.sendStatus(200); // ack immediately; process async
     try {
+      if (!webhookAllowed()) { console.warn('[wa] rate limit hit — dropping'); return; }
       const ws = process.env.DEFAULT_WORKSPACE_ID;
       if (!ws) return;
       const msgs = req.body?.entry?.[0]?.changes?.[0]?.value?.messages || [];
@@ -72,7 +95,7 @@ module.exports = function agentRoutes(pool, auth, bus) {
         const text = m.text?.body || m.button?.text || '';
         const from = m.from || 'WhatsApp';
         const t = await triage(text);
-        if (t) await fileLead(pool, ws, t, 'WhatsApp', from);
+        if (t) await fileLead(pool, ws, t, 'WhatsApp', from, leadIdempotencyKey('WhatsApp', from, text));
         bus.emit(ws, { type: 'portal_message', channel: 'whatsapp', client: from, body: text });
       }
     } catch (e) { console.error('[wa]', e.message); }
@@ -82,11 +105,13 @@ module.exports = function agentRoutes(pool, auth, bus) {
   router.post('/webhooks/:secret/email', secretGate, express.json(), async (req, res) => {
     res.sendStatus(200);
     try {
+      if (!webhookAllowed()) { console.warn('[email] rate limit hit — dropping'); return; }
       const ws = process.env.DEFAULT_WORKSPACE_ID;
       if (!ws) return;
       const text = `${req.body.subject || ''}\n\n${req.body.text || req.body.body || ''}`;
+      const from = req.body.from;
       const t = await triage(text);
-      if (t) await fileLead(pool, ws, t, 'Email', req.body.from);
+      if (t) await fileLead(pool, ws, t, 'Email', from, leadIdempotencyKey('Email', from, text));
       bus.emit(ws, { type: 'change', collection: 'leads', op: 'create' });
     } catch (e) { console.error('[email]', e.message); }
   });
@@ -94,8 +119,11 @@ module.exports = function agentRoutes(pool, auth, bus) {
   return router;
 };
 
-// Create a lead in documents_store from a triage result.
-async function fileLead(pool, ws, t, source, contact) {
+// Create (or update) a lead in documents_store from a triage result.
+// `idemKey` (when provided) makes the write idempotent: the same inbound
+// message (same source+contact+text) will UPDATE the existing lead rather
+// than minting a duplicate on replay / webhook re-delivery.
+async function fileLead(pool, ws, t, source, contact, idemKey) {
   const e = t.extract || {};
   const val = parseFloat(String(e.value || '').replace(/[^0-9.]/g, '')) || 0;
   const id = require('crypto').randomUUID();
@@ -103,7 +131,25 @@ async function fileLead(pool, ws, t, source, contact) {
     id, name: e.name || contact || 'New enquiry', inquiry: e.inquiry || t.summary,
     value: val, source, stage: 'new', updated: new Date().toISOString().slice(0, 10),
     _rev: Date.now(),
+    _idem: idemKey || undefined,
   };
+  if (idemKey) {
+    // Idempotent path: if a lead with this key already exists for the
+    // workspace, update it in place instead of inserting a duplicate.
+    const existing = await pool.query(
+      `SELECT doc_id, data FROM documents_store WHERE workspace_id=$1 AND collection='leads' AND data->>'_idem'=$2 LIMIT 1`,
+      [ws, idemKey]
+    );
+    if (existing.rows.length) {
+      const docId = existing.rows[0].doc_id;
+      const merged = { ...existing.rows[0].data, ...data, id: docId, _rev: Date.now() };
+      await pool.query(
+        `UPDATE documents_store SET data=$1, updated_at=now() WHERE workspace_id=$2 AND collection='leads' AND doc_id=$3`,
+        [merged, ws, docId]
+      );
+      return { doc_id: docId, ...merged, updated: true };
+    }
+  }
   await pool.query(
     `INSERT INTO documents_store(workspace_id, collection, doc_id, data) VALUES($1,'leads',$2,$3)
      ON CONFLICT (workspace_id, collection, doc_id) DO UPDATE SET data=$3, updated_at=now()`,

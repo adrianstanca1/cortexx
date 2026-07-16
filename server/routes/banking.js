@@ -117,11 +117,12 @@ async function withFreshToken(pool, conn) {
 
 // ── Routes ────────────────────────────────────────────────────────────
 router.get('/banking/status', (_req, res) => {
+  // Intentionally does NOT expose redirectUri or encKeySource: the former
+  // leaks the deployment's callback host and the latter reveals which secret
+  // backs token-at-rest encryption — both are recon value for an attacker.
   res.json({
     configured: CONFIGURED,
     env: ENV,
-    redirectUri: REDIRECT || null,
-    encKeySource: process.env.BANKING_ENC_KEY ? 'BANKING_ENC_KEY' : 'derived(JWT_SECRET)',
   });
 });
 
