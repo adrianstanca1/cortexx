@@ -33,19 +33,23 @@ const corsOptions = {
     // Same-origin / non-browser requests (no Origin header) are allowed.
     if (!origin) return cb(null, true);
     if (effectiveOrigins.includes(origin)) return cb(null, true);
-    return cb(new Error('CORS: origin not allowed — ' + origin), false);
+    // Returning `false` (not an Error) makes cors set
+    // Access-Control-Allow-Origin: false — the browser blocks the
+    // response. Combined with the explicit 403 middleware below, the
+    // signal to clients/monitors is correct and version-independent.
+    return cb(null, false);
   },
   optionsSuccessStatus: 204,
-  // Reject disallowed origins with a clean 403 instead of the cors
-  // middleware's default 500. Security is unchanged — the request is
-  // still blocked — but the signal to clients/monitors is correct.
-  onError: (err, req, res) => {
-    if (err && err.message && err.message.startsWith('CORS')) {
-      return res.status(403).json({ error: 'origin not allowed' });
-    }
-    return res.status(500).json({ error: 'internal' });
-  },
 };
+// Explicit 403 for rejected origins (cors 2.x has no onError hook that
+// runs for disallowed origins, so we intercept before cors replies).
+app.use((req, res, next) => {
+  const origin = req.headers.origin;
+  if (origin && !effectiveOrigins.includes(origin)) {
+    return res.status(403).json({ error: 'origin not allowed' });
+  }
+  next();
+});
 app.use(cors(corsOptions));
 // Stripe webhook needs the RAW body for signature verification, so it must be
 // parsed as a Buffer BEFORE the global JSON parser touches it.
