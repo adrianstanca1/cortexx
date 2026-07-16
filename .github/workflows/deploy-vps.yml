@@ -74,7 +74,20 @@ jobs:
             # postgres/ollama/caddy images. `unless-stopped` restart policy is
             # already set in docker-compose.yml so this survives reboots.
             docker compose pull
-            docker compose up -d --build --remove-orphans
+
+            # Tolerate the transient "removal of container ... is already in
+            # progress" race: a previous deploy's container teardown can still
+            # be finishing in the daemon when this run starts. Wait for any
+            # in-flight removal to settle, then retry the up a few times.
+            for up in 1 2 3; do
+              # Give the daemon a moment to finish any async container removal.
+              sleep 5
+              if docker compose up -d --build --remove-orphans; then
+                break
+              fi
+              echo "docker compose up attempt $up failed — retrying (likely daemon teardown race)"
+              sleep 10
+            done
 
             # Wait for the API to report healthy (via traefik public path).
             echo "Waiting for API health..."
