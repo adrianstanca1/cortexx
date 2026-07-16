@@ -390,11 +390,15 @@ app.post('/api/audit', apiLimiter, auth, wrap(async (req, res) => {
 
 // ── Admin console (SaaS operator) ──────────────────────────
 // Reuse the existing `auth` middleware, then require an operator role.
-function adminAuth(req, res, next) {
+// The JWT payload only carries {uid, ws} (see signToken), so we resolve the
+// live role from the DB — this also reflects role changes immediately.
+async function adminAuth(req, res, next) {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   try {
     const u = jwt.verify(token, JWT_SECRET);
-    if (!['owner', 'admin'].includes(u.role)) return res.status(403).json({ error: 'forbidden' });
+    const r = await pool.query('SELECT role FROM users WHERE id=$1', [u.uid]);
+    if (!r.rows[0] || !['owner', 'admin'].includes(r.rows[0].role))
+      return res.status(403).json({ error: 'forbidden' });
     req.user = u;
     next();
   } catch {
