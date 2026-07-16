@@ -36,6 +36,15 @@ const corsOptions = {
     return cb(new Error('CORS: origin not allowed — ' + origin), false);
   },
   optionsSuccessStatus: 204,
+  // Reject disallowed origins with a clean 403 instead of the cors
+  // middleware's default 500. Security is unchanged — the request is
+  // still blocked — but the signal to clients/monitors is correct.
+  onError: (err, req, res) => {
+    if (err && err.message && err.message.startsWith('CORS')) {
+      return res.status(403).json({ error: 'origin not allowed' });
+    }
+    return res.status(500).json({ error: 'internal' });
+  },
 };
 app.use(cors(corsOptions));
 // Stripe webhook needs the RAW body for signature verification, so it must be
