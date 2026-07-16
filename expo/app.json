@@ -1,0 +1,45 @@
+{
+  "expo": {
+    "name": "CortexBuild Pro",
+    "slug": "cortexbuild-pro",
+    "version": "1.0.0",
+    "scheme": "cortexbuild",
+    "orientation": "portrait",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#06101e"
+    },
+    "assetBundlePatterns": ["**/*"],
+    "ios": {
+      "bundleIdentifier": "com.cortexbuild.app",
+      "buildNumber": "1",
+      "supportsTablet": true,
+      "associatedDomains": ["applinks:cortexbuildpro.com"]
+    },
+    "android": {
+      "package": "com.cortexbuild.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#06101e"
+      }
+    },
+    "web": {
+      "bundler": "metro"
+    },
+    "plugins": [
+      "expo-router",
+      [
+        "expo-secure-store",
+        {
+          "faceID": true
+        }
+      ]
+    ],
+    "extra": {
+      "apiUrl": "https://cortexbuildpro.com",
+      "eas": {
+        "projectId": "cortexbuild-pro"
+      }
+    }
+  }
+}
