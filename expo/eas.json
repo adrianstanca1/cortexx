@@ -15,18 +15,13 @@
       }
     },
     "production": {
-      "autoIncrement": true,
-      "ios": {
-        "archive": true
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleId": "Adrian.stanca1@icloud.com",
-        "ascAppId": "com.cortexbuild.app",
-        "appleTeamId": ""
+        "appleId": "Adrian.stanca1@icloud.com"
       }
     }
   }
