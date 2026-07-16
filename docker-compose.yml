@@ -114,6 +114,8 @@ services:
       - traefik.http.services.cortexx.loadbalancer.server.port=80
     volumes:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Landing/marketing page (served at / via Caddy try_files).
+      - ./landing.html:/srv/app/landing.html:ro
       # Mount ONLY the assets Caddy serves — never the repo root, which would
       # expose .env, .env.vault, .git/, server/* and *.ts over HTTP. The Caddyfile
       # also denies these paths, but this mount is the primary boundary.
