@@ -9,6 +9,9 @@ App/Pods/
 
 # Capacitor generated www/ (rebuilt by npm run build:web)
 www/
+# cap sync ios copies web assets into the native project under public/ —
+# these are build output (regenerated every sync), never commit them.
+App/App/public/
 
 # Node
 node_modules/
