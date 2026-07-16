@@ -242,6 +242,20 @@ app.post('/api/support/tickets', authLimiter, wrap(async (req, res) => {
   res.json({ id: r.rows[0].id, status: r.rows[0].status });
 }));
 
+// Public support ticket lookup (self-service, by email). Registered BEFORE the
+// app.use('/api', ...) mounted routers so the intelligence router's auth guard
+// does not shadow it (same reason the ticket POST above lives up here).
+app.post('/api/support/tickets/lookup', authLimiter, wrap(async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.includes('@'))
+    return res.status(400).json({ error: 'valid email required' });
+  const r = await pool.query(
+    `SELECT id, subject, priority, status, created_at, updated_at
+     FROM support_tickets WHERE email=$1 ORDER BY created_at DESC LIMIT 50`,
+    [email.toLowerCase()]);
+  res.json({ tickets: r.rows });
+}));
+
 // ── Mounted route modules (MUST be before the generic /api/:collection
 //    handlers below, or Express would shadow these specific paths) ──────────
 app.use('/api/portal', portalLimiter, require('./routes/portal')(pool, bus));   // PUBLIC, token-scoped
@@ -490,18 +504,6 @@ app.patch('/api/admin/workspaces/:id', apiLimiter, adminAuth, wrap(async (req, r
     [req.params.id, suspended]);
   if (!r.rows[0]) return res.status(404).json({ error: 'not_found' });
   res.json({ workspace: r.rows[0] });
-}));
-
-// ── Public support ticket lookup (self-service, by email) ────
-app.post('/api/support/tickets/lookup', authLimiter, wrap(async (req, res) => {
-  const { email } = req.body;
-  if (!email || !email.includes('@'))
-    return res.status(400).json({ error: 'valid email required' });
-  const r = await pool.query(
-    `SELECT id, subject, priority, status, created_at, updated_at
-     FROM support_tickets WHERE email=$1 ORDER BY created_at DESC LIMIT 50`,
-    [email.toLowerCase()]);
-  res.json({ tickets: r.rows });
 }));
 
 // ── 404 + error handler ─────────────────────────────────────
