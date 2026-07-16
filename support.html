@@ -107,6 +107,18 @@
     </form>
   </div>
 
+  <div class="ticket">
+    <h2>Check my tickets</h2>
+    <p class="h">Look up the status of tickets you've raised — just enter the email you used.</p>
+    <form id="lookupForm">
+      <label>Your email</label>
+      <input type="email" id="l_email" required placeholder="you@company.com"/>
+      <button class="btn btn-block" type="submit">Check status</button>
+      <div class="formmsg" id="lookupMsg"></div>
+    </form>
+    <div id="lookupResults" style="margin-top:8px"></div>
+  </div>
+
   <h2 class="sec">Knowledge base</h2>
   <details><summary>Where's my data stored?</summary>
     <p>On your device. CortexBuild Pro is local-first — projects, photos, invoices and notes live in your phone or tablet. We have no copy unless you switch on multi-device sync (Pro tier). Back up regularly via <strong>Settings → Database → Export</strong>.</p>
@@ -163,6 +175,39 @@ document.getElementById('ticketForm').addEventListener('submit', async (e)=>{
   }catch(err){
     msg.className='formmsg err';
     msg.textContent='Could not submit: '+err.message+'. Try emailing support@cortexbuild.app directly.';
+  }
+});
+
+document.getElementById('lookupForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById('lookupMsg');
+  const res = document.getElementById('lookupResults');
+  msg.className='formmsg'; msg.textContent='Checking…'; res.innerHTML='';
+  const email = document.getElementById('l_email').value;
+  try{
+    const r = await fetch('/api/support/tickets/lookup', {method:'POST',
+      headers:{'content-type':'application/json'}, body:JSON.stringify({email})});
+    if(!r.ok){ const e2=await r.json().catch(()=>({})); throw new Error(e2.error||'failed'); }
+    const d = await r.json();
+    if(!d.tickets || d.tickets.length===0){
+      msg.className='formmsg'; msg.textContent='No tickets found for that email.';
+      return;
+    }
+    msg.className='formmsg ok'; msg.textContent=d.tickets.length+' ticket(s) found.';
+    const cls = {open:'open',in_progress:'in_progress',resolved:'resolved',closed:'closed'};
+    res.innerHTML = d.tickets.map(t=>{
+      const d0 = new Date(t.created_at).toLocaleDateString('en-GB',{day:'2-digit',month:'short'});
+      return `<div style="background:var(--bg2);border:0.5px solid var(--hair);border-radius:10px;padding:12px 14px;margin-top:8px">
+        <div style="display:flex;justify-content:space-between;gap:12px">
+          <span style="font-weight:600;color:var(--t1);font-size:14px">${t.subject}</span>
+          <span class="pill ${cls[t.status]||'open'}">${t.status.replace('_',' ')}</span>
+        </div>
+        <div style="font-size:12px;color:var(--t3);margin-top:4px">#${t.id.slice(0,8)} · ${t.priority} · ${d0}</div>
+      </div>`;
+    }).join('');
+  }catch(err){
+    msg.className='formmsg err';
+    msg.textContent='Could not check: '+err.message+'.';
   }
 });
 </script>

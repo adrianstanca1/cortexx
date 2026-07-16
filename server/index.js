@@ -446,7 +446,7 @@ app.get('/api/admin/overview', apiLimiter, adminAuth, wrap(async (req, res) => {
 // Tenant (workspace) directory.
 app.get('/api/admin/workspaces', apiLimiter, adminAuth, wrap(async (req, res) => {
   const r = await pool.query(`
-    SELECT w.id, w.name, w.company, w.plan, w.created_at,
+    SELECT w.id, w.name, w.company, w.plan, w.suspended, w.created_at,
            (SELECT COUNT(*) FROM users u WHERE u.workspace_id = w.id) AS users,
            (SELECT COUNT(*) FROM projects p WHERE p.workspace_id = w.id) AS projects
     FROM workspaces w ORDER BY w.created_at DESC LIMIT 200`);
@@ -480,6 +480,28 @@ app.patch('/api/admin/support/tickets/:id', apiLimiter, adminAuth, wrap(async (r
     [req.params.id, status]);
   if (!r.rows[0]) return res.status(404).json({ error: 'not_found' });
   res.json({ ticket: r.rows[0] });
+}));
+
+// Tenant suspend / activate (operator action; does not delete data).
+app.patch('/api/admin/workspaces/:id', apiLimiter, adminAuth, wrap(async (req, res) => {
+  const suspended = !!req.body.suspended;
+  const r = await pool.query(
+    "UPDATE workspaces SET suspended=$2 WHERE id=$1 RETURNING id, name, suspended",
+    [req.params.id, suspended]);
+  if (!r.rows[0]) return res.status(404).json({ error: 'not_found' });
+  res.json({ workspace: r.rows[0] });
+}));
+
+// ── Public support ticket lookup (self-service, by email) ────
+app.post('/api/support/tickets/lookup', authLimiter, wrap(async (req, res) => {
+  const { email } = req.body;
+  if (!email || !email.includes('@'))
+    return res.status(400).json({ error: 'valid email required' });
+  const r = await pool.query(
+    `SELECT id, subject, priority, status, created_at, updated_at
+     FROM support_tickets WHERE email=$1 ORDER BY created_at DESC LIMIT 50`,
+    [email.toLowerCase()]);
+  res.json({ tickets: r.rows });
 }));
 
 // ── 404 + error handler ─────────────────────────────────────

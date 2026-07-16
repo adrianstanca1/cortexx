@@ -108,8 +108,8 @@
 
   <div class="grid2">
     <div class="sec">
-      <h2>Tenants</h2>
-      <table class="tbl"><thead><tr><th>Workspace</th><th>Plan</th><th>Users</th><th>Projects</th><th>Joined</th></tr></thead>
+      <h2>Tenants <button class="btn btn-ghost" style="padding:3px 10px;font-size:12px;float:right" onclick="boot()">↻ Refresh</button></h2>
+      <table class="tbl"><thead><tr><th>Workspace</th><th>Plan</th><th>Users</th><th>Projects</th><th>Joined</th><th>Actions</th></tr></thead>
         <tbody id="wsBody"></tbody></table>
     </div>
     <div class="sec">
@@ -173,14 +173,22 @@ async function boot(){
     document.getElementById('cards').innerHTML = cards.map(([l,n,c])=>
       `<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
 
-    document.getElementById('wsBody').innerHTML = ws.workspaces.map(w=>
-      `<tr><td>${w.name||w.company||'—'}</td><td>${pill(w.plan||'free', w.plan==='pro'?'pro':'free')}</td>
-       <td>${w.users}</td><td>${w.projects}</td><td>${fmt(w.created_at)}</td></tr>`).join('')
-       || `<tr><td colspan="5" style="color:var(--t3)">No tenants yet.</td></tr>`;
+    document.getElementById('wsBody').innerHTML = ws.workspaces.map(w=>{
+      const susp = w.suspended;
+      const btn = susp
+        ? `<button class="btn btn-ghost" style="padding:4px 10px;font-size:12px" onclick="toggleSuspend('${w.id}', false)">Reactivate</button>`
+        : `<button class="btn btn-ghost" style="padding:4px 10px;font-size:12px;color:var(--red)" onclick="toggleSuspend('${w.id}', true)">Suspend</button>`;
+      return `<tr><td>${w.name||w.company||'—'} ${susp?'<span class="pill closed">suspended</span>':''}</td>
+        <td>${pill(w.plan||'free', w.plan==='pro'?'pro':'free')}</td>
+        <td>${w.users}</td><td>${w.projects}</td><td>${fmt(w.created_at)}</td><td>${btn}</td></tr>`;
+    }).join('')
+       || `<tr><td colspan="6" style="color:var(--t3)">No tenants yet.</td></tr>`;
 
-    document.getElementById('tkBody').innerHTML = tk.tickets.slice(0,8).map(t=>
-      `<tr><td>${t.subject}</td><td>${t.email}</td><td>${t.priority}</td>
-       <td>${pill(t.status, t.status)}</td></tr>`).join('')
+    document.getElementById('tkBody').innerHTML = tk.tickets.map(t=>
+      `<tr><td>${t.subject}</td><td>${t.email}</td><td>${pill(t.priority, t.priority==='urgent'?'open':t.priority)}</td>
+       <td><select onchange="setTicketStatus('${t.id}', this.value)" style="padding:3px 8px;border-radius:8px;background:var(--bg2);color:var(--t1);border:0.5px solid var(--hair);font-size:12px">
+         ${['open','in_progress','resolved','closed'].map(s=>`<option value="${s}" ${s===t.status?'selected':''}>${s.replace('_',' ')}</option>`).join('')}
+       </select></td></tr>`).join('')
        || `<tr><td colspan="4" style="color:var(--t3)">No tickets.</td></tr>`;
 
     document.getElementById('userBody').innerHTML = us.users.map(u=>
@@ -191,6 +199,28 @@ async function boot(){
     if(e.error==='unauthorized'||e.error==='forbidden'){ TOKEN=null; localStorage.removeItem('cb_admin_token'); location.reload(); }
     else document.getElementById('who').innerHTML = `<span class="err2">Load failed: ${e.error||'error'}</span>`;
   }
+}
+
+async function setTicketStatus(id, status){
+  try{
+    await api(`/admin/support/tickets/${id}`, {method:'PATCH', body:JSON.stringify({status})});
+    toast('Ticket → '+status.replace('_',' '));
+  }catch(e){ toast('Update failed: '+(e.error||'error'), 'error'); boot(); }
+}
+async function toggleSuspend(wsId, suspend){
+  try{
+    await api(`/admin/workspaces/${wsId}`, {method:'PATCH', body:JSON.stringify({suspended:suspend})});
+    toast(suspend?'Tenant suspended':'Tenant reactivated');
+    boot();
+  }catch(e){ toast('Action failed: '+(e.error||'error'), 'error'); }
+}
+function toast(msg, kind){
+  let el = document.getElementById('toast');
+  if(!el){ el = document.createElement('div'); el.id='toast';
+    el.style.cssText='position:fixed;bottom:24px;left:50%;transform:translateX(-50%);background:var(--bg3);color:var(--t1);padding:10px 18px;border-radius:10px;font-size:13px;z-index:50;box-shadow:0 8px 24px rgba(0,0,0,.4);border:0.5px solid var(--hair)';
+    document.body.appendChild(el); }
+  el.textContent = msg; el.style.display='block';
+  clearTimeout(el._t); el._t = setTimeout(()=>{ el.style.display='none'; }, 2200);
 }
 
 if(TOKEN) boot();
