@@ -110,14 +110,14 @@ function APIScreen({
     iconBg: T.purple,
     title: "Webhooks",
     sub: "3 endpoints configured",
-    onClick: () => window.open('https://cortexx.app/docs/webhooks', '_blank')
+    onClick: () => window.open('/docs/webhooks', '_blank')
   }), React.createElement(Row, {
     icon: Ic.book,
     iconBg: T.cyan,
     title: "API docs",
-    sub: "api.cortexx.app/docs",
+    sub: "cortexbuildpro.com/docs",
     isLast: true,
-    onClick: () => window.open('https://api.cortexx.app/docs', '_blank')
+    onClick: () => window.open('/docs', '_blank')
   }))), React.createElement(Section, {
     title: "Recent activity"
   }, React.createElement(GroupedList, null, React.createElement(Row, {

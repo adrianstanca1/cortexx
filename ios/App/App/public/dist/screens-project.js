@@ -897,7 +897,7 @@ function OnboardingSheet({
         lineHeight: 1.1,
         marginTop: 24
       }
-    }, "Welcome to Cortexx."), React.createElement("div", {
+    }, "Welcome to CortexBuild Pro."), React.createElement("div", {
       style: {
         fontFamily: SF,
         fontSize: 15,

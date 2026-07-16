@@ -1,5 +1,5 @@
 {
-	"appId": "app.cortexbuild.cortexx",
+	"appId": "com.cortexbuild.app",
 	"appName": "Cortexx",
 	"webDir": "www",
 	"ios": {

@@ -35,8 +35,13 @@
 
   let cachedStatus = null;
   let API_BASE = (function () {
-    try { return (localStorage.getItem('cortexx_llm_api_base') || '').replace(/\/+$/, ''); } catch (e) { return ''; }
+    try { return (localStorage.getItem('cortexx_llm_api_base') || localStorage.getItem('cortexx_api_url') || '').replace(/\/+$/, ''); } catch (e) { return ''; }
   })();
+  function authHeaders(extra) {
+    const h = Object.assign({ 'content-type': 'application/json' }, extra || {});
+    try { const t = localStorage.getItem('cortexx_token'); if (t) h.authorization = 'Bearer ' + t; } catch (e) {}
+    return h;
+  }
   const ENTITLEMENT_KEY = 'cortexx_iap_status';
 
   function loadStatus() {
@@ -58,7 +63,7 @@
     try {
       const r = await fetch(API_BASE + '/api/iap/verify', {
         method: 'POST', credentials: 'include',
-        headers: { 'content-type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify(payload),
       });
       if (!r.ok) return null;
@@ -103,7 +108,7 @@
     if (!plan) throw new Error('Unknown plan: ' + productId);
     const r = await fetch(API_BASE + '/api/iap/checkout', {
       method: 'POST', credentials: 'include',
-      headers: { 'content-type': 'application/json' },
+      headers: authHeaders(),
       body: JSON.stringify({ priceId: plan.stripe, productId }),
     });
     if (!r.ok) {
@@ -128,7 +133,7 @@
     }
     // Web: re-fetch entitlement from server
     try {
-      const r = await fetch(API_BASE + '/api/iap/entitlement', { credentials: 'include' });
+      const r = await fetch(API_BASE + '/api/iap/entitlement', { credentials: 'include', headers: authHeaders() });
       if (r.ok) { const s = await r.json(); saveStatus(s); return s; }
     } catch (e) {}
     return cachedStatus;
@@ -146,7 +151,7 @@
       window.open('itms-apps://apps.apple.com/account/subscriptions', '_system');
     } else {
       // Stripe billing portal
-      fetch(API_BASE + '/api/iap/portal', { method: 'POST', credentials: 'include' })
+      fetch(API_BASE + '/api/iap/portal', { method: 'POST', credentials: 'include', headers: authHeaders() })
         .then(r => r.json())
         .then(j => { if (j.url) window.location.assign(j.url); })
         .catch(() => {});

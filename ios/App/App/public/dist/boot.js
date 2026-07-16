@@ -94,7 +94,7 @@
             lineHeight: 1.5,
             maxWidth: 260
           }
-        }, "The rest of Cortexx is fine. Close and reopen this screen, or tap retry."), React.createElement("button", {
+        }, "The rest of CortexBuild Pro is fine. Close and reopen this screen, or tap retry."), React.createElement("button", {
           onClick: () => this.setState({
             error: null
           }),

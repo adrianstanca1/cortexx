@@ -250,7 +250,7 @@ function SSOLoginScreen({
       color: T.t1,
       letterSpacing: -0.5
     }
-  }, "Sign in to Cortexx"), React.createElement("div", {
+  }, "Sign in to CortexBuild Pro"), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 13,

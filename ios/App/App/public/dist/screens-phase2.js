@@ -130,14 +130,24 @@
     }]
   }];
   let _seedDirty = false;
-  if (!snap.rfis) { snap.rfis = RFI_SEED; _seedDirty = true; }
-  if (!snap.messages) { snap.messages = MESSAGE_SEED; _seedDirty = true; }
+  if (!snap.rfis) {
+    snap.rfis = RFI_SEED;
+    _seedDirty = true;
+  }
+  if (!snap.messages) {
+    snap.messages = MESSAGE_SEED;
+    _seedDirty = true;
+  }
   if (_seedDirty) {
     try {
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));
     } catch (e) {}
   }
-  const arr = name => { const s = Backend.db.snapshot(); if (!Array.isArray(s[name])) s[name] = []; return s[name]; };
+  const arr = name => {
+    const s = Backend.db.snapshot();
+    if (!Array.isArray(s[name])) s[name] = [];
+    return s[name];
+  };
   const makeT = name => ({
     list: async () => [...arr(name)],
     listSync: () => [...arr(name)],

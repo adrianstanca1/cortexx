@@ -53,7 +53,11 @@
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));
     } catch (e) {}
   }
-  const arr3 = name => { const s = Backend.db.snapshot(); if (!Array.isArray(s[name])) s[name] = []; return s[name]; };
+  const arr3 = name => {
+    const s = Backend.db.snapshot();
+    if (!Array.isArray(s[name])) s[name] = [];
+    return s[name];
+  };
   const makeT = name => ({
     listSync: () => [...arr3(name)],
     getSync: id => arr3(name).find(x => x.id == id),
@@ -866,7 +870,7 @@ function SettingsScreen({
     icon: Ic.book,
     iconBg: T.blue,
     title: "Help docs",
-    onClick: () => window.open('https://cortexx.app/help', '_blank')
+    onClick: () => window.open('/help', '_blank')
   }), React.createElement(Row, {
     icon: Ic.mail,
     iconBg: T.green,
@@ -1041,9 +1045,9 @@ function HelpScreen({
     icon: Ic.book,
     iconBg: T.purple,
     title: "Help centre",
-    sub: "cortexx.app/help",
+    sub: "cortexbuildpro.com/help",
     isLast: true,
-    onClick: () => window.open('https://cortexx.app/help', '_blank')
+    onClick: () => window.open('/help', '_blank')
   })))));
 }
 const PO_STATUS_C = {
@@ -1484,10 +1488,28 @@ function ClientPortalScreen({
       iconBg: c,
       title: `${iv.id} · £${iv.amount.toLocaleString()}`,
       sub: iv.status === 'paid' ? `Paid ${_formatRelDate(iv.paid)}` : `Due ${_formatRelDate(iv.due)}`,
-      right: React.createElement(Pill, {
+      right: iv.status === 'paid' ? React.createElement(Pill, {
         c: c,
         size: "xs"
-      }, iv.status),
+      }, iv.status) : React.createElement("button", {
+        onClick: e => {
+          e.stopPropagation();
+          if (window.cortexxNav) window.cortexxNav('payinvoice:' + iv.id);
+        },
+        style: {
+          padding: '5px 10px',
+          borderRadius: 6,
+          border: '1px solid ' + T.hair,
+          background: c,
+          color: '#fff',
+          fontFamily: 'inherit',
+          fontSize: 11,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: 0.4,
+          cursor: 'pointer'
+        }
+      }, "Pay"),
       isLast: i === a.length - 1
     });
   }))), React.createElement(Section, {

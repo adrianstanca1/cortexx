@@ -46,7 +46,9 @@ services:
         required: false
     environment:
       # Password-bearing URL (scram auth enforced on the db's 172.16 pg_hba line).
-      # POSTGRES_PASSWORD comes from the gitignored root .env (decrypted vault).
+      # POSTGRES_PASSWORD comes from the gitignored root .env (decrypted vault)
+      # or is generated fresh by deploy-vps.sh. Reference the same var so the
+      # api and db stay in sync — do NOT hardcode a placeholder here.
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/cortexx
       PORT: 3001
       NODE_ENV: production

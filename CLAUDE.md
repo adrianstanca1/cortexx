@@ -38,7 +38,7 @@ Node >=22, npm >=10. `postinstall` runs `precompile` silently, so `npm install` 
 
 **Backend (`server/`):** Express + PostgreSQL. `server/index.js` is the single entry; route modules live in `server/routes/` (banking, hmrc, iap, llm, payments, push, sync, portal, ledger, intelligence, agents). Multi-tenant via `workspace_id`. Auth is JWT (Bearer) + magic-link; realtime is Server-Sent Events per workspace (`channels` map in `index.js`). An Ollama service provides LLM inference with no external API keys. Note the backend uses a **raw SQL schema** (`server/db/schema.sql`, applied at volume init via docker-compose) — Prisma's `schema.prisma` is a *parallel model* for the Next.js stack, not the source of truth for the Express API.
 
-**iOS:** Capacitor 8 at the repo root, scaffold in `ios/`. `ios:sync` → `cap copy && cap sync ios`. Several App-Store-blockers remain that require a Mac + Apple portal (bundle-id `app.cortexx.cortexx` provisioning, universal-links AASA, StoreKit IAP plugin) — see the project memory; they cannot be resolved from this Linux VPS.
+**iOS:** Capacitor 8 at the repo root, scaffold in `ios/`. `ios:sync` → `cap copy && cap sync ios`. Canonical bundle id is `com.cortexbuild.app` (see `ios/capacitor.config.ts`). Several App-Store-blockers remain that require a Mac + Apple portal (provisioning profile, universal-links AASA, StoreKit IAP plugin) — see the project memory; they cannot be resolved from this Linux VPS.
 
 ## Build tooling — `lib/` → `dist/`
 

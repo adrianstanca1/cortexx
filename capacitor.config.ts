@@ -1,9 +1,10 @@
 import { CapacitorConfig } from '@capacitor/cli';
 
-// NOTE: The iOS build's source of truth is ios/capacitor.config.ts. Keep appId
-// here in sync with the real Xcode bundle id (app.cortexbuild.cortexx).
+// NOTE: The iOS build's source of truth is ios/capacitor.config.ts.
+// Canonical bundle id across the repo is com.cortexbuild.app (see
+// ios/capacitor.config.ts). Keep appId here in sync with that.
 const config: CapacitorConfig = {
-  appId: 'app.cortexbuild.cortexx',
+  appId: 'com.cortexbuild.app',
   appName: 'Cortexx',
   webDir: 'dist',
   server: {

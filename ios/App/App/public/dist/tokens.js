@@ -868,7 +868,7 @@ const WorkspaceChip = ({
   accent = T.blue
 }) => {
   const rec = window.CortexTenant ? window.CortexTenant.activeRecord() : {
-    name: 'Cortexx',
+    name: 'CortexBuild Pro',
     color: accent
   };
   return React.createElement("button", {

@@ -56,7 +56,7 @@ function InfrastructureScreen({
   const [downloading, setDownloading] = React.useState(false);
   const inputRef = React.useRef(null);
   const requestNotif = async () => {
-    const ok = await window.cortexxNotify('Cortexx', 'Notifications enabled. You\'ll get alerts for safety, money, and AI suggestions.');
+    const ok = await window.cortexxNotify('CortexBuild Pro', 'Notifications enabled. You\'ll get alerts for safety, money, and AI suggestions.');
     setNotifGranted(ok);
     if (!ok && Notification.permission === 'denied') {
       toast('Notifications blocked in browser settings', 'error');
@@ -234,7 +234,7 @@ function InfrastructureScreen({
   }, React.createElement(GroupedList, null, React.createElement(Row, {
     icon: Ic.download,
     iconBg: T.purple,
-    title: "Install Cortexx as app",
+    title: "Install CortexBuild Pro as app",
     sub: isStandalone ? '✓ Running as installed app' : installable ? 'Use browser menu → "Add to Home Screen"' : 'Not available in this browser',
     isLast: true,
     right: isStandalone && React.createElement(Pill, {

@@ -632,7 +632,7 @@ function ProfileScreen({
       color: T.t3,
       padding: '14px 0'
     }
-  }, "Cortexx \xB7 v2.0 (build 247) \xB7 ", user.company)));
+  }, "CortexBuild Pro \xB7 v2.0 (build 247) \xB7 ", user.company)));
 }
 const Toggle = ({
   on,

@@ -381,15 +381,15 @@ function DashV15_SiteNotice({
     style: {
       fontWeight: 700
     }
-  }, a.who.toUpperCase()), ' ', React.createElement("span", {
+  }, (a.who || a.t || '').toUpperCase()), ' ', React.createElement("span", {
     style: {
       color: V15.mute
     }
-  }, a.what), a.where && React.createElement("span", {
+  }, a.what || a.sub || ''), (a.where || a.location) && React.createElement("span", {
     style: {
       color: V15.fg
     }
-  }, " \xB7 ", a.where.toUpperCase()))))), incidents.length > 0 && React.createElement(React.Fragment, null, React.createElement(SectionLabel15, {
+  }, " \xB7 ", (a.where || a.location).toUpperCase()))))), incidents.length > 0 && React.createElement(React.Fragment, null, React.createElement(SectionLabel15, {
     num: "06",
     label: "Safety log",
     extra: `${incidents.length}`,
