@@ -1,5 +1,12 @@
 name: Deploy to Hostinger VPS
 
+# Deploys the Cortexx Docker stack (docker-compose.yml: api + db + ollama +
+# caddy) to the Hostinger VPS. TLS + routing are handled by Traefik/Caddy that
+# already run on the host, so this workflow only needs to pull the latest code
+# and bring the containers up. This replaces the older Next.js/pm2/nginx
+# workflow, which did not match the current containerised app and failed at the
+# `systemctl reload nginx` step (nginx is not part of the stack).
+
 on:
   workflow_dispatch:
   push:
@@ -7,7 +14,6 @@ on:
     paths-ignore:
       - 'README.md'
       - 'docs/**'
-      - '.github/workflows/health-monitor.yml'
       - '.github/workflows/ci.yml'
       - '.github/workflows/debug-vps.yml'
 
@@ -36,7 +42,6 @@ jobs:
             if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo SSH_OK && uname -a' 2>&1; then
               exit 0
             fi
-            # Linear backoff: 5, 10, 15, 20, 25, 30, 35 (total ≤140s)
             wait=$((attempt * 5))
             echo "SSH attempt $attempt failed, waiting ${wait}s"
             sleep $wait
@@ -44,527 +49,52 @@ jobs:
           echo "SSH connection failed after 8 attempts"
           exit 1
 
-      - name: Install missing tools
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-            set -e
-            export DEBIAN_FRONTEND=noninteractive
-            need=()
-            command -v node >/dev/null 2>&1 || need+=(nodejs)
-            command -v git >/dev/null 2>&1 || need+=(git)
-            command -v nginx >/dev/null 2>&1 || need+=(nginx)
-            command -v gzip >/dev/null 2>&1 || need+=(gzip)
-            command -v psql >/dev/null 2>&1 || need+=(postgresql postgresql-contrib)
-            command -v ffmpeg >/dev/null 2>&1 || need+=(ffmpeg)
-            command -v make >/dev/null 2>&1 || need+=(build-essential)
-            command -v redis-cli >/dev/null 2>&1 || need+=(redis-server)
-            if [ ${#need[@]} -gt 0 ]; then
-              if [[ " ${need[*]} " == *" nodejs "* ]]; then
-                curl -fsSL https://deb.nodesource.com/setup_20.x | bash -
-              fi
-              apt-get update -qq
-              apt-get install -y "${need[@]}"
-            fi
-            command -v pm2 >/dev/null 2>&1 || npm install -g pm2
-            systemctl enable --now postgresql 2>/dev/null || true
-            # Redis: bind to loopback only (default), shared by pm2 cluster
-            # workers for rate-limit + future cache state.
-            systemctl enable --now redis-server 2>/dev/null || true
-
-            # whisper.cpp — best-effort, non-blocking. Powers /api/transcribe
-            # for the voice-RFI flow. If install fails, /api/transcribe just
-            # returns 503 and the voice flow falls back to audio-only.
-            if [ ! -x /opt/whisper.cpp/main ] && [ ! -x /opt/whisper.cpp/build/bin/whisper-cli ]; then
-              echo "Installing whisper.cpp (one-time, ~5 min)…"
-              (
-                set -e
-                rm -rf /opt/whisper.cpp
-                git clone --depth 1 https://github.com/ggerganov/whisper.cpp /opt/whisper.cpp
-                cd /opt/whisper.cpp
-                # Newer whisper.cpp uses cmake; older uses make. Try both.
-                if [ -f CMakeLists.txt ] && command -v cmake >/dev/null 2>&1; then
-                  cmake -B build -DBUILD_SHARED_LIBS=OFF >/dev/null
-                  cmake --build build --config Release -j2 >/dev/null
-                else
-                  make -j2 >/dev/null
-                fi
-                bash ./models/download-ggml-model.sh base.en
-              ) || { echo "whisper.cpp install failed — voice transcription will be disabled"; rm -rf /opt/whisper.cpp; }
-            fi
-
-            # Ollama vision model (moondream, ~1.8 GB) — best-effort,
-            # non-blocking. Powers /api/snags/[id]/analyze + /api/ask vision
-            # flows. If pull fails (network / disk), the analyze endpoint
-            # returns 503 with install instructions and the rest of the app
-            # keeps working.
-            if command -v ollama >/dev/null 2>&1; then
-              if ! ollama list 2>/dev/null | grep -q '^moondream'; then
-                echo "Pulling moondream vision model (one-time, ~1.8 GB)…"
-                ollama pull moondream 2>&1 | tail -3 || echo "moondream pull failed — vision analysis will be disabled"
-              fi
-            else
-              echo "ollama not installed — vision + /ask features will be unavailable. Install: curl -fsSL https://ollama.com/install.sh | sh"
-            fi
-
-            echo "Node: $(node -v) | pm2: $(pm2 -v) | psql: $(psql --version 2>&1 | head -1)"
-            echo "ffmpeg: $(ffmpeg -version 2>&1 | head -1)"
-            echo "whisper: $(ls /opt/whisper.cpp/main /opt/whisper.cpp/build/bin/whisper-cli 2>/dev/null | head -1 || echo 'not installed')"
-            echo "ollama models: $(ollama list 2>/dev/null | tail -n +2 | awk '{print $1}' | tr '\n' ' ' || echo 'ollama not installed')"
-          REMOTE
-
-      - name: Provision DB, backup, deploy app
+      - name: Deploy via docker compose
         env:
-          NEXTAUTH_SECRET: ${{ secrets.NEXTAUTH_SECRET }}
-          ADMIN_EMAIL: ${{ secrets.ADMIN_EMAIL }}
-          ADMIN_PASSWORD: ${{ secrets.ADMIN_PASSWORD }}
-          SEED_TOKEN: ${{ secrets.SEED_TOKEN }}
-          # Optional — push notifications are a no-op when these aren't set.
-          # Generate locally via `npx web-push generate-vapid-keys`.
-          VAPID_PUBLIC_KEY: ${{ secrets.VAPID_PUBLIC_KEY }}
-          VAPID_PRIVATE_KEY: ${{ secrets.VAPID_PRIVATE_KEY }}
-          VAPID_CONTACT_EMAIL: ${{ secrets.VAPID_CONTACT_EMAIL }}
-          # Workflow-scoped token; valid for the run; can read the repo it owns.
+          # Read-only token — only used to authenticate the git pull of this
+          # (private) repo on the VPS. Scoped to this run.
           GH_PAT: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          # Generate a candidate password — only used if the existing one
-          # doesn't work (atomic rotation: either both DB + .env.production
-          # get the new one, or both keep the old one). Prevents the drift
-          # we saw earlier where failed deploys rotated DB without writing
-          # the matching env file.
-          DB_PASS_CANDIDATE=$(openssl rand -hex 16)
-          echo "::add-mask::$DB_PASS_CANDIDATE"
-
-          # Pass ALL secrets via the SSH env-var prefix — single SSH session, no cross-step file deps
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
-            DB_PASS_CANDIDATE="$DB_PASS_CANDIDATE" \
-            NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
-            ADMIN_EMAIL="$ADMIN_EMAIL" \
-            ADMIN_PASSWORD="$ADMIN_PASSWORD" \
-            SEED_TOKEN="$SEED_TOKEN" \
-            VAPID_PUBLIC_KEY="$VAPID_PUBLIC_KEY" \
-            VAPID_PRIVATE_KEY="$VAPID_PRIVATE_KEY" \
-            VAPID_CONTACT_EMAIL="$VAPID_CONTACT_EMAIL" \
-            GH_PAT="$GH_PAT" \
-            'bash -s' << 'REMOTE'
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
             set -euo pipefail
             APP_DIR=/opt/cortexx
-            APP_PORT=3010
-            BACKUP_DIR=/opt/cortexx-backups
-            mkdir -p $BACKUP_DIR
 
-            # ─── 1. System Postgres (no docker) ───────────────────────────
-            PG_IP=127.0.0.1
-            echo "Using system PostgreSQL on $PG_IP:5432"
-            psql --version 2>&1 | head -1
-
-            # ─── 2. Backup BEFORE any DB changes ──────────────────────────
-            STAMP=$(date -u +%Y%m%d-%H%M%S)
-            OUT="$BACKUP_DIR/cortexx-$STAMP.sql.gz"
-            if sudo -u postgres pg_dump cortexx 2>/dev/null | gzip > "$OUT" && [ -s "$OUT" ]; then
-              echo "✓ Backup: $OUT ($(du -h "$OUT" | cut -f1))"
-            else
-              echo "⚠ pg_dump skipped (DB may be empty / new)"
-              rm -f "$OUT"
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "::error:: $APP_DIR is not a git checkout — aborting"
+              exit 1
             fi
-            find "$BACKUP_DIR" -name '*.sql.gz' -mtime +30 -delete 2>/dev/null || true
+            cd "$APP_DIR"
 
-            # ─── 3. Create/update user + database (idempotent + atomic) ──
-            # Strategy: try the password already in .env.production FIRST.
-            # If it works, keep it (no rotation; no risk of drift). Only
-            # rotate to the candidate if the existing one is broken / missing.
-            HAS_USER=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_user WHERE usename='cortexx'" 2>/dev/null || echo "")
+            # Pull latest (origin is already set to the public URL on the VPS).
+            git fetch origin
+            git reset --hard origin/main
+            echo "Checked out: $(git rev-parse --short HEAD)"
 
-            EXISTING_PASS=""
-            if [ -f /opt/cortexx/.env.production ]; then
-              # Extract the password part of the URL (between : and @)
-              EXISTING_PASS=$(grep '^DATABASE_URL=' /opt/cortexx/.env.production | sed -E 's|.*://cortexx:([^@]+)@.*|\1|' || echo "")
-            fi
+            # Bring the stack up. Build the api image; reuse the published
+            # postgres/ollama/caddy images. `unless-stopped` restart policy is
+            # already set in docker-compose.yml so this survives reboots.
+            docker compose pull
+            docker compose up -d --build --remove-orphans
 
-            DB_PASS=""
-            # Test connection using the connection string directly (psql decodes the URL-encoded password)
-            if [ -n "$EXISTING_PASS" ] && [ "$HAS_USER" = "1" ] && psql "postgresql://cortexx:$EXISTING_PASS@$PG_IP:5432/postgres" -tAc "SELECT 1" >/dev/null 2>&1; then
-              # Connection worked! Use Node to get the RAW decoded password for PGPASSWORD and future steps.
-              DB_PASS=$(node -e "console.log(decodeURIComponent(process.argv[1]))" "$EXISTING_PASS")
-              echo "✓ Reusing existing password from .env.production"
-            else
-              DB_PASS="$DB_PASS_CANDIDATE"
-              if [ "$HAS_USER" != "1" ]; then
-                sudo -u postgres psql -c "CREATE USER cortexx WITH PASSWORD '$DB_PASS';"
-                echo "✓ Created user cortexx"
-              else
-                sudo -u postgres psql -c "ALTER USER cortexx WITH PASSWORD '$DB_PASS';" >/dev/null
-                echo "↻ Rotated DB password (existing one wasn't usable)"
+            # Wait for the API to report healthy (via traefik public path).
+            echo "Waiting for API health..."
+            for n in $(seq 1 24); do
+              code=$(curl -s --max-time 5 -o /dev/null -w "%{http_code}" https://cortexbuildpro.com/api/health 2>/dev/null || echo 000)
+              if [ "$code" = "200" ]; then
+                echo "API healthy after ~$((n*5))s (HTTP 200)"
+                break
               fi
-            fi
-
-
-            HAS_DB=$(sudo -u postgres psql -tAc "SELECT 1 FROM pg_database WHERE datname='cortexx'" 2>/dev/null || echo "")
-            if [ "$HAS_DB" != "1" ]; then
-              sudo -u postgres psql -c "CREATE DATABASE cortexx OWNER cortexx;"
-              echo "✓ Created database cortexx"
-            fi
-            sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE cortexx TO cortexx;" >/dev/null
-
-            # verify auth actually works before proceeding
-            if ! PGPASSWORD="$DB_PASS" psql -h "$PG_IP" -U cortexx -d postgres -tAc "SELECT 1" >/dev/null 2>&1; then
-              echo "✗ DB auth verification failed — credentials are not actually working"
-              exit 1
-            fi
-            echo "✓ DB ready"
-
-            # ─── 4. Nightly backup cron (idempotent) ──────────────────────
-            cat > /etc/cron.daily/cortexx-backup << 'CRON'
-          #!/usr/bin/env bash
-          set -e
-          mkdir -p /opt/cortexx-backups
-          OUT="/opt/cortexx-backups/cortexx-$(date -u +%Y%m%d-%H%M%S).sql.gz"
-          sudo -u postgres pg_dump cortexx 2>/dev/null | gzip > "$OUT" || rm -f "$OUT"
-          find /opt/cortexx-backups -name '*.sql.gz' -mtime +30 -delete
-          CRON
-            chmod +x /etc/cron.daily/cortexx-backup
-
-            # ─── 4b. Preserve CRON_SECRET across deploys ───────────────────
-            # The `cat > .env.production` at step 6 OVERWRITES the file with
-            # only the keys this workflow knows about — so CRON_SECRET would
-            # be lost on every deploy. Stash it here BEFORE the overwrite and
-            # restore in step 6b. Generate on first deploy.
-            EXISTING_CRON_SECRET=""
-            if [ -f $APP_DIR/.env.production ]; then
-              EXISTING_CRON_SECRET=$(grep -oP '^CRON_SECRET=\K.+' $APP_DIR/.env.production || echo "")
-            fi
-            if [ -z "$EXISTING_CRON_SECRET" ]; then
-              EXISTING_CRON_SECRET=$(openssl rand -hex 32)
-              echo "✓ generated fresh CRON_SECRET (first deploy)"
-            else
-              echo "✓ reusing existing CRON_SECRET"
-            fi
-
-            # ─── 5. Build URL and clone/update repo ───────────────────────
-
-            # The repo is private — use a PAT for authenticated git operations.
-            AUTH_URL="https://x-access-token:${GH_PAT}@github.com/adrianstanca1/cortexx.git"
-
-            if [ -d $APP_DIR/.git ]; then
-              cd $APP_DIR
-              git remote set-url origin "$AUTH_URL"
-              git fetch origin
-              git reset --hard origin/main
-              rm -rf $APP_DIR/.next $APP_DIR/node_modules
-            else
-              rm -rf $APP_DIR
-              git clone "$AUTH_URL" $APP_DIR
-              cd $APP_DIR
-            fi
-            # Sanitize the remote URL after fetch so the token isn't persisted on disk
-            git remote set-url origin "https://github.com/adrianstanca1/cortexx.git"
-
-            # Install dependencies before running any prisma commands
-            # NOTE: redirect to log files instead of piping to tail — pipefail can
-            # mask failures in some shell modes, and we need the script to abort
-            # loudly on real errors.
-            npm ci --include=dev > /tmp/cortexx-npm-ci.log 2>&1
-            tail -5 /tmp/cortexx-npm-ci.log
-
-            # Build URL for subsequent steps (must be URL-encoded for Prisma)
-            DB_PASS_ENCODED=$(node -e "console.log(encodeURIComponent(process.argv[1]))" "$DB_PASS")
-            DB_URL="postgresql://cortexx:$DB_PASS_ENCODED@$PG_IP:5432/cortexx"
-
-            # ─── 5b. Migration Management ─────────────────────────────────
-            # Must run after 'npm ci' so we use the pinned Prisma version.
-            MIGRATION_TABLE=$(sudo -u postgres psql cortexx -tAc "SELECT to_regclass('_prisma_migrations')" 2>/dev/null | xargs)
-            TABLE_COUNT=$(sudo -u postgres psql cortexx -tAc "SELECT count(*) FROM information_schema.tables WHERE table_schema = 'public'" 2>/dev/null | xargs)
-
-            # If the database is non-empty but the migrations table is missing or suspiciously behind,
-            # we baseline existing migrations to avoid P3005/P3018 errors.
-            if [ -n "$TABLE_COUNT" ] && [ "$TABLE_COUNT" -gt 5 ]; then
-              echo "↻ Non-empty database detected ($TABLE_COUNT tables). Ensuring all existing migrations are marked as applied."
-              for m in $(ls prisma/migrations/ | grep '^[0-9]'); do
-                # Check if this specific migration is already in the table and finished
-                ALREADY_APPLIED=""
-                if [ "$MIGRATION_TABLE" = "_prisma_migrations" ]; then
-                  ALREADY_APPLIED=$(sudo -u postgres psql cortexx -tAc "SELECT 1 FROM _prisma_migrations WHERE migration_name = '$m' AND finished_at IS NOT NULL" 2>/dev/null || echo "")
-                fi
-
-                if [ "$ALREADY_APPLIED" != "1" ]; then
-                  echo "  Baselining/Resolving $m..."
-                  DATABASE_URL="$DB_URL" npx prisma migrate resolve --applied "$m" || true
-                fi
-              done
-            fi
-
-            # Ensure no 'stuck' (NULL finished_at) rows remain in the table
-            if [ "$MIGRATION_TABLE" = "_prisma_migrations" ]; then
-               sudo -u postgres psql cortexx -c "DELETE FROM _prisma_migrations WHERE finished_at IS NULL" >/dev/null 2>&1 || true
-            fi
-
-            cat > $APP_DIR/.env.production << ENV
-          DATABASE_URL=$DB_URL
-          NEXTAUTH_SECRET=$NEXTAUTH_SECRET
-          NEXTAUTH_URL=https://cortexbuildpro.com
-          NODE_ENV=production
-          PORT=$APP_PORT
-          ALLOW_SEED=true
-          SEED_TOKEN=$SEED_TOKEN
-          ADMIN_EMAIL=$ADMIN_EMAIL
-          ADMIN_PASSWORD=$ADMIN_PASSWORD
-          VAPID_PUBLIC_KEY=$VAPID_PUBLIC_KEY
-          VAPID_PRIVATE_KEY=$VAPID_PRIVATE_KEY
-          VAPID_CONTACT_EMAIL=${VAPID_CONTACT_EMAIL:-admin@cortexbuildpro.com}
-          MULTITENANT_ENFORCED=true
-          REDIS_URL=redis://127.0.0.1:6379
-          CRON_SECRET=$EXISTING_CRON_SECRET
-          UPLOAD_DIR=/var/lib/cortexx/uploads
-          ENV
-            chmod 600 $APP_DIR/.env.production
-            # Ensure the upload directory exists with correct ownership.
-            # Without UPLOAD_DIR the code defaulted to $APP_DIR/uploads, which
-            # was wiped on every fresh clone — silent data loss on redeploy.
-            mkdir -p /var/lib/cortexx/uploads
-            chown -R root:root /var/lib/cortexx/uploads
-            chmod 755 /var/lib/cortexx/uploads
-            echo "✓ .env.production written ($(wc -c < $APP_DIR/.env.production) bytes)"
-
-            # ─── 5b. /api/cron/* schedulers (idempotent, uses preserved secret) ─
-            cat > /etc/cron.d/cortexx-cron << CRONJ
-          # Cortexx API crons. POSTs to /api/cron/* via localhost with the
-          # CRON_SECRET. Logs to syslog (journalctl -u cron).
-          0  6  *   *   *    root  curl -sS -X POST -H "Authorization: Bearer $EXISTING_CRON_SECRET" http://localhost:$APP_PORT/api/cron/overdue-invoices
-          30 6  *   *   *    root  curl -sS -X POST -H "Authorization: Bearer $EXISTING_CRON_SECRET" http://localhost:$APP_PORT/api/cron/expiry-warnings
-          0  3  *   *   0    root  curl -sS -X POST -H "Authorization: Bearer $EXISTING_CRON_SECRET" http://localhost:$APP_PORT/api/cron/prune-push
-          CRONJ
-            chmod 644 /etc/cron.d/cortexx-cron
-            echo "✓ /etc/cron.d/cortexx-cron written"
-
-            # ─── 6. Install + migrate + seed + build ──────────────────────
-            cd $APP_DIR
-            # NOTE: redirect to log files instead of piping to tail — pipefail can
-            # mask failures in some shell modes, and we need the script to abort
-            # loudly on real errors.
-            npm ci --include=dev > /tmp/cortexx-npm-ci.log 2>&1
-            tail -5 /tmp/cortexx-npm-ci.log
-            DATABASE_URL="$DB_URL" npx prisma generate > /tmp/cortexx-prisma-gen.log 2>&1
-            tail -3 /tmp/cortexx-prisma-gen.log
-
-            # set -e would silence the migration log, so handle the failure
-            # explicitly: dump the log then re-raise the same exit code.
-            # (Stuck-migration cleanup already happened earlier in step 3a.)
-            if ! DATABASE_URL="$DB_URL" npx prisma migrate deploy > /tmp/cortexx-prisma-mig.log 2>&1; then
-              echo "✗ prisma migrate deploy failed — full log:"
-              cat /tmp/cortexx-prisma-mig.log
-              exit 1
-            fi
-            tail -10 /tmp/cortexx-prisma-mig.log
-            DATABASE_URL="$DB_URL" ADMIN_EMAIL="$ADMIN_EMAIL" ADMIN_PASSWORD="$ADMIN_PASSWORD" \
-              npx prisma db seed > /tmp/cortexx-seed.log 2>&1 || echo "Seed skipped"
-            tail -8 /tmp/cortexx-seed.log
-            # Nuke .next/ before every build. Repeated incremental rebuilds
-            # accumulate stale React-client-manifest entries — symptom is
-            # 'Invariant: client reference manifest for route X does not
-            # exist' 500s on a subset of routes (hit Adrian on /settings
-            # via mobile after 5 chained deploys on 25 May). Clean build
-            # adds ~30s to the deploy; worth it for predictability.
-            rm -rf .next
-            DATABASE_URL="$DB_URL" NEXTAUTH_SECRET="$NEXTAUTH_SECRET" \
-              NEXTAUTH_URL=https://cortexbuildpro.com npm run build > /tmp/cortexx-build.log 2>&1
-            BUILD_RC=$?
-            tail -10 /tmp/cortexx-build.log
-            if [ "$BUILD_RC" -ne 0 ]; then
-              echo "✗ npm run build failed with exit $BUILD_RC — aborting deploy"
-              exit "$BUILD_RC"
-            fi
-
-            # ─── 7. Restart pm2 (DELETE + start, not reload) ──────────────
-            # `pm2 reload --update-env` keeps stale env baked in (we saw this:
-            # an old DATABASE_URL=file:./prod.db survived for 10+ hours across
-            # multiple "successful" deploys). Delete + start guarantees fresh
-            # env from .env.production.
-            #
-            # Cluster mode: -i max forks one worker per CPU core for ~Nx
-            # throughput on the request loop. Workers share rate-limit
-            # state via Redis (REDIS_URL above). pm2 MUST be pointed at
-            # the Node entry script (node_modules/next/dist/bin/next),
-            # NOT 'npm start' — pm2's cluster wrapper extends Node's
-            # cluster module to share the listen socket via SO_REUSEPORT,
-            # which only works when pm2 spawns the listening process
-            # directly. With `npm start` only worker #0 binds the port
-            # and 1..N error out with EADDRINUSE.
-            pm2 delete cortexx 2>/dev/null || true
-            PORT=$APP_PORT pm2 start "$APP_DIR/node_modules/next/dist/bin/next" \
-              --name cortexx -i max --cwd "$APP_DIR" -- start -p "$APP_PORT"
-            pm2 save
-            (pm2 startup systemd -u root --hp /root 2>&1 | grep "sudo " | bash) || true
-
-            sleep 6
-            curl -s -o /dev/null -w "App on :$APP_PORT → HTTP %{http_code}\n" http://localhost:$APP_PORT/
-            curl -s --max-time 5 http://localhost:$APP_PORT/api/health
-            echo ""
-
-            # ─── 8. Hard verification: code commit + build id ─────────────
-            DEPLOYED_SHA=$(cd $APP_DIR && git rev-parse HEAD)
-            DEPLOYED_BUILD_ID=$(cat $APP_DIR/.next/BUILD_ID 2>/dev/null)
-            echo "✓ Deployed git HEAD: $DEPLOYED_SHA"
-            echo "✓ Deployed BUILD_ID: $DEPLOYED_BUILD_ID"
-
-            # ─── 9. Healthcheck must report ok ────────────────────────────
-            HEALTH=$(curl -s --max-time 10 http://localhost:$APP_PORT/api/health)
-            if ! echo "$HEALTH" | grep -q '"status":"ok"'; then
-              echo "✗ Healthcheck did not return ok — production may be broken"
-              echo "$HEALTH"
-              exit 1
-            fi
-            echo "✓ Healthcheck OK"
-          REMOTE
-
-      - name: Configure nginx for cortexbuildpro.com
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-            set -e
-
-            BACKUP=/root/nginx-backup-$(date +%s)
-            mkdir -p $BACKUP
-
-            for f in /etc/nginx/sites-enabled/*; do
-              [ -e "$f" ] || continue
-              [ "$(basename $f)" = "cortexx" ] && continue
-              SRC=$(readlink -f "$f" 2>/dev/null || echo "$f")
-              DOMAINS=$(awk '
-                /^\s*server_name/ { in_sn=1; gsub(/^\s*server_name\s*/, ""); }
-                in_sn {
-                  if (match($0, /;/)) { gsub(/;.*/, ""); in_sn=0; }
-                  print
-                }' "$SRC" 2>/dev/null | tr -s ' \t\n' '\n' | sed '/^$/d')
-              MATCH=""
-              for d in $DOMAINS; do
-                if [ "$d" = "cortexbuildpro.com" ] || [ "$d" = "www.cortexbuildpro.com" ]; then
-                  MATCH=1; break
-                fi
-              done
-              if [ -n "$MATCH" ]; then
-                cp "$SRC" "$BACKUP/$(basename $f).bak" 2>/dev/null || true
-                echo "Removing $f (was serving cortexbuildpro.com)"
-                rm "$f"
-              fi
+              echo "  try $n: api http $code"
+              sleep 5
             done
-
-            mkdir -p /var/www/html
-
-            cat > /etc/nginx/sites-available/cortexx << 'NGINX'
-          server {
-              listen 80;
-              listen [::]:80;
-              server_name cortexbuildpro.com www.cortexbuildpro.com;
-
-              client_max_body_size 25m;
-              gzip on;
-              gzip_types text/plain application/json application/javascript text/css application/xml image/svg+xml;
-              gzip_min_length 1024;
-
-              location /.well-known/acme-challenge/ {
-                  root /var/www/html;
-                  try_files $uri =404;
-              }
-
-              location /api/events/ {
-                  proxy_pass http://127.0.0.1:3010;
-                  proxy_http_version 1.1;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_buffering off;
-                  proxy_cache off;
-                  proxy_read_timeout 1h;
-                  chunked_transfer_encoding off;
-              }
-
-              location / {
-                  proxy_pass http://127.0.0.1:3010;
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade $http_upgrade;
-                  proxy_set_header Connection 'upgrade';
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_cache_bypass $http_upgrade;
-                  proxy_read_timeout 90s;
-                  proxy_buffering off;
-              }
-          }
-          NGINX
-
-            ln -sf /etc/nginx/sites-available/cortexx /etc/nginx/sites-enabled/cortexx
-            nginx -t
-            systemctl reload nginx
-
-            # Provision cert if missing
-            if [ ! -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
-              command -v certbot >/dev/null 2>&1 || apt-get install -y certbot python3-certbot-nginx >/dev/null
-              certbot certonly --webroot -w /var/www/html \
-                -d cortexbuildpro.com -d www.cortexbuildpro.com \
-                --non-interactive --agree-tos -m admin@cortexbuildpro.com --no-eff-email 2>&1 | tail -8 || true
-            fi
-
-            if [ -f /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem ]; then
-              cat >> /etc/nginx/sites-available/cortexx << 'NGINX_HTTPS'
-
-          server {
-              listen 443 ssl http2;
-              listen [::]:443 ssl http2;
-              server_name cortexbuildpro.com www.cortexbuildpro.com;
-
-              ssl_certificate /etc/letsencrypt/live/cortexbuildpro.com/fullchain.pem;
-              ssl_certificate_key /etc/letsencrypt/live/cortexbuildpro.com/privkey.pem;
-              ssl_protocols TLSv1.2 TLSv1.3;
-              ssl_ciphers HIGH:!aNULL:!MD5;
-              ssl_session_cache shared:SSL:10m;
-
-              client_max_body_size 25m;
-              gzip on;
-              gzip_types text/plain application/json application/javascript text/css application/xml image/svg+xml;
-              gzip_min_length 1024;
-
-              location /api/events/ {
-                  proxy_pass http://127.0.0.1:3010;
-                  proxy_http_version 1.1;
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_buffering off;
-                  proxy_cache off;
-                  proxy_read_timeout 1h;
-                  chunked_transfer_encoding off;
-              }
-
-              location / {
-                  proxy_pass http://127.0.0.1:3010;
-                  proxy_http_version 1.1;
-                  proxy_set_header Upgrade $http_upgrade;
-                  proxy_set_header Connection 'upgrade';
-                  proxy_set_header Host $host;
-                  proxy_set_header X-Real-IP $remote_addr;
-                  proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-                  proxy_set_header X-Forwarded-Proto $scheme;
-                  proxy_cache_bypass $http_upgrade;
-                  proxy_read_timeout 90s;
-                  proxy_buffering off;
-              }
-          }
-          NGINX_HTTPS
-              nginx -t
-              systemctl reload nginx
-              systemctl enable --now certbot.timer 2>/dev/null || true
-            fi
           REMOTE
 
       - name: Verify deployment
         run: |
           sleep 5
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \
-            'curl -s -o /dev/null -w "Local 3010: HTTP %{http_code}\n" http://localhost:3010/'
           echo "=== Public ==="
-          curl -s -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.com/
-          curl -s -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.com/api/health
-          curl -s -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.com/login
+          curl -s -o /dev/null -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.com/
+          curl -s -o /dev/null -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.com/api/health
           echo "=== Health body ==="
           curl -s --max-time 10 https://cortexbuildpro.com/api/health
           echo ""
