@@ -1,0 +1,199 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1"/>
+<title>CortexBuild Pro — Admin Console</title>
+<meta name="theme-color" content="#0a0f1a"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root{
+    --bg0:#0a0f1a; --bg1:#0e1626; --bg2:#13203a; --bg3:#1a2c4e;
+    --amber:#ffb000; --blue:#2f6bff; --blue-l:#6aa0ff; --green:#10b981;
+    --red:#ef4444; --t1:#eef3fb; --t2:#a9bcd6; --t3:#6f87a8;
+    --hair:rgba(255,255,255,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg0);color:var(--t1);
+    font-family:"DM Sans",system-ui,sans-serif;line-height:1.55;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.brand{font-family:"Space Grotesk",system-ui,sans-serif;}
+  a{color:var(--blue-l);text-decoration:none;}
+  .topbar{display:flex;align-items:center;justify-content:space-between;padding:16px 28px;
+    border-bottom:0.5px solid var(--hair);background:rgba(10,15,26,0.85);backdrop-filter:blur(8px);
+    position:sticky;top:0;z-index:10;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:17px;letter-spacing:-0.3px;}
+  .brand .mk{width:28px;height:28px;border-radius:8px;background:linear-gradient(135deg,var(--amber),#ff8a00);
+    display:flex;align-items:center;justify-content:center;}
+  .brand .mk svg{width:16px;height:16px;}
+  .who{font-size:13px;color:var(--t2);}
+  .who b{color:var(--t1);}
+  .wrap{max-width:1080px;margin:0 auto;padding:36px 24px 80px;}
+  .login{max-width:380px;margin:14vh auto;}
+  .login h1{font-size:26px;margin:0 0 6px;}
+  .login p{color:var(--t3);font-size:14px;margin:0 0 24px;}
+  label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin:14px 0 6px;text-transform:uppercase;letter-spacing:0.5px;}
+  input,select,textarea{width:100%;background:var(--bg2);border:0.5px solid var(--hair);border-radius:10px;
+    padding:11px 13px;color:var(--t1);font-size:14px;font-family:inherit;}
+  input:focus,select:focus,textarea:focus{outline:none;border-color:var(--amber);}
+  .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;cursor:pointer;border:none;
+    border-radius:10px;padding:11px 18px;font-size:14px;font-weight:600;font-family:inherit;transition:.15s;}
+  .btn-primary{background:linear-gradient(135deg,var(--amber),#ff8a00);color:#0a0f1a;box-shadow:0 6px 18px rgba(255,176,0,0.3);}
+  .btn-primary:hover{filter:brightness(1.05);}
+  .btn-ghost{background:var(--bg2);color:var(--t1);border:0.5px solid var(--hair);}
+  .btn-block{width:100%;margin-top:22px;}
+  .err{color:var(--red);font-size:13px;margin-top:12px;min-height:16px;}
+  .cards{display:grid;grid-template-columns:repeat(5,1fr);gap:14px;margin-bottom:34px;}
+  .stat{background:var(--bg1);border:0.5px solid var(--hair);border-radius:14px;padding:18px;}
+  .stat .n{font-family:"Space Grotesk";font-size:30px;font-weight:700;letter-spacing:-0.5px;}
+  .stat .l{font-size:12px;color:var(--t3);margin-top:2px;}
+  .stat.amber .n{color:var(--amber);}
+  .sec{margin-top:38px;}
+  .sec h2{font-size:19px;margin:0 0 14px;letter-spacing:-0.3px;}
+  .tbl{width:100%;border-collapse:collapse;background:var(--bg1);border:0.5px solid var(--hair);border-radius:14px;overflow:hidden;}
+  .tbl th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--t3);
+    padding:12px 16px;font-weight:600;border-bottom:0.5px solid var(--hair);}
+  .tbl td{padding:12px 16px;font-size:13px;color:var(--t2);border-bottom:0.5px solid rgba(255,255,255,0.04);}
+  .tbl tr:last-child td{border-bottom:none;}
+  .pill{display:inline-block;padding:2px 9px;border-radius:20px;font-size:11px;font-weight:600;}
+  .pill.free{background:rgba(111,135,168,0.18);color:var(--t2);}
+  .pill.pro{background:rgba(47,107,255,0.18);color:var(--blue-l);}
+  .pill.open{background:rgba(239,68,68,0.18);color:#ff9a9a;}
+  .pill.in_progress{background:rgba(255,176,0,0.18);color:var(--amber);}
+  .pill.resolved,.pill.closed{background:rgba(16,185,129,0.18);color:#6ee7b7;}
+  .pill.owner{background:rgba(255,176,0,0.16);color:var(--amber);}
+  .pill.director{background:rgba(47,107,255,0.16);color:var(--blue-l);}
+  .pill.admin{background:rgba(16,185,129,0.16);color:#6ee7b7;}
+  .grid2{display:grid;grid-template-columns:1.4fr 1fr;gap:24px;}
+  @media(max-width:880px){.cards{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}}
+  .err2{color:var(--red);}
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+    outline:2px solid var(--amber);outline-offset:2px;border-radius:6px;}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;}}
+</style>
+</head>
+<body>
+
+<div class="topbar" id="topbar" style="display:none">
+  <div class="brand">
+    <span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="#0a0f1a" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#0a0f1a"/></svg></span>
+    CortexBuild <span style="color:var(--amber)">Pro</span> · Admin
+  </div>
+  <div class="who" id="who"></div>
+</div>
+
+<!-- LOGIN -->
+<div class="login" id="login">
+  <div class="brand" style="margin-bottom:18px">
+    <span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="#0a0f1a" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#0a0f1a"/></svg></span>
+    CortexBuild <span style="color:var(--amber)">Pro</span>
+  </div>
+  <h1>Admin Console</h1>
+  <p>Sign in with an owner or admin account to manage the platform.</p>
+  <form id="loginForm">
+    <label>Email</label>
+    <input type="email" id="email" placeholder="you@company.com" required/>
+    <label>Password</label>
+    <input type="password" id="password" placeholder="••••••••" required/>
+    <button class="btn btn-primary btn-block" type="submit">Sign in</button>
+    <div class="err" id="loginErr"></div>
+  </form>
+  <p style="margin-top:22px;font-size:12px;color:var(--t3)"><a href="landing.html">← Back to site</a> · <a href="support.html">Support</a></p>
+</div>
+
+<!-- DASHBOARD -->
+<div class="wrap" id="dash" style="display:none">
+  <div class="cards" id="cards"></div>
+
+  <div class="grid2">
+    <div class="sec">
+      <h2>Tenants</h2>
+      <table class="tbl"><thead><tr><th>Workspace</th><th>Plan</th><th>Users</th><th>Projects</th><th>Joined</th></tr></thead>
+        <tbody id="wsBody"></tbody></table>
+    </div>
+    <div class="sec">
+      <h2>Open tickets</h2>
+      <table class="tbl"><thead><tr><th>Subject</th><th>From</th><th>Priority</th><th>Status</th></tr></thead>
+        <tbody id="tkBody"></tbody></table>
+    </div>
+  </div>
+
+  <div class="sec">
+    <h2>Users</h2>
+    <table class="tbl"><thead><tr><th>Name</th><th>Email</th><th>Role</th><th>Workspace</th><th>Joined</th></tr></thead>
+      <tbody id="userBody"></tbody></table>
+  </div>
+</div>
+
+<script>
+const API = '/api';
+let TOKEN = localStorage.getItem('cb_admin_token');
+
+function fmt(d){ return new Date(d).toLocaleDateString('en-GB',{day:'2-digit',month:'short',year:'numeric'}); }
+function pill(txt, cls){ return `<span class="pill ${cls}">${txt}</span>`; }
+
+async function api(path, opts={}){
+  const r = await fetch(API+path, {
+    ...opts,
+    headers: {...(opts.headers||{}), 'content-type':'application/json', ...(TOKEN?{authorization:'Bearer '+TOKEN}:{})}
+  });
+  if(!r.ok){ const e = await r.json().catch(()=>({error:r.status})); throw e; }
+  return r.json();
+}
+
+document.getElementById('loginForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const err = document.getElementById('loginErr'); err.textContent='';
+  try{
+    const { token, user } = await api('/auth/login', {method:'POST', body:JSON.stringify({
+      email: document.getElementById('email').value,
+      password: document.getElementById('password').value
+    })});
+    if(!['owner','admin'].includes(user.role)){ err.textContent='This account is not an admin.'; return; }
+    TOKEN = token; localStorage.setItem('cb_admin_token', token);
+    boot();
+  }catch(e){ err.textContent = (e.error==='invalid credentials')?'Invalid email or password.':'Login failed: '+(e.error||'unknown'); }
+});
+
+async function boot(){
+  document.getElementById('login').style.display='none';
+  document.getElementById('topbar').style.display='flex';
+  document.getElementById('dash').style.display='block';
+  try{
+    const [ov, ws, us, tk] = await Promise.all([
+      api('/admin/overview'), api('/admin/workspaces'), api('/admin/users'), api('/admin/support/tickets')
+    ]);
+    document.getElementById('who').innerHTML = `Signed in · ${TOKEN?'(session active)':''}`;
+    const cards = [
+      ['Workspaces', ov.workspaces, 'amber'], ['Users', ov.users, ''],
+      ['Projects', ov.projects, ''], ['New · 7d', ov.new_projects_7d, ''],
+      ['Open tickets', ov.open_tickets, 'amber']
+    ];
+    document.getElementById('cards').innerHTML = cards.map(([l,n,c])=>
+      `<div class="stat ${c}"><div class="n">${n}</div><div class="l">${l}</div></div>`).join('');
+
+    document.getElementById('wsBody').innerHTML = ws.workspaces.map(w=>
+      `<tr><td>${w.name||w.company||'—'}</td><td>${pill(w.plan||'free', w.plan==='pro'?'pro':'free')}</td>
+       <td>${w.users}</td><td>${w.projects}</td><td>${fmt(w.created_at)}</td></tr>`).join('')
+       || `<tr><td colspan="5" style="color:var(--t3)">No tenants yet.</td></tr>`;
+
+    document.getElementById('tkBody').innerHTML = tk.tickets.slice(0,8).map(t=>
+      `<tr><td>${t.subject}</td><td>${t.email}</td><td>${t.priority}</td>
+       <td>${pill(t.status, t.status)}</td></tr>`).join('')
+       || `<tr><td colspan="4" style="color:var(--t3)">No tickets.</td></tr>`;
+
+    document.getElementById('userBody').innerHTML = us.users.map(u=>
+      `<tr><td>${u.name}</td><td>${u.email}</td><td>${pill(u.role, u.role)}</td>
+       <td>${u.workspace||'—'}</td><td>${fmt(u.created_at)}</td></tr>`).join('')
+       || `<tr><td colspan="5" style="color:var(--t3)">No users.</td></tr>`;
+  }catch(e){
+    if(e.error==='unauthorized'||e.error==='forbidden'){ TOKEN=null; localStorage.removeItem('cb_admin_token'); location.reload(); }
+    else document.getElementById('who').innerHTML = `<span class="err2">Load failed: ${e.error||'error'}</span>`;
+  }
+}
+
+if(TOKEN) boot();
+</script>
+</body>
+</html>

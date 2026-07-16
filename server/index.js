@@ -388,6 +388,94 @@ app.post('/api/audit', apiLimiter, auth, wrap(async (req, res) => {
   res.json({ ok: true, hash });
 }));
 
+// ── Admin console (SaaS operator) ──────────────────────────
+// Reuse the existing `auth` middleware, then require an operator role.
+function adminAuth(req, res, next) {
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  try {
+    const u = jwt.verify(token, JWT_SECRET);
+    if (!['owner', 'admin'].includes(u.role)) return res.status(403).json({ error: 'forbidden' });
+    req.user = u;
+    next();
+  } catch {
+    res.status(401).json({ error: 'unauthorized' });
+  }
+}
+
+// Platform overview: tenant/user/project counts + today's activity.
+app.get('/api/admin/overview', apiLimiter, adminAuth, wrap(async (req, res) => {
+  const [ws, us, pr, proj7, ticks] = await Promise.all([
+    pool.query('SELECT COUNT(*)::int AS n FROM workspaces'),
+    pool.query('SELECT COUNT(*)::int AS n FROM users'),
+    pool.query('SELECT COUNT(*)::int AS n FROM projects'),
+    pool.query("SELECT COUNT(*)::int AS n FROM projects WHERE created_at > now() - interval '7 days'"),
+    pool.query("SELECT COUNT(*)::int AS n FROM support_tickets WHERE status IN ('open','in_progress')"),
+  ]);
+  res.json({
+    workspaces: ws.rows[0].n,
+    users: us.rows[0].n,
+    projects: pr.rows[0].n,
+    new_projects_7d: proj7.rows[0].n,
+    open_tickets: ticks.rows[0].n,
+  });
+}));
+
+// Tenant (workspace) directory.
+app.get('/api/admin/workspaces', apiLimiter, adminAuth, wrap(async (req, res) => {
+  const r = await pool.query(`
+    SELECT w.id, w.name, w.company, w.plan, w.created_at,
+           (SELECT COUNT(*) FROM users u WHERE u.workspace_id = w.id) AS users,
+           (SELECT COUNT(*) FROM projects p WHERE p.workspace_id = w.id) AS projects
+    FROM workspaces w ORDER BY w.created_at DESC LIMIT 200`);
+  res.json({ workspaces: r.rows });
+}));
+
+// User directory.
+app.get('/api/admin/users', apiLimiter, adminAuth, wrap(async (req, res) => {
+  const r = await pool.query(`
+    SELECT u.id, u.name, u.email, u.role, u.created_at, w.name AS workspace
+    FROM users u LEFT JOIN workspaces w ON w.id = u.workspace_id
+    ORDER BY u.created_at DESC LIMIT 200`);
+  res.json({ users: r.rows });
+}));
+
+// Support tickets — admin list.
+app.get('/api/admin/support/tickets', apiLimiter, adminAuth, wrap(async (req, res) => {
+  const r = await pool.query(`
+    SELECT id, name, email, subject, priority, status, created_at
+    FROM support_tickets ORDER BY created_at DESC LIMIT 200`);
+  res.json({ tickets: r.rows });
+}));
+
+// Support ticket — admin status update.
+app.patch('/api/admin/support/tickets/:id', apiLimiter, adminAuth, wrap(async (req, res) => {
+  const { status } = req.body;
+  if (!['open', 'in_progress', 'resolved', 'closed'].includes(status))
+    return res.status(400).json({ error: 'bad_status' });
+  const r = await pool.query(
+    "UPDATE support_tickets SET status=$2, updated_at=now() WHERE id=$1 RETURNING *",
+    [req.params.id, status]);
+  if (!r.rows[0]) return res.status(404).json({ error: 'not_found' });
+  res.json({ ticket: r.rows[0] });
+}));
+
+// ── Public support ticket submission ────────────────────────
+app.post('/api/support/tickets', authLimiter, wrap(async (req, res) => {
+  const { name, email, subject, message, priority } = req.body;
+  if (!name || !email || !subject || !message)
+    return res.status(400).json({ error: 'name, email, subject, message required' });
+  const safePriority = ['low', 'normal', 'high', 'urgent'].includes(priority) ? priority : 'normal';
+  // Best-effort link to the submitting user's workspace (if logged in).
+  let wsId = null;
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  try { const u = jwt.verify(token, JWT_SECRET); wsId = u.ws; } catch { /* anonymous OK */ }
+  const r = await pool.query(
+    `INSERT INTO support_tickets(name, email, subject, message, priority, workspace_id)
+     VALUES($1,$2,$3,$4,$5,$6) RETURNING id, status`,
+    [name, email, subject, message, safePriority, wsId]);
+  res.json({ id: r.rows[0].id, status: r.rows[0].status });
+}));
+
 // ── 404 + error handler ─────────────────────────────────────
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
 app.use((err, req, res, next) => {

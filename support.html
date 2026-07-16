@@ -3,111 +3,168 @@
 <head>
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Support — Cortexx</title>
+<title>Support — CortexBuild Pro</title>
+<meta name="theme-color" content="#0a0f1a"/>
+<meta name="description" content="CortexBuild Pro support — submit a ticket, browse the knowledge base, or email the team. Built for UK SMB builders."/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;500;600&display=swap" rel="stylesheet">
 <style>
-  :root { --bg:#06101e; --bg2:#0e1828; --t1:#e8eef7; --t2:#a8bdd5; --t3:#7a9cc0; --hair:rgba(255,255,255,0.07); --blue:#60a5fa; --green:#10b981; --purple:#8b5cf6; }
-  html,body{margin:0;padding:0;background:var(--bg);color:var(--t1);font-family:-apple-system,"SF Pro Text",system-ui,sans-serif;line-height:1.6;}
-  .wrap{max-width:760px;margin:0 auto;padding:64px 24px 96px;}
-  h1{font-size:38px;font-weight:800;letter-spacing:-0.8px;margin:0 0 8px;}
-  .sub{color:var(--t3);font-size:15px;margin:0 0 40px;}
-  h2{font-size:20px;font-weight:700;margin:40px 0 14px;letter-spacing:-0.3px;}
-  p,li{font-size:15px;color:var(--t2);}
-  strong{color:var(--t1);font-weight:600;}
-  a{color:var(--blue);}
-  .back{display:inline-block;margin-bottom:32px;color:var(--t3);font-size:13px;text-decoration:none;}
+  :root{
+    --bg0:#0a0f1a; --bg1:#0e1626; --bg2:#13203a;
+    --amber:#ffb000; --blue:#2f6bff; --blue-l:#6aa0ff; --green:#10b981;
+    --t1:#eef3fb; --t2:#a9bcd6; --t3:#6f87a8; --hair:rgba(255,255,255,0.08);
+  }
+  *{box-sizing:border-box;}
+  html,body{margin:0;padding:0;background:var(--bg0);color:var(--t1);
+    font-family:"DM Sans",system-ui,sans-serif;line-height:1.6;-webkit-font-smoothing:antialiased;}
+  h1,h2,h3,.brand{font-family:"Space Grotesk",system-ui,sans-serif;}
+  a{color:var(--blue-l);text-decoration:none;}
+  .wrap{max-width:820px;margin:0 auto;padding:56px 24px 96px;}
+  .brand{display:flex;align-items:center;gap:10px;font-weight:700;font-size:16px;margin-bottom:30px;}
+  .brand .mk{width:26px;height:26px;border-radius:7px;background:linear-gradient(135deg,var(--amber),#ff8a00);
+    display:flex;align-items:center;justify-content:center;}
+  .brand .mk svg{width:15px;height:15px;}
+  .back{display:inline-block;margin-bottom:26px;color:var(--t3);font-size:13px;}
   .back:hover{color:var(--t1);}
-
-  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:20px 0 30px;}
+  h1{font-size:40px;font-weight:700;letter-spacing:-0.8px;margin:0 0 6px;}
+  .sub{color:var(--t3);font-size:15px;margin:0 0 34px;}
+  .cards{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin:0 0 36px;}
   @media(max-width:640px){.cards{grid-template-columns:1fr;}}
-  .card{background:var(--bg2);border:0.5px solid var(--hair);border-radius:14px;padding:20px 22px;text-decoration:none;color:var(--t1);display:block;}
-  .card:hover{border-color:rgba(96,165,250,0.4);}
-  .card .ico{font-size:24px;margin-bottom:10px;}
+  .card{background:var(--bg1);border:0.5px solid var(--hair);border-radius:14px;padding:20px 22px;color:var(--t1);display:block;transition:.15s;}
+  .card:hover{border-color:rgba(255,176,0,0.4);transform:translateY(-2px);}
+  .card .ico{font-size:22px;margin-bottom:10px;}
   .card .t{font-size:16px;font-weight:700;margin-bottom:4px;}
   .card .s{font-size:13px;color:var(--t3);}
 
-  details{background:var(--bg2);border:0.5px solid var(--hair);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
-  details[open]{border-color:rgba(96,165,250,0.3);}
+  .ticket{background:var(--bg1);border:0.5px solid var(--hair);border-radius:16px;padding:26px;margin:0 0 40px;}
+  .ticket h2{font-size:20px;margin:0 0 4px;}
+  .ticket p.h{color:var(--t3);font-size:13px;margin:0 0 18px;}
+  label{display:block;font-size:12px;font-weight:600;color:var(--t2);margin:14px 0 6px;text-transform:uppercase;letter-spacing:0.5px;}
+  input,textarea,select{width:100%;background:var(--bg2);border:0.5px solid var(--hair);border-radius:10px;
+    padding:11px 13px;color:var(--t1);font-size:14px;font-family:inherit;}
+  input:focus,textarea:focus,select:focus{outline:none;border-color:var(--amber);}
+  .row2{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+  .btn{display:inline-flex;align-items:center;justify-content:center;cursor:pointer;border:none;border-radius:10px;
+    padding:11px 20px;font-size:14px;font-weight:600;font-family:inherit;background:linear-gradient(135deg,var(--amber),#ff8a00);
+    color:#0a0f1a;box-shadow:0 6px 18px rgba(255,176,0,0.3);transition:.15s;}
+  .btn:hover{filter:brightness(1.05);}
+  .btn-block{width:100%;margin-top:18px;}
+  .formmsg{font-size:13px;margin-top:14px;min-height:18px;}
+  .formmsg.ok{color:var(--green);}
+  .formmsg.err{color:#ff9a9a;}
+
+  h2.sec{font-size:20px;margin:40px 0 14px;letter-spacing:-0.3px;}
+  details{background:var(--bg1);border:0.5px solid var(--hair);border-radius:10px;padding:12px 16px;margin-bottom:8px;}
+  details[open]{border-color:rgba(255,176,0,0.3);}
   summary{cursor:pointer;font-size:15px;font-weight:600;color:var(--t1);outline:none;}
-  details p{margin:10px 0 4px;}
+  details p{margin:10px 0 4px;color:var(--t2);font-size:14px;}
+  p,li{font-size:15px;color:var(--t2);}
+  strong{color:var(--t1);font-weight:600;}
+  a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{
+    outline:2px solid var(--amber);outline-offset:2px;border-radius:6px;}
+  @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;}}
 </style>
 </head>
 <body>
 <div class="wrap">
-  <a href="landing.html" class="back">← Back to Cortexx</a>
+  <a href="landing.html" class="back">← Back to CortexBuild Pro</a>
+  <div class="brand">
+    <span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="#0a0f1a" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#0a0f1a"/></svg></span>
+    CortexBuild <span style="color:var(--amber)">Pro</span>
+  </div>
   <h1>Support</h1>
-  <p class="sub">Most things are quick. We aim to reply within one business day.</p>
+  <p class="sub">We aim to reply within one business day. Search the knowledge base or raise a ticket below.</p>
 
   <div class="cards">
     <a class="card" href="mailto:support@cortexbuild.app">
-      <div class="ico">📧</div>
-      <div class="t">Email us</div>
-      <div class="s">support@cortexbuild.app</div>
+      <div class="ico">📧</div><div class="t">Email us</div><div class="s">support@cortexbuild.app</div>
     </a>
-    <a class="card" href="Cortexx.html">
-      <div class="ico">🚀</div>
-      <div class="t">Open the app</div>
-      <div class="s">cortexbuildpro.com → Demo</div>
+    <a class="card" href="admin.html">
+      <div class="ico">🛠️</div><div class="t">Admin console</div><div class="s">Platform operators</div>
     </a>
   </div>
 
-  <h2>Common questions</h2>
+  <div class="ticket">
+    <h2>Raise a ticket</h2>
+    <p class="h">We'll log it and a human replies by email. No account needed.</p>
+    <form id="ticketForm">
+      <div class="row2">
+        <div><label>Your name</label><input type="text" id="t_name" required placeholder="Jane Builder"/></div>
+        <div><label>Email</label><input type="email" id="t_email" required placeholder="you@company.com"/></div>
+      </div>
+      <label>Subject</label><input type="text" id="t_subject" required placeholder="Cant sync invoices to Xero"/>
+      <label>Priority</label>
+      <select id="t_priority">
+        <option value="low">Low</option>
+        <option value="normal" selected>Normal</option>
+        <option value="high">High</option>
+        <option value="urgent">Urgent</option>
+      </select>
+      <label>Message</label><textarea id="t_message" rows="5" required placeholder="Describe what happened and what you expected…"></textarea>
+      <button class="btn btn-block" type="submit">Submit ticket</button>
+      <div class="formmsg" id="formMsg"></div>
+    </form>
+  </div>
 
-  <details>
-    <summary>Where's my data stored?</summary>
-    <p>On your device. Cortexx is local-first — projects, photos, invoices and notes live in your phone or tablet. We have no copy unless you switch on multi-device sync (Pro tier). Back up regularly via <strong>Settings → Database → Export</strong>.</p>
+  <h2 class="sec">Knowledge base</h2>
+  <details><summary>Where's my data stored?</summary>
+    <p>On your device. CortexBuild Pro is local-first — projects, photos, invoices and notes live in your phone or tablet. We have no copy unless you switch on multi-device sync (Pro tier). Back up regularly via <strong>Settings → Database → Export</strong>.</p>
+  </details>
+  <details><summary>How do I install on my iPhone without the App Store?</summary>
+    <p>Open <a href="https://cortexbuildpro.com">cortexbuildpro.com</a> in Safari. Tap Share → <strong>Add to Home Screen</strong>. CortexBuild installs as a full-screen, offline-capable app.</p>
+  </details>
+  <details><summary>Cortex AI gave me a wrong number. What now?</summary>
+    <p>Always cross-check AI output against the real facts — quotes against supplier prices, CIS deductions against HMRC, RAMS against the site survey. Cortex AI is a fast first draft, not a qualified estimator. Email <a href="mailto:support@cortexbuild.app">support@cortexbuild.app</a> with what you asked and what it said.</p>
+  </details>
+  <details><summary>I lost my data after reinstalling.</summary>
+    <p>If multi-device sync was off, we can't recover it — local-device data is under your control. Always run <strong>Settings → Database → Export</strong> before uninstalling.</p>
+  </details>
+  <details><summary>Does CortexBuild work with Xero / QuickBooks / Sage?</summary>
+    <p>The Pro tier exports CSV ledgers compatible with all three. A direct API connector is on the roadmap — email us to join the beta.</p>
+  </details>
+  <details><summary>How do I cancel my Pro subscription?</summary>
+    <p>In the app: <strong>Settings → Billing → Cancel subscription</strong>. You keep Pro features until the end of the billing period.</p>
+  </details>
+  <details><summary>Is CortexBuild CIS-compliant?</summary>
+    <p>CortexBuild calculates CIS deductions for the standard 20% and higher 30% rates and generates a CIS300 monthly return. It's not a replacement for an accountant — have a qualified accountant sign off before filing.</p>
+  </details>
+  <details><summary>Is CortexBuild GDPR compliant?</summary>
+    <p>Yes. See our <a href="privacy.html">Privacy Policy</a> for legal basis, retention, your rights, and how to exercise them.</p>
+  </details>
+  <details><summary>I want a feature.</summary>
+    <p>Tell us — the small builders who shaped CortexBuild in beta still drive the roadmap. <a href="mailto:hello@cortexbuild.app">hello@cortexbuild.app</a>.</p>
   </details>
 
-  <details>
-    <summary>How do I install Cortexx on my iPhone without the App Store?</summary>
-    <p>Open <a href="https://cortexbuildpro.com">cortexbuildpro.com</a> in Safari on your iPhone. Tap the share button (the square with an up arrow), scroll down, tap <strong>Add to Home Screen</strong>. Cortexx installs as a real-feeling app — full-screen, offline, with its own icon.</p>
-  </details>
-
-  <details>
-    <summary>Cortex AI gave me a wrong number. What now?</summary>
-    <p>Always cross-check AI output against the real facts — quotes against your supplier prices, CIS deductions against HMRC's site, RAMS content against the site survey. Cortex AI is a fast first draft, not a qualified estimator or H&S specialist.</p>
-    <p>If you spot a consistent bug, email <a href="mailto:support@cortexbuild.app">support@cortexbuild.app</a> with what you asked and what Cortex said. We'll feed it back into our prompt tuning.</p>
-  </details>
-
-  <details>
-    <summary>I lost my data after reinstalling the app.</summary>
-    <p>If you didn't have multi-device sync turned on, we can't recover it — local-device data is exclusively under your control. Always run <strong>Settings → Database → Export</strong> before uninstalling, and re-import on the new install via <strong>Settings → Database → Import</strong>.</p>
-  </details>
-
-  <details>
-    <summary>Does Cortexx work with Xero / QuickBooks / Sage?</summary>
-    <p>The Pro tier exports CSV ledgers compatible with all three. A direct API connector is on the roadmap — email us if you want to be in the beta.</p>
-  </details>
-
-  <details>
-    <summary>How do I cancel my Pro subscription?</summary>
-    <p>In the app: <strong>Settings → Billing → Cancel subscription</strong>. You keep Pro features until the end of the current billing period.</p>
-  </details>
-
-  <details>
-    <summary>Is Cortexx CIS-compliant?</summary>
-    <p>Cortexx calculates CIS deductions correctly for the standard 20% and higher 30% rates, and lets you generate a CIS300 monthly return. It's not a replacement for an accountant — we strongly recommend a qualified accountant signs off your CIS return before filing.</p>
-  </details>
-
-  <details>
-    <summary>Is Cortexx GDPR compliant?</summary>
-    <p>Yes. See our <a href="privacy.html">Privacy Policy</a> for the detail: legal basis, retention periods, your rights, and how to exercise them.</p>
-  </details>
-
-  <details>
-    <summary>How do I get help with a specific UK construction scenario (RAMS, CSCS, planning, etc.)?</summary>
-    <p>Email <a href="mailto:support@cortexbuild.app">support@cortexbuild.app</a> with the scenario. We'll either answer or point you at the right HSE / HMRC / planning portal page. We don't give legal advice but we know the construction stack.</p>
-  </details>
-
-  <details>
-    <summary>I want a feature.</summary>
-    <p>Tell us. We read every request, and the small builders who shaped Cortexx in beta still drive the roadmap. <a href="mailto:hello@cortexbuild.app">hello@cortexbuild.app</a>.</p>
-  </details>
-
-  <h2>Status</h2>
-  <p>Live status of Cortex AI, sync, and any incidents: <a href="https://status.cortexbuild.app">status.cortexbuild.app</a> (coming soon — for now check the app's <strong>Settings → Infrastructure</strong> screen, which pings our health endpoints in real time).</p>
-
-  <h2>Security disclosures</h2>
-  <p>If you've found a security issue, please tell us privately first: <a href="mailto:security@cortexbuild.app">security@cortexbuild.app</a>. We have a responsible-disclosure policy and credit reporters in our changelog. See <a href="/.well-known/security.txt">/.well-known/security.txt</a>.</p>
+  <h2 class="sec">Security disclosures</h2>
+  <p>If you've found a security issue, tell us privately first: <a href="mailto:security@cortexbuild.app">security@cortexbuild.app</a>. We run a responsible-disclosure policy and credit reporters. See <a href="/.well-known/security.txt">/.well-known/security.txt</a>.</p>
 </div>
+
+<script>
+document.getElementById('ticketForm').addEventListener('submit', async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById('formMsg');
+  msg.className='formmsg'; msg.textContent='Submitting…';
+  const body = {
+    name: document.getElementById('t_name').value,
+    email: document.getElementById('t_email').value,
+    subject: document.getElementById('t_subject').value,
+    message: document.getElementById('t_message').value,
+    priority: document.getElementById('t_priority').value
+  };
+  try{
+    const r = await fetch('/api/support/tickets', {method:'POST',
+      headers:{'content-type':'application/json'}, body:JSON.stringify(body)});
+    if(!r.ok){ const e=await r.json().catch(()=>({})); throw new Error(e.error||'failed'); }
+    const d = await r.json();
+    msg.className='formmsg ok';
+    msg.textContent='Ticket #'+d.id.slice(0,8)+' created ('+d.status+'). We\'ll reply by email.';
+    e.target.reset();
+  }catch(err){
+    msg.className='formmsg err';
+    msg.textContent='Could not submit: '+err.message+'. Try emailing support@cortexbuild.app directly.';
+  }
+});
+</script>
 </body>
 </html>

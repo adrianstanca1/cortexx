@@ -116,14 +116,16 @@ services:
       - ./Caddyfile:/etc/caddy/Caddyfile:ro
       # Landing/marketing page (served at / via Caddy try_files).
       - ./landing.html:/srv/app/landing.html:ro
-      # Mount ONLY the assets Caddy serves — never the repo root, which would
+      - ./admin.html:/srv/app/admin.html:ro
+      - ./support.html:/srv/app/support.html:ro
       # expose .env, .env.vault, .git/, server/* and *.ts over HTTP. The Caddyfile
       # also denies these paths, but this mount is the primary boundary.
       - ./dist:/srv/app/dist:ro
       - ./lib:/srv/app/lib:ro
       - ./public:/srv/app/public:ro
       - ./Cortexx.html:/srv/app/Cortexx.html:ro
-      - ./Cortexx Marketing.html:/srv/app/Cortexx Marketing.html:ro
+      - ./admin.html:/srv/app/admin.html:ro
+      - ./support.html:/srv/app/support.html:ro
       - ./Cortexx Mobile Dashboard.html:/srv/app/Cortexx Mobile Dashboard.html:ro
       - ./Cortexx-standalone.html:/srv/app/Cortexx-standalone.html:ro
       - ./portal.html:/srv/app/portal.html:ro
