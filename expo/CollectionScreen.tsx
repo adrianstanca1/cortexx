@@ -8,13 +8,14 @@ import { getCollection, postCollection, clearToken } from './api';
 
 // field config: { key, label, type?: 'text'|'number'|'textarea', required? }
 export default function CollectionScreen({
-  name, title, fields, rowTitle, rowSub, onLogout,
+  name, title, fields, rowTitle, rowSub, onLogout, readOnly,
 }: {
   name: string; title: string;
   fields: { key: string; label: string; type?: 'text' | 'number'; required?: boolean }[];
   rowTitle: (item: any) => string;
   rowSub?: (item: any) => string | null;
   onLogout: () => void;
+  readOnly?: boolean;
 }) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -55,7 +56,7 @@ export default function CollectionScreen({
     <View style={styles.wrap}>
       <View style={styles.header}>
         <Text style={styles.h1}>{title}</Text>
-        <TouchableOpacity onPress={openAdd}><Text style={styles.addBtn}>+ New</Text></TouchableOpacity>
+        {!readOnly ? <TouchableOpacity onPress={openAdd}><Text style={styles.addBtn}>+ New</Text></TouchableOpacity> : null}
       </View>
       {err ? <Text style={styles.err}>{err}</Text> : null}
       <FlatList

@@ -30,7 +30,7 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
           <ProjectsScreen onLogout={onLogout} onSelect={setSelectedProject} />
         ) : tab === 'invoices' ? (
           <CollectionScreen
-            name="invoices" title="Invoices"
+            name="invoices" title="Invoices" readOnly
             fields={[
               { key: 'invoiceNo', label: 'Invoice No', required: true },
               { key: 'client', label: 'Client' },
@@ -57,7 +57,7 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
           />
         ) : tab === 'quotes' ? (
           <CollectionScreen
-            name="quotes" title="Quotes"
+            name="quotes" title="Quotes" readOnly
             fields={[
               { key: 'ref', label: 'Quote ref', required: true },
               { key: 'client', label: 'Client' },
