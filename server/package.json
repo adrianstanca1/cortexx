@@ -8,7 +8,7 @@
     "dev": "node --watch index.js",
     "migrate": "psql $DATABASE_URL -f db/schema.sql",
     "seed": "psql $DATABASE_URL -f db/seed.sql",
-    "test": "node --test ../test"
+    "test": "node --test ../test/*.test.js"
   },
   "dependencies": {
     "bcryptjs": "^2.4.3",
