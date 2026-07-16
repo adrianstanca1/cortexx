@@ -108,13 +108,36 @@ function LoginSheet({
 }) {
   const [step, setStep] = React.useState('start');
   const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [working, setWorking] = React.useState(false);
   const signIn = async () => {
     setWorking(true);
-    await new Promise(r => setTimeout(r, 800));
-    setWorking(false);
-    toast('Signed in', 'success');
-    onClose();
+    try {
+      const ok = await window.cortexxCloud.loginPassword(email.trim(), password);
+      if (ok) {
+        onClose();
+        return;
+      }
+    } catch (e) {
+      if (window.cortexxToast) window.cortexxToast('Sign-in failed — check your connection', 'error');
+    } finally {
+      setWorking(false);
+    }
+  };
+  const signUp = async () => {
+    setWorking(true);
+    try {
+      const name = email.split('@')[0].replace(/[._]/g, ' ');
+      const ok = await window.cortexxCloud.register(email.trim(), password, name, name);
+      if (ok) {
+        onClose();
+        return;
+      }
+    } catch (e) {
+      if (window.cortexxToast) window.cortexxToast('Sign-up failed — check your connection', 'error');
+    } finally {
+      setWorking(false);
+    }
   };
   return React.createElement(Sheet, {
     onClose: onClose,
@@ -247,6 +270,8 @@ function LoginSheet({
       outline: 'none'
     }
   }), React.createElement("input", {
+    value: password,
+    onChange: e => setPassword(e.target.value),
     type: "password",
     placeholder: "Password",
     style: {
@@ -335,12 +360,28 @@ function LoginSheet({
       fontSize: 16,
       outline: 'none'
     }
+  }), React.createElement("input", {
+    value: password,
+    onChange: e => setPassword(e.target.value),
+    type: "password",
+    placeholder: "Choose a password",
+    style: {
+      marginTop: 8,
+      background: T.bg2,
+      border: `0.5px solid ${T.hairMid}`,
+      borderRadius: 12,
+      padding: '14px 16px',
+      color: T.t1,
+      fontFamily: SF,
+      fontSize: 16,
+      outline: 'none'
+    }
   }), React.createElement("button", {
-    onClick: signIn,
-    disabled: !email.trim() || working,
+    onClick: signUp,
+    disabled: !email.trim() || !password || working,
     style: {
       marginTop: 16,
-      background: email.trim() ? accent : T.bg3,
+      background: email.trim() && password ? accent : T.bg3,
       color: '#fff',
       border: 'none',
       borderRadius: 14,
@@ -348,7 +389,7 @@ function LoginSheet({
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 700,
-      cursor: email.trim() && !working ? 'pointer' : 'default',
+      cursor: email.trim() && password && !working ? 'pointer' : 'default',
       opacity: working ? 0.5 : 1
     }
   }, working ? 'Setting up your workspace…' : 'Create my workspace'), React.createElement("button", {

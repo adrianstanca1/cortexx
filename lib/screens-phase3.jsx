@@ -57,14 +57,33 @@
 function LoginSheet({ onClose, accent }) {
   const [step, setStep] = React.useState('start');
   const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [working, setWorking] = React.useState(false);
 
   const signIn = async () => {
     setWorking(true);
-    await new Promise(r => setTimeout(r, 800));
-    setWorking(false);
-    toast('Signed in', 'success');
-    onClose();
+    try {
+      const ok = await window.cortexxCloud.loginPassword(email.trim(), password);
+      if (ok) { onClose(); return; }
+      // loginPassword toasts its own failure; fall through to re-enable button
+    } catch (e) {
+      if (window.cortexxToast) window.cortexxToast('Sign-in failed — check your connection', 'error');
+    } finally {
+      setWorking(false);
+    }
+  };
+
+  const signUp = async () => {
+    setWorking(true);
+    try {
+      const name = email.split('@')[0].replace(/[._]/g, ' ');
+      const ok = await window.cortexxCloud.register(email.trim(), password, name, name);
+      if (ok) { onClose(); return; }
+    } catch (e) {
+      if (window.cortexxToast) window.cortexxToast('Sign-up failed — check your connection', 'error');
+    } finally {
+      setWorking(false);
+    }
   };
 
   return (
@@ -113,7 +132,7 @@ function LoginSheet({ onClose, accent }) {
 
               <input value={email} onChange={e => setEmail(e.target.value)} type="email" autoFocus placeholder="you@cortexbuild.app"
                 style={{ marginTop: 24, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none' }}/>
-              <input type="password" placeholder="Password"
+              <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password"
                 style={{ marginTop: 8, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none' }}/>
 
               <button onClick={signIn} disabled={working} style={{
@@ -134,10 +153,12 @@ function LoginSheet({ onClose, accent }) {
               <div style={{ fontFamily: SF, fontSize: 13, color: T.t2, marginTop: 6 }}>We'll set you up. No credit card, no trial limit.</div>
               <input value={email} onChange={e => setEmail(e.target.value)} type="email" autoFocus placeholder="you@yourcompany.co.uk"
                 style={{ marginTop: 24, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none' }}/>
-              <button onClick={signIn} disabled={!email.trim() || working} style={{
-                marginTop: 16, background: email.trim() ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 14,
+              <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Choose a password"
+                style={{ marginTop: 8, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none' }}/>
+              <button onClick={signUp} disabled={!email.trim() || !password || working} style={{
+                marginTop: 16, background: (email.trim() && password) ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 14,
                 padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700,
-                cursor: email.trim() && !working ? 'pointer' : 'default', opacity: working ? 0.5 : 1,
+                cursor: (email.trim() && password && !working) ? 'pointer' : 'default', opacity: working ? 0.5 : 1,
               }}>{working ? 'Setting up your workspace…' : 'Create my workspace'}</button>
               <button onClick={() => setStep('start')} style={{ background: 'none', border: 'none', color: T.t3, cursor: 'pointer', padding: '12px 0', fontFamily: SF, fontSize: 12, marginTop: 8 }}>Back</button>
             </>

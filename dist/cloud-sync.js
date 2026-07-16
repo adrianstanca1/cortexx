@@ -14,7 +14,11 @@
     queue: 'cortexx_sync_queue',
     lastPull: 'cortexx_last_pull',
   };
-  let API = localStorage.getItem(LS.api) || '';
+  // Default the API base to the current origin so the app works out-of-the-box
+  // on its deployed domain (e.g. https://cortexbuildpro.com). An explicit URL
+  // set in Settings still wins and is persisted.
+  let API = localStorage.getItem(LS.api)
+    || (typeof window !== 'undefined' && window.location ? window.location.origin : '');
   let TOKEN = localStorage.getItem(LS.token) || '';
   let online = navigator.onLine;
   let es = null;                 // EventSource
@@ -110,6 +114,12 @@
     async health() { const h = await api('GET', '/api/health', null, false); return !!(h && h.status === 'ok'); },
 
     // ── Auth ────────────────────────────────────────────────
+    async register(email, password, name, company) {
+      const r = await api('POST', '/api/auth/register', { email, password, name, company }, false);
+      if (r && r.token) { return this._authed(r); }
+      toast(r && r.error ? ('Sign-up failed — ' + r.error) : 'Sign-up failed — try again', 'error');
+      return false;
+    },
     async loginPassword(email, password) {
       const r = await api('POST', '/api/auth/login', { email, password }, false);
       if (r && r.token) { return this._authed(r); }
