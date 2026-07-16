@@ -15,13 +15,29 @@ const crypto = require('crypto');
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
-// CORS: permissive by default (the API auth is Bearer-token, not cookie, so
-// wildcard origins can't ride a session; the Capacitor app also calls cross-origin).
-// Set CORS_ORIGINS=comma,separated,origins to lock it down to a known allowlist.
+// CORS: fail CLOSED. The API handles PII + financial data, so a wildcard '*'
+// origin is unsafe even with Bearer auth (any leaked/token-replayed request from a
+// victim's browser can be driven by a third-party site). Therefore:
+//   - production: CORS_ORIGINS MUST be set, else we refuse to boot (mirrors the
+//     JWT_SECRET prod guard below).
+//   - development: default to a localhost allowlist instead of '*'.
 const CORS_ORIGINS = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim()).filter(Boolean);
-app.use(cors(CORS_ORIGINS.length
-  ? { origin: (origin, cb) => cb(null, !origin || CORS_ORIGINS.includes(origin)) }
-  : undefined));
+const DEV_DEFAULT_ORIGINS = ['http://localhost:8080', 'http://localhost:3000', 'http://127.0.0.1:8080'];
+const effectiveOrigins = CORS_ORIGINS.length ? CORS_ORIGINS : DEV_DEFAULT_ORIGINS;
+if (!CORS_ORIGINS.length && process.env.NODE_ENV === 'production') {
+  console.error('[fatal] CORS_ORIGINS is not set. Refusing to start in production with a wildcard CORS policy.');
+  process.exit(1);
+}
+const corsOptions = {
+  origin: (origin, cb) => {
+    // Same-origin / non-browser requests (no Origin header) are allowed.
+    if (!origin) return cb(null, true);
+    if (effectiveOrigins.includes(origin)) return cb(null, true);
+    return cb(new Error('CORS: origin not allowed — ' + origin), false);
+  },
+  optionsSuccessStatus: 204,
+};
+app.use(cors(corsOptions));
 // Stripe webhook needs the RAW body for signature verification, so it must be
 // parsed as a Buffer BEFORE the global JSON parser touches it.
 app.use('/api/iap/webhook', express.raw({ type: '*/*', limit: '1mb' }));
