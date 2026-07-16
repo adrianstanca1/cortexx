@@ -223,6 +223,25 @@ app.get('/api/stream', apiLimiter, wrap(async (req, res) => {
 // ── Health (public; MUST be before /api/:collection or auth shadows it) ─────
 app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: Date.now(), streams: [...channels.values()].reduce((n, s) => n + s.size, 0) }));
 
+// ── Public support ticket submission (registered BEFORE the /api router
+//    mounts below, otherwise the auth-gated `sync` router shadows this path
+//    and forces a 401 on anonymous submissions) ─────────────────────────────
+app.post('/api/support/tickets', authLimiter, wrap(async (req, res) => {
+  const { name, email, subject, message, priority } = req.body;
+  if (!name || !email || !subject || !message)
+    return res.status(400).json({ error: 'name, email, subject, message required' });
+  const safePriority = ['low', 'normal', 'high', 'urgent'].includes(priority) ? priority : 'normal';
+  // Best-effort link to the submitting user's workspace (if logged in).
+  let wsId = null;
+  const token = (req.headers.authorization || '').replace('Bearer ', '');
+  try { const u = jwt.verify(token, JWT_SECRET); wsId = u.ws; } catch { /* anonymous OK */ }
+  const r = await pool.query(
+    `INSERT INTO support_tickets(name, email, subject, message, priority, workspace_id)
+     VALUES($1,$2,$3,$4,$5,$6) RETURNING id, status`,
+    [name, email, subject, message, safePriority, wsId]);
+  res.json({ id: r.rows[0].id, status: r.rows[0].status });
+}));
+
 // ── Mounted route modules (MUST be before the generic /api/:collection
 //    handlers below, or Express would shadow these specific paths) ──────────
 app.use('/api/portal', portalLimiter, require('./routes/portal')(pool, bus));   // PUBLIC, token-scoped
@@ -461,23 +480,6 @@ app.patch('/api/admin/support/tickets/:id', apiLimiter, adminAuth, wrap(async (r
     [req.params.id, status]);
   if (!r.rows[0]) return res.status(404).json({ error: 'not_found' });
   res.json({ ticket: r.rows[0] });
-}));
-
-// ── Public support ticket submission ────────────────────────
-app.post('/api/support/tickets', authLimiter, wrap(async (req, res) => {
-  const { name, email, subject, message, priority } = req.body;
-  if (!name || !email || !subject || !message)
-    return res.status(400).json({ error: 'name, email, subject, message required' });
-  const safePriority = ['low', 'normal', 'high', 'urgent'].includes(priority) ? priority : 'normal';
-  // Best-effort link to the submitting user's workspace (if logged in).
-  let wsId = null;
-  const token = (req.headers.authorization || '').replace('Bearer ', '');
-  try { const u = jwt.verify(token, JWT_SECRET); wsId = u.ws; } catch { /* anonymous OK */ }
-  const r = await pool.query(
-    `INSERT INTO support_tickets(name, email, subject, message, priority, workspace_id)
-     VALUES($1,$2,$3,$4,$5,$6) RETURNING id, status`,
-    [name, email, subject, message, safePriority, wsId]);
-  res.json({ id: r.rows[0].id, status: r.rows[0].status });
 }));
 
 // ── 404 + error handler ─────────────────────────────────────
