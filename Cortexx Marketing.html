@@ -4,44 +4,60 @@
 <meta charset="utf-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
 <title>CortexBuild Pro — The construction OS that thinks with you</title>
+<meta name="description" content="CortexBuild Pro is the construction OS for UK SMB contractors — AI estimating, CIS/HMRC compliance, RAMS & CSCS tracking, and live site capture. Built for builders, not bureaucrats."/>
+<meta name="theme-color" content="#0a0f1a"/>
+<meta property="og:title" content="CortexBuild Pro — The construction OS for UK builders"/>
+<meta property="og:description" content="AI estimating, CIS/HMRC compliance, RAMS & CSCS, live site capture — one OS for UK SMB contractors."/>
+<meta property="og:type" content="website"/>
+<meta property="og:url" content="https://cortexbuildpro.com/"/>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'><polygon points='13 2 3 14 12 14 11 22 21 10 12 10 13 2' fill='%23ffb000'/></svg>"/>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=DM+Sans:opsz,wght@9..40,400;500;600&display=swap" rel="stylesheet">
 <style>
   :root {
-    --bg0: #06101e;
-    --bg1: #0c1a2e;
-    --bg2: #152641;
-    --bg3: #1a2f4e;
-    --blue: #2563eb;
-    --blue-l: #60a5fa;
-    --green: #10b981;
-    --amber: #f59e0b;
-    --red: #ef4444;
-    --purple: #8b5cf6;
-    --cyan: #06b6d4;
-    --t1: #eef3fa;
-    --t2: #8ea8c5;
-    --t3: #52749a;
-    --hair: rgba(255,255,255,0.07);
-    --hair-mid: rgba(255,255,255,0.13);
+    /* ── CortexBuild Pro design system v2 ──
+       Surface: Decide/Learn (landing). Construction-confidence identity:
+       blueprint ink-navy base + hi-vis safety AMBER as the single confident
+       accent (reads "we know construction"), electric-blue secondary. */
+    --bg0: #0a0f1a;          /* deepest ink (page) */
+    --bg1: #0f1626;          /* panel */
+    --bg2: #161f33;          /* raised card */
+    --bg3: #1d2942;          /* hover card */
+    --amber: #ffb000;        /* hi-vis safety accent (primary) */
+    --amber-d: #e09a00;      /* amber press */
+    --blue: #2f6bff;         /* electric-blue secondary */
+    --blue-l: #6f9bff;
+    --green: #2dd4a7;        /* positive / live */
+    --red: #ff5d5d;          /* danger */
+    --t1: #f4f7fb;           /* primary ink-on-dark text */
+    --t2: #9fb0c8;           /* muted */
+    --t3: #5e7290;           /* faint */
+    --hair: rgba(255,255,255,0.08);
+    --hair-mid: rgba(255,255,255,0.14);
   }
   * { box-sizing: border-box; }
   html, body { margin: 0; padding: 0; }
   body {
     background: var(--bg0);
     color: var(--t1);
-    font-family: -apple-system, "SF Pro Text", "SF Pro Display", system-ui, sans-serif;
+    font-family: "DM Sans", -apple-system, system-ui, sans-serif;
     -webkit-font-smoothing: antialiased;
     overflow-x: hidden;
+    font-feature-settings: "ss01";
   }
-  .mono { font-family: "SF Mono", "JetBrains Mono", ui-monospace, monospace; }
+  h1, h2, h3, .logo, .mono { font-family: "Space Grotesk", "DM Sans", system-ui, sans-serif; }
+  .mono { font-family: "JetBrains Mono", ui-monospace, monospace; }
 
-  /* radial bg accent */
+  /* Blueprint grid backdrop — subtle construction identity, not a glow */
   body::before {
     content: "";
     position: fixed; inset: 0; z-index: -1; pointer-events: none;
     background:
-      radial-gradient(ellipse 80% 60% at 20% 0%, rgba(37,99,235,0.18), transparent 60%),
-      radial-gradient(ellipse 60% 50% at 80% 30%, rgba(139,92,246,0.14), transparent 60%),
-      radial-gradient(ellipse 100% 80% at 50% 100%, rgba(16,185,129,0.06), transparent 60%);
+      linear-gradient(rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 48px 48px,
+      linear-gradient(90deg, rgba(255,255,255,0.025) 1px, transparent 1px) 0 0 / 48px 48px,
+      radial-gradient(ellipse 70% 50% at 15% -5%, rgba(47,107,255,0.10), transparent 55%),
+      radial-gradient(ellipse 60% 50% at 95% 0%, rgba(255,176,0,0.06), transparent 55%);
   }
 
   /* nav */
@@ -61,9 +77,9 @@
   }
   .logo-mark {
     width: 32px; height: 32px; border-radius: 8px;
-    background: linear-gradient(135deg, var(--blue), var(--purple));
+    background: linear-gradient(135deg, var(--amber), #ff8a00);
     display: flex; align-items: center; justify-content: center;
-    box-shadow: 0 6px 16px rgba(37,99,235,0.4);
+    box-shadow: 0 6px 16px rgba(255,176,0,0.35);
   }
   .nav-links { display: flex; gap: 28px; }
   .nav-links a {
@@ -79,7 +95,7 @@
   }
   .btn:hover { transform: translateY(-1px); }
   .btn-ghost { color: var(--t1); background: transparent; border: 0.5px solid var(--hair-mid); }
-  .btn-primary { color: #fff; background: linear-gradient(135deg, var(--blue), #1d4ed8); box-shadow: 0 6px 18px rgba(37,99,235,0.4); }
+  .btn-primary { color: #0a0f1a; background: linear-gradient(135deg, var(--amber), #ff8a00); box-shadow: 0 6px 18px rgba(255,176,0,0.35); }
   .btn-lg { padding: 14px 22px; font-size: 15px; border-radius: 12px; }
 
   /* sections */
@@ -93,16 +109,16 @@
   }
   .hero-eyebrow {
     display: inline-flex; align-items: center; gap: 8px;
-    background: rgba(139,92,246,0.15); color: var(--purple);
-    border: 0.5px solid rgba(139,92,246,0.4);
+    background: rgba(255,176,0,0.12); color: var(--amber);
+    border: 0.5px solid rgba(255,176,0,0.4);
     padding: 6px 12px; border-radius: 14px;
     font-size: 12px; font-weight: 600; letter-spacing: 0.4px; text-transform: uppercase;
   }
+  .hero h1 .accent { background: linear-gradient(135deg, var(--amber), #ff8a00); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .hero h1 {
     font-size: 64px; font-weight: 700; line-height: 1.05; letter-spacing: -2px;
     margin-top: 18px;
   }
-  .hero h1 .accent { background: linear-gradient(135deg, var(--blue-l), var(--purple)); -webkit-background-clip: text; background-clip: text; color: transparent; }
   .hero p.lede {
     font-size: 19px; color: var(--t2); line-height: 1.5; margin-top: 24px; max-width: 540px;
   }
@@ -132,7 +148,7 @@
   }
   .phone-status-icons { display: flex; gap: 6px; font-size: 11px; }
   .phone-content { flex: 1; overflow: hidden; padding: 0 16px; }
-  .ph-eyebrow { font-size: 11px; color: var(--purple); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
+  .ph-eyebrow { font-size: 11px; color: var(--amber); font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 6px; }
   .ph-title { font-size: 20px; font-weight: 700; letter-spacing: -0.5px; line-height: 1.15; }
   .ph-sub { font-size: 12px; color: var(--t2); margin-top: 4px; }
 
@@ -140,7 +156,7 @@
     background: var(--bg2); border: 0.5px solid var(--hair); border-radius: 14px;
     padding: 12px; margin-top: 12px;
   }
-  .ph-card-hero { background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff; border: none; padding: 14px; }
+  .ph-card-hero { background: linear-gradient(135deg, var(--amber), #ff8a00); color: #0a0f1a; border: none; padding: 14px; }
   .ph-row {
     display: flex; align-items: center; gap: 10px; padding: 8px 0;
     border-bottom: 0.5px solid var(--hair);
@@ -171,7 +187,7 @@
 
   /* section eyebrow */
   .sec-eyebrow {
-    font-size: 12px; font-weight: 700; color: var(--purple); text-transform: uppercase; letter-spacing: 1.5px;
+    font-size: 12px; font-weight: 700; color: var(--amber); text-transform: uppercase; letter-spacing: 1.5px;
     margin-bottom: 12px; display: flex; align-items: center; gap: 6px;
   }
   .sec-eyebrow::before { content: "◆"; }
@@ -211,7 +227,7 @@
     border: 0.5px solid var(--hair);
     background: rgba(139,92,246,0.04);
   }
-  .ai-feature .ico { width: 36px; height: 36px; border-radius: 9px; background: rgba(139,92,246,0.18); color: var(--purple); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
+  .ai-feature .ico { width: 36px; height: 36px; border-radius: 9px; background: rgba(255,176,0,0.18); color: var(--amber); display: flex; align-items: center; justify-content: center; font-size: 18px; flex-shrink: 0; }
   .ai-feature .h { font-size: 14px; font-weight: 700; }
   .ai-feature .d { font-size: 12px; color: var(--t2); margin-top: 2px; line-height: 1.5; }
 
@@ -233,7 +249,7 @@
   .ai-demo .response strong { color: var(--blue-l); }
   .ai-demo .label {
     display: inline-flex; align-items: center; gap: 5px;
-    color: var(--purple); font-size: 10px; font-weight: 700;
+    color: var(--amber); font-size: 10px; font-weight: 700;
     letter-spacing: 0.6px; margin-bottom: 8px; text-transform: uppercase;
   }
 
@@ -250,7 +266,7 @@
   .case-3 { background: linear-gradient(160deg, rgba(16,185,129,0.2), rgba(16,185,129,0.05)); border: 0.5px solid rgba(16,185,129,0.4); }
   .case .badge { font-size: 11px; font-weight: 700; padding: 4px 10px; border-radius: 12px; align-self: flex-start; }
   .case-1 .badge { background: rgba(37,99,235,0.25); color: var(--blue-l); }
-  .case-2 .badge { background: rgba(139,92,246,0.25); color: var(--purple); }
+  .case-2 .badge { background: rgba(255,176,0,0.25); color: var(--amber); }
   .case-3 .badge { background: rgba(16,185,129,0.25); color: var(--green); }
   .case h3 { font-size: 22px; font-weight: 700; letter-spacing: -0.4px; margin-top: 12px; }
   .case p { font-size: 14px; color: var(--t2); line-height: 1.5; margin-top: 8px; }
@@ -343,6 +359,14 @@
     footer { grid-template-columns: 1fr 1fr; }
     .final-cta { padding: 40px 24px; margin: 40px 16px; }
     .final-cta h2 { font-size: 30px; }
+  }
+
+  /* accessibility: visible focus + reduced-motion */
+  a:focus-visible, button:focus-visible, .btn:focus-visible, input:focus-visible {
+    outline: 2px solid var(--amber); outline-offset: 2px; border-radius: 6px;
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
   }
 </style>
 </head>
@@ -458,7 +482,7 @@
 
   <div class="feature-grid">
     <div class="feature lg">
-      <div class="feature-icon" style="background: linear-gradient(135deg, var(--blue), var(--purple)); color: #fff;">⚡</div>
+      <div class="feature-icon" style="background: linear-gradient(135deg, var(--amber), #ff8a00); color: #0a0f1a;">⚡</div>
       <h3>AI Estimator</h3>
       <p>Describe a job in natural English — Cortex generates UK-realistic line items, quantities, and rates. Saves hours of pricing work. <a href="Cortexx.html" style="color: var(--blue-l); text-decoration: none;">Try it →</a></p>
     </div>
@@ -484,12 +508,12 @@
       <p>Safety score, RAMS expiry watch, CSCS tracking, incident reporting.</p>
     </div>
     <div class="feature">
-      <div class="feature-icon" style="background: rgba(6,182,212,0.2); color: var(--cyan);">📷</div>
+      <div class="feature-icon" style="background: rgba(47,107,255,0.2); color: var(--blue-l);">📷</div>
       <h3>Site capture</h3>
       <p>Photo, receipt, voice note, check-in — all geo-tagged, all auto-filed.</p>
     </div>
     <div class="feature">
-      <div class="feature-icon" style="background: rgba(139,92,246,0.2); color: var(--purple);">💬</div>
+      <div class="feature-icon" style="background: rgba(255,176,0,0.2); color: var(--amber);">💬</div>
       <h3>RFIs & Messaging</h3>
       <p>Threaded comms with crew, client, subs. AI suggests responses.</p>
     </div>
@@ -732,7 +756,7 @@
           ['HMRC MTD',     'Making Tax Digital', '#00703c'],
           ['CIS Online',   'UK CIS verification', '#005ea5'],
           ['WhatsApp',     'Site team chat',     '#25d366'],
-          ['Webhooks',     'Custom workflows',   '#8b5cf6'],
+          ['Webhooks',     'Custom workflows',   '#ffb000'],
         ];
         ints.forEach(([n, d, c]) => {
           document.write('<div style="background: var(--bg2); border: 0.5px solid var(--hair); border-radius: 14px; padding: 18px; transition: transform 0.15s, border-color 0.15s;" onmouseover="this.style.borderColor=\'' + c + '55\';this.style.transform=\'translateY(-2px)\'" onmouseout="this.style.borderColor=\'var(--hair)\';this.style.transform=\'\'">');
@@ -759,7 +783,7 @@
           <h3 style="font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-top: 16px; line-height: 1.2;">Riverside Builders cut admin from 12 to 4 hours/week.</h3>
           <p style="font-size: 14px; color: var(--t2); line-height: 1.6; margin-top: 14px;">"The AI estimator changed everything. I used to spend half a Saturday writing quotes — now I'm at the pub by 11am. Margin's up 3% because Cortex catches things I'd miss."</p>
           <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px;">
-            <div style="width: 36px; height: 36px; border-radius: 18px; background: linear-gradient(135deg, var(--blue), var(--purple)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">JR</div>
+            <div style="width: 36px; height: 36px; border-radius: 18px; background: linear-gradient(135deg, var(--amber), #ff8a00); display: flex; align-items: center; justify-content: center; color: #0a0f1a; font-weight: 700;">JR</div>
             <div>
               <div style="font-size: 13px; font-weight: 600;">James Riverside</div>
               <div style="font-size: 11px; color: var(--t2);">Director · Riverside Builders Ltd</div>
@@ -779,7 +803,7 @@
           <h3 style="font-size: 24px; font-weight: 700; letter-spacing: -0.5px; margin-top: 16px; line-height: 1.2;">Hackney Interiors collected £42k of overdue debt in 8 weeks.</h3>
           <p style="font-size: 14px; color: var(--t2); line-height: 1.6; margin-top: 14px;">"Cortex drafts polite chase emails the moment an invoice goes overdue. I just hit send. We've recovered debts we'd written off — and clients pay faster because they know we're paying attention."</p>
           <div style="display: flex; align-items: center; gap: 10px; margin-top: 20px;">
-            <div style="width: 36px; height: 36px; border-radius: 18px; background: linear-gradient(135deg, var(--green), var(--cyan)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">EL</div>
+            <div style="width: 36px; height: 36px; border-radius: 18px; background: linear-gradient(135deg, var(--green), var(--blue-l)); display: flex; align-items: center; justify-content: center; color: #fff; font-weight: 700;">EL</div>
             <div>
               <div style="font-size: 13px; font-weight: 600;">Eve Lin</div>
               <div style="font-size: 11px; color: var(--t2);">Founder · Hackney Interiors</div>

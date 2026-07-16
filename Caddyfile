@@ -26,9 +26,9 @@
 		respond 404
 	}
 
-	# ── Everything else → the SPA shell ──
+	# ── Everything else → landing page (or SPA shell for deep links) ──
 	handle {
-		try_files {path} /Cortexx.html
+		try_files {path} /Cortexx%20Marketing.html /Cortexx.html
 		file_server {
 			# Belt-and-suspenders: even if a matcher above missed something, never
 			# serve dotfiles, server source, or env/config files. Caddy's file_server
