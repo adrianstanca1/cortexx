@@ -78,6 +78,8 @@ jobs:
         with:
           node-version: ${{ env.NODE_VERSION }}
           cache: npm
+      - name: Install root workspace deps (provides typescript for packages/core)
+        run: npm ci
       - name: Typecheck shared core (@cortexbuild/core)
         working-directory: packages/core
         run: ../../node_modules/.bin/tsc --noEmit -p tsconfig.json
