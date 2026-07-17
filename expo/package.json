@@ -11,6 +11,7 @@
     "doctor": "expo-doctor"
   },
   "dependencies": {
+    "@cortexbuild/core": "file:../packages/core",
     "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/native": "^7.0.0",
     "@react-navigation/native-stack": "^7.0.0",
@@ -20,13 +21,12 @@
     "expo-router": "~57.0.6",
     "expo-secure-store": "~57.0.1",
     "expo-status-bar": "~57.0.1",
-    "react": "19.2.7",
+    "react": "^19.2.3",
     "react-dom": "19.2.3",
     "react-native": "0.86.0",
     "react-native-safe-area-context": "5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-web": "^0.21.2",
-    "@cortexbuild/core": "file:../packages/core",
     "typescript": "~6.0.3"
   },
   "devDependencies": {
