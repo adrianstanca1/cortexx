@@ -106,7 +106,7 @@ jobs:
           } 2>&1 | tee debug.txt
       - name: Upload debug log (private to this run)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v7
         with:
           name: vps-debug
           path: debug.txt
