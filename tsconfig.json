@@ -39,6 +39,8 @@
     "node_modules",
     "ios",
     "app-store",
-    "archive"
+    "archive",
+    "expo",
+    "packages"
   ]
 }

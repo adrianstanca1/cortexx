@@ -69,6 +69,22 @@ jobs:
           NEXTAUTH_URL: http://localhost:3000
         run: npm run build
 
+  typecheck-apps:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - name: Typecheck shared core (@cortexbuild/core)
+        working-directory: packages/core
+        run: npm install && npm run typecheck
+      - name: Typecheck Expo app (React Native)
+        working-directory: expo
+        run: npm install && npm run typecheck
+
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
