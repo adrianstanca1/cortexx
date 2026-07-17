@@ -7,25 +7,27 @@
     "android": "expo start --android",
     "ios": "expo start --ios",
     "web": "expo start --web",
-    "typecheck": "tsc --noEmit"
+    "typecheck": "tsc --noEmit",
+    "doctor": "expo-doctor"
   },
   "dependencies": {
-    "@react-native-async-storage/async-storage": "2.1.2",
+    "@react-native-async-storage/async-storage": "2.2.0",
     "@react-navigation/native": "^7.0.0",
     "@react-navigation/native-stack": "^7.0.0",
-    "eas-cli": "^21.0.1",
-    "expo": "~53.0.0",
-    "expo-router": "~5.0.0",
-    "expo-secure-store": "~14.2.0",
-    "expo-status-bar": "~2.0.0",
-    "react": "19.0.0",
-    "react-native": "0.79.4",
-    "react-native-safe-area-context": "5.4.0",
-    "react-native-screens": "~4.11.0"
+    "expo": "~57.0.6",
+    "expo-constants": "~57.0.5",
+    "expo-linking": "~57.0.3",
+    "expo-router": "~57.0.6",
+    "expo-secure-store": "~57.0.1",
+    "expo-status-bar": "~57.0.1",
+    "react": "19.2.7",
+    "react-native": "0.86.0",
+    "react-native-safe-area-context": "5.7.0",
+    "react-native-screens": "4.26.2",
+    "typescript": "~6.0.3"
   },
   "devDependencies": {
-    "@types/react": "~19.0.0",
-    "typescript": "~5.8.0"
+    "@types/react": "~19.2.4"
   },
   "private": true
 }

@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from 'react';
 import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
-import { Colors } from './theme';
+import { Colors, StatusColor } from './theme';
 import { getProjects, apiGet } from './api';
 
 type Project = {
@@ -41,7 +41,9 @@ export default function ProjectsScreen({ onSelect, onLogout }: { onSelect: (id: 
             <Text style={styles.meta}>{item.client || '—'}{item.addr ? ` · ${item.addr}` : ''}</Text>
             <View style={styles.row}>
               <Text style={styles.val}>{fmtMoney(item.value)}</Text>
-              <Text style={styles.pct}>{item.pct ?? 0}% complete</Text>
+              <View style={[styles.pill, { backgroundColor: (StatusColor[item.status || ''] || Colors.t3) + '22' }]}>
+                <Text style={[styles.pillText, { color: StatusColor[item.status || ''] || Colors.t3 }]}>{item.status || 'open'}</Text>
+              </View>
             </View>
             {typeof item.pct === 'number' ? (
               <View style={styles.bar}><View style={[styles.barFill, { width: `${Math.min(100, item.pct)}%` }]} /></View>
@@ -75,6 +77,8 @@ const styles = StyleSheet.create({
   pct: { color: Colors.t3, fontSize: 13 },
   bar: { height: 6, backgroundColor: Colors.ink2, borderRadius: 3, marginTop: 10, overflow: 'hidden' },
   barFill: { height: 6, backgroundColor: Colors.amber, borderRadius: 3 },
+  pill: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4, alignSelf: 'flex-start' },
+  pillText: { fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
   empty: { color: Colors.t3, textAlign: 'center', marginTop: 40 },
   err: { color: Colors.red, marginBottom: 12 },
 });

@@ -88,11 +88,14 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
 
       {!selectedProject ? (
         <View style={styles.tabBar}>
-          {TABS.map((t) => (
-            <TouchableOpacity key={t.key} style={styles.tabBtn} onPress={() => setTab(t.key)}>
-              <Text style={[styles.tabLabel, tab === t.key && styles.tabActive]}>{t.label}</Text>
-            </TouchableOpacity>
-          ))}
+          {TABS.map((t) => {
+            const active = tab === t.key;
+            return (
+              <TouchableOpacity key={t.key} style={[styles.tabBtn, active && styles.tabBtnActive]} onPress={() => setTab(t.key)}>
+                <Text style={[styles.tabLabel, active && styles.tabActive]}>{t.label}</Text>
+              </TouchableOpacity>
+            );
+          })}
         </View>
       ) : null}
     </View>
@@ -102,8 +105,9 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: Colors.ink },
   body: { flex: 1 },
-  tabBar: { flexDirection: 'row', backgroundColor: Colors.ink2, borderTopWidth: 1, borderTopColor: Colors.hair, paddingBottom: 6 },
-  tabBtn: { flex: 1, alignItems: 'center', paddingVertical: 10 },
+  tabBar: { flexDirection: 'row', backgroundColor: Colors.ink2, borderTopWidth: 1, borderTopColor: Colors.hair, paddingBottom: 6, paddingTop: 4 },
+  tabBtn: { flex: 1, alignItems: 'center', paddingVertical: 8, borderRadius: 10, marginHorizontal: 3 },
+  tabBtnActive: { backgroundColor: Colors.ink3 },
   tabLabel: { color: Colors.t3, fontSize: 11, fontWeight: '600' },
   tabActive: { color: Colors.amber },
 });
