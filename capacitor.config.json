@@ -1,0 +1,23 @@
+{
+  "appId": "app.cortexbuild.cortexx",
+  "appName": "Cortexx",
+  "webDir": ".",
+  "server": {
+    "iosScheme": "https"
+  },
+  "ios": {
+    "contentInset": "always",
+    "backgroundColor": "#06101e"
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 1200,
+      "backgroundColor": "#06101e",
+      "showSpinner": false
+    },
+    "StatusBar": {
+      "style": "DARK",
+      "backgroundColor": "#06101e"
+    }
+  }
+}
