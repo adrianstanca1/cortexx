@@ -6,12 +6,17 @@
 (function () {
   if (!window.Backend || !window.Backend.payments) {
     var Backend = window.Backend;
-    var API_BASE = (function () { try { return (localStorage.getItem('cortexx_llm_api_base') || '').replace(/\/+$/, ''); } catch (e) { return ''; } })();
+    var API_BASE = (function () { try { return (localStorage.getItem('cortexx_llm_api_base') || localStorage.getItem('cortexx_api_url') || '').replace(/\/+$/, ''); } catch (e) { return ''; } })();
+    function authHeaders() {
+      var h = { 'content-type': 'application/json' };
+      try { var t = localStorage.getItem('cortexx_token'); if (t) h.authorization = 'Bearer ' + t; } catch (e) {}
+      return h;
+    }
 
     Backend.payments = {
       providers: async function () {
         try {
-          var r = await fetch(API_BASE + '/api/payments/providers');
+          var r = await fetch(API_BASE + '/api/payments/providers', { headers: authHeaders() });
           if (!r.ok) return null;
           return await r.json();
         } catch (e) { return null; }
@@ -23,7 +28,7 @@
           description: invoice.client || '', provider: provider || 'stripe',
         };
         var r = await fetch(API_BASE + '/api/payments/link', {
-          method: 'POST', headers: { 'content-type': 'application/json' },
+          method: 'POST', headers: authHeaders(),
           body: JSON.stringify(body),
         });
         if (!r.ok) { var t = await r.text(); throw new Error('HTTP ' + r.status + ': ' + t.slice(0, 200)); }

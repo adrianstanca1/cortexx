@@ -26,7 +26,9 @@ function LLMSettingsScreen({ accent }) {
     setProbing(true); setHealth(null);
     try {
       const base = (st.apiBase && st.apiBase !== '(same-origin)') ? st.apiBase : '';
-      const r = await fetch(base + '/api/llm/health', { method: 'GET' });
+      const hh = {};
+      try { const t = localStorage.getItem('cortexx_token'); if (t) hh.authorization = 'Bearer ' + t; } catch (e) {}
+      const r = await fetch(base + '/api/llm/health', { method: 'GET', headers: hh });
       if (!r.ok) {
         setHealth({ ok: false, error: 'HTTP ' + r.status });
       } else {

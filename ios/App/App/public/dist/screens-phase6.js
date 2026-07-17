@@ -123,13 +123,22 @@
     }]
   };
   let _sd6 = false;
-  for (const k of Object.keys(SEED)) { if (!snap[k]) { snap[k] = SEED[k]; _sd6 = true; } }
+  for (const k of Object.keys(SEED)) {
+    if (!snap[k]) {
+      snap[k] = SEED[k];
+      _sd6 = true;
+    }
+  }
   if (_sd6) {
     try {
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));
     } catch (e) {}
   }
-  const arr6 = n => { const s = Backend.db.snapshot(); if (!Array.isArray(s[n])) s[n] = []; return s[n]; };
+  const arr6 = n => {
+    const s = Backend.db.snapshot();
+    if (!Array.isArray(s[n])) s[n] = [];
+    return s[n];
+  };
   const mk = n => ({
     listSync: () => [...arr6(n)],
     getSync: id => arr6(n).find(x => x.id == id),

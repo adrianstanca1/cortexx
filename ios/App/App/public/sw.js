@@ -11,7 +11,7 @@
 // Strategy: network-first for the HTML shell (fresh code on refresh), cache-first
 // for immutable JS + CDN. Precaching is resilient — one missing file can't abort it.
 
-const CACHE = 'cortexx-v3-1-011';
+const CACHE = 'cortexx-v3-1-012';
 
 const SHELL = [
   './',
@@ -156,8 +156,12 @@ self.addEventListener('fetch', e => {
   // truth; serving it cache-first would pin users to stale code.)
   const isLocalJs = url.pathname.includes('/dist/') || url.pathname.includes('/lib/');
   if (isLocalJs) {
+    // Bypass the HTTP disk cache explicitly: earlier deploys served these with
+    // `Cache-Control: immutable`, so a plain fetch() could still be satisfied
+    // from a stale pinned entry. `cache:'reload'` forces a real revalidation.
+    const req = new Request(e.request.url, { cache: 'reload', credentials: e.request.credentials, headers: e.request.headers, mode: e.request.mode });
     e.respondWith(
-      fetch(e.request).then(net => {
+      fetch(req).then(net => {
         if (net && net.status === 200) {
           const clone = net.clone();
           caches.open(CACHE).then(c => c.put(e.request, clone)).catch(() => {});

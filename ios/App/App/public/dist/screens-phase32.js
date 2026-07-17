@@ -363,6 +363,11 @@ function CommandPalette({
     i: Ic.zap,
     c: T.cyan
   }, {
+    l: 'AI engine',
+    k: 'aiengine',
+    i: Ic.spark,
+    c: T.purple
+  }, {
     l: 'Settings',
     k: 'settings',
     i: Ic.cog,

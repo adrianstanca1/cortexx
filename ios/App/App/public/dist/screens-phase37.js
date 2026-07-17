@@ -138,7 +138,7 @@ function ResponsiveSidebar({
       color: T.t1,
       letterSpacing: -0.3
     }
-  }, "Cortexx")), tabs.map(t => React.createElement("button", {
+  }, "CortexBuild Pro")), tabs.map(t => React.createElement("button", {
     key: t.k,
     onClick: () => setTab(t.k),
     style: {

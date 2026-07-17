@@ -14,7 +14,11 @@
     queue: 'cortexx_sync_queue',
     lastPull: 'cortexx_last_pull',
   };
-  let API = localStorage.getItem(LS.api) || '';
+  // Default the API base to the current origin so the app works out-of-the-box
+  // on its deployed domain (e.g. https://cortexbuildpro.com). An explicit URL
+  // set in Settings still wins and is persisted.
+  let API = localStorage.getItem(LS.api)
+    || (typeof window !== 'undefined' && window.location ? window.location.origin : '');
   let TOKEN = localStorage.getItem(LS.token) || '';
   let online = navigator.onLine;
   let es = null;                 // EventSource
@@ -26,20 +30,43 @@
   window.addEventListener('online', () => { online = true; flushQueue(); emit(status); });
   window.addEventListener('offline', () => { online = false; emit(status); });
 
+  // Clear the session when the server rejects our token, so the UI stops
+  // claiming "signed in" and prompts a fresh sign-in (queued writes survive
+  // and replay after re-auth via flushQueue()).
+  function invalidateAuth() {
+    if (!TOKEN) return;
+    TOKEN = '';
+    try { localStorage.removeItem(LS.token); } catch (e) {}
+    closeStream();
+    toast('Session expired — please sign in again', 'error');
+    emit(status);
+  }
+
   async function api(method, path, body, useAuth = true) {
     if (!API) return null;
     try {
       const headers = { 'content-type': 'application/json' };
       if (useAuth && TOKEN) headers.authorization = 'Bearer ' + TOKEN;
       const r = await fetch(API + path, { method, headers, body: body ? JSON.stringify(body) : undefined });
+      if (r.status === 401 && useAuth) { invalidateAuth(); return { __error: 401 }; }
       if (!r.ok) return { __error: r.status };
       return await r.json();
     } catch (e) { return null; }
   }
 
   // ── Offline write queue ───────────────────────────────────
+  const QUEUE_CAP = 10000;
   const readQueue = () => { try { return JSON.parse(localStorage.getItem(LS.queue) || '[]'); } catch (e) { return []; } };
-  const writeQueue = (q) => { try { localStorage.setItem(LS.queue, JSON.stringify(q.slice(-2000))); } catch (e) {} };
+  const writeQueue = (q) => {
+    try {
+      if (q.length > QUEUE_CAP) {
+        // Extended offline use overflowed the queue — warn rather than silently
+        // dropping the oldest writes with no user-visible signal.
+        toast('Offline changes exceed ' + QUEUE_CAP + ' — oldest may not sync. Reconnect soon.', 'error');
+      }
+      localStorage.setItem(LS.queue, JSON.stringify(q.slice(-QUEUE_CAP)));
+    } catch (e) {}
+  };
   async function flushQueue() {
     if (!API || !TOKEN || !online) return;
     const q = readQueue();
@@ -87,6 +114,12 @@
     async health() { const h = await api('GET', '/api/health', null, false); return !!(h && h.status === 'ok'); },
 
     // ── Auth ────────────────────────────────────────────────
+    async register(email, password, name, company) {
+      const r = await api('POST', '/api/auth/register', { email, password, name, company }, false);
+      if (r && r.token) { return this._authed(r); }
+      toast(r && r.error ? ('Sign-up failed — ' + r.error) : 'Sign-up failed — try again', 'error');
+      return false;
+    },
     async loginPassword(email, password) {
       const r = await api('POST', '/api/auth/login', { email, password }, false);
       if (r && r.token) { return this._authed(r); }
@@ -106,7 +139,11 @@
       TOKEN = r.token; localStorage.setItem(LS.token, TOKEN);
       if (r.user && window.Backend) try { window.Backend.db.user.update({ name: r.user.name, email: r.user.email }); } catch (e) {}
       toast('Signed in to cloud', 'success');
+      // Always tear down any prior account's stream before (re)opening, so a
+      // second sign-in on a shared device can't keep listening on account A's SSE.
+      closeStream();
       this.pull();
+      flushQueue();
       if (localStorage.getItem(LS.live) === '1') openStream();
       emit(status);
       return true;
@@ -126,18 +163,25 @@
       const r = await api('GET', '/api/sync/pull?since=' + encodeURIComponent(since));
       if (r && r.collections) {
         if (window.Backend && window.Backend.mergeRemote) window.Backend.mergeRemote(r.collections);
-        localStorage.setItem(LS.lastPull, r.at);
+        if (r.at) localStorage.setItem(LS.lastPull, r.at);
         emit(status);
         return r.collections;
       }
       return null;
     },
-    // Mirror a single create/update/delete to the cloud (queues when offline)
-    push(collection, op, id, data) {
+    // Mirror a single create/update/delete to the cloud (queues when offline
+    // OR when an online attempt fails, so writes are never silently dropped).
+    async push(collection, op, id, data) {
       if (!API || !TOKEN) return;
-      if (!online) { const q = readQueue(); q.push({ collection, op, id, data }); writeQueue(q); emit(status); return; }
-      if (op === 'create' || op === 'update') api(op === 'create' ? 'POST' : 'PUT', `/api/${collection}${op === 'update' ? '/' + id : ''}`, data);
-      if (op === 'delete') api('DELETE', `/api/${collection}/${id}`);
+      const item = { collection, op, id, data };
+      const enqueue = () => { const q = readQueue(); q.push(item); writeQueue(q); emit(status); };
+      if (!online) { enqueue(); return; }
+      let res;
+      if (op === 'create' || op === 'update') res = await api(op === 'create' ? 'POST' : 'PUT', `/api/${collection}${op === 'update' ? '/' + id : ''}`, data);
+      else if (op === 'delete') res = await api('DELETE', `/api/${collection}/${id}`);
+      // Network error (null) or any server error (incl. 401) → keep the write in
+      // the queue so it replays on reconnect or after re-auth (flushQueue).
+      if (res === null || (res && res.__error)) enqueue();
     },
 
     // ── Portal inbox (server-backed) ────────────────────────

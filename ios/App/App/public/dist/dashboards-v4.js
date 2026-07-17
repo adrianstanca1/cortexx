@@ -158,7 +158,7 @@ function DashV14_Broadsheet({
       fontStyle: 'italic',
       fontWeight: 700
     }
-  }, "Cortexx"), " Daily")), React.createElement("div", {
+  }, "CortexBuild Pro"), " Daily")), React.createElement("div", {
     style: {
       display: 'flex',
       justifyContent: 'space-between',
@@ -445,7 +445,7 @@ function DashV14_Broadsheet({
       letterSpacing: 1.5,
       textTransform: 'uppercase'
     }
-  }, "\u2014 Filed from your handset \u2014 Cortexx \xB7 Print to keep \u2014"))));
+  }, "\u2014 Filed from your handset \u2014 CortexBuild Pro \xB7 Print to keep \u2014"))));
 }
 function chipBtn14() {
   return {

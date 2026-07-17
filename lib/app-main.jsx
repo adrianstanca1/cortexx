@@ -265,6 +265,13 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       else if (k === 'addquote') setSheet('addquote');
       else if (k === 'addincident') setSheet('addincident');
       else if (k === 'toolboxtalk') setSheet('toolboxtalk');
+      else if (k === 'scheduletalk') setSheet('toolboxtalk');
+      else if (k === 'invoices') setSheet('subinvoices');
+      else if (k === 'addhandover') setSheet('addhandover');
+      else if (k === 'addtakeoff') setSheet('addtakeoff');
+      else if (k === 'addbid') setSheet('addbid');
+      else if (k === 'requestsurvey') setSheet('requestsurvey');
+      else if (k === 'scheduleaudit') setSheet('scheduleaudit');
       else if (k === 'delivery') setSheet('delivery');
       else if (k === 'weeklyreport') setSheet('weeklyreport');
       else if (k === 'dayend') setSheet('dayend');
@@ -563,6 +570,11 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       {sheet === 'addtemplate' && <AddTemplateSheet onClose={closeSheet} accent={accent}/>}
       {sheet === 'addview' && <AddViewSheet onClose={closeSheet} accent={accent}/>}
       {sheet === 'toolboxtalk' && <ToolboxTalkSheet onClose={closeSheet} accent={accent}/>}
+      {sheet === 'addhandover' && <HandoverSheet onClose={closeSheet} accent={accent}/>}
+      {sheet === 'addtakeoff' && <TakeoffSheet onClose={closeSheet} accent={accent}/>}
+      {sheet === 'addbid' && <BidSheet onClose={closeSheet} accent={accent}/>}
+      {sheet === 'requestsurvey' && <SurveySheet onClose={closeSheet} accent={accent}/>}
+      {sheet === 'scheduleaudit' && <AuditSheet onClose={closeSheet} accent={accent}/>}
       {/* ── v1.7 Intelligence screens ── */}
       {sheet === 'resourceplan' && <SheetWrap title="Resource planning" onClose={closeSheet} accent={accent}><ResourcePlanningScreen accent={accent}/></SheetWrap>}
       {sheet === 'addallocation' && <AddAllocationSheet onClose={closeSheet} accent={accent}/>}

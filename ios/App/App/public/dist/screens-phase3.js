@@ -53,7 +53,11 @@
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));
     } catch (e) {}
   }
-  const arr3 = name => { const s = Backend.db.snapshot(); if (!Array.isArray(s[name])) s[name] = []; return s[name]; };
+  const arr3 = name => {
+    const s = Backend.db.snapshot();
+    if (!Array.isArray(s[name])) s[name] = [];
+    return s[name];
+  };
   const makeT = name => ({
     listSync: () => [...arr3(name)],
     getSync: id => arr3(name).find(x => x.id == id),
@@ -104,13 +108,36 @@ function LoginSheet({
 }) {
   const [step, setStep] = React.useState('start');
   const [email, setEmail] = React.useState('');
+  const [password, setPassword] = React.useState('');
   const [working, setWorking] = React.useState(false);
   const signIn = async () => {
     setWorking(true);
-    await new Promise(r => setTimeout(r, 800));
-    setWorking(false);
-    toast('Signed in', 'success');
-    onClose();
+    try {
+      const ok = await window.cortexxCloud.loginPassword(email.trim(), password);
+      if (ok) {
+        onClose();
+        return;
+      }
+    } catch (e) {
+      if (window.cortexxToast) window.cortexxToast('Sign-in failed — check your connection', 'error');
+    } finally {
+      setWorking(false);
+    }
+  };
+  const signUp = async () => {
+    setWorking(true);
+    try {
+      const name = email.split('@')[0].replace(/[._]/g, ' ');
+      const ok = await window.cortexxCloud.register(email.trim(), password, name, name);
+      if (ok) {
+        onClose();
+        return;
+      }
+    } catch (e) {
+      if (window.cortexxToast) window.cortexxToast('Sign-up failed — check your connection', 'error');
+    } finally {
+      setWorking(false);
+    }
   };
   return React.createElement(Sheet, {
     onClose: onClose,
@@ -243,6 +270,8 @@ function LoginSheet({
       outline: 'none'
     }
   }), React.createElement("input", {
+    value: password,
+    onChange: e => setPassword(e.target.value),
     type: "password",
     placeholder: "Password",
     style: {
@@ -331,12 +360,28 @@ function LoginSheet({
       fontSize: 16,
       outline: 'none'
     }
+  }), React.createElement("input", {
+    value: password,
+    onChange: e => setPassword(e.target.value),
+    type: "password",
+    placeholder: "Choose a password",
+    style: {
+      marginTop: 8,
+      background: T.bg2,
+      border: `0.5px solid ${T.hairMid}`,
+      borderRadius: 12,
+      padding: '14px 16px',
+      color: T.t1,
+      fontFamily: SF,
+      fontSize: 16,
+      outline: 'none'
+    }
   }), React.createElement("button", {
-    onClick: signIn,
-    disabled: !email.trim() || working,
+    onClick: signUp,
+    disabled: !email.trim() || !password || working,
     style: {
       marginTop: 16,
-      background: email.trim() ? accent : T.bg3,
+      background: email.trim() && password ? accent : T.bg3,
       color: '#fff',
       border: 'none',
       borderRadius: 14,
@@ -344,7 +389,7 @@ function LoginSheet({
       fontFamily: SF,
       fontSize: 15,
       fontWeight: 700,
-      cursor: email.trim() && !working ? 'pointer' : 'default',
+      cursor: email.trim() && password && !working ? 'pointer' : 'default',
       opacity: working ? 0.5 : 1
     }
   }, working ? 'Setting up your workspace…' : 'Create my workspace'), React.createElement("button", {
@@ -866,7 +911,7 @@ function SettingsScreen({
     icon: Ic.book,
     iconBg: T.blue,
     title: "Help docs",
-    onClick: () => window.open('https://cortexx.app/help', '_blank')
+    onClick: () => window.open('/help', '_blank')
   }), React.createElement(Row, {
     icon: Ic.mail,
     iconBg: T.green,
@@ -1041,9 +1086,9 @@ function HelpScreen({
     icon: Ic.book,
     iconBg: T.purple,
     title: "Help centre",
-    sub: "cortexx.app/help",
+    sub: "cortexbuildpro.com/help",
     isLast: true,
-    onClick: () => window.open('https://cortexx.app/help', '_blank')
+    onClick: () => window.open('/help', '_blank')
   })))));
 }
 const PO_STATUS_C = {
@@ -1484,10 +1529,28 @@ function ClientPortalScreen({
       iconBg: c,
       title: `${iv.id} · £${iv.amount.toLocaleString()}`,
       sub: iv.status === 'paid' ? `Paid ${_formatRelDate(iv.paid)}` : `Due ${_formatRelDate(iv.due)}`,
-      right: React.createElement(Pill, {
+      right: iv.status === 'paid' ? React.createElement(Pill, {
         c: c,
         size: "xs"
-      }, iv.status),
+      }, iv.status) : React.createElement("button", {
+        onClick: e => {
+          e.stopPropagation();
+          if (window.cortexxNav) window.cortexxNav('payinvoice:' + iv.id);
+        },
+        style: {
+          padding: '5px 10px',
+          borderRadius: 6,
+          border: '1px solid ' + T.hair,
+          background: c,
+          color: '#fff',
+          fontFamily: 'inherit',
+          fontSize: 11,
+          fontWeight: 700,
+          textTransform: 'uppercase',
+          letterSpacing: 0.4,
+          cursor: 'pointer'
+        }
+      }, "Pay"),
       isLast: i === a.length - 1
     });
   }))), React.createElement(Section, {

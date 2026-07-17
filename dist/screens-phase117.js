@@ -234,7 +234,7 @@
         await Backend.db.talkSchedule.update(t.id, {
           done: true
         });
-        window.cortexxNav && window.cortexxNav('toolbox');
+        window.cortexxNav && window.cortexxNav('toolboxtalk');
       },
       style: {
         padding: '7px 12px',

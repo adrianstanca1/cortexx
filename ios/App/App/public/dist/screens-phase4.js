@@ -240,27 +240,36 @@
     }]
   };
   let _sd4 = false;
-  for (const k of Object.keys(SEED)) { if (!snap[k]) { snap[k] = SEED[k]; _sd4 = true; } }
+  for (const k of Object.keys(SEED)) {
+    if (!snap[k]) {
+      snap[k] = SEED[k];
+      _sd4 = true;
+    }
+  }
   if (_sd4) {
     try {
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));
     } catch (e) {}
   }
-  const arr4 = name => { const s = Backend.db.snapshot(); if (!Array.isArray(s[name])) s[name] = []; return s[name]; };
+  const arr = name => {
+    const s = Backend.db.snapshot();
+    if (!Array.isArray(s[name])) s[name] = [];
+    return s[name];
+  };
   const makeT = name => ({
-    listSync: () => [...arr4(name)],
-    getSync: id => arr4(name).find(x => x.id == id),
-    list: async () => [...arr4(name)],
-    get: async id => arr4(name).find(x => x.id == id),
+    listSync: () => [...arr(name)],
+    getSync: id => arr(name).find(x => x.id == id),
+    list: async () => [...arr(name)],
+    get: async id => arr(name).find(x => x.id == id),
     create: async data => {
       const s = Backend.db.snapshot();
-      const ids = arr4(name).map(x => typeof x.id === 'number' ? x.id : 0);
+      const ids = arr(name).map(x => typeof x.id === 'number' ? x.id : 0);
       const id = data.id ?? Math.max(0, ...ids) + 1;
       const item = {
         ...data,
         id
       };
-      s[name] = [item, ...arr4(name)];
+      s[name] = [item, ...arr(name)];
       try {
         localStorage.setItem('cortexx_db_v1', JSON.stringify(s));
       } catch (e) {}
@@ -269,7 +278,7 @@
     },
     update: async (id, patch) => {
       const s = Backend.db.snapshot();
-      s[name] = arr4(name).map(x => x.id == id ? {
+      s[name] = arr(name).map(x => x.id == id ? {
         ...x,
         ...patch
       } : x);
@@ -281,7 +290,7 @@
     },
     remove: async id => {
       const s = Backend.db.snapshot();
-      s[name] = arr4(name).filter(x => x.id != id);
+      s[name] = arr(name).filter(x => x.id != id);
       try {
         localStorage.setItem('cortexx_db_v1', JSON.stringify(s));
       } catch (e) {}

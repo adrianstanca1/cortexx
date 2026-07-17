@@ -8,7 +8,7 @@
       name: 'Tom Reilly',
       projectId: 1,
       action: 'in',
-      time: '2026-05-22T07:30',
+      time: '2026-06-06T07:30',
       method: 'gps',
       gps: {
         lat: 51.541,
@@ -21,7 +21,7 @@
       name: 'Aisha Begum',
       projectId: 1,
       action: 'in',
-      time: '2026-05-22T07:45',
+      time: '2026-06-06T07:45',
       method: 'gps',
       gps: {
         lat: 51.541,
@@ -34,7 +34,7 @@
       name: 'Jack Mitchell',
       projectId: 1,
       action: 'in',
-      time: '2026-05-22T08:00',
+      time: '2026-06-06T08:00',
       method: 'gps',
       gps: {
         lat: 51.541,
@@ -47,7 +47,7 @@
       name: 'Sara Khan',
       projectId: 1,
       action: 'in',
-      time: '2026-05-22T08:15',
+      time: '2026-06-06T08:15',
       method: 'qr',
       gps: null,
       location: 'Camden Mews'
@@ -57,7 +57,7 @@
       name: 'Marcus Webb',
       projectId: 2,
       action: 'in',
-      time: '2026-05-22T08:00',
+      time: '2026-06-06T08:00',
       method: 'gps',
       gps: {
         lat: 51.546,
@@ -70,7 +70,7 @@
       name: 'Dan Pavel',
       projectId: 2,
       action: 'in',
-      time: '2026-05-22T08:05',
+      time: '2026-06-06T08:05',
       method: 'gps',
       gps: {
         lat: 51.546,
@@ -83,7 +83,7 @@
       name: 'Tom Reilly',
       projectId: 1,
       action: 'break-out',
-      time: '2026-05-22T12:30',
+      time: '2026-06-06T12:30',
       method: 'manual',
       gps: null,
       location: 'Camden Mews'
@@ -93,10 +93,64 @@
       name: 'Tom Reilly',
       projectId: 1,
       action: 'break-in',
-      time: '2026-05-22T13:00',
+      time: '2026-06-06T13:00',
       method: 'manual',
       gps: null,
       location: 'Camden Mews'
+    }, {
+      id: 9,
+      userId: 1,
+      name: 'Tom Reilly',
+      projectId: 1,
+      action: 'in',
+      time: '2026-06-05T07:30',
+      method: 'gps',
+      location: 'Camden Mews'
+    }, {
+      id: 10,
+      userId: 1,
+      name: 'Tom Reilly',
+      projectId: 1,
+      action: 'out',
+      time: '2026-06-05T16:00',
+      method: 'manual',
+      location: 'Camden Mews'
+    }, {
+      id: 11,
+      userId: 2,
+      name: 'Aisha Begum',
+      projectId: 1,
+      action: 'in',
+      time: '2026-06-05T08:00',
+      method: 'gps',
+      location: 'Camden Mews'
+    }, {
+      id: 12,
+      userId: 2,
+      name: 'Aisha Begum',
+      projectId: 1,
+      action: 'out',
+      time: '2026-06-05T15:30',
+      method: 'manual',
+      location: 'Camden Mews'
+    }, {
+      id: 13,
+      userId: 3,
+      name: 'Jack Mitchell',
+      projectId: 2,
+      action: 'in',
+      time: '2026-06-04T07:45',
+      method: 'gps',
+      location: 'Hackney Loft'
+    }, {
+      id: 14,
+      userId: 3,
+      name: 'Jack Mitchell',
+      projectId: 2,
+      action: 'out',
+      time: '2026-06-04T16:30',
+      method: 'manual',
+      location: 'Hackney Loft'
     }];
     try {
       localStorage.setItem('cortexx_db_v1', JSON.stringify(snap));

@@ -1,16 +1,11 @@
-// CortexBuild Pro — Language settings + RIDDOR report screen (Phase 106)
-
-// ════════════════════════════════════════════════════════════════════
-// LANGUAGE SETTINGS
-// ════════════════════════════════════════════════════════════════════
 function LanguageSettingsScreen({
   accent
 }) {
   const i18n = window.CortexI18n;
   const [, force] = React.useReducer(x => x + 1, 0);
-  if (!i18n) return /*#__PURE__*/React.createElement(ScreenBg, {
+  if (!i18n) return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
@@ -42,17 +37,17 @@ function LanguageSettingsScreen({
     name: 'Welsh / Cymraeg',
     native: 'Cymraeg'
   }];
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: i18n.t('common.settings'),
     subtitle: 'Language · ' + current
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       marginTop: 14,
       fontSize: 11,
@@ -60,7 +55,7 @@ function LanguageSettingsScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "CHOOSE LANGUAGE"), locales.map(L => /*#__PURE__*/React.createElement("button", {
+  }, "CHOOSE LANGUAGE"), locales.map(L => React.createElement("button", {
     key: L.code,
     onClick: () => setLoc(L.code),
     style: {
@@ -79,23 +74,23 @@ function LanguageSettingsScreen({
       alignItems: 'center',
       gap: 12
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", null, L.name), /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", null, L.name), React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.t2,
       fontWeight: 500,
       marginTop: 2
     }
-  }, L.native)), current === L.code && /*#__PURE__*/React.createElement("span", {
+  }, L.native)), current === L.code && React.createElement("span", {
     style: {
       color: accent,
       fontWeight: 800
     }
-  }, "\u2713"))), /*#__PURE__*/React.createElement("div", {
+  }, "\u2713"))), React.createElement("div", {
     style: {
       marginTop: 18,
       padding: 14,
@@ -103,7 +98,7 @@ function LanguageSettingsScreen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -111,19 +106,19 @@ function LanguageSettingsScreen({
       letterSpacing: 0.6,
       marginBottom: 8
     }
-  }, "PREVIEW"), /*#__PURE__*/React.createElement("div", {
+  }, "PREVIEW"), React.createElement("div", {
     style: {
       fontSize: 18,
       fontWeight: 700,
       color: T.t1,
       marginBottom: 4
     }
-  }, sample[current].greet), /*#__PURE__*/React.createElement("div", {
+  }, sample[current].greet), React.createElement("div", {
     style: {
       fontSize: 13,
       color: T.t2
     }
-  }, sample[current].sub), /*#__PURE__*/React.createElement("div", {
+  }, sample[current].sub), React.createElement("div", {
     style: {
       marginTop: 12,
       display: 'grid',
@@ -131,34 +126,34 @@ function LanguageSettingsScreen({
       rowGap: 6,
       fontSize: 12
     }
-  }, /*#__PURE__*/React.createElement("span", {
+  }, React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, i18n.t('money.invoice')), /*#__PURE__*/React.createElement("span", {
+  }, i18n.t('money.invoice')), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       color: T.t1
     }
-  }, i18n.format.currency(8420)), /*#__PURE__*/React.createElement("span", {
+  }, i18n.format.currency(8420)), React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, i18n.t('common.today')), /*#__PURE__*/React.createElement("span", {
+  }, i18n.t('common.today')), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       color: T.t1
     }
-  }, i18n.format.date(new Date())), /*#__PURE__*/React.createElement("span", {
+  }, i18n.format.date(new Date())), React.createElement("span", {
     style: {
       color: T.t2
     }
-  }, "1 hour ago"), /*#__PURE__*/React.createElement("span", {
+  }, "1 hour ago"), React.createElement("span", {
     style: {
       fontFamily: SFMono,
       color: T.t1
     }
-  }, i18n.format.relative(Date.now() - 3600000)))), /*#__PURE__*/React.createElement("div", {
+  }, i18n.format.relative(Date.now() - 3600000)))), React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 12,
@@ -166,16 +161,12 @@ function LanguageSettingsScreen({
       color: T.t2,
       lineHeight: 1.55
     }
-  }, "UK construction has ~1 million workers and Welsh is a co-official language across Wales \u2014 RIDDOR, HSE notices, and contractor packs are often bilingual. CortexBuild Pro ships en-GB and cy-GB; more locales register via ", /*#__PURE__*/React.createElement("code", {
+  }, "UK construction has ~1 million workers and Welsh is a co-official language across Wales \u2014 RIDDOR, HSE notices, and contractor packs are often bilingual. CortexBuild Pro ships en-GB and cy-GB; more locales register via ", React.createElement("code", {
     style: {
       fontFamily: SFMono
     }
   }, "CortexI18n.register('xx-XX', ", '{...}', ")"), ".")));
 }
-
-// ════════════════════════════════════════════════════════════════════
-// RIDDOR / F2508 REPORT SCREEN
-// ════════════════════════════════════════════════════════════════════
 function RIDDORScreen({
   accent,
   incidentId
@@ -185,7 +176,6 @@ function RIDDORScreen({
   const incident = incidents.find(i => i.id === incidentId) || incidents[0] || {};
   const [classification, setClassification] = React.useState(R ? R.classify(incident) : null);
   const [form, setForm] = React.useState({
-    // Pre-fill from incident, but everything is editable
     incidentDate: incident.date || incident.when || new Date().toISOString().slice(0, 10),
     incidentTime: incident.time || '14:00',
     location: incident.location || incident.site || '',
@@ -240,9 +230,9 @@ function RIDDORScreen({
       if (window.cortexxToast) window.cortexxToast(errs.length + ' field' + (errs.length === 1 ? '' : 's') + ' missing', 'error');
     }
   };
-  if (!R) return /*#__PURE__*/React.createElement(ScreenBg, {
+  if (!R) return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       padding: 40,
       textAlign: 'center',
@@ -254,7 +244,7 @@ function RIDDORScreen({
     k,
     type,
     half
-  }) => /*#__PURE__*/React.createElement("div", {
+  }) => React.createElement("div", {
     style: {
       marginBottom: 10,
       display: half ? 'inline-block' : 'block',
@@ -262,14 +252,14 @@ function RIDDORScreen({
       boxSizing: 'border-box',
       paddingRight: half ? 4 : 0
     }
-  }, /*#__PURE__*/React.createElement("label", {
+  }, React.createElement("label", {
     style: {
       display: 'block',
       fontSize: 11,
       color: T.t2,
       marginBottom: 4
     }
-  }, label), /*#__PURE__*/React.createElement("input", {
+  }, label), React.createElement("input", {
     type: type || 'text',
     value: form[k] || '',
     onChange: e => update(k, e.target.value),
@@ -289,7 +279,7 @@ function RIDDORScreen({
     label,
     k,
     hint
-  }) => /*#__PURE__*/React.createElement("label", {
+  }) => React.createElement("label", {
     style: {
       display: 'flex',
       alignItems: 'flex-start',
@@ -297,40 +287,40 @@ function RIDDORScreen({
       marginTop: 8,
       cursor: 'pointer'
     }
-  }, /*#__PURE__*/React.createElement("input", {
+  }, React.createElement("input", {
     type: "checkbox",
     checked: !!form[k],
     onChange: e => update(k, e.target.checked),
     style: {
       marginTop: 3
     }
-  }), /*#__PURE__*/React.createElement("span", {
+  }), React.createElement("span", {
     style: {
       flex: 1
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 13,
       color: T.t1,
       fontWeight: 600
     }
-  }, label), hint && /*#__PURE__*/React.createElement("div", {
+  }, label), hint && React.createElement("div", {
     style: {
       fontSize: 11,
       color: T.t2
     }
   }, hint)));
-  return /*#__PURE__*/React.createElement(ScreenBg, {
+  return React.createElement(ScreenBg, {
     accent: accent
-  }, /*#__PURE__*/React.createElement(MobileHeader, {
+  }, React.createElement(MobileHeader, {
     title: "RIDDOR report",
     subtitle: "HSE F2508 \xB7 accident notification"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       padding: '0 18px 110px',
       fontFamily: SF
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 14,
@@ -338,7 +328,7 @@ function RIDDORScreen({
       background: classification ? classification.immediate ? 'rgba(239,68,68,.08)' : 'rgba(245,158,11,.06)' : 'rgba(34,197,94,.05)',
       border: '1px solid ' + (classification ? classification.immediate ? 'rgba(239,68,68,.3)' : 'rgba(245,158,11,.25)' : 'rgba(34,197,94,.2)')
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 11,
       fontWeight: 700,
@@ -346,30 +336,30 @@ function RIDDORScreen({
       letterSpacing: 0.6,
       marginBottom: 6
     }
-  }, "CLASSIFICATION"), /*#__PURE__*/React.createElement("div", {
+  }, "CLASSIFICATION"), React.createElement("div", {
     style: {
       fontSize: 14,
       fontWeight: 700,
       color: T.t1
     }
-  }, classification ? classification.form + ' · ' + classification.label : 'Not reportable under RIDDOR 2013'), classification && classification.immediate && /*#__PURE__*/React.createElement("div", {
+  }, classification ? classification.form + ' · ' + classification.label : 'Not reportable under RIDDOR 2013'), classification && classification.immediate && React.createElement("div", {
     style: {
       marginTop: 8,
       fontSize: 12,
       color: T.red,
       fontWeight: 600
     }
-  }, "\u26A0 Immediate phone notification required: ", /*#__PURE__*/React.createElement("span", {
+  }, "\u26A0 Immediate phone notification required: ", React.createElement("span", {
     style: {
       fontFamily: SFMono
     }
-  }, "0345 300 9923")), !classification && /*#__PURE__*/React.createElement("div", {
+  }, "0345 300 9923")), !classification && React.createElement("div", {
     style: {
       marginTop: 4,
       fontSize: 12,
       color: T.t2
     }
-  }, "Toggle the flags below to re-classify.")), /*#__PURE__*/React.createElement("div", {
+  }, "Toggle the flags below to re-classify.")), React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -377,23 +367,23 @@ function RIDDORScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "TRIGGER FLAGS"), /*#__PURE__*/React.createElement(Toggle, {
+  }, "TRIGGER FLAGS"), React.createElement(Toggle, {
     label: "Fatal",
     k: "fatal",
     hint: "Immediate phone notification required"
-  }), /*#__PURE__*/React.createElement(Toggle, {
+  }), React.createElement(Toggle, {
     label: "Specified injury",
     k: "specifiedInjury",
     hint: "Fracture, amputation, eye damage, crush, scalp, internal organ"
-  }), /*#__PURE__*/React.createElement(Toggle, {
+  }), React.createElement(Toggle, {
     label: "Over 7-day incapacitation",
     k: "daysOff",
     hint: "Pre-fills days off below"
-  }), /*#__PURE__*/React.createElement(Toggle, {
+  }), React.createElement(Toggle, {
     label: "Dangerous occurrence (Schedule 2)",
     k: "dangerousOccurrence",
     hint: "No injury required"
-  }), /*#__PURE__*/React.createElement("div", {
+  }), React.createElement("div", {
     style: {
       marginTop: 18,
       fontSize: 11,
@@ -401,32 +391,32 @@ function RIDDORScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "INCIDENT"), /*#__PURE__*/React.createElement("div", {
+  }, "INCIDENT"), React.createElement("div", {
     style: {
       marginTop: 8
     }
-  }, /*#__PURE__*/React.createElement(Field, {
+  }, React.createElement(Field, {
     label: "Date",
     k: "incidentDate",
     type: "date",
     half: true
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Time",
     k: "incidentTime",
     type: "time",
     half: true
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Location / site",
     k: "location"
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "What happened (description)",
     k: "description"
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Days off work",
     k: "daysOff",
     type: "number",
     half: true
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       marginTop: 4,
       fontSize: 11,
@@ -434,31 +424,31 @@ function RIDDORScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "INJURED PERSON"), /*#__PURE__*/React.createElement("div", {
+  }, "INJURED PERSON"), React.createElement("div", {
     style: {
       marginTop: 8
     }
-  }, /*#__PURE__*/React.createElement(Field, {
+  }, React.createElement(Field, {
     label: "Full name",
     k: "injuredPersonName"
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Age",
     k: "injuredPersonAge",
     type: "number",
     half: true
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Sex (M/F/X)",
     k: "injuredPersonSex",
     half: true
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Body part affected",
     k: "bodyPartAffected",
     half: true
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Nature of injury",
     k: "natureOfInjury",
     half: true
-  })), /*#__PURE__*/React.createElement("div", {
+  })), React.createElement("div", {
     style: {
       marginTop: 4,
       fontSize: 11,
@@ -466,34 +456,34 @@ function RIDDORScreen({
       color: T.t2,
       letterSpacing: 0.6
     }
-  }, "REPORTER"), /*#__PURE__*/React.createElement("div", {
+  }, "REPORTER"), React.createElement("div", {
     style: {
       marginTop: 8
     }
-  }, /*#__PURE__*/React.createElement(Field, {
+  }, React.createElement(Field, {
     label: "Name",
     k: "reporterName"
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Role",
     k: "reporterRole",
     half: true
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Phone",
     k: "reporterPhone",
     type: "tel",
     half: true
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Email",
     k: "reporterEmail",
     type: "email"
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Company",
     k: "companyName"
-  }), /*#__PURE__*/React.createElement(Field, {
+  }), React.createElement(Field, {
     label: "Postcode",
     k: "companyPostcode",
     half: true
-  })), errors.length > 0 && /*#__PURE__*/React.createElement("div", {
+  })), errors.length > 0 && React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 12,
@@ -501,20 +491,20 @@ function RIDDORScreen({
       background: 'rgba(239,68,68,.06)',
       border: '1px solid rgba(239,68,68,.25)'
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 12,
       fontWeight: 700,
       color: T.red,
       marginBottom: 4
     }
-  }, "Required fields missing"), errors.map((e, i) => /*#__PURE__*/React.createElement("div", {
+  }, "Required fields missing"), errors.map((e, i) => React.createElement("div", {
     key: i,
     style: {
       fontSize: 11,
       color: T.t2
     }
-  }, "\xB7 ", e.replace('Missing: ', '')))), /*#__PURE__*/React.createElement("button", {
+  }, "\xB7 ", e.replace('Missing: ', '')))), React.createElement("button", {
     onClick: generate,
     style: {
       marginTop: 18,
@@ -528,7 +518,7 @@ function RIDDORScreen({
       fontSize: 14,
       fontWeight: 700
     }
-  }, "Generate report"), report && /*#__PURE__*/React.createElement("div", {
+  }, "Generate report"), report && React.createElement("div", {
     style: {
       marginTop: 14,
       padding: 14,
@@ -536,19 +526,19 @@ function RIDDORScreen({
       background: T.bg2,
       border: '1px solid ' + T.hair
     }
-  }, /*#__PURE__*/React.createElement("div", {
+  }, React.createElement("div", {
     style: {
       fontSize: 12,
       fontWeight: 700,
       color: T.green,
       marginBottom: 8
     }
-  }, "\u2713 Report ready \xB7 ", report.form), /*#__PURE__*/React.createElement("div", {
+  }, "\u2713 Report ready \xB7 ", report.form), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8
     }
-  }, /*#__PURE__*/React.createElement("button", {
+  }, React.createElement("button", {
     onClick: () => R.openPrintable(report),
     style: {
       flex: 1,
@@ -561,7 +551,7 @@ function RIDDORScreen({
       fontSize: 12,
       fontWeight: 600
     }
-  }, "Print / PDF"), /*#__PURE__*/React.createElement("button", {
+  }, "Print / PDF"), React.createElement("button", {
     onClick: () => R.downloadJSON(report),
     style: {
       flex: 1,
@@ -574,7 +564,7 @@ function RIDDORScreen({
       fontSize: 12,
       fontWeight: 600
     }
-  }, "JSON")), /*#__PURE__*/React.createElement("a", {
+  }, "JSON")), React.createElement("a", {
     href: R.HSE_URL,
     target: "_blank",
     rel: "noopener noreferrer",
@@ -591,7 +581,7 @@ function RIDDORScreen({
       textAlign: 'center',
       textDecoration: 'none'
     }
-  }, "Open HSE portal to submit \u2192")), /*#__PURE__*/React.createElement("div", {
+  }, "Open HSE portal to submit \u2192")), React.createElement("div", {
     style: {
       marginTop: 16,
       padding: 12,
@@ -599,7 +589,7 @@ function RIDDORScreen({
       color: T.t2,
       lineHeight: 1.5
     }
-  }, "HSE doesn't expose an API. This screen produces the report data in the exact shape the F2508 form expects, plus a printable PDF for your records. ", /*#__PURE__*/React.createElement("strong", {
+  }, "HSE doesn't expose an API. This screen produces the report data in the exact shape the F2508 form expects, plus a printable PDF for your records. ", React.createElement("strong", {
     style: {
       color: T.t1
     }

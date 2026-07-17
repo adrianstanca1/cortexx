@@ -4,13 +4,20 @@
 
 (function () {
   if (window.CortexHMRC) return;
-  const API_BASE = (function () { try { return (localStorage.getItem('cortexx_llm_api_base') || '').replace(/\/+$/, ''); } catch (e) { return ''; } })();
+  const API_BASE = (function () { try { return (localStorage.getItem('cortexx_llm_api_base') || localStorage.getItem('cortexx_api_url') || '').replace(/\/+$/, ''); } catch (e) { return ''; } })();
+
+  function authHeaders() {
+    const h = { 'content-type': 'application/json' };
+    try { const t = localStorage.getItem('cortexx_token'); if (t) h.authorization = 'Bearer ' + t; } catch (e) {}
+    return h;
+  }
 
   async function req(path, opts) {
+    opts = opts || {};
     const r = await fetch(API_BASE + path, Object.assign({
       credentials: 'include',
-      headers: { 'content-type': 'application/json' },
-    }, opts || {}));
+      headers: Object.assign(authHeaders(), opts.headers || {}),
+    }, opts));
     const body = await r.text();
     if (!r.ok) throw new Error('HTTP ' + r.status + ': ' + body.slice(0, 200));
     try { return JSON.parse(body); } catch (e) { return { raw: body }; }

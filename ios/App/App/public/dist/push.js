@@ -14,7 +14,12 @@
 
   // VAPID public key — set from server. Stored so prod and dev can differ.
   let VAPID_KEY = (function () { try { return localStorage.getItem('cortexx_vapid_pub') || ''; } catch (e) { return ''; } })();
-  let API_BASE = (function () { try { return (localStorage.getItem('cortexx_llm_api_base') || '').replace(/\/+$/, ''); } catch (e) { return ''; } })();
+  let API_BASE = (function () { try { return (localStorage.getItem('cortexx_llm_api_base') || localStorage.getItem('cortexx_api_url') || '').replace(/\/+$/, ''); } catch (e) { return ''; } })();
+  function authHeaders() {
+    const h = { 'content-type': 'application/json' };
+    try { const t = localStorage.getItem('cortexx_token'); if (t) h.authorization = 'Bearer ' + t; } catch (e) {}
+    return h;
+  }
 
   function urlBase64ToUint8(s) {
     const pad = '='.repeat((4 - s.length % 4) % 4);
@@ -92,7 +97,7 @@
     try {
       await fetch(API_BASE + '/api/push/subscribe', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ subscription: sub.toJSON ? sub.toJSON() : sub, platform: 'web' }),
         credentials: 'include',
       });
@@ -111,7 +116,7 @@
     try {
       await fetch(API_BASE + '/api/push/unsubscribe', {
         method: 'POST',
-        headers: { 'content-type': 'application/json' },
+        headers: authHeaders(),
         body: JSON.stringify({ endpoint: sub.endpoint }),
         credentials: 'include',
       });

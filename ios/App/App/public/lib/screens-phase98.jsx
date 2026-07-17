@@ -30,26 +30,29 @@ function LabelPrinterScreen({ accent }) {
   }, [type, pid, checkinUrl]);
 
   const labelHTML = () => {
+    // Escape all user-controlled values — this HTML is written into a popup via
+    // document.write(), so unescaped project/field data would be an XSS vector.
+    const esc = (s) => String(s == null ? '' : s).replace(/[&<>"']/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c]));
     const wrap = (inner, w, h) => `<div style="width:${w};height:${h};box-sizing:border-box;padding:6mm;border:1.5px solid #111;border-radius:3mm;font-family:-apple-system,Helvetica,Arial,sans-serif;color:#111;display:flex;flex-direction:column;page-break-after:always">${inner}</div>`;
     if (type === 'delivery') {
       return wrap(`
         <div style="font:700 11px sans-serif;letter-spacing:2px;text-transform:uppercase;color:#666">Delivery to</div>
-        <div style="font:800 26px sans-serif;margin:2mm 0 1mm">${proj?.name || 'Site'}</div>
-        <div style="font:500 14px sans-serif;color:#333">${proj?.addr || ''}</div>
+        <div style="font:800 26px sans-serif;margin:2mm 0 1mm">${esc(proj?.name || 'Site')}</div>
+        <div style="font:500 14px sans-serif;color:#333">${esc(proj?.addr || '')}</div>
         <div style="flex:1"></div>
         <div style="display:flex;justify-content:space-between;border-top:1px solid #ccc;padding-top:3mm;font:600 13px sans-serif">
-          <span>Ref: ${fields.ref || '—'}</span><span>${today}</span></div>
-        ${fields.note ? `<div style="font:500 13px sans-serif;margin-top:2mm;color:#444">${fields.note}</div>` : ''}
-        <div style="font:700 10px sans-serif;color:#999;margin-top:2mm">CortexBuild · ${proj?.client || ''}</div>
+          <span>Ref: ${esc(fields.ref || '—')}</span><span>${today}</span></div>
+        ${fields.note ? `<div style="font:500 13px sans-serif;margin-top:2mm;color:#444">${esc(fields.note)}</div>` : ''}
+        <div style="font:700 10px sans-serif;color:#999;margin-top:2mm">CortexBuild · ${esc(proj?.client || '')}</div>
       `, '100mm', '62mm');
     }
     if (type === 'asset') {
       return wrap(`
         <div style="font:700 11px sans-serif;letter-spacing:2px;text-transform:uppercase;color:#666">Asset tag</div>
-        <div style="font:800 22px sans-serif;margin:2mm 0">${fields.ref || 'TOOL-001'}</div>
-        <div style="font:500 14px sans-serif;color:#333">${fields.note || 'Equipment'}</div>
+        <div style="font:800 22px sans-serif;margin:2mm 0">${esc(fields.ref || 'TOOL-001')}</div>
+        <div style="font:500 14px sans-serif;color:#333">${esc(fields.note || 'Equipment')}</div>
         <div style="flex:1"></div>
-        <div style="font:600 12px sans-serif;color:#444">Assigned: ${proj?.name || 'Yard'}</div>
+        <div style="font:600 12px sans-serif;color:#444">Assigned: ${esc(proj?.name || 'Yard')}</div>
         <div style="font:700 10px sans-serif;color:#999;margin-top:1mm">Property of CortexBuild Ltd · ${today}</div>
       `, '70mm', '40mm');
     }
@@ -58,7 +61,7 @@ function LabelPrinterScreen({ accent }) {
       const data = cv ? cv.toDataURL('image/png') : '';
       return wrap(`
         <div style="font:700 11px sans-serif;letter-spacing:2px;text-transform:uppercase;color:#0a7">Scan to check in</div>
-        <div style="font:800 20px sans-serif;margin:1mm 0 3mm">${proj?.name || 'Site'}</div>
+        <div style="font:800 20px sans-serif;margin:1mm 0 3mm">${esc(proj?.name || 'Site')}</div>
         <div style="display:flex;justify-content:center"><img src="${data}" style="width:55mm;height:55mm;image-rendering:pixelated"/></div>
         <div style="flex:1"></div>
         <div style="font:500 12px sans-serif;text-align:center;color:#444">Point your phone camera at the code to clock in / out</div>
@@ -67,11 +70,11 @@ function LabelPrinterScreen({ accent }) {
     }
     return wrap(`
       <div style="background:#d4901f;color:#111;font:800 13px sans-serif;letter-spacing:2px;text-transform:uppercase;padding:3mm;text-align:center;margin:-6mm -6mm 4mm;border-radius:3mm 3mm 0 0">⚠ Site safety notice</div>
-      <div style="font:800 24px sans-serif;margin-bottom:2mm">${proj?.name || 'Site'}</div>
-      <div style="font:700 18px sans-serif;color:#b00;margin:2mm 0">${fields.hazard}</div>
-      <div style="font:500 14px sans-serif;color:#333;line-height:1.5">${fields.note || 'All persons on site must sign in, hold valid CSCS, and follow the site induction. Report hazards to the site manager immediately.'}</div>
+      <div style="font:800 24px sans-serif;margin-bottom:2mm">${esc(proj?.name || 'Site')}</div>
+      <div style="font:700 18px sans-serif;color:#b00;margin:2mm 0">${esc(fields.hazard)}</div>
+      <div style="font:500 14px sans-serif;color:#333;line-height:1.5">${esc(fields.note || 'All persons on site must sign in, hold valid CSCS, and follow the site induction. Report hazards to the site manager immediately.')}</div>
       <div style="flex:1"></div>
-      <div style="border-top:1px solid #ccc;padding-top:3mm;font:600 12px sans-serif;color:#444">Issued ${today} · CortexBuild Ltd · ${proj?.client || ''}</div>
+      <div style="border-top:1px solid #ccc;padding-top:3mm;font:600 12px sans-serif;color:#444">Issued ${today} · CortexBuild Ltd · ${esc(proj?.client || '')}</div>
     `, '148mm', '210mm');
   };
 

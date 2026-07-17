@@ -756,4 +756,448 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
       onChange: e => set('visitorsOnSite', e.target.value)
     })));
   };
+  window.HandoverSheet = function ({
+    onClose,
+    accent
+  }) {
+    const projects = window.useDB('projects');
+    const [form, setForm] = React.useState({
+      projectId: (projects[0] || {}).id || '',
+      title: '',
+      body: '',
+      handedTo: '',
+      date: new Date().toISOString().slice(0, 10)
+    });
+    const [saving, setSaving] = React.useState(false);
+    const set = (k, v) => setForm(f => ({
+      ...f,
+      [k]: v
+    }));
+    const save = async () => {
+      setSaving(true);
+      await Backend.db.handovers.create({
+        ...form,
+        createdAt: new Date().toISOString()
+      });
+      await Backend.db.activity.create({
+        id: 'act-ho-' + Date.now(),
+        t: 'Handover doc',
+        icon: '📄',
+        sub: form.title || 'New handover',
+        when: 'now'
+      });
+      if (window.cortexxToast) window.cortexxToast('Handover document saved', 'success');
+      onClose();
+    };
+    return React.createElement(Wrap, {
+      title: 'Handover document',
+      onClose,
+      onSave: save,
+      saving
+    }, React.createElement(Field, {
+      label: 'Project'
+    }, React.createElement('select', {
+      style: inp(),
+      value: form.projectId,
+      onChange: e => set('projectId', e.target.value)
+    }, projects.map(p => React.createElement('option', {
+      key: p.id,
+      value: p.id
+    }, p.name)))), React.createElement(Field, {
+      label: 'Title'
+    }, React.createElement('input', {
+      style: inp(),
+      placeholder: 'e.g. Phase 1 practical completion',
+      value: form.title,
+      onChange: e => set('title', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Handed to'
+    }, React.createElement('input', {
+      style: inp(),
+      placeholder: 'Client / party receiving',
+      value: form.handedTo,
+      onChange: e => set('handedTo', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Date'
+    }, React.createElement('input', {
+      style: inp(),
+      type: 'date',
+      value: form.date,
+      onChange: e => set('date', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Details'
+    }, React.createElement('textarea', {
+      style: {
+        ...inp(),
+        minHeight: 120,
+        resize: 'vertical'
+      },
+      placeholder: 'Scope, conditions, outstanding items, keys, warranties…',
+      value: form.body,
+      onChange: e => set('body', e.target.value)
+    })));
+  };
+  window.TakeoffSheet = function ({
+    onClose,
+    accent
+  }) {
+    const projects = window.useDB('projects');
+    const [form, setForm] = React.useState({
+      projectId: (projects[0] || {}).id || '',
+      item: '',
+      qty: 1,
+      unit: 'm2',
+      notes: ''
+    });
+    const [saving, setSaving] = React.useState(false);
+    const set = (k, v) => setForm(f => ({
+      ...f,
+      [k]: v
+    }));
+    const save = async () => {
+      setSaving(true);
+      await Backend.db.takeoffs.create({
+        ...form,
+        qty: parseFloat(form.qty) || 0,
+        createdAt: new Date().toISOString()
+      });
+      await Backend.db.activity.create({
+        id: 'act-to-' + Date.now(),
+        t: 'Takeoff / measure',
+        icon: '📐',
+        sub: form.item || 'New measurement',
+        when: 'now'
+      });
+      if (window.cortexxToast) window.cortexxToast('Measurement saved to takeoff', 'success');
+      onClose();
+    };
+    return React.createElement(Wrap, {
+      title: 'Add measurement',
+      onClose,
+      onSave: save,
+      saving
+    }, React.createElement(Field, {
+      label: 'Project'
+    }, React.createElement('select', {
+      style: inp(),
+      value: form.projectId,
+      onChange: e => set('projectId', e.target.value)
+    }, projects.map(p => React.createElement('option', {
+      key: p.id,
+      value: p.id
+    }, p.name)))), React.createElement(Field, {
+      label: 'Item'
+    }, React.createElement('input', {
+      style: inp(),
+      placeholder: 'e.g. Blockwork 215mm',
+      value: form.item,
+      onChange: e => set('item', e.target.value)
+    })), React.createElement('div', {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 12
+      }
+    }, React.createElement(Field, {
+      label: 'Qty'
+    }, React.createElement('input', {
+      style: inp(),
+      type: 'number',
+      min: 0,
+      step: 'any',
+      value: form.qty,
+      onChange: e => set('qty', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Unit'
+    }, React.createElement('select', {
+      style: inp(),
+      value: form.unit,
+      onChange: e => set('unit', e.target.value)
+    }, ['m2', 'm3', 'm', 'nr', 'kg'].map(u => React.createElement('option', {
+      key: u,
+      value: u
+    }, u))))), React.createElement(Field, {
+      label: 'Notes'
+    }, React.createElement('textarea', {
+      style: {
+        ...inp(),
+        minHeight: 70,
+        resize: 'vertical'
+      },
+      placeholder: 'Optional notes…',
+      value: form.notes,
+      onChange: e => set('notes', e.target.value)
+    })));
+  };
+  window.BidSheet = function ({
+    onClose,
+    accent
+  }) {
+    const projects = window.useDB('projects');
+    const [form, setForm] = React.useState({
+      projectId: (projects[0] || {}).id || '',
+      title: '',
+      client: '',
+      value: '',
+      closeDate: '',
+      notes: ''
+    });
+    const [saving, setSaving] = React.useState(false);
+    const set = (k, v) => setForm(f => ({
+      ...f,
+      [k]: v
+    }));
+    const save = async () => {
+      setSaving(true);
+      await Backend.db.bids.create({
+        ...form,
+        value: parseFloat(form.value) || 0,
+        createdAt: new Date().toISOString()
+      });
+      await Backend.db.activity.create({
+        id: 'act-bid-' + Date.now(),
+        t: 'Bid / tender',
+        icon: '🏷️',
+        sub: form.title || 'New bid',
+        when: 'now'
+      });
+      if (window.cortexxToast) window.cortexxToast('Bid logged — ' + (form.client || 'client'), 'success');
+      onClose();
+    };
+    return React.createElement(Wrap, {
+      title: 'New bid',
+      onClose,
+      onSave: save,
+      saving
+    }, React.createElement(Field, {
+      label: 'Project'
+    }, React.createElement('select', {
+      style: inp(),
+      value: form.projectId,
+      onChange: e => set('projectId', e.target.value)
+    }, projects.map(p => React.createElement('option', {
+      key: p.id,
+      value: p.id
+    }, p.name)))), React.createElement(Field, {
+      label: 'Bid title'
+    }, React.createElement('input', {
+      style: inp(),
+      placeholder: 'e.g. Extension & refurb',
+      value: form.title,
+      onChange: e => set('title', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Client'
+    }, React.createElement('input', {
+      style: inp(),
+      placeholder: 'Client name',
+      value: form.client,
+      onChange: e => set('client', e.target.value)
+    })), React.createElement('div', {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 12
+      }
+    }, React.createElement(Field, {
+      label: 'Value (£)'
+    }, React.createElement('input', {
+      style: inp(),
+      type: 'number',
+      min: 0,
+      value: form.value,
+      onChange: e => set('value', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Close date'
+    }, React.createElement('input', {
+      style: inp(),
+      type: 'date',
+      value: form.closeDate,
+      onChange: e => set('closeDate', e.target.value)
+    }))), React.createElement(Field, {
+      label: 'Notes'
+    }, React.createElement('textarea', {
+      style: {
+        ...inp(),
+        minHeight: 70,
+        resize: 'vertical'
+      },
+      placeholder: 'Win strategy, differentiators…',
+      value: form.notes,
+      onChange: e => set('notes', e.target.value)
+    })));
+  };
+  window.SurveySheet = function ({
+    onClose,
+    accent
+  }) {
+    const projects = window.useDB('projects');
+    const [form, setForm] = React.useState({
+      projectId: (projects[0] || {}).id || '',
+      clientName: '',
+      email: '',
+      reason: '',
+      requestedAt: new Date().toISOString().slice(0, 10)
+    });
+    const [saving, setSaving] = React.useState(false);
+    const set = (k, v) => setForm(f => ({
+      ...f,
+      [k]: v
+    }));
+    const save = async () => {
+      setSaving(true);
+      await Backend.db.surveys.create({
+        ...form,
+        status: 'requested',
+        createdAt: new Date().toISOString()
+      });
+      await Backend.db.activity.create({
+        id: 'act-sv-' + Date.now(),
+        t: 'Survey requested',
+        icon: '📋',
+        sub: form.clientName || 'Client survey',
+        when: 'now'
+      });
+      if (window.cortexxToast) window.cortexxToast('Client survey requested', 'success');
+      onClose();
+    };
+    return React.createElement(Wrap, {
+      title: 'Request client survey',
+      onClose,
+      onSave: save,
+      saving
+    }, React.createElement(Field, {
+      label: 'Project'
+    }, React.createElement('select', {
+      style: inp(),
+      value: form.projectId,
+      onChange: e => set('projectId', e.target.value)
+    }, projects.map(p => React.createElement('option', {
+      key: p.id,
+      value: p.id
+    }, p.name)))), React.createElement(Field, {
+      label: 'Client name'
+    }, React.createElement('input', {
+      style: inp(),
+      placeholder: 'Client full name',
+      value: form.clientName,
+      onChange: e => set('clientName', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Email'
+    }, React.createElement('input', {
+      style: inp(),
+      type: 'email',
+      placeholder: 'client@email.com',
+      value: form.email,
+      onChange: e => set('email', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Reason for survey'
+    }, React.createElement('textarea', {
+      style: {
+        ...inp(),
+        minHeight: 80,
+        resize: 'vertical'
+      },
+      placeholder: 'e.g. snagging walkthrough at PC, quality sign-off…',
+      value: form.reason,
+      onChange: e => set('reason', e.target.value)
+    })));
+  };
+  window.AuditSheet = function ({
+    onClose,
+    accent
+  }) {
+    const projects = window.useDB('projects');
+    const team = window.useDB('team');
+    const [form, setForm] = React.useState({
+      projectId: (projects[0] || {}).id || '',
+      type: 'Site audit',
+      auditor: (team[0] || {}).name || 'Site Manager',
+      date: new Date().toISOString().slice(0, 10),
+      scope: '',
+      notes: ''
+    });
+    const [saving, setSaving] = React.useState(false);
+    const set = (k, v) => setForm(f => ({
+      ...f,
+      [k]: v
+    }));
+    const save = async () => {
+      setSaving(true);
+      await Backend.db.hsAudits.create({
+        ...form,
+        status: 'scheduled',
+        createdAt: new Date().toISOString()
+      });
+      await Backend.db.activity.create({
+        id: 'act-au-' + Date.now(),
+        t: 'HS audit scheduled',
+        icon: '🔍',
+        sub: form.type + ' — ' + form.date,
+        when: 'now'
+      });
+      if (window.cortexxToast) window.cortexxToast('Audit scheduled', 'success');
+      onClose();
+    };
+    return React.createElement(Wrap, {
+      title: 'Schedule audit',
+      onClose,
+      onSave: save,
+      saving
+    }, React.createElement(Field, {
+      label: 'Type'
+    }, React.createElement('select', {
+      style: inp(),
+      value: form.type,
+      onChange: e => set('type', e.target.value)
+    }, ['Site audit', 'Fire risk', 'CDM', 'Plant & equipment', 'COSHH'].map(t => React.createElement('option', {
+      key: t,
+      value: t
+    }, t)))), React.createElement(Field, {
+      label: 'Project'
+    }, React.createElement('select', {
+      style: inp(),
+      value: form.projectId,
+      onChange: e => set('projectId', e.target.value)
+    }, projects.map(p => React.createElement('option', {
+      key: p.id,
+      value: p.id
+    }, p.name)))), React.createElement('div', {
+      style: {
+        display: 'grid',
+        gridTemplateColumns: '1fr 1fr',
+        gap: 12
+      }
+    }, React.createElement(Field, {
+      label: 'Auditor'
+    }, React.createElement('input', {
+      style: inp(),
+      value: form.auditor,
+      onChange: e => set('auditor', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Date'
+    }, React.createElement('input', {
+      style: inp(),
+      type: 'date',
+      value: form.date,
+      onChange: e => set('date', e.target.value)
+    }))), React.createElement(Field, {
+      label: 'Scope'
+    }, React.createElement('input', {
+      style: inp(),
+      placeholder: 'Areas / systems in scope',
+      value: form.scope,
+      onChange: e => set('scope', e.target.value)
+    })), React.createElement(Field, {
+      label: 'Notes'
+    }, React.createElement('textarea', {
+      style: {
+        ...inp(),
+        minHeight: 70,
+        resize: 'vertical'
+      },
+      placeholder: 'Pre-audit prep, documents to bring…',
+      value: form.notes,
+      onChange: e => set('notes', e.target.value)
+    })));
+  };
 })();

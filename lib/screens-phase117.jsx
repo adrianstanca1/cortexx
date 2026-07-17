@@ -84,7 +84,7 @@
                 React.createElement('div', { style: { fontSize: 11, color: T.t3 } }, projName(t.projectId) + ' · ' + t.assignedTo + ' · ' + t.planned)),
               !t.done && React.createElement('button', { onClick: async () => {
                   await Backend.db.talkSchedule.update(t.id, { done: true });
-                  window.cortexxNav && window.cortexxNav('toolbox');
+                  window.cortexxNav && window.cortexxNav('toolboxtalk');
                 }, style: { padding: '7px 12px', borderRadius: 8, background: acc, border: 'none', color: '#fff', fontWeight: 700, fontSize: 11.5, cursor: 'pointer' } }, 'Deliver')))),
       React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('scheduletalk'),
         style: { marginTop: 10, width: '100%', padding: 13, borderRadius: 12, background: acc, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer' } }, '+ Schedule toolbox talk')
