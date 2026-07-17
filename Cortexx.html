@@ -93,6 +93,11 @@
 </head>
 <body>
 
+<!-- Shared API client (monorepo packages/core → browser global). Loaded
+     before the module loader so cloud-sync.js can delegate REST calls to
+     window.CortexCore. Plain <script src> = synchronous, no Babel needed. -->
+<script src="cortex-core.js"></script>
+
 <div class="header">
   <div class="badge">● Live · iPhone 15 Pro</div>
   <h1>CortexBuild Pro — full app</h1>
