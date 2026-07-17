@@ -49,6 +49,38 @@ jobs:
           echo "SSH connection failed after 8 attempts"
           exit 1
 
+      # The app containers can all be healthy while the site is still dark:
+      # Traefik owns host ports 80/443 and runs outside this compose stack
+      # (at /docker/traefik). If it is down or wedged, every public probe
+      # times out even though `docker compose ps` looks fine — exactly the
+      # failure mode of deploy runs 404/405. Diagnose the edge first and
+      # restart Traefik when 443 is unresponsive from the host itself.
+      - name: Ensure Traefik edge is up
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+            set -uo pipefail
+            echo "=== containers ==="
+            docker ps --format '{{.Names}}\t{{.Status}}\t{{.Ports}}'
+            echo "=== listeners on 80/443 ==="
+            ss -tlnp | grep -E ':(80|443) ' || echo "NOTHING listening on 80/443"
+            code=$(curl -sk --max-time 5 -o /dev/null -w '%{http_code}' https://127.0.0.1/ || true)
+            echo "local https probe -> ${code:-000}"
+            if [ "${code:-000}" = "000" ]; then
+              echo "Edge unresponsive — attempting Traefik restart"
+              tname=$(docker ps -a --format '{{.Names}}' | grep -im1 traefik || true)
+              echo "traefik container: ${tname:-<none found>}"
+              [ -n "$tname" ] && docker logs --tail 30 "$tname" 2>&1 | tail -30 || true
+              if [ -d /docker/traefik ]; then
+                (cd /docker/traefik && docker compose up -d --force-recreate) || true
+              elif [ -n "$tname" ]; then
+                docker restart "$tname" || true
+              fi
+              sleep 10
+              ss -tlnp | grep -E ':(80|443) ' || echo "STILL nothing on 80/443 after restart"
+              curl -sk --max-time 5 -o /dev/null -w 'local https probe after restart -> %{http_code}\n' https://127.0.0.1/ || true
+            fi
+          REMOTE
+
       - name: Deploy via docker compose
         env:
           # Read-only token — only used to authenticate the git pull of this
@@ -106,8 +138,8 @@ jobs:
         run: |
           sleep 5
           echo "=== Public ==="
-          curl -s -o /dev/null -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.com/
-          curl -s -o /dev/null -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.com/api/health
+          curl -s -o /dev/null --max-time 20 -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.com/
+          curl -s -o /dev/null --max-time 20 -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.com/api/health
           echo "=== Health body ==="
           curl -s --max-time 10 https://cortexbuildpro.com/api/health
           echo ""
