@@ -26,6 +26,7 @@
     "react-native-safe-area-context": "5.7.0",
     "react-native-screens": "4.25.2",
     "react-native-web": "^0.21.2",
+    "@cortexbuild/core": "file:../packages/core",
     "typescript": "~6.0.3"
   },
   "devDependencies": {

@@ -3,6 +3,9 @@
   "version": "1.4.0",
   "description": "The construction OS that thinks with you. UK SMB construction management with autonomous AI CEO.",
   "private": true,
+  "workspaces": [
+    "packages/*"
+  ],
   "engines": {
     "node": ">=22.0.0",
     "npm": ">=10.0.0"
@@ -34,7 +37,13 @@
     "ios:sync": "npx cap copy && npx cap sync ios",
     "ios:open": "npx cap open ios",
     "android:add": "npx cap add android",
-    "android:open": "npx cap open android"
+    "android:open": "npx cap open android",
+    "monorepo:build": "turbo run build",
+    "monorepo:typecheck": "turbo run typecheck",
+    "monorepo:lint": "turbo run lint",
+    "spa:build": "node build-dist.js",
+    "expo:typecheck": "cd expo && npx tsc --noEmit",
+    "expo:doctor": "cd expo && npx expo-doctor"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -85,6 +94,7 @@
     "tailwindcss": "^4.3.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.1",
+    "turbo": "^2.0.0",
     "typescript": "^6.0.3"
   },
   "overrides": {
