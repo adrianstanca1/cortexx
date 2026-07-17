@@ -80,7 +80,7 @@ jobs:
           cache: npm
       - name: Typecheck shared core (@cortexbuild/core)
         working-directory: packages/core
-        run: npm install && npm run typecheck
+        run: npx tsc --noEmit
       - name: Typecheck Expo app (React Native)
         working-directory: expo
         run: npm install && npm run typecheck
