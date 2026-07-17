@@ -80,10 +80,10 @@ jobs:
           cache: npm
       - name: Typecheck shared core (@cortexbuild/core)
         working-directory: packages/core
-        run: npx tsc --noEmit
+        run: ../../node_modules/.bin/tsc --noEmit -p tsconfig.json
       - name: Typecheck Expo app (React Native)
         working-directory: expo
-        run: npm install && npm run typecheck
+        run: npm ci && npm run typecheck
 
   audit:
     runs-on: ubuntu-latest
