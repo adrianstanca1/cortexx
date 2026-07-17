@@ -1,6 +1,6 @@
 {
   "cli": {
-    "version": ">= 16.0.0",
+    "version": "21.0.1",
     "appVersionSource": "local"
   },
   "build": {
@@ -11,22 +11,20 @@
     "preview": {
       "distribution": "internal",
       "ios": {
-        "simulator": false
+        "simulator": true
       }
     },
     "production": {
       "autoIncrement": true,
-      "ios": {
-        "archive": true
+      "env": {
+        "EAS_BUILD_NO_EXPO_GO_WARNING": "true"
       }
     }
   },
   "submit": {
     "production": {
       "ios": {
-        "appleId": "Adrian.stanca1@icloud.com",
-        "ascAppId": "com.cortexbuild.app",
-        "appleTeamId": ""
+        "appleId": "Adrian.stanca1@icloud.com"
       }
     }
   }

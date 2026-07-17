@@ -32,13 +32,7 @@ export async function login(email: string, password: string): Promise<{ token: s
 }
 
 export async function getProjects(): Promise<any[]> {
-  const token = await getToken();
-  const r = await fetch(`${API_URL}/api/projects?limit=100`, {
-    headers: token ? { authorization: `Bearer ${token}` } : {},
-  });
-  if (r.status === 401) { await clearToken(); throw new Error('unauthorized'); }
-  if (!r.ok) throw new Error('Failed to load projects');
-  const d = await r.json();
+  const d = await apiGet(`/api/projects?limit=100`);
   return Array.isArray(d) ? d : (d.rows || []);
 }
 
@@ -50,4 +44,30 @@ export async function apiGet(path: string): Promise<any> {
   if (r.status === 401) { await clearToken(); throw new Error('unauthorized'); }
   if (!r.ok) throw new Error('Request failed');
   return r.json();
+}
+
+export async function apiPost(path: string, body: any): Promise<any> {
+  const token = await getToken();
+  const r = await fetch(`${API_URL}${path}`, {
+    method: 'POST',
+    headers: {
+      'content-type': 'application/json',
+      ...(token ? { authorization: `Bearer ${token}` } : {}),
+    },
+    body: JSON.stringify(body),
+  });
+  if (r.status === 401) { await clearToken(); throw new Error('unauthorized'); }
+  if (!r.ok) {
+    const e = await r.json().catch(() => ({}));
+    throw new Error(e.error || 'Create failed');
+  }
+  return r.json();
+}
+
+export async function getCollection(name: string, limit = 100): Promise<any[]> {
+  const d = await apiGet(`/api/${name}?limit=${limit}`);
+  return Array.isArray(d) ? d : [];
+}
+export async function postCollection(name: string, body: any): Promise<any> {
+  return apiPost(`/api/${name}`, body);
 }
