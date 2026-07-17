@@ -15,6 +15,14 @@ import {
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
+// `req.formData()` resolves to undici's `FormData` global under @types/node,
+// which lacks the DOM `.get()` signature this handler relies on. We model the
+// subset of the Web FormData API we use so the code typechecks under both the
+// DOM and Node global definitions.
+type MultipartForm = {
+  get(name: string): File | string | null
+}
+
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
@@ -37,10 +45,8 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  let form: FormData
-  try {
-    form = await req.formData()
-  } catch {
+  let form = (await req.formData().catch(() => null)) as MultipartForm | null
+  if (!form) {
     return NextResponse.json({ error: 'Expected multipart/form-data' }, { status: 400 })
   }
 
