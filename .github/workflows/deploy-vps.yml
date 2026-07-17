@@ -66,7 +66,20 @@ jobs:
             code=$(curl -sk --max-time 5 -o /dev/null -w '%{http_code}' https://127.0.0.1/ || true)
             echo "local https probe -> ${code:-000}"
             if [ "${code:-000}" = "000" ]; then
-              echo "Edge unresponsive — attempting Traefik restart"
+              echo "Edge unresponsive — attempting recovery"
+              # Run 406 diagnostics: after a host reboot the legacy nginx
+              # systemd unit (a leftover of the retired pm2/nginx stack)
+              # grabs :80 before Traefik starts, and Traefik then crashloops
+              # on "listen tcp :80: bind: address already in use" — leaving
+              # :443 with no listener at all. Host nginx serves nothing in
+              # the current stack (Traefik + containerised Caddy), so evict
+              # it for good before restarting Traefik.
+              if ss -tlnp | grep ':80 ' | grep -q nginx; then
+                echo "Legacy host nginx holds port 80 — stopping and disabling it"
+                systemctl stop nginx || true
+                systemctl disable nginx || true
+                systemctl mask nginx || true
+              fi
               tname=$(docker ps -a --format '{{.Names}}' | grep -im1 traefik || true)
               echo "traefik container: ${tname:-<none found>}"
               [ -n "$tname" ] && docker logs --tail 30 "$tname" 2>&1 | tail -30 || true
