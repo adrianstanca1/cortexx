@@ -14,6 +14,7 @@ const crypto = require('crypto');
 // Denylist for the generic /api/:collection CRUD catch-all — keeps system/
 // auth/audit/integration-secret tables off the generic REST path entirely.
 const { isRestrictedCollection } = require('./security');
+const log = require('./logger');
 
 const { version } = require('../package.json');
 
@@ -30,7 +31,7 @@ const CORS_ORIGINS = (process.env.CORS_ORIGINS || '').split(',').map(s => s.trim
 const DEV_DEFAULT_ORIGINS = ['http://localhost:8080', 'http://localhost:3000', 'http://127.0.0.1:8080'];
 const effectiveOrigins = CORS_ORIGINS.length ? CORS_ORIGINS : DEV_DEFAULT_ORIGINS;
 if (!CORS_ORIGINS.length && process.env.NODE_ENV === 'production') {
-  console.error('[fatal] CORS_ORIGINS is not set. Refusing to start in production with a wildcard CORS policy.');
+  log.fatal('[fatal] CORS_ORIGINS is not set. Refusing to start in production with a wildcard CORS policy.');
   process.exit(1);
 }
 const corsOptions = {
@@ -62,7 +63,7 @@ app.use('/api/iap/webhook', express.raw({ type: '*/*', limit: '1mb' }));
 app.use(express.json({ limit: '10mb' }));
 // cookie-parser is needed by the Open Banking OAuth callback (state cookie).
 // Optional dep — degrade gracefully if it isn't installed.
-try { app.use(require('cookie-parser')()); } catch (e) { console.warn('[warn] cookie-parser not installed — bank OAuth state check disabled'); }
+try { app.use(require('cookie-parser')()); } catch (e) { log.warn('[warn] cookie-parser not installed — bank OAuth state check disabled'); }
 
 const pool = new Pool({ connectionString: process.env.DATABASE_URL });
 // Expose the pool to route modules that read req.app.locals.pool
@@ -74,7 +75,7 @@ const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
 // user/workspace (full auth bypass). banking.js also derives the bank-token
 // encryption key from JWT_SECRET, so this guard protects token-at-rest too.
 if (!process.env.JWT_SECRET && process.env.NODE_ENV === 'production') {
-  console.error('[fatal] JWT_SECRET is not set. Refusing to start in production with the insecure default.');
+  log.fatal('[fatal] JWT_SECRET is not set. Refusing to start in production with the insecure default.');
   process.exit(1);
 }
 const APP_URL = process.env.APP_URL || 'http://localhost:8080';
@@ -176,10 +177,10 @@ app.post('/api/auth/magic/request', authLimiter, wrap(async (req, res) => {
         }),
       });
       sent = r.ok;
-      if (!r.ok) console.error('[magic] resend failed', await r.text());
-    } catch (e) { console.error('[magic] resend error', e.message); }
+      if (!r.ok) log.error('[magic] resend failed', await r.text());
+      } catch (e) { log.error('[magic] resend error', e.message); }
   } else {
-    console.log(`[magic] (no mailer configured) ${email} → ${link}`);
+    log.info(`[magic] (no mailer configured) ${email} → ${link}`);
   }
   // In production, never leak the link in the response. In dev, return it.
   if (process.env.NODE_ENV === 'production') return res.json({ ok: true, sent });
@@ -542,7 +543,7 @@ app.patch('/api/admin/workspaces/:id', apiLimiter, adminAuth, wrap(async (req, r
 // ── 404 + error handler ─────────────────────────────────────
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
 app.use((err, req, res, next) => {
-  console.error('[error]', err.message);
+  log.error('[error]', err.message);
   res.status(500).json({ error: 'server_error' });
 });
 
@@ -551,12 +552,12 @@ const PORT = process.env.PORT || 3001;
 // by a test it exposes `app`/`server`/`pool` without opening a socket, so tests
 // can mount it on an ephemeral port. Runtime production behavior is unchanged.
 if (require.main === module) {
-  const server = app.listen(PORT, () => console.log(`Cortexx API on :${PORT}`));
+  const server = app.listen(PORT, () => log.info(`Cortexx API on :${PORT}`));
 
   // ── Graceful shutdown ───────────────────────────────────────
   for (const sig of ['SIGTERM', 'SIGINT']) {
     process.on(sig, () => {
-      console.log(`\n${sig} received — closing`);
+      log.info(`${sig} received — closing`);
       server.close(() => pool.end().then(() => process.exit(0)));
       setTimeout(() => process.exit(1), 10000).unref();
     });
