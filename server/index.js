@@ -246,13 +246,17 @@ app.post('/api/support/tickets', authLimiter, wrap(async (req, res) => {
 // app.use('/api', ...) mounted routers so the intelligence router's auth guard
 // does not shadow it (same reason the ticket POST above lives up here).
 app.post('/api/support/tickets/lookup', authLimiter, wrap(async (req, res) => {
-  const { email } = req.body;
+  const { email, ticketId } = req.body;
   if (!email || !email.includes('@'))
     return res.status(400).json({ error: 'valid email required' });
+  // Require the ticket id so this is not a bare email→customer enumeration
+  // vector: callers must prove knowledge of a specific ticket they belong to.
+  if (!ticketId)
+    return res.status(400).json({ error: 'ticketId required' });
   const r = await pool.query(
     `SELECT id, subject, priority, status, created_at, updated_at
-     FROM support_tickets WHERE email=$1 ORDER BY created_at DESC LIMIT 50`,
-    [email.toLowerCase()]);
+     FROM support_tickets WHERE email=$1 AND id=$2 LIMIT 1`,
+    [email.toLowerCase(), ticketId]);
   res.json({ tickets: r.rows });
 }));
 
