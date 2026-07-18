@@ -56,7 +56,9 @@ jobs:
         # matches lib/. `postinstall` masks precompile failures locally with
         # `|| true`; this step makes a broken builder fail CI instead of
         # silently publishing stale or over-broad dist/ to production.
-        run: npm run precompile:check
+        # Runs the builder's byte-for-byte --check directly so CI fails fast if
+        # a contributor forgets to recompile lib/ → dist/.
+        run: node build-dist.js --check
       - name: Unit tests
         run: |
           set -o pipefail
