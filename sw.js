@@ -134,6 +134,22 @@ self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
   const url = new URL(e.request.url);
 
+  // App-shell navigations (only same-origin): network-first, and on any failure
+  // (offline / 5xx) serve the cached Cortexx.html shell so the PWA boots with no
+  // network. This is the offline entry point for bookmark/refresh/deep-link.
+  if (url.origin === location.origin && e.request.mode === 'navigate') {
+    e.respondWith(
+      fetch(e.request).then(net => {
+        if (net && net.status === 200) {
+          const clone = net.clone();
+          caches.open(CACHE).then(c => c.put(e.request, clone)).catch(() => {});
+        }
+        return net;
+      }).catch(() => caches.match('./Cortexx.html').then(c => c || caches.match('./')))
+    );
+    return;
+  }
+
   // CDN deps (React/Babel) — cache-first so the app boots offline.
   if (url.origin === 'https://cdn.jsdelivr.net' || url.origin === 'https://unpkg.com' || url.origin === 'https://cdnjs.cloudflare.com') {
     e.respondWith(
