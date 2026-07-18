@@ -1,6 +1,6 @@
 ================================================================
 Cortexx — App Store Connect listing copy (ready to paste)
-Last updated: 2026-05-23
+Last updated: 2026-07-18
 ================================================================
 
 ----------------------------------------------------------------
@@ -142,3 +142,38 @@ ENCRYPTION EXPORT COMPLIANCE
 ----------------------------------------------------------------
 ITSAppUsesNonExemptEncryption = NO
 (we only use Apple's standard TLS and platform crypto; no proprietary crypto)
+
+----------------------------------------------------------------
+BUILD & SUBMISSION STATUS (owner checklist — updated 2026-07-18)
+----------------------------------------------------------------
+Code status: iOS scaffold is build-ready. Capacitor config, Info.plist
+permission keys, and PrivacyInfo.xcprivacy are complete. Server-side
+AASA (/.well-known/apple-app-site-association) is LIVE and serving valid
+JSON over HTTPS.
+
+YOU MUST DO THESE ON A MAC (cannot be done from the Linux build server):
+  [ ] Enroll Apple Developer Program (£79/yr) if not already.
+  [ ] Reconcile bundle ID everywhere to ONE value:
+        capacitor.config.ts appId = com.cortexbuild.app
+        Xcode target PRODUCT_BUNDLE_IDENTIFIER (currently app.cortexbuild.cortexx)
+        App Store Connect bundle ID
+      Run `npx cap sync ios` on the Mac to enforce — currently mismatched.
+  [ ] Replace TEAMID in /.well-known/apple-app-site-association with your
+      10-char Apple Team ID (find at developer.apple.com → Membership).
+  [ ] In Xcode: enable Associated Domains capability + add
+      applinks:cortexbuildpro.com; enable Push capability (aps-environment).
+      Confirm PrivacyInfo.xcprivacy + App.entitlements are attached to the
+      App target (currently NOT embedded in the pbxproj — ITMS upload fails
+      without it).
+  [ ] npx cap sync ios && pod install && Xcode Archive → Distribute → Upload.
+  [ ] Create StoreKit subscription products (cbp.pro.monthly, cbp.pro.yearly,
+      cbp.team.monthly) in App Store Connect; add cordova-plugin-purchase and
+      build /api/iap/verify (native IAP is currently absent).
+  [ ] Capture App Store screenshots (1320×2868 iPhone 6.9") — NONE exist yet;
+      use app-store/screenshots-generator.html on the Mac simulator.
+  [ ] Fill App Privacy in App Store Connect (mirror PrivacyInfo + SUBMISSION §4),
+      age rating 4+, copy above. Submit.
+
+NOTE: Caddy currently serves the AASA without an explicit Content-Type header
+(extensionless file quirk). iOS accepts valid JSON over HTTPS, but if the
+validator complains, pin application/json via the Xcode/entitlements step.

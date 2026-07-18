@@ -123,6 +123,9 @@ services:
       - ./dist:/srv/app/dist:ro
       - ./lib:/srv/app/lib:ro
       - ./public:/srv/app/public:ro
+      # Apple App Site Association + security.txt for Universal Links / AASA.
+      # Served at /.well-known/* (Caddy try_files resolves to /srv/app/.well-known).
+      - ./.well-known:/srv/app/.well-known:ro
       - ./Cortexx.html:/srv/app/Cortexx.html:ro
       - ./admin.html:/srv/app/admin.html:ro
       - ./support.html:/srv/app/support.html:ro
