@@ -16,7 +16,13 @@ const crypto = require('crypto');
 const { isRestrictedCollection } = require('./security');
 const log = require('./logger');
 
-const { version } = require('../package.json');
+// Resolve the app version. The image copies server/package.json next to
+// index.js (/app/package.json), while locally index.js lives in server/ and
+// the version lives at the repo root (../package.json). Try both so the
+// health endpoint reports a version in every context.
+const { version } = (() => {
+  try { return require('../package.json'); } catch { try { return require('./package.json'); } catch { return { version: '0.0.0' }; } }
+})();
 
 const app = express();
 app.set('trust proxy', 1);
