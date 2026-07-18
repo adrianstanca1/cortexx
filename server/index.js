@@ -430,7 +430,9 @@ async function adminAuth(req, res, next) {
   try {
     const u = jwt.verify(token, JWT_SECRET);
     const r = await pool.query('SELECT role FROM users WHERE id=$1', [u.uid]);
-    if (!r.rows[0] || !['owner', 'admin'].includes(r.rows[0].role))
+    // owner/admin run the platform; director is the founder/operator seat
+    // (the seeded Cortexx account is `director`), so it administers too.
+    if (!r.rows[0] || !['owner', 'admin', 'director'].includes(r.rows[0].role))
       return res.status(403).json({ error: 'forbidden' });
     req.user = u;
     next();
