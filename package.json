@@ -15,6 +15,7 @@
     "build": "next build && npm run precompile",
     "start": "next start",
     "lint": "eslint . --max-warnings 100",
+    "lint:smells": "node scripts/ban-smell-words.mjs",
     "audit:app": "node scripts/audit-app-integrity.mjs",
     "quality": "npm run audit:app && npm run lint && npx tsc --noEmit && npm test",
     "db:generate": "prisma generate",
