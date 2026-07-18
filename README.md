@@ -1,177 +1,150 @@
-# Cortexx — The Construction OS
+# Cortexx — The Construction OS that thinks with you
 
-The construction OS that thinks with you. Built for UK SMB contractors.
+UK SMB contractor management with an autonomous AI CEO (**Vera**). One product, **three deployment targets**, **one shared backend** (`/api/*` on **cortexbuildpro.com**).
 
-[![PWA](https://img.shields.io/badge/PWA-ready-2563eb)](manifest.json)
-[![iOS](https://img.shields.io/badge/iOS-Capacitor%206-1a73e8)](ios/README.md)
-[![App Store](https://img.shields.io/badge/App%20Store-submission%20ready-10b981)](app-store/SUBMISSION.md)
+[![Version](https://img.shields.io/badge/version-1.4.0-2563eb)](CHANGELOG.md)
+[![PWA](https://img.shields.io/badge/PWA-offline--first-2563eb)](manifest.json)
+[![iOS](https://img.shields.io/badge/iOS-Capacitor%208.4-1a73e8)](ios/README.md)
+[![Expo](https://img.shields.io/badge/Expo-SDK%2057-000)](expo/DEPLOY-IOS.md)
+[![Tests](https://img.shields.io/badge/tests-234%20passing-10b981)](test/)
 
 ![Cortexx](icon.svg)
 
-## What's inside
+---
 
-- **80 phase modules** — Quotes, Projects, Tasks, Team, Money, Safety, RFIs, Snags, Permits, Drawings, Site Diary, Inspections, Timesheets, Mileage, Customers, Leads, AI estimator, vision OCR, voice memos, Vera autopilot, and 60 more
-- **15 dashboard layouts** — Action-first, Status board, Calm, Bento, AI-forward, Field, Timeline, Books, Stories, Rings, Map, Focus, Executive, Broadsheet, Site Notice
-- **41+ reactive backend tables** — localStorage-backed, with IndexedDB for photos
-- **30+ AI flows** powered by Claude — estimator, briefing, decisions, OCR, parsing, chase drafting, report narration, health checks, transcription
-- **Vera Stone** — autonomous CEO AI persona with 5-member leadership team
-- **Real device APIs** — GPS check-in, camera, push notifications, file picker, share, print, backup/restore
-- **PWA-installable** — works offline; precompiled JS bundle loads in <1 s on iPhone
-- **iOS-ready** — Capacitor 6 scaffold + privacy manifest + App Store submission pack
+## What Cortexx is today
+
+Cortexx (product name **CortexBuild Pro**) is a UK SMB construction-management platform deployed live at **cortexbuildpro.com**. It is a **monorepo** with three client stacks that all talk to one Express + PostgreSQL backend, sharing an API contract via `@cortexbuild/core` (`packages/core`). See [`MONOREPO.md`](MONOREPO.md) for the layout.
+
+### Three deployment targets, one backend
+
+| # | Target | Path | Stack | Role |
+|---|--------|------|-------|------|
+| 1 | **Offline PWA** | `Cortexx.html` + `lib/` → `dist/` | Vanilla JS, Babel-in-browser (no bundler) | Offline-first, local-first, `<1s` cold start, private Ollama LLM |
+| 2 | **Web admin** | `app/`, `components/`, `prisma/` | Next.js 16, React 19, next-auth v5, Prisma 7, Tailwind v4 | Server + web admin dashboard |
+| 3 | **Native (iOS + Android)** | `expo/`, `ios/` | Expo SDK 57 / Capacitor 8.4 | Native app shell |
+
+All three consume the same `/api/*` endpoints. Business data in the PWA lives on-device (localStorage + IndexedDB) and syncs to the backend optionally.
+
+---
+
+## Backend (`server/`)
+
+Express + PostgreSQL. `server/index.js` is the single entry; route modules live in `server/routes/`.
+
+- **Multi-tenant** via `workspace_id`
+- **Auth**: JWT (Bearer) + magic-link
+- **Realtime**: Server-Sent Events (SSE) per workspace
+- **LLM**: **Ollama** local inference — no external API keys
+- **Data model**: a **raw SQL schema** (`server/db/schema.sql`, applied at volume init via docker-compose). Prisma's `schema.prisma` is a *parallel* model for the Next.js stack — **not** the source of truth for the Express API. See [`docs/DATA_MODEL_DRIFT.md`](docs/DATA_MODEL_DRIFT.md).
+
+**Route modules** (`server/routes/`): `banking` (TrueLayer open-banking), `hmrc` (CIS300), `iap` (Stripe / StoreKit), `llm`, `payments`, `push`, `sync`, `portal`, `ledger`, `intelligence`, `agents`.
+
+Deployment brings up four services via `docker-compose.yml`: `db` (Postgres 16), `api` (Express), `ollama` (local LLM), and `web` (Caddy static host + reverse proxy; config in `Caddyfile`).
+
+---
+
+## By the numbers (v1.4.0, grep-verified)
+
+| Area | Count |
+|------|-------|
+| SPA screen/logic modules (`lib/*.jsx|js` → `dist/*.js`) | **113** precompiled modules; phase modules through **phase 118** |
+| Dashboard layouts | **15** (`dashboards.jsx` + `dashboards-v2…v5.jsx`) |
+| Next.js pages (`app/**/page.tsx`) | **110+** |
+| Expo native app | thin shell — **5 core screens** + collection-driven tabs (SDK 57 / Capacitor 8), shares `@cortexbuild/core` |
+| Backend route modules | **11** (`server/routes/`) |
+| Backend data model | **34 SQL tables** (`schema.sql`) vs **82 Prisma models** (drift — see below) |
+| AI leadership team | **Vera** autonomous CEO + 5-person leadership team |
+| Test suite | **234 passing** (`npm test`) |
+
+> Honesty note: the native `expo/` app is currently a lean shell (login, projects, project detail, tickets, a generic collection screen + tabbed nav) sharing the cross-app API contract — not a full mirror of the 113-module PWA. The PWA is the feature-complete client.
+
+---
 
 ## Quick start
 
 ```bash
-# Local dev (no install needed)
-open Cortexx.html
+# 1) Offline PWA — no build, no server needed for local dev
+open Cortexx.html                 # loads precompiled dist/
+open "Cortexx.html?dev=1"         # hot-edit JSX via in-browser Babel
+open "Cortexx.html?perf=1"        # perf HUD
 
-# Or with hot-edit JSX (loads Babel in browser)
-open "Cortexx.html?dev=1"
+# 2) Next.js web admin + API dev server
+npm run dev
 
-# Or with the perf HUD visible
-open "Cortexx.html?perf=1"
+# 3) Native (Expo)
+cd expo && npm install && npx expo start
 ```
 
-No build step. No server. No backend infrastructure required.
+Node **>=22**, npm **>=10**.
+
+---
+
+## Build
+
+```bash
+npm run build              # next build && precompile (rebuilds dist/ from lib/)
+npm run precompile         # node build-dist.js — rebuild dist/ from lib/
+node build-dist.js --check # byte-verify dist/ vs lib/ sync, exit 1 on drift
+npm test                   # node --test test/*.test.js  (234 passing)
+```
+
+`build-dist.js` is the **single** SPA builder: `lib/*.jsx` → Babel → `dist/*.js`; `lib/*.js` copied verbatim; `.ts`/other server-only files are **not** emitted. `postinstall` runs `precompile`, so `npm install` rebuilds `dist/` automatically. **After editing any `lib/*.js|jsx`, run `node build-dist.js` and commit the updated `dist/`** — otherwise prod serves stale code.
+
+---
 
 ## Deploy
 
-This is a static site. Drop the project folder into:
+The stack is **self-hosted** via Docker Compose on a VPS (Postgres + Express + Ollama + Caddy). It is **not** a static-only site.
 
-- **Vercel** — `vercel --prod` from the project folder (uses included `vercel.json`)
-- **Netlify Drop** — drag folder to https://app.netlify.com/drop
-- **GitHub Pages** — push to a repo, enable Pages on `/ (root)` of main
-- **Cloudflare Pages** — connect the GitHub repo
-- **Self-hosted** — `deploy.sh` provisions Nginx + LE on a Hostinger VPS
+- Architecture, secrets, gotchas: [`CLAUDE.md`](CLAUDE.md) § **Deployment**
+- VPS runbooks: [`DEPLOY_VPS.md`](DEPLOY_VPS.md), [`DEPLOY_cortexbuildpro.md`](DEPLOY_cortexbuildpro.md), [`DEPLOYMENT.md`](DEPLOYMENT.md), [`DEPLOY_NOW.md`](DEPLOY_NOW.md)
+- Ops (systemd, backups, restore): [`deploy/README.md`](deploy/README.md), [`docs/RUNBOOK.md`](docs/RUNBOOK.md)
 
-Full deploy guide: [`docs/RUNBOOK.md`](docs/RUNBOOK.md) (ops runbook); current self-hosted stack details live in [`CLAUDE.md`](CLAUDE.md) § Deployment.
+Traefik owns host ports 80/443; the `web` Caddy service joins Traefik via docker-provider labels and must **not** publish 80/443 itself (see `CLAUDE.md`).
 
-## iOS App Store
+---
 
-Capacitor 6 scaffold lives in `ios/`. From a Mac with Xcode:
+## iOS / App Store — honest constraints
 
-```bash
-cd ios
-npm install
-npm run ios   # builds web, syncs, opens Xcode
-```
+The iOS path (Expo SDK 57 + Capacitor 8, `expo/` and `ios/`) **cannot be completed from this Linux VPS**. **EAS Build and App Store submission require a Mac + an Apple Developer account** for:
 
-App Store submission runbook: [`app-store/SUBMISSION.md`](app-store/SUBMISSION.md) and [`ios/README.md`](ios/README.md).
+- Provisioning profiles & signing
+- Universal-links / AASA association
+- StoreKit IAP plugin configuration and receipt validation
 
-## Project structure
+Canonical bundle id is `com.cortexbuild.app`. Runbooks: [`expo/DEPLOY-IOS.md`](expo/DEPLOY-IOS.md), [`ios/README.md`](ios/README.md), [`app-store/SUBMISSION.md`](app-store/SUBMISSION.md).
 
-```
-.
-├── Cortexx.html                 App entry (smart loader: prod or ?dev=1)
-├── Cortexx Marketing.html       Landing page
-├── Cortexx-standalone.html      Portable single-file build (1.7 MB)
-├── privacy.html · terms.html · support.html   Legal pages
-│
-├── lib/                         JSX source (60 modules)
-│   ├── backend.js / backend-extras.js   Reactive store + AI helpers
-│   ├── perf-phase71.js / perf-phase81.js   Performance layers
-│   ├── dashboards*.jsx          15 dashboard layouts
-│   ├── tokens.jsx               Design tokens + icons
-│   ├── tweaks-panel.jsx         Tweaks shell
-│   ├── ios-frame.jsx            iOS 26 device frame
-│   ├── boot.jsx                 React root bootstrap
-│   ├── app-main.jsx             Shell, sheet routing
-│   ├── app-{screens,sheets,utils}.jsx   Core screens
-│   ├── screens-ops.jsx · screens-project.jsx
-│   └── screens-phase2…80.jsx    79 phase modules
-│
-├── dist/                        Precompiled JS (production, immutable-cached)
-│
-├── ios/                         Capacitor 6 wrap
-├── app-store/                   Submission pack (metadata, screenshots, icons)
-├── .well-known/security.txt     Responsible disclosure
-├── manifest.json · sw.js        PWA
-├── icon-{192,512}.png · apple-touch-icon.png
-├── robots.txt · sitemap.xml · vercel.json · deploy.sh
-│
-└── ROADMAP.md · CHANGELOG.md · VAULT.md · CLAUDE.md   Docs
-```
+---
 
 ## AI flows
 
-All AI runs through `window.claude.complete` — but the entry point is now a **local-first shim** (`lib/llm-shim.js`) that routes to infrastructure you control:
+All AI runs through a **local-first shim** (`lib/llm-shim.js`) with a 3-tier router — no third-party API key required:
 
-1. **Server LLM** — `POST /api/llm` proxies to **Ollama** (default `llama3.2:3b`, `llava` for vision) on the VPS. No API keys.
-2. **WebLLM in-browser** — Llama-3.2-1B via WebGPU (opt-in from Settings; runs fully on-device, offline-capable).
+1. **Server LLM** — `POST /api/llm` proxies to **Ollama** (`llama3.2:3b` chat, `llava` vision) on the VPS.
+2. **WebLLM in-browser** — Llama-3.2-1B via WebGPU (opt-in from Settings; fully on-device, offline-capable).
 3. **Deterministic engine** — `CortexLocalAgent.respond()` reads live Brain state; never fails.
-
-Configure via `server/.env`:
-```
-LLM_RUNTIME=ollama
-OLLAMA_BASE=http://localhost:11434
-OLLAMA_MODEL=llama3.2:3b
-OLLAMA_VISION_MODEL=llava
-```
-Then on the VPS: `ollama pull llama3.2:3b && ollama pull llava`.
 
 Health check: `GET /api/llm/health` reports which models are installed and ready.
 
-In the prototype dev environment the shim detects the native `window.claude.complete` and leaves it alone (set `?local=1` or `CortexLLM.useLocal()` to force local).
+Flows: AI estimator (NL → UK line items + total), daily briefing / decisions / 30-day strategy, receipt OCR + categorisation, smart task parsing, invoice-chase drafting, project health check, material forecast, schedule optimisation, document generation (RAMS / Method Statement / H&S Policy / Tender), photo→snag vision, voice-memo transcription.
 
-- AI estimator — natural language → UK construction line items + total
-- Daily briefing, decisions, 30-day strategy (Vera CEO persona)
-- Receipt OCR + auto-categorisation
-- Smart task parsing
-- Invoice chase drafting
-- Project health check
-- Material forecast
-- Schedule optimisation
-- Document generation (RAMS, Method Statement, H&S Policy, Tender)
-- Photo→Snag vision flow
-- Voice memo transcription (post-hoc on iOS, live on Chrome)
+---
 
-## Vera autopilot
+## Vera — autonomous CEO
 
-Vera Stone is the autonomous CEO (`lib/screens-phase39.jsx` & `40.jsx`):
-- Generates leads from market intelligence
-- Drafts chase emails for overdue invoices
-- Health-checks every active project
-- Forecasts material orders
-- Schedules briefings on cron (06:00 / 09:00 / 14:00 / 16:00)
+**Vera Stone** is the autonomous CEO persona, backed by a 5-person leadership team: **Marcus Pound** (CFO), **Pip Carter** (Site Manager), **Ada Whitfield** (Compliance), **River Ng** (Sales Director). Vera generates leads from market intelligence, auto-quotes new/qualified leads, drafts chase emails for overdue invoices, health-checks active projects, forecasts material orders, and schedules briefings on cron.
 
-Plus 4 supporting personas: Marcus Pound (CFO), Pip Carter (Site Manager), Ada Whitfield (Compliance), River Ng (Sales Director).
+---
 
-## Performance
+## Docs
 
-| Metric | Result |
-|---|---|
-| Cold start (production) | **192 ms** in iframe; ~600 ms on iPhone Safari |
-| Cross-tab sync latency | < 5 ms via BroadcastChannel |
-| Bundle size (dist/, gzipped) | ~280 KB |
-| Lighthouse PWA score | 100/100 (target; verify locally) |
-
-See [`PERF_PHASE_81.md`](PERF_PHASE_81.md) for the deep-dive.
-
-## Build (keep lib/ and dist/ in sync)
-
-`lib/*.jsx` is the source of truth; `dist/*.js` is the precompiled production bundle.
-After editing anything in `lib/`, regenerate `dist/` so the two never drift:
-
-```sh
-# one-time
-npm install --save-dev @babel/core @babel/cli @babel/preset-react
-
-# recompile all modules (picks up new files automatically)
-npx babel lib --out-dir dist --presets=@babel/preset-react --extensions ".jsx,.js"
-```
-
-The app defaults to loading `lib/` via in-browser Babel, so source edits are always
-live. Append `?prod` to the URL to load the precompiled `dist/` path instead.
-
-## Tech
-
-- React 18 (UMD, dev build)
-- In-browser Babel only in `?dev=1` mode (production loads precompiled `dist/*.js`)
-- LocalStorage + IndexedDB (`backend.js` + `backend-extras.js`)
-- Service Worker (offline + dist/ precache)
-- BroadcastChannel (multi-tab sync)
-- Capacitor 6 (iOS wrap)
-- Claude API (server-proxied)
+- [`MONOREPO.md`](MONOREPO.md) — three-app layout + shared core
+- [`ROADMAP.md`](ROADMAP.md) — shipped / in-flight / planned + current risks
+- [`STATUS.md`](STATUS.md) — one-page product status
+- [`CLAUDE.md`](CLAUDE.md) — architecture, deployment, gotchas
+- [`docs/DATA_MODEL_DRIFT.md`](docs/DATA_MODEL_DRIFT.md) — SQL-vs-Prisma model drift
+- [`CHANGELOG.md`](CHANGELOG.md) · [`VAULT.md`](VAULT.md) (secrets)
 
 ## License
 
@@ -179,4 +152,4 @@ Provided as-is. Use it, fork it, ship it.
 
 ## Author
 
-Built with [Claude](https://claude.ai/) by Anthropic, in partnership with Adrian Stanca.
+Built in partnership with Adrian Stanca.

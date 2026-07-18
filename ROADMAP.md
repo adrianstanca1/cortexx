@@ -62,7 +62,7 @@ This is the **single source of truth** for what's done, what's in-flight, and wh
 | ✅ | Deeplink handler (`?action=task\|receipt\|ai\|...`) | PWA shortcuts open the right sheet |
 | ✅ | Legal pages: privacy.html, terms.html, support.html | UK GDPR-aware; ready for App Store URLs |
 | ✅ | robots.txt, sitemap.xml, .well-known/security.txt | SEO + responsible disclosure |
-| ✅ | iOS Capacitor 6 scaffold (`ios/`) | Mac-ready; one npm install + cap add ios away |
+| ✅ | iOS Capacitor scaffold (`ios/`) — later upgraded to Capacitor 8.4 (see Status 2026-07-18) | Mac-ready; one npm install + cap add ios away |
 | ✅ | iOS 17+ privacy manifest (`PrivacyInfo.xcprivacy`) | All Required Reason APIs declared |
 | ✅ | Info.plist permissions for every Web API | NSCameraUsageDescription, NSMicrophone, etc. |
 | ✅ | App Store submission pack (`app-store/`) | SUBMISSION.md runbook + metadata + screenshots |
@@ -169,3 +169,28 @@ This is the **single source of truth** for what's done, what's in-flight, and wh
 4. Update `SHIP_READY.md` if your change affects the bundle.
 5. Bump `sw.js` `CACHE` version (e.g. `v3-1-006`) — otherwise users won't get your code.
 6. Keep `dist/` in sync — `npm install` auto-runs `npm run precompile` (postinstall hook). No-Node fallback: open `tools/build-dist.html`. The loader also falls back to `lib/*.jsx` via Babel if `dist/X.js` 404s.
+
+---
+
+## Status (2026-07-18)
+
+> The header above (6 Jun 2026, "stops at Phase 4") is superseded. Since then the product consolidated into a monorepo (v1.4.0) and the roadmap's phase model no longer captures the shape of the codebase. This section is the current truth.
+
+### ✅ Shipped since 6 Jun 2026
+
+- **Monorepo consolidation** — three apps (Offline PWA, Next.js 16 web admin, Expo/native) unified under one repo with a shared `@cortexbuild/core` API-contract package. _(commit `7865114d`)_
+- **iOS: Capacitor 8 + Expo SDK 57** — native shell made submission/build-ready. _(commit `b3974259`)_
+- **8-dangling-nav fix** — resolved 8 sheet routes that were reachable from nav but had no destination. _(commit `d2cc8713`)_
+- **Cloud-sync refactor** — SPA `cloud-sync.js` rewired onto the shared `@cortexbuild/core` client. _(commit `8e83da72`)_
+
+### 🚨 Current in-flight risks (from the code review)
+
+These are the real structural liabilities the v1.4.0 review surfaced — they are **open**, not resolved:
+
+- **3 frontends, 2 data models.** The PWA, Next.js admin, and Expo app are three separate clients. Worse, there are **two divergent data models**: the canonical Express backend uses a **raw SQL schema (34 tables)** in `server/db/schema.sql`, while the Next.js stack uses **Prisma (82 models)**. They have drifted. Unifying them is a P0. See [`docs/DATA_MODEL_DRIFT.md`](docs/DATA_MODEL_DRIFT.md) and `scripts/align-prisma-to-sql.mjs`.
+- **184-branch nav dispatcher.** `lib/app-main.jsx` routes sheets through a long chain of `sheet === '…'` string comparisons (184 branches). It is brittle and hard to extend — being replaced by a **declarative SheetRegistry**. (`test/nav-registry.test.js` is the seed of that work.)
+- **~30–50 workaround markers.** A sweep of `lib/`, `server/`, `app/`, and `packages/` finds dozens of `TODO`/`FIXME`/`HACK`/`WORKAROUND` markers (≈32 counting TODO+FIXME+HACK+XXX+WORKAROUND; higher if case-insensitive "hack/workaround" prose is included). Each is deferred debt that should be triaged.
+
+### Data-model reference
+
+The authoritative model for the live API is **raw SQL** (`server/db/schema.sql`), not Prisma. Any code reading `schema.prisma` as the backend source of truth is wrong. See [`docs/DATA_MODEL_DRIFT.md`](docs/DATA_MODEL_DRIFT.md).
