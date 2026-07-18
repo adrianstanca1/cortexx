@@ -13,7 +13,7 @@ RUN npm ci --omit=dev && npm cache clean --force
 # db_status.log and any host node_modules into the image layer. Even though the
 # container runs as `USER node` and reads env via compose env_file, a secret
 # baked into a layer is recoverable by anyone who can pull/inspect the image.
-COPY index.js ollama-init.sh ./
+COPY index.js ollama-init.sh security.js logger.js ./
 COPY routes/ ./routes/
 COPY db/ ./db/
 
