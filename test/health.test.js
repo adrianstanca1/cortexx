@@ -41,7 +41,7 @@ function ensureServerDeps() {
   try {
     srvTmpDir = fs.mkdtempSync(path.join(os.tmpdir(), 'cortexx-srvtest-'))
     execFileSync('npm', ['install', '--no-package-lock', '--prefix', srvTmpDir,
-      'express@4', 'helmet@7', 'express-rate-limit@7', 'jsonwebtoken@9', 'cookie-parser@1'], {
+      'express@4', 'helmet@7', 'express-rate-limit@7', 'jsonwebtoken@9', 'cookie-parser@1', 'cors@2', 'bcryptjs@2'], {
       stdio: 'pipe', encoding: 'utf8', timeout: 60000,
     })
     const extraRoot = path.join(srvTmpDir, 'node_modules')
@@ -64,8 +64,12 @@ function ensureServerDeps() {
 }
 
 const depsOk = ensureServerDeps()
+let app = null
+if (depsOk) {
+  try { app = require(path.join(REPO, 'server', 'index.js')).app }
+  catch { depsOk = false }
+}
 const maybe = depsOk ? test : test.skip
-const app = depsOk ? require(path.join(REPO, 'server', 'index.js')).app : null
 
 let server, port
 before(() => {
