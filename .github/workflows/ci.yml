@@ -63,6 +63,11 @@ jobs:
         run: |
           set -o pipefail
           npm test 2>&1 | tee unit-tests.log
+      - name: Nav-registry integrity test (dangling-nav guard)
+        # Fails CI if any cortexxNav('X') target lacks a render block or
+        # special-case in lib/app-main.jsx (a navigation that would render
+        # nothing). Dependency-free — no DB required.
+        run: npm run test:nav
       - name: Upload unit-test log on failure
         if: failure()
         uses: actions/upload-artifact@v7
