@@ -1,0 +1,23 @@
+{
+  "applinks": {
+    "apps": [],
+    "details": [
+      {
+        "appIDs": [
+          "TEAMID.com.cortexbuild.app"
+        ],
+        "paths": [
+          "/portal/*",
+          "/magic/*",
+          "/invite/*",
+          "*"
+        ]
+      }
+    ]
+  },
+  "webcredentials": {
+    "apps": [
+      "TEAMID.com.cortexbuild.app"
+    ]
+  }
+}

@@ -26,6 +26,14 @@
 		respond 404
 	}
 
+	# Apple App Site Association — served at /.well-known/apple-app-site-association
+	# (no .json extension). Apple requires Content-Type application/json. A
+	# dedicated handle placed BEFORE the catch-all wins the route match.
+	handle /.well-known/apple-app-site-association {
+		header Content-Type "application/json"
+		file_server
+	}
+
 	# ── Everything else → landing page (or SPA shell for deep links) ──
 	handle {
 		try_files {path} /landing.html /Cortexx.html
