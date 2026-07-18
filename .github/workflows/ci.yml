@@ -38,6 +38,12 @@ jobs:
             ${{ runner.os }}-nextjs-${{ hashFiles('package-lock.json') }}-
       - name: Prisma schema format check
         run: npx prisma format --check
+      - name: Data-model drift guard (raw SQL vs Prisma)
+        # Enforces that every raw-SQL table the Express API persists either has a
+        # Prisma model the Next.js admin can use, or is an explicitly-allowlisted
+        # JSONB/system table. Catches net-new drift between schema.sql and
+        # schema.prisma before it reaches prod.
+        run: node scripts/prisma-drift-check.mjs
       - name: Application route, link, and UI integrity
         run: npm run audit:app
       - name: Lint

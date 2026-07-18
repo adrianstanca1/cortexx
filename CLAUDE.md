@@ -2,7 +2,7 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-Cortexx ("CortexBuild Pro") is a UK SMB construction-management app deployed live at **cortexbuildpro.com** (DNS points at this VPS). The repo holds two coexisting frontend stacks, an Express/Postgres backend, and an iOS (Capacitor) shell — read the architecture section before editing, because several conventions are non-obvious and have caused prod outages.
+Cortexx ("CortexBuild Pro") is a UK SMB construction-management app deployed live at **cortexbuildpro.com** (DNS points at this VPS). The repo holds **three deployment targets** that share ONE backend (`/api/*` on cortexbuildpro.com): (1) a vanilla-JS offline **PWA** (`Cortexx.html` + `lib/*.jsx` → `dist/`), (2) a **Next.js 16** web admin (`app/`), and (3) an **Expo SDK 57 / Capacitor 8** native iOS+Android shell (`expo/`, `ios/`). Plus an Express/Postgres backend (`server/`) and an Ollama LLM service — read the architecture section before editing, because several conventions are non-obvious and have caused prod outages.
 
 ## Commands
 
@@ -30,9 +30,9 @@ Node >=22, npm >=10. `postinstall` runs `precompile` silently, so `npm install` 
 
 ## Architecture
 
-**Two frontend stacks share this repo — know which one you're touching:**
+**Two frontend source stacks share this repo — plus a native shell — know which one you're touching:**
 
-1. **The production SPA** (what cortexbuildpro.com actually serves). Entry is `Cortexx.html`, a smart loader: default loads precompiled `.js` from `dist/`; `?dev=1` loads `.jsx` from `lib/` and transforms in-browser via Babel; `?perf=1` shows the perf HUD. `lib/` holds ~148 JSX/JS modules (`app-main.jsx`, `app-screens*.jsx`, `dashboards-v*.jsx`, `backend.js`, `tokens.jsx`, …). IndexedDB stores photos; localStorage backs the reactive store (`Backend.db.*` collections). PWA via `sw.js` + `manifest.json`.
+1. **The production SPA** (what cortexbuildpro.com actually serves). Entry is `Cortexx.html`, a smart loader: default loads precompiled `.js` from `dist/`; `?dev=1` loads `.jsx` from `lib/` and transforms in-browser via Babel; `?perf=1` shows the perf HUD. `lib/` holds **118 SPA screen modules** (`app-main.jsx`, `app-screens*.jsx`, `dashboards-v*.jsx`, `backend.js`, `tokens.jsx`, …) → **114 precompiled `dist/` modules**. IndexedDB stores photos; localStorage backs the reactive store (`Backend.db.*` collections). PWA via `sw.js` + `manifest.json`.
 
 2. **The newer Next.js 16 app** (`app/`, `components/`, `prisma/`) using React 19, next-auth v5, Prisma 7, Tailwind v4. App-router under `app/` with route groups like `(auth)` and ~60 feature dirs that mirror the SPA's screens. This stack uses **Prisma** (`prisma/schema.prisma`).
 

@@ -1,35 +1,59 @@
 # Data-Model Drift — raw SQL vs Prisma
 
-_As of 2026-07-18 · v1.4.0_
+_As of 2026-07-18 · v1.4.0 — REVISED after deep-dive verification_
 
-CortexBuild Pro carries **two data models that have drifted apart**. This is a P0 structural risk.
+## TL;DR
 
-## The two models
+The earlier "82 vs 34 = 2.4× table explosion" framing was **wrong**. The two
+models describe the **same ~34 underlying tables**. The real issue is a
+**naming/casing convention mismatch**, plus **one genuine missing model** and
+**three legacy/orphan models**.
 
-| | Canonical (live API) | Parallel (Next.js only) |
+## What the numbers actually mean
+
+| | Raw SQL (`server/db/schema.sql`) | Prisma (`prisma/schema.prisma`) |
 |---|---|---|
-| **Where** | `server/db/schema.sql` | `prisma/schema.prisma` |
-| **Engine** | Raw SQL, applied at Postgres volume init via `docker-compose.yml` | Prisma 7 |
-| **Consumed by** | Express API (`server/`) → serves `cortexbuildpro.com` `/api/*` | Next.js 16 web admin (`app/`) |
-| **Size** | **34 `CREATE TABLE`** statements | **82 `model` blocks** |
-| **Authority** | ✅ **Source of truth** for everything the product actually persists | ❌ Parallel model — **not** what the Express API reads/writes |
+| Count | **34 `CREATE TABLE`** | **82 `model` blocks** |
+| Role | ✅ **Source of truth** — Express API persists these at `cortexbuildpro.com` via `/api/:collection` | Next.js 16 admin's typed client |
 
-## Why this matters
+- **79 of the 82 Prisma models map to a real raw-SQL table** (e.g. `actionPlan`
+  → `action_plans`, `kaizenCard` → `kaizen_cards`, `serviceCatalogItem` →
+  `service_catalog_items`). They are **actively used** by `app/` (verified by
+  grepping `prisma.<model>` call sites — 79 distinct models referenced).
+- The "extra" Prisma models are mostly **different names for the same 34
+  tables** (camelCase singular vs snake_case plural), not new tables.
 
-- The live product (`cortexbuildpro.com`) is served by the **Express + raw-SQL** path. The `/api/:collection` routes, sync, portal, ledger, HMRC, banking, IAP, and intelligence endpoints all read/write the SQL tables.
-- Prisma's 82 models are used by the Next.js admin stack only. They do **not** define the backend contract.
-- Any developer who treats `schema.prisma` as the backend source of truth will build against a model that the production API does not honour.
+## The three real problems
 
-## Reconciliation tooling
+1. **Missing model (genuine gap):** the `workspaces` table (tenant root)
+   has **no Prisma model at all**. The Next.js admin references workspaces but
+   has no typed access. → _Tracked; TODO: add `model Workspace`._
+2. **Intentional JSONB/system tables (by design):** 23 tables are persisted
+   only via the generic `/api/:collection` JSONB namespace or purpose-built
+   auth/integration routes and are intentionally Prisma-free (`documents_store`,
+   `ai_history`, `audit_log`, `photos`, `portal_tokens`, `magic_links`,
+   `hmrc_submissions`, `bank_connections`, `iap_entitlements`, …).
+3. **Legacy/orphan models (safe to keep for now):** `Account`, `Session`,
+   `VerificationToken` are next-auth v5 convention names not yet wired to an
+   Email provider — kept for future use, documented as allowed orphans.
 
-`scripts/align-prisma-to-sql.mjs` reads `server/db/schema.sql`, parses every `CREATE TABLE`, and emits a Prisma model skeleton (one `model` per real table) — a starting point for aligning Prisma down to the 34 tables the backend actually persists.
+## Enforcement (the actual fix)
 
-```bash
-node scripts/align-prisma-to-sql.mjs   # print skeleton + drift report
-```
+A mechanical 82→34 collapse would **rename 79 used models and break
+`next build`** — do NOT do it. Instead we enforce alignment going forward:
 
-## The fix (P0)
+- **`scripts/prisma-drift-check.mjs`** — CI guard (wired into `.github/workflows/ci.yml`
+  after `prisma format --check`). It fails on:
+  - a raw-SQL table with no Prisma model (excluding the 23 intentional ones
+    + the 1 tracked gap `workspaces`), or
+  - a Prisma model with no SQL table AND no usage anywhere in `app/ components/
+    lib/ server/`.
+  - Runs green today; turns red on any net-new drift.
+- **`scripts/align-prisma-to-sql.mjs`** — reference generator that emits a
+  Prisma skeleton from `schema.sql` (one `model` per real table). Useful when
+  bootstrapping a new model for a currently-unmodelled table (e.g. `Workspace`).
 
-Unify on one model. The recommended direction is to make Prisma reflect the raw SQL schema (SQL stays canonical because it is what production runs), or to collapse the two so the three frontends share a single, verified contract via `@cortexbuild/core`.
+## Rule of thumb
 
-Until then: **when in doubt, `server/db/schema.sql` wins.**
+**When in doubt, `server/db/schema.sql` wins.** Prisma is the admin's typed
+view of the canonical SQL model — not an independent source of truth.
