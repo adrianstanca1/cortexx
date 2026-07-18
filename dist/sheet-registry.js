@@ -1,0 +1,752 @@
+(function (root) {
+  'use strict';
+
+  const SHEET_REGISTRY = {
+    'activity': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'addallocation': {
+      component: 'AddAllocationSheet',
+      audit: null
+    },
+    'addbid': {
+      component: 'BidSheet',
+      audit: null
+    },
+    'addcert': {
+      component: 'AddCertSheet',
+      audit: null
+    },
+    'addchange': {
+      component: 'AddChangeOrderSheet',
+      audit: null
+    },
+    'addclaim': {
+      component: 'AddClaimSheet',
+      audit: null
+    },
+    'addcost': {
+      component: 'AddCostItemSheet',
+      audit: null
+    },
+    'addcustomer': {
+      component: 'AddCustomerSheet',
+      audit: null
+    },
+    'adddiary': {
+      component: 'AddDiarySheet',
+      audit: null
+    },
+    'addequipment': {
+      component: 'AddEquipmentSheet',
+      audit: null
+    },
+    'addgoal': {
+      component: 'AddGoalSheet',
+      audit: null
+    },
+    'addhandover': {
+      component: 'HandoverSheet',
+      audit: null
+    },
+    'addholiday': {
+      component: 'AddHolidaySheet',
+      audit: null
+    },
+    'addimprovement': {
+      component: 'AddImprovementSheet',
+      audit: null
+    },
+    'addincident': {
+      component: 'AddIncidentSheet',
+      audit: null
+    },
+    'addinspection': {
+      component: 'AddInspectionSheet',
+      audit: null
+    },
+    'addinvoice': {
+      component: 'AddInvoiceSheet',
+      audit: null
+    },
+    'addlead': {
+      component: 'AddLeadSheet',
+      audit: null
+    },
+    'addmaterial': {
+      component: 'AddMaterialSheet',
+      audit: null
+    },
+    'addpermit': {
+      component: 'AddPermitSheet',
+      audit: null
+    },
+    'addpo': {
+      component: 'AddPOSheet',
+      audit: null
+    },
+    'addproject': {
+      component: 'AddProjectSheet',
+      audit: null
+    },
+    'addquote': {
+      component: 'AddQuoteSheet',
+      audit: null
+    },
+    'addreceipt': {
+      component: 'AddReceiptSheet',
+      audit: null
+    },
+    'addrfi': {
+      component: 'AddRFISheet',
+      audit: null
+    },
+    'addsnag': {
+      component: 'AddSnagSheet',
+      audit: null
+    },
+    'addsub': {
+      component: 'AddSubSheet',
+      audit: null
+    },
+    'addtag': {
+      component: 'AddTagSheet',
+      audit: null
+    },
+    'addtakeoff': {
+      component: 'TakeoffSheet',
+      audit: null
+    },
+    'addtask': {
+      component: 'AddTaskSheet',
+      audit: ["opened New Task", "Tasks"]
+    },
+    'addteam': {
+      component: 'AddTeamMemberSheet',
+      audit: null
+    },
+    'addtemplate': {
+      component: 'AddTemplateSheet',
+      audit: null
+    },
+    'addview': {
+      component: 'AddViewSheet',
+      audit: null
+    },
+    'admin': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'ai': {
+      component: 'AISheet',
+      audit: null
+    },
+    'aiengine': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'aihistory': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'annotate': {
+      component: 'PhotoAnnotateSheet',
+      audit: null
+    },
+    'api': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'apprentice': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'approval': {
+      component: 'ApprovalSheet',
+      audit: ["opened approval", "Variations"]
+    },
+    'attendance': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'auditlog': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'audittrail': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'bank': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'bankrec': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'bids': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'billing': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'calendar': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'capture': {
+      component: 'CaptureSheet',
+      audit: null
+    },
+    'carbon': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'catalog': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'changes': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'chase': {
+      component: 'ChaseSheet',
+      audit: ["opened invoice chase", "Money"]
+    },
+    'checkout': {
+      component: 'CheckoutSheet',
+      audit: null
+    },
+    'cis300': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'claims': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'clientexp': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'clientmsgs': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'clock': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'cloudsync': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'cmdk': {
+      component: 'CommandPalette',
+      audit: null
+    },
+    'confirmdelivery': {
+      component: 'DeliveryConfirmSheet',
+      audit: null
+    },
+    'currency': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'customer': {
+      component: 'CustomerDetailSheet',
+      audit: null
+    },
+    'customers': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'dashpick': {
+      component: 'Sheet',
+      audit: null
+    },
+    'database': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'dataexport': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'dayend': {
+      component: 'DayEndReportSheet',
+      audit: null
+    },
+    'delivery': {
+      component: 'DeliveryConfirmSheet',
+      audit: null
+    },
+    'diary': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'digests': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'docgen': {
+      component: 'DocGenSheet',
+      audit: null
+    },
+    'docs': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'drawing': {
+      component: 'DrawingViewerSheet',
+      audit: null
+    },
+    'drawings': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'e2ee': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'editfield': {
+      component: 'EditFieldSheet',
+      audit: null
+    },
+    'equipment': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'estimator': {
+      component: 'AIEstimatorSheet',
+      audit: ["opened AI estimator", "Quotes"]
+    },
+    'finintel': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'forms': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'goals': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'handover': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'health': {
+      component: 'HealthCheckSheet',
+      audit: null
+    },
+    'help': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'holiday': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'hscommand': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'improve': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'improvement': {
+      component: 'ImprovementDetailSheet',
+      audit: null
+    },
+    'inbox': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'incident': {
+      component: 'IncidentReportSheet',
+      audit: null
+    },
+    'infrastructure': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'inspection': {
+      component: 'InspectionDetailSheet',
+      audit: null
+    },
+    'inspections': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'kaizen': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'labels': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'language': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'launch': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'leads': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'ledger': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'livestatus': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'login': {
+      component: 'LoginSheet',
+      audit: null
+    },
+    'materials': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'member': {
+      component: 'TeamMemberSheet',
+      audit: null
+    },
+    'messages': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'mileage': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'money': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'msg': {
+      component: 'MessageThreadSheet',
+      audit: null
+    },
+    'myday': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'newworkspace': {
+      component: 'OnboardWizard',
+      audit: null
+    },
+    'nfctags': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'notifprefs': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'observability': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'onboarding': {
+      component: 'OnboardingSheet',
+      audit: null
+    },
+    'payinvoice': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'payments': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'payroll': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'performance': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'permits': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'personas': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'photomention': {
+      component: 'PhotoMentionSheet',
+      audit: null
+    },
+    'photoreview': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'photos': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'phototosnag': {
+      component: 'PhotoToSnagSheet',
+      audit: null
+    },
+    'portal': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'pos': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'postupdate': {
+      component: 'PostUpdateSheet',
+      audit: null
+    },
+    'processes': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'procurement': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'profile': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'project': {
+      component: 'ProjectSheet',
+      audit: null
+    },
+    'pushset': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'quote': {
+      component: 'QuoteDetailSheet',
+      audit: null
+    },
+    'quotes': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'reminders': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'reports': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'requestsurvey': {
+      component: 'SurveySheet',
+      audit: null
+    },
+    'resourceplan': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'retention': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'retentioninv': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'reviews': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'rfi': {
+      component: 'RFIDetailSheet',
+      audit: null
+    },
+    'rfis': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'riddor': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'roles': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'safety': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'scan': {
+      component: 'ReceiptScanSheetReal',
+      audit: ["scanned a receipt", "Money"]
+    },
+    'scheduleaudit': {
+      component: 'AuditSheet',
+      audit: null
+    },
+    'search': {
+      component: 'SearchSheet',
+      audit: null
+    },
+    'services': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'settings': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'signature': {
+      component: 'SignatureSheet',
+      audit: ["opened signature", "Compliance"]
+    },
+    'sitemap': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'sitephoto': {
+      component: 'SiteProgressPhotoSheet',
+      audit: null
+    },
+    'smartparse': {
+      component: 'SmartParseSheet',
+      audit: null
+    },
+    'snags': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'sso': {
+      component: 'SSOLoginScreen',
+      audit: null
+    },
+    'starttrip': {
+      component: 'StartTripSheet',
+      audit: null
+    },
+    'subinvoices': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'subportal': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'subs': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'subscription': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'switchworkspace': {
+      component: 'WorkspaceSwitcher',
+      audit: null
+    },
+    'tags': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'templatelib': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'templates': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'tenant': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'time': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'timeline': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'tomorrow': {
+      component: 'TomorrowSheet',
+      audit: null
+    },
+    'toolboxtalk': {
+      component: 'ToolboxTalkSheet',
+      audit: null
+    },
+    'tour': {
+      component: 'TourSheet',
+      audit: null
+    },
+    'training': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'triage': {
+      component: 'InboxTriageSheet',
+      audit: null
+    },
+    'upload': {
+      component: 'UploadSheet',
+      audit: null
+    },
+    'vera': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'veraauto': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'views': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'voice': {
+      component: 'VoiceMemoSheetReal',
+      audit: null
+    },
+    'waste': {
+      component: 'SheetWrap',
+      audit: null
+    },
+    'weeklyreport': {
+      component: 'WeeklyReportSheet',
+      audit: null
+    },
+    'workspace': {
+      component: 'WorkspaceSheet',
+      audit: null
+    }
+  };
+  function hasSheet(key) {
+    return Object.prototype.hasOwnProperty.call(SHEET_REGISTRY, key);
+  }
+  const api = {
+    SHEET_REGISTRY: SHEET_REGISTRY,
+    hasSheet: hasSheet
+  };
+  if (typeof module !== 'undefined' && module.exports) module.exports = api;
+  root.SHEET_REGISTRY = SHEET_REGISTRY;
+  root.hasSheet = hasSheet;
+})(typeof window !== 'undefined' ? window : globalThis);

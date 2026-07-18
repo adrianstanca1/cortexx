@@ -242,7 +242,12 @@ function CortexxApp({
         window.__checkoutPlan = payload;
         setCheckoutPlan(payload);
         setSheet('checkout');
-      } else {
+      } else if (key === 'invoices') setSheet('subinvoices');else if (key === 'scheduletalk') setSheet('toolboxtalk');else {
+        if (typeof SHEET_REGISTRY !== 'undefined' && !SHEET_REGISTRY[key]) {
+          if (typeof console !== 'undefined' && console.warn) {
+            console.warn('[cortexxNav] dangling nav target — no render block or special-case for sheet key: ' + key);
+          }
+        }
         setSheet(key);
       }
     };

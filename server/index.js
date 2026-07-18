@@ -11,6 +11,9 @@ const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+// Denylist for the generic /api/:collection CRUD catch-all — keeps system/
+// auth/audit/integration-secret tables off the generic REST path entirely.
+const { isRestrictedCollection } = require('./security');
 
 const app = express();
 app.set('trust proxy', 1);
@@ -303,6 +306,8 @@ const tableFor = (c) => TABLE_NAMES[c] || c;
 
 app.get('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
   const { collection } = req.params;
+  if (isRestrictedCollection(collection))
+    return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
   if (NATIVE.has(collection)) {
     const tbl = tableFor(collection);
     // Order by a column each table actually has (many lack created_at).
@@ -338,6 +343,8 @@ const TYPED_JSONB = new Set([
 
 app.post('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
   const { collection } = req.params;
+  if (isRestrictedCollection(collection))
+    return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
   const docId = req.body.id || crypto.randomUUID();
   if (TYPED_JSONB.has(collection)) {
     const tbl = tableFor(collection);
@@ -360,6 +367,8 @@ app.post('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
 
 app.put('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
   const { collection, id } = req.params;
+  if (isRestrictedCollection(collection))
+    return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
   if (TYPED_JSONB.has(collection)) {
     const tbl = tableFor(collection);
     await pool.query(
@@ -381,6 +390,8 @@ app.put('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
 
 app.delete('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
   const { collection, id } = req.params;
+  if (isRestrictedCollection(collection))
+    return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
   if (TYPED_JSONB.has(collection)) {
     const tbl = tableFor(collection);
     await pool.query(`DELETE FROM ${tbl} WHERE id=$1 AND workspace_id=$2`, [id, req.user.ws]);

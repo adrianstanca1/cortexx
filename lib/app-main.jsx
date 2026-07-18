@@ -131,7 +131,20 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       else if (key === 'adddiaryentry') setSheet('adddiary');
       else if (key === 'tab') { setTab(payload); setSheet(null); }
       else if (key === 'checkout') { window.__checkoutPlan = payload; setCheckoutPlan(payload); setSheet('checkout'); }
-      else { setSheet(key); }
+      else if (key === 'invoices') setSheet('subinvoices');
+      else if (key === 'scheduletalk') setSheet('toolboxtalk');
+      else {
+        // CI-gated guard: warn when navigating to a key that has neither a render
+        // block (declared in SHEET_REGISTRY — see lib/sheet-registry.jsx) nor a
+        // known special-case above. Such a key sets `sheet` to a key with no UI,
+        // so the user sees nothing. Catch regressions via test/nav-registry.test.js.
+        if (typeof SHEET_REGISTRY !== 'undefined' && !SHEET_REGISTRY[key]) {
+          if (typeof console !== 'undefined' && console.warn) {
+            console.warn('[cortexxNav] dangling nav target — no render block or special-case for sheet key: ' + key);
+          }
+        }
+        setSheet(key);
+      }
     };
   }, []);
 
