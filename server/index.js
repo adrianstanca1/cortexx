@@ -15,6 +15,8 @@ const crypto = require('crypto');
 // auth/audit/integration-secret tables off the generic REST path entirely.
 const { isRestrictedCollection } = require('./security');
 
+const { version } = require('../package.json');
+
 const app = express();
 app.set('trust proxy', 1);
 app.use(helmet());
@@ -224,7 +226,21 @@ app.get('/api/stream', apiLimiter, wrap(async (req, res) => {
 }));
 
 // ── Health (public; MUST be before /api/:collection or auth shadows it) ─────
-app.get('/api/health', (req, res) => res.json({ status: 'ok', ts: Date.now(), streams: [...channels.values()].reduce((n, s) => n + s.size, 0) }));
+// Reports app version + a best-effort DB liveness probe. DB status is 'down'
+// (never throws) when the pool can't reach Postgres, so the healthcheck stays
+// 200 even during a DB blip — callers differentiate liveness vs readiness via
+// the `db` field. No auth, no PII.
+app.get('/api/health', wrap(async (req, res) => {
+  let db = 'down';
+  try { await pool.query('SELECT 1'); db = 'up'; } catch { /* DB unreachable — report 'down' */ }
+  res.json({
+    status: 'ok',
+    version,
+    db,
+    ts: Date.now(),
+    streams: [...channels.values()].reduce((n, s) => n + s.size, 0),
+  });
+}));
 
 // ── Public support ticket submission (registered BEFORE the /api router
 //    mounts below, otherwise the auth-gated `sync` router shadows this path
@@ -531,13 +547,23 @@ app.use((err, req, res, next) => {
 });
 
 const PORT = process.env.PORT || 3001;
-const server = app.listen(PORT, () => console.log(`Cortexx API on :${PORT}`));
+// Only bind + listen when run directly (`node server/index.js`). When required
+// by a test it exposes `app`/`server`/`pool` without opening a socket, so tests
+// can mount it on an ephemeral port. Runtime production behavior is unchanged.
+if (require.main === module) {
+  const server = app.listen(PORT, () => console.log(`Cortexx API on :${PORT}`));
 
-// ── Graceful shutdown ───────────────────────────────────────
-for (const sig of ['SIGTERM', 'SIGINT']) {
-  process.on(sig, () => {
-    console.log(`\n${sig} received — closing`);
-    server.close(() => pool.end().then(() => process.exit(0)));
-    setTimeout(() => process.exit(1), 10000).unref();
-  });
+  // ── Graceful shutdown ───────────────────────────────────────
+  for (const sig of ['SIGTERM', 'SIGINT']) {
+    process.on(sig, () => {
+      console.log(`\n${sig} received — closing`);
+      server.close(() => pool.end().then(() => process.exit(0)));
+      setTimeout(() => process.exit(1), 10000).unref();
+    });
+  }
 }
+
+// Export the app + server so tests can mount/drive the real server in-process
+// (the file still boots and listens on import; this is additive and does not
+// change runtime behavior).
+module.exports = { app, pool };
