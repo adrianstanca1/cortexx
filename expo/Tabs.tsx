@@ -12,9 +12,11 @@ import CisPaymentsScreen from './CisPaymentsScreen';
 import TimesheetsScreen from './TimesheetsScreen';
 import DiaryScreen from './DiaryScreen';
 import NotificationsScreen from './NotificationsScreen';
+import OverviewScreen from './OverviewScreen';
 import { pendingWrites, onQueueChange, flushQueue, getToken } from './api';
 
 const TABS = [
+  { key: 'overview', label: 'Home' },
   { key: 'projects', label: 'Jobs' },
   { key: 'invoices', label: 'Invoices' },
   { key: 'tasks', label: 'Tasks' },
@@ -31,7 +33,7 @@ const TABS = [
 type TabKey = typeof TABS[number]['key'];
 
 export default function Tabs({ onLogout }: { onLogout: () => void }) {
-  const [tab, setTab] = React.useState<TabKey>('projects');
+  const [tab, setTab] = React.useState<TabKey>('overview');
   const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(0);
 
@@ -64,6 +66,8 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
       <View style={styles.body}>
         {selectedProject ? (
           <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} />
+        ) : tab === 'overview' ? (
+          <OverviewScreen onNavigate={setTab} onLogout={onLogout} />
         ) : tab === 'projects' ? (
           <ProjectsScreen onLogout={onLogout} onSelect={setSelectedProject} />
         ) : tab === 'invoices' ? (
