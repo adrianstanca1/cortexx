@@ -91,6 +91,7 @@
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.2.10",
     "eslint-plugin-react-hooks": "^7.1.1",
+    "express": "^4.22.2",
     "postcss": "^8.5.17",
     "prisma": "^7.8.0",
     "serve": "^14.2.0",

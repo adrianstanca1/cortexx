@@ -37,6 +37,10 @@ jobs:
         run: npx tsx --test test/*.test.ts
 
       # Backend integration (mocked pg — no DB needed)
+      # Server tests require server/node_modules (express, pg, etc.).
+      - name: Install server deps
+        working-directory: server
+        run: npm ci --no-audit --no-fund
       - name: Test backend routes
         working-directory: server
         run: npx tsx --test test/*.test.js
@@ -85,11 +89,13 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with: { node-version: '22' }
-      - name: Install JS deps + CocoaPods
+      - name: Install JS deps (root + Capacitor ios shell)
         run: |
           npm install --no-audit --no-fund
-          cd ios/App
-          pod install --no-repo-update
+          cd ios && npm install --no-audit --no-fund
+      - name: pod install (Capacitor App)
+        working-directory: ios/App
+        run: pod install --no-repo-update
       - name: xcodebuild (simulator, no signing)
         working-directory: ios/App
         run: |
