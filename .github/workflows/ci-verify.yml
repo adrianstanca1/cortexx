@@ -1,0 +1,99 @@
+name: ci-verify
+on:
+  push:
+    branches: [main, master]
+  pull_request:
+  workflow_dispatch:
+
+# Fail fast + don't pile up runs on the same ref.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  # ── Shared core / Expo RN typecheck + unit tests (Linux, no Mac) ──
+  apps:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: ['22']
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm' }
+
+      # Root deps provide the tsc binary used by packages/core + the server test.
+      - name: Install root deps
+        run: npm ci --no-audit --no-fund
+
+      # Shared core (offline cache, write-queue, realtime client)
+      - name: Typecheck shared core
+        working-directory: packages/core
+        run: ../../node_modules/.bin/tsc --noEmit -p tsconfig.json
+
+      - name: Test shared core
+        working-directory: packages/core
+        run: npx tsx --test test/*.test.ts
+
+      # Backend integration (mocked pg — no DB needed)
+      - name: Test backend routes
+        working-directory: server
+        run: npx tsx --test test/*.test.js
+
+      # Expo RN iOS app — its own lockfile + node_modules
+      - name: Install Expo deps
+        working-directory: expo
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck Expo
+        working-directory: expo
+        run: CI=1 npx tsc --noEmit
+
+      - name: Expo doctor
+        working-directory: expo
+        run: CI=1 npx expo-doctor
+
+      - name: Expo native push test
+        run: npx tsx --test test/push-native.test.js
+
+      # Prove the JS actually bundles (clean tsc ≠ bundlable)
+      - name: Expo export (web bundle)
+        working-directory: expo
+        run: CI=1 npx expo export --platform web
+
+  # ── Capacitor web build (the asset bundle the iOS shell serves) ──
+  capacitor-web:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22', cache: 'npm', cache-dependency-path: ios/package-lock.json }
+      - name: Build Capacitor web bundle
+        working-directory: ios
+        run: |
+          npm ci --no-audit --no-fund
+          npm run build:web
+      - name: Assert index.html produced
+        working-directory: ios
+        run: test -f www/index.html || (echo "www/index.html missing" && exit 1)
+
+  # ── Native iOS build pre-flight (needs macOS — validates Pods + xcodebuild) ──
+  ios-build:
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with: { node-version: '22' }
+      - name: Install JS deps + CocoaPods
+        run: |
+          npm install --no-audit --no-fund
+          cd ios/App
+          pod install --no-repo-update
+      - name: xcodebuild (simulator, no signing)
+        working-directory: ios/App
+        run: |
+          xcodebuild -workspace App.xcworkspace -scheme App \
+            -configuration Release -sdk iphonesimulator \
+            CODE_SIGNING_ALLOWED=NO -destination 'generic/platform=iOS Simulator' \
+            build | tail -20
