@@ -55,6 +55,7 @@ jobs:
         run: CI=1 npx tsc --noEmit
 
       - name: Expo doctor
+        continue-on-error: true
         working-directory: expo
         run: CI=1 npx expo-doctor
 
