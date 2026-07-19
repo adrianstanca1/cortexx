@@ -10,6 +10,7 @@ import TasksScreen from './TasksScreen';
 import SnagsScreen from './SnagsScreen';
 import CisPaymentsScreen from './CisPaymentsScreen';
 import TimesheetsScreen from './TimesheetsScreen';
+import DiaryScreen from './DiaryScreen';
 import { pendingWrites, onQueueChange, flushQueue, getToken } from './api';
 
 const TABS = [
@@ -18,6 +19,7 @@ const TABS = [
   { key: 'tasks', label: 'Tasks' },
   { key: 'cis', label: 'CIS' },
   { key: 'timesheets', label: 'Time' },
+  { key: 'diary', label: 'Diary' },
   { key: 'quotes', label: 'Quotes' },
   { key: 'snags', label: 'Snags' },
   { key: 'tickets', label: 'Tickets' },
@@ -82,6 +84,8 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
           <CisPaymentsScreen onLogout={onLogout} />
         ) : tab === 'timesheets' ? (
           <TimesheetsScreen onLogout={onLogout} />
+        ) : tab === 'diary' ? (
+          <DiaryScreen onLogout={onLogout} />
         ) : tab === 'quotes' ? (
           <CollectionScreen
             name="quotes" title="Quotes" readOnly
