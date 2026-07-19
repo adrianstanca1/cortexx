@@ -10,13 +10,23 @@
 import 'expo-router/entry';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { setTokenStorage, setOfflineCache, setQueueStore, flushQueue, api } from '@cortexbuild/core';
+import { setTokenStorage, setOfflineCache, setQueueStore, flushQueue, startStream, api } from '@cortexbuild/core';
+import { API_URL } from './theme';
 
 setTokenStorage({
   get: () => SecureStore.getItemAsync('cb_token'),
   set: (t: string) => SecureStore.setItemAsync('cb_token', t),
   clear: () => SecureStore.deleteItemAsync('cb_token'),
 });
+
+// Start the live realtime stream (job/task/invoice updates pushed to device).
+// Called on boot (token already stored) and after (re)login.
+async function startRealtime() {
+  try {
+    const t = await SecureStore.getItemAsync('cb_token');
+    if (t) startStream({ apiUrl: API_URL, token: t });
+  } catch { /* ignore */ }
+}
 
 // Offline cache (collections) shares AsyncStorage under cb_cache_*
 setOfflineCache({
@@ -58,4 +68,6 @@ setOfflineCache({
     // No expo-network: best-effort flush on each app foreground is handled by
     // the Tabs badge calling flushQueue() on focus.
   }
+
+  startRealtime();
 })();

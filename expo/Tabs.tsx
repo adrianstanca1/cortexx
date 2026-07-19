@@ -11,6 +11,7 @@ import SnagsScreen from './SnagsScreen';
 import CisPaymentsScreen from './CisPaymentsScreen';
 import TimesheetsScreen from './TimesheetsScreen';
 import DiaryScreen from './DiaryScreen';
+import NotificationsScreen from './NotificationsScreen';
 import { pendingWrites, onQueueChange, flushQueue, getToken } from './api';
 
 const TABS = [
@@ -23,6 +24,7 @@ const TABS = [
   { key: 'quotes', label: 'Quotes' },
   { key: 'snags', label: 'Snags' },
   { key: 'tickets', label: 'Tickets' },
+  { key: 'notifications', label: 'Live' },
   { key: 'profile', label: 'Profile' },
 ] as const;
 
@@ -103,6 +105,8 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
           <SnagsScreen onLogout={onLogout} />
         ) : tab === 'tickets' ? (
           <TicketsScreen />
+        ) : tab === 'notifications' ? (
+          <NotificationsScreen onLogout={onLogout} />
         ) : (
           <ProfileScreen onLogout={onLogout} />
         )}

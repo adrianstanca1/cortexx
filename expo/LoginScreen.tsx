@@ -1,7 +1,7 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Colors } from './theme';
-import { login } from './api';
+import { login, startStream } from './api';
 
 export default function LoginScreen({ onAuthed }: { onAuthed: () => void }) {
   const [email, setEmail] = useState('');
@@ -13,6 +13,8 @@ export default function LoginScreen({ onAuthed }: { onAuthed: () => void }) {
     setWorking(true);
     try {
       const { user } = await login(email.trim(), password);
+      const tok = await (await import('./api')).getToken();
+      if (tok) startStream({ apiUrl: (await import('./theme')).API_URL, token: tok });
       if (!['owner', 'admin', 'director', 'member'].includes(user.role)) {
         Alert.alert('Access', 'This account cannot use the mobile app.');
         return;

@@ -119,6 +119,67 @@ export type ApiClientOptions = {
   };
 };
 
+// ── Realtime stream (SSE) ─────────────────────────────────
+// Subscribes to /api/stream (Server-Sent Events) and surfaces live
+// 'change' events (job/task/invoice created/updated) to the UI. Works in
+// RN/Expo via fetch + ReadableStream reader (no EventSource polyfill needed).
+export type StreamEvent = { type: string; collection?: string; op?: string; id?: string; ts?: number };
+let _streamListeners: ((e: StreamEvent) => void)[] = [];
+let _streamController: AbortController | null = null;
+let _streamTimer: any = null;
+let _streamToken: string | null = null;
+let _streamUrl = '';
+
+export function onStreamEvent(cb: (e: StreamEvent) => void): () => void {
+  _streamListeners.push(cb);
+  return () => { _streamListeners = _streamListeners.filter((f) => f !== cb); };
+}
+function emitStream(e: StreamEvent) { for (const f of _streamListeners) { try { f(e); } catch { /* ignore */ } } }
+
+export function startStream(opts: { apiUrl: string; token: string }) {
+  stopStream();
+  _streamUrl = (opts.apiUrl || '').replace(/\/$/, '');
+  _streamToken = opts.token;
+  const connect = async () => {
+    if (!_streamUrl || !_streamToken) return;
+    const ctrl = new AbortController();
+    _streamController = ctrl;
+    try {
+      const res = await fetch(`${_streamUrl}/api/stream?token=${encodeURIComponent(_streamToken)}`, {
+        headers: { Accept: 'text/event-stream' }, signal: ctrl.signal,
+      });
+      if (!res.ok || !res.body) { throw new Error('stream ' + res.status); }
+      const reader = res.body.getReader();
+      const dec = new TextDecoder();
+      let buf = '';
+      const pump = async (): Promise<void> => {
+        const { done, value } = await reader.read();
+        if (done) throw new Error('stream closed');
+        buf += dec.decode(value, { stream: true });
+        const frames = buf.split('\n\n');
+        buf = frames.pop() || '';
+        for (const frame of frames) {
+          const line = frame.split('\n').find((l) => l.startsWith('data:'));
+          if (!line) continue;
+          try { emitStream({ ...JSON.parse(line.slice(5).trim()), ts: Date.now() }); } catch { /* ignore */ }
+        }
+        await pump();
+      };
+      await pump();
+    } catch (e: any) {
+      if (ctrl.signal.aborted) return;
+      _streamTimer = setTimeout(connect, 4000); // reconnect
+    }
+  };
+  connect();
+}
+
+export function stopStream() {
+  try { _streamController?.abort(); } catch { /* ignore */ }
+  _streamController = null;
+  if (_streamTimer) { clearTimeout(_streamTimer); _streamTimer = null; }
+}
+
 export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
   const API_URL = opts.apiUrl || API_URL_FALLBACK;
   const store = opts.tokenStorage || _store;
@@ -258,6 +319,9 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
     onQueueChange,
     pendingWrites,
     flushQueue,
+    startStream,
+    stopStream,
+    onStreamEvent,
   };
 }
 
