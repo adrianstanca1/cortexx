@@ -113,6 +113,22 @@ export function createApiClient(opts: ApiClientOptions = {}) {
     postCollection(name: string, body: any): Promise<any> {
       return apiPost(`/api/${name}`, body);
     },
+    async putCollection(name: string, id: string, body: any): Promise<any> {
+      const t = await token();
+      const headers: Record<string, string> = { 'content-type': 'application/json' };
+      if (t) headers['authorization'] = `Bearer ${t}`;
+      const r = await fetch(`${API_URL}/api/${name}/${id}`, {
+        method: 'PUT',
+        headers,
+        body: JSON.stringify(body),
+      });
+      if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); }
+      if (!r.ok) {
+        const e = await r.json().catch(() => ({}));
+        throw new Error((e as any).error || 'Update failed');
+      }
+      return r.json();
+    },
     async lookupTickets(email: string): Promise<any[]> {
       const r = await apiPost('/api/support/tickets/lookup', { email });
       return Array.isArray(r) ? r : r.tickets || [];

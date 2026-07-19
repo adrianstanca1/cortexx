@@ -6,10 +6,14 @@ import ProjectDetailScreen from './ProjectDetailScreen';
 import CollectionScreen from './CollectionScreen';
 import TicketsScreen from './TicketsScreen';
 import ProfileScreen from './ProfileScreen';
+import TasksScreen from './TasksScreen';
+import SnagsScreen from './SnagsScreen';
+import CisPaymentsScreen from './CisPaymentsScreen';
 
 const TABS = [
   { key: 'projects', label: 'Jobs' },
   { key: 'invoices', label: 'Invoices' },
+  { key: 'tasks', label: 'Tasks' },
   { key: 'cis', label: 'CIS' },
   { key: 'quotes', label: 'Quotes' },
   { key: 'snags', label: 'Snags' },
@@ -44,19 +48,10 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
             rowSub={(i) => `£${i.amount ?? '—'} · ${i.status || 'draft'}`}
             onLogout={onLogout}
           />
+        ) : tab === 'tasks' ? (
+          <TasksScreen onLogout={onLogout} />
         ) : tab === 'cis' ? (
-          <CollectionScreen
-            name="cisSubs" title="CIS Subcontractors"
-            fields={[
-              { key: 'name', label: 'Company name', required: true },
-              { key: 'utr', label: 'UTR' },
-              { key: 'trade', label: 'Trade' },
-              { key: 'rate', label: 'Rate (£)', type: 'number' },
-            ]}
-            rowTitle={(i) => i.name || 'Subcontractor'}
-            rowSub={(i) => i.trade ? `${i.trade}${i.rate ? ' · £' + i.rate : ''}` : null}
-            onLogout={onLogout}
-          />
+          <CisPaymentsScreen onLogout={onLogout} />
         ) : tab === 'quotes' ? (
           <CollectionScreen
             name="quotes" title="Quotes" readOnly
@@ -71,18 +66,7 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
             onLogout={onLogout}
           />
         ) : tab === 'snags' ? (
-          <CollectionScreen
-            name="snags" title="Snags / Defects"
-            fields={[
-              { key: 'title', label: 'Title', required: true },
-              { key: 'location', label: 'Location' },
-              { key: 'priority', label: 'Priority (low/med/high)' },
-              { key: 'status', label: 'Status (open/done)' },
-            ]}
-            rowTitle={(i) => i.title || 'Snag'}
-            rowSub={(i) => i.location ? `${i.location} · ${i.status || 'open'}` : (i.status || 'open')}
-            onLogout={onLogout}
-          />
+          <SnagsScreen onLogout={onLogout} />
         ) : tab === 'tickets' ? (
           <TicketsScreen />
         ) : (
