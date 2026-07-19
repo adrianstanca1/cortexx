@@ -109,6 +109,23 @@ function ProjectSheet({
   }, React.cloneElement(Ic.spark, {
     size: 13
   }), " Health"), React.createElement("button", {
+    onClick: () => {
+      window.cortexxNav('appgrid');
+    },
+    style: {
+      background: 'none',
+      border: 'none',
+      color: accent,
+      fontFamily: SF,
+      fontSize: 14,
+      cursor: 'pointer',
+      display: 'flex',
+      alignItems: 'center',
+      gap: 4
+    }
+  }, React.cloneElement(Ic.grid || Ic.spark, {
+    size: 13
+  }), " Apps"), React.createElement("button", {
     style: {
       background: 'none',
       border: 'none',

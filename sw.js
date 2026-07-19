@@ -11,7 +11,7 @@
 // Strategy: network-first for the HTML shell (fresh code on refresh), cache-first
 // for immutable JS + CDN. Precaching is resilient — one missing file can't abort it.
 
-const CACHE = 'cortexx-v3-1-013';
+const CACHE = 'cortexx-v3-1-014';
 
 const SHELL = [
   './',
@@ -60,7 +60,7 @@ const MODULE_NAMES = [
   'screens-phase96','screens-phase97','screens-phase98','screens-phase99',
   'screens-phase100','screens-phase101','screens-phase102','screens-phase103',
   'screens-phase106','screens-phase107','screens-phase108','screens-phase109',
-  'screens-phase110','screens-phase111','screens-phase112','screens-phase113','screens-phase114','screens-phase115','screens-phase116','screens-phase117','screens-phase118',
+  'screens-phase110','screens-phase111','screens-phase112','screens-phase113','screens-phase114','screens-phase115','screens-phase116','screens-phase117','screens-phase118','screens-phase119',
   'app-main','boot',
 ];
 
