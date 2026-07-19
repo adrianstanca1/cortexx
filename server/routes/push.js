@@ -83,8 +83,41 @@ router.post('/push/unsubscribe', async (req, res) => {
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 
+const https = require('https');
+
+// Deliver a notification to a native (Expo) token. The subscription was stored
+// with endpoint = 'native:' + expoToken and sub.token = the Expo push token.
+// Expo tokens look like "ExponentPushToken[xxxx]". We POST to Expo's push
+// service (no extra SDK needed — just an HTTPS request).
+function sendExpo(token, payload) {
+  const body = JSON.stringify({
+    to: token,
+    title: payload.title,
+    body: payload.body,
+    data: { url: payload.url, at: payload.at },
+    sound: 'default',
+  });
+  const data = Buffer.from(body);
+  return new Promise((resolve, reject) => {
+    const req = https.request(
+      { hostname: 'exp.host', path: '/--/api/v2/push/send', method: 'POST',
+        headers: { 'Content-Type': 'application/json', 'Content-Length': data.length } },
+      (res) => {
+        let buf = '';
+        res.on('data', (c) => (buf += c));
+        res.on('end', () => {
+          try { const j = JSON.parse(buf); resolve(j); }
+          catch (e) { reject(e); }
+        });
+      },
+    );
+    req.on('error', reject);
+    req.write(data);
+    req.end();
+  });
+}
+
 router.post('/push/send', async (req, res) => {
-  if (!webpush || !VAPID_PUB) return res.status(503).json({ error: 'push not configured — install web-push and set VAPID_*' });
   const title = String((req.body && req.body.title) || 'CortexBuild Pro');
   const body  = String((req.body && req.body.body)  || '');
   const url   = String((req.body && req.body.url)   || '/');
@@ -98,13 +131,24 @@ router.post('/push/send', async (req, res) => {
     let rows = [];
     try { const r = await pool.query('SELECT endpoint, sub FROM push_subscriptions WHERE workspace_id=$1', [req.user.ws]); rows = r.rows || []; }
     catch (e) { return res.status(503).json({ error: 'push_subscriptions table not initialised' }); }
-    let sent = 0, failed = 0;
+    let sent = 0, failed = 0, webSkipped = 0;
     const payload = JSON.stringify({ title, body, url, at: Date.now() });
     for (const row of rows) {
+      const endpoint = row.endpoint || '';
+      const sub = row.sub || {};
+      const nativeToken = (typeof sub.token === 'string' && sub.token) ? sub.token : (endpoint.startsWith('native:') ? endpoint.slice(7) : '');
+      // Native (Expo) path: deliver via Expo's push service. Works WITHOUT VAPID.
+      if (nativeToken && /ExponentPushToken\[/.test(nativeToken)) {
+        try { await sendExpo(nativeToken, JSON.parse(payload)); sent++; }
+        catch (e) { failed++; if (e.statusCode === 410) { try { await pool.query('DELETE FROM push_subscriptions WHERE endpoint=$1 AND workspace_id=$2', [row.endpoint, req.user.ws]); } catch (_) {} } }
+        continue;
+      }
+      // Web Push path (VAPID) — only if web-push + VAPID are configured.
+      if (!webpush || !VAPID_PUB) { webSkipped++; continue; }
       try { await webpush.sendNotification(row.sub, payload); sent++; }
       catch (e) { failed++; if (e.statusCode === 410 || e.statusCode === 404) { try { await pool.query('DELETE FROM push_subscriptions WHERE endpoint=$1 AND workspace_id=$2', [row.endpoint, req.user.ws]); } catch (_) {} } }
     }
-    res.json({ sent, failed, total: rows.length });
+    res.json({ sent, failed, webSkipped, total: rows.length });
   } catch (e) { res.status(500).json({ error: e.message }); }
 });
 

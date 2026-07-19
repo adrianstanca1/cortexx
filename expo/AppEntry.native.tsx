@@ -10,6 +10,8 @@
 import 'expo-router/entry';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Notifications from 'expo-notifications';
+import Constants from 'expo-constants';
 import { setTokenStorage, setOfflineCache, setQueueStore, flushQueue, startStream, api } from '@cortexbuild/core';
 import { API_URL } from './theme';
 
@@ -19,12 +21,36 @@ setTokenStorage({
   clear: () => SecureStore.deleteItemAsync('cb_token'),
 });
 
+// Register for native push. The backend /api/push/subscribe stores the Expo
+// token (platform:'ios'); /api/push/send delivers to Expo's push service, so
+// the office's broadcasts reach the device even when the app is backgrounded.
+// No-ops gracefully if the projectId isn't set yet (Expo dev / pre-EAS).
+async function registerPush() {
+  try {
+    const projectId = (Constants.expoConfig?.extra as any)?.eas?.projectId;
+    if (!projectId) return;
+    const { status } = await Notifications.getPermissionsAsync();
+    if (status !== 'granted') {
+      const r = await Notifications.requestPermissionsAsync();
+      if (r.status !== 'granted') return;
+    }
+    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
+    const auth = await SecureStore.getItemAsync('cb_token');
+    if (!auth) return;
+    await fetch(`${API_URL}/api/push/subscribe`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth}` },
+      body: JSON.stringify({ platform: 'ios', subscription: { token } }),
+    }).catch(() => { /* offline: will re-subscribe on next launch */ });
+  } catch { /* no-op */ }
+}
+
 // Start the live realtime stream (job/task/invoice updates pushed to device).
 // Called on boot (token already stored) and after (re)login.
 async function startRealtime() {
   try {
     const t = await SecureStore.getItemAsync('cb_token');
-    if (t) startStream({ apiUrl: API_URL, token: t });
+    if (t) { startStream({ apiUrl: API_URL, token: t }); registerPush(); }
   } catch { /* ignore */ }
 }
 
