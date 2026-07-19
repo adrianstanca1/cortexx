@@ -11,7 +11,7 @@
 // Strategy: network-first for the HTML shell (fresh code on refresh), cache-first
 // for immutable JS + CDN. Precaching is resilient — one missing file can't abort it.
 
-const CACHE = 'cortexx-v3-1-014';
+const CACHE = 'cortexx-v3-1-016';
 
 const SHELL = [
   './',
