@@ -1,0 +1,31 @@
+{
+  "cli": {
+    "version": ">= 12.0.0"
+  },
+  "build": {
+    "development": {
+      "developmentClient": true,
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "preview": {
+      "distribution": "internal",
+      "ios": {
+        "simulator": true
+      }
+    },
+    "production": {
+      "autoIncrement": true,
+      "prebuildCommand": "npm install --no-audit --no-fund && cd ios/App && pod install --no-repo-update"
+    }
+  },
+  "submit": {
+    "production": {
+      "ios": {
+        "appleId": "Adrian.stanca1@gmail.com"
+      }
+    }
+  }
+}

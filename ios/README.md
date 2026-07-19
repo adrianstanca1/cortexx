@@ -25,6 +25,18 @@ You also need:
 - A unique **Bundle Identifier** registered at developer.apple.com → Certificates, IDs & Profiles → Identifiers. We use `com.cortexbuild.app` in `capacitor.config.ts`; change it to one you own.
 - An **App Store Connect** record for the app (appstoreconnect.apple.com → My Apps → +).
 
+> ### ⚠️ Xcode Cloud / CI — `Pods` are gitignored
+> The native `ios/App/Pods/` directory is **gitignored** (standard for Capacitor),
+> so a fresh CI checkout has no `Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig`.
+> Xcode refuses to open `App.xcodeproj` in that state and the build fails with:
+> `Unable to open base configuration reference file '.../ios/App/Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig'`.
+>
+> **Fix (already wired):** `ci_scripts/ci_post_clone.sh` runs automatically after clone and
+> before the first build — it runs `npm install` then `pod install --no-repo-update`
+> (using the committed `Podfile.lock`), which regenerates that xcconfig. For EAS-driven
+> builds, `eas.json` carries the same `prebuildCommand`. **Do not** commit `Pods/`; let the
+> CI script generate it. If you ever build locally without the script, run `pod install` in `ios/App` first.
+
 ---
 
 ## 1 · First-time scaffold

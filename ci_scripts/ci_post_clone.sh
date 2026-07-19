@@ -1,31 +1,39 @@
 #!/bin/bash
+# Xcode Cloud — runs automatically AFTER the repo is cloned and BEFORE the
+# first build. Without this, `ios/App/Pods/` is never installed (it is
+# gitignored), so `App.xcodeproj` cannot find its base configuration
+# `Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig` and the
+# build fails with:
+#   "Unable to open base configuration reference file
+#    '.../ios/App/Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig'"
+#
+# Fix: install JS deps (Capacitor pods resolve from ../node_modules) then
+# `pod install`, which generates that xcconfig + the whole Pods workspace.
 set -euo pipefail
 
-REPO_ROOT="${CI_PRIMARY_REPOSITORY_PATH:-$(cd "$(dirname "$0")/.." && pwd)}"
-IOS_ROOT="$REPO_ROOT/ios"
-PBXPROJ="$IOS_ROOT/App/App.xcodeproj/project.pbxproj"
+WS="${CI_WORKSPACE:-$(pwd)}"
+echo "→ [ci_post_clone] workspace: $WS"
 
-printf 'Preparing Cortexx iOS build in %s\n' "$IOS_ROOT"
-cd "$IOS_ROOT"
-
-node --version
-npm --version
-
-# Xcode Cloud starts from a clean checkout. Install the Capacitor toolchain,
-# rebuild the bundled web application, and sync native dependencies.
-npm install --no-audit --no-fund
-npm run build:ios
-
-# Keep the generated Xcode target aligned with the bundle identifier registered
-# in App Store Connect. Older generated project files used a stale identifier.
-if grep -q 'app\.cortexbuild\.cortexx' "$PBXPROJ"; then
-  sed -i '' 's/app\.cortexbuild\.cortexx/com.cortexbuild.app/g' "$PBXPROJ"
+# 1) JS dependencies — required so the Capacitor Podfile can find
+#    ../node_modules/@capacitor/ios etc.
+cd "$WS"
+if [ -f package-lock.json ]; then
+  npm ci --no-audit --no-fund || npm install --no-audit --no-fund
+else
+  npm install --no-audit --no-fund
 fi
 
-grep -q 'PRODUCT_BUNDLE_IDENTIFIER = com.cortexbuild.app;' "$PBXPROJ"
+# 2) CocoaPods — generates Pods-App.*.xcconfig + Pods.xcworkspace.
+cd "$WS/ios/App"
+if ! command -v pod >/dev/null 2>&1; then
+  echo "  pod not found — installing via gem"
+  gem install cocoapods --no-document
+fi
+if [ -f Gemfile ]; then
+  bundle install --local || bundle install
+  bundle exec pod install --no-repo-update
+else
+  pod install --no-repo-update
+fi
 
-# CocoaPods is not restored automatically by Xcode Cloud for this Capacitor app.
-cd "$IOS_ROOT/App"
-pod install
-
-printf 'Xcode Cloud preparation completed successfully.\n'
+echo "→ [ci_post_clone] CocoaPods installed — ios/App ready to build"
