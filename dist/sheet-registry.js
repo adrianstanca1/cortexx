@@ -162,6 +162,10 @@
       component: 'SheetWrap',
       audit: null
     },
+    'appgrid': {
+      component: 'AppGridSheet',
+      audit: null
+    },
     'approval': {
       component: 'ApprovalSheet',
       audit: ["opened approval", "Variations"]

@@ -242,7 +242,7 @@ function CortexxApp({
         window.__checkoutPlan = payload;
         setCheckoutPlan(payload);
         setSheet('checkout');
-      } else if (key === 'invoices') setSheet('subinvoices');else if (key === 'scheduletalk') setSheet('toolboxtalk');else {
+      } else if (key === 'appgrid' || key === 'allapps') setSheet('appgrid');else if (key === 'invoices') setSheet('subinvoices');else if (key === 'scheduletalk') setSheet('toolboxtalk');else {
         if (typeof SHEET_REGISTRY !== 'undefined' && !SHEET_REGISTRY[key]) {
           if (typeof console !== 'undefined' && console.warn) {
             console.warn('[cortexxNav] dangling nav target — no render block or special-case for sheet key: ' + key);
@@ -1029,7 +1029,10 @@ function CortexxApp({
     accent: accent
   }, React.createElement(PerformanceScreen, {
     accent: accent
-  })), sheet === 'clock' && React.createElement(SheetWrap, {
+  })), sheet === 'appgrid' && React.createElement(AppGridSheet, {
+    onClose: closeSheet,
+    accent: accent
+  }), sheet === 'clock' && React.createElement(SheetWrap, {
     title: "Check in",
     onClose: closeSheet,
     accent: accent

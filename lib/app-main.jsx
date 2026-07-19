@@ -131,6 +131,7 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       else if (key === 'adddiaryentry') setSheet('adddiary');
       else if (key === 'tab') { setTab(payload); setSheet(null); }
       else if (key === 'checkout') { window.__checkoutPlan = payload; setCheckoutPlan(payload); setSheet('checkout'); }
+      else if (key === 'appgrid' || key === 'allapps') setSheet('appgrid');
       else if (key === 'invoices') setSheet('subinvoices');
       else if (key === 'scheduletalk') setSheet('toolboxtalk');
       else {
@@ -530,6 +531,7 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       {sheet === 'database' && <SheetWrap title="Database" onClose={closeSheet} accent={accent}><DatabaseScreen accent={accent}/></SheetWrap>}
       {sheet === 'reminders' && <SheetWrap title="Reminders" onClose={closeSheet} accent={accent}><RemindersScreen accent={accent}/></SheetWrap>}
       {sheet === 'performance' && <SheetWrap title="Performance" onClose={closeSheet} accent={accent}><PerformanceScreen accent={accent}/></SheetWrap>}
+      {sheet === 'appgrid' && <AppGridSheet onClose={closeSheet} accent={accent}/>}
       {sheet === 'clock' && <SheetWrap title="Check in" onClose={closeSheet} accent={accent}><CheckInScreen accent={accent}/></SheetWrap>}
       {sheet === 'livestatus' && <SheetWrap title="Live status" onClose={closeSheet} accent={accent}><LiveStatusScreen accent={accent}/></SheetWrap>}
       {sheet === 'myday' && <SheetWrap title="My day" onClose={closeSheet} accent={accent}><MyDayScreen accent={accent}/></SheetWrap>}

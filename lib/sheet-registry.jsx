@@ -47,6 +47,7 @@
     'annotate': { component: 'PhotoAnnotateSheet', audit: null },
     'api': { component: 'SheetWrap', audit: null },
     'apprentice': { component: 'SheetWrap', audit: null },
+    'appgrid': { component: 'AppGridSheet', audit: null },
     'approval': { component: 'ApprovalSheet', audit: ["opened approval","Variations"] },
     'attendance': { component: 'SheetWrap', audit: null },
     'auditlog': { component: 'SheetWrap', audit: null },

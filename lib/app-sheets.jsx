@@ -57,6 +57,9 @@ function ProjectSheet({ project, onClose, accent }) {
         <button onClick={() => { window.cortexxNav('health', project); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
           {React.cloneElement(Ic.spark, { size: 13 })} Health
         </button>
+        <button onClick={() => { window.cortexxNav('appgrid'); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+          {React.cloneElement(Ic.grid || Ic.spark, { size: 13 })} Apps
+        </button>
         <button style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }} onClick={async () => {
           if (editing) {
             await Backend.db.projects.update(project.id, {
