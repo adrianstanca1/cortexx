@@ -9,12 +9,14 @@ import ProfileScreen from './ProfileScreen';
 import TasksScreen from './TasksScreen';
 import SnagsScreen from './SnagsScreen';
 import CisPaymentsScreen from './CisPaymentsScreen';
+import TimesheetsScreen from './TimesheetsScreen';
 
 const TABS = [
   { key: 'projects', label: 'Jobs' },
   { key: 'invoices', label: 'Invoices' },
   { key: 'tasks', label: 'Tasks' },
   { key: 'cis', label: 'CIS' },
+  { key: 'timesheets', label: 'Time' },
   { key: 'quotes', label: 'Quotes' },
   { key: 'snags', label: 'Snags' },
   { key: 'tickets', label: 'Tickets' },
@@ -52,6 +54,8 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
           <TasksScreen onLogout={onLogout} />
         ) : tab === 'cis' ? (
           <CisPaymentsScreen onLogout={onLogout} />
+        ) : tab === 'timesheets' ? (
+          <TimesheetsScreen onLogout={onLogout} />
         ) : tab === 'quotes' ? (
           <CollectionScreen
             name="quotes" title="Quotes" readOnly

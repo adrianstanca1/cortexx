@@ -10,28 +10,63 @@
 
 const API_URL_FALLBACK = 'https://cortexbuildpro.com';
 
+// ── Token storage ───────────────────────────────────────────────
+// RN has no localStorage; default to in-memory so the app still runs.
+// The Expo entry (AppEntry.native) overrides this with expo-secure-store
+// so login persists securely across app restarts.
+let _memToken: string | null = null;
+function defaultTokenStorage(): ApiClientOptions['tokenStorage'] {
+  try {
+    if (typeof localStorage !== 'undefined') {
+      return {
+        get: () => localStorage.getItem('cb_token'),
+        set: (t: string) => localStorage.setItem('cb_token', t),
+        clear: () => localStorage.removeItem('cb_token'),
+      };
+    }
+  } catch { /* ignore */ }
+  return {
+    get: () => _memToken,
+    set: (t: string) => { _memToken = t; },
+    clear: () => { _memToken = null; },
+  };
+}
+
+export function setTokenStorage(store: { get: () => string | null | Promise<string | null>; set: (t: string) => void | Promise<void>; clear: () => void | Promise<void> }) {
+  _store = store;
+}
+
+let _store: ApiClientOptions['tokenStorage'] = defaultTokenStorage();
+
+// ── Offline cache (last-known-good collections) ───────────────
+// Used by the Expo app so lists work with no signal. Safe no-op elsewhere.
+let _cache: { get: (k: string) => Promise<string | null>; set: (k: string, v: string) => Promise<void> } | null = null;
+export function setOfflineCache(c: { get: (k: string) => Promise<string | null>; set: (k: string, v: string) => Promise<void> } | null) {
+  _cache = c;
+}
+async function cacheGet(name: string): Promise<any[] | null> {
+  if (!_cache) return null;
+  try { const v = await _cache.get('cb_cache_' + name); return v ? JSON.parse(v) : null; } catch { return null; }
+}
+async function cacheSet(name: string, rows: any[]): Promise<void> {
+  if (!_cache) return;
+  try { await _cache.set('cb_cache_' + name, JSON.stringify(rows)); } catch { /* ignore */ }
+}
+
 export type AuthUser = { id: string; email: string; role: string; name?: string };
 
 export type ApiClientOptions = {
   apiUrl?: string;
-  tokenStorage?: {
+  tokenStorage: {
     get: () => string | null | Promise<string | null>;
     set: (t: string) => void | Promise<void>;
     clear: () => void | Promise<void>;
   };
 };
 
-export function createApiClient(opts: ApiClientOptions = {}) {
+export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
   const API_URL = opts.apiUrl || API_URL_FALLBACK;
-  const store =
-    opts.tokenStorage ||
-    (typeof localStorage !== 'undefined'
-      ? {
-          get: () => localStorage.getItem('cb_token'),
-          set: (t: string) => localStorage.setItem('cb_token', t),
-          clear: () => localStorage.removeItem('cb_token'),
-        }
-      : { get: () => null, set: () => {}, clear: () => {} });
+  const store = opts.tokenStorage || _store;
 
   async function token(): Promise<string | null> {
     return await store.get();
@@ -107,8 +142,25 @@ export function createApiClient(opts: ApiClientOptions = {}) {
       return Array.isArray(d) ? d : d.rows || [];
     },
     async getCollection(name: string, limit = 100): Promise<any[]> {
-      const d = await apiGet(`/api/${name}?limit=${limit}`);
-      return Array.isArray(d) ? d : [];
+      try {
+        const d = await apiGet(`/api/${name}?limit=${limit}`);
+        const rows = Array.isArray(d) ? d : [];
+        await cacheSet(name, rows);
+        return rows;
+      } catch (e: any) {
+        if (e?.message === 'unauthorized') throw e;
+        const cached = await cacheGet(name);
+        if (cached) {
+          const err: any = new Error('offline-cache');
+          err.cached = cached;
+          err.message = 'No signal — showing last saved data';
+          throw err;
+        }
+        throw e;
+      }
+    },
+    async postCisSub(body: any): Promise<any> {
+      return apiPost('/api/cisSubs', body);
     },
     postCollection(name: string, body: any): Promise<any> {
       return apiPost(`/api/${name}`, body);

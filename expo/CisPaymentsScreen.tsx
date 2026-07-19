@@ -4,7 +4,7 @@ import {
   ActivityIndicator, Modal, TextInput, ScrollView, Alert, SectionList,
 } from 'react-native';
 import { Colors } from './theme';
-import { getCollection, postCollection } from './api';
+import { getCollection, postCollection, postCisSub } from './api';
 
 type Sub = { id: string; name: string; utr?: string; verified?: boolean };
 type Payment = { id: string; sub_id?: string; date?: string; amount?: number; labour?: number; materials?: number };
@@ -15,9 +15,13 @@ export default function CisPaymentsScreen({ onLogout }: { onLogout: () => void }
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const [modal, setModal] = useState(false);
+  const [subModal, setSubModal] = useState(false);
   const [saving, setSaving] = useState(false);
   const [form, setForm] = useState<{ sub_id: string; date: string; amount: string; labour: string; materials: string }>({
     sub_id: '', date: '', amount: '', labour: '', materials: '',
+  });
+  const [subForm, setSubForm] = useState<{ name: string; utr: string; trade: string; rate: string }>({
+    name: '', utr: '', trade: '', rate: '',
   });
 
   const load = async () => {
@@ -64,13 +68,33 @@ export default function CisPaymentsScreen({ onLogout }: { onLogout: () => void }
     finally { setSaving(false); }
   };
 
+  const openSub = () => { setSubForm({ name: '', utr: '', trade: '', rate: '' }); setSubModal(true); };
+  const saveSub = async () => {
+    if (!subForm.name.trim()) { Alert.alert('Missing', 'Company name is required.'); return; }
+    setSaving(true);
+    try {
+      await postCisSub({
+        name: subForm.name.trim(),
+        utr: subForm.utr.trim() || undefined,
+        trade: subForm.trade.trim() || undefined,
+        net_rate: subForm.rate ? parseFloat(subForm.rate) : undefined,
+      });
+      setSubModal(false);
+      await load();
+    } catch (e: any) { Alert.alert('Error', e?.message || 'Save failed'); }
+    finally { setSaving(false); }
+  };
+
   if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.amber} /></View>;
 
   return (
     <View style={styles.wrap}>
       <View style={styles.header}>
-        <Text style={styles.h1}>CIS Payments</Text>
-        <TouchableOpacity onPress={openAdd}><Text style={styles.addBtn}>+ Payment</Text></TouchableOpacity>
+        <Text style={styles.h1}>CIS</Text>
+        <View style={styles.headBtns}>
+          <TouchableOpacity onPress={openSub}><Text style={styles.addBtn}>+ Sub</Text></TouchableOpacity>
+          <TouchableOpacity onPress={openAdd}><Text style={styles.addBtn}>+ Pay</Text></TouchableOpacity>
+        </View>
       </View>
       {err ? <Text style={styles.err}>{err}</Text> : null}
 
@@ -133,6 +157,28 @@ export default function CisPaymentsScreen({ onLogout }: { onLogout: () => void }
           </View>
         </View>
       </Modal>
+
+      <Modal visible={subModal} animationType="slide" transparent>
+        <View style={styles.modalBack}>
+          <View style={styles.modal}>
+            <Text style={styles.modalTitle}>New Subcontractor</Text>
+            <ScrollView>
+              <Field label="Company name *"><Input value={subForm.name} onChange={(t) => setSubForm({ ...subForm, name: t })} placeholder="Ace Builders Ltd" /></Field>
+              <Field label="UTR"><Input value={subForm.utr} onChange={(t) => setSubForm({ ...subForm, utr: t })} placeholder="1234567890" /></Field>
+              <Field label="Trade"><Input value={subForm.trade} onChange={(t) => setSubForm({ ...subForm, trade: t })} placeholder="Plastering" /></Field>
+              <Field label="Net rate (0–1)"><Input value={subForm.rate} onChange={(t) => setSubForm({ ...subForm, rate: t })} placeholder="0.2" keyboardType="decimal-pad" /></Field>
+            </ScrollView>
+            <View style={styles.modalRow}>
+              <TouchableOpacity style={[styles.mBtn, styles.mCancel]} onPress={() => setSubModal(false)}>
+                <Text style={styles.mCancelText}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.mBtn, styles.mSave]} onPress={saveSub} disabled={saving}>
+                {saving ? <ActivityIndicator color="#06101e" /> : <Text style={styles.mSaveText}>Save</Text>}
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -154,6 +200,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   h1: { color: Colors.t1, fontSize: 24, fontWeight: '700' },
   addBtn: { color: Colors.amber, fontSize: 15, fontWeight: '700' },
+  headBtns: { flexDirection: 'row', gap: 14 },
   secHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginTop: 16, marginBottom: 6, paddingHorizontal: 2 },
   secTitle: { color: Colors.t1, fontSize: 16, fontWeight: '700' },
   secTotal: { color: Colors.amber, fontSize: 15, fontWeight: '700' },

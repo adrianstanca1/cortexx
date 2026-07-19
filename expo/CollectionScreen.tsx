@@ -20,15 +20,22 @@ export default function CollectionScreen({
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [offline, setOffline] = useState(false);
   const [modal, setModal] = useState(false);
   const [form, setForm] = useState<Record<string, string>>({});
   const [saving, setSaving] = useState(false);
 
   const load = async () => {
     setLoading(true); setErr('');
-    try { setItems(await getCollection(name)); }
-    catch (e: any) { setErr(e?.message || 'Failed'); if (e?.message === 'unauthorized') onLogout(); }
-    finally { setLoading(false); }
+    try {
+      const rows = await getCollection(name);
+      setItems(rows);
+      setOffline(false);
+    } catch (e: any) {
+      setErr(e?.message || 'Failed');
+      if (e?.message === 'unauthorized') onLogout();
+      else if (Array.isArray((e as any).cached)) { setItems((e as any).cached); setOffline(true); }
+    } finally { setLoading(false); }
   };
   useEffect(() => { load(); }, []);
 
@@ -59,6 +66,7 @@ export default function CollectionScreen({
         {!readOnly ? <TouchableOpacity onPress={openAdd}><Text style={styles.addBtn}>+ New</Text></TouchableOpacity> : null}
       </View>
       {err ? <Text style={styles.err}>{err}</Text> : null}
+      {offline ? <View style={styles.offlineBar}><Text style={styles.offlineText}>⚠ No signal — showing last saved data</Text></View> : null}
       <FlatList
         data={items}
         keyExtractor={(it) => it.id || Math.random().toString()}
@@ -118,6 +126,8 @@ const styles = StyleSheet.create({
   meta: { color: Colors.t2, fontSize: 13, marginTop: 2 },
   empty: { color: Colors.t3, textAlign: 'center', marginTop: 40 },
   err: { color: Colors.red, marginBottom: 12 },
+  offlineBar: { backgroundColor: Colors.orange + '22', borderWidth: 1, borderColor: Colors.orange, borderRadius: 10, padding: 10, marginBottom: 12 },
+  offlineText: { color: Colors.orange, fontSize: 12, fontWeight: '600' },
   modalBack: { flex: 1, backgroundColor: 'rgba(2,8,18,0.7)', justifyContent: 'flex-end' },
   modal: { backgroundColor: Colors.ink2, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 22, maxHeight: '85%' },
   modalTitle: { color: Colors.t1, fontSize: 20, fontWeight: '700', marginBottom: 16 },
