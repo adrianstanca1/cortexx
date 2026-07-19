@@ -10,6 +10,7 @@ import TasksScreen from './TasksScreen';
 import SnagsScreen from './SnagsScreen';
 import CisPaymentsScreen from './CisPaymentsScreen';
 import TimesheetsScreen from './TimesheetsScreen';
+import { pendingWrites, onQueueChange, flushQueue, getToken } from './api';
 
 const TABS = [
   { key: 'projects', label: 'Jobs' },
@@ -28,6 +29,31 @@ type TabKey = typeof TABS[number]['key'];
 export default function Tabs({ onLogout }: { onLogout: () => void }) {
   const [tab, setTab] = React.useState<TabKey>('projects');
   const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
+  const [pending, setPending] = React.useState(0);
+
+  // Reflect offline write-queue size; flush when the app is focussed.
+  React.useEffect(() => {
+    setPending(pendingWrites());
+    const off = onQueueChange(() => setPending(pendingWrites()));
+    const tryFlush = async () => {
+      try {
+        const t = await getToken();
+        if (t) await flushQueue({ token: t });
+        setPending(pendingWrites());
+      } catch { /* ignore */ }
+    };
+    tryFlush();
+    const id = setInterval(tryFlush, 15000);
+    return () => { off(); clearInterval(id); };
+  }, []);
+
+  const onSync = async () => {
+    try {
+      const t = await getToken();
+      if (t) await flushQueue({ token: t });
+      setPending(pendingWrites());
+    } catch { /* ignore */ }
+  };
 
   return (
     <View style={styles.wrap}>
@@ -90,6 +116,12 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
           })}
         </View>
       ) : null}
+
+      {pending > 0 ? (
+        <TouchableOpacity style={styles.syncBadge} onPress={onSync}>
+          <Text style={styles.syncText}>⤴ {pending} pending — tap to sync</Text>
+        </TouchableOpacity>
+      ) : null}
     </View>
   );
 }
@@ -102,4 +134,6 @@ const styles = StyleSheet.create({
   tabBtnActive: { backgroundColor: Colors.ink3 },
   tabLabel: { color: Colors.t3, fontSize: 11, fontWeight: '600' },
   tabActive: { color: Colors.amber },
+  syncBadge: { backgroundColor: Colors.amber, paddingVertical: 7, alignItems: 'center' },
+  syncText: { color: Colors.ink, fontSize: 12, fontWeight: '700' },
 });

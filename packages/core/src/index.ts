@@ -53,6 +53,61 @@ async function cacheSet(name: string, rows: any[]): Promise<void> {
   try { await _cache.set('cb_cache_' + name, JSON.stringify(rows)); } catch { /* ignore */ }
 }
 
+// ── Offline write queue ────────────────────────────────────────
+// Mutations (create/update) that fail due to no signal are persisted
+// here and replayed when flushQueue() runs (e.g. on network return).
+// A listener lets the UI show a "syncing N" badge.
+export type QueuedWrite = {
+  id: string; method: 'POST' | 'PUT'; collection: string; body: any; rowId?: string;
+};
+let _queue: QueuedWrite[] = [];
+let _queueStore: { get: (k: string) => Promise<string | null>; set: (k: string, v: string) => Promise<void> } | null = null;
+let _queueListeners: (() => void)[] = [];
+export function setQueueStore(s: { get: (k: string) => Promise<string | null>; set: (k: string, v: string) => Promise<void> } | null, onLoad?: QueuedWrite[]) {
+  _queueStore = s;
+  if (onLoad) { _queue = onLoad; notifyQueue(); }
+}
+function notifyQueue() { _queueListeners.forEach((l) => l()); }
+export function onQueueChange(cb: () => void): () => void {
+  _queueListeners.push(cb);
+  return () => { _queueListeners = _queueListeners.filter((l) => l !== cb); };
+}
+export function pendingWrites(): number { return _queue.length; }
+async function queuePersist() {
+  if (!_queueStore) return;
+  try { await _queueStore.set('cb_queue', JSON.stringify(_queue)); } catch { /* ignore */ }
+}
+async function enqueue(w: QueuedWrite): Promise<void> {
+  _queue.push(w);
+  await queuePersist();
+  notifyQueue();
+}
+async function dequeue(id: string): Promise<void> {
+  _queue = _queue.filter((w) => w.id !== id);
+  await queuePersist();
+  notifyQueue();
+}
+// Replay queued writes once a connection is available.
+export async function flushQueue(opts?: { apiUrl?: string; token?: string | null }): Promise<{ ok: number; failed: number }> {
+  if (_queue.length === 0) return { ok: 0, failed: 0 };
+  const API_URL = opts?.apiUrl || API_URL_FALLBACK;
+  let ok = 0; let failed = 0;
+  const snapshot = [..._queue];
+  for (const w of snapshot) {
+    try {
+      const headers: Record<string, string> = { 'content-type': 'application/json' };
+      const t = opts?.token ?? (await _store.get());
+      if (t) headers['authorization'] = `Bearer ${t}`;
+      const r = await fetch(`${API_URL}/api/${w.collection}${w.rowId ? '/' + w.rowId : ''}`, {
+        method: w.method, headers, body: JSON.stringify(w.body),
+      });
+      if (r.ok) { await dequeue(w.id); ok++; }
+      else failed++;
+    } catch { failed++; }
+  }
+  return { ok, failed };
+}
+
 export type AuthUser = { id: string; email: string; role: string; name?: string };
 
 export type ApiClientOptions = {
@@ -160,26 +215,39 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
       }
     },
     async postCisSub(body: any): Promise<any> {
-      return apiPost('/api/cisSubs', body);
+      try { return await apiPost('/api/cisSubs', body); }
+      catch (e: any) {
+        if (e?.message === 'unauthorized') throw e;
+        const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        await enqueue({ id, method: 'POST', collection: 'cisSubs', body });
+        return { id, _queued: true, ...body };
+      }
     },
     postCollection(name: string, body: any): Promise<any> {
-      return apiPost(`/api/${name}`, body);
+      return apiPost(`/api/${name}`, body).catch(async (e: any) => {
+        if (e?.message === 'unauthorized') throw e;
+        const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        await enqueue({ id, method: 'POST', collection: name, body });
+        return { id, _queued: true, ...body };
+      });
     },
     async putCollection(name: string, id: string, body: any): Promise<any> {
       const t = await token();
       const headers: Record<string, string> = { 'content-type': 'application/json' };
       if (t) headers['authorization'] = `Bearer ${t}`;
-      const r = await fetch(`${API_URL}/api/${name}/${id}`, {
-        method: 'PUT',
-        headers,
-        body: JSON.stringify(body),
-      });
-      if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); }
-      if (!r.ok) {
-        const e = await r.json().catch(() => ({}));
-        throw new Error((e as any).error || 'Update failed');
+      try {
+        const r = await fetch(`${API_URL}/api/${name}/${id}`, {
+          method: 'PUT', headers, body: JSON.stringify(body),
+        });
+        if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); }
+        if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error((e as any).error || 'Update failed'); }
+        return r.json();
+      } catch (e: any) {
+        if (e?.message === 'unauthorized') throw e;
+        const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8);
+        await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body });
+        return { id, _queued: true, ...body };
       }
-      return r.json();
     },
     async lookupTickets(email: string): Promise<any[]> {
       const r = await apiPost('/api/support/tickets/lookup', { email });
@@ -187,6 +255,9 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
     },
     apiGet,
     apiPost,
+    onQueueChange,
+    pendingWrites,
+    flushQueue,
   };
 }
 
