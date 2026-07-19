@@ -136,6 +136,10 @@ This is the **single source of truth** for what's done, what's in-flight, and wh
 - [x] **Server-side intelligence API** — `server/routes/intelligence.js` mirrors every selector authoritatively from `documents_store`. `GET /api/intelligence` (full briefing) + `/api/intelligence/:domain`. Client helper `cortexxCloud.intelligence(domain)`. ✅
 - [x] **Routing fix** — removed stale `dist/app-main.js` that pre-dated v1.7 and was shadowing the live sheet routes; all 7 screens now reachable. SW cache → `v3-1-009`. ✅
 
+### v1.8 — Navigation & connectivity (shipped) ✅ COMPLETE
+- [x] **AppGrid (All Apps) sheet** — `lib/screens-phase119.jsx` reads `SHEET_REGISTRY` and renders every registered feature as a searchable, domain-grouped tile grid; tapping a tile opens its sheet via `cortexxNav`. Doubles as a living connectivity check — nothing is orphaned. Reachable from the ProjectSheet header ("Apps" button) and `cortexxNav('appgrid' | 'allapps')`. ✅
+- [x] **Nav audit green** — 0 dangling `cortexxNav` targets across all 184 registry entries; `test/nav-registry.test.js` passes. SW cache → `v3-1-013`. ✅
+
 ---
 
 ## ❌ Known issues / parked
