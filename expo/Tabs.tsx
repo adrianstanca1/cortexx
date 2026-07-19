@@ -5,6 +5,7 @@ import ProjectsScreen from './ProjectsScreen';
 import ProjectDetailScreen from './ProjectDetailScreen';
 import CollectionScreen from './CollectionScreen';
 import TicketsScreen from './TicketsScreen';
+import ProfileScreen from './ProfileScreen';
 
 const TABS = [
   { key: 'projects', label: 'Jobs' },
@@ -13,6 +14,7 @@ const TABS = [
   { key: 'quotes', label: 'Quotes' },
   { key: 'snags', label: 'Snags' },
   { key: 'tickets', label: 'Tickets' },
+  { key: 'profile', label: 'Profile' },
 ] as const;
 
 type TabKey = typeof TABS[number]['key'];
@@ -81,8 +83,10 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
             rowSub={(i) => i.location ? `${i.location} · ${i.status || 'open'}` : (i.status || 'open')}
             onLogout={onLogout}
           />
-        ) : (
+        ) : tab === 'tickets' ? (
           <TicketsScreen />
+        ) : (
+          <ProfileScreen onLogout={onLogout} />
         )}
       </View>
 

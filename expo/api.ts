@@ -24,5 +24,5 @@ export const api = createApiClient({
 });
 
 // Re-export the shared contract so existing screens keep working unchanged.
-export const { login, getProjects, apiGet, apiPost, getCollection, postCollection, getToken, setToken, clearToken } = api;
+export const { login, getMe, getProjects, apiGet, apiPost, getCollection, postCollection, getToken, setToken, clearToken } = api;
 export type AuthUser = { id: string; email: string; role: string; name?: string };

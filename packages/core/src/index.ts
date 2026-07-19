@@ -94,6 +94,14 @@ export function createApiClient(opts: ApiClientOptions = {}) {
     async logout() {
       await store.clear();
     },
+    async getMe(): Promise<AuthUser | null> {
+      try {
+        const d = await apiGet('/api/auth/me');
+        return (d && (d.user || d)) as AuthUser;
+      } catch {
+        return null;
+      }
+    },
     async getProjects(): Promise<any[]> {
       const d = await apiGet('/api/projects?limit=100');
       return Array.isArray(d) ? d : d.rows || [];
