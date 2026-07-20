@@ -12,7 +12,7 @@
     "typecheck": "tsc --noEmit"
   },
   "devDependencies": {
-    "typescript": "~5.8.0"
+    "typescript": "~5.9.3"
   },
   "private": true
 }
