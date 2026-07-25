@@ -10,13 +10,13 @@ ON CONFLICT (id) DO NOTHING;
 
 -- Demo login — email: demo@cortexbuild.app  password: demo1234
 -- bcrypt hash of 'demo1234' (cost 10)
-INSERT INTO users(id, workspace_id, name, email, password_hash, role, cscs, safety_score)
+INSERT INTO users(id, workspace_id, name, email, password_hash, role, is_platform_admin, cscs, safety_score)
 VALUES (
   '00000000-0000-0000-0000-000000000002',
   '00000000-0000-0000-0000-000000000001',
   'Adrian Stanca', 'demo@cortexbuild.app',
   '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy',
-  'director', 'Gold', 92
+  'director', true, 'Gold', 92
 ) ON CONFLICT (id) DO NOTHING;
 
 -- Projects

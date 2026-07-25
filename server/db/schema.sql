@@ -19,6 +19,12 @@ CREATE TABLE users (
   email         TEXT UNIQUE NOT NULL,
   password_hash TEXT NOT NULL,
   role          TEXT DEFAULT 'director',
+  -- Platform-operator authority is a SEPARATE flag from the tenant role.
+  -- `role` (incl. 'director', the signup default) scopes a user WITHIN their
+  -- own workspace; is_platform_admin grants the cross-tenant /api/admin/*
+  -- surface and must NEVER be implied by a self-service role. Defaults false
+  -- so a fresh signup can never administer other tenants.
+  is_platform_admin BOOLEAN NOT NULL DEFAULT false,
   cscs          TEXT,
   safety_score  INT DEFAULT 90,
   created_at    TIMESTAMPTZ DEFAULT now()
