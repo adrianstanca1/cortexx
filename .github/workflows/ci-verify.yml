@@ -18,9 +18,9 @@ jobs:
       matrix:
         node: ['22']
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v7
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@v7
         with: { node-version: '22', cache: 'npm' }
 
       # Root deps provide the tsc binary used by packages/core + the server test.
@@ -71,8 +71,8 @@ jobs:
   capacitor-web:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: '22', cache: 'npm', cache-dependency-path: ios/package-lock.json }
       - name: Build Capacitor web bundle
         working-directory: ios
@@ -87,8 +87,8 @@ jobs:
   ios-build:
     runs-on: macos-14
     steps:
-      - uses: actions/checkout@v4
-      - uses: actions/setup-node@v4
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
         with: { node-version: '22' }
       - name: Install JS deps (root + Capacitor ios shell)
         run: |
