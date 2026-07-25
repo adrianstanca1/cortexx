@@ -11,7 +11,7 @@
 // Strategy: network-first for the HTML shell (fresh code on refresh), cache-first
 // for immutable JS + CDN. Precaching is resilient — one missing file can't abort it.
 
-const CACHE = 'cortexx-v3-1-016';
+const CACHE = 'cortexx-v3-1-017';
 
 const SHELL = [
   './',
@@ -31,6 +31,8 @@ const SHELL = [
 // CDN dependencies — cached no-cors so the app boots with no network.
 // Order mirrors the loader (jsDelivr-first), so precache targets what's requested.
 const CDN = [
+  'https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js',
+  'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js',
   'https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js',
   'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js',
   'https://cdn.jsdelivr.net/npm/@babel/standalone@7.29.0/babel.min.js',
@@ -61,6 +63,7 @@ const MODULE_NAMES = [
   'screens-phase100','screens-phase101','screens-phase102','screens-phase103',
   'screens-phase106','screens-phase107','screens-phase108','screens-phase109',
   'screens-phase110','screens-phase111','screens-phase112','screens-phase113','screens-phase114','screens-phase115','screens-phase116','screens-phase117','screens-phase118','screens-phase119',
+  'screens-phase120',
   'app-main','boot',
 ];
 
