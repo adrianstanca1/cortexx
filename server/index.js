@@ -565,40 +565,50 @@ const PORT = process.env.PORT || 3001;
 // Idempotent boot migration for the platform-admin flag. schema.sql only runs
 // on a FRESH Postgres volume init (docker-entrypoint-initdb.d), but the live
 // `cortexx_pgdata` volume predates the `is_platform_admin` column — so add it
-// here on every boot. `ADD COLUMN IF NOT EXISTS` makes this a no-op once
-// applied. Then (re)grant operator authority to the seeded account and to any
-// emails in PLATFORM_ADMIN_EMAILS — never to self-service signups. Best-effort:
-// a failure here must not crash the API (adminAuth fails closed if the column
-// is still missing), so we log and continue.
+// here on every boot. `ADD COLUMN IF NOT EXISTS` makes it a no-op once applied.
+//
+// Operator authority is granted ONLY from the declarative PLATFORM_ADMIN_EMAILS
+// env allowlist — the operator's source of truth. We deliberately do NOT
+// re-grant the seeded demo account here: that account ships with PUBLISHED
+// credentials (seed.sql / README), and an unconditional boot-time grant would
+// resurrect a deliberately-revoked bootstrap admin on every restart. Fresh DBs
+// still get it once via seed.sql (initial seeding); an operator who revokes it
+// stays revoked. Accounts absent from the allowlist are never auto-granted, and
+// clearing the env is the revocation path.
 async function ensurePlatformAdmin() {
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_admin BOOLEAN NOT NULL DEFAULT false');
-  // Seeded operator account (stable id from seed.sql) — no-op if absent.
-  await pool.query(
-    "UPDATE users SET is_platform_admin = true WHERE id = '00000000-0000-0000-0000-000000000002' AND is_platform_admin = false"
-  );
   const emails = (process.env.PLATFORM_ADMIN_EMAILS || '')
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   if (emails.length) {
     const g = await pool.query(
-      'UPDATE users SET is_platform_admin = true WHERE lower(email) = ANY($1) AND is_platform_admin = false RETURNING email',
+      'UPDATE users SET is_platform_admin = true WHERE lower(email) = ANY($1) AND is_platform_admin = false',
       [emails]
     );
-    if (g.rows.length) log.info(`[migrate] granted platform-admin to ${g.rows.map(r => r.email).join(', ')}`);
+    // Log the count only — never the emails (PII in logs, CWE-532).
+    if (g.rowCount) log.info(`[migrate] granted platform-admin to ${g.rowCount} account(s)`);
   }
 }
 
 if (require.main === module) {
-  ensurePlatformAdmin().catch(e => log.error('[migrate] ensurePlatformAdmin failed (adminAuth fails closed):', e.message));
-  const server = app.listen(PORT, () => log.info(`Cortexx API on :${PORT}`));
-
-  // ── Graceful shutdown ───────────────────────────────────────
-  for (const sig of ['SIGTERM', 'SIGINT']) {
-    process.on(sig, () => {
-      log.info(`${sig} received — closing`);
-      server.close(() => pool.end().then(() => process.exit(0)));
-      setTimeout(() => process.exit(1), 10000).unref();
-    });
-  }
+  // Await the migration BEFORE binding the socket: adminAuth and /api/auth/me
+  // read `is_platform_admin`, so serving traffic before the column exists would
+  // 500/401 for every user. If it fails (e.g. an ALTER blocked by a lock), exit
+  // non-zero so the container restarts and retries rather than serving a broken
+  // API that a health check might still mark "ready" — mirrors the fail-fast
+  // JWT_SECRET/CORS guards above.
+  ensurePlatformAdmin()
+    .then(() => {
+      const server = app.listen(PORT, () => log.info(`Cortexx API on :${PORT}`));
+      // ── Graceful shutdown ───────────────────────────────────
+      for (const sig of ['SIGTERM', 'SIGINT']) {
+        process.on(sig, () => {
+          log.info(`${sig} received — closing`);
+          server.close(() => pool.end().then(() => process.exit(0)));
+          setTimeout(() => process.exit(1), 10000).unref();
+        });
+      }
+    })
+    .catch(e => { log.fatal('[migrate] ensurePlatformAdmin failed — refusing to serve:', e.message); process.exit(1); });
 }
 
 // Export the app + server so tests can mount/drive the real server in-process
