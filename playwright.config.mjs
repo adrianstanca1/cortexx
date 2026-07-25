@@ -42,7 +42,11 @@ export default defineConfig({
   ],
   webServer: {
     command: 'npm run dev',
-    url: baseURL,
+    // Poll /login, not /: proxy.ts rewrites unauthenticated / to
+    // /legacy/Cortexx-standalone.html, which lives only on the VPS (never
+    // committed), so / is a permanent 404 in CI and the readiness check
+    // would time out. /login is a committed public route the journeys use.
+    url: `${baseURL}/login`,
     reuseExistingServer: !process.env.CI,
     timeout: 120_000,
     env: {
