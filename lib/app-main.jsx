@@ -101,6 +101,27 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
   // Global navigation exposed to all screens via window.cortexxNav
   React.useEffect(() => {
     window.cortexxNav = (key, payload) => {
+      // ── RBAC enforcement ───────────────────────────────────────────────
+      // Visibility (AppGrid __cortexxRoleFilter) is NOT access. Enforce here
+      // so calling cortexxNav(key) for an area the current role lacks permission
+      // for is silently refused (toast + audit), never rendered.
+      try {
+        if (key && window.__cortexxRoleFilter) {
+          const allowed = window.__cortexxRoleFilter({ k: key });
+          if (!allowed) {
+            const role = (window.__cortexxCurrentRole && window.__cortexxCurrentRole()) || 'unknown';
+            if (window.CortexAudit) {
+              const me = (window.CortexMembers && window.CortexMembers.list().find(m => m.status === 'active') || {}).name || 'You';
+              window.CortexAudit.log(me, 'blocked navigation to ' + key + ' (no ' + role + ' access)', 'Security');
+            }
+            if (typeof toast === 'function') toast('You don’t have access to that (' + role + ')', 'error');
+            else if (window.cortexxToast) window.cortexxToast('Access denied', 'error');
+            console.warn('[cortexxNav] RBAC deny — role ' + role + ' → ' + key);
+            return;
+          }
+        }
+      } catch (e) { /* fail-open on audit/role error, but still navigate */ }
+
       // Auto-record navigations to consequential areas in the per-tenant audit log
       try {
         if (window.CortexAudit) {

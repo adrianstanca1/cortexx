@@ -40,7 +40,26 @@
     myday: 'myday',
     leads: 'projects',
     customers: 'projects',
-    portal: 'portal'
+    portal: 'portal',
+    chase: 'money',
+    addinvoice: 'invoices',
+    addtask: 'tasks',
+    addteam: 'team',
+    rfi: 'projects',
+    msg: 'projects',
+    docgen: 'docs',
+    improvement: 'projects',
+    editfield: 'projects',
+    smartparse: 'money',
+    phototosnag: 'photos',
+    starttrip: 'clock',
+    addcost: 'money',
+    addco: 'projects',
+    adddiaryentry: 'diary',
+    checkout: 'money',
+    scheduletalk: 'safety',
+    invoices: 'invoices',
+    subinvoices: 'money'
   };
   function currentRole() {
     try {

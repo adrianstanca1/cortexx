@@ -193,6 +193,23 @@ function CortexxApp({
   React.useEffect(() => {
     window.cortexxNav = (key, payload) => {
       try {
+        if (key && window.__cortexxRoleFilter) {
+          const allowed = window.__cortexxRoleFilter({
+            k: key
+          });
+          if (!allowed) {
+            const role = window.__cortexxCurrentRole && window.__cortexxCurrentRole() || 'unknown';
+            if (window.CortexAudit) {
+              const me = (window.CortexMembers && window.CortexMembers.list().find(m => m.status === 'active') || {}).name || 'You';
+              window.CortexAudit.log(me, 'blocked navigation to ' + key + ' (no ' + role + ' access)', 'Security');
+            }
+            if (typeof toast === 'function') toast('You don’t have access to that (' + role + ')', 'error');else if (window.cortexxToast) window.cortexxToast('Access denied', 'error');
+            console.warn('[cortexxNav] RBAC deny — role ' + role + ' → ' + key);
+            return;
+          }
+        }
+      } catch (e) {}
+      try {
         if (window.CortexAudit) {
           const me = window.__cortexxCurrentRole && window.CortexMembers ? (window.CortexMembers.list().find(m => m.status === 'active') || {}).name : null;
           const AUDIT_MAP = {

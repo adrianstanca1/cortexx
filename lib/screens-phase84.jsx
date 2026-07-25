@@ -23,6 +23,26 @@
     vera: 'reports', veraauto: 'reports', personas: 'reports', myday: 'myday',
     // sales
     leads: 'projects', customers: 'projects', portal: 'portal',
+    // ── cortexxNav special-case keys (must be gated too — visibility ≠ access) ──
+    chase: 'money',          // invoice chase → financial
+    addinvoice: 'invoices',  // create invoice → financial
+    addtask: 'tasks',
+    addteam: 'team',
+    rfi: 'projects',
+    msg: 'projects',
+    docgen: 'docs',
+    improvement: 'projects',
+    editfield: 'projects',
+    smartparse: 'money',     // receipt/invoice parsing → financial
+    phototosnag: 'photos',
+    starttrip: 'clock',
+    addcost: 'money',        // cost item entry → financial
+    addco: 'projects',       // change order → project
+    adddiaryentry: 'diary',
+    checkout: 'money',       // plan checkout → billing
+    scheduletalk: 'safety',  // toolbox talk → safety
+    invoices: 'invoices',
+    subinvoices: 'money',
   };
 
   function currentRole() {
