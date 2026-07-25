@@ -90,7 +90,7 @@
     CortexBuild <span style="color:var(--amber)">Pro</span>
   </div>
   <h1>Admin Console</h1>
-  <p>Sign in with an owner or admin account to manage the platform.</p>
+  <p>Sign in with a platform-admin account to manage the platform.</p>
   <form id="loginForm">
     <label>Email</label>
     <input type="email" id="email" placeholder="you@company.com" required/>
@@ -150,7 +150,7 @@ document.getElementById('loginForm').addEventListener('submit', async (e)=>{
       email: document.getElementById('email').value,
       password: document.getElementById('password').value
     })});
-    if(!['owner','admin'].includes(user.role)){ err.textContent='This account is not an admin.'; return; }
+    if(user.is_platform_admin !== true){ err.textContent='This account is not a platform admin.'; return; }
     TOKEN = token; localStorage.setItem('cb_admin_token', token);
     boot();
   }catch(e){ err.textContent = (e.error==='invalid credentials')?'Invalid email or password.':'Login failed: '+(e.error||'unknown'); }

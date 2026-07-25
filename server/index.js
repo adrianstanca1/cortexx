@@ -148,12 +148,12 @@ app.post('/api/auth/login', authLimiter, wrap(async (req, res) => {
   if (!r.rows[0] || !r.rows[0].password_hash || !(await bcrypt.compare(password, r.rows[0].password_hash)))
     return res.status(401).json({ error: 'invalid credentials' });
   const u = r.rows[0];
-  res.json({ token: signToken(u.id, u.workspace_id), user: { id: u.id, name: u.name, email: u.email, role: u.role } });
+  res.json({ token: signToken(u.id, u.workspace_id), user: { id: u.id, name: u.name, email: u.email, role: u.role, is_platform_admin: !!u.is_platform_admin } });
 }));
 
 // Validate a token and return the current user (used by the client on boot).
 app.get('/api/auth/me', apiLimiter, auth, wrap(async (req, res) => {
-  const r = await pool.query('SELECT id, name, email, role, workspace_id FROM users WHERE id=$1', [req.user.uid]);
+  const r = await pool.query('SELECT id, name, email, role, workspace_id, COALESCE(is_platform_admin, false) AS is_platform_admin FROM users WHERE id=$1', [req.user.uid]);
   if (!r.rows[0]) return res.status(404).json({ error: 'not_found' });
   res.json({ user: r.rows[0] });
 }));
@@ -461,16 +461,21 @@ app.post('/api/audit', apiLimiter, auth, wrap(async (req, res) => {
 
 // ── Admin console (SaaS operator) ──────────────────────────
 // Reuse the existing `auth` middleware, then require an operator role.
+// Platform-admin authority is gated on the dedicated `is_platform_admin`
+// column, NOT on the tenant `role`. This is deliberate and security-critical:
+// `role` defaults to 'director' for every self-service signup (schema.sql +
+// the /api/auth/register and magic-link INSERTs, which set no role), so gating
+// /api/admin/* on any role value would let anyone who registers administer
+// EVERY tenant. The flag is provisioned only for real operators (seed.sql and
+// the boot migration below), never by a public code path.
 // The JWT payload only carries {uid, ws} (see signToken), so we resolve the
-// live role from the DB — this also reflects role changes immediately.
+// live flag from the DB — this reflects grants/revocations immediately.
 async function adminAuth(req, res, next) {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   try {
     const u = jwt.verify(token, JWT_SECRET);
-    const r = await pool.query('SELECT role FROM users WHERE id=$1', [u.uid]);
-    // owner/admin run the platform; director is the founder/operator seat
-    // (the seeded Cortexx account is `director`), so it administers too.
-    if (!r.rows[0] || !['owner', 'admin', 'director'].includes(r.rows[0].role))
+    const r = await pool.query('SELECT is_platform_admin FROM users WHERE id=$1', [u.uid]);
+    if (!r.rows[0] || r.rows[0].is_platform_admin !== true)
       return res.status(403).json({ error: 'forbidden' });
     req.user = u;
     next();
@@ -557,17 +562,53 @@ const PORT = process.env.PORT || 3001;
 // Only bind + listen when run directly (`node server/index.js`). When required
 // by a test it exposes `app`/`server`/`pool` without opening a socket, so tests
 // can mount it on an ephemeral port. Runtime production behavior is unchanged.
-if (require.main === module) {
-  const server = app.listen(PORT, () => log.info(`Cortexx API on :${PORT}`));
-
-  // ── Graceful shutdown ───────────────────────────────────────
-  for (const sig of ['SIGTERM', 'SIGINT']) {
-    process.on(sig, () => {
-      log.info(`${sig} received — closing`);
-      server.close(() => pool.end().then(() => process.exit(0)));
-      setTimeout(() => process.exit(1), 10000).unref();
-    });
+// Idempotent boot migration for the platform-admin flag. schema.sql only runs
+// on a FRESH Postgres volume init (docker-entrypoint-initdb.d), but the live
+// `cortexx_pgdata` volume predates the `is_platform_admin` column — so add it
+// here on every boot. `ADD COLUMN IF NOT EXISTS` makes it a no-op once applied.
+//
+// Operator authority is granted ONLY from the declarative PLATFORM_ADMIN_EMAILS
+// env allowlist — the operator's source of truth. We deliberately do NOT
+// re-grant the seeded demo account here: that account ships with PUBLISHED
+// credentials (seed.sql / README), and an unconditional boot-time grant would
+// resurrect a deliberately-revoked bootstrap admin on every restart. Fresh DBs
+// still get it once via seed.sql (initial seeding); an operator who revokes it
+// stays revoked. Accounts absent from the allowlist are never auto-granted, and
+// clearing the env is the revocation path.
+async function ensurePlatformAdmin() {
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_admin BOOLEAN NOT NULL DEFAULT false');
+  const emails = (process.env.PLATFORM_ADMIN_EMAILS || '')
+    .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
+  if (emails.length) {
+    const g = await pool.query(
+      'UPDATE users SET is_platform_admin = true WHERE lower(email) = ANY($1) AND is_platform_admin = false',
+      [emails]
+    );
+    // Log the count only — never the emails (PII in logs, CWE-532).
+    if (g.rowCount) log.info(`[migrate] granted platform-admin to ${g.rowCount} account(s)`);
   }
+}
+
+if (require.main === module) {
+  // Await the migration BEFORE binding the socket: adminAuth and /api/auth/me
+  // read `is_platform_admin`, so serving traffic before the column exists would
+  // 500/401 for every user. If it fails (e.g. an ALTER blocked by a lock), exit
+  // non-zero so the container restarts and retries rather than serving a broken
+  // API that a health check might still mark "ready" — mirrors the fail-fast
+  // JWT_SECRET/CORS guards above.
+  ensurePlatformAdmin()
+    .then(() => {
+      const server = app.listen(PORT, () => log.info(`Cortexx API on :${PORT}`));
+      // ── Graceful shutdown ───────────────────────────────────
+      for (const sig of ['SIGTERM', 'SIGINT']) {
+        process.on(sig, () => {
+          log.info(`${sig} received — closing`);
+          server.close(() => pool.end().then(() => process.exit(0)));
+          setTimeout(() => process.exit(1), 10000).unref();
+        });
+      }
+    })
+    .catch(e => { log.fatal('[migrate] ensurePlatformAdmin failed — refusing to serve:', e.message); process.exit(1); });
 }
 
 // Export the app + server so tests can mount/drive the real server in-process
