@@ -2,12 +2,28 @@ name: Backup Verify
 
 # Weekly verification that the nightly pg_dump backups are actually
 # restorable. Picks the most recent .sql.gz in /opt/cortexx-backups/,
-# restores it to a throwaway `cortexx_verify` database, runs smoke
-# queries, and drops the temp DB.
+# restores it to a throwaway `cortexx_verify` database INSIDE the `db`
+# container, runs smoke queries against the real raw-SQL schema, and
+# drops the temp DB.
 #
 # Catches the worst class of backup failure: backups that complete
 # without errors but are corrupt or truncated and can't be restored.
 # A failed run is a P0 — the production data isn't actually backed up.
+#
+# FIXED 2026-07-26 (see incident writeup in PR): this workflow, and the
+# `/etc/cron.daily/cortexx-backup` cron it exists to verify, both
+# pre-date the app's move to Docker Compose. Both used to target a
+# `sudo -u postgres psql` connection to the HOST's local PostgreSQL —
+# an empty, orphaned database, not the live one inside the `db`
+# container. The smoke queries also checked for Prisma-convention
+# tables (`"User"`, `"Project"`, `_prisma_migrations`) that only ever
+# existed in that host database, never in the real raw-SQL schema
+# (see docs/DATA_MODEL_DRIFT.md — raw SQL is canonical, snake_case,
+# lowercase). Every run for at least 8 consecutive weeks (since
+# 2026-06-07) failed for this reason, and the failure-issue step below
+# ALSO had a bug (it read a status file that was never written when the
+# SSH command itself failed under `set -e`), so no P0 issue was ever
+# actually opened. Both are fixed here.
 
 on:
   workflow_dispatch:
@@ -42,7 +58,7 @@ jobs:
           cat > /tmp/verify.sh << 'SCRIPT'
           set -uo pipefail
           BACKUP_DIR=/opt/cortexx-backups
-          STAMP=$(date -u +%Y%m%d-%H%M%S)
+          CTR=cortexx-db-1
 
           echo "=== Finding most recent backup ==="
           # Sort by mtime; take the newest .sql.gz that's > 1 KB (filters
@@ -62,60 +78,78 @@ jobs:
           fi
 
           echo ""
-          echo "=== Restoring to cortexx_verify ==="
+          echo "=== Restoring to cortexx_verify (inside $CTR) ==="
           # Drop the temp DB if it exists from a prior aborted run.
-          sudo -u postgres psql -c "DROP DATABASE IF EXISTS cortexx_verify"
-          sudo -u postgres psql -c "CREATE DATABASE cortexx_verify"
+          docker exec "$CTR" psql -U postgres -c "DROP DATABASE IF EXISTS cortexx_verify"
+          docker exec "$CTR" psql -U postgres -c "CREATE DATABASE cortexx_verify"
 
-          # Restore. set +e here so we can catch the exit code; gunzip
-          # exit is what we actually care about.
+          # Restore. set +e here so we can catch the exit code; the
+          # restore's own exit is what we actually care about.
           set +e
-          gunzip -c "$LATEST" | sudo -u postgres psql cortexx_verify > /tmp/verify-restore.log 2>&1
+          gunzip -c "$LATEST" | docker exec -i "$CTR" psql -U postgres cortexx_verify > /tmp/verify-restore.log 2>&1
           RESTORE_EXIT=$?
           set -e
 
           if [ $RESTORE_EXIT -ne 0 ]; then
             echo "✗ Restore failed with exit $RESTORE_EXIT — last 30 log lines:"
             tail -30 /tmp/verify-restore.log
-            sudo -u postgres psql -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
+            docker exec "$CTR" psql -U postgres -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
             exit 1
           fi
 
           echo ""
-          echo "=== Smoke queries ==="
+          echo "=== Smoke queries (raw-SQL schema — see docs/DATA_MODEL_DRIFT.md) ==="
           # The restore command may emit warnings (e.g. ALREADY EXISTS) and
-          # still produce a valid schema. Verify by running real queries.
-          USER_COUNT=$(sudo -u postgres psql cortexx_verify -tAc 'SELECT COUNT(*) FROM "User"' 2>&1)
-          PROJ_COUNT=$(sudo -u postgres psql cortexx_verify -tAc 'SELECT COUNT(*) FROM "Project"' 2>&1)
-          MIG_COUNT=$(sudo -u postgres psql cortexx_verify -tAc 'SELECT COUNT(*) FROM _prisma_migrations WHERE finished_at IS NOT NULL' 2>&1)
-          echo "Users: $USER_COUNT  Projects: $PROJ_COUNT  Applied migrations: $MIG_COUNT"
+          # still produce a valid schema. Verify by running real queries
+          # against the canonical snake_case tables, not Prisma names.
+          TABLE_COUNT=$(docker exec "$CTR" psql -U postgres -d cortexx_verify -tAc "SELECT COUNT(*) FROM information_schema.tables WHERE table_schema='public'" 2>&1)
+          USER_COUNT=$(docker exec "$CTR" psql -U postgres -d cortexx_verify -tAc 'SELECT COUNT(*) FROM users' 2>&1)
+          PROJ_COUNT=$(docker exec "$CTR" psql -U postgres -d cortexx_verify -tAc 'SELECT COUNT(*) FROM projects' 2>&1)
+          echo "Tables: $TABLE_COUNT  Users: $USER_COUNT  Projects: $PROJ_COUNT"
 
-          # Sanity: the verified DB should have at least the admin user
-          # and the foundation migrations applied.
-          if ! [[ "$USER_COUNT" =~ ^[0-9]+$ ]] || [ "$USER_COUNT" -lt 1 ]; then
-            echo "✗ User table empty or unreadable in restored DB"
-            sudo -u postgres psql -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
+          # Sanity: the restored schema should have (approximately) all
+          # 35 canonical tables and the users/projects tables must at
+          # least be queryable (row count may legitimately be 0 pre-launch
+          # — this checks the table EXISTS and is readable, not that it
+          # has data).
+          if ! [[ "$TABLE_COUNT" =~ ^[0-9]+$ ]] || [ "$TABLE_COUNT" -lt 30 ]; then
+            echo "✗ Restored DB has only $TABLE_COUNT tables (expected 30+) — schema likely incomplete"
+            docker exec "$CTR" psql -U postgres -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
             exit 1
           fi
-          if ! [[ "$MIG_COUNT" =~ ^[0-9]+$ ]] || [ "$MIG_COUNT" -lt 20 ]; then
-            echo "✗ Restored DB has only $MIG_COUNT applied migrations (expected 20+)"
-            sudo -u postgres psql -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
+          if ! [[ "$USER_COUNT" =~ ^[0-9]+$ ]]; then
+            echo "✗ users table missing or unreadable in restored DB: $USER_COUNT"
+            docker exec "$CTR" psql -U postgres -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
+            exit 1
+          fi
+          if ! [[ "$PROJ_COUNT" =~ ^[0-9]+$ ]]; then
+            echo "✗ projects table missing or unreadable in restored DB: $PROJ_COUNT"
+            docker exec "$CTR" psql -U postgres -c "DROP DATABASE cortexx_verify" >/dev/null 2>&1 || true
             exit 1
           fi
 
           echo ""
           echo "=== Cleanup ==="
-          sudo -u postgres psql -c "DROP DATABASE cortexx_verify"
+          docker exec "$CTR" psql -U postgres -c "DROP DATABASE cortexx_verify"
 
           echo ""
           echo "✓ Backup verified: $LATEST"
-          echo "  Restored cleanly, ${USER_COUNT} users, ${PROJ_COUNT} projects, ${MIG_COUNT} migrations applied."
+          echo "  Restored cleanly — ${TABLE_COUNT} tables, ${USER_COUNT} users, ${PROJ_COUNT} projects."
           echo "VERIFY_OK=1"
           SCRIPT
 
           scp -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy /tmp/verify.sh root@72.62.132.43:/tmp/verify.sh
+
+          # Run defensively: capture output and exit code even if ssh
+          # itself fails, so the failure-issue step below always has
+          # something to report. (Previously, a failing `OUT=$(ssh ...)`
+          # under this step's implicit `set -e` could abort before the
+          # output file was ever written, silently losing all diagnostic
+          # detail AND breaking the fallback issue-creation step.)
+          set +e
           OUT=$(ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -o ServerAliveInterval=30 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash /tmp/verify.sh' 2>&1)
           EXIT=$?
+          set -e
 
           echo "$OUT"
           {
@@ -124,14 +158,16 @@ jobs:
             echo '```'
             echo "$OUT"
             echo '```'
-          } >> $GITHUB_STEP_SUMMARY
+          } >> "$GITHUB_STEP_SUMMARY"
 
-          # Stash the output for the issue-opening step on failure.
+          # Stash the output for the issue-opening step on failure. This
+          # now always runs, even if ssh failed above, because it's no
+          # longer gated behind the (removed) implicit early-abort.
           mkdir -p /tmp/backup-verify
           echo "$OUT" > /tmp/backup-verify/output.txt
-          echo "exit_code=$EXIT" >> $GITHUB_OUTPUT
+          echo "exit_code=$EXIT" >> "$GITHUB_OUTPUT"
 
-          exit $EXIT
+          exit "$EXIT"
 
       - name: Open issue on failure
         if: failure()
@@ -152,7 +188,7 @@ jobs:
              the nightly `/etc/cron.daily/cortexx-backup` cron still
              writing files?
           3. Try the restore manually with a fresh backup taken on-the-spot
-             via `pg_dump cortexx > /tmp/now.sql.gz`.
+             via `docker compose exec -T db pg_dump -U postgres -d cortexx | gzip > /tmp/now.sql.gz`.
           4. If repeatable, halt non-essential deploys until the backup
              pipeline is fixed.
 
@@ -160,7 +196,7 @@ jobs:
           ```
           HEADER
           )
-          BODY+=$(cat /tmp/backup-verify/output.txt)
+          BODY+=$(cat /tmp/backup-verify/output.txt 2>/dev/null || echo "(no output captured — ssh connection to the VPS itself likely failed)")
           BODY+=$'\n```\n\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}'
 
           gh issue create \
