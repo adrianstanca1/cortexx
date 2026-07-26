@@ -27,6 +27,7 @@ module.exports = function ledgerRoutes(pool, auth) {
 
   // GET /api/ledger.csv?format=xero&vat=standard&from=ISO&to=ISO&sales=1&purchases=1
   router.get('/ledger.csv', auth, async (req, res) => {
+   try {
     const ws = req.user.ws;
     const format = ['xero', 'qb', 'sage', 'generic'].includes(req.query.format) ? req.query.format : 'generic';
     const vat = ['standard', 'zero', 'cis'].includes(req.query.vat) ? req.query.vat : 'standard';
@@ -77,6 +78,10 @@ module.exports = function ledgerRoutes(pool, auth) {
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
     res.setHeader('Content-Disposition', `attachment; filename="cortexx-ledger-${format}-${new Date().toISOString().slice(0,10)}.csv"`);
     res.send(csv);
+   } catch (err) {
+     console.error('[ledger] export failed:', err.message);
+     res.status(500).json({ error: 'ledger_export_failed' });
+   }
   });
 
   return router;
