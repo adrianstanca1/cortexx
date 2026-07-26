@@ -163,6 +163,7 @@ services:
       DATABASE_URL: postgres://postgres:***@db:5432/cortexx
       NODE_ENV: production
       PORT: 3000
+      ADMIN_TENANT: "true"
       NEXTAUTH_URL: https://admin.cortexbuildpro.com
       NEXTAUTH_SECRET: ${ADMIN_NEXTAUTH_SECRET:-change-me-admin-nextauth-secret}
       NEXT_PUBLIC_API_URL: https://cortexbuildpro.com

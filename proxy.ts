@@ -190,6 +190,11 @@ export default auth(req => {
   // (127.0.0.1:3000) keeps the rewrite internal; the browser URL is
   // unchanged (rewrites don't alter the address bar).
   if (pathname === '/' && !req.auth) {
+    // On the dedicated admin tenant there is no marketing landing page,
+    // so send signed-out visitors straight to the login screen.
+    if (process.env.ADMIN_TENANT === 'true') {
+      return NextResponse.redirect(new URL('/login', req.url))
+    }
     const rewriteUrl = new URL('/legacy/Cortexx-standalone.html', 'http://127.0.0.1:3000')
     return withSecurityHeaders(
       NextResponse.rewrite(rewriteUrl, nextOpts),
