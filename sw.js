@@ -43,7 +43,7 @@ const MODULE_NAMES = [
   'ios-frame','tweaks-panel','tokens',
   'dashboards','dashboards-v2','dashboards-v3','dashboards-v4','dashboards-v5',
   'backend','backend-extras','backend-v17','cloud-sync','qrcode','invoice-pdf',
-  'llm-shim','crash','observability','push','e2ee','cis300','banking','i18n','riddor','retention','iap','hmrc',
+  'llm-shim','crash','onboarding','observability','push','e2ee','cis300','banking','i18n','riddor','retention','iap','hmrc',
   'perf-phase71','perf-phase81',
   'app-screens','app-sheets','app-screens-2','app-utils',
   'screens-ops','screens-project',
