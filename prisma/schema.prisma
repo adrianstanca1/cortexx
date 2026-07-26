@@ -1824,6 +1824,4 @@ model Workspace {
   company   String?
   plan      String   @default("free")
   createdAt DateTime @default(now())
-
-  users     User[]
 }
