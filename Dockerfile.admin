@@ -38,7 +38,6 @@ ENV NEXT_TELEMETRY_DISABLED=1
 # the project dir name (e.g. cortexx-review/) depending on outputFileTracingRoot,
 # so copy from either location.
 COPY --from=builder /app/.next/standalone ./
-COPY --from=builder /app/.next/standalone/cortexx-review ./
 COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 EXPOSE 3000
