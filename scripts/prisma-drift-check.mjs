@@ -114,7 +114,12 @@ function main() {
   const KNOWN_GAPS = new Set(['workspaces']);
   // Prisma models intentionally unmapped (next-auth v5 convention names kept for
   // future Email-provider wiring; legacy; documented, not queried yet).
-  const ALLOWED_ORPHANS = new Set(['Account', 'Session', 'VerificationToken']);
+  const ALLOWED_ORPHANS = new Set(['Account', 'Session', 'VerificationToken', 'AiHistory']);
+  // NOTE: 'AiHistory' maps to the raw-SQL `ai_history` table, which is listed in
+  // INTENTIONAL_NO_MODEL (the Express API persists it directly via /api/:collection).
+  // modelToTable() pluralises it to the non-existent `ai_historys`, so without this
+  // exemption the guard wrongly flags it as an orphan. The table is intentional and
+  // the model is the Next.js admin's typed view of it.
 
   const problems = [];
 
