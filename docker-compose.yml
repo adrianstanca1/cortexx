@@ -147,7 +147,10 @@ services:
 
   # ── cortexx-admin: Next.js SaaS admin console (app/dashboard + RBAC) ──
   # Dedicated tenant behind host traefik at admin.cortexbuildpro.com.
-  # Shares the central Postgres `db` (same cortexx database) + traefik_web net.
+  # Shares the central Postgres `db` (same cortexx database). Traefik runs in
+  # host network mode and discovers this container via the docker provider,
+  # dialing its cortexx_default IP — same pattern as the working `web` tenant
+  # (which is also only on cortexx_default, no explicit traefik_web attach).
   admin:
     build:
       context: .
@@ -179,19 +182,9 @@ services:
       - traefik.http.routers.cortexx-admin-alt.rule=Host(`admin.srv1262179.hstgr.cloud`)
       - traefik.http.routers.cortexx-admin-alt.entrypoints=websecure
       - traefik.http.routers.cortexx-admin-alt.tls.certresolver=letsencrypt
-      - traefik.http.services.cortexx-admin.loadbalancer.server.port=3000
-    networks:
-      - default
-      - traefik_web
 
 volumes:
   cortexx_pgdata:
   cortexx_ollama:
   cortexx_caddy_data:
   cortexx_caddy_config:
-
-# traefik_web is the host traefik docker network (created by the traefik stack
-# at /docker/traefik). External so compose rejoins it instead of creating a new one.
-networks:
-  traefik_web:
-    external: true
