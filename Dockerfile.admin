@@ -6,7 +6,13 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
-RUN npm ci
+# Skip the root postinstall (it runs `prisma generate` + precompile in a way
+# that breaks inside a clean `npm ci`); we run those steps explicitly below.
+RUN npm ci --ignore-scripts
+# Generate Prisma client (schema path resolved via prisma.config.ts at root).
+RUN npx prisma generate
+# Precompile step the app expects (build-dist.js + cortex-core.js).
+RUN node build-dist.js && npm run build:core
 
 # Rebuild the source
 FROM base AS builder
@@ -24,6 +30,8 @@ ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV NEXTAUTH_URL=${NEXTAUTH_URL}
 ENV NEXT_PUBLIC_API_URL=https://cortexbuildpro.com
 ENV NEXT_PUBLIC_SITE_URL=https://cortexbuildpro.com
+# Ensure Prisma client is present for the build (standalone trace includes node_modules).
+RUN npx prisma generate
 RUN npm run build
 
 # Production image, copy all the files and run next

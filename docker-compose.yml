@@ -168,9 +168,17 @@ services:
       - "3000"
     labels:
       - traefik.enable=true
+      # Branded host (needs A record admin.cortexbuildpro.com -> VPS IP).
       - traefik.http.routers.cortexx-admin.rule=Host(`admin.cortexbuildpro.com`)
       - traefik.http.routers.cortexx-admin.entrypoints=websecure
       - traefik.http.routers.cortexx-admin.tls.certresolver=letsencrypt
+      - traefik.http.services.cortexx-admin.loadbalancer.server.port=3000
+      # Immediate-verification host: the Hostinger wildcard srv1262179.hstgr.cloud
+      # already resolves to the VPS, so LE issues a cert here at once. Remove once
+      # the branded A record is live if you prefer a single host.
+      - traefik.http.routers.cortexx-admin-alt.rule=Host(`admin.srv1262179.hstgr.cloud`)
+      - traefik.http.routers.cortexx-admin-alt.entrypoints=websecure
+      - traefik.http.routers.cortexx-admin-alt.tls.certresolver=letsencrypt
       - traefik.http.services.cortexx-admin.loadbalancer.server.port=3000
     networks:
       - default
