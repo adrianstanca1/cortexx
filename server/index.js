@@ -148,6 +148,11 @@ app.post('/api/auth/login', authLimiter, wrap(async (req, res) => {
   if (!r.rows[0] || !r.rows[0].password_hash || !(await bcrypt.compare(password, r.rows[0].password_hash)))
     return res.status(401).json({ error: 'invalid credentials' });
   const u = r.rows[0];
+  // Disabled accounts cannot authenticate. The column is added by migration
+  // 004 (and again defensively at boot), so default false when absent.
+  if (u.disabled) return res.status(403).json({ error: 'account_disabled' });
+  // Best-effort last-active stamp (non-fatal).
+  pool.query('UPDATE users SET last_active_at=now() WHERE id=$1', [u.id]).catch(() => {});
   res.json({ token: signToken(u.id, u.workspace_id), user: { id: u.id, name: u.name, email: u.email, role: u.role, is_platform_admin: !!u.is_platform_admin } });
 }));
 
@@ -475,16 +480,16 @@ app.post('/api/audit', apiLimiter, auth, wrap(async (req, res) => {
 }));
 
 // ── Admin console (SaaS operator) ──────────────────────────
-// Reuse the existing `auth` middleware, then require an operator role.
-// Platform-admin authority is gated on the dedicated `is_platform_admin`
-// column, NOT on the tenant `role`. This is deliberate and security-critical:
-// `role` defaults to 'director' for every self-service signup (schema.sql +
-// the /api/auth/register and magic-link INSERTs, which set no role), so gating
-// /api/admin/* on any role value would let anyone who registers administer
-// EVERY tenant. The flag is provisioned only for real operators (seed.sql and
-// the boot migration below), never by a public code path.
-// The JWT payload only carries {uid, ws} (see signToken), so we resolve the
-// live flag from the DB — this reflects grants/revocations immediately.
+// `adminAuth` is the platform-operator gate. Authority is gated on the
+// dedicated `is_platform_admin` column, NOT on the tenant `role`. This is
+// deliberate and security-critical: `role` defaults to 'director' for every
+// self-service signup (schema.sql + the /api/auth/register and magic-link
+// INSERTs, which set no role), so gating /api/admin/* on any role value would
+// let anyone who registers administer EVERY tenant. The flag is provisioned
+// only for real operators (seed.sql / PLATFORM_ADMIN_EMAILS), never by a
+// public code path. The JWT payload only carries {uid, ws} (see signToken), so
+// we resolve the live flag from the DB — this reflects grants/revocations
+// immediately.
 async function adminAuth(req, res, next) {
   const token = (req.headers.authorization || '').replace('Bearer ', '');
   try {
@@ -499,72 +504,10 @@ async function adminAuth(req, res, next) {
   }
 }
 
-// Platform overview: tenant/user/project counts + today's activity.
-app.get('/api/admin/overview', apiLimiter, adminAuth, wrap(async (req, res) => {
-  const [ws, us, pr, proj7, ticks] = await Promise.all([
-    pool.query('SELECT COUNT(*)::int AS n FROM workspaces'),
-    pool.query('SELECT COUNT(*)::int AS n FROM users'),
-    pool.query('SELECT COUNT(*)::int AS n FROM projects'),
-    pool.query("SELECT COUNT(*)::int AS n FROM projects WHERE created_at > now() - interval '7 days'"),
-    pool.query("SELECT COUNT(*)::int AS n FROM support_tickets WHERE status IN ('open','in_progress')"),
-  ]);
-  res.json({
-    workspaces: ws.rows[0].n,
-    users: us.rows[0].n,
-    projects: pr.rows[0].n,
-    new_projects_7d: proj7.rows[0].n,
-    open_tickets: ticks.rows[0].n,
-  });
-}));
-
-// Tenant (workspace) directory.
-app.get('/api/admin/workspaces', apiLimiter, adminAuth, wrap(async (req, res) => {
-  const r = await pool.query(`
-    SELECT w.id, w.name, w.company, w.plan, w.suspended, w.created_at,
-           (SELECT COUNT(*) FROM users u WHERE u.workspace_id = w.id) AS users,
-           (SELECT COUNT(*) FROM projects p WHERE p.workspace_id = w.id) AS projects
-    FROM workspaces w ORDER BY w.created_at DESC LIMIT 200`);
-  res.json({ workspaces: r.rows });
-}));
-
-// User directory.
-app.get('/api/admin/users', apiLimiter, adminAuth, wrap(async (req, res) => {
-  const r = await pool.query(`
-    SELECT u.id, u.name, u.email, u.role, u.created_at, w.name AS workspace
-    FROM users u LEFT JOIN workspaces w ON w.id = u.workspace_id
-    ORDER BY u.created_at DESC LIMIT 200`);
-  res.json({ users: r.rows });
-}));
-
-// Support tickets — admin list.
-app.get('/api/admin/support/tickets', apiLimiter, adminAuth, wrap(async (req, res) => {
-  const r = await pool.query(`
-    SELECT id, name, email, subject, priority, status, created_at
-    FROM support_tickets ORDER BY created_at DESC LIMIT 200`);
-  res.json({ tickets: r.rows });
-}));
-
-// Support ticket — admin status update.
-app.patch('/api/admin/support/tickets/:id', apiLimiter, adminAuth, wrap(async (req, res) => {
-  const { status } = req.body;
-  if (!['open', 'in_progress', 'resolved', 'closed'].includes(status))
-    return res.status(400).json({ error: 'bad_status' });
-  const r = await pool.query(
-    "UPDATE support_tickets SET status=$2, updated_at=now() WHERE id=$1 RETURNING *",
-    [req.params.id, status]);
-  if (!r.rows[0]) return res.status(404).json({ error: 'not_found' });
-  res.json({ ticket: r.rows[0] });
-}));
-
-// Tenant suspend / activate (operator action; does not delete data).
-app.patch('/api/admin/workspaces/:id', apiLimiter, adminAuth, wrap(async (req, res) => {
-  const suspended = !!req.body.suspended;
-  const r = await pool.query(
-    "UPDATE workspaces SET suspended=$2 WHERE id=$1 RETURNING id, name, suspended",
-    [req.params.id, suspended]);
-  if (!r.rows[0]) return res.status(404).json({ error: 'not_found' });
-  res.json({ workspace: r.rows[0] });
-}));
+// The full operator surface (tenants, users, billing, support, activity, audit,
+// operator actions) lives in server/routes/admin.js. Mounting it under
+// /api/admin keeps every operator endpoint behind adminAuth.
+app.use('/api/admin', apiLimiter, require('./routes/admin')(pool, auth, adminAuth, wrap, bus));
 
 // ── 404 + error handler ─────────────────────────────────────
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
@@ -592,6 +535,10 @@ const PORT = process.env.PORT || 3001;
 // clearing the env is the revocation path.
 async function ensurePlatformAdmin() {
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_admin BOOLEAN NOT NULL DEFAULT false');
+  // Defensive create for the account-disable columns added by migration 004.
+  // Keeps a live (pre-migration) volume working without a manual ALTER.
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT false');
+  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ DEFAULT now()');
   const emails = (process.env.PLATFORM_ADMIN_EMAILS || '')
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   if (emails.length) {
