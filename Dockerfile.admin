@@ -7,11 +7,8 @@ RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
 # Skip the root postinstall (it runs `prisma generate` + precompile in a way
-# that breaks inside a clean `npm ci`; we run those steps explicitly below).
+# that breaks inside a clean `npm ci`; we run those steps explicitly in builder).
 RUN npm ci --ignore-scripts
-# Precompile step the app expects (build-dist.js + cortex-core.js). Does not
-# need Prisma, so safe to run here before the schema is copied.
-RUN node build-dist.js && npm run build:core
 
 # Rebuild the source
 FROM base AS builder
