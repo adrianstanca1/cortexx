@@ -53,3 +53,6 @@ ios/ios/
 # Committing it breaks expo-doctor (native config in app.json won't sync).
 expo/ios/
 expo/android/
+.backup/
+expo/build-and-submit-ios.sh
+expo/build-ios-asc-key.sh
