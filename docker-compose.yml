@@ -117,6 +117,7 @@ services:
       # Landing/marketing page (served at / via Caddy try_files).
       - ./landing.html:/srv/app/landing.html:ro
       - ./admin.html:/srv/app/admin.html:ro
+      - ./admin.js:/srv/app/admin.js:ro
       - ./support.html:/srv/app/support.html:ro
       # expose .env, .env.vault, .git/, server/* and *.ts over HTTP. The Caddyfile
       # also denies these paths, but this mount is the primary boundary.
@@ -128,6 +129,7 @@ services:
       - ./.well-known:/srv/app/.well-known:ro
       - ./Cortexx.html:/srv/app/Cortexx.html:ro
       - ./admin.html:/srv/app/admin.html:ro
+      - ./admin.js:/srv/app/admin.js:ro
       - ./support.html:/srv/app/support.html:ro
       - ./Cortexx Mobile Dashboard.html:/srv/app/Cortexx Mobile Dashboard.html:ro
       - ./Cortexx-standalone.html:/srv/app/Cortexx-standalone.html:ro

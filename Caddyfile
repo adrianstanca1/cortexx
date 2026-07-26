@@ -58,7 +58,7 @@
 	# to a year — defeating the whole point of the network-first strategy.
 	@static {
 		path *.js *.css *.png *.jpg *.svg *.woff2
-		not path /lib/* /dist/* /sw.js
+		not path /lib/* /dist/* /sw.js /admin.js
 	}
 	header @static Cache-Control "public, max-age=31536000, immutable"
 	header /sw.js Cache-Control "no-cache, must-revalidate"
