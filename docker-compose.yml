@@ -145,8 +145,45 @@ services:
       # Behind traefik this stays ":80" (plain HTTP inside the network).
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
 
+  # ── cortexx-admin: Next.js SaaS admin console (app/dashboard + RBAC) ──
+  # Dedicated tenant behind host traefik at admin.cortexbuildpro.com.
+  # Shares the central Postgres `db` (same cortexx database) + traefik_web net.
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:***@db:5432/cortexx
+      NODE_ENV: production
+      PORT: 3000
+      NEXTAUTH_URL: https://admin.cortexbuildpro.com
+      NEXTAUTH_SECRET: ${ADMIN_NEXTAUTH_SECRET:-change-me-admin-nextauth-secret}
+      NEXT_PUBLIC_API_URL: https://cortexbuildpro.com
+      NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.com
+    expose:
+      - "3000"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cortexx-admin.rule=Host(`admin.cortexbuildpro.com`)
+      - traefik.http.routers.cortexx-admin.entrypoints=websecure
+      - traefik.http.routers.cortexx-admin.tls.certresolver=letsencrypt
+      - traefik.http.services.cortexx-admin.loadbalancer.server.port=3000
+    networks:
+      - default
+      - traefik_web
+
 volumes:
   cortexx_pgdata:
   cortexx_ollama:
   cortexx_caddy_data:
   cortexx_caddy_config:
+
+# traefik_web is the host traefik docker network (created by the traefik stack
+# at /docker/traefik). External so compose rejoins it instead of creating a new one.
+networks:
+  traefik_web:
+    external: true

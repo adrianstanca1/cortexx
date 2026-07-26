@@ -27,7 +27,8 @@
       "package": "com.cortexbuild.app",
       "adaptiveIcon": {
         "backgroundColor": "#06101e"
-      }
+      },
+      "versionCode": 2
     },
     "web": {
       "bundler": "metro"
