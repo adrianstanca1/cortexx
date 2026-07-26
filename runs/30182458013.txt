@@ -1,0 +1,16 @@
+run_id: 30182458013
+exit_code: 0
+completed_at: 2026-07-26T01:11:09Z
+command: |
+  echo "--- git state:"; git -C /opt/cortexx log --oneline -1 2>&1 | head -2; echo "--- shell onboarding count:"; grep -c "onboarding" /opt/cortexx/Cortexx.html; echo "--- dist onboarding:"; ls -la /opt/cortexx/dist/onboarding.js 2>&1 | tail -1; echo "--- marketing mount present:"; docker inspect cortexx-web-1 --format "{{range .Mounts}}{{.Destination}}|{{end}}" | tr "|" "\n" | grep -ci marketing; echo "--- compose has mount:"; grep -c "Cortexx_Marketing" /opt/cortexx/docker-compose.yml
+---
+--- git state:
+ce2f046 feat(onboarding): first-run welcome tour (#124)
+--- shell onboarding count:
+2
+--- dist onboarding:
+-rw-r--r-- 1 root root 8040 Jul 26 01:08 /opt/cortexx/dist/onboarding.js
+--- marketing mount present:
+1
+--- compose has mount:
+1
