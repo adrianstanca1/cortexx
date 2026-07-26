@@ -6,15 +6,11 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
-# Prisma 7 config (prisma.config.ts) reads DATABASE_URL at load time even for
-# `generate`, so set a placeholder here (real runtime URL comes from compose).
-ENV DATABASE_URL=postgres://postgres:***@localhost:5432/cortexx
 # Skip the root postinstall (it runs `prisma generate` + precompile in a way
-# that breaks inside a clean `npm ci`; we run those steps explicitly below.
+# that breaks inside a clean `npm ci`; we run those steps explicitly below).
 RUN npm ci --ignore-scripts
-# Generate Prisma client (schema path resolved via prisma.config.ts at root).
-RUN npx prisma generate
-# Precompile step the app expects (build-dist.js + cortex-core.js).
+# Precompile step the app expects (build-dist.js + cortex-core.js). Does not
+# need Prisma, so safe to run here before the schema is copied.
 RUN node build-dist.js && npm run build:core
 
 # Rebuild the source
@@ -25,15 +21,14 @@ COPY . .
 # Build needs a DB connection string + auth secret; these are NOT runtime secrets.
 # Real runtime DATABASE_URL points at the shared cortexx db via compose env.
 ENV NEXT_TELEMETRY_DISABLED=1
-ARG DATABASE_URL=postgres://postgres:***@db:5432/cortexx
+ENV DATABASE_URL=postgres://postgres:***@localhost:5432/cortexx
 ARG NEXTAUTH_SECRET=build-time-placeholder-not-used-at-runtime
 ARG NEXTAUTH_URL=https://admin.cortexbuildpro.com
-ENV DATABASE_URL=${DATABASE_URL}
 ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
 ENV NEXTAUTH_URL=${NEXTAUTH_URL}
 ENV NEXT_PUBLIC_API_URL=https://cortexbuildpro.com
 ENV NEXT_PUBLIC_SITE_URL=https://cortexbuildpro.com
-# Ensure Prisma client is present for the build (standalone trace includes node_modules).
+# Generate Prisma client now that the full source (prisma.config.ts + schema) is present.
 RUN npx prisma generate
 RUN npm run build
 
