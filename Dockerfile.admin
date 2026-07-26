@@ -1,0 +1,44 @@
+# Cortexx Next.js admin — standalone, minimal image (cortexx-admin tenant)
+# Deployed behind host traefik (admin.cortexbuildpro.com). No TLS in-container.
+FROM node:22-alpine AS base
+# Install dependencies only when needed
+FROM base AS deps
+RUN apk add --no-cache libc6-compat
+WORKDIR /app
+COPY package.json package-lock.json* ./
+RUN npm ci
+
+# Rebuild the source
+FROM base AS builder
+WORKDIR /app
+COPY --from=deps /app/node_modules ./node_modules
+COPY . .
+# Build needs a DB connection string + auth secret; these are NOT runtime secrets.
+# Real runtime DATABASE_URL points at the shared cortexx db via compose env.
+ENV NEXT_TELEMETRY_DISABLED=1
+ARG DATABASE_URL=postgres://postgres:***@db:5432/cortexx
+ARG NEXTAUTH_SECRET=build-time-placeholder-not-used-at-runtime
+ARG NEXTAUTH_URL=https://admin.cortexbuildpro.com
+ENV DATABASE_URL=${DATABASE_URL}
+ENV NEXTAUTH_SECRET=${NEXTAUTH_SECRET}
+ENV NEXTAUTH_URL=${NEXTAUTH_URL}
+ENV NEXT_PUBLIC_API_URL=https://cortexbuildpro.com
+ENV NEXT_PUBLIC_SITE_URL=https://cortexbuildpro.com
+RUN npm run build
+
+# Production image, copy all the files and run next
+FROM base AS runner
+WORKDIR /app
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+# Next 16 standalone copies a minimal server. The bundle may be nested under
+# the project dir name (e.g. cortexx-review/) depending on outputFileTracingRoot,
+# so copy from either location.
+COPY --from=builder /app/.next/standalone ./
+COPY --from=builder /app/.next/standalone/cortexx-review ./
+COPY --from=builder /app/.next/static ./.next/static
+COPY --from=builder /app/public ./public
+EXPOSE 3000
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+CMD ["node", "server.js"]

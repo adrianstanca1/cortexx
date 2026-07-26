@@ -16,6 +16,12 @@ const nextConfig = {
   // HMR websocket handshake failures). Playwright's baseURL and CI both use
   // http://127.0.0.1:3000, so allow it. Dev-only setting; no effect on prod.
   allowedDevOrigins: ['127.0.0.1'],
+  // Standalone output => minimal self-contained server image for the
+  // cortexx-admin tenant (deployed behind host traefik, see docker-compose.yml).
+  // outputFileTracingRoot makes the standalone bundle land at the image root
+  // (not nested under the project dir name) so the Dockerfile COPY is clean.
+  output: 'standalone',
+  outputFileTracingRoot: __dirname,
   experimental: {
     optimizePackageImports: ['@prisma/client'],
   },

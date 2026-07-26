@@ -1,0 +1,17 @@
+# cortexx-admin tenant build context (Next standalone)
+node_modules
+.next
+.git
+.github
+.gitignore
+.env
+.env.*
+!.env.example
+server
+cortexx-review  # safety: don't nest this dir
+*.md
+!next.config.js
+!Dockerfile.admin
+coverage
+tests
+e2e
