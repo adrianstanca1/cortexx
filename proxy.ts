@@ -181,10 +181,15 @@ export default auth(req => {
   // of the thin server-rendered marketing page. Rewrite (not redirect)
   // so the URL stays clean as `cortexbuildpro.com/`. Authenticated
   // users fall through to app/page.tsx, which bounces to /dashboard.
+  //
+  // NOTE: rewrite to a RELATIVE path, not an absolute URL built from
+  // `req.url`. An absolute same-origin URL makes Next fetch it as an
+  // external proxy, which requires DNS for the incoming Host header
+  // (e.g. admin.cortexbuildpro.com) — failing with ENOTFOUND on a host
+  // that has no A record yet. A relative path is served internally.
   if (pathname === '/' && !req.auth) {
-    const rewriteUrl = new URL('/legacy/Cortexx-standalone.html', req.url)
     return withSecurityHeaders(
-      NextResponse.rewrite(rewriteUrl, nextOpts),
+      NextResponse.rewrite('/legacy/Cortexx-standalone.html', nextOpts),
       nonce,
       '/legacy/Cortexx-standalone.html',
     )
