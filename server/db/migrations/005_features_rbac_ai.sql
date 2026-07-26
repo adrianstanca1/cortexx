@@ -70,7 +70,7 @@ CREATE TABLE IF NOT EXISTS roles (
   description TEXT,
   is_system   BOOLEAN NOT NULL DEFAULT true
 );
-INSERT INTO roles (key, name, permissions, description) VALUES
+INSERT INTO roles (key, name, permissions, description, is_system) VALUES
   ('owner',   'Owner',        '{"*":true}',                                                              'Full tenant control', true),
   ('admin',   'Admin',        '{"projects":true,"invoices":true,"clients":true,"team":true,"settings":true,"users":true,"ai":true}', 'Tenant administration', true),
   ('manager', 'Manager',      '{"projects":true,"invoices":true,"clients":true,"team":true,"settings":false,"users":false,"ai":true}', 'Operations manager', true),
