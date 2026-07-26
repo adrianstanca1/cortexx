@@ -37,6 +37,7 @@ export default function CollectionScreen({
       else if (Array.isArray((e as any).cached)) { setItems((e as any).cached); setOffline(true); }
     } finally { setLoading(false); }
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
   useEffect(() => { load(); }, []);
 
   const openAdd = () => { setForm({}); setModal(true); };

@@ -35,6 +35,7 @@ export default function CisPaymentsScreen({ onLogout }: { onLogout: () => void }
       if (e?.message === 'unauthorized') onLogout();
     } finally { setLoading(false); }
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
   useEffect(() => { load(); }, []);
 
   const nameFor = (sub_id?: string) => subs.find((s) => s.id === sub_id)?.name || 'Unassigned';

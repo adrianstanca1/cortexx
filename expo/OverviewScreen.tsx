@@ -56,6 +56,7 @@ export default function OverviewScreen({ onNavigate, onLogout }: { onNavigate: (
     load();
     const off = onStreamEvent(() => setLive((n) => n + 1));
     return () => off();
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only stream subscription
   }, []);
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.amber} /></View>;

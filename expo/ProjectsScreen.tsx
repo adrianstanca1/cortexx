@@ -19,6 +19,7 @@ export default function ProjectsScreen({ onSelect, onLogout }: { onSelect: (id: 
     catch (e: any) { setErr(e?.message || 'Failed to load'); if (e?.message === 'unauthorized') onLogout(); }
     finally { setLoading(false); }
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
   useEffect(() => { load(); }, []);
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.amber} /></View>;

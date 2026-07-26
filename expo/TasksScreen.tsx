@@ -37,6 +37,7 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
       if (e?.message === 'unauthorized') onLogout();
     } finally { setLoading(false); }
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
   useEffect(() => { load(); }, []);
 
   const toggle = async (t: Task) => {

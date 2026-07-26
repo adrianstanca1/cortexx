@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
+import Image from 'next/image'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
 import Modal from '@/components/ui/Modal'
@@ -371,7 +372,7 @@ export default function DocumentsPage() {
                 <div key={d.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
                   {isImage && d.url ? (
                     <a href={d.url} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
-                      <img src={d.url} alt="" width={36} height={36} style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', display: 'block' }} />
+                      <Image src={d.url} alt="" width={36} height={36} unoptimized style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', display: 'block' }} />
                     </a>
                   ) : (
                     <IcDoc size={20} color={expired ? '#ef4444' : expiring ? '#f59e0b' : isPdf ? '#ef4444' : '#52749a'} />

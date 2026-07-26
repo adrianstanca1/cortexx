@@ -43,6 +43,7 @@ export default function DiaryScreen({ onLogout }: { onLogout: () => void }) {
       if (e?.message === 'unauthorized') onLogout();
     } finally { setLoading(false); }
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
   useEffect(() => { load(); }, []);
 
   const openAdd = () => {

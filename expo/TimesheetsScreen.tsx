@@ -30,6 +30,7 @@ export default function TimesheetsScreen({ onLogout }: { onLogout: () => void })
       if (e?.message === 'unauthorized') onLogout();
     } finally { setLoading(false); }
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
   useEffect(() => { load(); }, []);
 
   const openAdd = () => { setForm({ project_id: projects[0]?.id || '', date: '', hours: '', notes: '' }); setModal(true); };

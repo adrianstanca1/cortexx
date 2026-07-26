@@ -56,6 +56,7 @@ export default function NotificationsScreen({ onLogout }: { onLogout: () => void
       off = onStreamEvent(addLive);
     })();
     return () => { if (off) off(); };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only effect (onLogout/stream)
   }, []);
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.amber} /></View>;

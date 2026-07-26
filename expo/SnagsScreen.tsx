@@ -42,6 +42,7 @@ export default function SnagsScreen({ onLogout }: { onLogout: () => void }) {
       if (e?.message === 'unauthorized') onLogout();
     } finally { setLoading(false); }
   };
+  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
   useEffect(() => { load(); }, []);
 
   const pickPhoto = async () => {
@@ -95,7 +96,7 @@ export default function SnagsScreen({ onLogout }: { onLogout: () => void }) {
         renderItem={({ item }) => (
           <View style={styles.card}>
             {item.photo ? (
-              <Image source={{ uri: item.photo }} style={styles.thumb} resizeMode="cover" />
+              <Image source={{ uri: item.photo }} style={styles.thumb} resizeMode="cover" alt={item.title ? `Snag photo: ${item.title}` : 'Snag photo'} />
             ) : null}
             <View style={styles.body}>
               <Text style={styles.name}>{item.title || '(no title)'}</Text>
@@ -135,7 +136,7 @@ export default function SnagsScreen({ onLogout }: { onLogout: () => void }) {
                 <TouchableOpacity style={styles.photoBtn} onPress={pickPhoto}>
                   <Text style={styles.photoBtnText}>{photo ? 'Change photo' : 'Add photo (camera roll)'}</Text>
                 </TouchableOpacity>
-                {photo ? <Image source={{ uri: photo }} style={styles.preview} resizeMode="cover" /> : null}
+                {photo ? <Image source={{ uri: photo }} style={styles.preview} resizeMode="cover" alt="Selected snag photo" /> : null}
               </Field>
             </ScrollView>
             <View style={styles.modalRow}>
