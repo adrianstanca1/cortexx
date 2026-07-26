@@ -448,6 +448,21 @@ app.post('/api/ai', apiLimiter, auth, wrap(async (req, res) => {
   res.json({ text });
 }));
 
+// ── AI History (persisted conversation log) ─────────────────
+app.get('/api/ai/history', apiLimiter, auth, wrap(async (req, res) => {
+  const limit = Math.min(parseInt(req.query.limit) || 50, 200);
+  const r = await pool.query(
+    'SELECT id, user_msg, ai_reply, created_at FROM ai_history WHERE workspace_id=$1 ORDER BY created_at DESC LIMIT $2',
+    [req.user.ws, limit]
+  );
+  res.json({ history: r.rows });
+}));
+
+app.delete('/api/ai/history', apiLimiter, auth, wrap(async (req, res) => {
+  await pool.query('DELETE FROM ai_history WHERE workspace_id=$1', [req.user.ws]);
+  res.json({ ok: true });
+}));
+
 // ── Audit (hash-chained) ────────────────────────────────────
 app.post('/api/audit', apiLimiter, auth, wrap(async (req, res) => {
   const prev = await pool.query('SELECT hash FROM audit_log WHERE workspace_id=$1 ORDER BY id DESC LIMIT 1', [req.user.ws]);

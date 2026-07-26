@@ -1,71 +1,68 @@
 'use client'
 
 /**
- * AI history — recent prompts to /ask Cortex. Reads the same
- * localStorage namespace that /ask writes to:
- * `cortexx-ask-history-v1:<userKey>`. Pairs user prompts with the
- * assistant response that immediately followed.
- *
- * When we land a persisted AiInteraction Prisma model, swap the
- * localStorage read for a /api/ask/history call.
+ * AI history — persisted conversation log from /api/ai/history.
+ * Previously read from localStorage; now backed by the ai_history
+ * SQL table via the Express API.
  */
-import { useEffect, useState } from 'react'
+import { useEffect, useState, useCallback } from 'react'
 import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
-import { IcChevL, IcSpark } from '@/components/ui/Icons'
+import Toast from '@/components/ui/Toast'
+import { IcChevL, IcSpark, IcTrash } from '@/components/ui/Icons'
 
-interface Message {
-  role: 'user' | 'assistant'
-  content: string
-  model?: string
-  durationMs?: number
-  error?: boolean
-}
-
-interface Turn {
+interface HistoryEntry {
   id: string
-  prompt: string
-  response: string | null
-  model: string | null
-  durationMs: number | null
+  user_msg: string | null
+  ai_reply: string | null
+  created_at: string
 }
-
-const STORAGE_PREFIX = 'cortexx-ask-history-v1:'
 
 export default function AiHistoryPage() {
-  const { data: session, status: sessionStatus } = useSession()
-  const [turns, setTurns] = useState<Turn[]>([])
-  const [hydrated, setHydrated] = useState(false)
+  const { status: sessionStatus } = useSession()
+  const [entries, setEntries] = useState<HistoryEntry[]>([])
+  const [loading, setLoading] = useState(true)
+  const [error, setError] = useState<string | null>(null)
+  const [toast, setToast] = useState<string | null>(null)
+
+  const fetchHistory = useCallback(async () => {
+    setLoading(true)
+    setError(null)
+    try {
+      const res = await fetch('/api/ai/history?limit=50')
+      if (!res.ok) throw new Error('Failed to load history')
+      const data = await res.json()
+      setEntries(data.history || [])
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Unknown error')
+    } finally {
+      setLoading(false)
+    }
+  }, [])
 
   useEffect(() => {
-    if (sessionStatus !== 'authenticated') return
-    const userKey = (session?.user as { id?: string } | undefined)?.id || session?.user?.email
-    if (!userKey) { setHydrated(true); return }
+    if (sessionStatus === 'authenticated') fetchHistory()
+    else if (sessionStatus !== 'loading') setLoading(false)
+  }, [sessionStatus, fetchHistory])
+
+  const clearHistory = useCallback(async () => {
+    if (!confirm('Delete all AI conversation history? This cannot be undone.')) return
     try {
-      const raw = window.localStorage.getItem(STORAGE_PREFIX + userKey)
-      if (!raw) { setHydrated(true); return }
-      const messages: Message[] = JSON.parse(raw)
-      // Pair each user message with the next assistant message
-      const paired: Turn[] = []
-      for (let i = 0; i < messages.length; i++) {
-        const m = messages[i]
-        if (m.role !== 'user') continue
-        const next = messages[i + 1]
-        const ai = next && next.role === 'assistant' ? next : null
-        paired.push({
-          id: String(i),
-          prompt: m.content,
-          response: ai?.content ?? null,
-          model: ai?.model ?? null,
-          durationMs: ai?.durationMs ?? null,
-        })
-      }
-      // Newest first
-      setTurns(paired.reverse())
-    } catch { /* corrupted, ignore */ }
-    finally { setHydrated(true) }
-  }, [sessionStatus, session?.user])
+      const res = await fetch('/api/ai/history', { method: 'DELETE' })
+      if (!res.ok) throw new Error('Failed to clear history')
+      setEntries([])
+      setToast('History cleared')
+    } catch (e) {
+      setToast(e instanceof Error ? e.message : 'Failed to clear')
+    }
+  }, [])
+
+  const fmtDate = (iso: string) => {
+    const d = new Date(iso)
+    return d.toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) + ' ' +
+           d.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })
+  }
 
   return (
     <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
@@ -74,38 +71,55 @@ export default function AiHistoryPage() {
           <IcChevL size={18} color="#52749a" />
           <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>All apps</span>
         </Link>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
-          AI history
-        </h1>
-        <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
-          Your recent prompts to <Link href="/ask" style={{ color: '#8b5cf6', textDecoration: 'none' }}>Ask Cortex</Link>. {hydrated && turns.length > 0 && `${turns.length} turn${turns.length === 1 ? '' : 's'} stored on this device.`}
-        </p>
+        <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+          <div>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
+              AI history
+            </h1>
+            <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
+              Your prompts to <Link href="/ask" style={{ color: '#8b5cf6', textDecoration: 'none' }}>Ask Cortex</Link>.
+              {!loading && entries.length > 0 && ` ${entries.length} conversation${entries.length === 1 ? '' : 's'} saved.`}
+            </p>
+          </div>
+          {entries.length > 0 && (
+            <button
+              onClick={clearHistory}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, color: '#ef4444', opacity: 0.7 }}
+              title="Clear all history"
+            >
+              <IcTrash size={18} color="#ef4444" />
+            </button>
+          )}
+        </div>
       </div>
 
       <div style={{ padding: '16px 20px' }}>
-        {!hydrated ? (
+        {loading ? (
           <p style={{ color: '#52749a', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>Loading…</p>
-        ) : turns.length === 0 ? (
+        ) : error ? (
+          <p style={{ color: '#ef4444', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>{error}</p>
+        ) : entries.length === 0 ? (
           <div style={{ color: '#52749a', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
             <IcSpark size={32} color="#8b5cf6" />
-            <p style={{ marginTop: 12 }}>No prompts yet on this device.<br /><Link href="/ask" style={{ color: '#f59e0b', textDecoration: 'none' }}>Ask Cortex something →</Link></p>
+            <p style={{ marginTop: 12 }}>No prompts yet.<br /><Link href="/ask" style={{ color: '#f59e0b', textDecoration: 'none' }}>Ask Cortex something →</Link></p>
           </div>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-            {turns.map(t => (
-              <li key={t.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)' }}>
+            {entries.map((e) => (
+              <li key={e.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <IcSpark size={14} color="#8b5cf6" />
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontSize: 13, color: '#eef3fa', fontWeight: 600 }}>{t.prompt}</div>
-                    {t.response && (
+                    {e.user_msg && (
+                      <div style={{ fontSize: 13, color: '#eef3fa', fontWeight: 600 }}>{e.user_msg}</div>
+                    )}
+                    {e.ai_reply && (
                       <div style={{ fontSize: 12, color: '#8ea8c5', marginTop: 6, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
-                        {t.response.length > 240 ? t.response.slice(0, 240) + '…' : t.response}
+                        {e.ai_reply.length > 240 ? e.ai_reply.slice(0, 240) + '…' : e.ai_reply}
                       </div>
                     )}
-                    <div style={{ fontSize: 10, color: '#52749a', marginTop: 6, display: 'flex', gap: 8 }}>
-                      {t.model && <span>{t.model}</span>}
-                      {t.durationMs && <span>{(t.durationMs / 1000).toFixed(1)}s</span>}
+                    <div style={{ fontSize: 10, color: '#52749a', marginTop: 6 }}>
+                      {fmtDate(e.created_at)}
                     </div>
                   </div>
                 </div>
@@ -116,6 +130,7 @@ export default function AiHistoryPage() {
       </div>
 
       <TabBar />
+      {toast && <Toast message={toast} onDone={() => setToast(null)} />}
     </div>
   )
 }
