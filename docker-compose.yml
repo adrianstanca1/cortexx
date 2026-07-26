@@ -132,6 +132,7 @@ services:
       - ./Cortexx Mobile Dashboard.html:/srv/app/Cortexx Mobile Dashboard.html:ro
       - ./Cortexx-standalone.html:/srv/app/Cortexx-standalone.html:ro
       - ./portal.html:/srv/app/portal.html:ro
+      - ./Cortexx_Marketing.html:/srv/app/Cortexx_Marketing.html:ro
       - ./manifest.json:/srv/app/manifest.json:ro
       - ./sw.js:/srv/app/sw.js:ro
       - ./icon-192.png:/srv/app/icon-192.png:ro
