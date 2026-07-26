@@ -319,7 +319,7 @@ export default function SubInvoicesPage() {
             <a
               href={`/api/sub-invoices/${activeInv.id}/pdf`}
               target="_blank"
-              rel="noreferrer"
+              rel="noopener noreferrer"
               style={{ padding: '10px', borderRadius: 10, background: 'rgba(139,92,246,0.13)', border: '0.5px solid rgba(139,92,246,0.4)', color: '#a78bfa', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
             >
               <IcDoc size={12} color="#a78bfa" /> Download PDF

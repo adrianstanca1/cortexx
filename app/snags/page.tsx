@@ -252,7 +252,7 @@ export default function SnagsPage() {
             <div key={s.id} style={{ background: '#152641', borderRadius: 14, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10, border: '0.5px solid rgba(255,255,255,0.07)', opacity: s.status === 'closed' ? 0.7 : 1 }}>
               <div style={{ display: 'flex', gap: 12 }}>
               {s.photoUrl ? (
-                <a href={s.photoUrl} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
+                <a href={s.photoUrl} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0 }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={s.photoUrl} alt="" width={56} height={56} style={{ width: 56, height: 56, borderRadius: 10, objectFit: 'cover', display: 'block' }} />
                 </a>

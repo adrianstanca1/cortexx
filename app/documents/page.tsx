@@ -371,7 +371,7 @@ export default function DocumentsPage() {
               return (
                 <div key={d.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
                   {isImage && d.url ? (
-                    <a href={d.url} target="_blank" rel="noreferrer" style={{ flexShrink: 0 }}>
+                    <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0 }}>
                       <Image src={d.url} alt="" width={36} height={36} unoptimized style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', display: 'block' }} />
                     </a>
                   ) : (
@@ -379,7 +379,7 @@ export default function DocumentsPage() {
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {d.url ? (
-                      <a href={d.url} target="_blank" rel="noreferrer" style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', textDecoration: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{d.name}</a>
+                      <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', textDecoration: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{d.name}</a>
                     ) : (
                       <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
                     )}
@@ -627,7 +627,7 @@ export default function DocumentsPage() {
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <Button variant="ghost" onClick={() => setPreviewUrl(null)}>Close</Button>
             {previewUrl && (
-              <a href={previewUrl} target="_blank" rel="noreferrer" style={{ textDecoration: 'none' }}>
+              <a href={previewUrl} target="_blank" rel="noopener noreferrer" style={{ textDecoration: 'none' }}>
                 <Button variant="primary">Open in new tab</Button>
               </a>
             )}

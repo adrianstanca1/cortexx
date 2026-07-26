@@ -135,7 +135,7 @@ export default function ClientViewPage() {
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         <button onClick={() => copy(url, p.id)} style={btnStyle('#06b6d4')}>Copy link</button>
-                        <Link href={url} target="_blank" style={{ ...btnStyle('#52749a'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>Preview</Link>
+                        <Link href={url} target="_blank" rel="noopener noreferrer" style={{ ...btnStyle('#52749a'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>Preview</Link>
                         <button onClick={() => share(url, p.name)} style={{ ...btnStyle('#8b5cf6'), display: 'flex', alignItems: 'center', gap: 4 }}>
                           <IcSend size={11} color="#a78bfa" /> Email
                         </button>

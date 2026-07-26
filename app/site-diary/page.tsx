@@ -209,7 +209,7 @@ export default function SiteDiaryPage() {
             <Section title={`Photos · ${data.photos.length}`}>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 4, padding: 6 }}>
                 {data.photos.map(p => (
-                  <a key={p.id} href={p.url || '#'} target="_blank" rel="noreferrer" style={{ display: 'block', aspectRatio: '1 / 1', borderRadius: 6, overflow: 'hidden', background: '#0c1a2e' }}>
+                  <a key={p.id} href={p.url || '#'} target="_blank" rel="noopener noreferrer" style={{ display: 'block', aspectRatio: '1 / 1', borderRadius: 6, overflow: 'hidden', background: '#0c1a2e' }}>
                     {/* eslint-disable-next-line @next/next/no-img-element */}
                     <img src={p.url!} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
                   </a>

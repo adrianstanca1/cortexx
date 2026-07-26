@@ -486,7 +486,7 @@ export default function QuotesPage() {
               <a
                 href={`/api/quotes/${activeQuote.id}/pdf`}
                 target="_blank"
-                rel="noreferrer"
+                rel="noopener noreferrer"
                 style={{ ...statusBtn('#8b5cf6'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4, textDecoration: 'none' }}
               >
                 <IcDoc size={12} color="#8b5cf6" /> Download PDF

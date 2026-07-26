@@ -361,7 +361,7 @@ export default function PhotosPage() {
                 ) : null}
               </div>
             )}
-            <a href={activePhoto.url!} target="_blank" rel="noreferrer" style={{ display: 'inline-block', marginTop: 10, fontFamily: SF, fontSize: 11, color: '#52749a', textDecoration: 'underline' }}>Open original ↗</a>
+            <a href={activePhoto.url!} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 10, fontFamily: SF, fontSize: 11, color: '#52749a', textDecoration: 'underline' }}>Open original ↗</a>
           </div>
         </div>
       )}

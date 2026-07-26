@@ -415,7 +415,7 @@ export default function DrawingsPage() {
                           </button>
                         )}
                         {r.fileUrl && (
-                          <a href={r.fileUrl} target="_blank" rel="noreferrer" style={{ background: 'rgba(37,99,235,0.2)', border: '0.5px solid rgba(37,99,235,0.4)', color: '#60a5fa', borderRadius: 6, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>Open</a>
+                          <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" style={{ background: 'rgba(37,99,235,0.2)', border: '0.5px solid rgba(37,99,235,0.4)', color: '#60a5fa', borderRadius: 6, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>Open</a>
                         )}
                       </div>
                     )
