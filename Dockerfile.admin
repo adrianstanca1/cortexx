@@ -6,8 +6,11 @@ FROM base AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 COPY package.json package-lock.json* ./
+# Prisma 7 config (prisma.config.ts) reads DATABASE_URL at load time even for
+# `generate`, so set a placeholder here (real runtime URL comes from compose).
+ENV DATABASE_URL=postgres://postgres:***@localhost:5432/cortexx
 # Skip the root postinstall (it runs `prisma generate` + precompile in a way
-# that breaks inside a clean `npm ci`); we run those steps explicitly below.
+# that breaks inside a clean `npm ci`; we run those steps explicitly below.
 RUN npm ci --ignore-scripts
 # Generate Prisma client (schema path resolved via prisma.config.ts at root).
 RUN npx prisma generate
