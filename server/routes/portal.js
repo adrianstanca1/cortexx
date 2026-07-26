@@ -18,6 +18,7 @@ module.exports = function portalRoutes(pool, bus) {
 
   // GET /api/portal/:token — read-only project snapshot for the client
   router.get('/:token', async (req, res) => {
+   try {
     const ctx = await resolve(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'invalid_or_revoked_token' });
 
@@ -41,10 +42,15 @@ module.exports = function portalRoutes(pool, bus) {
       invoices: invs.rows,
       updates: acts.rows.map(r => r.data),
     });
+   } catch (err) {
+     console.error('[portal] GET /:token failed:', err.message);
+     res.status(500).json({ error: 'portal_fetch_failed' });
+   }
   });
 
   // POST /api/portal/:token/message — client sends a note
   router.post('/:token/message', async (req, res) => {
+   try {
     const ctx = await resolve(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'invalid_or_revoked_token' });
     const body = (req.body.body || '').toString().slice(0, 4000);
@@ -57,10 +63,15 @@ module.exports = function portalRoutes(pool, bus) {
     );
     bus.emit(ctx.workspace_id, { type: 'portal_message', projectId: ctx.project_id, client, body });
     res.json({ ok: true, id: r.rows[0].id });
+   } catch (err) {
+     console.error('[portal] POST /:token/message failed:', err.message);
+     res.status(500).json({ error: 'portal_message_failed' });
+   }
   });
 
   // POST /api/portal/:token/approve — client approves the quote
   router.post('/:token/approve', async (req, res) => {
+   try {
     const ctx = await resolve(req.params.token);
     if (!ctx) return res.status(404).json({ error: 'invalid_or_revoked_token' });
     const client = (req.body.client || 'Client').toString().slice(0, 200);
@@ -75,6 +86,10 @@ module.exports = function portalRoutes(pool, bus) {
     await pool.query(`UPDATE projects SET status='active' WHERE id=$1 AND workspace_id=$2 AND status='quoting'`, [ctx.project_id, ctx.workspace_id]);
     bus.emit(ctx.workspace_id, { type: 'portal_approval', projectId: ctx.project_id, client });
     res.json({ ok: true });
+   } catch (err) {
+     console.error('[portal] POST /:token/approve failed:', err.message);
+     res.status(500).json({ error: 'portal_approve_failed' });
+   }
   });
 
   return router;

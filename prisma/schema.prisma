@@ -1814,3 +1814,16 @@ model ProcessedStripeEvent {
   type      String // event.type for triage
   createdAt DateTime @default(now())
 }
+
+/// Root tenant entity. The raw-SQL `workspaces` table is the source of truth
+/// for the Express API; this Prisma model gives the Next.js admin a typed
+/// client for the same table. See docs/DATA_MODEL_DRIFT.md.
+model Workspace {
+  id        String   @id @default(uuid()) @db.Uuid
+  name      String
+  company   String?
+  plan      String   @default("free")
+  createdAt DateTime @default(now())
+
+  users     User[]
+}
