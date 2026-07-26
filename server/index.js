@@ -508,6 +508,9 @@ async function adminAuth(req, res, next) {
 // operator actions) lives in server/routes/admin.js. Mounting it under
 // /api/admin keeps every operator endpoint behind adminAuth.
 app.use('/api/admin', apiLimiter, require('./routes/admin')(pool, auth, adminAuth, wrap, bus));
+// Enhanced operator surface: features (VERA), RBAC/packages, AI control plane, settings.
+app.use('/api/admin', apiLimiter, require('./routes/admin-features')(pool, auth, adminAuth, wrap, bus));
+app.use('/api/admin', apiLimiter, require('./routes/admin-ai')(pool, auth, adminAuth, wrap, bus));
 
 // ── 404 + error handler ─────────────────────────────────────
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));

@@ -22,7 +22,6 @@
   a{color:var(--blue-l);text-decoration:none;}
   button{font-family:inherit;cursor:pointer;}
   input,select,textarea{font-family:inherit;}
-  /* layout */
   .app{display:grid;grid-template-columns:248px 1fr;min-height:100vh;}
   .side{background:linear-gradient(180deg,#0c1426,#0a0f1a);border-right:0.5px solid var(--hair);
     display:flex;flex-direction:column;position:sticky;top:0;height:100vh;}
@@ -63,22 +62,20 @@
   .view{padding:24px 28px 80px;overflow:auto;}
   .hidden{display:none!important;}
 
-  /* kpis */
   .kpis{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:26px;}
   .kpi{background:var(--bg1);border:0.5px solid var(--hair);border-radius:14px;padding:16px 18px;position:relative;overflow:hidden;}
   .kpi .kpi-n{font-size:27px;font-weight:700;letter-spacing:-0.5px;}
   .kpi .kpi-l{font-size:12px;color:var(--t3);margin-top:3px;}
-  .kpi .spark{position:absolute;right:-6px;bottom:-6px;width:84px;height:48px;opacity:.22;}
   .kpi.amber .kpi-n{color:var(--amber);} .kpi.blue .kpi-n{color:var(--blue-l);}
   .kpi.green .kpi-n{color:#6ee7b7;} .kpi.red .kpi-n{color:#ff9a9a;}
 
-  /* panels / cards */
   .panel{background:var(--bg1);border:0.5px solid var(--hair);border-radius:16px;padding:18px 20px;margin-bottom:20px;}
   .panel h2{font-size:16px;margin:0 0 14px;letter-spacing:-0.2px;display:flex;align-items:center;gap:9px;}
   .panel h2 .dot{width:7px;height:7px;border-radius:50%;background:var(--amber);}
+  .panel h3{font-size:13px;margin:0 0 10px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px;}
   .grid2{display:grid;grid-template-columns:1.3fr 1fr;gap:20px;}
+  .grid3{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;}
 
-  /* tables */
   table{width:100%;border-collapse:collapse;}
   th{text-align:left;font-size:11px;text-transform:uppercase;letter-spacing:0.6px;color:var(--t3);
     padding:10px 12px;font-weight:600;border-bottom:0.5px solid var(--hair);}
@@ -86,7 +83,6 @@
   tr:last-child td{border-bottom:none;}
   tbody tr:hover{background:rgba(255,255,255,0.02);}
 
-  /* pills */
   .pill{display:inline-block;padding:2px 10px;border-radius:20px;font-size:11px;font-weight:600;white-space:nowrap;}
   .pill.free{background:rgba(111,135,168,0.18);color:var(--t2);}
   .pill.pro{background:rgba(47,107,255,0.18);color:var(--blue-l);}
@@ -100,17 +96,24 @@
   .pill.active{background:rgba(16,185,129,0.16);color:#6ee7b7;}
   .pill.admin{background:rgba(16,185,129,0.16);color:#6ee7b7;}
   .pill.disabled{background:rgba(120,120,140,0.22);color:#c0c6d4;}
+  .pill.on{background:rgba(16,185,129,0.18);color:#6ee7b7;}
+  .pill.off{background:rgba(120,120,140,0.22);color:#c0c6d4;}
+  .pill.cat-ai{background:rgba(47,107,255,0.18);color:var(--blue-l);}
+  .pill.cat-memory{background:rgba(16,185,129,0.18);color:#6ee7b7;}
+  .pill.cat-skills{background:rgba(255,176,0,0.18);color:var(--amber);}
+  .pill.cat-knowledge{background:rgba(139,92,246,0.18);color:#c4b5fd;}
+  .pill.cat-agents{background:rgba(239,68,68,0.16);color:#ff9a9a;}
+  .pill.cat-packages{background:rgba(111,135,168,0.18);color:var(--t2);}
+  .pill.cat-core{background:rgba(111,135,168,0.18);color:var(--t2);}
 
-  /* filters */
   .filters{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;align-items:center;}
   .filters input,.filters select{background:var(--bg2);border:0.5px solid var(--hair);border-radius:10px;
     padding:9px 12px;color:var(--t1);font-size:13px;width:auto;}
   .filters input[type=search]{min-width:220px;}
 
-  /* modal */
   .modal-bg{position:fixed;inset:0;background:rgba(4,8,16,0.66);backdrop-filter:blur(3px);z-index:40;
     display:flex;align-items:center;justify-content:center;padding:20px;}
-  .modal{background:var(--bg1);border:0.5px solid var(--hair);border-radius:16px;width:min(560px,100%);
+  .modal{background:var(--bg1);border:0.5px solid var(--hair);border-radius:16px;width:min(620px,100%);
     max-height:90vh;overflow:auto;box-shadow:0 24px 60px rgba(0,0,0,.5);}
   .modal .m-head{display:flex;justify-content:space-between;align-items:center;padding:18px 20px;border-bottom:0.5px solid var(--hair);}
   .modal .m-head h3{margin:0;font-size:16px;}
@@ -121,7 +124,6 @@
   .modal .m-foot{padding:14px 20px;border-top:0.5px solid var(--hair);display:flex;justify-content:flex-end;gap:10px;}
   .x{cursor:pointer;color:var(--t3);font-size:20px;line-height:1;background:none;border:none;}
 
-  /* misc */
   .empty{color:var(--t3);font-size:13px;padding:22px;text-align:center;}
   .row-actions{display:flex;gap:6px;flex-wrap:wrap;}
   .mini{font-size:12px;color:var(--t3);}
@@ -137,7 +139,20 @@
   .login-wrap input{width:100%;background:var(--bg2);border:0.5px solid var(--hair);border-radius:10px;padding:11px 13px;color:var(--t1);font-size:14px;}
   .login-wrap .err{color:var(--red);font-size:13px;margin-top:12px;min-height:16px;}
   .login-wrap .hint{font-size:12px;color:var(--t3);margin-top:18px;}
-  @media(max-width:980px){.kpis{grid-template-columns:repeat(2,1fr);}.grid2{grid-template-columns:1fr;}.app{grid-template-columns:1fr;}.side{position:static;height:auto;flex-direction:row;overflow:auto;}.nav{display:flex;flex-wrap:wrap;}.nav .sec-lbl{display:none;}.side .me{display:none;}}
+  .switch{position:relative;display:inline-block;width:40px;height:22px;}
+  .switch input{opacity:0;width:0;height:0;}
+  .slider{position:absolute;cursor:pointer;inset:0;background:var(--bg3);border:0.5px solid var(--hair);transition:.2s;border-radius:22px;}
+  .slider:before{position:absolute;content:"";height:16px;width:16px;left:3px;bottom:2px;background:var(--t2);transition:.2s;border-radius:50%;}
+  .switch input:checked + .slider{background:linear-gradient(135deg,var(--amber),#ff8a00);}
+  .switch input:checked + .slider:before{transform:translateX(18px);background:#0a0f1a;}
+  .feat-row{display:flex;align-items:center;justify-content:space-between;padding:10px 0;border-bottom:0.5px solid rgba(255,255,255,0.04);}
+  .feat-row:last-child{border-bottom:none;}
+  .feat-meta{font-size:12px;color:var(--t3);}
+  .card{background:var(--bg2);border:0.5px solid var(--hair);border-radius:12px;padding:14px;display:flex;flex-direction:column;gap:8px;}
+  .card .ttl{font-weight:600;font-size:14px;}
+  .kv{display:flex;justify-content:space-between;font-size:13px;padding:4px 0;}
+  .kv b{color:var(--t1);font-weight:600;}
+  @media(max-width:980px){.kpis{grid-template-columns:repeat(2,1fr);}.grid2,.grid3{grid-template-columns:1fr;}.app{grid-template-columns:1fr;}.side{position:static;height:auto;flex-direction:row;overflow:auto;}.nav{display:flex;flex-wrap:wrap;}.nav .sec-lbl{display:none;}.side .me{display:none;}}
   @media (prefers-reduced-motion: reduce){*{transition:none!important;animation:none!important;}}
   a:focus-visible,button:focus-visible,input:focus-visible,select:focus-visible,textarea:focus-visible{outline:2px solid var(--amber);outline-offset:2px;border-radius:6px;}
 </style>
@@ -165,7 +180,6 @@
 
 <!-- ============ APP ============ -->
 <div id="app" class="app hidden">
-  <!-- sidebar -->
   <aside class="side">
     <div class="brand">
       <span class="mk"><svg viewBox="0 0 24 24" fill="none" stroke="#0a0f1a" stroke-width="2"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2" fill="#0a0f1a"/></svg></span>
@@ -177,12 +191,16 @@
       <a data-view="tenants"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 21h18M5 21V7l7-4 7 4v14"/></svg>Tenants</a>
       <a data-view="users"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0M16 11a3 3 0 1 0 0-6M21 20a6 6 0 0 0-4-5.6"/></svg>Users</a>
       <a data-view="billing"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 7h18v10H3zM3 11h18"/></svg>Billing</a>
+      <div class="sec-lbl">Platform Control</div>
+      <a data-view="features"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v4M12 18v4M4.9 4.9l2.8 2.8M16.3 16.3l2.8 2.8M2 12h4M18 12h4M4.9 19.1l2.8-2.8M16.3 7.7l2.8-2.8"/></svg>Features (VERA)</a>
+      <a data-view="access"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>Access &amp; RBAC</a>
+      <a data-view="ai"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a3 3 0 0 1 3 3v1a3 3 0 0 1-6 0V5a3 3 0 0 1 3-3zM5 21v-2a4 4 0 0 1 4-4h6a4 4 0 0 1 4 4v2"/><circle cx="12" cy="9" r="2"/></svg>AI Control</a>
+      <a data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.5 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>Settings</a>
       <div class="sec-lbl">Support</div>
       <a data-view="support"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>Support</a>
       <a data-view="activity"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 12h4l3 8 4-16 3 8h4"/></svg>Activity</a>
-      <div class="sec-lbl">Platform</div>
+      <div class="sec-lbl">System</div>
       <a data-view="system"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="3" width="18" height="18" rx="2"/><path d="M9 9h6v6H9z"/></svg>System</a>
-      <a data-view="settings"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M19 12a7 7 0 0 0-.1-1l2-1.5-2-3.5-2.3 1a7 7 0 0 0-1.7-1l-.3-2.5h-4l-.3 2.5a7 7 0 0 0-1.7 1l-2.3-1-2 3.5 2 1.5a7 7 0 0 0 0 2l-2 1.5 2 3.5 2.3-1a7 7 0 0 0 1.7 1l.3 2.5h4l.3-2.5a7 7 0 0 0 1.7-1l2.3 1 2-3.5-2-1.5a7 7 0 0 0 .1-1z"/></svg>Settings</a>
     </nav>
     <div class="me">
       <div>Signed in as <b id="meEmail">—</b></div>
@@ -191,7 +209,6 @@
     </div>
   </aside>
 
-  <!-- main -->
   <div class="main">
     <div class="topbar">
       <div>
@@ -199,6 +216,7 @@
         <div class="sub" id="viewSub">Platform overview</div>
       </div>
       <div class="right">
+        <select id="tenantPicker" class="hidden"><option value="">— select tenant —</option></select>
         <button class="btn btn-ghost btn-sm" id="refreshBtn">↻ Refresh</button>
       </div>
     </div>
@@ -206,7 +224,6 @@
   </div>
 </div>
 
-<!-- modal host -->
 <div id="modalHost"></div>
 
 <script src="admin.js"></script>
