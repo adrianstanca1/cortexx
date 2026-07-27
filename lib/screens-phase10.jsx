@@ -128,8 +128,19 @@ function PerformanceScreen({ accent }) {
   const achievements = useDB('achievements');
   const earned = achievements.filter(a => a.earned);
   const inProgress = achievements.filter(a => !a.earned);
-  const days = [4,5,8,6,3,2,7]; // mock weekly activity
-  const max = Math.max(...days);
+  const [days, setDays] = React.useState([0,0,0,0,0,0,0]);
+  React.useEffect(() => {
+    const tasks = Backend.db.snapshot().tasks || [];
+    const now = new Date();
+    const d = [];
+    for (let i = 6; i >= 0; i--) {
+      const date = new Date(now); date.setDate(date.getDate() - i);
+      const dateStr = date.toISOString().slice(0,10);
+      d.push(tasks.filter(t => t.createdAt?.slice(0,10) === dateStr).length);
+    }
+    setDays(d);
+  }, []);
+  const max = Math.max(...days, 1);
 
   const ACHIEVEMENT_ICONS = { star: Ic.star, money: Ic.money, clock: Ic.clock, list: Ic.list, calc: Ic.calc, spark: Ic.spark };
 

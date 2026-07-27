@@ -524,7 +524,8 @@ function LeadsScreen({ accent }) {
 function PhotosScreen({ accent }) {
   const projects = useDB('projects');
   const [activeProject, setActiveProject] = React.useState(null);
-  const totalPhotos = 64; // mock
+  const allPhotos = Backend.db.snapshot().photos || [];
+  const totalPhotos = allPhotos.length;
   const grid = activeProject ? 12 : totalPhotos > 24 ? 24 : totalPhotos;
   return (
     <ScreenBg accent={accent}>

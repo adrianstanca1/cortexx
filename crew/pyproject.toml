@@ -1,0 +1,18 @@
+[project]
+name = "cortexx-crew"
+version = "1.0.0"
+description = "CortexBuild Pro — CrewAI Multi-Agent Orchestration"
+requires-python = ">=3.12"
+dependencies = [
+    "crewai>=0.86.0",
+    "crewai-tools>=0.17.0",
+    "requests>=2.32.0",
+    "pydantic>=2.9.0",
+    "python-dotenv>=1.0.0",
+]
+
+[project.optional-dependencies]
+dev = ["pytest>=8.0", "black>=24.0", "ruff>=0.6.0"]
+
+[tool.crewai]
+type = "crew"

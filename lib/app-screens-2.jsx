@@ -417,41 +417,80 @@ function AddTaskSheet({ onClose, accent }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// RECEIPT SCANNER FLOW — mock OCR + AI categorization
+// RECEIPT SCANNER FLOW — real camera OCR + AI categorization
 // ═══════════════════════════════════════════════════════════════════
-const MOCK_RECEIPTS = [
-  { vendor: 'Travis Perkins', amount: 142.80 },
-  { vendor: 'Wickes',         amount: 67.40 },
-  { vendor: 'Selco',          amount: 234.50 },
-  { vendor: 'B&Q',            amount: 18.99 },
-  { vendor: 'Toolstation',    amount: 89.20 },
-  { vendor: 'Screwfix',       amount: 45.75 },
-];
-
 function ReceiptScanSheet({ onClose, accent }) {
   const projects = useDB('projects');
-  const [stage, setStage] = React.useState('camera'); // camera -> scanning -> result
+  const [stage, setStage] = React.useState('camera'); // camera -> scanning -> result -> manual
   const [receipt, setReceipt] = React.useState(null);
   const [ai, setAi] = React.useState(null);
+  const [error, setError] = React.useState(null);
+  const videoRef = React.useRef(null);
+  const canvasRef = React.useRef(null);
+  const streamRef = React.useRef(null);
+
+  React.useEffect(() => {
+    if (stage !== 'camera') return;
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({ video: { facingMode: 'environment' } });
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      } catch (e) {
+        setError('Camera access denied or unavailable. You can enter receipt details manually.');
+      }
+    };
+    startCamera();
+    return () => {
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    };
+  }, [stage]);
 
   const scan = async () => {
     setStage('scanning');
-    // Generate a unique realistic receipt via AI
-    let mock;
+    setError(null);
+    let extractedText = '';
     try {
-      const prompt = `Generate a realistic UK construction trade receipt as JSON only: {"vendor":"...","amount":000.00}. Use UK trade vendors like Travis Perkins, Selco, Wickes, Toolstation, Screwfix, Jewson, B&Q. Amount £20-£500.`;
-      const raw = await window.claude.complete({ messages: [{ role: 'user', content: prompt }] });
-      const json = raw.match(/\{[\s\S]*\}/)?.[0];
-      const parsed = JSON.parse(json);
-      mock = { ...parsed, date: new Date().toISOString().slice(0,10) };
+      if (videoRef.current && canvasRef.current) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        canvas.width = videoRef.current.videoWidth || 640;
+        canvas.height = videoRef.current.videoHeight || 480;
+        ctx.drawImage(videoRef.current, 0, 0);
+        if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+        const visionRes = await fetch('/api/llm/vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: imageData, prompt: 'Extract vendor name and total amount from this receipt. Return JSON: {"vendor":"...","amount":000.00}' })
+        });
+        if (visionRes.ok) {
+          const visionData = await visionRes.json();
+          extractedText = visionData.text || '';
+        }
+      }
     } catch (e) {
-      mock = { vendor: 'Travis Perkins', amount: 142.80, date: new Date().toISOString().slice(0,10) };
+      console.warn('Vision OCR failed:', e);
     }
-    setReceipt(mock);
-    // AI categorize
-    const result = await Backend.ai.categorizeReceipt(mock);
-    setAi(result);
+    let parsed = { vendor: '', amount: '', date: new Date().toISOString().slice(0,10) };
+    try {
+      const jsonMatch = extractedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) parsed = { ...JSON.parse(jsonMatch[0]), date: parsed.date };
+    } catch (e) {
+      // Leave empty for manual entry
+    }
+    setReceipt(parsed);
+    if (parsed.vendor && parsed.amount) {
+      const result = await Backend.ai.categorizeReceipt(parsed);
+      setAi(result);
+    }
     setStage('result');
+  };
+
+  const goManual = () => {
+    setReceipt({ vendor: '', amount: '', date: new Date().toISOString().slice(0,10) });
+    setAi(null);
+    setStage('manual');
   };
 
   const save = async () => {
@@ -475,19 +514,22 @@ function ReceiptScanSheet({ onClose, accent }) {
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               position: 'relative', overflow: 'hidden',
             }}>
-              {/* fake viewfinder */}
-              <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0 }}>
+              <video ref={videoRef} autoPlay playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <canvas ref={canvasRef} style={{ display: 'none' }} />
+              <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
                 <rect x="20" y="40" width="80%" height="140" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="8 6" opacity="0.6"/>
               </svg>
-              <div style={{ position: 'relative', color: T.t3 }}>
-                {React.cloneElement(Ic.camera, { size: 48, sw: 1.2 })}
-              </div>
-              <div style={{ position: 'relative', fontFamily: SF, fontSize: 13, color: T.t2, marginTop: 10 }}>Point camera at receipt</div>
+              {!error && <div style={{ position: 'absolute', bottom: 12, fontFamily: SF, fontSize: 11, color: T.t2, background: 'rgba(0,0,0,0.5)', padding: '4px 10px', borderRadius: 8 }}>Point camera at receipt</div>}
+              {error && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', padding: 20, textAlign: 'center', fontFamily: SF, fontSize: 13, color: T.t2 }}>{error}</div>}
             </div>
             <button onClick={scan} style={{
               width: '100%', marginTop: 14, background: accent, color: '#fff', border: 'none',
               borderRadius: 14, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer',
-            }}>Tap to scan receipt</button>
+            }}>Capture & Scan</button>
+            <button onClick={goManual} style={{
+              width: '100%', marginTop: 8, background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
+              borderRadius: 14, padding: '12px', fontFamily: SF, fontSize: 14, cursor: 'pointer',
+            }}>Enter manually</button>
           </>
         )}
 
@@ -505,7 +547,7 @@ function ReceiptScanSheet({ onClose, accent }) {
           </div>
         )}
 
-        {stage === 'result' && receipt && ai && (
+        {stage === 'result' && receipt && (
           <>
             <div style={{
               background: T.bg2, borderRadius: 14, padding: 14,
@@ -514,44 +556,84 @@ function ReceiptScanSheet({ onClose, accent }) {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
                 <div>
                   <div style={{ fontFamily: SF, fontSize: 10, color: T.t2, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Vendor</div>
-                  <div style={{ fontFamily: SF, fontSize: 17, fontWeight: 600, color: T.t1, marginTop: 2 }}>{receipt.vendor}</div>
+                  <div style={{ fontFamily: SF, fontSize: 17, fontWeight: 600, color: T.t1, marginTop: 2 }}>{receipt.vendor || 'Unknown'}</div>
                 </div>
-                <div style={{ fontFamily: SFMono, fontSize: 22, color: T.t1, fontWeight: 700, letterSpacing: -0.5 }}>£{receipt.amount.toFixed(2)}</div>
+                <div style={{ fontFamily: SFMono, fontSize: 22, color: T.t1, fontWeight: 700, letterSpacing: -0.5 }}>£{parseFloat(receipt.amount || 0).toFixed(2)}</div>
               </div>
             </div>
 
-            <div style={{
-              background: `linear-gradient(135deg, ${T.purple}1a, ${accent}0a)`,
-              border: `0.5px solid ${T.purple}44`,
-              borderRadius: 14, padding: 14,
-            }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
-                <div style={{ fontFamily: SF, fontSize: 11, color: T.purple, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Cortex suggests</div>
-                <span style={{ fontFamily: SFMono, fontSize: 10, color: T.t2 }}>{(ai.confidence * 100).toFixed(0)}% sure</span>
-              </div>
-              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                  <span style={{ fontFamily: SF, fontSize: 12, color: T.t2, width: 70 }}>Category</span>
-                  <Pill c={accent}>{ai.category}</Pill>
+            {ai && (
+              <div style={{
+                background: `linear-gradient(135deg, ${T.purple}1a, ${accent}0a)`,
+                border: `0.5px solid ${T.purple}44`,
+                borderRadius: 14, padding: 14,
+              }}>
+                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: 8 }}>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: T.purple, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Cortex suggests</div>
+                  <span style={{ fontFamily: SFMono, fontSize: 10, color: T.t2 }}>{(ai.confidence * 100).toFixed(0)}% sure</span>
                 </div>
-                {ai.projectId && (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                    <span style={{ fontFamily: SF, fontSize: 12, color: T.t2, width: 70 }}>Project</span>
-                    <Pill c={T.cyan}>{projects.find(p => p.id == ai.projectId)?.name || 'unknown'}</Pill>
+                    <span style={{ fontFamily: SF, fontSize: 12, color: T.t2, width: 70 }}>Category</span>
+                    <Pill c={accent}>{ai.category}</Pill>
                   </div>
-                )}
+                  {ai.projectId && (
+                    <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+                      <span style={{ fontFamily: SF, fontSize: 12, color: T.t2, width: 70 }}>Project</span>
+                      <Pill c={T.cyan}>{projects.find(p => p.id == ai.projectId)?.name || 'unknown'}</Pill>
+                    </div>
+                  )}
+                </div>
               </div>
-              <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                <button onClick={save} style={{
-                  flex: 1, background: accent, color: '#fff', border: 'none',
-                  borderRadius: 10, padding: '10px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
-                }}>Save & file</button>
-                <button onClick={() => setStage('camera')} style={{
-                  background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
-                  borderRadius: 10, padding: '10px 14px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
-                }}>Edit</button>
+            )}
+            <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
+              <button onClick={save} disabled={!receipt.vendor || !receipt.amount} style={{
+                flex: 1, background: accent, color: '#fff', border: 'none',
+                borderRadius: 10, padding: '10px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: (!receipt.vendor || !receipt.amount) ? 'not-allowed' : 'pointer',
+                opacity: (!receipt.vendor || !receipt.amount) ? 0.5 : 1,
+              }}>Save & file</button>
+              <button onClick={() => setStage('manual')} style={{
+                background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
+                borderRadius: 10, padding: '10px 14px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
+              }}>Edit</button>
+            </div>
+          </>
+        )}
+
+        {stage === 'manual' && (
+          <>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 10, marginBottom: 12 }}>
+              <div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: T.t2, marginBottom: 4 }}>Vendor</div>
+                <input type="text" value={receipt?.vendor || ''} onChange={e => setReceipt(r => ({ ...r, vendor: e.target.value }))} style={{
+                  width: '100%', background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 10,
+                  padding: '10px 12px', fontFamily: SF, fontSize: 14, color: T.t1,
+                }} placeholder="e.g. Travis Perkins" />
+              </div>
+              <div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: T.t2, marginBottom: 4 }}>Amount (£)</div>
+                <input type="number" step="0.01" value={receipt?.amount || ''} onChange={e => setReceipt(r => ({ ...r, amount: e.target.value }))} style={{
+                  width: '100%', background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 10,
+                  padding: '10px 12px', fontFamily: SFMono, fontSize: 14, color: T.t1,
+                }} placeholder="0.00" />
+              </div>
+              <div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: T.t2, marginBottom: 4 }}>Date</div>
+                <input type="date" value={receipt?.date || ''} onChange={e => setReceipt(r => ({ ...r, date: e.target.value }))} style={{
+                  width: '100%', background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 10,
+                  padding: '10px 12px', fontFamily: SF, fontSize: 14, color: T.t1,
+                }} />
               </div>
             </div>
+            <button onClick={async () => {
+              if (!receipt?.vendor || !receipt?.amount) { toast('Please fill in vendor and amount', 'error'); return; }
+              const result = await Backend.ai.categorizeReceipt(receipt);
+              setAi(result);
+              setStage('result');
+            }} style={{
+              width: '100%', background: accent, color: '#fff', border: 'none',
+              borderRadius: 14, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer',
+            }}>Categorise with AI</button>
           </>
         )}
       </div>

@@ -183,14 +183,28 @@ Date: ${entry.date}; Weather: ${entry.weather.temp}°C ${entry.weather.cond}; Cr
     return Backend.ai.ask('', { system: prompt });
   };
 
-  // Snag detection from photo (mocked — would call vision in real life)
-  Backend.ai.detectSnags = async (description) => {
-    const prompt = `Imagine you've just looked at a construction site photo described as: "${description}". List 0-3 likely snags or defects to inspect. Reply ONLY with JSON array: [{"title":"...","area":"...","priority":"low|med|high"}]. If nothing notable, reply with [].`;
-    try {
-      const raw = await window.claude.complete({ messages: [{ role: 'user', content: prompt }] });
-      const json = raw.match(/\[[\s\S]*\]/)?.[0];
-      return JSON.parse(json);
-    } catch (e) { return []; }
+  // Snag detection from photo — uses real vision when available, honest fallback when not
+  Backend.ai.detectSnags = async (imageBase64OrDescription) => {
+    if (imageBase64OrDescription && imageBase64OrDescription.startsWith('data:image')) {
+      try {
+        const res = await fetch('/api/llm/vision', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            image: imageBase64OrDescription,
+            prompt: 'You are a construction site inspector. Look at this photo and list 0-3 likely snags or defects. Reply ONLY with JSON array: [{"title":"...","area":"...","priority":"low|med|high"}]. If nothing notable, reply with [].'
+          })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          const json = data.text?.match(/\[[\s\S]*\]/)?.[0] || '[]';
+          return JSON.parse(json);
+        }
+      } catch (e) {
+        console.warn('Vision snag detection failed:', e);
+      }
+    }
+    return []; // Honest fallback — never hallucinate defects from text descriptions
   };
 
   // Material forecast — what to order

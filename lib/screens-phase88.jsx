@@ -131,7 +131,7 @@ function WorkspaceSwitcher({ accent, onClose }) {
 }
 
 // ═══════════════════════════════════════════════════════════════════
-// CHECKOUT — plan upgrade with card form (Stripe-style mock)
+// CHECKOUT — real Stripe payment intent
 // ═══════════════════════════════════════════════════════════════════
 function CheckoutSheet({ accent, plan, price, onClose }) {
   const [card, setCard] = React.useState('');
@@ -139,19 +139,50 @@ function CheckoutSheet({ accent, plan, price, onClose }) {
   const [cvc, setCvc] = React.useState('');
   const [busy, setBusy] = React.useState(false);
   const [done, setDone] = React.useState(false);
+  const [clientSecret, setClientSecret] = React.useState(null);
+  const [error, setError] = React.useState(null);
 
   const fmtCard = v => v.replace(/\D/g, '').slice(0, 16).replace(/(.{4})/g, '$1 ').trim();
   const fmtExp = v => { const d = v.replace(/\D/g, '').slice(0, 4); return d.length > 2 ? d.slice(0, 2) + '/' + d.slice(2) : d; };
   const valid = card.replace(/\s/g, '').length >= 15 && exp.length === 5 && cvc.length >= 3;
 
-  const pay = () => {
+  React.useEffect(() => {
+    fetch('/api/iap/create-payment-intent', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ plan, price: parseFloat(price.replace(/[^0-9.]/g, '')) })
+    })
+      .then(r => r.json())
+      .then(data => {
+        if (data.error) throw new Error(data.error);
+        setClientSecret(data.clientSecret);
+      })
+      .catch(e => setError(e.message));
+  }, [plan, price]);
+
+  const pay = async () => {
+    if (!clientSecret) return;
     setBusy(true);
-    setTimeout(() => {
-      if (window.CortexTenant && window.CortexTenant.setPlan) window.CortexTenant.setPlan(plan);
-      if (window.CortexAudit) window.CortexAudit.log('You', `upgraded to ${plan} plan`, 'Billing');
-      setBusy(false); setDone(true);
-      setTimeout(() => { onClose(); if (window.CortexTenant) location.reload(); }, 1400);
-    }, 1100);
+    setError(null);
+    try {
+      const res = await fetch('/api/iap/confirm-payment', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ clientSecret, plan })
+      });
+      const data = await res.json();
+      if (data.success) {
+        if (window.CortexTenant?.setPlan) window.CortexTenant.setPlan(plan);
+        if (window.CortexAudit) window.CortexAudit.log('You', `upgraded to ${plan} plan`, 'Billing');
+        setDone(true);
+        setTimeout(() => { onClose(); if (window.CortexTenant) location.reload(); }, 1400);
+      } else {
+        throw new Error(data.error || 'Payment failed');
+      }
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Payment failed');
+      setBusy(false);
+    }
   };
 
   if (done) {
@@ -176,6 +207,14 @@ function CheckoutSheet({ accent, plan, price, onClose }) {
           <span style={{ fontFamily: SFMono, fontSize: 30, fontWeight: 700, color: accent }}>{price}</span>
           <span style={{ fontFamily: SF, fontSize: 13, color: T.t2 }}>/month · billed monthly · cancel anytime</span>
         </div>
+        {error && (
+          <div style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: SF, fontSize: 13, marginBottom: 16 }}>
+            {error}
+          </div>
+        )}
+        {!clientSecret && !error && (
+          <div style={{ textAlign: 'center', padding: 20, color: T.t3, fontFamily: SF, fontSize: 14 }}>Loading secure payment form…</div>
+        )}
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div>
             <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>Card number</div>

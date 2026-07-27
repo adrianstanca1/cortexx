@@ -5,16 +5,22 @@
 //   • Everything else → network only (API calls bypass the SW)
 // Update model: bump CACHE_VERSION below; the new SW takes over on next page load.
 
-const CACHE_VERSION = 'cortexx-v4'
+const CACHE_VERSION = 'cortexx-v5'
 const STATIC_CACHE = `${CACHE_VERSION}-static`
 const RUNTIME_CACHE = `${CACHE_VERSION}-runtime`
 
 const PRECACHE = [
+  '/',
+  '/landing.html',
+  '/Cortexx.html',
   '/offline.html',
   '/manifest.json',
+  '/browserconfig.xml',
   '/favicon.ico',
   '/icon-192.png',
   '/icon-512.png',
+  '/icon-192-maskable.png',
+  '/icon-512-maskable.png',
   '/apple-touch-icon.png',
 ]
 

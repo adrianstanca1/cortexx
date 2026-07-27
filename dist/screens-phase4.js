@@ -1289,7 +1289,8 @@ function PhotosScreen({
 }) {
   const projects = useDB('projects');
   const [activeProject, setActiveProject] = React.useState(null);
-  const totalPhotos = 64;
+  const allPhotos = Backend.db.snapshot().photos || [];
+  const totalPhotos = allPhotos.length;
   const grid = activeProject ? 12 : totalPhotos > 24 ? 24 : totalPhotos;
   return React.createElement(ScreenBg, {
     accent: accent

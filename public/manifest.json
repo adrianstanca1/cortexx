@@ -1,12 +1,12 @@
 {
-  "name": "Cortexx",
-  "short_name": "Cortexx",
-  "description": "Mobile-first construction management",
-  "start_url": "/dashboard",
+  "name": "CortexBuild Pro",
+  "short_name": "CortexBuild",
+  "description": "The construction OS for UK SMB contractors — AI estimating, CIS/HMRC compliance, RAMS & CSCS tracking, and live site capture. Built for builders, not bureaucrats.",
+  "start_url": "/Cortexx.html",
   "scope": "/",
   "display": "standalone",
-  "background_color": "#06101e",
-  "theme_color": "#06101e",
+  "background_color": "#0a0f1a",
+  "theme_color": "#0a0f1a",
   "orientation": "portrait",
   "categories": ["business", "productivity"],
   "icons": [
@@ -19,5 +19,28 @@
     { "name": "Capture",  "short_name": "Capture",  "url": "/capture",   "description": "Open the capture screen" },
     { "name": "Tasks",    "short_name": "Tasks",    "url": "/tasks",     "description": "View open tasks" },
     { "name": "Projects", "short_name": "Projects", "url": "/projects",  "description": "View all projects" }
-  ]
+  ],
+  "screenshots": [
+    {
+      "src": "/screenshot-narrow.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "CortexBuild Pro mobile dashboard"
+    },
+    {
+      "src": "/screenshot-wide.png",
+      "sizes": "1280x800",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "CortexBuild Pro web dashboard"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "webapp",
+      "url": "https://cortexbuildpro.com/manifest.json"
+    }
+  ],
+  "prefer_related_applications": false
 }

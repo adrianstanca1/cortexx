@@ -7,39 +7,15 @@
   // P51 pour scheduler · P52 snag vision (via AI) · P53 drawing diff · P54 bid library
   // P55-60 finance · P61-64 people · P65-70 compliance
 
-  // P55: bank accounts (mock for Open Banking)
+  // P55: bank accounts — initialise empty arrays for real data
   if (!s.bankAccounts) {
-    s.bankAccounts = [
-      { id: 1, name: 'Business current',  balance: 28450, currency: 'GBP', provider: 'Lloyds',  last4: '4421', txCount: 47 },
-      { id: 2, name: 'Savings',           balance: 12000, currency: 'GBP', provider: 'Lloyds',  last4: '4439', txCount: 3 },
-      { id: 3, name: 'CIS reserve',       balance: 1700,  currency: 'GBP', provider: 'Starling', last4: '8821', txCount: 12 },
-    ];
-    s.payroll = [
-      { id: 1, period: '2026-04', gross: 18420, netPaid: 14736, cisDeducted: 1842, tax: 1842, status: 'submitted' },
-      { id: 2, period: '2026-03', gross: 17800, netPaid: 14240, cisDeducted: 1780, tax: 1780, status: 'submitted' },
-      { id: 3, period: '2026-05', gross: 0, netPaid: 0, cisDeducted: 0, tax: 0, status: 'draft' },
-    ];
-    s.holidays = [
-      { id: 1, userId: 1, name: 'Tom Reilly',  start: '2026-07-14', end: '2026-07-25', days: 10, status: 'approved' },
-      { id: 2, userId: 2, name: 'Aisha Begum', start: '2026-06-02', end: '2026-06-09', days: 5,  status: 'pending' },
-      { id: 3, userId: 5, name: 'Marcus Webb', start: '2026-08-04', end: '2026-08-18', days: 11, status: 'pending' },
-    ];
-    s.apprentices = [
-      { id: 1, userId: 4, name: 'Sara Khan', year: 2, course: 'NVQ Level 2 Joinery', progress: 65, nextReview: '2026-06-30', hours: 1284, target: 1900 },
-    ];
-    s.carbon = [
-      { id: 1, projectId: 1, scope1: 4.2, scope2: 1.8, scope3: 12.4, total: 18.4, unit: 'tCO2e', period: '2026-Q2' },
-      { id: 2, projectId: 2, scope1: 1.1, scope2: 0.6, scope3: 3.8,  total: 5.5,  unit: 'tCO2e', period: '2026-Q2' },
-    ];
-    s.waste = [
-      { id: 1, projectId: 1, kind: 'Inert',          tonnes: 2.4, recycled: 95, when: '2026-05-15', carrier: 'Tonic Skips' },
-      { id: 2, projectId: 1, kind: 'Wood',           tonnes: 0.8, recycled: 100, when: '2026-05-18', carrier: 'Tonic Skips' },
-      { id: 3, projectId: 1, kind: 'Mixed C&D',      tonnes: 1.2, recycled: 78, when: '2026-05-21', carrier: 'Tonic Skips' },
-    ];
-    s.claims = [
-      { id: 'CLM-001', when: '2026-04-12', projectId: 1, kind: 'Damage', amount: 1240, status: 'closed', insurer: 'Aviva' },
-      { id: 'CLM-002', when: '2026-05-08', projectId: 3, kind: 'Theft',  amount: 850,  status: 'in-review', insurer: 'Hiscox' },
-    ];
+    s.bankAccounts = [];
+    s.payroll = [];
+    s.holidays = [];
+    s.apprentices = [];
+    s.carbon = [];
+    s.waste = [];
+    s.claims = [];
     try { localStorage.setItem('cortexx_db_v1', JSON.stringify(s)); } catch (e) {}
   }
   const mk = (n) => ({
@@ -57,30 +33,47 @@
 // P55: Bank accounts
 function BankScreen({ accent }) {
   const accounts = useDB('bankAccounts');
-  const total = accounts.reduce((s, a) => s + a.balance, 0);
+  const total = accounts.reduce((s, a) => s + (a.balance || 0), 0);
+  const connectBank = () => { window.location.href = '/api/banking/connect'; };
   return <ScreenBg accent={accent}><div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
     <MobileHeader title="Banking" subtitle={`${accounts.length} accounts · £${total.toLocaleString()} total`}
-      right={<HeaderBtn icon={Ic.plus} accent={accent} onClick={() => window.open('mailto:hello@cortexbuildpro.com?subject=Connect%20bank%20account%20(Open%20Banking)', '_blank')}/>}/>
-    <div style={{ padding: '4px 16px 14px' }}>
-      <div style={{ background: `linear-gradient(135deg, ${T.green}22, ${accent}11)`, border: `0.5px solid ${T.green}44`, borderRadius: 14, padding: 14 }}>
-        <div style={{ fontFamily: SF, fontSize: 11, color: T.green, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>Total balance</div>
-        <div style={{ fontFamily: SFMono, fontSize: 32, fontWeight: 700, color: T.t1, marginTop: 4, letterSpacing: -0.8 }}>£{total.toLocaleString()}</div>
-      </div>
-    </div>
-    <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
-      {accounts.map(a => (
-        <div key={a.id} style={{ background: T.bg2, borderRadius: 14, padding: 14, border: `0.5px solid ${T.hair}` }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-            <div>
-              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: T.t1 }}>{a.name}</div>
-              <div style={{ fontFamily: SFMono, fontSize: 11, color: T.t2, marginTop: 2 }}>{a.provider} ····{a.last4}</div>
-            </div>
-            <div style={{ fontFamily: SFMono, fontSize: 18, color: a.balance > 5000 ? T.green : T.amber, fontWeight: 700 }}>£{a.balance.toLocaleString()}</div>
-          </div>
-          <div style={{ fontFamily: SFMono, fontSize: 10, color: T.t3, marginTop: 6 }}>{a.txCount} transactions this month</div>
+      right={<HeaderBtn icon={Ic.plus} accent={accent} onClick={connectBank}/>}/>
+    {accounts.length === 0 ? (
+      <div style={{ padding: 40, textAlign: 'center' }}>
+        <div style={{ fontFamily: SF, fontSize: 15, color: T.t2, marginBottom: 20 }}>
+          Connect your business bank account via TrueLayer Open Banking to automatically import transactions.
         </div>
-      ))}
-    </div>
+        <button onClick={connectBank} style={{ background: accent, color: '#fff', border: 'none', borderRadius: 14, padding: '14px 24px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+          Connect Bank Account
+        </button>
+        <div style={{ marginTop: 16, fontFamily: SF, fontSize: 13, color: T.t3 }}>
+          Or <span style={{ color: accent, cursor: 'pointer' }} onClick={() => toast('Manual upload coming soon', 'info')}>upload statements manually</span>
+        </div>
+      </div>
+    ) : (
+      <>
+        <div style={{ padding: '4px 16px 14px' }}>
+          <div style={{ background: `linear-gradient(135deg, ${T.green}22, ${accent}11)`, border: `0.5px solid ${T.green}44`, borderRadius: 14, padding: 14 }}>
+            <div style={{ fontFamily: SF, fontSize: 11, color: T.green, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>Total balance</div>
+            <div style={{ fontFamily: SFMono, fontSize: 32, fontWeight: 700, color: T.t1, marginTop: 4, letterSpacing: -0.8 }}>£{total.toLocaleString()}</div>
+          </div>
+        </div>
+        <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+          {accounts.map(a => (
+            <div key={a.id} style={{ background: T.bg2, borderRadius: 14, padding: 14, border: `0.5px solid ${T.hair}` }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between' }}>
+                <div>
+                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: T.t1 }}>{a.name}</div>
+                  <div style={{ fontFamily: SFMono, fontSize: 11, color: T.t2, marginTop: 2 }}>{a.provider} ····{a.last4}</div>
+                </div>
+                <div style={{ fontFamily: SFMono, fontSize: 18, color: (a.balance || 0) > 5000 ? T.green : T.amber, fontWeight: 700 }}>£{(a.balance || 0).toLocaleString()}</div>
+              </div>
+              <div style={{ fontFamily: SFMono, fontSize: 10, color: T.t3, marginTop: 6 }}>{a.txCount || 0} transactions this month</div>
+            </div>
+          ))}
+        </div>
+      </>
+    )}
   </div></ScreenBg>;
 }
 

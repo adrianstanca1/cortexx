@@ -92,6 +92,24 @@ router.post('/llm', async (req, res) => {
   }
 });
 
+// Dedicated vision endpoint — accepts { image: base64, prompt: string }
+router.post('/llm/vision', async (req, res) => {
+  try {
+    const { image, prompt } = req.body || {};
+    if (!image || !prompt) return res.status(400).json({ error: 'image and prompt required' });
+    const messages = [
+      { role: 'user', content: prompt, images: [image] }
+    ];
+    const text = RUNTIME === 'openai_compat' && OAI_BASE()
+      ? await openaiCompatChat(messages)
+      : await ollamaChat(messages);
+    res.json({ text, runtime: RUNTIME, model: OLLAMA_VISION_MODEL });
+  } catch (e) {
+    const status = e.status || (e.name === 'AbortError' ? 504 : 502);
+    res.status(status).json({ error: e.message || 'Vision call failed' });
+  }
+});
+
 router.get('/llm/health', async (_req, res) => {
   try {
     if (RUNTIME === 'openai_compat' && OAI_BASE()) {

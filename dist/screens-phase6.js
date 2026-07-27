@@ -789,32 +789,66 @@ function VoiceMemoSheet({
   const [duration, setDuration] = React.useState(0);
   const [transcript, setTranscript] = React.useState(null);
   const [transcribing, setTranscribing] = React.useState(false);
+  const [recorderError, setRecorderError] = React.useState(null);
+  const recognitionRef = React.useRef(null);
+  const timerRef = React.useRef(null);
   React.useEffect(() => {
-    if (!recording) return;
-    const t = setInterval(() => setDuration(d => d + 1), 1000);
-    return () => clearInterval(t);
-  }, [recording]);
-  const stop = async () => {
-    setRecording(false);
-    setTranscribing(true);
-    let text;
-    try {
-      const prompt = `You're a UK construction site manager dictating a voice memo on the way out of site. Generate ONE realistic 2-3 sentence note about today (UK English, conversational, mention specific trades/materials/people). Reply with just the memo text, no quotes.`;
-      text = await window.claude.complete({
-        messages: [{
-          role: 'user',
-          content: prompt
-        }]
-      });
-      text = text.trim().replace(/^["']|["']$/g, '');
-    } catch (e) {
-      text = "Quick site note. Plasterboard delivery delayed until Friday. Aisha confirmed first-fix electrics complete in the kitchen. Need to chase the supplier about second-fix timeline.";
+    if (!recording) {
+      if (timerRef.current) clearInterval(timerRef.current);
+      return;
     }
-    setTranscript(text);
+    timerRef.current = setInterval(() => setDuration(d => d + 1), 1000);
+    return () => clearInterval(timerRef.current);
+  }, [recording]);
+  const startRecording = () => {
+    setRecorderError(null);
+    const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+    if (!SpeechRecognition) {
+      setRecorderError('Speech recognition not supported in this browser. Please type your note.');
+      return;
+    }
+    const recognition = new SpeechRecognition();
+    recognition.lang = 'en-GB';
+    recognition.continuous = true;
+    recognition.interimResults = true;
+    recognitionRef.current = recognition;
+    let finalTranscript = '';
+    recognition.onresult = event => {
+      let interim = '';
+      for (let i = event.resultIndex; i < event.results.length; i++) {
+        if (event.results[i].isFinal) finalTranscript += event.results[i][0].transcript;else interim += event.results[i][0].transcript;
+      }
+      setTranscript(finalTranscript || interim);
+    };
+    recognition.onerror = event => {
+      console.warn('Speech recognition error:', event.error);
+      if (event.error === 'not-allowed') setRecorderError('Microphone access denied. Please check permissions.');
+      setRecording(false);
+    };
+    recognition.onend = () => {
+      setRecording(false);
+      setTranscribing(false);
+    };
+    recognition.start();
+    setRecording(true);
+    setTranscript('');
+  };
+  const stop = () => {
+    if (recognitionRef.current) recognitionRef.current.stop();
+    setRecording(false);
     setTranscribing(false);
-    toast('Transcribed by Cortex', 'ai');
+    toast('Transcription complete', 'success');
   };
   const save = async () => {
+    if (!transcript?.trim()) {
+      toast('Please record or type a memo first', 'error');
+      return;
+    }
+    await Backend.db.notes.create({
+      type: 'voice',
+      text: transcript.trim(),
+      createdAt: new Date().toISOString()
+    });
     toast('Voice memo saved', 'success');
     onClose();
   };
@@ -842,11 +876,19 @@ function VoiceMemoSheet({
       marginBottom: 30,
       lineHeight: 1.5
     }
-  }, "Record a voice note. Cortex will transcribe it automatically."), React.createElement("button", {
-    onClick: () => {
-      setRecording(true);
-      setDuration(0);
-    },
+  }, "Record a voice note. Cortex will transcribe it automatically."), recorderError && React.createElement("div", {
+    style: {
+      background: 'rgba(239,68,68,0.15)',
+      border: '1px solid rgba(239,68,68,0.3)',
+      color: '#ef4444',
+      borderRadius: 10,
+      padding: '10px 14px',
+      fontFamily: SF,
+      fontSize: 13,
+      marginBottom: 16
+    }
+  }, recorderError), React.createElement("button", {
+    onClick: startRecording,
     style: {
       width: 120,
       height: 120,

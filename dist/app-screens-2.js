@@ -875,25 +875,6 @@ function AddTaskSheet({
     }
   }, "Edit")))));
 }
-const MOCK_RECEIPTS = [{
-  vendor: 'Travis Perkins',
-  amount: 142.80
-}, {
-  vendor: 'Wickes',
-  amount: 67.40
-}, {
-  vendor: 'Selco',
-  amount: 234.50
-}, {
-  vendor: 'B&Q',
-  amount: 18.99
-}, {
-  vendor: 'Toolstation',
-  amount: 89.20
-}, {
-  vendor: 'Screwfix',
-  amount: 45.75
-}];
 function ReceiptScanSheet({
   onClose,
   accent
@@ -902,34 +883,88 @@ function ReceiptScanSheet({
   const [stage, setStage] = React.useState('camera');
   const [receipt, setReceipt] = React.useState(null);
   const [ai, setAi] = React.useState(null);
+  const [error, setError] = React.useState(null);
+  const videoRef = React.useRef(null);
+  const canvasRef = React.useRef(null);
+  const streamRef = React.useRef(null);
+  React.useEffect(() => {
+    if (stage !== 'camera') return;
+    const startCamera = async () => {
+      try {
+        const stream = await navigator.mediaDevices.getUserMedia({
+          video: {
+            facingMode: 'environment'
+          }
+        });
+        streamRef.current = stream;
+        if (videoRef.current) videoRef.current.srcObject = stream;
+      } catch (e) {
+        setError('Camera access denied or unavailable. You can enter receipt details manually.');
+      }
+    };
+    startCamera();
+    return () => {
+      if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+    };
+  }, [stage]);
   const scan = async () => {
     setStage('scanning');
-    let mock;
+    setError(null);
+    let extractedText = '';
     try {
-      const prompt = `Generate a realistic UK construction trade receipt as JSON only: {"vendor":"...","amount":000.00}. Use UK trade vendors like Travis Perkins, Selco, Wickes, Toolstation, Screwfix, Jewson, B&Q. Amount £20-£500.`;
-      const raw = await window.claude.complete({
-        messages: [{
-          role: 'user',
-          content: prompt
-        }]
-      });
-      const json = raw.match(/\{[\s\S]*\}/)?.[0];
-      const parsed = JSON.parse(json);
-      mock = {
-        ...parsed,
-        date: new Date().toISOString().slice(0, 10)
-      };
+      if (videoRef.current && canvasRef.current) {
+        const canvas = canvasRef.current;
+        const ctx = canvas.getContext('2d');
+        canvas.width = videoRef.current.videoWidth || 640;
+        canvas.height = videoRef.current.videoHeight || 480;
+        ctx.drawImage(videoRef.current, 0, 0);
+        if (streamRef.current) streamRef.current.getTracks().forEach(t => t.stop());
+        const imageData = canvas.toDataURL('image/jpeg', 0.9);
+        const visionRes = await fetch('/api/llm/vision', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            image: imageData,
+            prompt: 'Extract vendor name and total amount from this receipt. Return JSON: {"vendor":"...","amount":000.00}'
+          })
+        });
+        if (visionRes.ok) {
+          const visionData = await visionRes.json();
+          extractedText = visionData.text || '';
+        }
+      }
     } catch (e) {
-      mock = {
-        vendor: 'Travis Perkins',
-        amount: 142.80,
-        date: new Date().toISOString().slice(0, 10)
-      };
+      console.warn('Vision OCR failed:', e);
     }
-    setReceipt(mock);
-    const result = await Backend.ai.categorizeReceipt(mock);
-    setAi(result);
+    let parsed = {
+      vendor: '',
+      amount: '',
+      date: new Date().toISOString().slice(0, 10)
+    };
+    try {
+      const jsonMatch = extractedText.match(/\{[\s\S]*\}/);
+      if (jsonMatch) parsed = {
+        ...JSON.parse(jsonMatch[0]),
+        date: parsed.date
+      };
+    } catch (e) {}
+    setReceipt(parsed);
+    if (parsed.vendor && parsed.amount) {
+      const result = await Backend.ai.categorizeReceipt(parsed);
+      setAi(result);
+    }
     setStage('result');
+  };
+  const goManual = () => {
+    setReceipt({
+      vendor: '',
+      amount: '',
+      date: new Date().toISOString().slice(0, 10)
+    });
+    setAi(null);
+    setStage('manual');
   };
   const save = async () => {
     await Backend.db.receipts.create({
@@ -971,12 +1006,29 @@ function ReceiptScanSheet({
       position: 'relative',
       overflow: 'hidden'
     }
-  }, React.createElement("svg", {
+  }, React.createElement("video", {
+    ref: videoRef,
+    autoPlay: true,
+    playsInline: true,
+    style: {
+      position: 'absolute',
+      inset: 0,
+      width: '100%',
+      height: '100%',
+      objectFit: 'cover'
+    }
+  }), React.createElement("canvas", {
+    ref: canvasRef,
+    style: {
+      display: 'none'
+    }
+  }), React.createElement("svg", {
     width: "100%",
     height: "100%",
     style: {
       position: 'absolute',
-      inset: 0
+      inset: 0,
+      pointerEvents: 'none'
     }
   }, React.createElement("rect", {
     x: "20",
@@ -988,23 +1040,32 @@ function ReceiptScanSheet({
     strokeWidth: "2",
     strokeDasharray: "8 6",
     opacity: "0.6"
-  })), React.createElement("div", {
+  })), !error && React.createElement("div", {
     style: {
-      position: 'relative',
-      color: T.t3
+      position: 'absolute',
+      bottom: 12,
+      fontFamily: SF,
+      fontSize: 11,
+      color: T.t2,
+      background: 'rgba(0,0,0,0.5)',
+      padding: '4px 10px',
+      borderRadius: 8
     }
-  }, React.cloneElement(Ic.camera, {
-    size: 48,
-    sw: 1.2
-  })), React.createElement("div", {
+  }, "Point camera at receipt"), error && React.createElement("div", {
     style: {
-      position: 'relative',
+      position: 'absolute',
+      inset: 0,
+      display: 'flex',
+      alignItems: 'center',
+      justifyContent: 'center',
+      background: 'rgba(0,0,0,0.7)',
+      padding: 20,
+      textAlign: 'center',
       fontFamily: SF,
       fontSize: 13,
-      color: T.t2,
-      marginTop: 10
+      color: T.t2
     }
-  }, "Point camera at receipt")), React.createElement("button", {
+  }, error)), React.createElement("button", {
     onClick: scan,
     style: {
       width: '100%',
@@ -1019,7 +1080,21 @@ function ReceiptScanSheet({
       fontWeight: 700,
       cursor: 'pointer'
     }
-  }, "Tap to scan receipt")), stage === 'scanning' && React.createElement("div", {
+  }, "Capture & Scan"), React.createElement("button", {
+    onClick: goManual,
+    style: {
+      width: '100%',
+      marginTop: 8,
+      background: 'transparent',
+      color: T.t2,
+      border: `0.5px solid ${T.hairMid}`,
+      borderRadius: 14,
+      padding: '12px',
+      fontFamily: SF,
+      fontSize: 14,
+      cursor: 'pointer'
+    }
+  }, "Enter manually")), stage === 'scanning' && React.createElement("div", {
     style: {
       padding: '50px 20px',
       textAlign: 'center'
@@ -1053,7 +1128,7 @@ function ReceiptScanSheet({
       color: T.t2,
       marginTop: 6
     }
-  }, "OCR + Cortex AI categorising"), React.createElement("style", null, `@keyframes pulse-scale {0%,100%{transform:scale(1);opacity:1}50%{transform:scale(0.92);opacity:0.7}}`)), stage === 'result' && receipt && ai && React.createElement(React.Fragment, null, React.createElement("div", {
+  }, "OCR + Cortex AI categorising"), React.createElement("style", null, `@keyframes pulse-scale {0%,100%{transform:scale(1);opacity:1}50%{transform:scale(0.92);opacity:0.7}}`)), stage === 'result' && receipt && React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       background: T.bg2,
       borderRadius: 14,
@@ -1084,7 +1159,7 @@ function ReceiptScanSheet({
       color: T.t1,
       marginTop: 2
     }
-  }, receipt.vendor)), React.createElement("div", {
+  }, receipt.vendor || 'Unknown')), React.createElement("div", {
     style: {
       fontFamily: SFMono,
       fontSize: 22,
@@ -1092,7 +1167,7 @@ function ReceiptScanSheet({
       fontWeight: 700,
       letterSpacing: -0.5
     }
-  }, "\xA3", receipt.amount.toFixed(2)))), React.createElement("div", {
+  }, "\xA3", parseFloat(receipt.amount || 0).toFixed(2)))), ai && React.createElement("div", {
     style: {
       background: `linear-gradient(135deg, ${T.purple}1a, ${accent}0a)`,
       border: `0.5px solid ${T.purple}44`,
@@ -1156,7 +1231,7 @@ function ReceiptScanSheet({
     }
   }, "Project"), React.createElement(Pill, {
     c: T.cyan
-  }, projects.find(p => p.id == ai.projectId)?.name || 'unknown'))), React.createElement("div", {
+  }, projects.find(p => p.id == ai.projectId)?.name || 'unknown')))), React.createElement("div", {
     style: {
       display: 'flex',
       gap: 8,
@@ -1164,6 +1239,7 @@ function ReceiptScanSheet({
     }
   }, React.createElement("button", {
     onClick: save,
+    disabled: !receipt.vendor || !receipt.amount,
     style: {
       flex: 1,
       background: accent,
@@ -1174,10 +1250,11 @@ function ReceiptScanSheet({
       fontFamily: SF,
       fontSize: 14,
       fontWeight: 700,
-      cursor: 'pointer'
+      cursor: !receipt.vendor || !receipt.amount ? 'not-allowed' : 'pointer',
+      opacity: !receipt.vendor || !receipt.amount ? 0.5 : 1
     }
   }, "Save & file"), React.createElement("button", {
-    onClick: () => setStage('camera'),
+    onClick: () => setStage('manual'),
     style: {
       background: 'transparent',
       color: T.t2,
@@ -1189,7 +1266,111 @@ function ReceiptScanSheet({
       fontWeight: 600,
       cursor: 'pointer'
     }
-  }, "Edit"))))));
+  }, "Edit"))), stage === 'manual' && React.createElement(React.Fragment, null, React.createElement("div", {
+    style: {
+      display: 'flex',
+      flexDirection: 'column',
+      gap: 10,
+      marginBottom: 12
+    }
+  }, React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontFamily: SF,
+      fontSize: 11,
+      color: T.t2,
+      marginBottom: 4
+    }
+  }, "Vendor"), React.createElement("input", {
+    type: "text",
+    value: receipt?.vendor || '',
+    onChange: e => setReceipt(r => ({
+      ...r,
+      vendor: e.target.value
+    })),
+    style: {
+      width: '100%',
+      background: T.bg2,
+      border: `0.5px solid ${T.hair}`,
+      borderRadius: 10,
+      padding: '10px 12px',
+      fontFamily: SF,
+      fontSize: 14,
+      color: T.t1
+    },
+    placeholder: "e.g. Travis Perkins"
+  })), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontFamily: SF,
+      fontSize: 11,
+      color: T.t2,
+      marginBottom: 4
+    }
+  }, "Amount (\xA3)"), React.createElement("input", {
+    type: "number",
+    step: "0.01",
+    value: receipt?.amount || '',
+    onChange: e => setReceipt(r => ({
+      ...r,
+      amount: e.target.value
+    })),
+    style: {
+      width: '100%',
+      background: T.bg2,
+      border: `0.5px solid ${T.hair}`,
+      borderRadius: 10,
+      padding: '10px 12px',
+      fontFamily: SFMono,
+      fontSize: 14,
+      color: T.t1
+    },
+    placeholder: "0.00"
+  })), React.createElement("div", null, React.createElement("div", {
+    style: {
+      fontFamily: SF,
+      fontSize: 11,
+      color: T.t2,
+      marginBottom: 4
+    }
+  }, "Date"), React.createElement("input", {
+    type: "date",
+    value: receipt?.date || '',
+    onChange: e => setReceipt(r => ({
+      ...r,
+      date: e.target.value
+    })),
+    style: {
+      width: '100%',
+      background: T.bg2,
+      border: `0.5px solid ${T.hair}`,
+      borderRadius: 10,
+      padding: '10px 12px',
+      fontFamily: SF,
+      fontSize: 14,
+      color: T.t1
+    }
+  }))), React.createElement("button", {
+    onClick: async () => {
+      if (!receipt?.vendor || !receipt?.amount) {
+        toast('Please fill in vendor and amount', 'error');
+        return;
+      }
+      const result = await Backend.ai.categorizeReceipt(receipt);
+      setAi(result);
+      setStage('result');
+    },
+    style: {
+      width: '100%',
+      background: accent,
+      color: '#fff',
+      border: 'none',
+      borderRadius: 14,
+      padding: '14px',
+      fontFamily: SF,
+      fontSize: 15,
+      fontWeight: 700,
+      cursor: 'pointer'
+    }
+  }, "Categorise with AI"))));
 }
 function ChaseSheet({
   invoice,

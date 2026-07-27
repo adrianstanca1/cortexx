@@ -76,7 +76,8 @@
   },
   "devDependencies": {
     "@babel/cli": "^7.24.0",
-    "@babel/preset-react": "^7.24.0",
+    "@babel/core": "^7.29.7",
+    "@babel/preset-react": "^7.29.7",
     "@babel/standalone": "^7.29.7",
     "@capacitor/cli": "^8.4.2",
     "@next/bundle-analyzer": "^16.2.10",
@@ -106,4 +107,3 @@
     "@hono/node-server": "^2.0.8"
   }
 }
-

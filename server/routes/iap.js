@@ -159,6 +159,68 @@ router.post('/iap/verify', async (req, res) => {
   }
 });
 
+// ── Stripe Payment Intent (direct card payment) ────────────────────
+router.post('/iap/create-payment-intent', async (req, res) => {
+  if (!STRIPE_KEY()) return res.status(503).json({ error: 'STRIPE_SECRET_KEY not configured' });
+  const { plan, price } = req.body || {};
+  if (!plan || !price) return res.status(400).json({ error: 'plan and price required' });
+  try {
+    const wsId = req.user.ws;
+    const amountPence = Math.round(parseFloat(price) * 100);
+    const r = await abortableFetch('https://api.stripe.com/v1/payment_intents', {
+      method: 'POST',
+      headers: {
+        authorization: 'Bearer ' + STRIPE_KEY(),
+        'content-type': 'application/x-www-form-urlencoded',
+      },
+      body: form({
+        amount: String(amountPence),
+        currency: 'gbp',
+        'metadata[plan]': plan,
+        'metadata[workspace_id]': wsId,
+        automatic_payment_methods: JSON.stringify({ enabled: true }),
+      }),
+    });
+    if (!r.ok) return res.status(502).json({ error: 'Stripe: ' + (await r.text()).slice(0, 200) });
+    const j = await r.json();
+    res.json({ clientSecret: j.client_secret, id: j.id });
+  } catch (e) { res.status(502).json({ error: e.message }); }
+});
+
+router.post('/iap/confirm-payment', async (req, res) => {
+  if (!STRIPE_KEY()) return res.status(503).json({ error: 'STRIPE_SECRET_KEY not configured' });
+  const { clientSecret, plan } = req.body || {};
+  if (!clientSecret) return res.status(400).json({ error: 'clientSecret required' });
+  try {
+    // Verify the payment intent succeeded
+    const id = clientSecret.split('_secret_')[0];
+    const r = await abortableFetch('https://api.stripe.com/v1/payment_intents/' + id, {
+      method: 'GET',
+      headers: { authorization: 'Bearer ' + STRIPE_KEY() },
+    });
+    if (!r.ok) return res.status(502).json({ error: 'Stripe: ' + (await r.text()).slice(0, 200) });
+    const j = await r.json();
+    if (j.status !== 'succeeded') return res.status(402).json({ error: 'Payment not succeeded: ' + j.status });
+    // Record entitlement
+    const pool = req.app.locals.pool;
+    if (pool) {
+      await ensureTable(pool);
+      await upsertEntitlement(pool, {
+        workspace_id: req.user.ws,
+        user_id: req.user.uid || null,
+        source: 'stripe',
+        plan: plan || '',
+        product_id: '',
+        external_id: j.id,
+        status: 'active',
+        expires_at: null,
+        raw: { customer: j.customer, amount: j.amount },
+      });
+    }
+    res.json({ success: true, id: j.id });
+  } catch (e) { res.status(502).json({ error: e.message }); }
+});
+
 // ── Stripe Checkout (subscription) ──────────────────────────────────
 router.post('/iap/checkout', async (req, res) => {
   if (!STRIPE_KEY()) return res.status(503).json({ error: 'STRIPE_SECRET_KEY not configured' });
