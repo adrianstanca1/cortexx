@@ -79,7 +79,7 @@
     "@babel/preset-react": "^7.24.0",
     "@babel/standalone": "^7.29.7",
     "@capacitor/cli": "^8.4.2",
-    "@next/bundle-analyzer": "^16.2.10",
+    "@next/bundle-analyzer": "^16.2.12",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/bcryptjs": "^3.0.0",
@@ -98,7 +98,7 @@
     "tailwindcss": "^4.3.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.1",
-    "turbo": "^2.0.0",
+    "turbo": "^2.10.7",
     "typescript": "^5.9.3"
   },
   "overrides": {
