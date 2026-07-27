@@ -52,13 +52,18 @@ services:
       DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/cortexx
       PORT: 3001
       NODE_ENV: production
-      # Point the LLM proxy at the bundled Ollama service (default, no keys).
-      # Cloud OpenAI-compatible runtime (LLM_RUNTIME=openai_compat) is supported
-      # by the code (server/routes/llm.js + secret-store 'openai_compat_key'),
-      # but is NOT enabled here until a valid provider key is provisioned on the
-      # VPS — otherwise every /api/llm call 401s. Flip via server/.env when a
-      # working key exists.
-      LLM_RUNTIME: ollama
+      # ── LLM runtime (env-driven, safe default) ──────────────────────────
+      # LLM_RUNTIME is read from server/.env (gitignored) so prod can switch
+      # between 'ollama' (local, no key) and 'openai_compat' (cloud) with ZERO
+      # code/compose change and no secret in git. Defaults to ollama so a
+      # missing/empty key never breaks boot.
+      #   ollama        -> local Ollama container (no key needed)
+      #   openai_compat -> any OpenAI-compatible API (OpenRouter/OpenAI/xAI…)
+      #                    via OPENAI_COMPAT_BASE + OPENAI_COMPAT_KEY
+      LLM_RUNTIME: ${LLM_RUNTIME:-ollama}
+      OPENAI_COMPAT_BASE: ${OPENAI_COMPAT_BASE:-https://openrouter.ai/api}
+      OPENAI_COMPAT_MODEL: ${OPENAI_COMPAT_MODEL:-openai/gpt-4o-mini}
+      # Ollama fallback vars (used when LLM_RUNTIME=ollama)
       OLLAMA_BASE: http://ollama:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
       OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-llava}
