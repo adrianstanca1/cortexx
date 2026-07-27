@@ -16,6 +16,14 @@ RUN npm ci --omit=dev && npm cache clean --force
 COPY index.js ollama-init.sh security.js logger.js ./
 COPY routes/ ./routes/
 COPY db/ ./db/
+# lib/ holds runtime modules (e.g. secret-store.js) required by index.js and
+# every route. The explicit-COPY list above previously omitted it, producing a
+# MODULE_NOT_FOUND crash loop on boot (prod /api/health 502). Keep this in sync
+# with every top-level server/ require() target.
+COPY lib/ ./lib/
+# secret-store.js ships as 0600 on disk; normalize so the non-root runtime
+# (USER node) can read it. Never widen beyond the needed read bit.
+RUN chmod -R u+rwX,go+rX lib/
 
 EXPOSE 3001
 HEALTHCHECK --interval=30s --timeout=3s --start-period=15s --retries=3 \
