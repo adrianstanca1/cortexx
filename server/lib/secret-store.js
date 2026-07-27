@@ -56,6 +56,7 @@ const REGISTRY = [
   { name: 'apple_shared_secret',   envVar: 'APPLE_SHARED_SECRET',      category: 'payments', provider: 'apple',      label: 'Apple IAP shared secret' },
   { name: 'ollama_base',           envVar: 'OLLAMA_BASE',              category: 'ai',       provider: 'ollama',     label: 'Local LLM (Ollama base URL)' },
   { name: 'openai_compat_base',    envVar: 'OPENAI_COMPAT_BASE',       category: 'ai',       provider: 'openai',     label: 'OpenAI-compatible base URL' },
+  { name: 'openai_compat_key',     envVar: 'OPENAI_COMPAT_KEY',        category: 'ai',       provider: 'openai',     label: 'OpenAI-compatible API key' },
 ];
 const REGISTRY_BY_NAME = Object.fromEntries(REGISTRY.map((r) => [r.name, r]));
 
@@ -75,6 +76,7 @@ const VALIDATORS = {
   apple_shared_secret: (v) => v.length >= 10,
   ollama_base: (v) => /^https?:\/\//.test(v),
   openai_compat_base: (v) => /^https?:\/\//.test(v),
+  openai_compat_key: (v) => v.length >= 20,
   anthropic_api_key: (v) => v.startsWith('sk-ant-') || v.length >= 20,
   openai_api_key: (v) => v.startsWith('sk-') || v.length >= 20,
   gemini_api_key: (v) => v.length >= 20,

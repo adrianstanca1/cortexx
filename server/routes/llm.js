@@ -22,6 +22,7 @@ const OLLAMA_BASE = () => (getSecret('ollama_base') || process.env.OLLAMA_BASE |
 const OLLAMA_MODEL = process.env.OLLAMA_MODEL || 'llama3.2:3b';
 const OLLAMA_VISION_MODEL = process.env.OLLAMA_VISION_MODEL || 'llava';
 const OAI_BASE = () => (getSecret('openai_compat_base') || process.env.OPENAI_COMPAT_BASE || '').replace(/\/+$/, '');
+const OAI_KEY = () => (getSecret('openai_compat_key') || process.env.OPENAI_COMPAT_KEY || '');
 const OAI_MODEL = process.env.OPENAI_COMPAT_MODEL || 'default';
 const TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT_MS || '60000', 10);
 
@@ -53,9 +54,13 @@ async function ollamaChat(messages) {
 }
 
 async function openaiCompatChat(messages) {
-  const r = await abortableFetch(OAI_BASE() + '/v1/chat/completions', {
+  const base = OAI_BASE();
+  const key = OAI_KEY();
+  const headers = { 'content-type': 'application/json' };
+  if (key) headers['Authorization'] = `Bearer ${key}`;
+  const r = await abortableFetch(base + '/v1/chat/completions', {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers,
     body: JSON.stringify({
       model: OAI_MODEL,
       messages: messages.map(m => ({ role: m.role, content: m.content })),
@@ -79,7 +84,8 @@ router.post('/llm', async (req, res) => {
     const text = RUNTIME === 'openai_compat' && OAI_BASE()
       ? await openaiCompatChat(messages)
       : await ollamaChat(messages);
-    res.json({ text, runtime: RUNTIME, model: hasImages(messages) ? OLLAMA_VISION_MODEL : OLLAMA_MODEL });
+    const reportedModel = RUNTIME === 'openai_compat' && OAI_BASE() ? OAI_MODEL : (hasImages(messages) ? OLLAMA_VISION_MODEL : OLLAMA_MODEL);
+    res.json({ text, runtime: RUNTIME, model: reportedModel });
   } catch (e) {
     const status = e.status || (e.name === 'AbortError' ? 504 : 502);
     res.status(status).json({ error: e.message || 'LLM call failed' });
@@ -89,8 +95,11 @@ router.post('/llm', async (req, res) => {
 router.get('/llm/health', async (_req, res) => {
   try {
     if (RUNTIME === 'openai_compat' && OAI_BASE()) {
-      const r = await abortableFetch(OAI_BASE() + '/v1/models', { method: 'GET' });
-      return res.json({ ok: r.ok, runtime: RUNTIME, base: OAI_BASE() });
+      const key = OAI_KEY();
+      const headers = {};
+      if (key) headers['Authorization'] = `Bearer ${key}`;
+      const r = await abortableFetch(OAI_BASE() + '/v1/models', { method: 'GET', headers });
+      return res.json({ ok: r.ok, runtime: RUNTIME, base: OAI_BASE(), model: OAI_MODEL });
     }
     const r = await abortableFetch(OLLAMA_BASE() + '/api/tags', { method: 'GET' });
     if (!r.ok) return res.status(502).json({ ok: false, runtime: 'ollama', base: OLLAMA_BASE() });
