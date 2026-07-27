@@ -1,23 +1,26 @@
 {
   "cli": {
-    "version": ">= 12.0.0"
+    "version": "21.2.0"
   },
   "build": {
     "development": {
       "developmentClient": true,
       "distribution": "internal",
+      "node": "22",
       "ios": {
         "simulator": true
       }
     },
     "preview": {
       "distribution": "internal",
+      "node": "22",
       "ios": {
         "simulator": true
       }
     },
     "production": {
       "autoIncrement": true,
+      "node": "22",
       "prebuildCommand": "npm install --no-audit --no-fund && cd ios/App && pod install --no-repo-update"
     }
   },
