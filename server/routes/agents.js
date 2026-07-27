@@ -11,9 +11,9 @@ const { getSecret } = require('../lib/secret-store');
 // Resolve at request time so a rotation via /api/admin/connections takes
 // effect immediately without a restart. Falls back to env if the store is
 // uninitialised (tests / direct require).
-const ANTHROPIC_API_KEY = () => getSecret('anthropic_api_key');
-const WEBHOOK_SECRET = () => getSecret('agent_webhook_secret');
-const WA_VERIFY_TOKEN = () => getSecret('waba_verify_token');
+const ANTHROPIC_API_KEY = () => getSecret('anthropic_api_key') || process.env.ANTHROPIC_API_KEY;
+const WEBHOOK_SECRET = () => getSecret('agent_webhook_secret') || process.env.WEBHOOK_SECRET;
+const WA_VERIFY_TOKEN = () => getSecret('waba_verify_token') || process.env.WA_VERIFY_TOKEN;
 const DEFAULT_WORKSPACE_ID = () => getSecret('agent_default_workspace_id') || process.env.DEFAULT_WORKSPACE_ID || 'demo';
 
 // Small Claude helper (server holds the key).
