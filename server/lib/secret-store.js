@@ -330,6 +330,19 @@ function hasSecret(name) {
   return !!(def && process.env[def.envVar]);
 }
 
+// Boot-facing helpers expected by server/index.js. They build/attach the
+// singleton store (idempotent) and run the table-ensure + env-seed steps.
+// (The class methods are ensureTable()/seedFromEnv(); these wrappers keep
+//  the boot call site stable and accept a pool directly.)
+async function ensureApiConnectionsTable(pool) {
+  const s = setStorePool(pool);
+  await s.ensureTable();
+}
+async function syncEnvToRegistry(pool) {
+  const s = setStorePool(pool);
+  await s.seedFromEnv();
+}
+
 module.exports = {
   REGISTRY,
   REGISTRY_BY_NAME,
@@ -338,6 +351,8 @@ module.exports = {
   init,
   store,
   setStorePool,
+  ensureApiConnectionsTable,
+  syncEnvToRegistry,
   getSecret,
   hasSecret,
   encrypt,
