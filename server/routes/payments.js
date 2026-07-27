@@ -14,9 +14,14 @@
 
 const express = require('express');
 const router = express.Router();
+// Central credential registry — read live (supports runtime rotation + UI).
+const { getSecret } = require('../lib/secret-store');
 
-const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
-const GC_TOKEN = process.env.GOCARDLESS_ACCESS_TOKEN || '';
+// Resolve at request time so a rotation via /api/admin/connections takes
+// effect immediately without a restart. Falls back to env if the store is
+// uninitialised (tests / direct require).
+const STRIPE_KEY = () => getSecret('stripe_secret_key');
+const GC_TOKEN = () => getSecret('gocardless_token');
 const GC_BASE = (process.env.GOCARDLESS_BASE || 'https://api.gocardless.com').replace(/\/+$/, '');
 
 // Bank-transfer details (no third party — just rendered for the client)
@@ -42,8 +47,9 @@ function form(o) {
 
 // ── Stripe: create a Product + Price + Payment Link in one go ─────────
 async function stripeLink({ invoiceId, amountPennies, currency, description }) {
-  if (!STRIPE_KEY) { const e = new Error('Stripe not configured — set STRIPE_SECRET_KEY'); e.status = 503; throw e; }
-  const auth = 'Bearer ' + STRIPE_KEY;
+  const STRIPE_KEY_ = STRIPE_KEY();
+  if (!STRIPE_KEY_) { const e = new Error('Stripe not configured — set STRIPE_SECRET_KEY'); e.status = 503; throw e; }
+  const auth = 'Bearer ' + STRIPE_KEY_;
   const h = { authorization: auth, 'content-type': 'application/x-www-form-urlencoded' };
 
   // 1. Product
@@ -74,9 +80,10 @@ async function stripeLink({ invoiceId, amountPennies, currency, description }) {
 
 // ── GoCardless: hosted billing-request flow (real Direct Debit) ──────
 async function gocardlessLink({ invoiceId, amountPennies, currency, description }) {
-  if (!GC_TOKEN) { const e = new Error('GoCardless not configured — set GOCARDLESS_ACCESS_TOKEN'); e.status = 503; throw e; }
+  const GC_TOKEN_ = GC_TOKEN();
+  if (!GC_TOKEN_) { const e = new Error('GoCardless not configured — set GOCARDLESS_ACCESS_TOKEN'); e.status = 503; throw e; }
   const h = {
-    authorization: 'Bearer ' + GC_TOKEN,
+    authorization: 'Bearer ' + GC_TOKEN_,
     'content-type': 'application/json',
     'GoCardless-Version': '2015-07-06',
     'Accept': 'application/json',
@@ -124,9 +131,11 @@ function bankTransferDetails({ invoiceId, amountPennies, currency }) {
 
 // ── Routes ────────────────────────────────────────────────────────────
 router.get('/payments/providers', (_req, res) => {
+  const sk = STRIPE_KEY();
+  const gc = GC_TOKEN();
   res.json({
-    stripe:     { available: !!STRIPE_KEY,        mode: STRIPE_KEY.startsWith('sk_test_') ? 'test' : (STRIPE_KEY ? 'live' : 'off') },
-    gocardless: { available: !!GC_TOKEN,          mode: GC_BASE.includes('sandbox') ? 'sandbox' : (GC_TOKEN ? 'live' : 'off') },
+    stripe:     { available: !!sk,        mode: sk.startsWith('sk_test_') ? 'test' : (sk ? 'live' : 'off') },
+    gocardless: { available: !!gc,        mode: GC_BASE.includes('sandbox') ? 'sandbox' : (gc ? 'live' : 'off') },
     bank:       { available: !!(BANK.accountName && ((BANK.sortCode && BANK.accountNo) || BANK.iban)) },
   });
 });

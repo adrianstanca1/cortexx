@@ -5,12 +5,23 @@
 
 const express = require('express');
 const crypto = require('crypto');
+// Central credential registry — read live (supports runtime rotation + UI).
+const { getSecret } = require('../lib/secret-store');
+
+// Resolve at request time so a rotation via /api/admin/connections takes
+// effect immediately without a restart. Falls back to env if the store is
+// uninitialised (tests / direct require).
+const ANTHROPIC_API_KEY = () => getSecret('anthropic_api_key');
+const WEBHOOK_SECRET = () => getSecret('agent_webhook_secret');
+const WA_VERIFY_TOKEN = () => getSecret('waba_verify_token');
+const DEFAULT_WORKSPACE_ID = () => getSecret('agent_default_workspace_id') || process.env.DEFAULT_WORKSPACE_ID || 'demo';
 
 // Small Claude helper (server holds the key).
 async function claude(messages) {
+  const key = ANTHROPIC_API_KEY();
   const r = await fetch('https://api.anthropic.com/v1/messages', {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-api-key': process.env.ANTHROPIC_API_KEY, 'anthropic-version': '2023-06-01' },
+    headers: { 'content-type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' },
     body: JSON.stringify({ model: 'claude-haiku-4-5', max_tokens: 800, messages }),
   });
   const data = await r.json();
@@ -66,7 +77,7 @@ module.exports = function agentRoutes(pool, auth, bus) {
   // These are PUBLIC but gated by a shared secret in the path so randoms can't post.
   // Configure WEBHOOK_SECRET in env and use /api/webhooks/<secret>/whatsapp etc.
   function secretGate(req, res, next) {
-    const expected = process.env.WEBHOOK_SECRET || '';
+    const expected = WEBHOOK_SECRET() || '';
     // Accept the secret either in the path (Meta config compat) or an
     // X-Webhook-Secret header. Compare in constant time to avoid leaking it
     // via timing, and guard against length-mismatch throwing in timingSafeEqual.
@@ -80,7 +91,7 @@ module.exports = function agentRoutes(pool, auth, bus) {
 
   // Meta WhatsApp verification handshake (GET) + message receipt (POST)
   router.get('/webhooks/:secret/whatsapp', secretGate, (req, res) => {
-    if (req.query['hub.verify_token'] === (process.env.WA_VERIFY_TOKEN || process.env.WEBHOOK_SECRET))
+    if (req.query['hub.verify_token'] === (WA_VERIFY_TOKEN() || WEBHOOK_SECRET()))
       return res.send(req.query['hub.challenge']);
     res.sendStatus(403);
   });
@@ -88,7 +99,7 @@ module.exports = function agentRoutes(pool, auth, bus) {
     res.sendStatus(200); // ack immediately; process async
     try {
       if (!webhookAllowed()) { console.warn('[wa] rate limit hit — dropping'); return; }
-      const ws = process.env.DEFAULT_WORKSPACE_ID;
+      const ws = DEFAULT_WORKSPACE_ID();
       if (!ws) return;
       const msgs = req.body?.entry?.[0]?.changes?.[0]?.value?.messages || [];
       for (const m of msgs) {
@@ -106,7 +117,7 @@ module.exports = function agentRoutes(pool, auth, bus) {
     res.sendStatus(200);
     try {
       if (!webhookAllowed()) { console.warn('[email] rate limit hit — dropping'); return; }
-      const ws = process.env.DEFAULT_WORKSPACE_ID;
+      const ws = DEFAULT_WORKSPACE_ID();
       if (!ws) return;
       const text = `${req.body.subject || ''}\n\n${req.body.text || req.body.body || ''}`;
       const from = req.body.from;

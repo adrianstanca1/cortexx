@@ -22,9 +22,15 @@
 
 const express = require('express');
 const router = express.Router();
+// Central credential registry — read live (supports runtime rotation + UI).
+const { getSecret } = require('../lib/secret-store');
 
-const GW_USER = process.env.HMRC_GATEWAY_USER || '';
-const GW_PASS = process.env.HMRC_GATEWAY_PASS || '';
+// Resolve at request time so a rotation via /api/admin/connections takes
+// effect immediately without a restart. Falls back to env if the store is
+// uninitialised (tests / direct require).
+const gwUser = () => getSecret('hmrc_gateway_user');
+const gwPass = () => getSecret('hmrc_gateway_pass');
+
 const VENDOR_ID = process.env.HMRC_VENDOR_ID || '0000';
 const PRODUCT = 'CortexBuild Pro';
 const VERSION = '1.0.0';
@@ -33,7 +39,7 @@ const HMRC_URL = HMRC_ENV === 'live'
   ? 'https://transaction-engine.tax.service.gov.uk/submission'
   : 'https://test-transaction-engine.tax.service.gov.uk/submission';
 
-const CONFIGURED = !!(GW_USER && GW_PASS);
+const configured = () => !!(gwUser() && gwPass());
 
 function abortableFetch(url, opts, ms) {
   const c = new AbortController();
@@ -80,11 +86,11 @@ function wrapGovTalkRequest(body, opts) {
   const auth = `
     <SenderDetails>
       <IDAuthentication>
-        <SenderID>${xmlEscape(GW_USER)}</SenderID>
+        <SenderID>${xmlEscape(gwUser())}</SenderID>
         <Authentication>
           <Method>clear</Method>
           <Role>principal</Role>
-          <Value>${xmlEscape(GW_PASS)}</Value>
+          <Value>${xmlEscape(gwPass())}</Value>
         </Authentication>
       </IDAuthentication>
     </SenderDetails>`;
@@ -170,17 +176,17 @@ async function ensureTable(pool) {
 // ── Routes ──────────────────────────────────────────────────────
 router.get('/hmrc/status', (_req, res) => {
   res.json({
-    configured: CONFIGURED,
+    configured: configured(),
     env: HMRC_ENV,
     url: HMRC_URL,
-    senderConfigured: !!GW_USER,
+    senderConfigured: !!gwUser(),
     vendorId: VENDOR_ID,
   });
 });
 
 router.post('/hmrc/cis300/submit', async (req, res) => {
   try {
-    if (!CONFIGURED) return res.status(503).json({ error: 'HMRC Gateway credentials not configured — set HMRC_GATEWAY_USER + HMRC_GATEWAY_PASS' });
+    if (!configured()) return res.status(503).json({ error: 'HMRC Gateway credentials not configured — set HMRC_GATEWAY_USER + HMRC_GATEWAY_PASS' });
     const body = req.body && req.body.irEnvelope;
     const periodEnd = (req.body && req.body.periodEnd) || '';
     if (!body) return res.status(400).json({ error: 'irEnvelope required (the body from CortexCIS300.toHMRCXml)' });
@@ -230,7 +236,7 @@ router.post('/hmrc/cis300/submit', async (req, res) => {
 
 router.get('/hmrc/cis300/status', async (req, res) => {
   try {
-    if (!CONFIGURED) return res.status(503).json({ error: 'HMRC not configured' });
+    if (!configured()) return res.status(503).json({ error: 'HMRC not configured' });
     const correlationId = req.query.correlationId;
     if (!correlationId) return res.status(400).json({ error: 'correlationId required' });
     // Only allow polling a submission that belongs to the caller's workspace.
@@ -266,7 +272,7 @@ router.get('/hmrc/cis300/status', async (req, res) => {
 
 router.delete('/hmrc/cis300/submission', async (req, res) => {
   try {
-    if (!CONFIGURED) return res.status(503).json({ error: 'HMRC not configured' });
+    if (!configured()) return res.status(503).json({ error: 'HMRC not configured' });
     const correlationId = req.query.correlationId;
     if (!correlationId) return res.status(400).json({ error: 'correlationId required' });
     // Only allow deleting/cleaning up a submission owned by the caller's workspace.

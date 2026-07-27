@@ -44,6 +44,9 @@ const RESTRICTED_COLLECTIONS = new Set([
   'hmrcsubmissions',
   'push_subscriptions', // device push endpoints
   'pushsubscriptions',
+  // ── Central API registry (encrypted integration secrets) ─────
+  'api_connections',     // encrypted API credentials (rotatable via admin)
+  'apiconnections',
   // ── AI memory (may contain sensitive prompts) ───────────────
   'ai_history',
   'aihistory',

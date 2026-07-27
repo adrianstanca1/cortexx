@@ -172,14 +172,32 @@ app.post('/api/auth/magic/request', authLimiter, wrap(async (req, res) => {
   const expires = new Date(Date.now() + 15 * 60 * 1000);
   await pool.query('INSERT INTO magic_links(token, email, workspace_id, expires_at) VALUES($1,$2,$3,$4)',
     [token, email, u.rows[0]?.workspace_id || null, expires]);
-  const link = `${APP_URL}/?magic=${token}`;
-  // Deliver via Resend if configured; otherwise log (and in dev, return the link).
+  const { getSecret } = require('./lib/secret-store');
+  const resendKey = getSecret('resend_key') || process.env.RESEND_API_KEY;
+  const sendgridKey = getSecret('sendgrid_key') || process.env.SENDGRID_API_KEY;
+  const emailProvider = (process.env.EMAIL_PROVIDER || 'resend').toLowerCase();
+  // Deliver via the configured mailer; otherwise log (and in dev, return the link).
   let sent = false;
-  if (process.env.RESEND_API_KEY) {
+  if (emailProvider === 'sendgrid' && sendgridKey) {
+    try {
+      const r = await fetch('https://api.sendgrid.com/v3/mail/send', {
+        method: 'POST',
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${sendgridKey}` },
+        body: JSON.stringify({
+          personalizations: [{ to: [{ email }] }],
+          from: { email: (process.env.MAIL_FROM || 'login@cortexbuildpro.com').replace(/^.*<(.*)>$/, '$1') },
+          subject: 'Your CortexBuild Pro sign-in link',
+          content: [{ type: 'text/html', value: `<p>Tap to sign in (expires in 15 minutes):</p><p><a href="${link}">Sign in to CortexBuild Pro</a></p><p>If you didn't request this, ignore this email.</p>` }],
+        }),
+      });
+      sent = r.ok;
+      if (!r.ok) log.error('[magic] sendgrid failed', await r.text());
+    } catch (e) { log.error('[magic] sendgrid error', e.message); }
+  } else if (resendKey) {
     try {
       const r = await fetch('https://api.resend.com/emails', {
         method: 'POST',
-        headers: { 'content-type': 'application/json', authorization: `Bearer ${process.env.RESEND_API_KEY}` },
+        headers: { 'content-type': 'application/json', authorization: `Bearer ${resendKey}` },
         body: JSON.stringify({
           from: process.env.MAIL_FROM || 'CortexBuild Pro <login@cortexbuildpro.com>',
           to: [email],
@@ -189,7 +207,7 @@ app.post('/api/auth/magic/request', authLimiter, wrap(async (req, res) => {
       });
       sent = r.ok;
       if (!r.ok) log.error('[magic] resend failed', await r.text());
-      } catch (e) { log.error('[magic] resend error', e.message); }
+    } catch (e) { log.error('[magic] resend error', e.message); }
   } else {
     log.info(`[magic] (no mailer configured) ${email} → ${link}`);
   }
@@ -511,6 +529,8 @@ app.use('/api/admin', apiLimiter, require('./routes/admin')(pool, auth, adminAut
 // Enhanced operator surface: features (VERA), RBAC/packages, AI control plane, settings.
 app.use('/api/admin', apiLimiter, require('./routes/admin-features')(pool, auth, adminAuth, wrap, bus));
 app.use('/api/admin', apiLimiter, require('./routes/admin-ai')(pool, auth, adminAuth, wrap, bus));
+// Central API registry (operator surface): list / rotate / test integrations.
+app.use('/api/admin', apiLimiter, require('./routes/api-connections')(pool, auth, adminAuth, wrap));
 
 // ── 404 + error handler ─────────────────────────────────────
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
@@ -562,6 +582,8 @@ if (require.main === module) {
   // API that a health check might still mark "ready" — mirrors the fail-fast
   // JWT_SECRET/CORS guards above.
   ensurePlatformAdmin()
+    .then(() => require('./lib/secret-store').ensureApiConnectionsTable(pool))
+    .then(() => require('./lib/secret-store').syncEnvToRegistry(pool))
     .then(() => {
       const server = app.listen(PORT, () => log.info(`Cortexx API on :${PORT}`));
       // ── Graceful shutdown ───────────────────────────────────

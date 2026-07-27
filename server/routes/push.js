@@ -12,18 +12,26 @@
 
 const express = require('express');
 const router = express.Router();
+// Central credential registry — read live (supports runtime rotation + UI).
+const { getSecret } = require('../lib/secret-store');
 
 let webpush = null;
 try { webpush = require('web-push'); } catch (e) { /* optional dep */ }
 
-const VAPID_PUB = process.env.VAPID_PUBLIC_KEY || '';
-const VAPID_PRIV = process.env.VAPID_PRIVATE_KEY || '';
+const VAPID_PUB = () => getSecret('vapid_public');
+const VAPID_PRIV = () => getSecret('vapid_private');
 const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:sales@cortexbuildpro.com';
 
-if (webpush && VAPID_PUB && VAPID_PRIV) {
-  try { webpush.setVapidDetails(VAPID_SUBJECT, VAPID_PUB, VAPID_PRIV); }
-  catch (e) { console.error('[push] VAPID setup failed:', e.message); }
+// Re-apply VAPID details at request time (so a rotation via /api/admin/connections
+// takes effect without a restart). Safe to call repeatedly.
+function applyVapid() {
+  const pub = VAPID_PUB();
+  const priv = VAPID_PRIV();
+  if (webpush && pub && priv) {
+    try { webpush.setVapidDetails(VAPID_SUBJECT, pub, priv); } catch (e) { /* noop */ }
+  }
 }
+applyVapid();
 
 async function ensurePushTable(pool) {
   await pool.query(`CREATE TABLE IF NOT EXISTS push_subscriptions (
@@ -47,8 +55,8 @@ async function isAdmin(pool, uid) {
 }
 
 router.get('/push/vapid', (_req, res) => {
-  if (!VAPID_PUB) return res.status(503).json({ error: 'VAPID_PUBLIC_KEY not configured on server' });
-  res.json({ publicKey: VAPID_PUB });
+  if (!VAPID_PUB()) return res.status(503).json({ error: 'VAPID_PUBLIC_KEY not configured on server' });
+  res.json({ publicKey: VAPID_PUB() });
 });
 
 router.post('/push/subscribe', async (req, res) => {
@@ -144,7 +152,7 @@ router.post('/push/send', async (req, res) => {
         continue;
       }
       // Web Push path (VAPID) — only if web-push + VAPID are configured.
-      if (!webpush || !VAPID_PUB) { webSkipped++; continue; }
+      if (!webpush || !VAPID_PUB()) { webSkipped++; continue; }
       try { await webpush.sendNotification(row.sub, payload); sent++; }
       catch (e) { failed++; if (e.statusCode === 410 || e.statusCode === 404) { try { await pool.query('DELETE FROM push_subscriptions WHERE endpoint=$1 AND workspace_id=$2', [row.endpoint, req.user.ws]); } catch (_) {} } }
     }

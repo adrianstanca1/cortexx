@@ -1,77 +1,36 @@
 /**
- * Transactional email helper. Mirrors the shape of `lib/push.ts` —
- * configured when RESEND_API_KEY is set, gracefully no-ops otherwise so
- * the rest of the app keeps working with email disabled.
+ * Transactional email helper. Pluggable provider (Resend default, SendGrid
+ * supported) — see lib/email-providers.ts. Selection via EMAIL_PROVIDER
+ * (resend|sendgrid). The active key is resolved live so a rotation in the
+ * admin API registry takes effect immediately.
  *
- * Provider: Resend (resend.com). Cheap, dev-friendly, EU-hosted option
- * available. Templates live in `emails/` as plain HTML strings for now;
- * upgrade to React Email later if template authoring becomes painful.
+ * When run in the browser/SPA bundle, the key comes from process.env (build
+ * time) since the secret store is server-only. When run on the server, pass a
+ * keyResolver that reads lib/secret-store so rotations are live.
  */
 
-const RESEND_KEY = process.env.RESEND_API_KEY
-const FROM_ADDRESS = process.env.EMAIL_FROM || 'Cortexx <no-reply@cortexbuildpro.com>'
-const REPLY_TO = process.env.EMAIL_REPLY_TO
+import { sendViaProvider, resolveEmailKey, selectedEmailProvider, EmailPayload, EmailResult } from './email-providers'
+
+// Optional server-side resolver (set by the server on import).
+let _keyResolver: ((name: string) => string | undefined) | undefined
+export function setEmailKeyResolver(fn: (name: string) => string | undefined) {
+  _keyResolver = fn
+}
 
 export function isEmailConfigured(): boolean {
-  return !!RESEND_KEY
+  return !!resolveEmailKey(selectedEmailProvider(), _keyResolver)
 }
 
-export interface EmailPayload {
-  to: string | string[]
-  subject: string
-  html: string
-  text?: string
-  replyTo?: string
-}
-
-export interface EmailResult {
-  delivered: number
-  skipped: boolean
-  error?: string
+export function activeEmailProvider(): string {
+  return selectedEmailProvider()
 }
 
 /**
- * Send a transactional email. Fire-and-forget at the call site —
- * the returned promise resolves with a result you can log but never
- * throws (errors are returned in the result).
+ * Send a transactional email. Fire-and-forget at the call site — the returned
+ * promise resolves with a result you can log but never throws.
  */
 export async function sendEmail(payload: EmailPayload): Promise<EmailResult> {
-  if (!isEmailConfigured()) return { delivered: 0, skipped: true }
-
-  const recipients = Array.isArray(payload.to) ? payload.to : [payload.to]
-  const validRecipients = recipients.filter(r => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(r))
-  if (validRecipients.length === 0) {
-    return { delivered: 0, skipped: false, error: 'No valid recipients' }
-  }
-
-  try {
-    const res = await fetch('https://api.resend.com/emails', {
-      method: 'POST',
-      headers: {
-        Authorization: `Bearer ${RESEND_KEY}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        from: FROM_ADDRESS,
-        to: validRecipients,
-        subject: payload.subject.slice(0, 200),
-        html: payload.html,
-        text: payload.text,
-        reply_to: payload.replyTo || REPLY_TO,
-      }),
-    })
-    if (!res.ok) {
-      const body = await res.text().catch(() => '')
-      return { delivered: 0, skipped: false, error: `Resend ${res.status}: ${body.slice(0, 200)}` }
-    }
-    return { delivered: validRecipients.length, skipped: false }
-  } catch (err) {
-    return {
-      delivered: 0,
-      skipped: false,
-      error: err instanceof Error ? err.message : 'Email send failed',
-    }
-  }
+  return sendViaProvider(payload, { keyResolver: _keyResolver })
 }
 
 // ─── Templates ──────────────────────────────────────────────────────

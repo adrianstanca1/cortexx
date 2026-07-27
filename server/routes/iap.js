@@ -11,10 +11,15 @@
 const express = require('express');
 const crypto = require('crypto');
 const router = express.Router();
+// Central credential registry — read live (supports runtime rotation + UI).
+const { getSecret } = require('../lib/secret-store');
 
-const STRIPE_KEY = process.env.STRIPE_SECRET_KEY || '';
-const STRIPE_WEBHOOK_SECRET = process.env.STRIPE_WEBHOOK_SECRET || '';
-const APPLE_SHARED_SECRET = process.env.APPLE_SHARED_SECRET || '';
+// Resolve at request time so a rotation via /api/admin/connections takes
+// effect immediately without a restart. Falls back to env if the store is
+// uninitialised (tests / direct require).
+const STRIPE_KEY = () => getSecret('stripe_secret_key');
+const STRIPE_WEBHOOK_SECRET = () => getSecret('stripe_webhook_secret');
+const APPLE_SHARED_SECRET = () => getSecret('apple_shared_secret');
 const APP_URL = process.env.PUBLIC_BASE_URL || 'https://cortexbuildpro.com';
 
 // Verify a Stripe webhook signature against the RAW request body.
@@ -93,10 +98,10 @@ async function upsertEntitlement(pool, row) {
 
 // ── Apple receipt verification ────────────────────────────────────────
 async function verifyAppleReceipt(receiptBase64) {
-  if (!APPLE_SHARED_SECRET) throw new Error('APPLE_SHARED_SECRET not configured');
+  if (!APPLE_SHARED_SECRET()) throw new Error('APPLE_SHARED_SECRET not configured');
   const body = JSON.stringify({
     'receipt-data': receiptBase64,
-    'password': APPLE_SHARED_SECRET,
+    'password': APPLE_SHARED_SECRET(),
     'exclude-old-transactions': true,
   });
   // Always try production first, fall back to sandbox on 21007
@@ -156,7 +161,7 @@ router.post('/iap/verify', async (req, res) => {
 
 // ── Stripe Checkout (subscription) ──────────────────────────────────
 router.post('/iap/checkout', async (req, res) => {
-  if (!STRIPE_KEY) return res.status(503).json({ error: 'STRIPE_SECRET_KEY not configured' });
+  if (!STRIPE_KEY()) return res.status(503).json({ error: 'STRIPE_SECRET_KEY not configured' });
   const { priceId, productId } = req.body || {};
   if (!priceId) return res.status(400).json({ error: 'priceId required' });
   try {
@@ -164,7 +169,7 @@ router.post('/iap/checkout', async (req, res) => {
     const r = await abortableFetch('https://api.stripe.com/v1/checkout/sessions', {
       method: 'POST',
       headers: {
-        authorization: 'Bearer ' + STRIPE_KEY,
+        authorization: 'Bearer ' + STRIPE_KEY(),
         'content-type': 'application/x-www-form-urlencoded',
       },
       body: form({
@@ -185,7 +190,7 @@ router.post('/iap/checkout', async (req, res) => {
 
 // ── Stripe billing portal ──────────────────────────────────────────
 router.post('/iap/portal', async (req, res) => {
-  if (!STRIPE_KEY) return res.status(503).json({ error: 'Stripe not configured' });
+  if (!STRIPE_KEY()) return res.status(503).json({ error: 'Stripe not configured' });
   const pool = req.app.locals.pool;
   if (!pool) return res.status(503).json({ error: 'no pool' });
   await ensureTable(pool);
@@ -196,7 +201,7 @@ router.post('/iap/portal', async (req, res) => {
   try {
     const r = await abortableFetch('https://api.stripe.com/v1/billing_portal/sessions', {
       method: 'POST',
-      headers: { authorization: 'Bearer ' + STRIPE_KEY, 'content-type': 'application/x-www-form-urlencoded' },
+      headers: { authorization: 'Bearer ' + STRIPE_KEY(), 'content-type': 'application/x-www-form-urlencoded' },
       body: form({ customer, return_url: APP_URL + '/Cortexx.html' }),
     });
     if (!r.ok) return res.status(502).json({ error: 'Stripe portal: ' + (await r.text()).slice(0, 200) });
@@ -237,9 +242,10 @@ router.post('/iap/webhook', async (req, res) => {
     // service — ack and ignore rather than trusting an unauthenticated body.
     if (!STRIPE_KEY) return res.json({ ok: true, skipped: 'stripe not configured' });
     // req.body is a Buffer (raw). The signature is the only authenticator for
-    // this public endpoint, so require the secret and a valid signature.
-    if (!STRIPE_WEBHOOK_SECRET) return res.status(503).json({ error: 'STRIPE_WEBHOOK_SECRET not configured' });
-    if (!verifyStripeSignature(req.body, req.headers['stripe-signature'], STRIPE_WEBHOOK_SECRET)) {
+    if (!STRIPE_KEY()) return res.json({ ok: true, skipped: 'stripe not configured' });
+    const hookSecret = STRIPE_WEBHOOK_SECRET();
+    if (!hookSecret) return res.status(503).json({ error: 'STRIPE_WEBHOOK_SECRET not configured' });
+    if (!verifyStripeSignature(req.body, req.headers['stripe-signature'], hookSecret)) {
       return res.status(400).json({ error: 'invalid signature' });
     }
     let event = null;

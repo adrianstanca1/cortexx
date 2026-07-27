@@ -397,3 +397,21 @@ CREATE TABLE IF NOT EXISTS hmrc_submissions (
   updated_at     TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_hmrc_ws ON hmrc_submissions(workspace_id, created_at DESC);
+
+-- Central API / credential registry (routes/api-connections.js).
+-- Encrypted secrets live here so integrations can be rotated at runtime from
+-- the admin console without a redeploy. The encryption key is the server's
+-- CREDENTIAL_ENCRYPTION_KEY (or derived from JWT_SECRET) — never committed.
+CREATE TABLE IF NOT EXISTS api_connections (
+  name           TEXT PRIMARY KEY,
+  category       TEXT NOT NULL,
+  provider       TEXT NOT NULL,
+  encrypted_secret TEXT,
+  config         JSONB DEFAULT '{}'::jsonb,
+  status         TEXT DEFAULT 'unknown',
+  last_tested_at TIMESTAMPTZ,
+  last_error     TEXT,
+  updated_by     TEXT,
+  updated_at     TIMESTAMPTZ DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_api_conn_cat ON api_connections(category);

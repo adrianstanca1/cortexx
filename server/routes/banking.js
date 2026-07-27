@@ -13,15 +13,20 @@ const router = express.Router();
 const crypto = require('crypto');
 const jwt = require('jsonwebtoken');
 const JWT_SECRET = process.env.JWT_SECRET || 'change-me-in-production';
+// Central credential registry — read live (supports runtime rotation + UI).
+const { getSecret } = require('../lib/secret-store');
 
-const CID = process.env.TRUELAYER_CLIENT_ID || '';
-const CSECRET = process.env.TRUELAYER_CLIENT_SECRET || '';
+// Resolve at request time so a rotation via /api/admin/connections takes
+// effect immediately without a restart. Falls back to env if the store is
+// uninitialised (tests / direct require).
+const CID = () => getSecret('truelayer_client_id');
+const CSECRET = () => getSecret('truelayer_client_secret');
 const REDIRECT = process.env.TRUELAYER_REDIRECT_URI || '';
 const ENV = (process.env.TRUELAYER_ENV || 'sandbox').toLowerCase();
 const AUTH_BASE = ENV === 'live' ? 'https://auth.truelayer.com' : 'https://auth.truelayer-sandbox.com';
 const API_BASE  = ENV === 'live' ? 'https://api.truelayer.com'  : 'https://api.truelayer-sandbox.com';
 
-const CONFIGURED = !!(CID && CSECRET && REDIRECT);
+const configured = () => !!(CID() && CSECRET() && REDIRECT);
 
 // Encryption for token-at-rest. Uses BANKING_ENC_KEY (32 bytes hex) or
 // derives from a server secret if missing (warns).
@@ -72,10 +77,9 @@ function abortableFetch(url, opts, ms) {
 async function exchangeToken(code) {
   const body = new URLSearchParams({
     grant_type: 'authorization_code',
-    client_id: CID,
-    client_secret: CSECRET,
+    client_id: CID(),
+    client_secret: CSECRET(),
     redirect_uri: REDIRECT,
-    code,
   });
   const r = await abortableFetch(AUTH_BASE + '/connect/token', {
     method: 'POST',
@@ -89,7 +93,7 @@ async function exchangeToken(code) {
 async function refreshToken(refresh_token) {
   const body = new URLSearchParams({
     grant_type: 'refresh_token',
-    client_id: CID, client_secret: CSECRET,
+    client_id: CID(), client_secret: CSECRET(),
     refresh_token,
   });
   const r = await abortableFetch(AUTH_BASE + '/connect/token', {
@@ -121,13 +125,13 @@ router.get('/banking/status', (_req, res) => {
   // leaks the deployment's callback host and the latter reveals which secret
   // backs token-at-rest encryption — both are recon value for an attacker.
   res.json({
-    configured: CONFIGURED,
+    configured: configured(),
     env: ENV,
   });
 });
 
 router.get('/banking/connect', (req, res) => {
-  if (!CONFIGURED) return res.status(503).json({ error: 'Open Banking not configured — set TRUELAYER_CLIENT_ID + TRUELAYER_CLIENT_SECRET + TRUELAYER_REDIRECT_URI' });
+  if (!configured()) return res.status(503).json({ error: 'Open Banking not configured — set TRUELAYER_CLIENT_ID + TRUELAYER_CLIENT_SECRET + TRUELAYER_REDIRECT_URI' });
   // This route is authenticated (see integrationAuth), so req.user is guaranteed.
   // The OAuth `state` is a short-lived signed token carrying the workspace/user,
   // so the PUBLIC callback below can bind the new connection to the right tenant.
@@ -138,7 +142,7 @@ router.get('/banking/connect', (req, res) => {
   res.cookie('cortexx_bank_state', nonce, { httpOnly: true, secure: true, sameSite: 'lax', maxAge: 10 * 60 * 1000 });
   const params = new URLSearchParams({
     response_type: 'code',
-    client_id: CID,
+    client_id: CID(),
     scope: 'info accounts balance cards transactions direct_debits standing_orders offline_access',
     redirect_uri: REDIRECT,
     providers: 'uk-ob-all uk-oauth-all',
@@ -148,7 +152,7 @@ router.get('/banking/connect', (req, res) => {
 });
 
 router.get('/banking/callback', async (req, res) => {
-  if (!CONFIGURED) return res.status(503).send('Open Banking not configured');
+  if (!configured()) return res.status(503).send('Open Banking not configured');
   // Verify the signed state (proves it originated from an authenticated /connect)
   // and that its embedded nonce matches the CSRF cookie set at that time.
   let st;
@@ -214,7 +218,7 @@ router.post('/banking/disconnect', async (req, res) => {
 
 router.get('/banking/transactions', async (req, res) => {
   try {
-    if (!CONFIGURED) return res.status(503).json({ error: 'Open Banking not configured' });
+    if (!configured()) return res.status(503).json({ error: 'Open Banking not configured' });
     const pool = req.app.locals.pool;
     if (!pool) return res.status(503).json({ error: 'no pool' });
     await ensureTable(pool);
