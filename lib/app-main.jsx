@@ -175,6 +175,81 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
   const openQuote = (q) => { setActiveQuote(q); setSheet('quote'); };
   const closeSheet = () => { setSheet(null); setActiveProject(null); setActiveInvoice(null); setActiveQuote(null); };
 
+  // ── Sheet back-stack ───────────────────────────────────────────────
+  // Lightweight history so browser Back (popstate), ESC and the SheetWrap
+  // "Back" button return to the PREVIOUS sheet instead of dumping the user
+  // at the base screen. Each entry snapshots the sheet key + its payloads
+  // (project / invoice / quote) so payload-dependent sheets restore intact.
+  const sheetStackRef = React.useRef([]);
+  const prevSnapRef = React.useRef({ sheet: null, project: null, invoice: null, quote: null });
+  const poppingRef = React.useRef(false);
+  const sheetBackRef = React.useRef(null);
+
+  // Plain function (not useCallback) kept fresh via ref so the single
+  // popstate/keydown subscriptions below always see the latest closure.
+  const sheetBack = (fromPopstate) => {
+    const prev = sheetStackRef.current.pop() || null;
+    poppingRef.current = true;
+    if (prev && prev.sheet) {
+      setActiveProject(prev.project || null);
+      setActiveInvoice(prev.invoice || null);
+      setActiveQuote(prev.quote || null);
+      setSheet(prev.sheet);
+      // Re-arm the history guard entry so the NEXT hardware/browser Back
+      // also steps back one sheet (guard is consumed by each popstate).
+      if (fromPopstate && window.history && window.history.pushState) {
+        window.history.pushState({ cortexxSheet: true }, '', window.location.href);
+      }
+    } else {
+      setActiveProject(null); setActiveInvoice(null); setActiveQuote(null); setSheet(null);
+    }
+  };
+  sheetBackRef.current = sheetBack;
+
+  // Track sheet transitions: push a snapshot of where we came FROM.
+  React.useEffect(() => {
+    const prev = prevSnapRef.current;
+    prevSnapRef.current = { sheet, project: activeProject, invoice: activeInvoice, quote: activeQuote };
+    if (poppingRef.current) { poppingRef.current = false; return; }
+    if (sheet && prev.sheet !== sheet) {
+      sheetStackRef.current.push(prev);
+      if (sheetStackRef.current.length > 30) sheetStackRef.current.shift();
+      // One history guard entry per base→sheet open (not per hop), so a
+      // fully-closed sheet never leaves the user trapped behind N entries.
+      if (!prev.sheet && window.history && window.history.pushState) {
+        window.history.pushState({ cortexxSheet: true }, '', window.location.href);
+      }
+    }
+    if (!sheet) sheetStackRef.current = [];
+  }, [sheet, activeProject, activeInvoice, activeQuote]);
+
+  // Browser / Android-PWA Back button steps back one sheet while any is open.
+  React.useEffect(() => {
+    const onPop = () => { if (prevSnapRef.current.sheet && sheetBackRef.current) sheetBackRef.current(true); };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+
+  // ESC steps back one sheet (ignored while typing in a field so inline
+  // edit-cancel handlers keep their own Escape semantics).
+  React.useEffect(() => {
+    const onEsc = (e) => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      const t = e.target;
+      const tag = t && t.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || (t && t.isContentEditable)) return;
+      if (prevSnapRef.current.sheet && sheetBackRef.current) sheetBackRef.current(false);
+    };
+    window.addEventListener('keydown', onEsc);
+    return () => window.removeEventListener('keydown', onEsc);
+  }, []);
+
+  // Expose for SheetWrap's Back affordance (and any screen that wants it).
+  React.useEffect(() => {
+    window.cortexxSheetBack = () => { if (sheetBackRef.current) sheetBackRef.current(false); };
+    return () => { if (window.cortexxSheetBack) delete window.cortexxSheetBack; };
+  }, []);
+
   // First-run onboarding trigger
   React.useEffect(() => {
     if (!localStorage.getItem('cortexx_onboarded')) {
@@ -678,7 +753,7 @@ function SheetWrap({ title, onClose, accent, children }) {
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
         background: T.bg0, position: 'relative', zIndex: 5,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button onClick={() => { if (window.cortexxSheetBack) window.cortexxSheetBack(); else onClose(); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>{title}</div>

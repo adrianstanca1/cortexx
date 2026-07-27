@@ -287,6 +287,85 @@ function CortexxApp({
     setActiveInvoice(null);
     setActiveQuote(null);
   };
+  const sheetStackRef = React.useRef([]);
+  const prevSnapRef = React.useRef({
+    sheet: null,
+    project: null,
+    invoice: null,
+    quote: null
+  });
+  const poppingRef = React.useRef(false);
+  const sheetBackRef = React.useRef(null);
+  const sheetBack = fromPopstate => {
+    const prev = sheetStackRef.current.pop() || null;
+    poppingRef.current = true;
+    if (prev && prev.sheet) {
+      setActiveProject(prev.project || null);
+      setActiveInvoice(prev.invoice || null);
+      setActiveQuote(prev.quote || null);
+      setSheet(prev.sheet);
+      if (fromPopstate && window.history && window.history.pushState) {
+        window.history.pushState({
+          cortexxSheet: true
+        }, '', window.location.href);
+      }
+    } else {
+      setActiveProject(null);
+      setActiveInvoice(null);
+      setActiveQuote(null);
+      setSheet(null);
+    }
+  };
+  sheetBackRef.current = sheetBack;
+  React.useEffect(() => {
+    const prev = prevSnapRef.current;
+    prevSnapRef.current = {
+      sheet,
+      project: activeProject,
+      invoice: activeInvoice,
+      quote: activeQuote
+    };
+    if (poppingRef.current) {
+      poppingRef.current = false;
+      return;
+    }
+    if (sheet && prev.sheet !== sheet) {
+      sheetStackRef.current.push(prev);
+      if (sheetStackRef.current.length > 30) sheetStackRef.current.shift();
+      if (!prev.sheet && window.history && window.history.pushState) {
+        window.history.pushState({
+          cortexxSheet: true
+        }, '', window.location.href);
+      }
+    }
+    if (!sheet) sheetStackRef.current = [];
+  }, [sheet, activeProject, activeInvoice, activeQuote]);
+  React.useEffect(() => {
+    const onPop = () => {
+      if (prevSnapRef.current.sheet && sheetBackRef.current) sheetBackRef.current(true);
+    };
+    window.addEventListener('popstate', onPop);
+    return () => window.removeEventListener('popstate', onPop);
+  }, []);
+  React.useEffect(() => {
+    const onEsc = e => {
+      if (e.key !== 'Escape' || e.defaultPrevented) return;
+      const t = e.target;
+      const tag = t && t.tagName;
+      if (tag === 'INPUT' || tag === 'TEXTAREA' || tag === 'SELECT' || t && t.isContentEditable) return;
+      if (prevSnapRef.current.sheet && sheetBackRef.current) sheetBackRef.current(false);
+    };
+    window.addEventListener('keydown', onEsc);
+    return () => window.removeEventListener('keydown', onEsc);
+  }, []);
+  React.useEffect(() => {
+    window.cortexxSheetBack = () => {
+      if (sheetBackRef.current) sheetBackRef.current(false);
+    };
+    return () => {
+      if (window.cortexxSheetBack) delete window.cortexxSheetBack;
+    };
+  }, []);
   React.useEffect(() => {
     if (!localStorage.getItem('cortexx_onboarded')) {
       setTimeout(() => setSheet('onboarding'), 400);
@@ -1466,7 +1545,9 @@ function SheetWrap({
       zIndex: 5
     }
   }, React.createElement("button", {
-    onClick: onClose,
+    onClick: () => {
+      if (window.cortexxSheetBack) window.cortexxSheetBack();else onClose();
+    },
     style: {
       background: 'none',
       border: 'none',

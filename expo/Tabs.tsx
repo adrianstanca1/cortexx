@@ -1,5 +1,5 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet, BackHandler, Platform } from 'react-native';
 import { Colors } from './theme';
 import ProjectsScreen from './ProjectsScreen';
 import ProjectDetailScreen from './ProjectDetailScreen';
@@ -60,6 +60,18 @@ export default function Tabs({ onLogout }: { onLogout: () => void }) {
       setPending(pendingWrites());
     } catch { /* ignore */ }
   };
+
+  // Android hardware back: step back through the in-app nav state instead of
+  // exiting the app. Project detail → project list → Home tab → (default: exit).
+  React.useEffect(() => {
+    if (Platform.OS !== 'android') return;
+    const sub = BackHandler.addEventListener('hardwareBackPress', () => {
+      if (selectedProject) { setSelectedProject(null); return true; }
+      if (tab !== 'overview') { setTab('overview'); return true; }
+      return false; // on Home with nothing open — let Android exit/background
+    });
+    return () => sub.remove();
+  }, [selectedProject, tab]);
 
   return (
     <View style={styles.wrap}>
