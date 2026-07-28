@@ -191,6 +191,41 @@ services:
       - traefik.http.routers.cortexx-admin-alt.entrypoints=websecure
       - traefik.http.routers.cortexx-admin-alt.tls.certresolver=letsencrypt
 
+  # ── app: Next.js main application server (standalone) ──
+  # Serves app-router routes, especially /api/cron/*, which the Express API
+  # does not implement. The static web tenant and all other /api/* traffic
+  # remain on Caddy + the Express API. Built from the pre-generated
+  # .next/standalone bundle; Prisma client is generated inside the image so
+  # the native engine matches the Alpine container.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: ./server/.env
+        required: false
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/cortexx
+      PORT: 3010
+      HOSTNAME: 0.0.0.0
+      NODE_ENV: production
+      NEXTAUTH_URL: https://cortexbuildpro.com
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-nextauth-secret}
+    expose:
+      - "3010"
+    healthcheck:
+      # Any HTTP response (including 401) means the server is up; only a
+      # connection failure should mark the container unhealthy.
+      test: ["CMD-SHELL", "curl -sS http://127.0.0.1:3010/api/cron/overdue-invoices -o /dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
 volumes:
   cortexx_pgdata:
   cortexx_ollama:

@@ -8,6 +8,13 @@
 	root * /srv/app
 	encode gzip zstd
 
+	# ── Cron routes → Next.js standalone app server ──
+	# The Express API does not implement /api/cron/*; the Next.js app router
+	# does. Route these specifically before the catch-all /api/* below.
+	handle /api/cron/* {
+		reverse_proxy app:3010
+	}
+
 	# ── API + realtime + webhooks → Node service ──
 	handle /api/* {
 		reverse_proxy api:3001

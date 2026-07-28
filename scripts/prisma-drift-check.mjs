@@ -107,7 +107,7 @@ function main() {
     'portal_tokens', 'portal_messages', 'magic_links', 'site_maps', 'sync_log',
     'receipts', 'cis_subs', 'cis_payments', 'timesheets', 'diary_entries',
     'change_orders', 'subs', 'notifications', 'activity_log', 'bank_connections',
-    'iap_entitlements', 'hmrc_submissions',
+    'iap_entitlements', 'hmrc_submissions', 'api_connections',
   ]);
   // KNOWN_GAPS: real tables that SHOULD have a Prisma model but don't yet.
   // Tracked in docs/DATA_MODEL_DRIFT.md — TODO: add `model Workspace`.
