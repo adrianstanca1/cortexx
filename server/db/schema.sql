@@ -211,6 +211,16 @@ CREATE INDEX idx_sync_ws_at ON sync_log(workspace_id, at);
 
 -- ════════════════════════════════════════════════════════════
 -- ── v1.3 sync gap closure: high-traffic collections ────────
+--
+-- NOTE: the `id TEXT PRIMARY KEY` declared on the tables below is NOT the
+-- final shape. Migration 007 replaces it with a workspace-scoped
+-- UNIQUE (workspace_id, id) so each tenant gets its own id namespace, and
+-- server/index.js applies that migration on every boot (before binding the
+-- socket), so a database created from this file is converted immediately.
+-- The primary key is left declared here only so `cis_payments.sub_id
+-- REFERENCES cis_subs(id)` is satisfiable at init time; migration 007
+-- re-creates that reference as workspace-scoped too.
+--
 -- All carry a `data JSONB` column so they can store any extra
 -- fields the frontend invents (forward-compatible) without
 -- schema churn. Hot fields are promoted to typed columns for
@@ -320,7 +330,11 @@ CREATE TABLE IF NOT EXISTS notifications (
   id           TEXT PRIMARY KEY,
   workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
   user_id      TEXT, title TEXT, body TEXT, kind TEXT, read BOOLEAN DEFAULT false,
-  data         JSONB, created_at TIMESTAMPTZ DEFAULT now()
+  -- `updated_at` is required by the generic /api/:collection writer, which is
+  -- shared by every TEXT-id + JSONB table. Without it, writes to this table
+  -- fail with `column "updated_at" ... does not exist`.
+  data         JSONB, created_at TIMESTAMPTZ DEFAULT now(),
+  updated_at   TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX IF NOT EXISTS idx_notifs_user ON notifications(workspace_id, user_id, created_at DESC);
 

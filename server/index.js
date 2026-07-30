@@ -11,6 +11,8 @@ const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 // Denylist for the generic /api/:collection CRUD catch-all — keeps system/
 // auth/audit/integration-secret tables off the generic REST path entirely.
 const { isRestrictedCollection } = require('./security');
@@ -312,59 +314,45 @@ app.post('/api/support/tickets/lookup', authLimiter, wrap(async (req, res) => {
 // ── Mounted route modules (MUST be before the generic /api/:collection
 //    handlers below, or Express would shadow these specific paths) ──────────
 app.use('/api/portal', portalLimiter, require('./routes/portal')(pool, bus));   // PUBLIC, token-scoped
-app.use('/api', apiLimiter, require('./routes/sync')(pool, auth));               // sync + portal inbox
-app.use('/api', apiLimiter, require('./routes/ledger')(pool, auth));            // ledger CSV
-app.use('/api', apiLimiter, require('./routes/agents')(pool, auth, bus));                    // AI triage + inbound webhooks (rate-limited; /triage calls a paid upstream)
-app.use('/api', apiLimiter, integrationAuth, require('./routes/llm'));           // local LLM (Ollama/OpenAI-compat) — replaces third-party API
-app.use('/api', apiLimiter, integrationAuth, require('./routes/payments'));      // Stripe / GoCardless / bank-transfer link generation
-app.use('/api', apiLimiter, integrationAuth, require('./routes/push'));          // Web Push (VAPID) + native APNs/FCM passthrough
-app.use('/api', apiLimiter, integrationAuth, require('./routes/banking'));       // Open Banking (TrueLayer) — auto-pull bank statements
-app.use('/api', apiLimiter, integrationAuth, require('./routes/iap'));           // In-app subscriptions (StoreKit + Stripe Checkout)
-app.use('/api', apiLimiter, integrationAuth, require('./routes/hmrc'));          // HMRC Transaction Engine (CIS300 + GovTalk envelope)
-app.use('/api', apiLimiter, require('./routes/intelligence')(pool, auth));       // v1.7 server-side intelligence (7 domains)
+
+// Rate-limit everything below this line ONCE.
+//
+// `apiLimiter` is a single middleware instance backed by one counter store, and
+// it used to be listed on all ten `app.use('/api', …)` mounts plus each leaf
+// route. Express runs every one of those on a matching request, and each pass
+// spends a token, so one HTTP call consumed ~11 — the effective budget was 27
+// requests/minute, not the 300 configured. The SPA syncs ~50 collections on
+// load, so it hit 429 during normal startup. Applying it here, once, ahead of
+// the mounted routers gives every /api route below exactly one token per
+// request. Routes registered ABOVE this line carry their own limiter
+// (authLimiter on /api/auth/*, portalLimiter on /api/portal/*), so they are
+// deliberately not covered twice.
+app.use('/api', apiLimiter);
+
+app.use('/api', require('./routes/sync')(pool, auth));               // sync + portal inbox
+app.use('/api', require('./routes/ledger')(pool, auth));            // ledger CSV
+app.use('/api', require('./routes/agents')(pool, auth, bus));                    // AI triage + inbound webhooks (rate-limited; /triage calls a paid upstream)
+app.use('/api', integrationAuth, require('./routes/llm'));           // local LLM (Ollama/OpenAI-compat) — replaces third-party API
+app.use('/api', integrationAuth, require('./routes/payments'));      // Stripe / GoCardless / bank-transfer link generation
+app.use('/api', integrationAuth, require('./routes/push'));          // Web Push (VAPID) + native APNs/FCM passthrough
+app.use('/api', integrationAuth, require('./routes/banking'));       // Open Banking (TrueLayer) — auto-pull bank statements
+app.use('/api', integrationAuth, require('./routes/iap'));           // In-app subscriptions (StoreKit + Stripe Checkout)
+app.use('/api', integrationAuth, require('./routes/hmrc'));          // HMRC Transaction Engine (CIS300 + GovTalk envelope)
+app.use('/api', require('./routes/intelligence')(pool, auth));       // v1.7 server-side intelligence (7 domains)
 
 // ── Generic collection REST (mirrors frontend Backend.db.*) ──
-// Typed collections — these have first-class DB tables. Anything else falls
-// through to the generic `documents_store` JSON catch-all.
-const NATIVE = new Set([
-  'projects', 'tasks', 'team', 'team_members', 'invoices', 'quotes',
-  // v1.3 gap closure (all use TEXT id + data JSONB)
-  'receipts', 'cisSubs', 'cisPayments', 'timesheets', 'diary',
-  'snags', 'changeOrders', 'rfis', 'subs', 'materials',
-  'documentsMeta', 'equipment', 'notifications', 'siteMaps',
-  // NOTE: 'activity' intentionally excluded — activity_log uses a BIGSERIAL id
-  // (not the TEXT-id + JSONB write shape), so it lives in documents_store like
-  // the other ~36 lighter collections. Keeps read/write paths consistent.
-]);
+// The collection registry (which tables are typed, their table names, order
+// columns and the workspace-scoped upsert) lives in ./collections so it can be
+// asserted against schema.sql in tests.
+const { NATIVE, TYPED_JSONB, tableFor, orderColumnFor, typedUpsertSql } = require('./collections');
 
-// camelCase collection name → snake_case table name
-const TABLE_NAMES = {
-  team:           'team_members',
-  cisSubs:        'cis_subs',
-  cisPayments:    'cis_payments',
-  changeOrders:   'change_orders',
-  diary:          'diary_entries',
-  documentsMeta:  'documents_meta',
-  activity:       'activity_log',
-  siteMaps:       'site_maps',
-};
-const tableFor = (c) => TABLE_NAMES[c] || c;
-
-app.get('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
+app.get('/api/:collection', auth, wrap(async (req, res) => {
   const { collection } = req.params;
   if (isRestrictedCollection(collection))
     return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
   if (NATIVE.has(collection)) {
     const tbl = tableFor(collection);
-    // Order by a column each table actually has (many lack created_at).
-    const ORDER = {
-      projects: 'created_at', tasks: 'created_at',
-      invoices: 'issued', quotes: 'issued',
-      team: 'name', team_members: 'name',
-      activity: 'at', notifications: 'created_at',
-    };
-    let orderCol = ORDER[collection];
-    if (!orderCol) orderCol = ['receipts','cisSubs','cisPayments','timesheets','diary','snags','changeOrders','rfis','subs','materials','documentsMeta','equipment','siteMaps'].includes(collection) ? 'updated_at' : 'id';
+    const orderCol = orderColumnFor(collection);
     // Optional pagination — default is unbounded to preserve the SPA's full-sync
     // model, but callers can pass ?limit=&?offset= to page large collections.
     const lim = Math.min(Math.max(parseInt(req.query.limit, 10) || 0, 0), 5000);
@@ -381,24 +369,17 @@ app.get('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
   res.json(r.rows.map(row => ({ id: row.doc_id, ...row.data })));
 }));
 
-// Tables that have a TEXT id + data JSONB shape (v1.3 gap closure schema)
-const TYPED_JSONB = new Set([
-  'receipts','cisSubs','cisPayments','timesheets','diary','snags','changeOrders',
-  'rfis','subs','materials','documentsMeta','equipment','notifications','siteMaps',
-]);
-
-app.post('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
+app.post('/api/:collection', auth, wrap(async (req, res) => {
   const { collection } = req.params;
   if (isRestrictedCollection(collection))
     return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
   const docId = req.body.id || crypto.randomUUID();
   if (TYPED_JSONB.has(collection)) {
     const tbl = tableFor(collection);
-    await pool.query(
-      `INSERT INTO ${tbl} (id, workspace_id, data) VALUES ($1,$2,$3)
-       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now()`,
-      [docId, req.user.ws, req.body]
-    );
+    const r = await pool.query(typedUpsertSql(tbl), [docId, req.user.ws, req.body]);
+    // Zero rows means the id is already held by a different workspace — see
+    // typedUpsertSql. Refuse rather than write into another tenant.
+    if (!r.rowCount) return res.status(409).json({ error: 'id_conflict', message: 'That id is already in use.' });
     bus.emit(req.user.ws, { type: 'change', collection, op: 'create', id: docId });
     return res.json({ id: docId, ...req.body });
   }
@@ -411,17 +392,14 @@ app.post('/api/:collection', apiLimiter, auth, wrap(async (req, res) => {
   res.json({ id: docId, ...req.body });
 }));
 
-app.put('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
+app.put('/api/:collection/:id', auth, wrap(async (req, res) => {
   const { collection, id } = req.params;
   if (isRestrictedCollection(collection))
     return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
   if (TYPED_JSONB.has(collection)) {
     const tbl = tableFor(collection);
-    await pool.query(
-      `INSERT INTO ${tbl} (id, workspace_id, data) VALUES ($1,$2,$3)
-       ON CONFLICT (id) DO UPDATE SET data=$3, updated_at=now()`,
-      [id, req.user.ws, { ...req.body, id }]
-    );
+    const r = await pool.query(typedUpsertSql(tbl), [id, req.user.ws, { ...req.body, id }]);
+    if (!r.rowCount) return res.status(409).json({ error: 'id_conflict', message: 'That id is already in use.' });
     bus.emit(req.user.ws, { type: 'change', collection, op: 'update', id });
     return res.json({ id, ...req.body });
   }
@@ -434,7 +412,7 @@ app.put('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
   res.json({ id, ...req.body });
 }));
 
-app.delete('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
+app.delete('/api/:collection/:id', auth, wrap(async (req, res) => {
   const { collection, id } = req.params;
   if (isRestrictedCollection(collection))
     return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
@@ -450,7 +428,7 @@ app.delete('/api/:collection/:id', apiLimiter, auth, wrap(async (req, res) => {
 }));
 
 // ── AI proxy (local-first: Ollama; Anthropic only if a key is present) ──
-app.post('/api/ai', apiLimiter, auth, wrap(async (req, res) => {
+app.post('/api/ai', auth, wrap(async (req, res) => {
   const messages = req.body.messages || [];
   let text = '';
   if (process.env.ANTHROPIC_API_KEY) {
@@ -472,7 +450,7 @@ app.post('/api/ai', apiLimiter, auth, wrap(async (req, res) => {
 }));
 
 // ── AI History (persisted conversation log) ─────────────────
-app.get('/api/ai/history', apiLimiter, auth, wrap(async (req, res) => {
+app.get('/api/ai/history', auth, wrap(async (req, res) => {
   const limit = Math.min(parseInt(req.query.limit) || 50, 200);
   const r = await pool.query(
     'SELECT id, user_msg, ai_reply, created_at FROM ai_history WHERE workspace_id=$1 ORDER BY created_at DESC LIMIT $2',
@@ -481,13 +459,13 @@ app.get('/api/ai/history', apiLimiter, auth, wrap(async (req, res) => {
   res.json({ history: r.rows });
 }));
 
-app.delete('/api/ai/history', apiLimiter, auth, wrap(async (req, res) => {
+app.delete('/api/ai/history', auth, wrap(async (req, res) => {
   await pool.query('DELETE FROM ai_history WHERE workspace_id=$1', [req.user.ws]);
   res.json({ ok: true });
 }));
 
 // ── Audit (hash-chained) ────────────────────────────────────
-app.post('/api/audit', apiLimiter, auth, wrap(async (req, res) => {
+app.post('/api/audit', auth, wrap(async (req, res) => {
   const prev = await pool.query('SELECT hash FROM audit_log WHERE workspace_id=$1 ORDER BY id DESC LIMIT 1', [req.user.ws]);
   const prevHash = prev.rows[0]?.hash || '';
   const { actor, action, target } = req.body;
@@ -525,12 +503,12 @@ async function adminAuth(req, res, next) {
 // The full operator surface (tenants, users, billing, support, activity, audit,
 // operator actions) lives in server/routes/admin.js. Mounting it under
 // /api/admin keeps every operator endpoint behind adminAuth.
-app.use('/api/admin', apiLimiter, require('./routes/admin')(pool, auth, adminAuth, wrap, bus));
+app.use('/api/admin', require('./routes/admin')(pool, auth, adminAuth, wrap, bus));
 // Enhanced operator surface: features (VERA), RBAC/packages, AI control plane, settings.
-app.use('/api/admin', apiLimiter, require('./routes/admin-features')(pool, auth, adminAuth, wrap, bus));
-app.use('/api/admin', apiLimiter, require('./routes/admin-ai')(pool, auth, adminAuth, wrap, bus));
+app.use('/api/admin', require('./routes/admin-features')(pool, auth, adminAuth, wrap, bus));
+app.use('/api/admin', require('./routes/admin-ai')(pool, auth, adminAuth, wrap, bus));
 // Central API registry (operator surface): list / rotate / test integrations.
-app.use('/api/admin', apiLimiter, require('./routes/api-connections')(pool, auth, adminAuth, wrap));
+app.use('/api/admin', require('./routes/api-connections')(pool, auth, adminAuth, wrap));
 
 // ── 404 + error handler ─────────────────────────────────────
 app.use('/api', (req, res) => res.status(404).json({ error: 'not_found' }));
@@ -543,10 +521,11 @@ const PORT = process.env.PORT || 3001;
 // Only bind + listen when run directly (`node server/index.js`). When required
 // by a test it exposes `app`/`server`/`pool` without opening a socket, so tests
 // can mount it on an ephemeral port. Runtime production behavior is unchanged.
-// Idempotent boot migration for the platform-admin flag. schema.sql only runs
-// on a FRESH Postgres volume init (docker-entrypoint-initdb.d), but the live
-// `cortexx_pgdata` volume predates the `is_platform_admin` column — so add it
-// here on every boot. `ADD COLUMN IF NOT EXISTS` makes it a no-op once applied.
+// Idempotent boot migrations. schema.sql only runs on a FRESH Postgres volume
+// init (docker-entrypoint-initdb.d), but the live `cortexx_pgdata` volume
+// predates several schema changes — so they are (re)applied here on every boot.
+// Every statement below is a no-op once applied. This also grants the
+// platform-admin flag from the env allowlist, described below.
 //
 // Operator authority is granted ONLY from the declarative PLATFORM_ADMIN_EMAILS
 // env allowlist — the operator's source of truth. We deliberately do NOT
@@ -562,6 +541,17 @@ async function ensurePlatformAdmin() {
   // Keeps a live (pre-migration) volume working without a manual ALTER.
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT false');
   await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ DEFAULT now()');
+  // `notifications` shipped without the `updated_at` column that the generic
+  // /api/:collection writer sets on every TEXT-id + JSONB table, so every write
+  // to that collection failed. Same reason as above: the live volume predates
+  // the schema.sql fix, so add it on boot.
+  await pool.query('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()');
+  // Migration 007 swaps the global `id` primary key on the v1.3 typed tables
+  // for a workspace-scoped UNIQUE (workspace_id, id) — the conflict target the
+  // generic upsert now uses, so writes to those collections fail until it has
+  // run. It is idempotent, so applying it on every boot is a no-op once done.
+  await pool.query(
+    fs.readFileSync(path.join(__dirname, 'db/migrations/007_workspace_scoped_ids.sql'), 'utf8'));
   const emails = (process.env.PLATFORM_ADMIN_EMAILS || '')
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   if (emails.length) {
