@@ -55,15 +55,24 @@ function fakePool() {
         const rows = (store.get(tbl) || []).filter(r => r.workspace_id === ws);
         return Promise.resolve({ rows });
       }
-      // NATIVE table INSERT: INSERT INTO <tbl> (id, workspace_id, data) VALUES ($1,$2,$3)
+      // NATIVE typed upsert:
+      //   INSERT INTO <tbl> (id, workspace_id, data) VALUES ($1,$2,$3)
+      //   ON CONFLICT (workspace_id, id) DO UPDATE ... WHERE <tbl>.workspace_id=$2
+      //   RETURNING id
+      // Ids are unique per workspace (migration 007), so a row is matched on
+      // BOTH columns — two workspaces may legitimately hold the same id. The
+      // route reads `rowCount` to tell "wrote" from "refused", so return it the
+      // way pg does: 1 with the returned row, or 0 when nothing matched.
       m = s.match(/INSERT INTO (\w+) \(id, workspace_id, data\) VALUES \(\$1,\$2,\$3\)/);
       if (m) {
         const tbl = m[1];
         const [id, w, data] = params;
         const arr = store.get(tbl) || [];
-        arr.push({ id, workspace_id: w, data });
+        const existing = arr.find(r => String(r.id) === String(id) && r.workspace_id === w);
+        if (existing) existing.data = data;
+        else arr.push({ id, workspace_id: w, data });
         store.set(tbl, arr);
-        return Promise.resolve({ rows: [{ id }] });
+        return Promise.resolve({ rows: [{ id }], rowCount: 1 });
       }
       // auth resolution (role/admin lookups)
       if (s.includes('SELECT role FROM users')) return Promise.resolve({ rows: [{ role: 'admin' }] });
