@@ -142,6 +142,11 @@ services:
       - ./Cortexx_Marketing.html:/srv/app/Cortexx_Marketing.html:ro
       - ./manifest.json:/srv/app/manifest.json:ro
       - ./sw.js:/srv/app/sw.js:ro
+      # landing.html references /browserconfig.xml via <meta
+      # name="msapplication-config">. Without this mount the Caddyfile's
+      # `try_files {path} /landing.html` fallback answered that request with
+      # the landing page HTML instead of the tile config.
+      - ./browserconfig.xml:/srv/app/browserconfig.xml:ro
       - ./icon-192.png:/srv/app/icon-192.png:ro
       - ./icon-512.png:/srv/app/icon-512.png:ro
       - ./apple-touch-icon.png:/srv/app/apple-touch-icon.png:ro

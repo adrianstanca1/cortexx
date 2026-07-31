@@ -1,6 +1,11 @@
 import { defineConfig, devices } from '@playwright/test'
 
 const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000'
+// The PWA ships from the repo root via Caddy, not from the Next app (which
+// serves only public/). These specs therefore run against a static server that
+// stands in for Caddy — see scripts/static-server.mjs.
+const pwaBaseURL = process.env.PLAYWRIGHT_PWA_BASE_URL || 'http://127.0.0.1:3101'
+const PWA_SPECS = ['**/cortexx-pwa.spec.mjs', '**/landing-3d.spec.mjs', '**/pwa-offline.spec.mjs']
 
 export default defineConfig({
   testDir: './test/e2e',
@@ -24,8 +29,10 @@ export default defineConfig({
     navigationTimeout: 30_000,
   },
   projects: [
+    // ── Next.js app journeys (authenticated UI) ──────────────────────────
     {
       name: 'desktop-chromium',
+      testIgnore: PWA_SPECS,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1440, height: 1000 },
@@ -33,14 +40,42 @@ export default defineConfig({
     },
     {
       name: 'mobile-chromium',
+      testIgnore: PWA_SPECS,
       use: {
         ...devices['Pixel 7'],
         isMobile: true,
         hasTouch: true,
       },
     },
+    // ── PWA journeys (static repo-root bundle, Caddy-equivalent) ─────────
+    {
+      name: 'pwa-desktop-chromium',
+      testMatch: PWA_SPECS,
+      use: {
+        ...devices['Desktop Chrome'],
+        viewport: { width: 1440, height: 1000 },
+        baseURL: pwaBaseURL,
+      },
+    },
+    {
+      name: 'pwa-mobile-chromium',
+      testMatch: PWA_SPECS,
+      use: {
+        ...devices['Pixel 7'],
+        isMobile: true,
+        hasTouch: true,
+        baseURL: pwaBaseURL,
+      },
+    },
   ],
-  webServer: {
+  webServer: [{
+    // Stands in for Caddy: serves the PWA off the repo root.
+    command: 'node scripts/static-server.mjs',
+    url: `${pwaBaseURL}/landing.html`,
+    reuseExistingServer: !process.env.CI,
+    timeout: 30_000,
+    env: { ...process.env, PORT: new URL(pwaBaseURL).port },
+  }, {
     command: 'npm run dev',
     // Poll /login, not /: proxy.ts rewrites unauthenticated / to
     // /legacy/Cortexx-standalone.html, which lives only on the VPS (never
@@ -56,5 +91,5 @@ export default defineConfig({
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'local-playwright-secret-change-me',
       AUTH_SECRET: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'local-playwright-secret-change-me',
     },
-  },
+  }],
 })
