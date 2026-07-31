@@ -9,10 +9,18 @@ test.describe('Landing page — 3D construction experience', () => {
     const canvas = page.locator('#hero-canvas')
     await expect(canvas).toBeVisible()
 
-    // Verify WebGL context exists
+    // Verify a WebGL context exists.
+    //
+    // Ask for 'webgl2' FIRST. A canvas only ever returns the context type it
+    // was first created with, and three.js r128 takes a WebGL2 context — so
+    // `getContext('webgl')` on the hero canvas returns null exactly when the 3D
+    // scene is working, which is how this assertion failed on CI while passing
+    // anywhere three.js had not loaded.
     const hasWebGL = await page.evaluate(() => {
       const canvas = document.getElementById('hero-canvas')
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl')
+      const gl = canvas.getContext('webgl2')
+        || canvas.getContext('webgl')
+        || canvas.getContext('experimental-webgl')
       return !!gl
     })
     expect(hasWebGL).toBe(true)
