@@ -44,7 +44,9 @@ test.describe('Cortexx PWA — core functionality', () => {
 
   test('offline mode serves cached content', async ({ page, context }) => {
     await page.goto('/Cortexx.html')
-    await page.waitForTimeout(500)
+    // Same reason as pwa-offline.spec.mjs: wait for the service worker to be
+    // active rather than sleeping a fixed delay, which made this flaky.
+    await page.evaluate(() => navigator.serviceWorker.ready)
 
     await context.setOffline(true)
     await page.reload()

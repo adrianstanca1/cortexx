@@ -6,6 +6,17 @@ const baseURL = process.env.PLAYWRIGHT_BASE_URL || 'http://127.0.0.1:3000'
 // stands in for Caddy — see scripts/static-server.mjs.
 const pwaBaseURL = process.env.PLAYWRIGHT_PWA_BASE_URL || 'http://127.0.0.1:3101'
 const PWA_SPECS = ['**/cortexx-pwa.spec.mjs', '**/landing-3d.spec.mjs', '**/pwa-offline.spec.mjs']
+// landing.html's hero is a three.js/WebGL canvas, and `canvas.getContext
+// ('webgl')` returned null on CI, so the 3D test failed on browser capability
+// rather than on anything about the page.
+//
+// Playwright launches the *chromium headless shell* by default, which ships
+// without the GL stack. `channel: 'chromium'` selects the full browser instead
+// — verified locally that the full binary reports a WebGL context where the
+// shell does not. The SwiftShader args then supply software rendering, since CI
+// runners have no GPU.
+const WEBGL_CHANNEL = 'chromium'
+const WEBGL_ARGS = ['--use-gl=angle', '--use-angle=swiftshader', '--enable-unsafe-swiftshader']
 
 export default defineConfig({
   testDir: './test/e2e',
@@ -51,20 +62,28 @@ export default defineConfig({
     {
       name: 'pwa-desktop-chromium',
       testMatch: PWA_SPECS,
+      // The service worker precaches the entire app source before anything can
+      // be served offline, which is slower than the app journeys' 45s budget.
+      timeout: 90_000,
       use: {
         ...devices['Desktop Chrome'],
         viewport: { width: 1440, height: 1000 },
         baseURL: pwaBaseURL,
+        channel: WEBGL_CHANNEL,
+        launchOptions: { args: WEBGL_ARGS },
       },
     },
     {
       name: 'pwa-mobile-chromium',
       testMatch: PWA_SPECS,
+      timeout: 90_000,
       use: {
         ...devices['Pixel 7'],
         isMobile: true,
         hasTouch: true,
         baseURL: pwaBaseURL,
+        channel: WEBGL_CHANNEL,
+        launchOptions: { args: WEBGL_ARGS },
       },
     },
   ],

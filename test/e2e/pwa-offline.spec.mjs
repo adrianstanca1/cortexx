@@ -38,7 +38,16 @@ test.describe('PWA — manifest, service worker, offline', () => {
   test('offline.html is cached and accessible', async ({ page, context }) => {
     // First visit to cache resources
     await page.goto('/landing.html')
-    await page.waitForTimeout(500)
+    // Wait for the service worker to be active AND controlling this page rather
+    // than sleeping a fixed 500ms. Nothing can be served from cache until a
+    // controller exists, so the old timeout raced activation and the offline
+    // navigation then failed outright with ERR_INTERNET_DISCONNECTED — testing
+    // the race, not the offline behaviour. The page that registers a worker is
+    // not controlled by it until clients.claim() lands, so reload once to be
+    // certain instead of depending on that timing.
+    await page.evaluate(() => navigator.serviceWorker.ready)
+    await page.reload()
+    await page.evaluate(() => navigator.serviceWorker.ready)
 
     // Go offline
     await context.setOffline(true)

@@ -54,7 +54,13 @@ test.describe('Landing page — 3D construction experience', () => {
   test('CTA buttons navigate to app', async ({ page }) => {
     await page.goto('/landing.html')
 
-    const cta = page.locator('a[href="Cortexx.html"]').first()
+    // Four elements link to the app. The first in DOM order lives in
+    // `.nav-links`, which landing.html deliberately hides below 900px
+    // (`@media (max-width: 900px) { .nav-links { display: none } }`), so
+    // `.first()` picked a hidden element on the mobile project. The visible
+    // route to the app on mobile is `.nav-cta` plus the hero buttons — assert
+    // that at least one CTA is actually reachable, on every viewport.
+    const cta = page.locator('a[href="Cortexx.html"]:visible').first()
     await expect(cta).toBeVisible()
     await expect(cta).toHaveAttribute('href', 'Cortexx.html')
   })
