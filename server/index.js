@@ -11,8 +11,6 @@ const rateLimit = require('express-rate-limit');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const crypto = require('crypto');
-const fs = require('fs');
-const path = require('path');
 // Denylist for the generic /api/:collection CRUD catch-all — keeps system/
 // auth/audit/integration-secret tables off the generic REST path entirely.
 const { isRestrictedCollection } = require('./security');
@@ -350,23 +348,46 @@ app.get('/api/:collection', auth, wrap(async (req, res) => {
   const { collection } = req.params;
   if (isRestrictedCollection(collection))
     return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
-  if (NATIVE.has(collection)) {
-    const tbl = tableFor(collection);
-    const orderCol = orderColumnFor(collection);
-    // Optional pagination — default is unbounded to preserve the SPA's full-sync
-    // model, but callers can pass ?limit=&?offset= to page large collections.
-    const lim = Math.min(Math.max(parseInt(req.query.limit, 10) || 0, 0), 5000);
-    const off = Math.max(parseInt(req.query.offset, 10) || 0, 0);
-    const page = lim ? ` LIMIT ${lim} OFFSET ${off}` : '';
-    const r = await pool.query(`SELECT * FROM ${tbl} WHERE workspace_id=$1 ORDER BY ${orderCol} DESC NULLS LAST${page}`, [req.user.ws]);
-    // Merge the JSONB `data` blob over the typed columns, drop internal bookkeeping.
-    return res.json(r.rows.map(row => {
-      const { data, workspace_id, ...cols } = row;
-      return { ...cols, ...(data || {}) };
-    }));
+  // Optional pagination — default is unbounded to preserve the SPA's full-sync
+  // model, but callers can pass ?limit=&?offset= to page large collections.
+  const lim = Math.min(Math.max(parseInt(req.query.limit, 10) || 0, 0), 5000);
+  const off = Math.max(parseInt(req.query.offset, 10) || 0, 0);
+  const paginate = (rows) => (lim ? rows.slice(off, off + lim) : rows);
+
+  // documents_store rows for this collection. It is the authoritative store —
+  // /api/sync/pull has always overlaid it on top of the typed tables, and this
+  // read has to agree with that or the two disagree about the same record.
+  const store = await pool.query(
+    'SELECT doc_id, data FROM documents_store WHERE workspace_id=$1 AND collection=$2',
+    [req.user.ws, collection]);
+
+  if (!NATIVE.has(collection)) {
+    return res.json(paginate(store.rows.map(row => ({ id: row.doc_id, ...row.data }))));
   }
-  const r = await pool.query('SELECT doc_id, data FROM documents_store WHERE workspace_id=$1 AND collection=$2', [req.user.ws, collection]);
-  res.json(r.rows.map(row => ({ id: row.doc_id, ...row.data })));
+
+  const tbl = tableFor(collection);
+  const orderCol = orderColumnFor(collection);
+  const r = await pool.query(
+    `SELECT * FROM ${tbl} WHERE workspace_id=$1 ORDER BY ${orderCol} DESC NULLS LAST`,
+    [req.user.ws]);
+  // Merge the JSONB `data` blob over the typed columns, drop internal bookkeeping.
+  const rows = r.rows.map(row => {
+    const { data, workspace_id, ...cols } = row;
+    return { ...cols, ...(data || {}) };
+  });
+
+  // Overlay documents_store by id. Without this, collections that are readable
+  // from a typed table but NOT writable to one — projects, tasks, team,
+  // team_members, invoices, quotes, which have no `data` column and so fall to
+  // documents_store on write — returned 200 from POST and then never appeared
+  // here. It also surfaces seeded documents_store rows (seed.sql writes
+  // receipts there) that the typed read alone would miss.
+  for (const row of store.rows) {
+    const rec = { id: row.doc_id, ...row.data };
+    const idx = rows.findIndex(x => String(x.id) === String(row.doc_id));
+    if (idx >= 0) rows[idx] = rec; else rows.push(rec);
+  }
+  res.json(paginate(rows));
 }));
 
 app.post('/api/:collection', auth, wrap(async (req, res) => {
@@ -521,11 +542,11 @@ const PORT = process.env.PORT || 3001;
 // Only bind + listen when run directly (`node server/index.js`). When required
 // by a test it exposes `app`/`server`/`pool` without opening a socket, so tests
 // can mount it on an ephemeral port. Runtime production behavior is unchanged.
-// Idempotent boot migrations. schema.sql only runs on a FRESH Postgres volume
-// init (docker-entrypoint-initdb.d), but the live `cortexx_pgdata` volume
-// predates several schema changes — so they are (re)applied here on every boot.
-// Every statement below is a no-op once applied. This also grants the
-// platform-admin flag from the env allowlist, described below.
+// Grants the platform-admin flag from the env allowlist. The schema itself is
+// brought up to date separately by runMigrations() (server/db/migrate.js),
+// which applies every file in db/migrations/ in order — schema.sql only runs on
+// a FRESH Postgres volume, so the migrations are the one path that both a fresh
+// volume and the long-lived `cortexx_pgdata` volume travel.
 //
 // Operator authority is granted ONLY from the declarative PLATFORM_ADMIN_EMAILS
 // env allowlist — the operator's source of truth. We deliberately do NOT
@@ -536,22 +557,6 @@ const PORT = process.env.PORT || 3001;
 // stays revoked. Accounts absent from the allowlist are never auto-granted, and
 // clearing the env is the revocation path.
 async function ensurePlatformAdmin() {
-  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS is_platform_admin BOOLEAN NOT NULL DEFAULT false');
-  // Defensive create for the account-disable columns added by migration 004.
-  // Keeps a live (pre-migration) volume working without a manual ALTER.
-  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS disabled BOOLEAN NOT NULL DEFAULT false');
-  await pool.query('ALTER TABLE users ADD COLUMN IF NOT EXISTS last_active_at TIMESTAMPTZ DEFAULT now()');
-  // `notifications` shipped without the `updated_at` column that the generic
-  // /api/:collection writer sets on every TEXT-id + JSONB table, so every write
-  // to that collection failed. Same reason as above: the live volume predates
-  // the schema.sql fix, so add it on boot.
-  await pool.query('ALTER TABLE notifications ADD COLUMN IF NOT EXISTS updated_at TIMESTAMPTZ DEFAULT now()');
-  // Migration 007 swaps the global `id` primary key on the v1.3 typed tables
-  // for a workspace-scoped UNIQUE (workspace_id, id) — the conflict target the
-  // generic upsert now uses, so writes to those collections fail until it has
-  // run. It is idempotent, so applying it on every boot is a no-op once done.
-  await pool.query(
-    fs.readFileSync(path.join(__dirname, 'db/migrations/007_workspace_scoped_ids.sql'), 'utf8'));
   const emails = (process.env.PLATFORM_ADMIN_EMAILS || '')
     .split(',').map(s => s.trim().toLowerCase()).filter(Boolean);
   if (emails.length) {
@@ -565,13 +570,15 @@ async function ensurePlatformAdmin() {
 }
 
 if (require.main === module) {
-  // Await the migration BEFORE binding the socket: adminAuth and /api/auth/me
-  // read `is_platform_admin`, so serving traffic before the column exists would
-  // 500/401 for every user. If it fails (e.g. an ALTER blocked by a lock), exit
-  // non-zero so the container restarts and retries rather than serving a broken
-  // API that a health check might still mark "ready" — mirrors the fail-fast
+  // Await the migrations BEFORE binding the socket: adminAuth and /api/auth/me
+  // read `is_platform_admin`, and the generic collection writer needs migration
+  // 007's workspace-scoped key, so serving traffic first would 500/401 for every
+  // user. If it fails (e.g. an ALTER blocked by a lock), exit non-zero so the
+  // container restarts and retries rather than serving a half-migrated API that
+  // a health check might still mark "ready" — mirrors the fail-fast
   // JWT_SECRET/CORS guards above.
-  ensurePlatformAdmin()
+  require('./db/migrate').runMigrations(pool)
+    .then(() => ensurePlatformAdmin())
     .then(() => require('./lib/secret-store').ensureApiConnectionsTable(pool))
     .then(() => require('./lib/secret-store').syncEnvToRegistry(pool))
     .then(() => {
@@ -585,7 +592,7 @@ if (require.main === module) {
         });
       }
     })
-    .catch(e => { log.fatal('[migrate] ensurePlatformAdmin failed — refusing to serve:', e.message); process.exit(1); });
+    .catch(e => { log.fatal('[migrate] boot migration failed — refusing to serve:', e.message); process.exit(1); });
 }
 
 // Export the app + server so tests can mount/drive the real server in-process
