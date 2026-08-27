@@ -1,53 +1,64 @@
 #!/usr/bin/env bash
-# Nightly backup of the Cortexx CUSTOMER data store (host Postgres) — the real
-# database the web app uses (NOT the docker 'db' container). Plain-text secrets are
-# avoided: we connect via the postgres OS user (peer auth), so no password is needed
-# in this file or in the crontab.
+# CortexBuild Pro — nightly database backup (Hermes pipeline variant).
 #
-# Output: timestamped .dump (pg_dump custom format) + .sql in /var/backups/cortexx,
-# kept for KEEP_DAYS then rotated. Writes a .lastok marker on success so the watchdog
-# can later alert if backups stop happening.
+# Installed at /root/.hermes/scripts/cortexx_db_backup.sh — invoked by
+# /etc/cron.d/cortexx-backup at 03:17 UTC. This is the LEGACY pipeline that
+# predates /etc/cron.daily/cortexx-backup. We keep both running so a failure
+# of one does not silently leave the system without off-box coverage.
 #
-# Install via /etc/cron.d/cortexx-backup (see that file). Run manually:
-#   bash /root/.hermes/scripts/cortexx_db_backup.sh
+# The 2026-07 incident (see /etc/cron.daily/cortexx-backup history block)
+# was caused by this script dumping the EMPTY host Postgres while the real
+# data lived in the `db` container. The host DB has since been dropped, so
+# this script now dumps the live Docker DB too — same target, same guard
+# rails as the daily script. Two pipelines writing the same dump is fine:
+# different filenames (this one: -host suffix on the .lastok marker), and
+# different S3 prefixes if/when replication is re-enabled.
+#
+# Writes .lastok-host on success so the watchdog can alert on staleness.
 
-set -u
-# Cron runs with a minimal PATH — pin the tools we need.
+set -euo pipefail
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-PG_DB="cortexx"
-BACKUP_DIR="/var/backups/cortexx"
-KEEP_DAYS=7
-TS="$(date -u +%Y%m%dT%H%M%SZ)"
-LASTOK="$BACKUP_DIR/.lastok"
+
+APP_DIR=/opt/cortexx
+BACKUP_DIR=/opt/cortexx-backups
+KEEP_DAYS=30
+LASTOK="$BACKUP_DIR/.lastok-host"
+
+TS="$(date -u +%Y%m%d-%H%M%S)"
+OUT="$BACKUP_DIR/cortexx-${TS}-host.sql.gz"
 
 mkdir -p "$BACKUP_DIR"
+cd "$APP_DIR" || { echo "[cortexx_db_backup $TS] FATAL: $APP_DIR missing" >&2; exit 1; }
 
-dump_one() {  # $1 = role
-  local role="$1"
-  local dump="$BACKUP_DIR/${PG_DB}-${TS}.dump"
-  # PATCHED 2026-07-27: was `sudo -u postgres pg_dump` against the HOST
-  # Postgres — an orphaned DB with 83 tables and 0 rows. The live database
-  # is inside the `db` container (both cortexx-api-1 and cortexx-admin-1
-  # use db:5432/cortexx). Custom format is preserved so the existing
-  # replica + Telegram/S3 replication steps keep working unchanged.
-  if ( cd /opt/cortexx && docker compose exec -T db pg_dump -U postgres --format=custom -d "$PG_DB" ) > "$dump" 2>/dev/null && [ -s "$dump" ]; then
-    # Only the compressed custom-format dump is kept (it is the restore artifact).
-    # A human-readable .sql copy is intentionally NOT written: it would be a
-    # plaintext copy of customer data on disk and the dump is sufficient.
-    date -u +%FT%TZ > "$LASTOK"
-    echo "[cortexx-db-backup $TS] OK -> $dump ($(du -h "$dump" | cut -f1))"
-    return 0
-  fi
-  echo "[cortexx-db-backup $TS] FAILED via role $role" >&2
-  return 1
-}
-
-if dump_one postgres; then
-  # Rotate: delete dumps older than KEEP_DAYS
-  find "$BACKUP_DIR" -name "${PG_DB}-*.dump" -mtime +"$KEEP_DAYS" -delete 2>/dev/null
-  echo "[cortexx-db-backup $TS] rotation: kept last $KEEP_DAYS days"
-  exit 0
-else
-  echo "[cortexx-db-backup $TS] BACKUP FAILED" >&2
+# ── 1. Dump the live database (inside the db container) ─────────────────────
+if ! docker compose exec -T db pg_dump -U postgres -d cortexx 2>/tmp/cortexx-backup-host.err | gzip > "$OUT"; then
+  echo "[cortexx_db_backup $TS] FAILED: pg_dump error:" >&2
+  tail -5 /tmp/cortexx-backup-host.err >&2
+  rm -f "$OUT"
   exit 1
 fi
+
+# Guard against a silent partial/empty dump — a valid schema dump of this
+# database is comfortably over 2 KB gzipped.
+SIZE=$(stat -c %s "$OUT")
+if [ "$SIZE" -lt 2048 ]; then
+  echo "[cortexx_db_backup $TS] FAILED: dump suspiciously small (${SIZE} bytes) — not trusting it" >&2
+  rm -f "$OUT"
+  exit 1
+fi
+
+# Verify the gzip is intact and contains real schema before we call it a win.
+TABLES=$(gunzip -c "$OUT" 2>/dev/null | grep -c "^CREATE TABLE" || echo 0)
+if [ "$TABLES" -lt 30 ]; then
+  echo "[cortexx_db_backup $TS] FAILED: only ${TABLES} CREATE TABLE statements (expected 30+)" >&2
+  rm -f "$OUT"
+  exit 1
+fi
+
+echo "[cortexx_db_backup $TS] OK -> $OUT ($(du -h "$OUT" | cut -f1), ${TABLES} tables)"
+
+# ── 2. Rotate local copies ──────────────────────────────────────────────────
+find "$BACKUP_DIR" -name 'cortexx-*.sql.gz' -mtime +"$KEEP_DAYS" -delete 2>/dev/null
+
+date -u +%FT%TZ > "$LASTOK"
+exit 0

@@ -1,63 +1,63 @@
 #!/usr/bin/env bash
-# On-prem / local replica of the nightly Cortexx customer-DB dumps.
+# CortexBuild Pro — on-prem / local replica of the nightly DB dump.
 #
-# Why: the primary nightly dump lives in /var/backups/cortexx (7-day rotation).
-# This script copies the newest dumps to a SEPARATE path (/var/backups/cortexx-replica)
-# with LONGER retention (30 days) so an accidental wipe or corruption of the primary
-# dir — or a bad backup — is recoverable. It uses hardlinks when the replica is on the
-# same filesystem (zero extra disk cost) and falls back to cp otherwise.
+# Invoked by /etc/cron.d/cortexx-replica at 03:22 UTC. Hardlinks the newest
+# .sql.gz from /opt/cortexx-backups into /var/backups/cortexx-replica
+# (30-day retention) so a single disk failure does not wipe the only copy.
+# If a NAS / USB is mounted at /mnt/cortexx-backup it writes the hardlink
+# there instead — that gives true off-disk redundancy without paying S3
+# egress on every nightly cycle.
 #
-# Off-box ready: if an external volume (NAS/USB) is mounted at $MOUNT_POINT, the replica
-# is written there instead — giving true disk-failure protection the moment you attach
-# one. The fstab/cron wiring already points at it.
-#
-# Cron runs with a minimal PATH — pin the tools we need.
-set -u
+# Companion to cortexx_db_replicate.sh, which handles off-box (S3 / Telegram)
+# replication. The two are intentionally split: local replica at 03:22 is
+# cheap and runs first; off-box replication at 03:27 can take its time.
+
+set -euo pipefail
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
-SRC_DIR="/var/backups/cortexx"
-REPLICA_DIR="/var/backups/cortexx-replica"
-MOUNT_POINT="/mnt/cortexx-backup"   # attach a NAS/USB here to get off-disk protection
+
+SOURCE_DIR=/opt/cortexx-backups
+LOCAL_REPL=/var/backups/cortexx-replica
+NAS_MOUNT=/mnt/cortexx-backup
 KEEP_DAYS=30
-PG_DB="cortexx"
-TS="$(date -u +%Y%m%dT%H%M%SZ)"
 
-# Prefer an external mount if it's actually mounted and writable
-if mountpoint -q "$MOUNT_POINT" 2>/dev/null && [[ -w "$MOUNT_POINT" ]]; then
-  REPLICA_DIR="$MOUNT_POINT/cortexx-replica"
-  install -d -m 700 "$REPLICA_DIR"
-fi
+mkdir -p "$LOCAL_REPL"
 
-if [[ ! -d "$SRC_DIR" ]]; then
-  echo "[cortexx-replica $TS] ERROR: source $SRC_DIR missing"
+# Pick the newest .sql.gz that succeeded (skip any from this script itself).
+LATEST="$(find "$SOURCE_DIR" -maxdepth 1 -name 'cortexx-*.sql.gz' -printf '%T@ %p\n' 2>/dev/null | sort -nr | head -1 | awk '{print $2}')"
+if [ -z "$LATEST" ] || [ ! -f "$LATEST" ]; then
+  echo "[cortexx_db_replica_local] FAILED: no dump found in $SOURCE_DIR" >&2
   exit 1
 fi
-install -d -m 700 "$REPLICA_DIR"
 
-# Copy every local .dump into the replica. Hardlink if same FS (free), else copy.
-copied=0
-while IFS= read -r f; do
-  [[ -e "$f" ]] || continue
-  dest="$REPLICA_DIR/$(basename "$f")"
-  [[ -e "$dest" ]] && continue
-  if ln "$f" "$dest" 2>/dev/null; then
-    : # hardlink ok
-  elif cp -p "$f" "$dest" 2>/dev/null; then
-    : # copy ok
-  else
-    echo "[cortexx-replica $TS] WARN: could not copy $(basename "$f")"
-    continue
-  fi
-  copied=$((copied+1))
-done < <(ls -1t "$SRC_DIR/${PG_DB}-"*.dump 2>/dev/null)
-
-# Rotate: delete replica copies older than KEEP_DAYS
-find "$REPLICA_DIR" -name "${PG_DB}-*.dump" -mtime +"$KEEP_DAYS" -delete 2>/dev/null
-count=$(ls -1 "$REPLICA_DIR/${PG_DB}-"*.dump 2>/dev/null | wc -l)
-
-if [[ "$MOUNT_POINT" != "${REPLICA_DIR%/*}" ]]; then
-  loc="local ($REPLICA_DIR)"
-else
-  loc="external ($REPLICA_DIR)"
+# Sanity-check the source still looks valid before we replicate garbage.
+SIZE=$(stat -c %s "$LATEST")
+if [ "$SIZE" -lt 2048 ]; then
+  echo "[cortexx_db_replica_local] FAILED: source dump suspiciously small (${SIZE} bytes), refusing to replicate" >&2
+  exit 1
 fi
-echo "[cortexx-replica $TS] OK: +$copied new, $count kept ($KEEP_DAYS d) [$loc]"
+
+# ── 1. Hardlink into the local replica dir ──────────────────────────────────
+NAME="$(basename "$LATEST")"
+if ! ln -f "$LATEST" "$LOCAL_REPL/$NAME" 2>/dev/null && ! cp -f "$LATEST" "$LOCAL_REPL/$NAME"; then
+  # ln can fail across filesystems; fall back to a real copy.
+  cp -f "$LATEST" "$LOCAL_REPL/$NAME"
+fi
+echo "[cortexx_db_replica_local] OK local -> $LOCAL_REPL/$NAME ($(du -h "$LOCAL_REPL/$NAME" | cut -f1))"
+
+# ── 2. Also hardlink onto a NAS / USB if one is mounted ─────────────────────
+if mountpoint -q "$NAS_MOUNT" 2>/dev/null; then
+  if ! ln -f "$LATEST" "$NAS_MOUNT/$NAME" 2>/dev/null && ! cp -f "$LATEST" "$NAS_MOUNT/$NAME"; then
+    cp -f "$LATEST" "$NAS_MOUNT/$NAME"
+  fi
+  echo "[cortexx_db_replica_local] OK nas   -> $NAS_MOUNT/$NAME"
+else
+  echo "[cortexx_db_replica_local] NOTE: $NAS_MOUNT not mounted — local replica only"
+fi
+
+# ── 3. Rotate local copies (30 days) ────────────────────────────────────────
+find "$LOCAL_REPL" -name 'cortexx-*.sql.gz' -mtime +"$KEEP_DAYS" -delete 2>/dev/null
+if mountpoint -q "$NAS_MOUNT" 2>/dev/null; then
+  find "$NAS_MOUNT" -maxdepth 1 -name 'cortexx-*.sql.gz' -mtime +"$KEEP_DAYS" -delete 2>/dev/null
+fi
+
 exit 0
