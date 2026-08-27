@@ -1,0 +1,22 @@
+http:
+  routers:
+    buildtrack-api:
+      rule: "Host(`buildtrack-api.srv1262179.hstgr.cloud`)"
+      entryPoints: [websecure]
+      service: buildtrack-api
+      tls: { certResolver: letsencrypt }
+    buildtrack-api-cbp:
+      rule: "Host(`buildtrack.cortexbuildpro.com`)"
+      entryPoints: [websecure]
+      service: buildtrack-api
+      tls: { certResolver: letsencrypt }
+    buildtrack-api-adr:
+      rule: "Host(`buildtrack.adrianstanca.com`)"
+      entryPoints: [websecure]
+      service: buildtrack-api
+      tls: { certResolver: letsencrypt }
+  services:
+    buildtrack-api:
+      loadBalancer:
+        servers:
+          - url: "http://172.16.3.5:3001"

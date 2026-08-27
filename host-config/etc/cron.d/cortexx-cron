@@ -1,0 +1,13 @@
+# Cortexx API crons. POSTs to /api/cron/* via the public Caddy/Traefik route
+# with a bearer token sourced from /etc/cron.d/cortexx-cron.env (mode 0600).
+# Logs to syslog (journalctl -u cron).
+#
+# NOTE (2026-07-27): /api/cron/* is reverse-proxied by Caddy to the Next.js
+# standalone app container (cortexx-app-1). The cron handlers now use raw SQL
+# against the legacy Express DB schema and return clean 2xx responses.
+SHELL=/bin/bash
+PATH=/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin
+
+0  6  *   *   *    root  bash -c '. /etc/cron.d/cortexx-cron.env; curl -sS -X POST -H "Authorization: Bearer $CRON_SECRET" https://cortexbuildpro.com/api/cron/overdue-invoices'
+30 6  *   *   *    root  bash -c '. /etc/cron.d/cortexx-cron.env; curl -sS -X POST -H "Authorization: Bearer $CRON_SECRET" https://cortexbuildpro.com/api/cron/expiry-warnings'
+0  3  *   *   0    root  bash -c '. /etc/cron.d/cortexx-cron.env; curl -sS -X POST -H "Authorization: Bearer $CRON_SECRET" https://cortexbuildpro.com/api/cron/prune-push'

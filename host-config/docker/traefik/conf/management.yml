@@ -1,0 +1,22 @@
+http:
+  routers:
+    management:
+      rule: "Host(`management.srv1262179.hstgr.cloud`)"
+      entryPoints: [websecure]
+      service: management
+      tls: { certResolver: letsencrypt }
+    management-cbp:
+      rule: "Host(`management.cortexbuildpro.com`)"
+      entryPoints: [websecure]
+      service: management
+      tls: { certResolver: letsencrypt }
+    management-adr:
+      rule: "Host(`management.adrianstanca.com`)"
+      entryPoints: [websecure]
+      service: management
+      tls: { certResolver: letsencrypt }
+  services:
+    management:
+      loadBalancer:
+        servers:
+          - url: "http://172.16.3.7:5001"

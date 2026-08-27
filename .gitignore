@@ -1,0 +1,59 @@
+# --- Default deny: ignore everything unless explicitly allowed ---
+*
+*/**
+
+# --- Root operational docs ---
+!/.gitignore
+!/CLAUDE.md
+!/master_build.py
+
+# --- Field app documentation and config (mirrored under host-config/ because
+# cortexbuild-field is an independent git repository; see host-config/README.md)
+#/cortexbuild-field/*
+
+# --- Claude capabilities (no runtime state / transcripts / secrets) ---
+!/.claude/
+!/.claude/CREDENTIALS_ROTATION_CHECKLIST.md
+!/.claude/agents/
+!/.claude/agents/**
+!/.claude/commands/
+!/.claude/commands/**
+!/.claude/skills/
+!/.claude/skills/**
+!/.claude/plans/
+!/.claude/plans/**
+!/.claude/projects/
+!/.claude/projects/-root/
+!/.claude/projects/-root/memory/
+!/.claude/projects/-root/memory/**
+/.claude/projects/-root/transcripts/
+/.claude/projects/-root/*.jsonl
+/.claude/backups/
+/.claude/cache/
+/.claude/daemon/
+/.claude/daemon.log
+/.claude/file-history/
+/.claude/.last-cleanup
+/.claude/.last-update-result.json
+/.claude/settings.local.json
+
+# --- Hermes automation scripts ---
+!/.hermes/
+!/.hermes/scripts/
+!/.hermes/scripts/**
+
+# --- Host config mirrors (copies of files that live outside /root) ---
+!/host-config/
+!/host-config/**
+
+# --- Safety net: never commit secrets or env files ---
+*.env
+*.env.*
+!.env.example
+!.env.production.template
+secrets.env
+*.key
+*.pem
+*.crt
+*.p12
+*.jks

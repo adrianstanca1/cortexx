@@ -1,0 +1,74 @@
+# CortexBuild Pro — Caddy reverse proxy + static host
+# Free automatic HTTPS (Let's Encrypt) when SITE_ADDRESS is a real domain.
+# Falls back to plain HTTP on :80 for IP-only deploys.
+#
+# SITE_ADDRESS is injected from the environment by docker-compose.
+{$SITE_ADDRESS} {
+	# ── Static app (Cortexx.html + lib/ + dist/ + portal.html + assets) ──
+	root * /srv/app
+	encode gzip zstd
+
+	# ── Cron routes → Next.js standalone app server ──
+	# The Express API does not implement /api/cron/*; the Next.js app router
+	# does. Route these specifically before the catch-all /api/* below.
+	handle /api/cron/* {
+		reverse_proxy app:3010
+	}
+
+	# ── API + realtime + webhooks → Node service ──
+	handle /api/* {
+		reverse_proxy api:3001
+	}
+
+	# ── Hard-block secrets, server source, and build/config files ──
+	# The repo root is mounted into /srv/app, so WITHOUT this a request for
+	# /.env, /.env.vault, /.git/config, /server/index.js, /build-dist.js, or any
+	# *.ts would return the file's contents to the public internet. The docker
+	# compose mount is also narrowed (defense in depth), but never rely on that
+	# alone — keep this deny list explicit. Wrapped in its own handle() and
+	# placed BEFORE the catch-all so it always wins (top-level respond would be
+	# reordered after the catch-all handle by Caddy's default directive order).
+	@blocked path /.git* /.env* /.env.production /.env.vault /server/* /build-dist.js /proxy.ts /instrumentation.ts /package.json /package-lock.json /tsconfig.json /next.config.* /tailwind.config.* /postcss.config.* /playwright.config.* /eslint.config.* *.ts *.tsx
+	handle @blocked {
+		respond 404
+	}
+
+	# Apple App Site Association — served at /.well-known/apple-app-site-association
+	# (no .json extension). Apple requires Content-Type application/json. A
+	# dedicated handle placed BEFORE the catch-all wins the route match.
+	handle /.well-known/apple-app-site-association {
+		header Content-Type "application/json"
+		file_server
+	}
+
+	# ── Everything else → landing page (or SPA shell for deep links) ──
+	handle {
+		try_files {path} /landing.html /Cortexx.html
+		file_server {
+			# Belt-and-suspenders: even if a matcher above missed something, never
+			# serve dotfiles, server source, or env/config files. Caddy's file_server
+			# only hides the active Caddyfile by default — it does NOT hide .git/.env.
+			hide .git .env .env.* server *.ts *.tsx build-dist.js proxy.ts instrumentation.ts package.json package-lock.json tsconfig.json next.config.js tailwind.config.js postcss.config.js playwright.config.js eslint.config.js
+		}
+	}
+
+	# App code in /lib and /dist is NOT content-hashed, so it must never be
+	# pinned as immutable — otherwise a returning browser keeps running old code
+	# (including security fixes) for up to a year. Revalidate it every load; the
+	# service worker's network-first strategy depends on this.
+	@appcode path /lib/* /dist/*
+	header @appcode Cache-Control "no-cache, must-revalidate"
+
+	# Long-cache genuinely static assets (icons, fonts) — but exclude app code
+	# AND the service worker. sw.js MUST revalidate every load or browsers keep
+	# running the old SW (and cached app shell, including security fixes) for up
+	# to a year — defeating the whole point of the network-first strategy.
+	@static {
+		path *.js *.css *.png *.jpg *.svg *.woff2
+		not path /lib/* /dist/* /sw.js /admin.js
+	}
+	header @static Cache-Control "public, max-age=31536000, immutable"
+	header /sw.js Cache-Control "no-cache, must-revalidate"
+	@html path *.html
+	header @html Cache-Control "no-cache"
+}

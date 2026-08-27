@@ -1,0 +1,233 @@
+# CortexBuild Pro — complete self-hosted stack (100% free software)
+# ───────────────────────────────────────────────────────────────
+# One command on your VPS:   docker compose up -d
+#
+# Brings up:
+#   • db      — PostgreSQL 16            (database)
+#   • api     — Node/Express             (REST + sync + webhooks + auth)
+#   • ollama  — local LLM runtime        (AI, no API keys, no per-call cost)
+#   • web     — Caddy                    (static app + reverse proxy + auto-HTTPS)
+#
+# No managed services. No SaaS bills. Runs entirely on the VPS you already pay for.
+# ───────────────────────────────────────────────────────────────
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cortexx
+      # Enforce scram-sha-256 (NOT trust) on fresh volume inits. The existing
+      # cortexx_pgdata volume predates this and is hardened live below (pg_hba
+      # edited + reloaded) — see the CLAUDE.md pg_hba gotcha. POSTGRES_PASSWORD is
+      # substituted from the gitignored root .env (decrypted from .env.vault), so
+      # no secret lands in this tracked file.
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD:?POSTGRES_PASSWORD must be set in .env (run npm run vault:decrypt)}"
+      POSTGRES_HOST_AUTH_METHOD: scram-sha-256
+    volumes:
+      - cortexx_pgdata:/var/lib/postgresql/data
+      - ./server/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./server/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cortexx"]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    # Reads server/.env for secrets (JWT_SECRET, WEBHOOK_SECRET, VAPID_*, etc.).
+    # The values below override DB + LLM hosts to point at the compose services.
+    env_file:
+      - path: ./server/.env
+        required: false
+    environment:
+      # Password-bearing URL (scram auth enforced on the db's 172.16 pg_hba line).
+      # POSTGRES_PASSWORD comes from the gitignored root .env (decrypted vault)
+      # or is generated fresh by deploy-vps.sh. Reference the same var so the
+      # api and db stay in sync — do NOT hardcode a placeholder here.
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/cortexx
+      PORT: 3001
+      NODE_ENV: production
+      # ── LLM runtime (driven entirely by the gitignored server/.env) ──────
+      # LLM_RUNTIME / OPENAI_COMPAT_* are intentionally NOT set here: the
+      # `environment:` block would override `env_file` and clobber them.
+      # server/.env sets LLM_RUNTIME=openai_compat + OPENAI_COMPAT_BASE/MODEL/KEY
+      # (or ollama). The app defaults to 'ollama' when LLM_RUNTIME is unset,
+      # so a missing/empty server/.env never breaks boot.
+      # Ollama fallback vars (used only when LLM_RUNTIME=ollama):
+      OLLAMA_BASE: http://ollama:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-llama3.2:3b}
+      OLLAMA_VISION_MODEL: ${OLLAMA_VISION_MODEL:-llava}
+    expose:
+      - "3001"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - cortexx_ollama:/root/.ollama
+      # On first boot, pulls the default model so the AI works out of the box.
+      - ./server/ollama-init.sh:/ollama-init.sh:ro
+    entrypoint: ["/bin/sh", "/ollama-init.sh"]
+    expose:
+      - "11434"
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+    # GPU is optional. If your VPS has an NVIDIA GPU, uncomment:
+    # deploy:
+    #   resources:
+    #     reservations:
+    #       devices:
+    #         - driver: nvidia
+    #           count: all
+    #           capabilities: [gpu]
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on:
+      - api
+    # TLS + ports 80/443 are owned by the host-network traefik at /docker/traefik.
+    # Caddy serves plain HTTP on :80 inside the compose network; traefik routes
+    # cortexbuildpro.com to it via the docker provider labels below.
+    expose:
+      - "80"
+    labels:
+      - traefik.enable=true
+      - traefik.http.routers.cortexx.rule=Host(`cortexbuildpro.com`) || Host(`www.cortexbuildpro.com`)
+      - traefik.http.routers.cortexx.entrypoints=websecure
+      - traefik.http.routers.cortexx.tls.certresolver=letsencrypt
+      # Canonical redirect: www.cortexbuildpro.com -> cortexbuildpro.com (308).
+      # Traefik owns TLS + Host routing, so the redirect lives here (not in
+      # Caddy, which only serves plain HTTP behind traefik).
+      - traefik.http.middlewares.cortexx-www-redirect.redirectregex.regex=^https?://www\.(.*)
+      - traefik.http.middlewares.cortexx-www-redirect.redirectregex.replacement=https://$${1}
+      - traefik.http.middlewares.cortexx-www-redirect.redirectregex.permanent=true
+      - traefik.http.routers.cortexx.middlewares=cortexx-www-redirect
+      - traefik.http.services.cortexx.loadbalancer.server.port=80
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      # Landing/marketing page (served at / via Caddy try_files).
+      - ./landing.html:/srv/app/landing.html:ro
+      - ./admin.html:/srv/app/admin.html:ro
+      - ./admin.js:/srv/app/admin.js:ro
+      - ./support.html:/srv/app/support.html:ro
+      # expose .env, .env.vault, .git/, server/* and *.ts over HTTP. The Caddyfile
+      # also denies these paths, but this mount is the primary boundary.
+      - ./dist:/srv/app/dist:ro
+      - ./lib:/srv/app/lib:ro
+      - ./public:/srv/app/public:ro
+      # Apple App Site Association + security.txt for Universal Links / AASA.
+      # Served at /.well-known/* (Caddy try_files resolves to /srv/app/.well-known).
+      - ./.well-known:/srv/app/.well-known:ro
+      - ./Cortexx.html:/srv/app/Cortexx.html:ro
+      - ./admin.html:/srv/app/admin.html:ro
+      - ./admin.js:/srv/app/admin.js:ro
+      - ./support.html:/srv/app/support.html:ro
+      - ./Cortexx Mobile Dashboard.html:/srv/app/Cortexx Mobile Dashboard.html:ro
+      - ./Cortexx-standalone.html:/srv/app/Cortexx-standalone.html:ro
+      - ./portal.html:/srv/app/portal.html:ro
+      - ./Cortexx_Marketing.html:/srv/app/Cortexx_Marketing.html:ro
+      - ./manifest.json:/srv/app/manifest.json:ro
+      - ./sw.js:/srv/app/sw.js:ro
+      - ./icon-192.png:/srv/app/icon-192.png:ro
+      - ./icon-512.png:/srv/app/icon-512.png:ro
+      - ./apple-touch-icon.png:/srv/app/apple-touch-icon.png:ro
+      - ./icon.svg:/srv/app/icon.svg:ro
+      - cortexx_caddy_data:/data
+      - cortexx_caddy_config:/config
+    environment:
+      # Behind traefik this stays ":80" (plain HTTP inside the network).
+      SITE_ADDRESS: ${SITE_ADDRESS:-:80}
+
+  # ── cortexx-admin: Next.js SaaS admin console (app/dashboard + RBAC) ──
+  # Dedicated tenant behind host traefik at admin.cortexbuildpro.com.
+  # Shares the central Postgres `db` (same cortexx database). Traefik runs in
+  # host network mode and discovers this container via the docker provider,
+  # dialing its cortexx_default IP — same pattern as the working `web` tenant
+  # (which is also only on cortexx_default, no explicit traefik_web attach).
+  admin:
+    build:
+      context: .
+      dockerfile: Dockerfile.admin
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    environment:
+      DATABASE_URL: postgres://postgres:***@db:5432/cortexx
+      NODE_ENV: production
+      PORT: 3000
+      ADMIN_TENANT: "true"
+      NEXTAUTH_URL: https://admin.cortexbuildpro.com
+      NEXTAUTH_SECRET: ${ADMIN_NEXTAUTH_SECRET:-change-me-admin-nextauth-secret}
+      NEXT_PUBLIC_API_URL: https://cortexbuildpro.com
+      NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.com
+    expose:
+      - "3000"
+    labels:
+      - traefik.enable=true
+      # Branded host (needs A record admin.cortexbuildpro.com -> VPS IP).
+      - traefik.http.routers.cortexx-admin.rule=Host(`admin.cortexbuildpro.com`)
+      - traefik.http.routers.cortexx-admin.entrypoints=websecure
+      - traefik.http.routers.cortexx-admin.tls.certresolver=letsencrypt
+      - traefik.http.services.cortexx-admin.loadbalancer.server.port=3000
+      # Immediate-verification host: the Hostinger wildcard srv1262179.hstgr.cloud
+      # already resolves to the VPS, so LE issues a cert here at once. Remove once
+      # the branded A record is live if you prefer a single host.
+      - traefik.http.routers.cortexx-admin-alt.rule=Host(`admin.srv1262179.hstgr.cloud`)
+      - traefik.http.routers.cortexx-admin-alt.entrypoints=websecure
+      - traefik.http.routers.cortexx-admin-alt.tls.certresolver=letsencrypt
+
+  # ── app: Next.js main application server (standalone) ──
+  # Serves app-router routes, especially /api/cron/*, which the Express API
+  # does not implement. The static web tenant and all other /api/* traffic
+  # remain on Caddy + the Express API. Built from the pre-generated
+  # .next/standalone bundle; Prisma client is generated inside the image so
+  # the native engine matches the Alpine container.
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.app
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file:
+      - path: ./server/.env
+        required: false
+    environment:
+      DATABASE_URL: postgres://postgres:${POSTGRES_PASSWORD}@db:5432/cortexx
+      PORT: 3010
+      HOSTNAME: 0.0.0.0
+      NODE_ENV: production
+      NEXTAUTH_URL: https://cortexbuildpro.com
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-nextauth-secret}
+    expose:
+      - "3010"
+    healthcheck:
+      # Any HTTP response (including 401) means the server is up; only a
+      # connection failure should mark the container unhealthy.
+      test: ["CMD-SHELL", "curl -sS http://127.0.0.1:3010/api/cron/overdue-invoices -o /dev/null"]
+      interval: 30s
+      timeout: 5s
+      retries: 5
+      start_period: 30s
+
+volumes:
+  cortexx_pgdata:
+  cortexx_ollama:
+  cortexx_caddy_data:
+  cortexx_caddy_config:

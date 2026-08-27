@@ -1,0 +1,12 @@
+http:
+  routers:
+    field:
+      rule: "Host(`field.cortexbuildpro.com`)"
+      entryPoints: [websecure]
+      service: field
+      tls: { certResolver: letsencrypt }
+  services:
+    field:
+      loadBalancer:
+        servers:
+          - url: "http://127.0.0.1:3005"
