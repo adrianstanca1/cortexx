@@ -1,0 +1,29 @@
+services:
+  api:
+    build:
+      context: ..
+      dockerfile: infra/Dockerfile
+    environment:
+      PORT: 4310
+      OLLAMA_URL: http://host.docker.internal:11434
+      OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
+      DATABASE_URL: postgres://cortex:cortex@postgres:5432/cortex_agent_os
+      REDIS_URL: redis://redis:6379
+    ports: ["4310:4310"]
+    depends_on:
+      postgres: { condition: service_healthy }
+      redis: { condition: service_healthy }
+    restart: unless-stopped
+  postgres:
+    image: postgres:17-alpine
+    environment: { POSTGRES_USER: cortex, POSTGRES_PASSWORD: cortex, POSTGRES_DB: cortex_agent_os }
+    volumes: ["cortex_pg:/var/lib/postgresql/data", "../db/schema.sql:/docker-entrypoint-initdb.d/001-schema.sql:ro"]
+    healthcheck: { test: ["CMD-SHELL", "pg_isready -U cortex -d cortex_agent_os"], interval: 5s, timeout: 3s, retries: 20 }
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: ["redis-server","--appendonly","yes"]
+    volumes: ["cortex_redis:/data"]
+    healthcheck: { test: ["CMD","redis-cli","ping"], interval: 5s, timeout: 3s, retries: 20 }
+    restart: unless-stopped
+volumes: { cortex_pg: {}, cortex_redis: {} }

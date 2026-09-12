@@ -1,0 +1,7 @@
+import test from "node:test";import assert from "node:assert/strict";
+import {AgentRegistry,ApprovalService,EventBus,MemoryStore,ModelRouter,Orchestrator,classifyCommand} from "../packages/runtime/src/index.js";
+import type {ModelProvider,ModelRequest,ModelResponse} from "../packages/core/src/types.js";
+class FakeProvider implements ModelProvider{id="fake";local=true;async health(){return true}async models(){return["fake"]}async generate(r:ModelRequest):Promise<ModelResponse>{return{text:`done:${r.prompt.slice(0,20)}`,provider:"fake",model:"fake",local:true,latencyMs:1}}}
+test("orchestrator completes a research mission",async()=>{const e=new EventBus(),a=new AgentRegistry(),m=new MemoryStore(e),o=new Orchestrator(a,e,m,new ModelRouter([new FakeProvider()]));const mission=o.createMission("Research UK cladding market");await o.runMission(mission.id);assert.equal(o.missions.get(mission.id)?.status,"completed");assert.ok(o.mission(mission.id)?.tasks.length);assert.ok(m.list().length);});
+test("approval ASK blocks and creates request",()=>{const e=new EventBus(),s=new ApprovalService(e);const r=s.authorize("git.write","ASK",{reason:"push"});assert.equal(r.allowed,false);assert.equal(s.list("pending").length,1);});
+test("dangerous command classifier denies catastrophic shell",()=>{assert.equal(classifyCommand("rm -rf /"),"FORBIDDEN");assert.equal(classifyCommand("git status"),"SAFE_READ");assert.equal(classifyCommand("git push --force origin main"),"ELEVATED");});

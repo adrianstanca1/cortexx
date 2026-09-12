@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS missions (id uuid PRIMARY KEY, goal text NOT NULL, status text NOT NULL, created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now(), result text, error text);
+CREATE TABLE IF NOT EXISTS tasks (id uuid PRIMARY KEY, mission_id uuid NOT NULL REFERENCES missions(id) ON DELETE CASCADE, title text NOT NULL, description text NOT NULL, capability text NOT NULL, status text NOT NULL, assigned_agent_id text, depends_on uuid[] NOT NULL DEFAULT '{}', result text, error text, retries int NOT NULL DEFAULT 0, max_retries int NOT NULL DEFAULT 2);
+CREATE TABLE IF NOT EXISTS approvals (id uuid PRIMARY KEY, mission_id uuid, task_id uuid, agent_id text, action text NOT NULL, reason text NOT NULL, status text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE IF NOT EXISTS memories (id uuid PRIMARY KEY, type text NOT NULL, scope text NOT NULL, content text NOT NULL, source text NOT NULL, confidence real NOT NULL, importance real NOT NULL, mission_id uuid, task_id uuid, agent_id text, tags text[] NOT NULL DEFAULT '{}', metadata jsonb NOT NULL DEFAULT '{}', created_at timestamptz NOT NULL DEFAULT now(), updated_at timestamptz NOT NULL DEFAULT now());
+CREATE INDEX IF NOT EXISTS memories_scope_idx ON memories(scope);
+CREATE INDEX IF NOT EXISTS memories_tags_idx ON memories USING gin(tags);

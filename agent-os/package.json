@@ -1,11 +1,13 @@
 {
   "name": "cortex-agent-os",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "private": true,
   "type": "module",
   "scripts": {
     "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc -p tsconfig.json --noEmit",
     "test": "npm run build && node --test dist/tests/*.test.js",
-    "start": "node dist/apps/api/src/server.js"
+    "start": "node dist/apps/api/src/server.js",
+    "cli": "node dist/apps/cli/src/index.js"
   }
 }

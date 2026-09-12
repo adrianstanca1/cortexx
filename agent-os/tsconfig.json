@@ -3,13 +3,14 @@
     "target": "ES2022",
     "module": "NodeNext",
     "moduleResolution": "NodeNext",
-    "strict": true,
     "outDir": "dist",
     "rootDir": ".",
+    "strict": true,
     "esModuleInterop": true,
     "forceConsistentCasingInFileNames": true,
     "skipLibCheck": true,
-    "lib": ["ES2022", "DOM"]
+    "resolveJsonModule": true
   },
-  "include": ["apps/**/*.ts", "packages/**/*.ts", "tests/**/*.ts", "types/**/*.d.ts"]
+  "include": ["packages/**/*.ts", "apps/api/**/*.ts", "apps/cli/**/*.ts", "tests/**/*.ts", "types/**/*.d.ts"],
+  "exclude": ["apps/mobile/**/*"]
 }
