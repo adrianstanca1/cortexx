@@ -1,5 +1,7 @@
 # Architecture
 
-`packages/core` is the provider-neutral Agent OS kernel. `apps/api` exposes it over HTTP. `apps/web` is the first Mission Control client.
+Control surfaces (Web / Mobile / CLI) → API → Orchestrator → Agent Registry → Model Router / Tool Registry / Memory / Approvals → Ollama or optional cloud provider.
 
-The kernel is intentionally independent from UI and model vendors. Model routing currently expresses the local-first policy without making external model calls. Tool permissions, durable storage, approvals and workers are the next platform layer.
+The orchestrator creates dependency-aware tasks from missions and emits lifecycle events. Agents are capability profiles rather than hard-coded processes, allowing dynamic teams. Model routing is local-first and provider-neutral. Tool calls are permission-gated. Memory tracks working, episodic, semantic, project and preference records with provenance.
+
+PostgreSQL is the target durable record store; Redis is the deployment queue/event dependency. The current core also runs dependency-free for tests and development. The runtime boundaries intentionally allow later worker processes, vector search and graph persistence without changing agent contracts.

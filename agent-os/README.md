@@ -1,36 +1,53 @@
 # Cortex Agent OS
 
-A local-first, permission-aware Agentic OS runtime for Cortexx.
+Cortex Agent OS is a local-first, permissioned multi-agent runtime and Mission Control surface. It is designed to run on a VPS alongside Ollama while allowing optional OpenAI-compatible cloud fallback.
 
-## Current vertical slice
+## Included
 
-- Mission creation and orchestration state
-- Agent registry with planner/research/developer/QA profiles
-- Local-first model routing abstraction (Ollama preferred)
-- HTTP API with health endpoint
-- Mission Control web UI
-- Strict TypeScript
-- Core regression tests
-- Zero runtime npm dependencies
+- Mission → plan → task → agent → verification orchestration
+- Local-first Ollama provider plus cloud fallback adapter
+- Agent registry with Supervisor, Research, Developer, QA and construction specialists
+- Persistent-memory domain model and PostgreSQL schema
+- Permission/approval service with ALLOW / ASK / DENY
+- Sandboxed workspace file tools and command-risk classifier
+- SSE live activity stream
+- HTTP API, responsive Mission Control web UI and CLI
+- Expo/React Native mobile Mission Control scaffold
+- Docker Compose for API, PostgreSQL and Redis
+- Construction agents: Procurement, Tender Scout, Document Analyst, Safety and Commercial
 
-## Run
+## Local development
 
 ```bash
-npm run build
+cp .env.example .env
+npm run typecheck
 npm test
+npm run build
 npm start
 ```
 
-Open http://localhost:8787
+Open `http://localhost:4310`.
 
-## Environment
+## VPS / Docker
 
 ```bash
-PORT=8787
-OLLAMA_MODEL=qwen2.5:7b
-CLOUD_MODEL=configured-cloud-model
+cd infra
+docker compose up -d --build
 ```
 
-## Next
+Ollama is expected at `OLLAMA_URL`; on Linux Docker you may prefer the host gateway or run the API with host networking.
 
-Add persistent PostgreSQL/Redis state, approval gates, real model adapters, Expo mobile client, WebSocket events, sandboxed tools, long-term memory and multi-agent parallel execution.
+## Mobile
+
+```bash
+cd apps/mobile
+npm install
+npx expo-doctor
+npx expo start
+```
+
+Set `EXPO_PUBLIC_CORTEX_URL` to the reachable HTTPS API URL.
+
+## Security
+
+No unrestricted shell execution is enabled by default. Sensitive writes, Git pushes, package installs and privileged operations must pass an approval policy. Never put API keys in the repository.

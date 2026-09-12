@@ -1,0 +1,1 @@
+{"expo":{"name":"Cortex Agent OS","slug":"cortex-agent-os","scheme":"cortexos","plugins":["expo-router"],"ios":{"bundleIdentifier":"com.cortexbuild.agentos"},"android":{"package":"com.cortexbuild.agentos"}}}
