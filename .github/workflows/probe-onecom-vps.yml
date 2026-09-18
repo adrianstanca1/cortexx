@@ -1,0 +1,35 @@
+name: Probe One.com VPS Access
+on:
+  push:
+    branches: [probe-onecom-vps-access]
+permissions:
+  contents: read
+jobs:
+  probe:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Validate stored key
+        env:
+          KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          if [[ -z "$KEY" ]]; then
+            echo "::error::VPS_SSH_PRIVATE_KEY is not available in this repository"
+            exit 1
+          fi
+      - name: Configure SSH
+        env:
+          KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          printf '%s\n' "$KEY" > ~/.ssh/onecom_probe
+          chmod 600 ~/.ssh/onecom_probe
+          cat > ~/.ssh/known_hosts <<'EOF'
+          85.190.100.68 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAOE0euHxCIKpRJj5CETbE0X+4j3uoUKFp4m8xhVRGY
+          EOF
+          chmod 600 ~/.ssh/known_hosts
+      - name: Read-only connectivity probe
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes -o ConnectTimeout=15 -i ~/.ssh/onecom_probe administrator@85.190.100.68 'printf "AUTH_OK "; whoami; hostname'
