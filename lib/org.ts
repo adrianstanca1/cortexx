@@ -13,7 +13,8 @@
 import { cookies } from 'next/headers'
 import { prisma } from './db'
 
-export const MULTITENANT_ENFORCED = process.env.MULTITENANT_ENFORCED === 'true'
+import { MULTITENANT_ENFORCED } from './tenant-config'
+export { MULTITENANT_ENFORCED } from './tenant-config'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
