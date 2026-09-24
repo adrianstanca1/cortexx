@@ -76,33 +76,57 @@ jobs:
 
             echo "=== Bring stack up ==="
             docker compose -f docker-compose.cortexx.yml pull
+            deployed=false
             for up in 1 2 3; do
               sleep 5
               if docker compose -f docker-compose.cortexx.yml up -d --build --remove-orphans 2>&1; then
+                deployed=true
                 break
               fi
               echo "docker compose up attempt $up failed — retrying"
               sleep 10
             done
 
+            if [ "$deployed" != true ]; then
+              echo "Docker Compose failed after all attempts" >&2
+              exit 1
+            fi
+
             echo "=== Wait for health ==="
+            healthy=false
             for n in $(seq 1 36); do
-              code=$(curl -s --max-time 5 -o /dev/null -w "%{http_code}" https://cortexbuildpro.tech/api/health 2>/dev/null || echo 000)
-              if [ "$code" = "200" ]; then
-                echo "API healthy: HTTP 200"
+              # Validate the construction API contract inside the API container,
+              # which always has Node. A different app returning 200 is not ready.
+              if curl --fail --silent --show-error --max-time 5 https://cortexbuildpro.tech/api/health |
+                docker compose -f docker-compose.cortexx.yml exec -T api node -e '
+                  let input = "";
+                  process.stdin.on("data", c => input += c);
+                  process.stdin.on("end", () => {
+                    try {
+                      const h = JSON.parse(input);
+                      if (h.status !== "ok" || h.db !== "up" || h.version !== require("./package.json").version || !Number.isFinite(h.ts) || !Number.isInteger(h.streams)) process.exit(1);
+                    } catch { process.exit(1); }
+                  });'; then
+                echo "Construction API ready"
+                healthy=true
                 break
               fi
-              echo "  try $n: HTTP $code"
+              echo "  try $n: construction API not ready"
               sleep 5
             done
+            if [ "$healthy" != true ]; then
+              echo "API did not become healthy before the deadline" >&2
+              exit 1
+            fi
           REMOTE
 
       - name: Verify deployment
         run: |
-          curl -s -o /dev/null --max-time 20 -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.tech/
-          curl -s -o /dev/null --max-time 20 -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.tech/api/health
+          set -euo pipefail
+          curl --fail --silent --show-error -o /dev/null --max-time 20 -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.tech/
+          curl --fail --silent --show-error -o /dev/null --max-time 20 -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.tech/api/health
           echo "=== Health body ==="
-          curl -s --max-time 10 https://cortexbuildpro.tech/api/health
+          curl --fail --silent --show-error --max-time 10 https://cortexbuildpro.tech/api/health | node scripts/check-construction-health.cjs
           echo ""
           echo "=== Direct (port 8080) ==="
-          curl -s -o /dev/null --max-time 10 -w "Direct health -> %{http_code}\n" http://${VPS_HOST}:8080/api/health
+          curl --fail --silent --show-error -o /dev/null --max-time 10 -w "Direct health -> %{http_code}\n" http://${VPS_HOST}:8080/api/health

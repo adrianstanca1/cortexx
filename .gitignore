@@ -56,3 +56,6 @@ expo/android/
 .backup/
 expo/build-and-submit-ios.sh
 expo/build-ios-asc-key.sh
+
+# Construction deployment secrets
+.env.construction
