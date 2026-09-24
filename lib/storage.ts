@@ -172,7 +172,7 @@ export async function putObject(
 
   // Local disk
   await mkdir(LOCAL_UPLOAD_DIR, { recursive: true })
-  await writeFile(join(LOCAL_UPLOAD_DIR, key), body)
+  await writeFile(join(/* turbopackIgnore: true */ LOCAL_UPLOAD_DIR, key), body)
   return { key }
 }
 
@@ -219,11 +219,11 @@ export async function getObjectStream(key: string): Promise<{
   }
 
   // Local disk
-  const fullPath = join(LOCAL_UPLOAD_DIR, key)
-  const info = await stat(fullPath).catch(() => null)
+  const fullPath = join(/* turbopackIgnore: true */ LOCAL_UPLOAD_DIR, key)
+  const info = await stat(/* turbopackIgnore: true */ fullPath).catch(() => null)
   if (!info || !info.isFile()) return null
   return {
-    body: Readable.toWeb(createReadStream(fullPath)) as ReadableStream<Uint8Array>,
+    body: Readable.toWeb(createReadStream(/* turbopackIgnore: true */ fullPath)) as ReadableStream<Uint8Array>,
     size: info.size,
     mimeType: 'application/octet-stream',  // caller maps from extension
   }
@@ -243,8 +243,8 @@ export async function downloadToTemp(key: string): Promise<{ path: string; clean
   if (!safeKey(key)) return null
 
   if (!isS3Configured()) {
-    const path = join(LOCAL_UPLOAD_DIR, key)
-    const info = await stat(path).catch(() => null)
+    const path = join(/* turbopackIgnore: true */ LOCAL_UPLOAD_DIR, key)
+    const info = await stat(/* turbopackIgnore: true */ path).catch(() => null)
     if (!info || !info.isFile()) return null
     return { path, cleanup: async () => { /* file lives in shared upload dir; don't delete */ } }
   }
@@ -278,6 +278,6 @@ export async function deleteObject(key: string): Promise<boolean> {
     return true
   }
 
-  await unlink(join(LOCAL_UPLOAD_DIR, key)).catch(() => null)
+  await unlink(join(/* turbopackIgnore: true */ LOCAL_UPLOAD_DIR, key)).catch(() => null)
   return true
 }
