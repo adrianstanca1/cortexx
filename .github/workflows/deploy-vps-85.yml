@@ -34,10 +34,10 @@ jobs:
           if [[ -n "${VPS_SSH_KEY:-}" ]]; then
             printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
             chmod 600 ~/.ssh/id_ed25519
-          else
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq sshpass
           fi
+          # Always install sshpass — needed for password fallback
+          sudo apt-get update -qq 2>/dev/null || true
+          sudo apt-get install -y -qq sshpass 2>/dev/null || true
 
       - uses: actions/checkout@v7
 
