@@ -47,9 +47,8 @@ jobs:
           SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=15"
 
           # SSH key rejected by VPS — use password auth instead
-          echo "$VPS_PASSWORD" > /tmp/vps_pass
-          chmod 600 /tmp/vps_pass
-          SSH_CMD="sshpass -f /tmp/vps_pass ssh ${SSH_OPTS} ${VPS_USER}@${VPS_HOST}"
+          export SSHPASS="$VPS_PASSWORD"
+          SSH_CMD="sshpass -e ssh ${SSH_OPTS} ${VPS_USER}@${VPS_HOST}"
 
           $SSH_CMD 'bash -s' << 'REMOTE'
             set -euo pipefail
