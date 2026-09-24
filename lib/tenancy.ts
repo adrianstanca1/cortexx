@@ -26,7 +26,15 @@ export interface OrgRequestContext {
   bypass?: boolean
 }
 
-const storage = new AsyncLocalStorage<OrgRequestContext>()
+const globalForTenancy = globalThis as unknown as {
+  cortexxOrgStorage?: AsyncLocalStorage<OrgRequestContext>
+}
+
+// Server chunks and hot reload must share the storage instance, while each
+// request retains its own isolated store. Otherwise Prisma and auth can read
+// different storage instances despite running in the same request.
+const storage = globalForTenancy.cortexxOrgStorage ?? new AsyncLocalStorage<OrgRequestContext>()
+globalForTenancy.cortexxOrgStorage = storage
 
 /** Set up the org context for the duration of `fn`. Returns whatever fn returns.
  *

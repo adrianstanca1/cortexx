@@ -26,3 +26,18 @@ test('a fresh authentication context clears inherited tenant and bypass privileg
     assert.equal(getCurrentOrg().bypass, undefined)
   })
 })
+
+
+test('separately evaluated tenancy modules share request context', async () => {
+  const modulePath = require.resolve('../../lib/tenancy.ts')
+  delete require.cache[modulePath]
+  const reloaded = require(modulePath)
+  await runWithOrg({ organizationId: 'chunk-org', userId: 'chunk-user', role: 'member' }, async () => {
+    await Promise.resolve()
+    assert.equal(reloaded.getCurrentOrg().organizationId, 'chunk-org')
+    await reloaded.runWithOrg({ organizationId: 'nested-org', userId: 'nested-user', role: 'member' }, async () => {
+      assert.equal(getCurrentOrg().organizationId, 'nested-org')
+    })
+    assert.equal(getCurrentOrg().organizationId, 'chunk-org')
+  })
+})
