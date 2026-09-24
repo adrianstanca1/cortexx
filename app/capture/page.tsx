@@ -12,6 +12,19 @@ const actions = [
   { id: 'incident', label: 'Incident', sub: 'Report a site incident', Icon: IcAlert, color: '#ef4444' },
 ]
 
+type CapturePosition = { latitude: number; longitude: number; accuracyM: number }
+
+function getCapturePosition(): Promise<CapturePosition | null> {
+  if (typeof navigator === 'undefined' || !navigator.geolocation) return Promise.resolve(null)
+  return new Promise(resolve => {
+    navigator.geolocation.getCurrentPosition(
+      pos => resolve({ latitude: pos.coords.latitude, longitude: pos.coords.longitude, accuracyM: pos.coords.accuracy }),
+      () => resolve(null),
+      { enableHighAccuracy: true, timeout: 5000, maximumAge: 30000 },
+    )
+  })
+}
+
 function CaptureContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
@@ -83,7 +96,8 @@ function CaptureContent() {
     const type = fileTypeRef.current
     if (!type || !file) return
     try {
-      const uploaded = await uploadFile(file, file.name)
+      const capturedAt = new Date().toISOString()
+      const [uploaded, location] = await Promise.all([uploadFile(file, file.name), getCapturePosition()])
       const res = await fetch('/api/documents', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -94,14 +108,50 @@ function CaptureContent() {
           url: uploaded.url,
           size: uploaded.size,
           mimeType: uploaded.mimeType,
+          capturedAt,
+          latitude: location?.latitude ?? null,
+          longitude: location?.longitude ?? null,
+          accuracyM: location?.accuracyM ?? null,
+          tags: type === 'photo' ? ['progress-photo', ...(location ? ['gps'] : [])] : ['receipt', ...(location ? ['gps'] : [])],
+          metadata: { source: 'capture', captureType: type, originalName: file.name },
         }),
       })
-      if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Save failed')
+      const document = await res.json().catch(() => ({})) as { id?: string; error?: string }
+      if (!res.ok || !document.id) throw new Error(document.error || 'Save failed')
+
+      const gpsDetail = location
+        ? `GPS ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)} · ±${Math.round(location.accuracyM)}m`
+        : 'GPS unavailable or not permitted'
       await logActivity(
-        type === 'photo' ? 'uploaded a progress photo' : 'logged a receipt',
+        type === 'photo' ? 'uploaded a progress photo' : 'captured a receipt',
         type === 'photo' ? 'camera' : 'receipt',
+        gpsDetail,
       )
-      finishWith(type === 'photo' ? 'Photo logged' : 'Receipt logged')
+
+      if (type === 'receipt') {
+        try {
+          const ocrRes = await fetch('/api/receipts/analyze', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ documentId: document.id }),
+          })
+          const ocr = await ocrRes.json().catch(() => ({})) as {
+            extraction?: { vendor?: string | null; totalAmount?: number | null; confidence?: number }
+          }
+          if (ocrRes.ok && ocr.extraction) {
+            const vendor = ocr.extraction.vendor ? ` · ${ocr.extraction.vendor}` : ''
+            const amount = typeof ocr.extraction.totalAmount === 'number' ? ` · £${ocr.extraction.totalAmount.toFixed(2)}` : ''
+            finishWith(`Receipt scanned${vendor}${amount}`)
+          } else {
+            finishWith('Receipt saved · review needed')
+          }
+        } catch {
+          finishWith('Receipt saved · OCR unavailable')
+        }
+        return
+      }
+
+      finishWith(location ? 'Photo logged · GPS tagged' : 'Photo logged')
     } catch (e) {
       failWith(e instanceof Error ? e.message : 'Failed')
     }
