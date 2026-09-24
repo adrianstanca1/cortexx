@@ -73,7 +73,6 @@ jobs:
             sudo apt-get update -qq 2>/dev/null || true
             sudo apt-get install -y -qq sshpass 2>/dev/null || true
             export SSHPASS="$VPS_PASSWORD"
-            chmod 600 /tmp/vps_pass
             SSH_CMD="sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=${t} -o PubkeyAuthentication=no administrator@85.190.100.68"
           fi
           $SSH_CMD "timeout --signal=KILL ${t}s bash -lc \"\$(cat)\"" <<< "$CMD" > /tmp/vps-out.txt 2>&1
