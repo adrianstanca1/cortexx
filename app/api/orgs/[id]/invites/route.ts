@@ -6,6 +6,7 @@ import { enforceRateLimit } from '@/lib/rateLimit'
 import { canManage } from '@/lib/rbac'
 import { sendEmail, inviteTemplate } from '@/lib/email'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { isAssignablePersona, personaLabel } from '@/lib/persona'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,6 +44,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       organizationId: true,
       email: true,
       role: true,
+      personaRole: true,
       expiresAt: true,
       acceptedAt: true,
       invitedById: true,
@@ -73,14 +75,16 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  let body: { email?: unknown; role?: unknown }
+  let body: { email?: unknown; role?: unknown; personaRole?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
 
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
   }
-  const role = typeof body.role === 'string' && ALLOWED_ROLES.has(body.role) ? body.role : 'member'
+  const personaRole = isAssignablePersona(body.personaRole) ? body.personaRole : 'operative'
+  let role = typeof body.role === 'string' && ALLOWED_ROLES.has(body.role) ? body.role : (personaRole === 'client' ? 'viewer' : 'member')
+  if (personaRole === 'company_admin') role = 'admin'
 
   // Reject if the email is already a member of this org.
   const existingUser = await prisma.user.findUnique({ where: { email }, select: { id: true } })
@@ -99,7 +103,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   expiresAt.setDate(expiresAt.getDate() + 7)
 
   const invite = await prisma.organizationInvite.create({
-    data: { organizationId, email, role, token, expiresAt, invitedById: userId },
+    data: { organizationId, email, role, personaRole, token, expiresAt, invitedById: userId },
   })
 
   const acceptUrl = `${process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'}/invite/${token}`
@@ -107,7 +111,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     inviterName: actorName(session),
     organizationName: membership.organization.name,
     acceptUrl,
-    role,
+    role: personaLabel(personaRole),
   })
   // Fire-and-forget — invite is created either way; email is best-effort.
   sendEmail({ to: email, subject: tmpl.subject, html: tmpl.html, text: tmpl.text }).catch(() => {})
@@ -118,9 +122,9 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     action: 'invite.create',
     resourceType: 'OrganizationInvite',
     resourceId: invite.id,
-    metadata: { email, role },
+    metadata: { email, role, personaRole },
     ...requestMeta(req),
   })
 
-  return NextResponse.json({ invite: { id: invite.id, email, role, expiresAt, acceptUrl } }, { status: 201 })
+  return NextResponse.json({ invite: { id: invite.id, email, role, personaRole, expiresAt, acceptUrl } }, { status: 201 })
 }

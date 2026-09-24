@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { canManage, hasRole, isOwner } from '@/lib/rbac'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { isAssignablePersona } from '@/lib/persona'
 
 export const dynamic = 'force-dynamic'
 
@@ -27,23 +28,27 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
   }
 
-  let body: { role?: unknown }
+  let body: { role?: unknown; personaRole?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON' }, { status: 400 }) }
-  const newRole = typeof body.role === 'string' && ALLOWED_ROLES.has(body.role) ? body.role : null
-  if (!newRole) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
-
-  // Only owners can hand out or revoke ownership.
-  if ((newRole === 'owner' || hasRole(myMembership.role, 'owner') === false) && !isOwner(myMembership.role) && newRole === 'owner') {
-    return NextResponse.json({ error: 'Only an owner can promote to owner' }, { status: 403 })
-  }
+  const hasRoleChange = body.role !== undefined
+  const hasPersonaChange = body.personaRole !== undefined
+  if (!hasRoleChange && !hasPersonaChange) return NextResponse.json({ error: 'Role or personaRole is required' }, { status: 400 })
+  if (hasRoleChange && (typeof body.role !== 'string' || !ALLOWED_ROLES.has(body.role))) return NextResponse.json({ error: 'Invalid role' }, { status: 400 })
+  if (hasPersonaChange && !isAssignablePersona(body.personaRole)) return NextResponse.json({ error: 'Invalid construction persona' }, { status: 400 })
 
   const target = await prisma.userOrganization.findUnique({
     where: { id: memberId },
-    select: { id: true, userId: true, organizationId: true, role: true },
+    select: { id: true, userId: true, organizationId: true, role: true, personaRole: true },
   })
   if (!target || target.organizationId !== organizationId) {
     return NextResponse.json({ error: 'Member not found' }, { status: 404 })
   }
+  const newRole = hasRoleChange ? String(body.role) : target.role
+  const newPersonaRole = hasPersonaChange ? String(body.personaRole) : target.personaRole
+  if (newRole === 'owner' && !isOwner(myMembership.role)) return NextResponse.json({ error: 'Only an owner can promote to owner' }, { status: 403 })
+  if (newRole === 'owner' && newPersonaRole !== 'company_admin') return NextResponse.json({ error: 'Workspace owners must use the Company Admin persona' }, { status: 409 })
+  if (newPersonaRole === 'company_admin' && !['owner', 'admin'].includes(newRole)) return NextResponse.json({ error: 'Company Admin persona requires owner or admin workspace access' }, { status: 409 })
+
   // Demoting an owner — only another owner can do it, and the org must keep
   // at least one owner after the change.
   if (target.role === 'owner' && newRole !== 'owner') {
@@ -60,7 +65,7 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
 
   const updated = await prisma.userOrganization.update({
     where: { id: memberId },
-    data: { role: newRole },
+    data: { role: newRole, personaRole: newPersonaRole },
   })
 
   auditLog({
@@ -69,11 +74,11 @@ export async function PUT(req: NextRequest, { params }: RouteParams) {
     action: 'member.role-change',
     resourceType: 'UserOrganization',
     resourceId: memberId,
-    metadata: { from: target.role, to: newRole, targetUserId: target.userId },
+    metadata: { accessFrom: target.role, accessTo: newRole, personaFrom: target.personaRole, personaTo: newPersonaRole, targetUserId: target.userId },
     ...requestMeta(req),
   })
 
-  return NextResponse.json({ ok: true, role: updated.role })
+  return NextResponse.json({ ok: true, role: updated.role, personaRole: updated.personaRole })
 }
 
 /** DELETE — remove a member from the org. Owners can be removed only by

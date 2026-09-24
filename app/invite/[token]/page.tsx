@@ -4,12 +4,14 @@ import { use, useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import { useSession, signIn } from 'next-auth/react'
 import Link from 'next/link'
+import { personaLabel } from '@/lib/persona'
 
 interface InviteInfo {
   organizationName: string
   organizationSlug: string
   email: string
   role: string
+  personaRole: string
   expiresAt: string
 }
 
@@ -76,7 +78,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       <Frame>
         <h1 style={titleStyle}>You&apos;ve been invited</h1>
         <p style={{ color: '#8ea8c5', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 16, lineHeight: 1.5 }}>
-          Join <strong style={{ color: '#eef3fa' }}>{invite.organizationName}</strong> on Cortexx as a <strong style={{ color: '#eef3fa' }}>{invite.role}</strong>.
+          Join <strong style={{ color: '#eef3fa' }}>{invite.organizationName}</strong> on Cortexx as <strong style={{ color: '#eef3fa' }}>{personaLabel(invite.personaRole)}</strong> ({invite.role} workspace access).
         </p>
         <p style={{ color: '#52749a', fontSize: 12, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 20 }}>
           Sign in or create an account for {invite.email} to continue.

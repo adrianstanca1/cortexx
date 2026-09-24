@@ -5,12 +5,14 @@ import { cookies } from 'next/headers'
 import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { reportError } from './errors'
+import { resolvePersona } from './persona'
 
 export interface SessionOrgMembership {
   id: string
   slug: string
   name: string
   role: string
+  personaRole: string
 }
 
 // Auth.js v5 (next-auth@beta) — config object + destructured exports
@@ -67,6 +69,7 @@ export const authConfig: NextAuthConfig = {
             slug: m.organization.slug,
             name: m.organization.name,
             role: m.role,
+            personaRole: resolvePersona(m.personaRole, token.role, m.role),
           })) satisfies SessionOrgMembership[]
         } catch (error) {
           // Don't lock the user out — keep the previous cached value if

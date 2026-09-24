@@ -115,6 +115,7 @@ var CortexCore = (() => {
       "drawings.annotate",
       "safety.read",
       "safety.create",
+      "safety.approve",
       "quality.read",
       "quality.create",
       "client.read",
@@ -141,8 +142,7 @@ var CortexCore = (() => {
       "safety.create",
       "quality.read",
       "quality.create",
-      "ai.use",
-      "ai.execute"
+      "ai.use"
     ]),
     operative: /* @__PURE__ */ new Set([
       "workspace.read",

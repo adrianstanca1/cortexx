@@ -7,6 +7,7 @@ import { reportError } from './errors'
 import { beginOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
 import { bearerToken, verifyMobileToken } from './mobileAuth'
+import { resolvePersona } from './persona'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
@@ -32,13 +33,14 @@ async function mobileBearerSession(orgContext: { organizationId: string | null; 
       slug: membership.organization.slug,
       name: membership.organization.name,
       role: membership.role,
+      personaRole: resolvePersona(membership.personaRole, membership.user.role, membership.role),
     } satisfies SessionOrgMembership
     const session = {
       user: {
         id: membership.user.id,
         email: membership.user.email,
         name: membership.user.name,
-        role: membership.user.role,
+        role: org.personaRole,
         organizations: [org],
       },
       expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
@@ -51,17 +53,16 @@ async function mobileBearerSession(orgContext: { organizationId: string | null; 
 }
 
 /**
- * When the JWT carries `orgs: []`, hit the DB once to confirm the user
- * really has no memberships before falling through. The JWT loader in
- * lib/auth.ts swallows DB errors and caches an empty list — without
- * this fallback, one bad sign-in permanently breaks every owned-model
- * route for the rest of the 30-day token lifetime.
+ * Load current memberships from the DB for route authorization. JWT org data
+ * remains useful to clients, but server routes must see role/persona changes and
+ * removals immediately rather than waiting for a new 30-day token. Null means
+ * the refresh itself failed, in which case callers may retain cached metadata.
  */
-async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[]> {
+async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[] | null> {
   try {
     const memberships = await prisma.userOrganization.findMany({
       where: { userId },
-      include: { organization: { select: { id: true, slug: true, name: true } } },
+      include: { organization: { select: { id: true, slug: true, name: true } }, user: { select: { role: true } } },
       orderBy: { joinedAt: 'asc' },
     })
     return memberships.map(m => ({
@@ -69,10 +70,11 @@ async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[]
       slug: m.organization.slug,
       name: m.organization.name,
       role: m.role,
+      personaRole: resolvePersona(m.personaRole, m.user.role, m.role),
     }))
   } catch (error) {
     reportError(error, { context: 'requireAuth.refetchOrgsFromDb', userId })
-    return []
+    return null
   }
 }
 
@@ -103,9 +105,11 @@ export async function requireAuth() {
 
   const userId = (session.user as { id?: string }).id || null
   let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
-  if (orgs.length === 0 && userId) {
-    orgs = await refetchOrgsFromDb(userId)
+  if (userId) {
+    const freshOrgs = await refetchOrgsFromDb(userId)
+    if (freshOrgs !== null) orgs = freshOrgs
   }
+  ;(session.user as { organizations?: SessionOrgMembership[] }).organizations = orgs
 
   if (orgs.length > 0) {
     let active = orgs[0]
@@ -117,6 +121,8 @@ export async function requireAuth() {
         if (match) active = match
       }
     } catch { /* not in a request context */ }
+    const personaRole = resolvePersona(active.personaRole, (session.user as { role?: string }).role, active.role)
+    ;(session.user as { role?: string }).role = personaRole
     Object.assign(orgContext, { organizationId: active.id, userId, role: active.role })
   }
 
@@ -146,9 +152,11 @@ export async function requireOrg() {
 
   const userId = (session.user as { id?: string }).id
   let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
-  if (orgs.length === 0 && userId) {
-    orgs = await refetchOrgsFromDb(userId)
+  if (userId) {
+    const freshOrgs = await refetchOrgsFromDb(userId)
+    if (freshOrgs !== null) orgs = freshOrgs
   }
+  ;(session.user as { organizations?: SessionOrgMembership[] }).organizations = orgs
 
   if (orgs.length === 0) {
     if (MULTITENANT_ENFORCED) {
@@ -167,6 +175,8 @@ export async function requireOrg() {
     }
   } catch { /* native bearer requests have no cookie requirement */ }
 
+  const personaRole = resolvePersona(active.personaRole, (session.user as { role?: string }).role, active.role)
+  ;(session.user as { role?: string }).role = personaRole
   Object.assign(orgContext, { organizationId: active.id, userId: userId ?? null, role: active.role })
 
   return {
@@ -176,6 +186,7 @@ export async function requireOrg() {
     orgSlug: active.slug,
     orgName: active.name,
     role: active.role,
+    personaRole,
   }
 }
 

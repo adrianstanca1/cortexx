@@ -31,7 +31,7 @@ const ROLE_CAPABILITIES: Record<CortexRole, ReadonlySet<Capability>> = {
     'task.read', 'task.create', 'task.assign', 'task.approve',
     'time.read', 'time.approve', 'procurement.read', 'procurement.create',
     'finance.read', 'documents.read', 'documents.create', 'documents.approve',
-    'drawings.read', 'drawings.annotate', 'safety.read', 'safety.create',
+    'drawings.read', 'drawings.annotate', 'safety.read', 'safety.create', 'safety.approve',
     'quality.read', 'quality.create', 'client.read', 'client.communicate',
     'ai.use', 'ai.execute', 'ai.approve', 'audit.read',
   ]),
@@ -40,7 +40,7 @@ const ROLE_CAPABILITIES: Record<CortexRole, ReadonlySet<Capability>> = {
     'task.read', 'task.create', 'task.assign',
     'time.read', 'time.clock', 'documents.read', 'documents.create',
     'drawings.read', 'drawings.annotate', 'safety.read', 'safety.create',
-    'quality.read', 'quality.create', 'ai.use', 'ai.execute',
+    'quality.read', 'quality.create', 'ai.use',
   ]),
   operative: new Set([
     'workspace.read', 'project.read', 'task.read', 'task.create',

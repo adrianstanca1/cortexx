@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { issueMobileToken } from '@/lib/mobileAuth'
 import { verifyTotp } from '@/lib/totp'
+import { resolvePersona } from '@/lib/persona'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -45,6 +46,7 @@ export async function POST(req: NextRequest) {
   const requestedOrgId = typeof body.organizationId === 'string' ? body.organizationId : ''
   const membership = (requestedOrgId && user.organizations.find(m => m.organizationId === requestedOrgId)) || user.organizations[0]
   if (!membership) return NextResponse.json({ error: 'Organization access denied' }, { status: 403 })
+  const personaRole = resolvePersona(membership.personaRole, user.role, membership.role)
 
   const token = await issueMobileToken({
     userId: user.id,
@@ -52,7 +54,7 @@ export async function POST(req: NextRequest) {
     organizationRole: membership.role,
     email: user.email,
     name: user.name,
-    appRole: user.role,
+    appRole: personaRole,
   })
 
   return NextResponse.json({
@@ -61,10 +63,10 @@ export async function POST(req: NextRequest) {
       id: user.id,
       email: user.email,
       name: user.name,
-      role: user.role,
+      role: personaRole,
       organizationRole: membership.role,
       organization: membership.organization,
-      organizations: user.organizations.map(m => ({ ...m.organization, role: m.role })),
+      organizations: user.organizations.map(m => ({ ...m.organization, role: m.role, personaRole: resolvePersona(m.personaRole, user.role, m.role) })),
     },
   })
 }

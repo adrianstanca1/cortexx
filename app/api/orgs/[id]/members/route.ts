@@ -34,6 +34,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       name: m.user.name,
       image: m.user.image,
       role: m.role,
+      personaRole: m.personaRole,
       joinedAt: m.joinedAt,
     })),
     canManage: canManage(myMembership.role),

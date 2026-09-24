@@ -26,6 +26,7 @@ export async function GET(_req: NextRequest, { params }: RouteParams) {
       organizationSlug: invite.organization.slug,
       email: invite.email,
       role: invite.role,
+      personaRole: invite.personaRole,
       expiresAt: invite.expiresAt,
     },
   })
@@ -56,8 +57,8 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     // Upsert membership — if the user was previously a member, restore.
     await tx.userOrganization.upsert({
       where: { userId_organizationId: { userId, organizationId: invite.organizationId } },
-      create: { userId, organizationId: invite.organizationId, role: invite.role },
-      update: { role: invite.role },
+      create: { userId, organizationId: invite.organizationId, role: invite.role, personaRole: invite.personaRole },
+      update: { role: invite.role, personaRole: invite.personaRole },
     })
     await tx.organizationInvite.update({
       where: { id: invite.id },
@@ -71,7 +72,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     action: 'invite.accept',
     resourceType: 'OrganizationInvite',
     resourceId: invite.id,
-    metadata: { role: invite.role },
+    metadata: { role: invite.role, personaRole: invite.personaRole },
     ...requestMeta(req),
   })
 

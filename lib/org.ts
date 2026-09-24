@@ -12,6 +12,7 @@
  */
 import { cookies } from 'next/headers'
 import { prisma } from './db'
+import { resolvePersona } from './persona'
 
 import { MULTITENANT_ENFORCED } from './tenant-config'
 export { MULTITENANT_ENFORCED } from './tenant-config'
@@ -21,6 +22,7 @@ const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 export interface OrgContext {
   organizationId: string
   role: 'owner' | 'admin' | 'member' | 'viewer'
+  personaRole: string
   organization: {
     id: string
     slug: string
@@ -58,6 +60,7 @@ export async function getActiveOrg(userId: string): Promise<OrgContext | null> {
   return {
     organizationId: chosen.organizationId,
     role: chosen.role as OrgContext['role'],
+    personaRole: resolvePersona(chosen.personaRole, undefined, chosen.role),
     organization: chosen.organization,
   }
 }

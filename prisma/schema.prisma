@@ -1498,7 +1498,8 @@ model UserOrganization {
   id             String       @id @default(cuid())
   userId         String
   organizationId String
-  role           String       @default("member") // owner / admin / member / viewer
+  role           String       @default("member") // tenant access: owner / admin / member / viewer
+  personaRole    String       @default("operative") // tenant-specific construction persona
   joinedAt       DateTime     @default(now())
   user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
   organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -1512,7 +1513,8 @@ model OrganizationInvite {
   id             String       @id @default(cuid())
   organizationId String
   email          String
-  role           String       @default("member")
+  role           String       @default("member") // tenant access role
+  personaRole    String       @default("operative") // construction persona granted on accept
   token          String       @unique
   expiresAt      DateTime
   acceptedAt     DateTime?
