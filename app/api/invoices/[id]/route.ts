@@ -24,15 +24,6 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   }
 }
 
-async function recalcSpent(projectId: string) {
-  const paidInvoices = await prisma.invoice.findMany({
-    where: { projectId, status: 'paid' },
-    select: { amount: true },
-  })
-  const spent = paidInvoices.reduce((sum, i) => sum + i.amount, 0)
-  await prisma.project.update({ where: { id: projectId }, data: { spent } })
-}
-
 export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
   const auth = await requireAuth()
@@ -44,37 +35,28 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (body.amount !== undefined && (!Number.isFinite(Number(body.amount)) || Number(body.amount) <= 0)) {
       return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 })
     }
-    // Wrap update + project-spent recalc in a single transaction so two
-    // concurrent paid-flips on different invoices for the same project
-    // can't race: previously each PUT updated independently then read
-    // the (potentially in-flight) set of paid invoices, and the second
-    // writer's sum could miss the first's update. The interactive tx
-    // serialises both reads + the project.spent write.
-    const invoice = await prisma.$transaction(async (tx) => {
-      const inv = await tx.invoice.update({
-        where: { id: params.id },
-        data: {
-          ...(body.status !== undefined && { status: body.status }),
-          ...(body.amount !== undefined && { amount: Number(body.amount) }),
-          ...(body.clientName !== undefined && { clientName: body.clientName }),
-          ...(body.notes !== undefined && { notes: body.notes }),
-          ...(body.dueDate && { dueDate: new Date(body.dueDate) }),
-          ...(body.paidDate !== undefined && { paidDate: body.paidDate ? new Date(body.paidDate) : null }),
-          ...(body.status === 'paid' && !body.paidDate && { paidDate: new Date() }),
-        },
-        include: { project: true },
-      })
-      if (body.status !== undefined && inv.projectId) {
-        const paid = await tx.invoice.findMany({
-          where: { projectId: inv.projectId, status: 'paid' },
-          select: { amount: true },
-        })
-        const spent = paid.reduce((s, i) => s + i.amount, 0)
-        await tx.project.update({ where: { id: inv.projectId }, data: { spent } })
-      }
-      return inv
+    // Client invoices are revenue. Never write them into Project.spent, which
+    // is a cost-side field used by project margin/commercial reporting.
+    const invoice = await prisma.invoice.update({
+      where: { id: params.id },
+      data: {
+        ...(body.status !== undefined && { status: body.status }),
+        ...(body.amount !== undefined && { amount: Number(body.amount) }),
+        ...(body.clientName !== undefined && { clientName: body.clientName }),
+        ...(body.notes !== undefined && { notes: body.notes }),
+        ...(body.dueDate && { dueDate: new Date(body.dueDate) }),
+        ...(body.paidDate !== undefined && { paidDate: body.paidDate ? new Date(body.paidDate) : null }),
+        ...(body.status === 'paid' && !body.paidDate && { paidDate: new Date() }),
+      },
+      include: { project: true },
     })
-
+    auditLog({
+      action: 'invoice.update',
+      resourceType: 'Invoice',
+      resourceId: invoice.id,
+      metadata: { status: invoice.status, amount: invoice.amount },
+      ...requestMeta(req),
+    })
     return NextResponse.json(invoice)
   } catch (error) {
     reportError(error)
@@ -108,8 +90,6 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
       ...requestMeta(req),
     })
 
-    // Keep project.spent in sync (was non-paid so spent shouldn't change, but be safe)
-    if (existing.projectId) await recalcSpent(existing.projectId)
 
     // Log activity (non-blocking)
     if (existing.projectId) {

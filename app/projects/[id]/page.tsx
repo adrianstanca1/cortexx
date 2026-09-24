@@ -15,12 +15,20 @@ const statusLabel: Record<string, string> = { active: 'Active', snagging: 'Snagg
 const priorityColor: Record<string, string> = { critical: '#ef4444', high: '#f59e0b', medium: '#2563eb', low: '#52749a' }
 const invoiceStatusColor: Record<string, string> = { draft: '#52749a', sent: '#f59e0b', paid: '#10b981', overdue: '#ef4444' }
 const invoiceNextStatus: Record<string, string> = { draft: 'sent', sent: 'paid', paid: 'draft', overdue: 'paid' }
+const gbp = (n: number) => n.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
 const PRIORITIES = ['low', 'medium', 'high', 'critical'] as const
 const STATUSES = ['active', 'quoting', 'snagging', 'complete'] as const
 const DOCUMENT_EXPIRY_WARNING_DAYS = 7
 
 type TabId = 'overview' | 'tasks' | 'team' | 'finance'
+
+type CommercialSummary = {
+  originalContractValue: number; approvedVariations: number; adjustedContractValue: number; appliedToDate: number; certifiedToDate: number
+  retentionHeld: number; valuationCashReceived: number; clientInvoicesIssued: number; clientInvoicesPaid: number; committedPOs: number
+  approvedSubcontract: number; paidSubcontract: number; recordedCost: number; openCommitments: number; forecastCost: number; earnedValue: number
+  uncertifiedValue: number; forecastMargin: number; forecastMarginPct: number; cashPosition: number
+}
 
 export default function ProjectDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -32,6 +40,8 @@ export default function ProjectDetailPage() {
   const [error, setError] = useState<string | null>(null)
   const [tab, setTab] = useState<TabId>('overview')
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
+  const [commercial, setCommercial] = useState<CommercialSummary | null>(null)
+  const [commercialLoading, setCommercialLoading] = useState(false)
 
   // Task modal
   const [showTaskModal, setShowTaskModal] = useState(false)
@@ -84,17 +94,28 @@ export default function ProjectDetailPage() {
     } catch { /* non-critical */ }
   }
 
+  const loadCommercial = useCallback(() => {
+    if (!id) return
+    setCommercialLoading(true)
+    fetch(`/api/projects/${id}/commercial`)
+      .then(r => { if (!r.ok) throw new Error('Commercial summary unavailable'); return r.json() })
+      .then(d => setCommercial(d.summary || null))
+      .catch(() => setCommercial(null))
+      .finally(() => setCommercialLoading(false))
+  }, [id])
+
   const load = useCallback(() => {
     if (!id) { setLoading(false); setError('Invalid project ID'); return }
     fetch(`/api/projects/${id}`)
       .then(r => { if (!r.ok) throw new Error('Project not found'); return r.json() })
       .then(d => { setProject(d.project || d); setLoading(false) })
       .catch(e => { setError(e.message); setLoading(false) })
+    loadCommercial()
     fetch(`/api/projects/${id}/comments?take=5`)
       .then(r => r.ok ? r.json() : null)
       .then(d => { if (d?.comments) setRecentComments(d.comments) })
       .catch(() => {})
-  }, [id])
+  }, [id, loadCommercial])
 
   useEffect(() => { load() }, [load])
 
@@ -115,7 +136,7 @@ export default function ProjectDetailPage() {
   const margin = project.budget > 0 ? Math.round(((project.budget - project.spent) / project.budget) * 100) : 0
   const openTasks = project.tasks?.filter(t => t.status !== 'done') || []
   const doneTasks = project.tasks?.filter(t => t.status === 'done') || []
-  const totalInvoiced = project.invoices?.reduce((s, i) => s + i.amount, 0) || 0
+  const totalInvoiced = project.invoices?.filter(i => i.status !== 'draft').reduce((s, i) => s + i.amount, 0) || 0
   const paid = project.invoices?.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0) || 0
   const daysLeft = project.endDate ? Math.ceil((new Date(project.endDate).getTime() - now) / 86400000) : null
   const documentExpiryThreshold = now + DOCUMENT_EXPIRY_WARNING_DAYS * 86400000
@@ -191,10 +212,10 @@ export default function ProjectDetailPage() {
       setProject(prev => {
         if (!prev) return prev
         const updatedInvoices = prev.invoices?.map(i => i.id === inv.id ? { ...i, status: next } : i) || []
-        const newSpent = updatedInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
-        return { ...prev, invoices: updatedInvoices, spent: newSpent }
+        return { ...prev, invoices: updatedInvoices }
       })
       showToast(`Invoice marked ${next}`)
+      loadCommercial()
       if (next === 'paid') logActivity(`marked invoice ${inv.number} as paid`, 'check')
     } catch { showToast('Failed to update invoice', 'error') }
   }
@@ -206,10 +227,10 @@ export default function ProjectDetailPage() {
       setProject(prev => {
         if (!prev) return prev
         const updatedInvoices = prev.invoices?.filter(i => i.id !== inv.id) || []
-        const newSpent = updatedInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
-        return { ...prev, invoices: updatedInvoices, spent: newSpent }
+        return { ...prev, invoices: updatedInvoices }
       })
       showToast('Invoice deleted')
+      loadCommercial()
     } catch { showToast('Failed to delete invoice', 'error') }
   }
 
@@ -251,12 +272,12 @@ export default function ProjectDetailPage() {
       setProject(prev => {
         if (!prev) return prev
         const updatedInvoices = prev.invoices?.map(i => i.id === updated.id ? { ...i, ...updated } : i) || []
-        const newSpent = updatedInvoices.filter(i => i.status === 'paid').reduce((s, i) => s + i.amount, 0)
-        return { ...prev, invoices: updatedInvoices, spent: newSpent }
+        return { ...prev, invoices: updatedInvoices }
       })
       setShowEditInvoiceModal(false)
       setEditInvoice(null)
       showToast('Invoice updated')
+      loadCommercial()
     } catch (e) { showToast(e instanceof Error ? e.message : 'Failed to update invoice', 'error') }
     finally { setSavingEditInvoice(false) }
   }
@@ -669,6 +690,40 @@ export default function ProjectDetailPage() {
         {/* ── FINANCE ── */}
         {tab === 'finance' && (
           <div>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
+              <p style={{ ...labelStyle, marginBottom: 0 }}>Commercial control</p>
+              <a href={`/api/projects/${id}/commercial/export`} style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#2563eb', textDecoration: 'none', padding: '6px 9px', borderRadius: 8, background: 'rgba(37,99,235,0.10)' }}>Export CSV</a>
+            </div>
+            {commercialLoading && <div style={{ color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 12, padding: '12px 0' }}>Calculating commercial position…</div>}
+            {commercial && (
+              <>
+                <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginBottom: 10 }}>
+                  <CommercialMetric label="Adjusted contract" value={gbp(commercial.adjustedContractValue)} sub={`${gbp(commercial.approvedVariations)} approved variations`} color="#eef3fa" />
+                  <CommercialMetric label="Earned value" value={gbp(commercial.earnedValue)} sub={`${project.progress}% physical progress`} color="#06b6d4" />
+                  <CommercialMetric label="Applied to date" value={gbp(commercial.appliedToDate)} sub="latest valuation" color="#3b82f6" />
+                  <CommercialMetric label="Certified" value={gbp(commercial.certifiedToDate)} sub={`${gbp(commercial.retentionHeld)} retention held`} color="#f59e0b" />
+                  <CommercialMetric label="Cash received" value={gbp(commercial.valuationCashReceived)} sub="against certificates" color="#10b981" />
+                  <CommercialMetric label="Uncertified value" value={gbp(commercial.uncertifiedValue)} sub={commercial.uncertifiedValue < 0 ? 'certification ahead of earned value' : 'earned but not certified'} color={commercial.uncertifiedValue < 0 ? '#ef4444' : '#8b5cf6'} />
+                  <CommercialMetric label="Forecast cost" value={gbp(commercial.forecastCost)} sub={`${gbp(commercial.openCommitments)} open commitments`} color="#ef4444" />
+                  <CommercialMetric label="Forecast margin" value={gbp(commercial.forecastMargin)} sub={`${commercial.forecastMarginPct.toFixed(1)}% of adjusted contract`} color={commercial.forecastMarginPct >= 15 ? '#10b981' : commercial.forecastMarginPct >= 5 ? '#f59e0b' : '#ef4444'} />
+                </div>
+                <div style={{ background: '#152641', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 14 }}>
+                  <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', rowGap: 6, columnGap: 10, fontFamily: 'var(--font-system)', fontSize: 11 }}>
+                    <span style={{ color: '#8ea8c5' }}>Recorded project cost</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.recordedCost)}</strong>
+                    <span style={{ color: '#8ea8c5' }}>PO commitments</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.committedPOs)}</strong>
+                    <span style={{ color: '#8ea8c5' }}>Approved subcontract liabilities</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.approvedSubcontract)}</strong>
+                    <span style={{ color: '#8ea8c5' }}>Valuation cash less recorded cost</span><strong style={{ color: commercial.cashPosition >= 0 ? '#10b981' : '#ef4444' }}>{gbp(commercial.cashPosition)}</strong>
+                  </div>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 10, overflowX: 'auto' }}>
+                    <Link href="/valuations" style={commercialLinkStyle}>Valuations</Link>
+                    <Link href="/variations" style={commercialLinkStyle}>Variations</Link>
+                    <Link href="/pos" style={commercialLinkStyle}>Purchase orders</Link>
+                    <Link href="/sub-invoices" style={commercialLinkStyle}>Subcontract costs</Link>
+                  </div>
+                </div>
+              </>
+            )}
+
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
               <div style={{ background: 'rgba(16,185,129,0.08)', border: '0.5px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: 12 }}>
                 <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Invoiced</div>
@@ -982,6 +1037,19 @@ export default function ProjectDetailPage() {
       )}
     </div>
   )
+}
+
+const commercialLinkStyle: React.CSSProperties = {
+  flexShrink: 0, fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: '#8ea8c5', textDecoration: 'none',
+  padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.08)',
+}
+
+function CommercialMetric({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
+  return <div style={{ background: '#152641', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div style={{ fontFamily: 'var(--font-system)', fontSize: 9, fontWeight: 800, color: '#52749a', textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
+    <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 800, color, marginTop: 3 }}>{value}</div>
+    <div style={{ fontFamily: 'var(--font-system)', fontSize: 9, color: '#52749a', marginTop: 2, lineHeight: 1.3 }}>{sub}</div>
+  </div>
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
