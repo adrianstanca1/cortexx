@@ -1,10 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
+import { canManage } from '@/lib/rbac'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
+
+function financialAdmin(auth: { role: string | null }) { return !!auth.role && canManage(auth.role) }
 
 const ALLOWED_STATUS = new Set(['draft', 'sent', 'accepted', 'rejected'])
 
@@ -51,8 +54,9 @@ function validateLineItems(raw: unknown): LineItem[] {
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!financialAdmin(auth)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   const quote = await prisma.quote.findUnique({
     where: { id: params.id },
     include: { customer: { select: { id: true, name: true, contactName: true, contactEmail: true } } },
@@ -63,8 +67,9 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 
 export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!financialAdmin(auth)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   try {
     const body = await req.json()
     const existing = await prisma.quote.findUnique({
@@ -139,8 +144,9 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!financialAdmin(auth)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   try {
     await prisma.quote.delete({ where: { id: params.id } })
     auditLog({

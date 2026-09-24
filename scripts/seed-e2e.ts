@@ -58,6 +58,11 @@ async function main() {
     project = await prisma.project.create({ data: { name: 'E2E Verification Project', address: '1 Automation Way', postcode: 'E2E 1AA', status: 'active', progress: 25, clientName: 'Cortexx Test Client', budget: 100000, spent: 25000, organizationId: organization.id } })
   }
 
+  let adminOnlyProject = await prisma.project.findFirst({ where: { name: 'E2E Admin Only Project', organizationId: organization.id } })
+  if (!adminOnlyProject) {
+    adminOnlyProject = await prisma.project.create({ data: { name: 'E2E Admin Only Project', address: '99 Restricted Way', postcode: 'E2E 9ZZ', status: 'active', progress: 5, clientName: 'Admin Client', budget: 250000, spent: 10000, organizationId: organization.id } })
+  }
+
   for (const persona of ['project_manager', 'foreman', 'operative']) {
     const member = seeded.get(persona)?.member
     if (member) {
@@ -67,6 +72,36 @@ async function main() {
         create: { projectId: project.id, memberId: member.id, role: persona.replace('_', ' '), organizationId: organization.id },
       })
     }
+  }
+
+  const operative = seeded.get('operative')?.member
+  if (operative) {
+    const existing = await prisma.task.findFirst({ where: { title: 'E2E Operative Task', projectId: project.id, organizationId: organization.id } })
+    if (existing) await prisma.task.update({ where: { id: existing.id }, data: { assigneeId: operative.id, status: 'todo' } })
+    else await prisma.task.create({ data: { title: 'E2E Operative Task', projectId: project.id, assigneeId: operative.id, status: 'todo', priority: 'medium', organizationId: organization.id } })
+  }
+  const adminTask = await prisma.task.findFirst({ where: { title: 'E2E Admin Only Task', projectId: adminOnlyProject.id, organizationId: organization.id } })
+  if (!adminTask) await prisma.task.create({ data: { title: 'E2E Admin Only Task', projectId: adminOnlyProject.id, status: 'todo', priority: 'medium', organizationId: organization.id } })
+
+  const operativeMember = seeded.get('operative')?.member
+  if (operativeMember) {
+    const assignedDate = new Date('2026-09-24T08:00:00.000Z')
+    const existingAssignedTime = await prisma.timeEntry.findFirst({ where: { memberId: operativeMember.id, projectId: project.id, date: assignedDate, organizationId: organization.id } })
+    if (existingAssignedTime) await prisma.timeEntry.update({ where: { id: existingAssignedTime.id }, data: { hours: 7.5, week: 39, year: 2026, approved: false } })
+    else await prisma.timeEntry.create({ data: { memberId: operativeMember.id, projectId: project.id, date: assignedDate, hours: 7.5, week: 39, year: 2026, approved: false, organizationId: organization.id } })
+
+    const approvedDate = new Date('2026-09-22T08:00:00.000Z')
+    const existingApprovedTime = await prisma.timeEntry.findFirst({ where: { memberId: operativeMember.id, projectId: project.id, date: approvedDate, organizationId: organization.id } })
+    if (existingApprovedTime) await prisma.timeEntry.update({ where: { id: existingApprovedTime.id }, data: { hours: 8, week: 39, year: 2026, approved: true } })
+    else await prisma.timeEntry.create({ data: { memberId: operativeMember.id, projectId: project.id, date: approvedDate, hours: 8, week: 39, year: 2026, approved: true, organizationId: organization.id } })
+  }
+
+  const adminMember = seeded.get('company_admin')?.member
+  if (adminMember) {
+    const adminDate = new Date('2026-09-23T08:00:00.000Z')
+    const existingAdminTime = await prisma.timeEntry.findFirst({ where: { memberId: adminMember.id, projectId: adminOnlyProject.id, date: adminDate, organizationId: organization.id } })
+    if (existingAdminTime) await prisma.timeEntry.update({ where: { id: existingAdminTime.id }, data: { hours: 4, week: 39, year: 2026, approved: false } })
+    else await prisma.timeEntry.create({ data: { memberId: adminMember.id, projectId: adminOnlyProject.id, date: adminDate, hours: 4, week: 39, year: 2026, approved: false, organizationId: organization.id } })
   }
 
   console.log(`Seeded E2E personas for ${organizationSlug}: ${personas.map(p => p.userRole).join(', ')}`)

@@ -1,14 +1,43 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { canManage, canWrite } from '@/lib/rbac'
 import { runWithOrg } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
 type RouteParams = { params: Promise<{ id: string }> }
+type OrgAuth = Exclude<Awaited<ReturnType<typeof requireOrg>>, NextResponse>
+
+function appRole(auth: OrgAuth): string { return (auth.session.user as { role?: string })?.role || '' }
+function email(auth: OrgAuth): string { return (auth.session.user as { email?: string | null })?.email?.trim() || '' }
+
+function taskAccessWhere(id: string, auth: OrgAuth): Prisma.TaskWhereInput {
+  if (canManage(auth.role || '')) return { id }
+  const role = appRole(auth)
+  const mail = email(auth)
+  if (!mail) return { id: '__no_accessible_task__' }
+  if (role === 'project_manager' || role === 'foreman') {
+    return { id, project: { assignments: { some: { member: { email: { equals: mail, mode: 'insensitive' } } } } } }
+  }
+  if (role === 'operative') return { id, assignee: { email: { equals: mail, mode: 'insensitive' } } }
+  return { id }
+}
+
+async function assignedProject(projectId: string, auth: OrgAuth): Promise<boolean> {
+  if (canManage(auth.role || '')) return true
+  const mail = email(auth)
+  if (!mail) return false
+  return !!(await prisma.project.findFirst({ where: { id: projectId, assignments: { some: { member: { email: { equals: mail, mode: 'insensitive' } } } } }, select: { id: true } }))
+}
+
+async function assigneeBelongsToProject(assigneeId: string, projectId: string): Promise<boolean> {
+  return !!(await prisma.teamMember.findFirst({ where: { id: assigneeId, assignments: { some: { projectId } } }, select: { id: true } }))
+}
 
 async function scoped<T>(auth: Exclude<Awaited<ReturnType<typeof requireOrg>>, NextResponse>, fn: () => Promise<T>) {
   return runWithOrg({ organizationId: auth.orgId, userId: auth.userId ?? null, role: auth.role }, fn)
@@ -20,8 +49,8 @@ export async function GET(_req: NextRequest, { params: paramsP }: RouteParams) {
   const params = await paramsP
   return scoped(auth, async () => {
     try {
-      const task = await prisma.task.findUnique({
-        where: { id: params.id },
+      const task = await prisma.task.findFirst({
+        where: taskAccessWhere(params.id, auth),
         include: { project: true, assignee: true, _count: { select: { comments: true } } },
       })
       if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
@@ -41,7 +70,21 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
   const params = await paramsP
   return scoped(auth, async () => {
     try {
+      if (!canWrite(auth.role || '')) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
+      const existing = await prisma.task.findFirst({ where: taskAccessWhere(params.id, auth), select: { id: true, projectId: true, assigneeId: true } })
+      if (!existing) return NextResponse.json({ error: 'Task not found or not assigned' }, { status: 404 })
       const body = await req.json()
+      const role = appRole(auth)
+      if (!canManage(auth.role || '') && role === 'operative') {
+        const keys = Object.keys(body).filter(key => body[key] !== undefined)
+        if (keys.some(key => key !== 'status')) return NextResponse.json({ error: 'Operatives can only update task status' }, { status: 403 })
+      }
+      const targetProjectId = body.projectId !== undefined ? body.projectId : existing.projectId
+      if (!canManage(auth.role || '') && (role === 'project_manager' || role === 'foreman')) {
+        if (!targetProjectId || !(await assignedProject(String(targetProjectId), auth))) return NextResponse.json({ error: 'Target project is not assigned' }, { status: 403 })
+        if (role === 'foreman' && body.projectId !== undefined && body.projectId !== existing.projectId) return NextResponse.json({ error: 'Foremen cannot move tasks between projects' }, { status: 403 })
+        if (body.assigneeId && !(await assigneeBelongsToProject(String(body.assigneeId), String(targetProjectId)))) return NextResponse.json({ error: 'Assignee must belong to the selected project' }, { status: 400 })
+      }
       if (body.title !== undefined && !String(body.title).trim()) return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
       if (body.dueTime !== undefined && body.dueTime !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(body.dueTime))) {
         return NextResponse.json({ error: 'dueTime must be HH:MM (00:00–23:59)' }, { status: 400 })
@@ -86,8 +129,10 @@ export async function DELETE(req: NextRequest, { params: paramsP }: RouteParams)
   const params = await paramsP
   return scoped(auth, async () => {
     try {
-      const task = await prisma.task.findUnique({ where: { id: params.id }, select: { title: true, projectId: true } })
-      if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
+      const role = appRole(auth)
+      if (!canManage(auth.role || '') && role !== 'project_manager') return NextResponse.json({ error: 'Company Admin or Project Manager permission required to delete tasks' }, { status: 403 })
+      const task = await prisma.task.findFirst({ where: taskAccessWhere(params.id, auth), select: { title: true, projectId: true } })
+      if (!task) return NextResponse.json({ error: 'Task not found or not assigned' }, { status: 404 })
       await prisma.task.delete({ where: { id: params.id } })
       auditLog({ action: 'task.delete', resourceType: 'Task', resourceId: params.id, ...requestMeta(req) })
       prisma.activity.create({

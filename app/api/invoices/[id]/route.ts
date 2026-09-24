@@ -1,16 +1,20 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
+import { canManage } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
+function financialAdmin(auth: { role: string | null }) { return !!auth.role && canManage(auth.role) }
+
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!financialAdmin(auth)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   try {
     const invoice = await prisma.invoice.findUnique({
       where: { id: params.id },
@@ -26,9 +30,10 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 
 export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!financialAdmin(auth)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
   if (limited) return limited
   try {
     const body = await req.json()
@@ -66,8 +71,9 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!financialAdmin(auth)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   try {
     // Block deletion of paid invoices — preserves accounting integrity
     const existing = await prisma.invoice.findUnique({
@@ -96,7 +102,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
       prisma.activity.create({
         data: {
           projectId: existing.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(auth.session),
           actorType: 'human',
           action: `deleted invoice ${existing.number}`,
           iconType: 'receipt',

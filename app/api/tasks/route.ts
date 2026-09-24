@@ -6,6 +6,7 @@ import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { sendPush } from '@/lib/push'
 import { reportError } from '@/lib/errors'
+import { canManage } from '@/lib/rbac'
 
 import { withRoute } from '@/lib/withRoute'
 
@@ -51,7 +52,7 @@ async function GET_impl(req: NextRequest, session: { user?: { email?: string | n
   }
 }
 
-async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null } }) {
+async function POST_impl(req: NextRequest, userId: string, orgRole: string | null, session: { user?: { name?: string | null; email?: string | null; role?: string } }) {
   const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
@@ -65,6 +66,31 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
     if (body.dueDate && isNaN(Date.parse(String(body.dueDate)))) {
       return NextResponse.json({ error: 'dueDate must be a valid date' }, { status: 400 })
     }
+
+    const appRole = session.user?.role || ''
+    const email = session.user?.email?.trim() || ''
+    const fieldRole = ['project_manager', 'foreman', 'operative'].includes(appRole)
+    const projectId = body.projectId || null
+    let assigneeId = body.assigneeId || null
+    if (!canManage(orgRole || '') && fieldRole) {
+      if (!projectId || !email) return NextResponse.json({ error: 'Assigned project is required for field task creation' }, { status: 403 })
+      const assignedProject = await prisma.project.findFirst({
+        where: { id: projectId, assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } },
+        select: { id: true },
+      })
+      if (!assignedProject) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 403 })
+
+      if (appRole === 'operative') {
+        const self = await prisma.teamMember.findFirst({ where: { email: { equals: email, mode: 'insensitive' } }, select: { id: true } })
+        if (!self) return NextResponse.json({ error: 'Linked team member required' }, { status: 403 })
+        if (assigneeId && assigneeId !== self.id) return NextResponse.json({ error: 'Operatives can only create tasks for themselves' }, { status: 403 })
+        assigneeId = self.id
+      } else if (assigneeId) {
+        const projectMember = await prisma.teamMember.findFirst({ where: { id: assigneeId, assignments: { some: { projectId } } }, select: { id: true } })
+        if (!projectMember) return NextResponse.json({ error: 'Assignee must belong to the selected project' }, { status: 400 })
+      }
+    }
+
     const task = await prisma.task.create({
       data: {
         title: body.title.trim(),
@@ -74,8 +100,8 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
         status: body.status || 'todo',
         priority: body.priority || 'medium',
         category: body.category || null,
-        projectId: body.projectId || null,
-        assigneeId: body.assigneeId || null,
+        projectId,
+        assigneeId,
       },
       include: { project: true, assignee: true },
     })
@@ -119,4 +145,4 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
 }
 
 export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
-export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })
+export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, role, session), { permission: 'write' })

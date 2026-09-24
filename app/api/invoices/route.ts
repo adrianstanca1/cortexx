@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
+import { canManage } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 
@@ -10,9 +11,14 @@ export const dynamic = 'force-dynamic'
 
 const MAX_TAKE = 100
 
+function financialAdmin(auth: { role: string | null }) {
+  return !!auth.role && canManage(auth.role)
+}
+
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!financialAdmin(auth)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
@@ -39,9 +45,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!financialAdmin(auth)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
   try {
     const body = await req.json()

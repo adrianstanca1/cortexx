@@ -14,12 +14,19 @@ function extractId(req: NextRequest): string | null {
 }
 
 export const GET = withRoute(
-  async ({ req }) => {
+  async ({ req, session }) => {
   const id = extractId(req)
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
   try {
-    const member = await prisma.teamMember.findUnique({
-      where: { id },
+    const appRole = session.user?.role || ''
+    const email = session.user?.email?.trim() || ''
+    const where: Prisma.TeamMemberWhereInput = appRole === 'operative'
+      ? (email ? { id, email: { equals: email, mode: 'insensitive' } } : { id: '__no_team_access__' })
+      : (appRole === 'project_manager' || appRole === 'foreman')
+        ? (email ? { id, assignments: { some: { project: { assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } } } } } : { id: '__no_team_access__' })
+        : { id }
+    const member = await prisma.teamMember.findFirst({
+      where,
       include: {
         assignments: { include: { project: true } },
         timeEntries: { orderBy: { date: 'desc' }, take: 20 },
@@ -36,7 +43,7 @@ export const GET = withRoute(
     return NextResponse.json({ error: 'Failed to fetch team member' }, { status: 500 })
   }
   },
-  { requireOrg: false }
+  { requireOrg: true, permission: 'read' }
 )
 
 export const PUT = withRoute(
@@ -86,7 +93,7 @@ export const PUT = withRoute(
       return NextResponse.json({ error: 'Failed to update team member' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'write' }
+  { requireOrg: true, permission: 'manage' }
 )
 
 export const DELETE = withRoute(
@@ -126,5 +133,5 @@ export const DELETE = withRoute(
       return NextResponse.json({ error: 'Failed to delete team member' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'write' }
+  { requireOrg: true, permission: 'manage' }
 )
