@@ -4,6 +4,8 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { canManage } from '@/lib/rbac'
+import { getCurrentOrg } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -43,6 +45,10 @@ export async function GET(req: NextRequest) {
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  const role = getCurrentOrg()?.role
+  if (role && !canManage(role)) {
+    return NextResponse.json({ error: 'Company admin permission required to create projects' }, { status: 403 })
+  }
   const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
   if (__limited) return __limited
 
