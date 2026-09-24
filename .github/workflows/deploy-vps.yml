@@ -147,8 +147,8 @@ jobs:
 
             docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools
             docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama
-            docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm tools
-            docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm tools npx tsx scripts/bootstrap-construction.ts
+            docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools
+            docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools npx tsx scripts/bootstrap-construction.ts
             docker compose --env-file .env.construction -f docker-compose.construction.yml up -d app
 
             healthy=false
