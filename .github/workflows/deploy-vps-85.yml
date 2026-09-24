@@ -8,75 +8,88 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: read
+    env:
+      VPS_HOST: 85.190.100.68
+      VPS_USER: administrator
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
+      VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      APP_URL: https://cortexbuildpro.tech
     steps:
+      - name: Validate deployment credentials
+        run: |
+          set -euo pipefail
+          if [[ -z "${VPS_SSH_KEY:-}" && -z "${VPS_PASSWORD:-}" ]]; then
+            echo "::error::Set either VPS_SSH_KEY or VPS_PASSWORD in secrets."
+            exit 1
+          fi
+
+      - name: Configure SSH
+        run: |
+          set -euo pipefail
+          install -d -m 700 ~/.ssh
+          {
+            echo "85.190.100.68 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAOE0euHxCIKpRJj5CETbE0X+4j3uoUKFp4m8xhVRGY"
+            echo "85.190.100.68 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDggUBarc+2H4TdJOapEEbt6IVO7KdroL/g46krW2hUCPmjD6yOgT+8Ac7N/sJeOCwnPZ9tTTa9LNxxmaqEKyqhmOnKNz/BxGZpafagpmBR7gwD4pEAgKjlZy43VMjAIUqMF6MCZYvppMm6tm0AM7EuDIQD0kM/UOWvlU1+oZfnZ5lF0HM+yuKSsWzDnSjlOly1K6HXxC78w40GaMDZ1zOpv39fVqF3p9ay/dVl8diwT6N2VIIjKbvxjMTxvJUbKOKLQwk3mQHAA1ha/Eg8i64wlEAWrk1S/6NJ3HpsnWIZMBvxDW0kpv5s56r17cEpAZA9fX4m7VsB3kJ4K5R9bG6/"
+          } > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/known_hosts
+
+          if [[ -n "${VPS_SSH_KEY:-}" ]]; then
+            printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/id_ed25519
+            chmod 600 ~/.ssh/id_ed25519
+          else
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq sshpass
+          fi
+
       - uses: actions/checkout@v7
 
-      - name: Setup SSH
+      - name: Deploy to VPS
         run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
-          chmod 600 ~/.ssh/cortexx_deploy
-          ssh-keyscan -H 85.190.100.68 >> ~/.ssh/known_hosts 2>/dev/null || true
+          set -euo pipefail
+          SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=15"
 
-      - name: Verify SSH access (retry up to 8 times)
-        run: |
-          for attempt in 1 2 3 4 5 6 7 8; do
-            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/cortexx_deploy root@85.190.100.68 'echo SSH_OK && uname -a' 2>&1; then
-              exit 0
-            fi
-            wait=$((attempt * 5))
-            echo "SSH attempt $attempt failed, waiting ${wait}s"
-            sleep $wait
-          done
-          echo "SSH connection failed after 8 attempts"
-          exit 1
+          if [[ -n "${VPS_SSH_KEY:-}" ]]; then
+            SSH_CMD="ssh ${SSH_OPTS} -i ~/.ssh/id_ed25519 ${VPS_USER}@${VPS_HOST}"
+          else
+            SSH_CMD="sshpass -p '${VPS_PASSWORD}' ssh ${SSH_OPTS} ${VPS_USER}@${VPS_HOST}"
+          fi
 
-      - name: Deploy via docker compose
-        env:
-          GH_PAT: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@85.190.100.68 'bash -s' << 'REMOTE'
+          $SSH_CMD 'bash -s' << 'REMOTE'
             set -euo pipefail
             APP_DIR=/opt/cortexx
 
-            if [ ! -d "$APP_DIR/.git" ]; then
-              echo "::error:: $APP_DIR is not a git checkout — aborting"
-              exit 1
-            fi
+            echo "=== Pull latest code ==="
             cd "$APP_DIR"
-
-            # Pull latest
             git fetch origin
             git reset --hard origin/main
             echo "Checked out: $(git rev-parse --short HEAD)"
 
-            # Bring the stack up
+            echo "=== Bring stack up ==="
             docker compose pull
             for up in 1 2 3; do
               sleep 5
-              if docker compose up -d --build --remove-orphans; then
+              if docker compose up -d --build --remove-orphans 2>&1; then
                 break
               fi
               echo "docker compose up attempt $up failed — retrying"
               sleep 10
             done
 
-            # Wait for API health
-            echo "Waiting for API health..."
-            for n in $(seq 1 24); do
+            echo "=== Wait for health ==="
+            for n in $(seq 1 36); do
               code=$(curl -s --max-time 5 -o /dev/null -w "%{http_code}" https://cortexbuildpro.tech/api/health 2>/dev/null || echo 000)
               if [ "$code" = "200" ]; then
-                echo "API healthy after ~$((n*5))s (HTTP 200)"
+                echo "API healthy: HTTP 200"
                 break
               fi
-              echo "  try $n: api http $code"
+              echo "  try $n: HTTP $code"
               sleep 5
             done
           REMOTE
 
       - name: Verify deployment
         run: |
-          sleep 5
+          sleep 10
           echo "=== Public ==="
           curl -s -o /dev/null --max-time 20 -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.tech/
           curl -s -o /dev/null --max-time 20 -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.tech/api/health
