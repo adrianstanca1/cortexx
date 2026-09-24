@@ -17,7 +17,7 @@ const OWNED_MODELS = new Set([
   'SiteCheckIn', 'MileageEntry', 'CostItem', 'Subcontractor', 'Equipment',
   'Material', 'PurchaseOrder', 'SubInvoice', 'Drawing', 'DrawingRevision',
   'Milestone', 'Permit', 'Rams', 'Tender', 'Inspection', 'Meeting', 'Risk',
-  'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident',
+  'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident', 'SafetyCorrectiveAction',
   'PayrollRun', 'LeaveRequest', 'BankTransaction', 'CarbonEntry',
   'WasteEntry', 'Appraisal', 'DocumentTemplate', 'FormDefinition',
   'Reminder', 'SavedView', 'Tag', 'Goal', 'Improvement', 'KaizenCard',

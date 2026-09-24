@@ -11,8 +11,8 @@ const INCIDENT_TYPES = ['near_miss', 'first_aid', 'accident', 'dangerous_occurre
 const SEVERITIES = ['near_miss', 'low', 'medium', 'high', 'critical']
 const STATUSES = ['open', 'investigating', 'closed']
 
-// Mirror the auto-RIDDOR rule from the create handler.
-function autoRiddorReportable(type, severity) {
+// Serious events should trigger a RIDDOR assessment, not an automatic legal conclusion.
+function riddorReviewRequired(type, severity) {
   return type === 'accident' || type === 'dangerous_occurrence' || severity === 'critical'
 }
 
@@ -23,29 +23,11 @@ function daysWithoutIncident(mostRecentOccurredAt, now = Date.now()) {
   return Math.max(0, Math.floor(ms / 86400000))
 }
 
-test('auto-RIDDOR — accidents always reportable', () => {
-  for (const sev of SEVERITIES) {
-    assert.equal(autoRiddorReportable('accident', sev), true)
-  }
-})
-
-test('auto-RIDDOR — dangerous occurrences always reportable', () => {
-  for (const sev of SEVERITIES) {
-    assert.equal(autoRiddorReportable('dangerous_occurrence', sev), true)
-  }
-})
-
-test('auto-RIDDOR — critical severity always reportable regardless of type', () => {
-  for (const type of INCIDENT_TYPES) {
-    assert.equal(autoRiddorReportable(type, 'critical'), true)
-  }
-})
-
-test('auto-RIDDOR — non-accident + non-critical = not auto-reportable', () => {
-  assert.equal(autoRiddorReportable('near_miss', 'low'), false)
-  assert.equal(autoRiddorReportable('first_aid', 'medium'), false)
-  assert.equal(autoRiddorReportable('environmental', 'high'), false)
-  assert.equal(autoRiddorReportable('security', 'low'), false)
+test('RIDDOR review — serious incidents are flagged for assessment without deciding reportability', () => {
+  assert.equal(riddorReviewRequired('accident', 'low'), true)
+  assert.equal(riddorReviewRequired('dangerous_occurrence', 'medium'), true)
+  assert.equal(riddorReviewRequired('near_miss', 'critical'), true)
+  assert.equal(riddorReviewRequired('near_miss', 'low'), false)
 })
 
 test('daysWithoutIncident — 0 when no incidents', () => {
