@@ -147,9 +147,22 @@ jobs:
       - name: Run integration suite
         run: npm run test:integration
 
-  browser-e2e:
+  browser-e2e-project:
+    name: browser-e2e-${{ matrix.project }}
     runs-on: ubuntu-latest
-    timeout-minutes: 30
+    timeout-minutes: 10
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - project: desktop-chromium
+            workers: 4
+          - project: mobile-chromium
+            workers: 1
+          - project: pwa-desktop-chromium
+            workers: 1
+          - project: pwa-mobile-chromium
+            workers: 1
     services:
       postgres:
         image: postgres:16-alpine
@@ -191,19 +204,32 @@ jobs:
         run: npx tsx scripts/seed-e2e.ts
       - name: Install Playwright and Chromium
         run: npm run e2e:install
-      - name: Run desktop and mobile browser journeys
+      - name: Run browser journeys — ${{ matrix.project }}
         shell: bash
         run: |
           set -o pipefail
-          npm run e2e 2>&1 | tee playwright-e2e.log
+          npx playwright test --project=${{ matrix.project }} --workers=${{ matrix.workers }} 2>&1 | tee playwright-e2e.log
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report
+          name: playwright-report-${{ matrix.project }}
           path: |
             playwright-report/
             test-results/playwright/
             playwright-e2e.log
           if-no-files-found: ignore
           retention-days: 14
+
+  browser-e2e:
+    name: browser-e2e
+    runs-on: ubuntu-latest
+    if: always()
+    needs: browser-e2e-project
+    steps:
+      - name: Require every browser project to pass
+        env:
+          RESULT: ${{ needs.browser-e2e-project.result }}
+        run: |
+          echo "browser matrix result: $RESULT"
+          test "$RESULT" = "success"

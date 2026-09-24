@@ -26,7 +26,7 @@
     "test": "node --test test/*.test.js",
     "test:nav": "node --test test/nav-registry.test.js",
     "test:integration": "tsx --test test/integration/*.test.js",
-    "e2e:install": "npm install --no-save --package-lock=false @playwright/test@1.55.0 && npx playwright install chromium",
+    "e2e:install": "npm install --no-save --package-lock=false @playwright/test@1.63.0 && npx playwright install chromium",
     "e2e": "playwright test",
     "e2e:desktop": "playwright test --project=desktop-chromium",
     "e2e:mobile": "playwright test --project=mobile-chromium",
@@ -82,7 +82,7 @@
     "@babel/standalone": "^7.29.9",
     "@capacitor/cli": "^8.5.2",
     "@next/bundle-analyzer": "^16.3.5",
-    "@playwright/test": "^1.55.0",
+    "@playwright/test": "^1.63.0",
     "@tailwindcss/forms": "^0.5.7",
     "@tailwindcss/postcss": "^4.3.2",
     "@types/bcryptjs": "^3.0.0",
@@ -106,6 +106,8 @@
   },
   "overrides": {
     "postcss": "^8.5.17",
-    "@hono/node-server": "^2.0.8"
+    "@hono/node-server": "^2.0.8",
+    "mysql2": "3.24.4",
+    "deepmerge-ts": "8.0.2"
   }
 }
