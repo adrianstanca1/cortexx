@@ -12,6 +12,7 @@ const { test } = require('node:test');
 // ---- fake pg Pool -------------------------------------------------------
 const store = new Map(); // collection -> [{id, workspace_id, data}]
 let queryLog = [];
+const typedJsonbCollections = new Set(['receipts','cisSubs','cisPayments','timesheets','diary','snags','changeOrders','rfis','subs','materials','documentsMeta','equipment','notifications']);
 function fakePool() {
   return {
     query(sql, params = []) {
@@ -36,12 +37,17 @@ function fakePool() {
       }
       // DELETE from documents_store
       if (s.startsWith('DELETE FROM documents_store')) {
-        const [w, col, id] = params;
-        store.set(col, (store.get(col) || []).filter(r => !(r.workspace_id === w && r.id === id)));
+        const [w, colOrAliases, id] = params;
+        const aliases = Array.isArray(colOrAliases) ? colOrAliases : [colOrAliases];
+        for (const col of aliases) {
+          // The fake uses one map for typed rows and JSON overlays. A real
+          // documents_store cleanup must not erase the typed row we just upserted.
+          if (!typedJsonbCollections.has(col)) store.set(col, (store.get(col) || []).filter(r => !(r.workspace_id === w && String(r.id) === String(id))));
+        }
         return Promise.resolve({ rowCount: 1 });
       }
       // NATIVE table DELETE: DELETE FROM <tbl> WHERE id=$1 AND workspace_id=$2
-      m = s.match(/DELETE FROM (\w+) WHERE id=\$1 AND workspace_id=\$2/);
+      m = s.match(/DELETE FROM (\w+) WHERE id(?:::text)?=\$1 AND workspace_id=\$2/);
       if (m) {
         const tbl = m[1];
         const [id, w] = params;
@@ -78,6 +84,9 @@ function fakePool() {
       if (s.includes('SELECT role FROM users')) return Promise.resolve({ rows: [{ role: 'admin' }] });
       if (s.includes('FROM users WHERE id=$1')) return Promise.resolve({ rows: [{ role: 'admin' }] });
       return Promise.resolve({ rows: [] });
+    },
+    async connect() {
+      return { query: this.query.bind(this), release() {} };
     },
     end() { return Promise.resolve(); },
   };
