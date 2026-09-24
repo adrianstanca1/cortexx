@@ -19,7 +19,7 @@ Superseded repositories remain preserved in GitHub as read-only archives; their 
 
 ## P0 gaps
 1. Apps routing is now connected for Smart Parse, AI Estimate, Photo→Snag, check-in and safety; finish the underlying AI/OCR/photo intelligence rather than adding more launcher tiles.
-2. Valuations now persist applications with tenant scope, retention, prior-certified calculation and draft → submitted → certified → paid/rejected lifecycle. Next extend this into certificate revisions, variation linkage, export, payment reconciliation, retention release and project WIP/cashflow.
+2. Valuations now persist applications, revisioned certificates, variation links and partial/full payment reconciliation with explicit organisation scope, retention and retention release. Next extend this into exports, project WIP/cashflow and invoice/accounting reconciliation.
 3. Capture claims still exceed behavior: receipt OCR/auto-file, progress-photo geotag persistence and full incident/RIDDOR investigation/closeout must be completed.
 4. Native Expo is functional for core field CRUD but needs high-value workflow parity.
 5. Production-critical mutations need broader authenticated tenant-scoped integration tests plus browser/mobile E2E journeys.
@@ -38,7 +38,7 @@ Drawing intelligence; spatial site layer; Tender Scout and procurement intellige
 ## Roadmap
 **Gate A — Canonical release:** merge verified release to `main`, protect it with tests/lint/build/drift/security gates, keep one production source of truth and remove stale contradictory docs.
 
-**Gate B — P0 closure:** complete valuation certificates/revisions/variation links/export/reconciliation; OCR/geotag/incident capture; native high-value field parity; tenant/RBAC mutation tests; Playwright Admin/PM/Foreman/Operative journeys. Smart Parse and Apps workflow routing are complete.
+**Gate B — P0 closure:** complete valuation export + project WIP/cashflow/accounting reconciliation; OCR/geotag/incident capture; native high-value field parity; broader tenant/RBAC mutation tests; Playwright Admin/PM/Foreman/Operative journeys. Persistent applications, revisioned certificates, retention release, variation links, payment reconciliation, Smart Parse and Apps workflow routing are complete.
 
 **Gate C — Commercial/procurement backbone:** unify commercial ledger, complete procurement lifecycle, supplier scorecards, immutable audit events, approval matrices and accounting adapter boundary.
 

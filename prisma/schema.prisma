@@ -125,29 +125,92 @@ model Project {
 }
 
 model Valuation {
-  id                String        @id @default(cuid())
+  id                String                 @id @default(cuid())
   projectId         String
-  project           Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project           Project                @relation(fields: [projectId], references: [id], onDelete: Cascade)
   applicationNumber Int
-  periodEnd         DateTime      @default(now())
+  periodEnd         DateTime               @default(now())
   grossToDate       Float
-  retentionPct      Float         @default(3)
+  retentionPct      Float                  @default(3)
   retentionAmount   Float
-  previousCertified Float         @default(0)
+  previousCertified Float                  @default(0)
   netDue            Float
-  status            String        @default("draft")
+  status            String                 @default("draft")
   notes             String?
   submittedAt       DateTime?
   certifiedAt       DateTime?
   paidAt            DateTime?
-  createdAt         DateTime      @default(now())
-  updatedAt         DateTime      @updatedAt
+  createdAt         DateTime               @default(now())
+  updatedAt         DateTime               @updatedAt
   organizationId    String?
-  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization      Organization?          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  certificates      ValuationCertificate[]
+  variationLinks    ValuationVariation[]
 
   @@unique([projectId, applicationNumber])
   @@index([projectId, status])
   @@index([periodEnd])
+  @@index([organizationId])
+}
+
+model ValuationCertificate {
+  id                   String             @id @default(cuid())
+  valuationId          String
+  valuation            Valuation          @relation(fields: [valuationId], references: [id], onDelete: Cascade)
+  revision             Int                @default(1)
+  certificateNumber    String
+  certifiedGrossToDate Float
+  retentionPct         Float
+  retentionAmount      Float
+  previousCertified    Float
+  retentionRelease     Float              @default(0)
+  amountCertified      Float
+  status               String             @default("issued") // issued, superseded, void
+  dueDate              DateTime?
+  issuedAt             DateTime           @default(now())
+  notes                String?
+  createdAt            DateTime           @default(now())
+  updatedAt            DateTime           @updatedAt
+  organizationId       String?
+  organization         Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  payments             ValuationPayment[]
+
+  @@unique([valuationId, revision])
+  @@index([certificateNumber])
+  @@index([status, dueDate])
+  @@index([organizationId])
+}
+
+model ValuationPayment {
+  id             String               @id @default(cuid())
+  certificateId  String
+  certificate    ValuationCertificate @relation(fields: [certificateId], references: [id], onDelete: Cascade)
+  amount         Float
+  paidAt         DateTime             @default(now())
+  reference      String?
+  method         String?
+  notes          String?
+  createdAt      DateTime             @default(now())
+  organizationId String?
+  organization   Organization?        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([certificateId, paidAt])
+  @@index([organizationId])
+}
+
+model ValuationVariation {
+  id             String        @id @default(cuid())
+  valuationId    String
+  valuation      Valuation     @relation(fields: [valuationId], references: [id], onDelete: Cascade)
+  variationId    String
+  variation      Variation     @relation(fields: [variationId], references: [id], onDelete: Cascade)
+  amountIncluded Float
+  createdAt      DateTime      @default(now())
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([valuationId, variationId])
+  @@index([variationId])
   @@index([organizationId])
 }
 
@@ -504,7 +567,8 @@ model Variation {
   project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization   Organization?        @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  valuationLinks ValuationVariation[]
 
   @@unique([projectId, number])
   @@index([projectId, status])
@@ -1182,62 +1246,65 @@ model PushSubscription {
 // follow-up migration. See docs/v1-completion-plan.md.
 
 model Organization {
-  id                   String                @id @default(cuid())
-  slug                 String                @unique
-  name                 String
-  plan                 String                @default("trial") // trial / starter / pro / enterprise
-  subscriptionStatus   String                @default("active") // active / past_due / cancelled
-  trialEndsAt          DateTime?
-  stripeCustomerId     String?               @unique
-  stripeSubscriptionId String?               @unique
-  brandingLogoUrl      String?
-  brandingAccent       String?
-  createdAt            DateTime              @default(now())
-  updatedAt            DateTime              @updatedAt
-  members              UserOrganization[]
-  invites              OrganizationInvite[]
-  auditEvents          AuditEvent[]
-  projects             Project[]
-  tasks                Task[]
-  teamMembers          TeamMember[]
-  assignments          Assignment[]
-  invoices             Invoice[]
-  timeEntries          TimeEntry[]
-  activities           Activity[]
-  comments             Comment[]
-  documents            Document[]
-  snags                Snag[]
-  certifications       Certification[]
-  trainingCourses      TrainingCourse[]
-  rfis                 Rfi[]
-  announcements        Announcement[]
-  observations         Observation[]
-  variations           Variation[]
-  leads                Lead[]
-  customers            Customer[]
-  quotes               Quote[]
-  siteCheckIns         SiteCheckIn[]
-  mileageEntries       MileageEntry[]
-  costItems            CostItem[]
-  subcontractors       Subcontractor[]
-  equipment            Equipment[]
-  materials            Material[]
-  purchaseOrders       PurchaseOrder[]
-  subInvoices          SubInvoice[]
-  drawings             Drawing[]
-  drawingRevisions     DrawingRevision[]
-  milestones           Milestone[]
-  permits              Permit[]
-  rams                 Rams[]
-  tenders              Tender[]
-  inspections          Inspection[]
-  meetings             Meeting[]
-  risks                Risk[]
-  toolboxTalks         ToolboxTalk[]
-  maintenanceSchedules MaintenanceSchedule[]
-  suppliers            Supplier[]
-  safetyIncidents      SafetyIncident[]
-  valuations           Valuation[]
+  id                    String                 @id @default(cuid())
+  slug                  String                 @unique
+  name                  String
+  plan                  String                 @default("trial") // trial / starter / pro / enterprise
+  subscriptionStatus    String                 @default("active") // active / past_due / cancelled
+  trialEndsAt           DateTime?
+  stripeCustomerId      String?                @unique
+  stripeSubscriptionId  String?                @unique
+  brandingLogoUrl       String?
+  brandingAccent        String?
+  createdAt             DateTime               @default(now())
+  updatedAt             DateTime               @updatedAt
+  members               UserOrganization[]
+  invites               OrganizationInvite[]
+  auditEvents           AuditEvent[]
+  projects              Project[]
+  tasks                 Task[]
+  teamMembers           TeamMember[]
+  assignments           Assignment[]
+  invoices              Invoice[]
+  timeEntries           TimeEntry[]
+  activities            Activity[]
+  comments              Comment[]
+  documents             Document[]
+  snags                 Snag[]
+  certifications        Certification[]
+  trainingCourses       TrainingCourse[]
+  rfis                  Rfi[]
+  announcements         Announcement[]
+  observations          Observation[]
+  variations            Variation[]
+  leads                 Lead[]
+  customers             Customer[]
+  quotes                Quote[]
+  siteCheckIns          SiteCheckIn[]
+  mileageEntries        MileageEntry[]
+  costItems             CostItem[]
+  subcontractors        Subcontractor[]
+  equipment             Equipment[]
+  materials             Material[]
+  purchaseOrders        PurchaseOrder[]
+  subInvoices           SubInvoice[]
+  drawings              Drawing[]
+  drawingRevisions      DrawingRevision[]
+  milestones            Milestone[]
+  permits               Permit[]
+  rams                  Rams[]
+  tenders               Tender[]
+  inspections           Inspection[]
+  meetings              Meeting[]
+  risks                 Risk[]
+  toolboxTalks          ToolboxTalk[]
+  maintenanceSchedules  MaintenanceSchedule[]
+  suppliers             Supplier[]
+  safetyIncidents       SafetyIncident[]
+  valuations            Valuation[]
+  valuationCertificates ValuationCertificate[]
+  valuationPayments     ValuationPayment[]
+  valuationVariations   ValuationVariation[]
 
   // ── Legacy-parity v1.1 modules
   payrollRuns         PayrollRun[]
