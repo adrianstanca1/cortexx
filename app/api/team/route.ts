@@ -38,7 +38,7 @@ export const GET = withRoute(
 
   return NextResponse.json({ team: result })
   },
-  { requireOrg: false }
+  { requireOrg: true }
 )
 
 export const POST = withRoute(
@@ -85,5 +85,5 @@ export const POST = withRoute(
       return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'write' }
+  { requireOrg: true, permission: 'write' }
 )

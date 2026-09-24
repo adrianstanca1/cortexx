@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { requireAuth } from './requireAuth'
 import { canWrite, canManage } from './rbac'
+import { runWithOrg } from './tenancy'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
@@ -81,7 +82,10 @@ export function withRoute(
     }
 
     try {
-      return await handler({ req, session: session as RouteSession, userId, role, orgId, orgSlug, orgName })
+      const invoke = () => handler({ req, session: session as RouteSession, userId, role, orgId, orgSlug, orgName })
+      return orgId
+        ? await runWithOrg({ organizationId: orgId, userId, role }, invoke)
+        : await invoke()
     } catch (err) {
       console.error(`[api] ${req.method} ${req.nextUrl.pathname}`, err)
       const message = err instanceof Error ? err.message : 'Internal server error'

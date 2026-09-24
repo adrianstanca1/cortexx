@@ -90,6 +90,7 @@ export default defineConfig({
     timeout: 120_000,
     env: {
       ...process.env,
+      PORT: new URL(baseURL).port || '3000',
       NEXTAUTH_URL: baseURL,
       AUTH_URL: baseURL,
       NEXTAUTH_SECRET: process.env.NEXTAUTH_SECRET || 'local-playwright-secret-change-me',

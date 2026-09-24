@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,9 +18,7 @@ function isoWeek(date: Date): { week: number; year: number } {
   return { week, year: d.getUTCFullYear() }
 }
 
-export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+async function GET_impl(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const memberId = searchParams.get('memberId')
@@ -63,10 +62,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+async function POST_impl(req: NextRequest, userId: string) {
+  const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -106,3 +103,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create time entry' }, { status: 500 })
   }
 }
+
+export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
+export const POST = withRoute(({ req, userId }) => POST_impl(req, userId), { permission: 'write' })

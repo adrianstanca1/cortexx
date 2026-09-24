@@ -1,7 +1,8 @@
 import { NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
+
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,9 +11,7 @@ export const dynamic = 'force-dynamic'
  * critical/overdue tasks, unapproved timesheets. Each item has an actionable
  * link.
  */
-export async function GET() {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+async function GET_impl() {
   try {
     const now = new Date()
     const in7Days = new Date(now.getTime() + 7 * 86400000)
@@ -109,3 +108,5 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to load inbox' }, { status: 500 })
   }
 }
+
+export const GET = withRoute(() => GET_impl(), { permission: 'read' })
