@@ -9,13 +9,22 @@ import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export const GET = withRoute(
-  async () => {
+  async ({ session }) => {
   const now = new Date()
   const weekStart = new Date(now)
   weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
   weekStart.setHours(0, 0, 0, 0)
 
+  const appRole = session.user?.role || ''
+  const email = session.user?.email?.trim() || ''
+  const where: Prisma.TeamMemberWhereInput = appRole === 'operative'
+    ? (email ? { email: { equals: email, mode: 'insensitive' } } : { id: '__no_team_access__' })
+    : (appRole === 'project_manager' || appRole === 'foreman')
+      ? (email ? { assignments: { some: { project: { assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } } } } } : { id: '__no_team_access__' })
+      : {}
+
   const members = await prisma.teamMember.findMany({
+    where,
     // Cap at 500 — protects against runaway responses on big tenants.
     // A workspace with >500 members would need a paginated view
     // anyway; for now the cap is a backstop, not a UX requirement.
@@ -38,7 +47,7 @@ export const GET = withRoute(
 
   return NextResponse.json({ team: result })
   },
-  { requireOrg: true }
+  { requireOrg: true, permission: 'read' }
 )
 
 export const POST = withRoute(
@@ -85,5 +94,5 @@ export const POST = withRoute(
       return NextResponse.json({ error: 'Failed to create team member' }, { status: 500 })
     }
   },
-  { requireOrg: true, permission: 'write' }
+  { requireOrg: true, permission: 'manage' }
 )

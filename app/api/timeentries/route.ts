@@ -1,12 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { canManage } from '@/lib/rbac'
 
 import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
+
+type TimeActor = { orgRole: string | null; appRole: string; email: string }
+
+function canApproveTime(actor: TimeActor): boolean {
+  return canManage(actor.orgRole || '') || actor.appRole === 'project_manager'
+}
+
+function timeReadScope(actor: TimeActor): Prisma.TimeEntryWhereInput {
+  if (canManage(actor.orgRole || '')) return {}
+  if (actor.appRole === 'operative') {
+    return actor.email ? { member: { email: { equals: actor.email, mode: 'insensitive' } } } : { id: '__no_time_access__' }
+  }
+  if (actor.appRole === 'project_manager' || actor.appRole === 'foreman') {
+    return actor.email ? { project: { assignments: { some: { member: { email: { equals: actor.email, mode: 'insensitive' } } } } } } : { id: '__no_time_access__' }
+  }
+  return {}
+}
+
 
 // ISO 8601 week number — week containing Thursday is week 1
 function isoWeek(date: Date): { week: number; year: number } {
@@ -18,7 +38,7 @@ function isoWeek(date: Date): { week: number; year: number } {
   return { week, year: d.getUTCFullYear() }
 }
 
-async function GET_impl(req: NextRequest) {
+async function GET_impl(req: NextRequest, actor: TimeActor) {
   try {
     const { searchParams } = new URL(req.url)
     const memberId = searchParams.get('memberId')
@@ -34,12 +54,13 @@ async function GET_impl(req: NextRequest) {
     const currentWeek = weekParam ? parseInt(weekParam) : nowIso.week
     const currentYear = yearParam ? parseInt(yearParam) : nowIso.year
 
+    const filters: Prisma.TimeEntryWhereInput = {
+      ...(memberId && { memberId }),
+      ...(!allWeeks && { week: currentWeek, year: currentYear }),
+      ...(approvedFilter !== undefined && { approved: approvedFilter }),
+    }
     const entries = await prisma.timeEntry.findMany({
-      where: {
-        ...(memberId && { memberId }),
-        ...(!allWeeks && { week: currentWeek, year: currentYear }),
-        ...(approvedFilter !== undefined && { approved: approvedFilter }),
-      },
+      where: { AND: [filters, timeReadScope(actor)] },
       include: { member: true, project: true },
       orderBy: { date: 'asc' },
     })
@@ -62,11 +83,14 @@ async function GET_impl(req: NextRequest) {
   }
 }
 
-async function POST_impl(req: NextRequest, userId: string) {
+async function POST_impl(req: NextRequest, userId: string, actor: TimeActor) {
   const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
     const body = await req.json()
+    if (body.approved === true && !canApproveTime(actor)) {
+      return NextResponse.json({ error: 'Project Manager or Company Admin approval required' }, { status: 403 })
+    }
     if (!body.memberId) {
       return NextResponse.json({ error: 'memberId is required' }, { status: 400 })
     }
@@ -83,6 +107,21 @@ async function POST_impl(req: NextRequest, userId: string) {
     if (isNaN(date.getTime())) {
       return NextResponse.json({ error: 'Invalid date' }, { status: 400 })
     }
+    // Field personas may only write time inside their assigned project scope.
+    if (!canManage(actor.orgRole || '') && ['project_manager', 'foreman', 'operative'].includes(actor.appRole)) {
+      if (!body.projectId || !actor.email) return NextResponse.json({ error: 'Assigned project is required for field time' }, { status: 403 })
+      const assignedProject = await prisma.project.findFirst({
+        where: { id: String(body.projectId), assignments: { some: { member: { email: { equals: actor.email, mode: 'insensitive' } } } } },
+        select: { id: true },
+      })
+      if (!assignedProject) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 403 })
+      const targetMember = await prisma.teamMember.findFirst({
+        where: { id: String(body.memberId), ...(actor.appRole === 'operative' ? { email: { equals: actor.email, mode: 'insensitive' } } : { assignments: { some: { projectId: assignedProject.id } } }) },
+        select: { id: true },
+      })
+      if (!targetMember) return NextResponse.json({ error: actor.appRole === 'operative' ? 'Operatives can only log their own time' : 'Team member is not assigned to this project' }, { status: 403 })
+    }
+
     // Always derive week/year server-side from the date (don't trust client overrides)
     const { week, year } = isoWeek(date)
     const entry = await prisma.timeEntry.create({
@@ -93,7 +132,7 @@ async function POST_impl(req: NextRequest, userId: string) {
         hours: Number(body.hours),
         week,
         year,
-        approved: body.approved ?? false,
+        approved: canApproveTime(actor) ? (body.approved ?? false) : false,
       },
       include: { member: true, project: true },
     })
@@ -104,5 +143,5 @@ async function POST_impl(req: NextRequest, userId: string) {
   }
 }
 
-export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
-export const POST = withRoute(({ req, userId }) => POST_impl(req, userId), { permission: 'write' })
+export const GET = withRoute(({ req, role, session }) => GET_impl(req, { orgRole: role, appRole: session.user?.role || '', email: session.user?.email?.trim() || '' }), { permission: 'read' })
+export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, { orgRole: role, appRole: session.user?.role || '', email: session.user?.email?.trim() || '' }), { permission: 'write' })

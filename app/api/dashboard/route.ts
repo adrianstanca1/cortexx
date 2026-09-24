@@ -1,21 +1,88 @@
 import { NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db'
 import { reportError } from '@/lib/errors'
-
+import { canManage } from '@/lib/rbac'
 import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
-async function GET_impl() {
+type DashboardActor = { orgRole: string | null; appRole: string; email: string }
+
+function projectScope(actor: DashboardActor): Prisma.ProjectWhereInput {
+  if (canManage(actor.orgRole || '')) return {}
+  if (['project_manager', 'foreman', 'operative'].includes(actor.appRole)) {
+    return actor.email
+      ? { assignments: { some: { member: { email: { equals: actor.email, mode: 'insensitive' } } } } }
+      : { id: '__no_project_access__' }
+  }
+  return {}
+}
+
+function taskScope(actor: DashboardActor): Prisma.TaskWhereInput {
+  if (canManage(actor.orgRole || '')) return {}
+  if (actor.appRole === 'operative') {
+    return actor.email ? { assignee: { email: { equals: actor.email, mode: 'insensitive' } } } : { id: '__no_task_access__' }
+  }
+  if (actor.appRole === 'project_manager' || actor.appRole === 'foreman') {
+    return actor.email
+      ? { project: { assignments: { some: { member: { email: { equals: actor.email, mode: 'insensitive' } } } } } }
+      : { id: '__no_task_access__' }
+  }
+  return {}
+}
+
+function teamScope(actor: DashboardActor): Prisma.TeamMemberWhereInput {
+  if (canManage(actor.orgRole || '')) return {}
+  if (actor.appRole === 'operative') {
+    return actor.email ? { email: { equals: actor.email, mode: 'insensitive' } } : { id: '__no_team_access__' }
+  }
+  if (actor.appRole === 'project_manager' || actor.appRole === 'foreman') {
+    return actor.email
+      ? { assignments: { some: { project: { assignments: { some: { member: { email: { equals: actor.email, mode: 'insensitive' } } } } } } } }
+      : { id: '__no_team_access__' }
+  }
+  return {}
+}
+
+function timeScope(actor: DashboardActor): Prisma.TimeEntryWhereInput {
+  if (canManage(actor.orgRole || '')) return {}
+  if (actor.appRole === 'operative') {
+    return actor.email ? { member: { email: { equals: actor.email, mode: 'insensitive' } } } : { id: '__no_time_access__' }
+  }
+  if (actor.appRole === 'project_manager' || actor.appRole === 'foreman') {
+    return actor.email
+      ? { project: { assignments: { some: { member: { email: { equals: actor.email, mode: 'insensitive' } } } } } }
+      : { id: '__no_time_access__' }
+  }
+  return {}
+}
+
+function activityScope(actor: DashboardActor): Prisma.ActivityWhereInput {
+  if (canManage(actor.orgRole || '')) return {}
+  if (['project_manager', 'foreman', 'operative'].includes(actor.appRole)) {
+    return actor.email
+      ? { project: { assignments: { some: { member: { email: { equals: actor.email, mode: 'insensitive' } } } } } }
+      : { id: '__no_activity_access__' }
+  }
+  return {}
+}
+
+async function GET_impl(actor: DashboardActor) {
   try {
     const now = new Date()
     const weekStart = new Date(now)
     weekStart.setDate(weekStart.getDate() - weekStart.getDay() + 1)
     weekStart.setHours(0, 0, 0, 0)
 
-    // Run all queries in parallel. Use groupBy / aggregate for sums instead of
-    // fetching full rows just to reduce.
+    const financeAdmin = canManage(actor.orgRole || '')
+    const projectWhere: Prisma.ProjectWhereInput = { archivedAt: null, ...projectScope(actor) }
+    const taskWhere: Prisma.TaskWhereInput = { status: { not: 'done' }, ...taskScope(actor) }
+    const teamWhere = teamScope(actor)
+    const timeWhere: Prisma.TimeEntryWhereInput = { date: { gte: weekStart }, ...timeScope(actor) }
+    const activityWhere = activityScope(actor)
+
     const [
       projects,
       tasks,
@@ -27,11 +94,8 @@ async function GET_impl() {
       invoiceTotalsByStatus,
     ] = await Promise.all([
       prisma.project.findMany({
-        // Cap at 200 — the dashboard heat-grid renders fine up to that;
-        // tenants with more need a paginated /projects view, not a
-        // single-shot dashboard fetch.
         take: 200,
-        where: { archivedAt: null },
+        where: projectWhere,
         include: {
           _count: { select: { tasks: true, assignments: true } },
           assignments: { include: { member: true }, where: { onSite: true }, take: 4 },
@@ -39,46 +103,33 @@ async function GET_impl() {
         orderBy: { updatedAt: 'desc' },
       }),
       prisma.task.findMany({
-        where: { status: { not: 'done' } },
+        where: taskWhere,
         include: { project: true, assignee: true },
         orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }],
         take: 10,
       }),
       prisma.teamMember.findMany({
+        where: teamWhere,
         take: 200,
         include: {
           assignments: { include: { project: true } },
           _count: { select: { timeEntries: true } },
         },
       }),
-      // Only fetch the 5 most-recent invoices we actually display
-      prisma.invoice.findMany({
-        include: { project: true },
-        orderBy: { createdAt: 'desc' },
-        take: 5,
-      }),
+      financeAdmin
+        ? prisma.invoice.findMany({ include: { project: true }, orderBy: { createdAt: 'desc' }, take: 5 })
+        : Promise.resolve([]),
       prisma.activity.findMany({
+        where: activityWhere,
         include: { project: true },
         orderBy: { createdAt: 'desc' },
         take: 10,
       }),
-      // Sum hours this week without fetching every row (was iterating all
-      // timeEntries just to reduce on .hours)
-      prisma.timeEntry.aggregate({
-        where: { date: { gte: weekStart } },
-        _sum: { hours: true },
-      }),
-      prisma.timeEntry.groupBy({
-        by: ['memberId'],
-        where: { date: { gte: weekStart } },
-        _sum: { hours: true },
-      }),
-      // Compute owed / cashflow across ALL invoices, not just the 5 displayed
-      // (previously these sums only ran on recentInvoices — a correctness bug)
-      prisma.invoice.groupBy({
-        by: ['status'],
-        _sum: { amount: true },
-      }),
+      prisma.timeEntry.aggregate({ where: timeWhere, _sum: { hours: true } }),
+      prisma.timeEntry.groupBy({ by: ['memberId'], where: timeWhere, _sum: { hours: true } }),
+      financeAdmin
+        ? prisma.invoice.groupBy({ by: ['status'], _sum: { amount: true } })
+        : Promise.resolve([]),
     ])
 
     const activeSites = projects.filter((p) => p.status === 'active').length
@@ -107,4 +158,7 @@ async function GET_impl() {
   }
 }
 
-export const GET = withRoute(() => GET_impl(), { permission: 'read' })
+export const GET = withRoute(
+  ({ session, role }) => GET_impl({ orgRole: role, appRole: session.user?.role || '', email: session.user?.email?.trim() || '' }),
+  { permission: 'read' },
+)
