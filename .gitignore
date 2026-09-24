@@ -59,3 +59,4 @@ expo/build-ios-asc-key.sh
 
 # Construction deployment secrets
 .env.construction
+.owner-credentials
