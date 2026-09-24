@@ -2,7 +2,8 @@
 const { version } = require('../package.json');
 function checkHealth(value) {
   return !!value && value.status === 'ok' && value.version === version &&
-    value.db === 'up' && Number.isFinite(value.ts) && Number.isInteger(value.streams);
+    value.service === 'cortexbuild-construction' && value.checks?.database?.ok === true &&
+    Number.isFinite(Date.parse(value.timestamp));
 }
 module.exports = { checkHealth };
 if (require.main === module) {

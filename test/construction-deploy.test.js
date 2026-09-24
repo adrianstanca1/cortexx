@@ -8,9 +8,9 @@ const root = path.resolve(__dirname, '..');
 
 test('deployment rejects a healthy response from the video app or a disconnected database', () => {
   assert.equal(checkHealth({ status: 'ok', service: 'viral-shorts-studio' }), false);
-  const health = { status: 'ok', version, db: 'up', streams: 0, ts: Date.now() };
+  const health = { status: 'ok', version, service: 'cortexbuild-construction', checks: { database: { ok: true } }, timestamp: new Date().toISOString() };
   assert.equal(checkHealth(health), true);
-  assert.equal(checkHealth({ ...health, db: 'down' }), false);
+  assert.equal(checkHealth({ ...health, checks: { database: { ok: false } } }), false);
   assert.equal(checkHealth({ ...health, version: '0.0.0' }), false);
   assert.equal(checkHealth(null), false);
 });

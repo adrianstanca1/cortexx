@@ -16,7 +16,7 @@ on:
       upload_to_testflight:
         description: 'Upload to TestFlight after build?'
         required: false
-        default: 'true'
+        default: true
         type: boolean
 
 concurrency:
@@ -25,45 +25,34 @@ concurrency:
 
 jobs:
   build:
-    name: Archive & Upload
-    runs-on: macos-14          # Apple Silicon — Xcode 15.4
+    name: Build, Archive & Upload
+    runs-on: macos-14
     timeout-minutes: 60
-
     env:
-      XCODE_PROJECT: ios/App/App.xcodeproj
-      XCODE_SCHEME:  App
-      BUNDLE_ID:     com.cortexbuild.app
+      XCODE_SCHEME: App
+      BUNDLE_ID: com.cortexbuild.app
       EXPORT_METHOD: app-store
-
     steps:
-      # ── Checkout ──────────────────────────────────────────────────
-      - name: Checkout
-        uses: actions/checkout@v4
+      - uses: actions/checkout@v4
 
-      # ── Node 20 ───────────────────────────────────────────────────
-      - name: Setup Node 20
-        uses: actions/setup-node@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
+          cache: npm
           cache-dependency-path: ios/package-lock.json
 
-      # ── Install JS deps ───────────────────────────────────────────
       - name: Install JS dependencies
         working-directory: ios
-        run: npm ci
+        run: npm ci --no-audit --no-fund
 
-      # ── Build web assets (Cortexx.html -> ios/www/index.html) ─────
-      - name: Build web assets (www/)
+      - name: Build web assets
         working-directory: ios
         run: npm run build:web
 
-      # ── Sync Capacitor (copies www into native project) ──────────
       - name: Sync Capacitor iOS
         working-directory: ios
         run: npx cap sync ios
 
-      # ── CocoaPods ─────────────────────────────────────────────────
       - name: Cache CocoaPods
         uses: actions/cache@v6
         with:
@@ -75,120 +64,131 @@ jobs:
         working-directory: ios/App
         run: pod install --repo-update
 
-      # ── Code signing ──────────────────────────────────────────────
-      - name: Import signing certificate
+      - name: Verify unsigned iOS build
+        working-directory: ios/App
+        run: |
+          set -o pipefail
+          xcodebuild -workspace App.xcworkspace -scheme App \
+            -configuration Release -sdk iphonesimulator \
+            CODE_SIGNING_ALLOWED=NO -destination 'generic/platform=iOS Simulator' \
+            build | tail -60
+
+      - name: Check signing configuration
+        id: signing
         env:
-          CERTIFICATE_BASE64:     ${{ secrets.IOS_CERTIFICATE_BASE64 }}
-          CERTIFICATE_PASSWORD:   ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
-          KEYCHAIN_PASSWORD:      ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+          CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+          PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          ASC_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          ASC_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          ASC_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+        run: |
+          archive_ready=true
+          for value in "$CERTIFICATE_BASE64" "$CERTIFICATE_PASSWORD" "$KEYCHAIN_PASSWORD" "$PROVISIONING_PROFILE_BASE64" "$APPLE_TEAM_ID"; do
+            [ -n "$value" ] || archive_ready=false
+          done
+          upload_ready=$archive_ready
+          for value in "$ASC_KEY_ID" "$ASC_ISSUER_ID" "$ASC_KEY_BASE64"; do
+            [ -n "$value" ] || upload_ready=false
+          done
+          echo "archive_ready=$archive_ready" >> "$GITHUB_OUTPUT"
+          echo "upload_ready=$upload_ready" >> "$GITHUB_OUTPUT"
+          if [ "$archive_ready" != true ]; then
+            echo "::notice::Unsigned iOS build passed. App Store signing secrets are not configured, so archive/upload is skipped."
+          elif [ "$upload_ready" != true ]; then
+            echo "::notice::Signed archive can run, but App Store Connect API secrets are incomplete; TestFlight upload will be skipped."
+          fi
+
+      - name: Import signing certificate
+        if: steps.signing.outputs.archive_ready == 'true'
+        env:
+          CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
         run: |
           KEYCHAIN_PATH=$RUNNER_TEMP/build.keychain
-          echo "$CERTIFICATE_BASE64" | base64 --decode > $RUNNER_TEMP/certificate.p12
+          printf '%s' "$CERTIFICATE_BASE64" | base64 --decode > "$RUNNER_TEMP/certificate.p12"
           security create-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
           security set-keychain-settings -lut 21600 "$KEYCHAIN_PATH"
           security unlock-keychain -p "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
-          security import "$RUNNER_TEMP/certificate.p12" \
-            -k "$KEYCHAIN_PATH" \
-            -P "$CERTIFICATE_PASSWORD" \
-            -T /usr/bin/codesign
+          security import "$RUNNER_TEMP/certificate.p12" -k "$KEYCHAIN_PATH" -P "$CERTIFICATE_PASSWORD" -T /usr/bin/codesign
           security list-keychain -d user -s "$KEYCHAIN_PATH"
-          security set-key-partition-list \
-            -S apple-tool:,apple: \
-            -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
+          security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
       - name: Install provisioning profile
+        if: steps.signing.outputs.archive_ready == 'true'
         env:
           PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
         run: |
           PP_PATH=$RUNNER_TEMP/build.mobileprovision
-          echo "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
+          printf '%s' "$PROVISIONING_PROFILE_BASE64" | base64 --decode > "$PP_PATH"
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
-      # ── Increment build number ────────────────────────────────────
       - name: Set build number
-        run: |
-          BUILD_NUMBER=${{ github.run_number }}
-          xcrun agvtool new-version -all "$BUILD_NUMBER"
+        if: steps.signing.outputs.archive_ready == 'true'
         working-directory: ios/App
+        run: xcrun agvtool new-version -all "${{ github.run_number }}"
 
-      # ── Archive ───────────────────────────────────────────────────
-      - name: Archive
+      - name: Archive signed app
+        if: steps.signing.outputs.archive_ready == 'true'
         run: |
+          set -o pipefail
           xcodebuild archive \
             -workspace ios/App/App.xcworkspace \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
-            -archivePath $RUNNER_TEMP/Cortexx.xcarchive \
-            -destination "generic/platform=iOS" \
+            -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
+            -destination 'generic/platform=iOS' \
             CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY="iPhone Distribution" \
-            PROVISIONING_PROFILE_SPECIFIER="Cortexx App Store" \
-            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            CODE_SIGN_IDENTITY='iPhone Distribution' \
+            PROVISIONING_PROFILE_SPECIFIER='Cortexx App Store' \
+            DEVELOPMENT_TEAM='${{ secrets.APPLE_TEAM_ID }}' \
             | xcpretty
 
-      # ── Export IPA ────────────────────────────────────────────────
       - name: Export IPA
+        if: steps.signing.outputs.archive_ready == 'true'
         run: |
-          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
+          cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-          <plist version="1.0">
-          <dict>
-            <key>method</key>
-            <string>${{ env.EXPORT_METHOD }}</string>
-            <key>teamID</key>
-            <string>${{ secrets.APPLE_TEAM_ID }}</string>
-            <key>uploadBitcode</key>
-            <false/>
-            <key>uploadSymbols</key>
-            <true/>
-            <key>compileBitcode</key>
-            <false/>
-            <key>signingStyle</key>
-            <string>manual</string>
-            <key>provisioningProfiles</key>
-            <dict>
-              <key>${{ env.BUNDLE_ID }}</key>
-              <string>Cortexx App Store</string>
-            </dict>
-          </dict>
-          </plist>
+          <plist version="1.0"><dict>
+            <key>method</key><string>${{ env.EXPORT_METHOD }}</string>
+            <key>teamID</key><string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>signingStyle</key><string>manual</string>
+            <key>provisioningProfiles</key><dict><key>${{ env.BUNDLE_ID }}</key><string>Cortexx App Store</string></dict>
+          </dict></plist>
           EOF
-
+          set -o pipefail
           xcodebuild -exportArchive \
-            -archivePath $RUNNER_TEMP/Cortexx.xcarchive \
-            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
-            -exportPath $RUNNER_TEMP/ipa \
-            | xcpretty
+            -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/ipa" | xcpretty
 
-      # ── Upload to TestFlight ──────────────────────────────────────
-      - name: Upload to App Store Connect / TestFlight
-        if: ${{ github.event.inputs.upload_to_testflight != 'false' }}
+      - name: Upload to TestFlight
+        if: steps.signing.outputs.upload_ready == 'true' && github.event.inputs.upload_to_testflight != 'false'
         env:
-          APP_STORE_CONNECT_KEY_ID:       ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
-          APP_STORE_CONNECT_ISSUER_ID:    ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
-          APP_STORE_CONNECT_KEY_BASE64:   ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
         run: |
-          echo "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > $RUNNER_TEMP/AuthKey.p8
+          printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+          xcrun altool --upload-app --type ios --file "$RUNNER_TEMP/ipa/Cortexx.ipa" \
+            --apiKey "$APP_STORE_CONNECT_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
+            --apiKeyPath "$RUNNER_TEMP/AuthKey.p8" --verbose
 
-          xcrun altool --upload-app \
-            --type ios \
-            --file "$RUNNER_TEMP/ipa/Cortexx.ipa" \
-            --apiKey "$APP_STORE_CONNECT_KEY_ID" \
-            --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
-            --apiKeyPath "$RUNNER_TEMP/AuthKey.p8" \
-            --verbose
-
-      # ── Upload IPA as artifact ────────────────────────────────────
       - name: Upload IPA artifact
+        if: steps.signing.outputs.archive_ready == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: Cortexx-${{ github.run_number }}.ipa
           path: ${{ runner.temp }}/ipa/Cortexx.ipa
           retention-days: 30
 
-      # ── Clean up keychain ─────────────────────────────────────────
-      - name: Clean up keychain
+      - name: Clean up signing material
         if: always()
-        run: security delete-keychain $RUNNER_TEMP/build.keychain || true
+        run: |
+          security delete-keychain "$RUNNER_TEMP/build.keychain" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/certificate.p12" "$RUNNER_TEMP/AuthKey.p8" "$RUNNER_TEMP/build.mobileprovision"

@@ -4,7 +4,7 @@ import { auth } from './auth'
 import { prisma } from './db'
 import { MULTITENANT_ENFORCED } from './org'
 import { reportError } from './errors'
-import { setOrgContext } from './tenancy'
+import { beginOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
@@ -43,13 +43,15 @@ async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[]
  *   if (session instanceof NextResponse) return session
  *   // session.user.id, session.user.name, etc.
  *
- * SIDE EFFECT: when the user has an active organization, exposes it in the
- * current AsyncLocalStorage context for immediate consumers. Routes that touch
- * tenant-owned Prisma models must still execute their full handler inside
- * runWithOrg(), normally via withRoute(), because lazy Prisma execution can
- * cross later async boundaries.
+ * SIDE EFFECT (intentional, transparent to callers): when the user has
+ * an active organization, threads it into the AsyncLocalStorage that
+ * powers the Prisma tenancy extension. Every Prisma query for an owned
+ * model in the rest of this request will auto-filter by organizationId
+ * without the route handler doing anything explicit. This is what lets
+ * the 120+ existing routes opt in to multi-tenancy without a codemod.
  */
 export async function requireAuth() {
+  const orgContext = beginOrgContext()
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -71,7 +73,7 @@ export async function requireAuth() {
         if (match) active = match
       }
     } catch { /* not in a request context */ }
-    setOrgContext({ organizationId: active.id, userId, role: active.role })
+    Object.assign(orgContext, { organizationId: active.id, userId, role: active.role })
   }
 
   return session
@@ -85,6 +87,7 @@ export async function requireAuth() {
  * when it exists.
  */
 export async function requireOrg() {
+  const orgContext = beginOrgContext()
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -114,9 +117,9 @@ export async function requireOrg() {
     // Not in a request context — fall through.
   }
 
-  // Expose the resolved org in the current async context. Callers that perform
-  // tenant-owned Prisma work should keep the full operation inside runWithOrg.
-  setOrgContext({ organizationId: active.id, userId: userId ?? null, role: active.role })
+  // Thread the org into the async context so the Prisma tenancy extension
+  // can auto-scope every query for the rest of this request.
+  Object.assign(orgContext, { organizationId: active.id, userId: userId ?? null, role: active.role })
 
   return {
     session,

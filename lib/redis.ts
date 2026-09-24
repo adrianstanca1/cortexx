@@ -22,6 +22,8 @@ export function getRedis(): Redis | null {
     return null
   }
   const client = new Redis(url, {
+    // Preserve the v5 reply shapes while upgrading to the supported v6 client.
+    protocol: 2,
     // Fail fast in dev so a stale REDIS_URL doesn't hang the request loop
     connectTimeout: 2000,
     maxRetriesPerRequest: 1,

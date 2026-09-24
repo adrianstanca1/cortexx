@@ -84,7 +84,14 @@ export default function SiteDiaryPage() {
   }
   const jumpToToday = () => setDate(new Date().toISOString().slice(0, 10))
   const isToday = date === new Date().toISOString().slice(0, 10)
-  const niceDate = new Date(date).toLocaleDateString('en-GB', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+  // ICU versions in Node and browsers disagree on punctuation. Compose the
+  // calendar-date parts explicitly and keep the date independent of timezone.
+  const dateParts = date ? Object.fromEntries(new Intl.DateTimeFormat('en-GB', {
+    weekday: 'long', day: 'numeric', month: 'long', year: 'numeric', timeZone: 'UTC',
+  }).formatToParts(new Date(date)).map(part => [part.type, part.value])) : null
+  const niceDate = dateParts
+    ? `${dateParts.weekday} ${dateParts.day} ${dateParts.month} ${dateParts.year}`
+    : 'Choose a date'
 
   const shareReport = () => {
     if (!data) return

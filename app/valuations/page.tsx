@@ -282,6 +282,7 @@ export default function ValuationsPage() {
             <h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa' }}>Valuations</h1>
             <p style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>Interim applications → certification → payment</p>
           </div>
+          <a href={'/api/valuations/export' + (filter === 'all' ? '' : '?status=' + filter)} style={{ color: '#93c5fd', fontSize: 13, whiteSpace: 'nowrap' }}>Export CSV</a>
           <button type="button" onClick={() => setShowAdd(true)} disabled={!projects.length} aria-label="Create valuation" style={{ width: 38, height: 38, borderRadius: 11, border: 'none', background: '#10b981', cursor: projects.length ? 'pointer' : 'not-allowed', opacity: projects.length ? 1 : 0.45, display: 'grid', placeItems: 'center' }}>
             <IcPlus size={18} color="#fff" />
           </button>
