@@ -46,11 +46,8 @@ jobs:
           set -euo pipefail
           SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=15"
 
-          if [[ -n "${VPS_SSH_KEY:-}" ]]; then
-            SSH_CMD="ssh ${SSH_OPTS} -i ~/.ssh/id_ed25519 ${VPS_USER}@${VPS_HOST}"
-          else
-            SSH_CMD="sshpass -p '${VPS_PASSWORD}' ssh ${SSH_OPTS} ${VPS_USER}@${VPS_HOST}"
-          fi
+          # SSH key rejected by VPS — use password auth instead
+          SSH_CMD="sshpass -p '${VPS_PASSWORD}' ssh ${SSH_OPTS} ${VPS_USER}@${VPS_HOST}"
 
           $SSH_CMD 'bash -s' << 'REMOTE'
             set -euo pipefail
