@@ -22,7 +22,7 @@ Superseded repositories remain preserved in GitHub as read-only archives; their 
 2. Commercial control now persists applications, revisioned certificates, variation links, retention/release and partial/full payment reconciliation; project Finance now exposes adjusted contract value, earned/applied/certified value, valuation cash, recorded cost, commitments, forecast cost/margin, uncertified value and CSV export. Client invoice revenue is explicitly separated from Project.spent cost. Next deepen accounting reconciliation and cost coding.
 3. Capture/safety P0 is now end-to-end: receipt OCR/review, progress-photo GPS/time evidence, and incident → investigation → root cause → corrective action → explicit RIDDOR decision/submission record → verified closeout. Serious incidents are flagged for RIDDOR assessment without the app making an automatic legal determination.
 4. Native Expo is functional for core field CRUD but needs high-value workflow parity.
-5. Production-critical mutations need broader authenticated tenant-scoped integration tests plus browser/mobile E2E journeys.
+5. Construction-role browser journeys now cover Company Admin, Project Manager, Foreman and Operative; project creation is server-enforced as Company Admin-only. Continue broadening tenant/RBAC mutation coverage around finance, team administration and approval-only actions.
 
 ## P1 workflow completion
 Commercial: one ledger for contract sum, variations, commitments, valuations, certificates, retention, invoices, forecast cost/value and margin.
@@ -38,7 +38,7 @@ Drawing intelligence; spatial site layer; Tender Scout and procurement intellige
 ## Roadmap
 **Gate A — Canonical release:** merge verified release to `main`, protect it with tests/lint/build/drift/security gates, keep one production source of truth and remove stale contradictory docs.
 
-**Gate B — P0 closure:** deepen invoice/accounting reconciliation and cost coding; native high-value field parity; broader tenant/RBAC mutation tests; Playwright Admin/PM/Foreman/Operative journeys. Persistent applications/certificates/payments, project WIP/cashflow control, CSV commercial export, Smart Parse, receipt OCR/review, GPS-tagged field evidence, governed incident/RIDDOR investigation-closeout and Apps workflow routing are complete.
+**Gate B — P0 closure:** deepen invoice/accounting reconciliation and cost coding; native high-value field parity; broaden tenant/RBAC mutation coverage. Persistent applications/certificates/payments, project WIP/cashflow control, CSV commercial export, Smart Parse, receipt OCR/review, GPS-tagged field evidence, governed incident/RIDDOR investigation-closeout, Apps workflow routing, Company Admin/PM/Foreman/Operative browser journeys and Company Admin-only project creation are complete.
 
 **Gate C — Commercial/procurement backbone:** unify commercial ledger, complete procurement lifecycle, supplier scorecards, immutable audit events, approval matrices and accounting adapter boundary.
 

@@ -25,6 +25,7 @@ export default function ProjectsPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [showModal, setShowModal] = useState(false)
+  const [canCreateProject, setCanCreateProject] = useState(false)
   const [saving, setSaving] = useState(false)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [form, setForm] = useState({
@@ -47,6 +48,16 @@ export default function ProjectsPage() {
 
   useEffect(() => { load(showArchived) }, [showArchived])
 
+  useEffect(() => {
+    fetch('/api/orgs')
+      .then(r => r.ok ? r.json() : null)
+      .then(d => {
+        const active = d?.organizations?.find((o: { active?: boolean }) => o.active) || d?.organizations?.[0]
+        setCanCreateProject(active?.role === 'owner' || active?.role === 'admin')
+      })
+      .catch(() => setCanCreateProject(false))
+  }, [])
+
   // Cross-tab sync — refetch when another tab broadcasts a projects change.
   useEffect(() => {
     return subscribe(msg => {
@@ -57,10 +68,10 @@ export default function ProjectsPage() {
   }, [showArchived])
 
   useEffect(() => {
-    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1') {
+    if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1' && canCreateProject) {
       setShowModal(true)
     }
-  }, [])
+  }, [canCreateProject])
 
   const filtered = projects.filter(p => {
     const matchesSearch = p.name.toLowerCase().includes(search.toLowerCase()) ||
@@ -99,15 +110,16 @@ export default function ProjectsPage() {
           progress: 0,
         }),
       })
-      if (!res.ok) throw new Error('Failed')
-      const newProject = await res.json()
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload?.error || 'Failed to create project')
+      const newProject = payload
       setProjects(prev => [newProject, ...prev])
       setShowModal(false)
       setForm({ name: '', clientName: '', address: '', postcode: '', status: 'active', budget: '', startDate: '', endDate: '' })
       setToast({ msg: 'Project created' })
       broadcastInvalidate('projects')
-    } catch {
-      setToast({ msg: 'Failed to create project', type: 'error' })
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Failed to create project', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -123,9 +135,9 @@ export default function ProjectsPage() {
             <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Projects</h1>
             <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>{stats.active} active · {stats.snagging} snagging · {stats.quoting} quoting</p>
           </div>
-          <button onClick={() => setShowModal(true)} aria-label="Create new project" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          {canCreateProject && <button onClick={() => setShowModal(true)} aria-label="Create new project" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
-          </button>
+          </button>}
         </div>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '10px 14px' }}>
           <IcSearch size={16} color="#52749a" />
@@ -161,7 +173,7 @@ export default function ProjectsPage() {
       <TabBar />
 
       {/* New project modal */}
-      {showModal && (
+      {showModal && canCreateProject && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>

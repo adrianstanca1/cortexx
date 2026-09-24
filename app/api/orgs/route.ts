@@ -4,6 +4,7 @@ import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { findAvailableSlug } from '@/lib/org'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { getCurrentOrg } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -23,11 +24,13 @@ export async function GET() {
     },
     orderBy: { joinedAt: 'asc' },
   })
+  const activeOrgId = getCurrentOrg()?.organizationId || memberships[0]?.organizationId || null
   return NextResponse.json({
     organizations: memberships.map(m => ({
       ...m.organization,
       role: m.role,
       joinedAt: m.joinedAt,
+      active: m.organizationId === activeOrgId,
     })),
   })
 }
