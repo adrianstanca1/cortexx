@@ -1,0 +1,85 @@
+name: Deploy CortexBuild Pro to 85.190.100.68
+
+on:
+  workflow_dispatch:
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@v7
+
+      - name: Setup SSH
+        run: |
+          mkdir -p ~/.ssh
+          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
+          chmod 600 ~/.ssh/cortexx_deploy
+          ssh-keyscan -H 85.190.100.68 >> ~/.ssh/known_hosts 2>/dev/null || true
+
+      - name: Verify SSH access (retry up to 8 times)
+        run: |
+          for attempt in 1 2 3 4 5 6 7 8; do
+            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/cortexx_deploy root@85.190.100.68 'echo SSH_OK && uname -a' 2>&1; then
+              exit 0
+            fi
+            wait=$((attempt * 5))
+            echo "SSH attempt $attempt failed, waiting ${wait}s"
+            sleep $wait
+          done
+          echo "SSH connection failed after 8 attempts"
+          exit 1
+
+      - name: Deploy via docker compose
+        env:
+          GH_PAT: ${{ secrets.GITHUB_TOKEN }}
+        run: |
+          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@85.190.100.68 'bash -s' << 'REMOTE'
+            set -euo pipefail
+            APP_DIR=/opt/cortexx
+
+            if [ ! -d "$APP_DIR/.git" ]; then
+              echo "::error:: $APP_DIR is not a git checkout — aborting"
+              exit 1
+            fi
+            cd "$APP_DIR"
+
+            # Pull latest
+            git fetch origin
+            git reset --hard origin/main
+            echo "Checked out: $(git rev-parse --short HEAD)"
+
+            # Bring the stack up
+            docker compose pull
+            for up in 1 2 3; do
+              sleep 5
+              if docker compose up -d --build --remove-orphans; then
+                break
+              fi
+              echo "docker compose up attempt $up failed — retrying"
+              sleep 10
+            done
+
+            # Wait for API health
+            echo "Waiting for API health..."
+            for n in $(seq 1 24); do
+              code=$(curl -s --max-time 5 -o /dev/null -w "%{http_code}" https://cortexbuildpro.tech/api/health 2>/dev/null || echo 000)
+              if [ "$code" = "200" ]; then
+                echo "API healthy after ~$((n*5))s (HTTP 200)"
+                break
+              fi
+              echo "  try $n: api http $code"
+              sleep 5
+            done
+          REMOTE
+
+      - name: Verify deployment
+        run: |
+          sleep 5
+          echo "=== Public ==="
+          curl -s -o /dev/null --max-time 20 -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.tech/
+          curl -s -o /dev/null --max-time 20 -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.tech/api/health
+          echo "=== Health body ==="
+          curl -s --max-time 10 https://cortexbuildpro.tech/api/health
+          echo ""
