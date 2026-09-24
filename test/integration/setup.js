@@ -50,7 +50,7 @@ async function truncate(prisma) {
       'Subcontractor', 'Supplier', 'Lead', 'Customer', 'Quote', 'Tender',
       'TeamMember', 'Project',
       // Legacy-parity v1.1 modules
-      'PayrollRun', 'LeaveRequest', 'BankTransaction', 'CarbonEntry',
+      'PayrollRun', 'LeaveRequest', 'BankTransaction', 'BankAllocation', 'CarbonEntry',
       'WasteEntry', 'Appraisal', 'DocumentTemplate', 'FormDefinition',
       'Reminder', 'SavedView', 'Tag', 'Goal', 'Improvement', 'KaizenCard',
       'ProcessDoc', 'SiteReview', 'Apprenticeship', 'InsuranceClaim',
