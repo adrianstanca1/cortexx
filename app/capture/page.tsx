@@ -249,7 +249,7 @@ function CaptureContent() {
     } catch (e) {
       failWith(e instanceof Error ? e.message : 'Failed')
     }
-  }, [activeProject, logActivity, finishWith, failWith, recording, startVoiceRfi, stopRecording])
+  }, [logActivity, finishWith, failWith, recording, router, startVoiceRfi, stopRecording])
 
   // Auto-trigger if type pre-selected
   useEffect(() => {

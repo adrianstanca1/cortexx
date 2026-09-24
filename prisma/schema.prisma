@@ -110,6 +110,7 @@ model Project {
   risks               Risk[]
   toolboxTalks        ToolboxTalk[]
   safetyIncidents     SafetyIncident[]
+  valuations          Valuation[]
 
   organizationId  String?
   organization    Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -120,6 +121,33 @@ model Project {
   @@index([status])
   @@index([updatedAt])
   @@index([archivedAt])
+  @@index([organizationId])
+}
+
+model Valuation {
+  id                String        @id @default(cuid())
+  projectId         String
+  project           Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  applicationNumber Int
+  periodEnd         DateTime      @default(now())
+  grossToDate       Float
+  retentionPct      Float         @default(3)
+  retentionAmount   Float
+  previousCertified Float         @default(0)
+  netDue            Float
+  status            String        @default("draft")
+  notes             String?
+  submittedAt       DateTime?
+  certifiedAt       DateTime?
+  paidAt            DateTime?
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
+  organizationId    String?
+  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, applicationNumber])
+  @@index([projectId, status])
+  @@index([periodEnd])
   @@index([organizationId])
 }
 
@@ -1209,6 +1237,7 @@ model Organization {
   maintenanceSchedules MaintenanceSchedule[]
   suppliers            Supplier[]
   safetyIncidents      SafetyIncident[]
+  valuations           Valuation[]
 
   // ── Legacy-parity v1.1 modules
   payrollRuns         PayrollRun[]

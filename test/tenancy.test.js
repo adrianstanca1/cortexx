@@ -12,7 +12,7 @@ const assert = require('node:assert/strict')
 // ─── Mirror of the OWNED_MODELS set in lib/tenancy.ts ────────────────
 const OWNED_MODELS = new Set([
   'Project', 'Task', 'TeamMember', 'Assignment', 'Invoice', 'TimeEntry',
-  'Activity', 'Comment', 'Document', 'Snag', 'Certification', 'Rfi',
+  'Activity', 'Comment', 'Document', 'Snag', 'Certification', 'Valuation', 'Rfi',
   'Announcement', 'Observation', 'Variation', 'Lead', 'Customer', 'Quote',
   'SiteCheckIn', 'MileageEntry', 'CostItem', 'Subcontractor', 'Equipment',
   'Material', 'PurchaseOrder', 'SubInvoice', 'Drawing', 'DrawingRevision',
@@ -26,7 +26,7 @@ const OWNED_MODELS = new Set([
   'ApiKey', 'InfraSnapshot',
   // v1.1 additions — keep in sync with lib/tenancy.ts OWNED_MODELS
   'ProjectBookmark', 'ActionPlan', 'Conflict', 'Cis300Return',
-  'Conversation', 'ChatMessage',
+  'Conversation', 'ChatMessage', 'EquipmentCheck',
 ])
 
 const READ_OPERATIONS = new Set([

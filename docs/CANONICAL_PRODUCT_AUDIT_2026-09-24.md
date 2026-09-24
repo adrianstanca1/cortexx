@@ -18,11 +18,11 @@ Superseded repositories remain preserved in GitHub as read-only archives; their 
 - Core domains exist across projects, tasks, team, timesheets, documents/drawings, RFIs, submittals, defects, safety, equipment, materials, procurement, suppliers, commercial, tenders, scheduling, portals, analytics and Vera/AI.
 
 ## P0 gaps
-1. Apps: Smart Parse and Snag from Photo are explicit stubs; AI Estimate exists elsewhere but its Apps tile is not connected.
-2. Valuations are a preview; replace derived “previous certified” with a persistent application/certificate ledger including versions, certification, payment, retention, variations, export, audit and permissions.
-3. Capture claims exceed behavior: receipt OCR/auto-file, progress-photo geotag persistence and full incident/RIDDOR capture must be completed.
+1. Apps routing is now connected for Smart Parse, AI Estimate, Photo→Snag, check-in and safety; finish the underlying AI/OCR/photo intelligence rather than adding more launcher tiles.
+2. Valuations now persist applications with tenant scope, retention, prior-certified calculation and draft → submitted → certified → paid/rejected lifecycle. Next extend this into certificate revisions, variation linkage, export, payment reconciliation, retention release and project WIP/cashflow.
+3. Capture claims still exceed behavior: receipt OCR/auto-file, progress-photo geotag persistence and full incident/RIDDOR investigation/closeout must be completed.
 4. Native Expo is functional for core field CRUD but needs high-value workflow parity.
-5. Production-critical mutations need authenticated tenant-scoped integration tests plus browser/mobile E2E journeys.
+5. Production-critical mutations need broader authenticated tenant-scoped integration tests plus browser/mobile E2E journeys.
 
 ## P1 workflow completion
 Commercial: one ledger for contract sum, variations, commitments, valuations, certificates, retention, invoices, forecast cost/value and margin.
@@ -38,7 +38,7 @@ Drawing intelligence; spatial site layer; Tender Scout and procurement intellige
 ## Roadmap
 **Gate A — Canonical release:** merge verified release to `main`, protect it with tests/lint/build/drift/security gates, keep one production source of truth and remove stale contradictory docs.
 
-**Gate B — P0 closure:** implement Smart Parse, AI Estimate tile and Photo→Snag; persistent valuation/certification models/APIs; OCR/geotag/incident capture; tenant/RBAC mutation tests; Playwright Admin/PM/Foreman/Operative journeys.
+**Gate B — P0 closure:** complete valuation certificates/revisions/variation links/export/reconciliation; OCR/geotag/incident capture; native high-value field parity; tenant/RBAC mutation tests; Playwright Admin/PM/Foreman/Operative journeys. Smart Parse and Apps workflow routing are complete.
 
 **Gate C — Commercial/procurement backbone:** unify commercial ledger, complete procurement lifecycle, supplier scorecards, immutable audit events, approval matrices and accounting adapter boundary.
 
