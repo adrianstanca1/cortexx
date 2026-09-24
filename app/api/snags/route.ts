@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,9 +13,7 @@ const MAX_TAKE = 100
 const ALLOWED_STATUS = new Set(['open', 'in_progress', 'closed'])
 const ALLOWED_PRIORITY = new Set(['low', 'medium', 'high', 'critical'])
 
-export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+async function GET_impl(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
@@ -45,10 +45,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null } }) {
+  const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -88,7 +86,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId: snag.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'human',
         action: `raised snag: ${snag.title}`,
         iconType: 'alert',
@@ -102,3 +100,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create snag' }, { status: 500 })
   }
 }
+
+export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
+export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })

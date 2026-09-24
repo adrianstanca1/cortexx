@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import { createActivity } from '@/lib/activity'
+
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,9 +16,7 @@ export const dynamic = 'force-dynamic'
  * No new model — pure aggregation over what /capture / /check-in /
  * /snags / /photos already write.
  */
-export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+async function GET_impl(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
@@ -100,10 +100,8 @@ function sanitize(s: string, maxLen = 500): string {
  * records, so a new entry is stored as an activity record and immediately
  * appears in today's diary feed.
  */
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null } }) {
+  const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -117,7 +115,7 @@ export async function POST(req: NextRequest) {
 
     const activity = await createActivity({
       projectId,
-      actorName: sanitize(actorName(auth), 100),
+      actorName: sanitize(actorName(session), 100),
       actorType: 'human',
       action: `site diary note: ${sanitize(note, 200)}`,
       detail: sanitize(note),
@@ -130,3 +128,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create site diary entry' }, { status: 500 })
   }
 }
+
+export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
+export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })

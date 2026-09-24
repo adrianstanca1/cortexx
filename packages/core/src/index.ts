@@ -72,7 +72,7 @@ export function startStream(opts: { apiUrl: string; token: string }) {
   const connect = async () => {
     const ctrl = new AbortController(); _streamController = ctrl;
     try {
-      const res = await fetch(`${base}/api/stream?token=${encodeURIComponent(opts.token)}`, { headers: { Accept: 'text/event-stream' }, signal: ctrl.signal });
+      const res = await fetch(`${base}/api/events/stream`, { headers: { Accept: 'text/event-stream', Authorization: `Bearer ${opts.token}` }, signal: ctrl.signal });
       if (!res.ok || !res.body) throw new Error('stream ' + res.status);
       const reader = res.body.getReader(); const dec = new TextDecoder(); let buf = '';
       while (true) {
@@ -113,8 +113,17 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
     async getMe(): Promise<AuthUser | null> { try { const d = await apiGet('/api/auth/me'); return (d && (d.user || d)) as AuthUser; } catch { return null; } },
     async getProjects(): Promise<any[]> { const d = await apiGet('/api/projects?limit=100'); return Array.isArray(d) ? d : d.rows || d.projects || []; },
     async getCollection(name: string, limit = 100): Promise<any[]> {
-      try { const d = await apiGet(`/api/${name}?limit=${limit}`); const rows = Array.isArray(d) ? d : d.rows || d[name] || []; await cacheSet(name, rows); return rows; }
-      catch (e: any) { if (e?.message === 'unauthorized') throw e; const cached = await cacheGet(name); if (cached) { const err: any = new Error('offline-cache'); err.cached = cached; throw err; } throw e; }
+      try {
+        const d = await apiGet(`/api/${name}?limit=${limit}&take=${limit}`);
+        const responseKey: Record<string, string> = {
+          timeentries: 'entries', checkins: 'checkins', safety: 'incidents', team: 'team', documents: 'documents', receipts: 'receipts',
+        };
+        const key = responseKey[name] || name;
+        const rows = Array.isArray(d) ? d : d.rows || d[key] || [];
+        await cacheSet(name, rows);
+        return rows;
+      }
+      catch (e: any) { if (e?.message === 'unauthorized') throw e; const cached = await cacheGet(name); if (cached) return cached; throw e; }
     },
     postCollection(name: string, body: any): Promise<any> { return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized') throw e; const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body }); return { id, _queued: true, ...body }; }); },
     async putCollection(name: string, id: string, body: any): Promise<any> {

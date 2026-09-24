@@ -1,12 +1,14 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { sendPush } from '@/lib/push'
 import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
 import safetyWorkflow from '@/lib/safety-workflow'
+
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,9 +22,7 @@ function jsonArray(value: unknown, max = 30): Prisma.InputJsonValue {
   return (Array.isArray(value) ? value.slice(0, max) : []) as Prisma.InputJsonValue
 }
 
-export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+async function GET_impl(req: NextRequest) {
   try {
     const sp = req.nextUrl.searchParams
     const take = Math.min(parseInt(sp.get('take') || '50') || 50, MAX_TAKE)
@@ -63,10 +63,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null } }) {
+  const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
   try {
     const body = await req.json()
@@ -96,7 +94,7 @@ export async function POST(req: NextRequest) {
         severity,
         status: 'open',
         location: String(body.location || '').trim().slice(0, 300) || null,
-        reportedBy: String(body.reportedBy || actorName(auth)).trim().slice(0, 160) || actorName(auth),
+        reportedBy: String(body.reportedBy || actorName(session)).trim().slice(0, 160) || actorName(session),
         injuredParty: String(body.injuredParty || '').trim().slice(0, 160) || null,
         photoUrl: typeof body.photoUrl === 'string' && body.photoUrl.trim() ? body.photoUrl.trim().slice(0, 1000) : null,
         riddorReportable,
@@ -114,7 +112,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId: incident.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'human',
         action: `logged a safety incident: ${incident.title}`,
         detail: `${severity} · ${type.replace('_', ' ')}${needsRiddorReview || riddorReportable ? ' · RIDDOR assessment required' : ''}`,
@@ -141,3 +139,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create safety incident' }, { status: 500 })
   }
 }
+
+export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
+export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })

@@ -1,13 +1,54 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { auth } from './auth'
 import { prisma } from './db'
 import { MULTITENANT_ENFORCED } from './org'
 import { reportError } from './errors'
 import { setOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
+import { bearerToken, verifyMobileToken } from './mobileAuth'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
+
+async function mobileBearerSession() {
+  let token: string | null = null
+  try { token = bearerToken((await headers()).get('authorization')) } catch { return null }
+  if (!token) return null
+
+  try {
+    const claims = await verifyMobileToken(token)
+    const membership = await prisma.userOrganization.findUnique({
+      where: { userId_organizationId: { userId: claims.sub, organizationId: claims.orgId } },
+      include: {
+        user: { select: { id: true, email: true, name: true, role: true } },
+        organization: { select: { id: true, slug: true, name: true } },
+      },
+    })
+    if (!membership || membership.user.email.toLowerCase() !== claims.email.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const org = {
+      id: membership.organization.id,
+      slug: membership.organization.slug,
+      name: membership.organization.name,
+      role: membership.role,
+    } satisfies SessionOrgMembership
+    const session = {
+      user: {
+        id: membership.user.id,
+        email: membership.user.email,
+        name: membership.user.name,
+        role: membership.user.role,
+        organizations: [org],
+      },
+      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+    setOrgContext({ organizationId: org.id, userId: membership.user.id, role: membership.role })
+    return session
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+}
 
 /**
  * When the JWT carries `orgs: []`, hit the DB once to confirm the user
@@ -50,6 +91,9 @@ async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[]
  * cross later async boundaries.
  */
 export async function requireAuth() {
+  const mobile = await mobileBearerSession()
+  if (mobile) return mobile
+
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -85,15 +129,10 @@ export async function requireAuth() {
  * when it exists.
  */
 export async function requireOrg() {
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  }
+  const session = await requireAuth()
+  if (session instanceof NextResponse) return session
   const userId = (session.user as { id?: string }).id
-  let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
-  if (orgs.length === 0 && userId) {
-    orgs = await refetchOrgsFromDb(userId)
-  }
+  const orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
 
   if (orgs.length === 0) {
     if (MULTITENANT_ENFORCED) {
@@ -110,22 +149,10 @@ export async function requireOrg() {
       const match = orgs.find(o => o.id === cookieValue)
       if (match) active = match
     }
-  } catch {
-    // Not in a request context — fall through.
-  }
+  } catch { /* native bearer requests have no cookie store requirement */ }
 
-  // Expose the resolved org in the current async context. Callers that perform
-  // tenant-owned Prisma work should keep the full operation inside runWithOrg.
   setOrgContext({ organizationId: active.id, userId: userId ?? null, role: active.role })
-
-  return {
-    session,
-    userId,
-    orgId: active.id,
-    orgSlug: active.slug,
-    orgName: active.name,
-    role: active.role,
-  }
+  return { session, userId, orgId: active.id, orgSlug: active.slug, orgName: active.name, role: active.role }
 }
 
 /**

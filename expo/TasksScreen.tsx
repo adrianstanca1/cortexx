@@ -1,204 +1,24 @@
 import React, { useEffect, useState } from 'react';
-import {
-  View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl,
-  ActivityIndicator, Modal, TextInput, ScrollView, Alert,
-} from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator, Modal, TextInput, ScrollView, Alert } from 'react-native';
 import { Colors } from './theme';
 import { getCollection, postCollection, putCollection, getProjects } from './api';
 
-const PRIO: Record<string, string> = {
-  high: Colors.red, med: Colors.orange, medium: Colors.orange, low: Colors.green,
-};
+const PRIO: Record<string,string>={low:Colors.green,medium:Colors.orange,high:Colors.red,critical:'#dc2626'};
+type Task={id:string;title:string;description?:string|null;status:string;priority:string;dueDate?:string|null;projectId?:string|null;assigneeId?:string|null;project?:{name?:string}|null;assignee?:{name?:string}|null};
 
-type Task = {
-  id: string; title: string; assignee?: string; due?: string;
-  prio?: string; done?: boolean; project_id?: string;
-};
-
-export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
-  const [items, setItems] = useState<Task[]>([]);
-  const [projects, setProjects] = useState<{ id: string; name: string }[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [err, setErr] = useState('');
-  const [modal, setModal] = useState(false);
-  const [saving, setSaving] = useState(false);
-  const [form, setForm] = useState<{ title: string; assignee: string; due: string; prio: string; project_id: string }>({
-    title: '', assignee: '', due: '', prio: 'med', project_id: '',
-  });
-
-  const load = async () => {
-    setLoading(true); setErr('');
-    try {
-      const [t, p] = await Promise.all([getCollection('tasks'), getProjects()]);
-      setItems(Array.isArray(t) ? t : []);
-      setProjects(Array.isArray(p) ? p.slice(0, 50) : []);
-    } catch (e: any) {
-      setErr(e?.message || 'Failed to load');
-      if (e?.message === 'unauthorized') onLogout();
-    } finally { setLoading(false); }
-  };
-  // eslint-disable-next-line react-hooks/exhaustive-deps -- intentional mount-only fetch
-  useEffect(() => { load(); }, []);
-
-  const toggle = async (t: Task) => {
-    const next = !t.done;
-    setItems((cur) => cur.map((x) => (x.id === t.id ? { ...x, done: next } : x)));
-    try { await putCollection('tasks', t.id, { ...t, done: next }); }
-    catch (e: any) { Alert.alert('Update failed', e?.message || ''); load(); }
-  };
-
-  const openAdd = () => { setForm({ title: '', assignee: '', due: '', prio: 'med', project_id: '' }); setModal(true); };
-  const save = async () => {
-    if (!form.title.trim()) { Alert.alert('Missing', 'Title is required.'); return; }
-    setSaving(true);
-    try {
-      await postCollection('tasks', {
-        title: form.title.trim(),
-        assignee: form.assignee.trim() || undefined,
-        due: form.due || undefined,
-        prio: form.prio,
-        project_id: form.project_id || undefined,
-      });
-      setModal(false);
-      await load();
-    } catch (e: any) { Alert.alert('Error', e?.message || 'Save failed'); }
-    finally { setSaving(false); }
-  };
-
-  if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.amber} /></View>;
-
-  return (
-    <View style={styles.wrap}>
-      <View style={styles.header}>
-        <Text style={styles.h1}>Tasks</Text>
-        <TouchableOpacity onPress={openAdd}><Text style={styles.addBtn}>+ New</Text></TouchableOpacity>
-      </View>
-      {err ? <Text style={styles.err}>{err}</Text> : null}
-      <FlatList
-        data={items}
-        keyExtractor={(t) => t.id}
-        refreshControl={<RefreshControl tintColor={Colors.amber} onRefresh={load} refreshing={loading} />}
-        contentContainerStyle={{ paddingBottom: 20 }}
-        renderItem={({ item }) => (
-          <View style={styles.card}>
-            <TouchableOpacity style={styles.toggle} onPress={() => toggle(item)}>
-              <View style={[styles.box, item.done && styles.boxOn]}>
-                {item.done ? <Text style={styles.check}>✓</Text> : null}
-              </View>
-            </TouchableOpacity>
-            <View style={styles.body}>
-              <Text style={[styles.name, item.done && styles.nameDone]}>{item.title}</Text>
-              <View style={styles.metaRow}>
-                {item.prio ? (
-                  <View style={[styles.pill, { backgroundColor: (PRIO[item.prio] || Colors.t3) + '22' }]}>
-                    <Text style={[styles.pillText, { color: PRIO[item.prio] || Colors.t3 }]}>{item.prio}</Text>
-                  </View>
-                ) : null}
-                {item.assignee ? <Text style={styles.meta}>{item.assignee}</Text> : null}
-                {item.due ? <Text style={styles.meta}>{fmtDate(item.due)}</Text> : null}
-              </View>
-            </View>
-          </View>
-        )}
-        ListEmptyComponent={!err ? <Text style={styles.empty}>No tasks yet. Tap + New.</Text> : null}
-      />
-
-      <Modal visible={modal} animationType="slide" transparent>
-        <View style={styles.modalBack}>
-          <View style={styles.modal}>
-            <Text style={styles.modalTitle}>New Task</Text>
-            <ScrollView>
-              <Field label="Title *"><Input value={form.title} onChange={(t) => setForm({ ...form, title: t })} placeholder="Fix roof leak" /></Field>
-              <Field label="Assignee"><Input value={form.assignee} onChange={(t) => setForm({ ...form, assignee: t })} placeholder="Dave" /></Field>
-              <Field label="Due (YYYY-MM-DD)"><Input value={form.due} onChange={(t) => setForm({ ...form, due: t })} placeholder="2026-08-01" /></Field>
-              <Field label="Priority">
-                <View style={styles.seg}>
-                  {['low', 'med', 'high'].map((p) => (
-                    <TouchableOpacity key={p} style={[styles.segBtn, form.prio === p && styles.segOn]} onPress={() => setForm({ ...form, prio: p })}>
-                      <Text style={[styles.segText, form.prio === p && styles.segTextOn]}>{p}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </Field>
-              <Field label="Project (optional)">
-                <View style={styles.picker}>
-                  {projects.slice(0, 20).map((p) => (
-                    <TouchableOpacity key={p.id} style={[styles.chip, form.project_id === p.id && styles.chipOn]} onPress={() => setForm({ ...form, project_id: form.project_id === p.id ? '' : p.id })}>
-                      <Text style={[styles.chipText, form.project_id === p.id && styles.chipTextOn]}>{p.name}</Text>
-                    </TouchableOpacity>
-                  ))}
-                </View>
-              </Field>
-            </ScrollView>
-            <View style={styles.modalRow}>
-              <TouchableOpacity style={[styles.mBtn, styles.mCancel]} onPress={() => setModal(false)}>
-                <Text style={styles.mCancelText}>Cancel</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.mBtn, styles.mSave]} onPress={save} disabled={saving}>
-                {saving ? <ActivityIndicator color="#06101e" /> : <Text style={styles.mSaveText}>Save</Text>}
-              </TouchableOpacity>
-            </View>
-          </View>
-        </View>
-      </Modal>
-    </View>
-  );
+export default function TasksScreen({onLogout}:{onLogout:()=>void}){
+ const [items,setItems]=useState<Task[]>([]),[projects,setProjects]=useState<any[]>([]),[team,setTeam]=useState<any[]>([]); const [loading,setLoading]=useState(true),[err,setErr]=useState(''),[modal,setModal]=useState(false),[saving,setSaving]=useState(false);
+ const [form,setForm]=useState({title:'',description:'',dueDate:'',priority:'medium',projectId:'',assigneeId:''});
+ const load=async()=>{setLoading(true);setErr('');try{const[t,p,m]=await Promise.all([getCollection('tasks',200),getProjects(),getCollection('team',500)]);setItems((t||[]) as Task[]);setProjects(p||[]);setTeam(m||[]);}catch(e:any){setErr(e?.message||'Failed');if(e?.message==='unauthorized')onLogout();}finally{setLoading(false)}};
+ useEffect(()=>{load()},[]);// eslint-disable-line react-hooks/exhaustive-deps
+ const toggle=async(t:Task)=>{const next=t.status==='done'?'todo':'done';setItems(cur=>cur.map(x=>x.id===t.id?{...x,status:next}:x));try{await putCollection('tasks',t.id,{status:next});}catch(e:any){Alert.alert('Update failed',e?.message||'');load()}};
+ const openAdd=()=>{setForm({title:'',description:'',dueDate:'',priority:'medium',projectId:projects[0]?.id||'',assigneeId:''});setModal(true)};
+ const save=async()=>{if(!form.title.trim()){Alert.alert('Missing','Title is required.');return}setSaving(true);try{const r=await postCollection('tasks',{title:form.title.trim(),description:form.description.trim()||null,dueDate:form.dueDate||null,priority:form.priority,projectId:form.projectId||null,assigneeId:form.assigneeId||null});setModal(false);if(r?._queued)Alert.alert('Queued offline','Task will sync when connection returns.');await load();}catch(e:any){Alert.alert('Error',e?.message||'Save failed')}finally{setSaving(false)}};
+ if(loading)return <View style={styles.center}><ActivityIndicator color={Colors.amber}/></View>;
+ return <View style={styles.wrap}><View style={styles.header}><Text style={styles.h1}>Tasks</Text><TouchableOpacity onPress={openAdd}><Text style={styles.add}>+ New</Text></TouchableOpacity></View>{err?<Text style={styles.err}>{err}</Text>:null}<FlatList data={items} keyExtractor={x=>x.id} refreshControl={<RefreshControl tintColor={Colors.amber} onRefresh={load} refreshing={loading}/>} renderItem={({item})=><View style={styles.card}><TouchableOpacity onPress={()=>toggle(item)}><View style={[styles.box,item.status==='done'&&styles.boxOn]}>{item.status==='done'?<Text style={styles.check}>✓</Text>:null}</View></TouchableOpacity><View style={{flex:1,marginLeft:12}}><Text style={[styles.name,item.status==='done'&&styles.done]}>{item.title}</Text><View style={styles.metaRow}><Text style={[styles.pill,{color:PRIO[item.priority]||Colors.t3}]}>{item.priority}</Text>{item.project?.name?<Text style={styles.meta}>{item.project.name}</Text>:null}{item.assignee?.name?<Text style={styles.meta}>· {item.assignee.name}</Text>:null}{item.dueDate?<Text style={styles.meta}>· {new Date(item.dueDate).toLocaleDateString('en-GB')}</Text>:null}</View></View></View>} ListEmptyComponent={<Text style={styles.empty}>No tasks.</Text>}/>
+ <Modal visible={modal} transparent animationType="slide"><View style={styles.back}><View style={styles.modal}><Text style={styles.modalTitle}>New task</Text><ScrollView><Field label="Title *"><Input value={form.title} onChange={v=>setForm({...form,title:v})} placeholder="Install east elevation panel"/></Field><Field label="Description"><Input value={form.description} onChange={v=>setForm({...form,description:v})} placeholder="Details / location"/></Field><Field label="Priority"><Chips values={['low','medium','high','critical']} value={form.priority} onPick={v=>setForm({...form,priority:v})}/></Field><Field label="Project"><Chips values={projects.map(p=>p.id)} label={id=>projects.find(p=>p.id===id)?.name||id} value={form.projectId} onPick={v=>setForm({...form,projectId:v})}/></Field><Field label="Assignee"><Chips values={team.slice(0,30).map(m=>m.id)} label={id=>team.find(m=>m.id===id)?.name||id} value={form.assigneeId} onPick={v=>setForm({...form,assigneeId:form.assigneeId===v?'':v})}/></Field><Field label="Due date"><Input value={form.dueDate} onChange={v=>setForm({...form,dueDate:v})} placeholder="YYYY-MM-DD"/></Field></ScrollView><View style={styles.actions}><TouchableOpacity style={styles.cancel} onPress={()=>setModal(false)}><Text style={{color:Colors.t2}}>Cancel</Text></TouchableOpacity><TouchableOpacity style={styles.save} onPress={save}><Text style={{color:Colors.ink,fontWeight:'800'}}>{saving?'Saving…':'Save'}</Text></TouchableOpacity></View></View></View></Modal></View>
 }
-
-function fmtDate(v?: string): string {
-  if (!v) return '—';
-  try { return new Date(v).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' }); } catch { return v; }
-}
-
-function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <View style={{ marginBottom: 12 }}><Text style={styles.label}>{label}</Text>{children}</View>;
-}
-function Input({ value, onChange, placeholder }: { value: string; onChange: (t: string) => void; placeholder: string }) {
-  return (
-    <TextInput style={styles.input} placeholder={placeholder} placeholderTextColor={Colors.t3}
-      value={value} onChangeText={onChange} />
-  );
-}
-
-const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: Colors.ink, padding: 20 },
-  center: { flex: 1, backgroundColor: Colors.ink, alignItems: 'center', justifyContent: 'center' },
-  header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
-  h1: { color: Colors.t1, fontSize: 24, fontWeight: '700' },
-  addBtn: { color: Colors.amber, fontSize: 15, fontWeight: '700' },
-  card: { flexDirection: 'row', backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 12, padding: 14, marginBottom: 10, alignItems: 'flex-start' },
-  toggle: { marginTop: 2 },
-  box: { width: 22, height: 22, borderRadius: 6, borderWidth: 2, borderColor: Colors.hair, alignItems: 'center', justifyContent: 'center' },
-  boxOn: { backgroundColor: Colors.green, borderColor: Colors.green },
-  check: { color: '#06101e', fontSize: 14, fontWeight: '800' },
-  body: { flex: 1, marginLeft: 12 },
-  name: { color: Colors.t1, fontSize: 16, fontWeight: '600' },
-  nameDone: { color: Colors.t3, textDecorationLine: 'line-through' },
-  metaRow: { flexDirection: 'row', flexWrap: 'wrap', alignItems: 'center', gap: 8, marginTop: 6 },
-  meta: { color: Colors.t2, fontSize: 12 },
-  pill: { borderRadius: 10, paddingHorizontal: 10, paddingVertical: 4 },
-  pillText: { fontSize: 12, fontWeight: '700', textTransform: 'capitalize' },
-  empty: { color: Colors.t3, textAlign: 'center', marginTop: 40 },
-  err: { color: Colors.red, marginBottom: 12 },
-  modalBack: { flex: 1, backgroundColor: 'rgba(2,8,18,0.7)', justifyContent: 'flex-end' },
-  modal: { backgroundColor: Colors.ink2, borderTopLeftRadius: 20, borderTopRightRadius: 20, padding: 22, maxHeight: '90%' },
-  modalTitle: { color: Colors.t1, fontSize: 20, fontWeight: '700', marginBottom: 16 },
-  label: { color: Colors.t2, fontSize: 13, marginBottom: 6 },
-  input: { backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 10, padding: 12, color: Colors.t1, fontSize: 15 },
-  seg: { flexDirection: 'row', gap: 8 },
-  segBtn: { flex: 1, borderRadius: 10, padding: 10, backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, alignItems: 'center' },
-  segOn: { backgroundColor: Colors.amber, borderColor: Colors.amber },
-  segText: { color: Colors.t2, fontWeight: '700' },
-  segTextOn: { color: Colors.ink },
-  picker: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
-  chip: { borderRadius: 16, paddingHorizontal: 12, paddingVertical: 6, backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair },
-  chipOn: { backgroundColor: Colors.amber, borderColor: Colors.amber },
-  chipText: { color: Colors.t2, fontSize: 12 },
-  chipTextOn: { color: Colors.ink, fontWeight: '700' },
-  modalRow: { flexDirection: 'row', gap: 12, marginTop: 8 },
-  mBtn: { flex: 1, borderRadius: 12, padding: 14, alignItems: 'center' },
-  mCancel: { backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair },
-  mCancelText: { color: Colors.t2, fontWeight: '600' },
-  mSave: { backgroundColor: Colors.amber },
-  mSaveText: { color: Colors.ink, fontWeight: '700' },
-});
+function Field({label,children}:{label:string;children:React.ReactNode}){return <View style={{marginBottom:12}}><Text style={styles.label}>{label}</Text>{children}</View>};
+function Input({value,onChange,placeholder}:{value:string;onChange:(v:string)=>void;placeholder:string}){return <TextInput style={styles.input} value={value} onChangeText={onChange} placeholder={placeholder} placeholderTextColor={Colors.t3}/>};
+function Chips({values,value,onPick,label=(v)=>v}:{values:string[];value:string;onPick:(v:string)=>void;label?:(v:string)=>string}){return <View style={styles.chips}>{values.map(v=><TouchableOpacity key={v} style={[styles.chip,value===v&&styles.chipOn]} onPress={()=>onPick(v)}><Text style={[styles.chipText,value===v&&styles.chipTextOn]}>{label(v)}</Text></TouchableOpacity>)}</View>};
+const styles=StyleSheet.create({wrap:{flex:1,backgroundColor:Colors.ink,padding:20},center:{flex:1,backgroundColor:Colors.ink,alignItems:'center',justifyContent:'center'},header:{flexDirection:'row',justifyContent:'space-between',alignItems:'center',marginBottom:14},h1:{color:Colors.t1,fontSize:24,fontWeight:'800'},add:{color:Colors.amber,fontWeight:'800'},err:{color:Colors.red},card:{flexDirection:'row',backgroundColor:Colors.ink3,borderWidth:1,borderColor:Colors.hair,borderRadius:12,padding:14,marginBottom:9},box:{width:23,height:23,borderWidth:2,borderColor:Colors.hair,borderRadius:6,alignItems:'center',justifyContent:'center'},boxOn:{backgroundColor:Colors.green,borderColor:Colors.green},check:{color:Colors.ink,fontWeight:'900'},name:{color:Colors.t1,fontSize:15,fontWeight:'700'},done:{color:Colors.t3,textDecorationLine:'line-through'},metaRow:{flexDirection:'row',flexWrap:'wrap',gap:6,marginTop:5},pill:{fontSize:10,fontWeight:'800',textTransform:'uppercase'},meta:{color:Colors.t2,fontSize:10},empty:{color:Colors.t3,textAlign:'center',marginTop:40},back:{flex:1,backgroundColor:'rgba(2,8,18,.75)',justifyContent:'flex-end'},modal:{backgroundColor:Colors.ink2,padding:20,borderTopLeftRadius:20,borderTopRightRadius:20,maxHeight:'92%'},modalTitle:{color:Colors.t1,fontSize:20,fontWeight:'800',marginBottom:14},label:{color:Colors.t2,fontSize:12,fontWeight:'700',marginBottom:6},input:{backgroundColor:Colors.ink3,borderWidth:1,borderColor:Colors.hair,borderRadius:10,padding:11,color:Colors.t1},chips:{flexDirection:'row',flexWrap:'wrap',gap:7},chip:{backgroundColor:Colors.ink3,borderWidth:1,borderColor:Colors.hair,borderRadius:16,paddingHorizontal:10,paddingVertical:7},chipOn:{backgroundColor:Colors.amber,borderColor:Colors.amber},chipText:{color:Colors.t2,fontSize:11},chipTextOn:{color:Colors.ink,fontWeight:'800'},actions:{flexDirection:'row',gap:10,marginTop:8},cancel:{flex:1,padding:13,borderRadius:11,borderWidth:1,borderColor:Colors.hair,alignItems:'center'},save:{flex:1,padding:13,borderRadius:11,backgroundColor:Colors.amber,alignItems:'center'}});

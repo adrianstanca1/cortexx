@@ -1,7 +1,8 @@
 import { NextRequest } from 'next/server'
 import { cookies } from 'next/headers'
 import { prisma } from '@/lib/db'
-import { auth, type SessionOrgMembership } from '@/lib/auth'
+import type { SessionOrgMembership } from '@/lib/auth'
+import { requireAuth } from '@/lib/requireAuth'
 import { setOrgContext, runWithOrg, type OrgRequestContext } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
@@ -15,10 +16,9 @@ let active = 0
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
 export async function GET(req: NextRequest) {
-  const session = await auth()
-  if (!session?.user) {
-    return new Response('Unauthorized', { status: 401 })
-  }
+  const session = await requireAuth()
+  if (session instanceof Response) return session
+  if (!session?.user) return new Response('Unauthorized', { status: 401 })
   if (active >= MAX_CONCURRENT) {
     return new Response('Too many concurrent streams; try again shortly', { status: 503 })
   }
