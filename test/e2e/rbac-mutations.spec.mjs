@@ -37,6 +37,12 @@ async function getTimes(page) {
   return result.body?.entries || []
 }
 
+async function getDashboard(page) {
+  const result = await api(page, '/api/dashboard')
+  expect(result.status).toBe(200)
+  return result.body
+}
+
 async function expectCompanyMutationDenied(page) {
   const attempts = [
     ['/api/team', { name: 'Blocked Person', role: 'Operative' }],
@@ -64,6 +70,11 @@ test('Company Admin retains company finance and team mutation boundary', async (
   const tasks = await api(page, '/api/tasks?take=100')
   expect(tasks.status).toBe(200)
   expect(tasks.body?.tasks?.some(t => t.title === 'E2E Admin Only Task')).toBe(true)
+
+  const dashboard = await getDashboard(page)
+  expect(dashboard.projects?.some(p => p.name === 'E2E Admin Only Project')).toBe(true)
+  expect(dashboard.invoices?.some(i => i.number === 'E2E-ADMIN-001')).toBe(true)
+  expect(dashboard.stats?.owed).toBeGreaterThanOrEqual(1250)
 })
 
 test('Project Manager is assignment-scoped, blocked from company finance/team, and can approve assigned time only', async ({ page }) => {
@@ -82,6 +93,11 @@ test('Project Manager is assignment-scoped, blocked from company finance/team, a
   })
   expect(forbiddenTask.status).toBe(403)
   await expectCompanyMutationDenied(page)
+  const dashboard = await getDashboard(page)
+  expect(dashboard.projects?.some(p => p.name === 'E2E Admin Only Project')).toBe(false)
+  expect(dashboard.invoices).toEqual([])
+  expect(dashboard.stats?.owed).toBe(0)
+  expect(dashboard.stats?.cashflow).toBe(0)
 
   const entries = await getTimes(page)
   const assignedEntry = entries.find(e => e.project?.name === 'E2E Verification Project' && !e.approved)
@@ -101,6 +117,10 @@ test('Foreman is assignment-scoped and cannot approve time or mutate company adm
   expect(projects.some(p => p.name === 'E2E Verification Project')).toBe(true)
   expect(projects.some(p => p.name === 'E2E Admin Only Project')).toBe(false)
   await expectCompanyMutationDenied(page)
+  const dashboard = await getDashboard(page)
+  expect(dashboard.projects?.some(p => p.name === 'E2E Admin Only Project')).toBe(false)
+  expect(dashboard.invoices).toEqual([])
+  expect(dashboard.stats?.owed).toBe(0)
 
   const entries = await getTimes(page)
   const entry = entries.find(e => e.project?.name === 'E2E Verification Project')
@@ -117,18 +137,25 @@ test('Operative sees only self task/time context and cannot approve or mutate ot
   expect(team.status).toBe(200)
   expect(team.body?.team?.length).toBe(1)
   expect(team.body?.team?.[0]?.email).toBe(users.operative)
+  const selfTeamMutation = await api(page, `/api/team/${team.body.team[0].id}`, {
+    method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ phone: 'blocked' }),
+  })
+  expect(selfTeamMutation.status).toBe(403)
+
+  const dashboard = await getDashboard(page)
+  expect(dashboard.projects?.some(p => p.name === 'E2E Admin Only Project')).toBe(false)
+  expect(dashboard.invoices).toEqual([])
+  expect(dashboard.team?.length).toBe(1)
+  expect(dashboard.team?.[0]?.email).toBe(users.operative)
+  expect(dashboard.tasks?.some(t => t.title === 'E2E Admin Only Task')).toBe(false)
+  expect(dashboard.tasks?.every(t => t.assignee?.email === users.operative)).toBe(true)
+  expect(dashboard.stats?.cashflow).toBe(0)
+  expect(dashboard.stats?.owed).toBe(0)
 
   const tasks = await api(page, '/api/tasks?take=100')
   expect(tasks.status).toBe(200)
   expect(tasks.body?.tasks?.some(t => t.title === 'E2E Operative Task')).toBe(true)
   expect(tasks.body?.tasks?.some(t => t.title === 'E2E Admin Only Task')).toBe(false)
-  const dashboard = await api(page, '/api/dashboard')
-  expect(dashboard.status).toBe(200)
-  expect(dashboard.body?.tasks?.some(t => t.title === 'E2E Admin Only Task')).toBe(false)
-  expect(dashboard.body?.tasks?.every(t => t.assignee?.email === users.operative)).toBe(true)
-  expect(dashboard.body?.invoices || []).toHaveLength(0)
-  expect(dashboard.body?.stats?.cashflow).toBe(0)
-  expect(dashboard.body?.stats?.owed).toBe(0)
   await expectCompanyMutationDenied(page)
 
   const entries = await getTimes(page)
