@@ -60,6 +60,7 @@ jobs:
 
       # ── Sync Capacitor (copies www into native project) ──────────
       - name: Sync Capacitor iOS
+        working-directory: ios
         run: npx cap sync ios
 
       # ── CocoaPods ─────────────────────────────────────────────────
