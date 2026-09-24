@@ -25,7 +25,7 @@ type TabId = 'overview' | 'tasks' | 'team' | 'finance'
 
 type CommercialSummary = {
   originalContractValue: number; approvedVariations: number; adjustedContractValue: number; appliedToDate: number; certifiedToDate: number
-  retentionHeld: number; valuationCashReceived: number; clientInvoicesIssued: number; clientInvoicesPaid: number; committedPOs: number
+  retentionHeld: number; valuationCashReceived: number; clientInvoicesIssued: number; clientInvoicesPaid: number; committedPOs: number; uncodedCost: number; costCodingPct: number
   approvedSubcontract: number; paidSubcontract: number; recordedCost: number; openCommitments: number; forecastCost: number; earnedValue: number
   uncertifiedValue: number; forecastMargin: number; forecastMarginPct: number; cashPosition: number
 }
@@ -710,6 +710,7 @@ export default function ProjectDetailPage() {
                 <div style={{ background: '#152641', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 14 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', rowGap: 6, columnGap: 10, fontFamily: 'var(--font-system)', fontSize: 11 }}>
                     <span style={{ color: '#8ea8c5' }}>Recorded project cost</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.recordedCost)}</strong>
+                    <span style={{ color: '#8ea8c5' }}>Cost coding</span><strong style={{ color: commercial.uncodedCost > 0 ? '#f59e0b' : '#10b981' }}>{commercial.costCodingPct.toFixed(1)}% · {gbp(commercial.uncodedCost)} uncoded</strong>
                     <span style={{ color: '#8ea8c5' }}>PO commitments</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.committedPOs)}</strong>
                     <span style={{ color: '#8ea8c5' }}>Approved subcontract liabilities</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.approvedSubcontract)}</strong>
                     <span style={{ color: '#8ea8c5' }}>Valuation cash less recorded cost</span><strong style={{ color: commercial.cashPosition >= 0 ? '#10b981' : '#ef4444' }}>{gbp(commercial.cashPosition)}</strong>

@@ -14,7 +14,7 @@ const OWNED_MODELS = new Set([
   'Project', 'Task', 'TeamMember', 'Assignment', 'Invoice', 'TimeEntry',
   'Activity', 'Comment', 'Document', 'ExpenseReceipt', 'Snag', 'Certification', 'Valuation', 'ValuationCertificate', 'ValuationPayment', 'ValuationVariation', 'Rfi',
   'Announcement', 'Observation', 'Variation', 'Lead', 'Customer', 'Quote',
-  'SiteCheckIn', 'MileageEntry', 'CostItem', 'Subcontractor', 'Equipment',
+  'SiteCheckIn', 'MileageEntry', 'CostCode', 'ProjectCostEntry', 'CostItem', 'Subcontractor', 'Equipment',
   'Material', 'PurchaseOrder', 'SubInvoice', 'Drawing', 'DrawingRevision',
   'Milestone', 'Permit', 'Rams', 'Tender', 'Inspection', 'Meeting', 'Risk',
   'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident', 'SafetyCorrectiveAction',

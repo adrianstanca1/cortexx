@@ -25,7 +25,7 @@
     "db:studio": "prisma studio",
     "test": "node --test test/*.test.js",
     "test:nav": "node --test test/nav-registry.test.js",
-    "test:integration": "tsx --test test/integration/*.test.js",
+    "test:integration": "tsx --test --test-concurrency=1 test/integration/*.test.js",
     "e2e:install": "npm install --no-save --package-lock=false @playwright/test@1.55.0 && npx playwright install chromium",
     "e2e": "playwright test",
     "e2e:desktop": "playwright test --project=desktop-chromium",

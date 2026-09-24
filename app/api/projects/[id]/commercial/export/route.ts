@@ -3,9 +3,11 @@ import { prisma } from '@/lib/db'
 import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
 import commercialWip from '@/lib/commercial-wip'
+import costLedger from '@/lib/cost-ledger'
 
 export const dynamic = 'force-dynamic'
 const { commercialSummary } = commercialWip
+const { costControlSummary } = costLedger
 
 function csvCell(value: string | number) {
   const text = String(value ?? '')
@@ -18,18 +20,20 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   if (!auth.orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
   try {
     const { id } = await params
-    const [project, variations, valuations, certificates, payments, invoices, purchaseOrders, subInvoices] = await Promise.all([
+    const [project, variations, valuations, certificates, payments, invoices, purchaseOrders, subInvoices, costEntries] = await Promise.all([
       prisma.project.findUnique({ where: { id }, select: { id: true, name: true, budget: true, spent: true, progress: true } }),
       prisma.variation.findMany({ where: { projectId: id }, select: { status: true, costImpact: true } }),
       prisma.valuation.findMany({ where: { projectId: id }, select: { applicationNumber: true, grossToDate: true } }),
       prisma.valuationCertificate.findMany({ where: { valuation: { projectId: id } }, select: { status: true, amountCertified: true, retentionAmount: true, retentionRelease: true, issuedAt: true } }),
       prisma.valuationPayment.findMany({ where: { certificate: { valuation: { projectId: id } } }, select: { amount: true } }),
       prisma.invoice.findMany({ where: { projectId: id }, select: { status: true, amount: true } }),
-      prisma.purchaseOrder.findMany({ where: { projectId: id }, select: { status: true, subtotal: true } }),
-      prisma.subInvoice.findMany({ where: { projectId: id }, select: { status: true, payableAmount: true } }),
+      prisma.purchaseOrder.findMany({ where: { projectId: id }, include: { costCode: { select: { id: true, code: true, name: true } } } }),
+      prisma.subInvoice.findMany({ where: { projectId: id }, select: { status: true, payableAmount: true, netAmount: true, purchaseOrderId: true } }),
+      prisma.projectCostEntry.findMany({ where: { projectId: id }, include: { costCode: { select: { id: true, code: true, name: true } } } }),
     ])
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })
-    const summary = commercialSummary({ project, variations, valuations, certificates, payments, invoices, purchaseOrders, subInvoices }) as Record<string, number>
+    const costControl = costControlSummary({ entries: costEntries, purchaseOrders, subInvoices })
+    const summary = commercialSummary({ project, variations, valuations, certificates, payments, invoices, purchaseOrders, subInvoices, costControl }) as Record<string, number>
     const labels: Record<string, string> = {
       originalContractValue: 'Original contract value', approvedVariations: 'Approved variations', adjustedContractValue: 'Adjusted contract value',
       appliedToDate: 'Applied to date', certifiedToDate: 'Certified to date', retentionHeld: 'Retention held', valuationCashReceived: 'Valuation cash received',

@@ -37,3 +37,32 @@ test('negative uncertified value identifies over-certification without hiding it
   assert.equal(s.earnedValue, 20000)
   assert.equal(s.uncertifiedValue, -5000)
 })
+
+
+test('canonical cost ledger overrides legacy spent and prevents PO/invoice double count', () => {
+  const s = commercialSummary({
+    project: { budget: 100000, spent: 99999, progress: 50 },
+    purchaseOrders: [{ status: 'sent', subtotal: 50000 }],
+    subInvoices: [{ status: 'approved', payableAmount: 12000 }],
+    costControl: { actualNet: 20000, committedNet: 50000, openCommitments: 30000 },
+  })
+  assert.equal(s.recordedCost, 20000)
+  assert.equal(s.committedPOs, 50000)
+  assert.equal(s.openCommitments, 30000)
+  assert.equal(s.forecastCost, 50000)
+  assert.equal(s.forecastMargin, 50000)
+})
+
+
+test('commercial summary uses canonical cost ledger actuals and open commitments when supplied', () => {
+  const s = commercialSummary({
+    project: { budget: 100000, spent: 99999, progress: 50 },
+    costControl: { actualNet: 25000, openCommitments: 15000, uncodedNet: 5000, codedPct: 80 },
+  })
+  assert.equal(s.recordedCost, 25000)
+  assert.equal(s.openCommitments, 15000)
+  assert.equal(s.forecastCost, 40000)
+  assert.equal(s.uncodedCost, 5000)
+  assert.equal(s.costCodingPct, 80)
+  assert.equal(s.forecastMargin, 60000)
+})
