@@ -735,7 +735,7 @@ export default function ProjectDetailPage() {
                         <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 800, color: '#eef3fa' }}>Cost-code control</div>
                         <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#6f8cac', marginTop: 2 }}>{costControl.breakdown.length} buckets · net cost basis</div>
                       </div>
-                      <Link href="/receipts" style={commercialLinkStyle}>Review receipts</Link>
+                      <div style={{ display: 'flex', gap: 6 }}><Link href="/cost-codes" style={commercialLinkStyle}>Manage codes</Link><Link href="/receipts" style={commercialLinkStyle}>Review receipts</Link></div>
                     </div>
                     {costControl.breakdown.length === 0 ? (
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#6f8cac', padding: '5px 0' }}>No posted cost or commitments yet.</div>

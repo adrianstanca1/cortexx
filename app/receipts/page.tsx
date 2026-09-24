@@ -8,6 +8,7 @@ import { IcCamera, IcCheck, IcChevL, IcReceipt, IcSpark, IcX } from '@/component
 import { useModalEffects } from '@/lib/useModalEffects'
 
 type ReceiptStatus = 'pending' | 'extracted' | 'needs_review' | 'approved' | 'reconciled'
+type CostCode = { id: string; code: string; name: string }
 type Receipt = {
   id: string
   vendor: string | null
@@ -17,6 +18,8 @@ type Receipt = {
   totalAmount: number | null
   currency: string
   category: string | null
+  costCodeId?: string | null
+  costCode?: CostCode | null
   confidence: number | null
   notes: string | null
   status: ReceiptStatus
@@ -29,7 +32,7 @@ type Receipt = {
 }
 type Summary = { awaitingReview: number; approved: number; reconciled: number; approvedValue: number; approvedVat: number }
 
-type EditForm = { vendor: string; receiptDate: string; subtotal: string; vatAmount: string; totalAmount: string; category: string; notes: string }
+type EditForm = { vendor: string; receiptDate: string; subtotal: string; vatAmount: string; totalAmount: string; category: string; costCodeId: string; notes: string }
 
 const SF = 'var(--font-system)'
 const CATEGORIES = ['materials', 'plant', 'tools', 'fuel', 'travel', 'accommodation', 'subcontract', 'office', 'other']
@@ -49,6 +52,7 @@ function toForm(r: Receipt): EditForm {
     vatAmount: r.vatAmount == null ? '' : String(r.vatAmount),
     totalAmount: r.totalAmount == null ? '' : String(r.totalAmount),
     category: r.category || 'other',
+    costCodeId: r.costCodeId || r.costCode?.id || '',
     notes: r.notes || '',
   }
 }
@@ -59,7 +63,8 @@ export default function ReceiptsPage() {
   const [filter, setFilter] = useState<'all' | ReceiptStatus>('all')
   const [loading, setLoading] = useState(true)
   const [editing, setEditing] = useState<Receipt | null>(null)
-  const [form, setForm] = useState<EditForm>({ vendor: '', receiptDate: '', subtotal: '', vatAmount: '', totalAmount: '', category: 'other', notes: '' })
+  const [form, setForm] = useState<EditForm>({ vendor: '', receiptDate: '', subtotal: '', vatAmount: '', totalAmount: '', category: 'other', costCodeId: '', notes: '' })
+  const [costCodes, setCostCodes] = useState<CostCode[]>([])
   const [saving, setSaving] = useState(false)
   const [scanning, setScanning] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
@@ -78,7 +83,7 @@ export default function ReceiptsPage() {
     } finally { setLoading(false) }
   }, [])
 
-  useEffect(() => { load() }, [load])
+  useEffect(() => { load(); fetch('/api/cost-codes').then(r => r.ok ? r.json() : null).then(d => setCostCodes(d?.codes || [])).catch(() => {}) }, [load])
 
   const filtered = useMemo(() => {
     if (filter === 'all') return receipts
@@ -99,6 +104,7 @@ export default function ReceiptsPage() {
         vatAmount: form.vatAmount === '' ? null : Number(form.vatAmount),
         totalAmount: form.totalAmount === '' ? null : Number(form.totalAmount),
         category: form.category,
+        costCodeId: form.costCodeId || null,
         notes: form.notes,
         ...(status ? { status } : {}),
       }
@@ -163,6 +169,7 @@ export default function ReceiptsPage() {
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 9 }}>
             <Chip text={r.category || 'uncategorised'} />
+            {r.costCode && <Chip text={`${r.costCode.code} · ${r.costCode.name}`} />}
             {confidence != null && <Chip text={`${confidence}% OCR`} />}
             <Chip text={gps ? `GPS ±${Math.round(r.accuracyM || 0)}m` : 'No GPS'} />
             {r.vatAmount != null && <Chip text={`VAT ${money(r.vatAmount)}`} />}
@@ -191,6 +198,7 @@ export default function ReceiptsPage() {
           <Field label="Total"><input type="number" min="0" step="0.01" value={form.totalAmount} onChange={e => setForm(p => ({ ...p, totalAmount: e.target.value }))} style={inputStyle} /></Field>
         </div>
         <Field label="Category"><select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={inputStyle}>{CATEGORIES.map(c => <option key={c} value={c}>{c[0].toUpperCase() + c.slice(1)}</option>)}</select></Field>
+        <Field label="Cost code"><select value={form.costCodeId} onChange={e => setForm(p => ({ ...p, costCodeId: e.target.value }))} disabled={editing.status === 'reconciled'} style={inputStyle}><option value="">— Uncoded —</option>{costCodes.map(c => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}</select></Field>
         <Field label="Notes"><textarea rows={3} value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} /></Field>
         <div style={{ display: 'flex', gap: 7 }}>
           <button type="button" onClick={() => save()} disabled={saving} style={{ ...actionBtn('#3b82f6'), flex: 1 }}>{saving ? 'Saving…' : 'Save'}</button>
