@@ -25,6 +25,16 @@ services:
       interval: 10s
       timeout: 5s
       retries: 10
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - construction_ollama:/root/.ollama
+    healthcheck:
+      test: [CMD, ollama, list]
+      interval: 10s
+      timeout: 5s
+      retries: 12
   app:
     build:
       context: .
@@ -43,6 +53,7 @@ services:
       AUTH_URL: https://cortexbuildpro.tech
       NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.tech
       REDIS_URL: redis://redis:6379
+      OLLAMA_BASE_URL: http://ollama:11434
       UPLOAD_DIR: /app/uploads
       npm_package_version: 1.5.0
     depends_on:
@@ -50,13 +61,12 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      ollama:
+        condition: service_healthy
     ports:
       - '127.0.0.1:3020:3000'
     volumes:
       - construction_uploads:/app/uploads
-    networks:
-      - default
-      - existing_ai
   tools:
     profiles: [tools]
     build:
@@ -71,7 +81,4 @@ volumes:
   construction_db:
   construction_redis:
   construction_uploads:
-networks:
-  existing_ai:
-    external: true
-    name: viral-shorts-studio_default
+  construction_ollama:
