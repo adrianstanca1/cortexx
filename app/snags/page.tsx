@@ -100,6 +100,10 @@ export default function SnagsPage() {
 
   useModalEffects(showModal, () => setShowModal(false))
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') setShowModal(true)
+  }, [])
+
   const load = useCallback(() => {
     fetch('/api/snags')
       .then(r => { if (!r.ok) throw new Error('Failed to load snags'); return r.json() })

@@ -77,6 +77,12 @@ export default function QuotesPage() {
 
   useModalEffects(showAdd || activeQuote !== null, () => { setShowAdd(false); setActiveQuote(null) })
 
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    if (params.get('new') === '1') setShowAdd(true)
+    if (params.get('ai') === '1') { setShowAdd(true); setAiOpen(true) }
+  }, [])
+
   const load = useCallback(() => {
     fetch('/api/quotes')
       .then(r => { if (!r.ok) throw new Error('Failed'); return r.json() })

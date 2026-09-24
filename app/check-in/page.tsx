@@ -50,6 +50,10 @@ export default function CheckInPage() {
 
   useModalEffects(showIn, () => setShowIn(false))
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') setShowIn(true)
+  }, [])
+
   const load = useCallback(() => {
     fetch('/api/checkins')
       .then(r => { if (!r.ok) throw new Error('Failed'); return r.json() })
