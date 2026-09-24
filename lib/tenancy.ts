@@ -14,7 +14,7 @@
  */
 import { AsyncLocalStorage } from 'node:async_hooks'
 import { Prisma } from '@prisma/client'
-import { MULTITENANT_ENFORCED } from './org'
+import { MULTITENANT_ENFORCED } from './tenant-config'
 
 export interface OrgRequestContext {
   organizationId: string | null
@@ -51,6 +51,16 @@ export function runWithOrg<T>(ctx: OrgRequestContext, fn: () => Promise<T> | T):
  */
 export function setOrgContext(ctx: OrgRequestContext): void {
   storage.enterWith(ctx)
+}
+
+/** Establish the context synchronously before an auth helper's first await.
+ * The caller's continuation inherits this object; fill it only after membership
+ * verification. Replacing the store after await cannot update the caller.
+ */
+export function beginOrgContext(): OrgRequestContext {
+  const context: OrgRequestContext = { organizationId: null, userId: null, role: null }
+  storage.enterWith(context)
+  return context
 }
 
 /** Read the org context for the current request (or null outside any). */
