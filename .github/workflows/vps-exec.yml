@@ -75,9 +75,7 @@ jobs:
             SSH_CMD="sshpass -p '$VPS_PASSWORD' ssh -o StrictHostKeyChecking=no -o ConnectTimeout=${t} -o PubkeyAuthentication=no root@85.190.100.68"
           fi
           $SSH_CMD "timeout --signal=KILL ${t}s bash -lc \"\$(cat)\"" <<< "$CMD" > /tmp/vps-out.txt 2>&1
-          rc=$?
           set -e
-          rc=$?
           set -e
 
           # Echo to job log for humans
