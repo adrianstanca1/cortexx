@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
+import { canManage } from '@/lib/rbac'
 import commercialWip from '@/lib/commercial-wip'
 import costLedger from '@/lib/cost-ledger'
 
@@ -17,6 +18,7 @@ function csvCell(value: string | number) {
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!auth.role || !canManage(auth.role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   if (!auth.orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
   try {
     const { id } = await params

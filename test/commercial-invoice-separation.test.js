@@ -15,3 +15,16 @@ test('project finance UI does not derive spent from paid client invoices', () =>
   assert.doesNotMatch(page, /newSpent/)
   assert.doesNotMatch(page, /spent:\s*updatedInvoices/)
 })
+
+test('project APIs cannot bypass the canonical cost ledger with direct spent writes', () => {
+  const createApi = fs.readFileSync(path.join(root, 'app/api/projects/route.ts'), 'utf8')
+  const itemApi = fs.readFileSync(path.join(root, 'app/api/projects/[id]/route.ts'), 'utf8')
+  assert.match(createApi, /Opening spend must be posted through the project cost ledger/)
+  assert.match(itemApi, /Project spend is ledger-derived; post or reconcile project costs instead/)
+  assert.doesNotMatch(itemApi, /body\.spent[^\n]*spent:\s*Number\(body\.spent\)/)
+})
+
+test('assigned non-admin project detail does not unconditionally expose client invoices', () => {
+  const itemApi = fs.readFileSync(path.join(root, 'app/api/projects/[id]/route.ts'), 'utf8')
+  assert.match(itemApi, /invoices:\s*isCompanyAdmin\(\)\s*\?/)
+})

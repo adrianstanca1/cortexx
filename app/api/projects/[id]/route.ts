@@ -44,7 +44,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
       include: {
         tasks: { include: { assignee: true }, orderBy: { dueDate: 'asc' }, take: 200 },
         assignments: { include: { member: true }, take: 200 },
-        invoices: { orderBy: { createdAt: 'desc' }, take: 100 },
+        invoices: isCompanyAdmin() ? { orderBy: { createdAt: 'desc' }, take: 100 } : false,
         activities: { orderBy: { createdAt: 'desc' }, take: 10 },
         documents: { orderBy: { createdAt: 'desc' }, take: 200 },
         _count: { select: { tasks: true, assignments: true } },
@@ -87,6 +87,9 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (body.budget !== undefined && (!Number.isFinite(Number(body.budget)) || Number(body.budget) < 0)) {
       return NextResponse.json({ error: 'Budget must be a non-negative number' }, { status: 400 })
     }
+    if (body.spent !== undefined) {
+      return NextResponse.json({ error: 'Project spend is ledger-derived; post or reconcile project costs instead' }, { status: 409 })
+    }
     if (body.progress !== undefined && (!Number.isFinite(Number(body.progress)) || Number(body.progress) < 0 || Number(body.progress) > 100)) {
       return NextResponse.json({ error: 'Progress must be between 0 and 100' }, { status: 400 })
     }
@@ -100,7 +103,6 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
         ...(body.progress !== undefined && { progress: Number(body.progress) }),
         ...(body.clientName !== undefined && { clientName: String(body.clientName).trim() }),
         ...(body.budget !== undefined && { budget: Number(body.budget) }),
-        ...(body.spent !== undefined && { spent: Number(body.spent) }),
         ...(body.onSiteCount !== undefined && { onSiteCount: Number(body.onSiteCount) }),
         ...(body.startDate !== undefined && { startDate: body.startDate ? new Date(body.startDate) : null }),
         ...(body.endDate !== undefined && { endDate: body.endDate ? new Date(body.endDate) : null }),
