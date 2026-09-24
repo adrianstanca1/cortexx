@@ -29,6 +29,7 @@ export async function GET() {
     organizations: memberships.map(m => ({
       ...m.organization,
       role: m.role,
+      personaRole: m.personaRole,
       joinedAt: m.joinedAt,
       active: m.organizationId === activeOrgId,
     })),
@@ -65,7 +66,7 @@ export async function POST(req: NextRequest) {
       data: { slug, name, plan: 'trial', trialEndsAt },
     })
     await tx.userOrganization.create({
-      data: { userId, organizationId: created.id, role: 'owner' },
+      data: { userId, organizationId: created.id, role: 'owner', personaRole: 'company_admin' },
     })
     return created
   })

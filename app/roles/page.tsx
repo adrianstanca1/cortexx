@@ -12,31 +12,28 @@ import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Avatar from '@/components/ui/Avatar'
 import { IcChevL, IcTeam } from '@/components/ui/Icons'
-
-type Role = 'owner' | 'admin' | 'member' | 'viewer'
+import { ASSIGNABLE_PERSONAS, personaLabel } from '@/lib/persona'
 
 interface MemberRow {
   userId: string
   email: string
   name: string | null
-  role: Role
+  role: string
+  personaRole: string
   joinedAt: string
   lastSeenAt: string | null
 }
 
-const ROLE_COLOR: Record<Role, string> = {
-  owner: '#f59e0b',
-  admin: '#06b6d4',
-  member: '#10b981',
-  viewer: '#52749a',
+const ROLE_COLOR: Record<string, string> = {
+  company_admin: '#06b6d4',
+  project_manager: '#8b5cf6',
+  foreman: '#3b82f6',
+  operative: '#10b981',
+  client: '#ec4899',
 }
 
-const ROLE_LABEL: Record<Role, string> = {
-  owner: 'Owner',
-  admin: 'Admin',
-  member: 'Member',
-  viewer: 'Viewer',
-}
+const PERSONA_ORDER = [...ASSIGNABLE_PERSONAS]
+
 
 export default function RolesPage() {
   const [rows, setRows] = useState<MemberRow[]>([])
@@ -51,9 +48,10 @@ export default function RolesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const grouped: Record<Role, MemberRow[]> = { owner: [], admin: [], member: [], viewer: [] }
-  for (const r of rows) {
-    if (grouped[r.role]) grouped[r.role].push(r)
+  const grouped = Object.fromEntries(PERSONA_ORDER.map(role => [role, [] as MemberRow[]])) as Record<string, MemberRow[]>
+  for (const row of rows) {
+    const persona = PERSONA_ORDER.includes(row.personaRole as (typeof ASSIGNABLE_PERSONAS)[number]) ? row.personaRole : 'operative'
+    grouped[persona].push(row)
   }
 
   return (
@@ -77,13 +75,13 @@ export default function RolesPage() {
         ) : error ? (
           <p style={{ color: '#ef4444', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>{error}</p>
         ) : (
-          (['owner', 'admin', 'member', 'viewer'] as const).map(role => {
+          PERSONA_ORDER.map(role => {
             const members = grouped[role]
             if (members.length === 0) return null
             return (
               <section key={role} style={{ marginBottom: 20 }}>
-                <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: ROLE_COLOR[role], letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
-                  {ROLE_LABEL[role]} <span style={{ color: '#8ea8c5' }}>· {members.length}</span>
+                <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: ROLE_COLOR[role] || '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+                  {personaLabel(role)} <span style={{ color: '#8ea8c5' }}>· {members.length}</span>
                 </p>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {members.map(m => (
@@ -92,7 +90,7 @@ export default function RolesPage() {
                       <div style={{ flex: 1, minWidth: 0 }}>
                         <div style={{ fontSize: 13, color: '#eef3fa', fontWeight: 600 }}>{m.name || m.email}</div>
                         <div style={{ fontSize: 11, color: '#8ea8c5', marginTop: 2 }}>
-                          {m.email}{m.lastSeenAt ? ` · last seen ${new Date(m.lastSeenAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}` : ' · never signed in'}
+                          {m.email} · {m.role} access{m.lastSeenAt ? ` · last seen ${new Date(m.lastSeenAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}` : ' · never signed in'}
                         </div>
                       </div>
                     </li>

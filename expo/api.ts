@@ -23,7 +23,7 @@ export type AuthUser = {
   role: string;
   organizationRole?: string;
   organization?: { id: string; slug: string; name: string };
-  organizations?: Array<{ id: string; slug: string; name: string; role: string }>;
+  organizations?: Array<{ id: string; slug: string; name: string; role: string; personaRole?: string }>;
 };
 
 export async function login(email: string, password: string, totp?: string): Promise<{ token: string; user: AuthUser }> {

@@ -39,7 +39,7 @@ async function main() {
   })
   if (!membership) {
     await prisma.userOrganization.create({
-      data: { userId: admin.id, organizationId: org.id, role: 'owner' },
+      data: { userId: admin.id, organizationId: org.id, role: 'owner', personaRole: 'company_admin' },
     })
     console.log(`✓ Linked ${adminEmail} as owner of ${defaultSlug}`)
   }

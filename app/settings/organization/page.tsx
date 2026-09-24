@@ -1,9 +1,9 @@
 'use client'
 
 import { useEffect, useState, useCallback } from 'react'
-import { useSession } from 'next-auth/react'
 import Link from 'next/link'
 import { IcChevL } from '@/components/ui/Icons'
+import { ASSIGNABLE_PERSONAS, personaLabel } from '@/lib/persona'
 
 interface Member {
   id: string
@@ -11,6 +11,7 @@ interface Member {
   email: string
   name: string | null
   role: 'owner' | 'admin' | 'member' | 'viewer' | string
+  personaRole: string
   joinedAt: string
 }
 
@@ -18,17 +19,16 @@ interface Invite {
   id: string
   email: string
   role: string
+  personaRole: string
   expiresAt: string
 }
 
 const RANK: Record<string, number> = { viewer: 0, member: 1, admin: 2, owner: 3 }
 
 export default function OrganizationSettingsPage() {
-  const { data: session } = useSession()
-  type SessionOrg = { id: string; slug: string; name: string; role: string }
-  const orgs = ((session?.user as { organizations?: SessionOrg[] })?.organizations) || []
-  const activeOrg = orgs[0] // resolved server-side via cookie elsewhere; here we display the first
-
+  type SessionOrg = { id: string; slug: string; name: string; role: string; personaRole?: string; active?: boolean }
+  const [activeOrg, setActiveOrg] = useState<SessionOrg | null>(null)
+  const [orgResolved, setOrgResolved] = useState(false)
   const [members, setMembers] = useState<Member[]>([])
   const [invites, setInvites] = useState<Invite[]>([])
   const [canManage, setCanManage] = useState(false)
@@ -37,8 +37,20 @@ export default function OrganizationSettingsPage() {
 
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
+  const [invitePersona, setInvitePersona] = useState<(typeof ASSIGNABLE_PERSONAS)[number]>('operative')
   const [inviteBusy, setInviteBusy] = useState(false)
   const [inviteMsg, setInviteMsg] = useState<string | null>(null)
+
+  useEffect(() => {
+    fetch('/api/orgs')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const organizations = (data?.organizations || []) as SessionOrg[]
+        setActiveOrg(organizations.find(org => org.active) || organizations[0] || null)
+      })
+      .catch(() => setActiveOrg(null))
+      .finally(() => setOrgResolved(true))
+  }, [])
 
   const load = useCallback(async () => {
     if (!activeOrg) return
@@ -77,7 +89,7 @@ export default function OrganizationSettingsPage() {
       const res = await fetch(`/api/orgs/${activeOrg.id}/invites`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole }),
+        body: JSON.stringify({ email: inviteEmail.trim(), role: inviteRole, personaRole: invitePersona }),
       })
       const data = await res.json()
       if (!res.ok) throw new Error(data.error || 'Failed to send invite')
@@ -91,14 +103,18 @@ export default function OrganizationSettingsPage() {
     }
   }
 
-  const changeRole = async (memberId: string, role: string) => {
+  const changeMember = async (memberId: string, patch: { role?: string; personaRole?: string }) => {
     if (!activeOrg) return
     const res = await fetch(`/api/orgs/${activeOrg.id}/members/${memberId}`, {
       method: 'PUT',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ role }),
+      body: JSON.stringify(patch),
     })
     if (res.ok) await load()
+    else {
+      const data = await res.json().catch(() => ({}))
+      window.alert(data.error || 'Failed to update member')
+    }
   }
 
   const removeMember = async (memberId: string, email: string) => {
@@ -110,6 +126,10 @@ export default function OrganizationSettingsPage() {
       const data = await res.json().catch(() => ({}))
       window.alert(data.error || 'Failed to remove member')
     }
+  }
+
+  if (!orgResolved) {
+    return <div style={{ background: '#06101e', minHeight: '100dvh', padding: 24, color: '#52749a', fontFamily: 'var(--font-system)' }}>Loading workspace…</div>
   }
 
   if (!activeOrg) {
@@ -131,7 +151,7 @@ export default function OrganizationSettingsPage() {
         {activeOrg.name}
       </h1>
       <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginBottom: 24 }}>
-        {activeOrg.slug} · You are {activeOrg.role}
+        {activeOrg.slug} · access {activeOrg.role} · {personaLabel(activeOrg.personaRole || (activeOrg.role === 'owner' ? 'company_admin' : 'operative'))}
       </p>
 
       {/* Billing */}
@@ -167,21 +187,34 @@ export default function OrganizationSettingsPage() {
                     {m.email}
                   </div>
                 </div>
-                {canManage && m.role !== 'owner' ? (
-                  <select
-                    value={m.role}
-                    onChange={e => changeRole(m.id, e.target.value)}
-                    style={{ background: '#06101e', color: '#eef3fa', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', fontFamily: 'var(--font-system)', fontSize: 12 }}
-                  >
-                    <option value="admin">admin</option>
-                    <option value="member">member</option>
-                    <option value="viewer">viewer</option>
-                  </select>
-                ) : (
-                  <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: m.role === 'owner' ? '#f59e0b' : '#52749a' }}>
-                    {m.role}
-                  </div>
-                )}
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                  {canManage && m.role !== 'owner' ? (
+                    <select
+                      aria-label={`Workspace access for ${m.email}`}
+                      value={m.role}
+                      onChange={e => changeMember(m.id, { role: e.target.value })}
+                      style={{ background: '#06101e', color: '#eef3fa', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 8px', fontFamily: 'var(--font-system)', fontSize: 11 }}
+                    >
+                      <option value="admin">admin access</option>
+                      <option value="member">member access</option>
+                      <option value="viewer">viewer access</option>
+                    </select>
+                  ) : (
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: '#f59e0b' }}>{m.role}</div>
+                  )}
+                  {canManage && m.role !== 'owner' ? (
+                    <select
+                      aria-label={`Construction persona for ${m.email}`}
+                      value={m.personaRole || 'operative'}
+                      onChange={e => changeMember(m.id, { personaRole: e.target.value, ...(e.target.value === 'company_admin' ? { role: 'admin' } : {}) })}
+                      style={{ background: '#06101e', color: '#eef3fa', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 8px', fontFamily: 'var(--font-system)', fontSize: 11 }}
+                    >
+                      {ASSIGNABLE_PERSONAS.map(role => <option key={role} value={role}>{personaLabel(role)}</option>)}
+                    </select>
+                  ) : (
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#8ea8c5' }}>{personaLabel(m.personaRole || 'company_admin')}</div>
+                  )}
+                </div>
                 {canManage && m.role !== 'owner' && (
                   <button
                     onClick={() => removeMember(m.id, m.email)}
@@ -200,7 +233,7 @@ export default function OrganizationSettingsPage() {
       {canManage && (
         <section style={sectionStyle}>
           <div style={labelStyle}>Invite a teammate</div>
-          <form onSubmit={sendInvite} style={{ display: 'flex', gap: 8, marginTop: 10 }}>
+          <form onSubmit={sendInvite} style={{ display: 'flex', gap: 8, marginTop: 10, flexWrap: 'wrap' }}>
             <input
               type="email"
               required
@@ -209,10 +242,18 @@ export default function OrganizationSettingsPage() {
               onChange={e => setInviteEmail(e.target.value)}
               style={{ ...inputStyle, flex: 1 }}
             />
-            <select value={inviteRole} onChange={e => setInviteRole(e.target.value as 'admin' | 'member' | 'viewer')} style={{ ...inputStyle, width: 110, padding: '12px 10px' }}>
-              <option value="admin">admin</option>
-              <option value="member">member</option>
-              <option value="viewer">viewer</option>
+            <select aria-label="Construction persona" value={invitePersona} onChange={e => {
+              const persona = e.target.value as (typeof ASSIGNABLE_PERSONAS)[number]
+              setInvitePersona(persona)
+              if (persona === 'company_admin') setInviteRole('admin')
+              if (persona === 'client' && inviteRole === 'member') setInviteRole('viewer')
+            }} style={{ ...inputStyle, width: 160, padding: '12px 10px' }}>
+              {ASSIGNABLE_PERSONAS.map(role => <option key={role} value={role}>{personaLabel(role)}</option>)}
+            </select>
+            <select aria-label="Workspace access" value={inviteRole} onChange={e => setInviteRole(e.target.value as 'admin' | 'member' | 'viewer')} style={{ ...inputStyle, width: 130, padding: '12px 10px' }}>
+              <option value="admin">admin access</option>
+              <option value="member">member access</option>
+              <option value="viewer">viewer access</option>
             </select>
             <button
               type="submit"
@@ -236,7 +277,7 @@ export default function OrganizationSettingsPage() {
                   <div key={i.id} style={{ padding: '8px 12px', background: '#1a2f4e', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa' }}>{i.email}</div>
-                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a' }}>{i.role} · expires {new Date(i.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a' }}>{personaLabel(i.personaRole || 'operative')} · {i.role} access · expires {new Date(i.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                     </div>
                   </div>
                 ))}

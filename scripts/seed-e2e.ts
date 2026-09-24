@@ -12,13 +12,13 @@ type PersonaSeed = { email: string; name: string; userRole: string; orgRole: 'ow
 async function upsertPersona(persona: PersonaSeed, passwordHash: string, organizationId: string) {
   const user = await prisma.user.upsert({
     where: { email: persona.email },
-    update: { name: persona.name, role: persona.userRole, passwordHash },
-    create: { email: persona.email, name: persona.name, role: persona.userRole, passwordHash },
+    update: { name: persona.name, role: 'member', passwordHash },
+    create: { email: persona.email, name: persona.name, role: 'member', passwordHash },
   })
   await prisma.userOrganization.upsert({
     where: { userId_organizationId: { userId: user.id, organizationId } },
-    update: { role: persona.orgRole },
-    create: { userId: user.id, organizationId, role: persona.orgRole },
+    update: { role: persona.orgRole, personaRole: persona.userRole },
+    create: { userId: user.id, organizationId, role: persona.orgRole, personaRole: persona.userRole },
   })
   await prisma.notificationPreference.upsert({ where: { userId: user.id }, update: {}, create: { userId: user.id } })
 

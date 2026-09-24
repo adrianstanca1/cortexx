@@ -88,10 +88,10 @@ async function seedTwoOrgs(prisma) {
       data: { slug: 'org-b', name: 'Org B', plan: 'pro' },
     })
     await prisma.userOrganization.create({
-      data: { userId: userA.id, organizationId: orgA.id, role: 'owner' },
+      data: { userId: userA.id, organizationId: orgA.id, role: 'owner', personaRole: 'company_admin' },
     })
     await prisma.userOrganization.create({
-      data: { userId: userB.id, organizationId: orgB.id, role: 'owner' },
+      data: { userId: userB.id, organizationId: orgB.id, role: 'owner', personaRole: 'company_admin' },
     })
     return { userA, userB, orgA, orgB }
   })

@@ -11,7 +11,7 @@ export async function GET() {
     email?: string | null
     name?: string | null
     role?: string
-    organizations?: Array<{ id: string; slug: string; name: string; role: string }>
+    organizations?: Array<{ id: string; slug: string; name: string; role: string; personaRole?: string }>
   }
   return NextResponse.json({ user })
 }

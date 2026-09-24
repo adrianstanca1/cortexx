@@ -31,6 +31,7 @@ export async function GET() {
       name: m.user.name,
       image: m.user.image,
       role: m.role,
+      personaRole: m.personaRole,
       joinedAt: m.joinedAt,
       lastSeenAt: m.user.updatedAt,
     })),

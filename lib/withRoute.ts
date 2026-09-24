@@ -3,6 +3,7 @@ import { cookies } from 'next/headers'
 import { requireAuth } from './requireAuth'
 import { canWrite, canManage } from './rbac'
 import { runWithOrg } from './tenancy'
+import { resolvePersona } from './persona'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
@@ -12,7 +13,7 @@ interface RouteSession {
     name?: string | null
     email?: string | null
     role?: string
-    organizations?: Array<{ id: string; slug: string; name: string; role: string }>
+    organizations?: Array<{ id: string; slug: string; name: string; role: string; personaRole?: string }>
   }
 }
 
@@ -21,6 +22,7 @@ interface HandlerContext {
   session: RouteSession
   userId: string
   role: string | null
+  personaRole: string | null
   orgId: string | null
   orgSlug: string | null
   orgName: string | null
@@ -68,7 +70,9 @@ export function withRoute(
     const orgName = active?.name || null
     // Per-org role takes precedence; fall back to legacy user-level role for
     // accounts that pre-date the organization model.
-    const role = active?.role || (session as RouteSession).user?.role || null
+    const role = active?.role || null
+    const personaRole = active ? resolvePersona(active.personaRole, (session as RouteSession).user?.role, active.role) : ((session as RouteSession).user?.role || null)
+    if (personaRole && (session as RouteSession).user) (session as RouteSession).user!.role = personaRole
 
     if (requireOrg && !orgId) {
       return NextResponse.json({ error: 'Organisation context required' }, { status: 400 })
@@ -82,7 +86,7 @@ export function withRoute(
     }
 
     try {
-      const invoke = () => handler({ req, session: session as RouteSession, userId, role, orgId, orgSlug, orgName })
+      const invoke = () => handler({ req, session: session as RouteSession, userId, role, personaRole, orgId, orgSlug, orgName })
       return orgId
         ? await runWithOrg({ organizationId: orgId, userId, role }, invoke)
         : await invoke()

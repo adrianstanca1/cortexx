@@ -212,11 +212,6 @@ export default function SettingsPage() {
       <form onSubmit={saveName} style={{ background: '#152641', borderRadius: 14, padding: 16, marginBottom: 16, border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={labelStyle}>Profile</div>
         <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5' }}>{session?.user?.email}</div>
-        {session?.user?.role && (
-          <div style={{ display: 'inline-block', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: 10, fontWeight: 700, padding: '2px 8px', borderRadius: 5, textTransform: 'uppercase', letterSpacing: 0.5, alignSelf: 'flex-start' }}>
-            {session.user.role}
-          </div>
-        )}
         <input
           type="text"
           placeholder="Your name"
