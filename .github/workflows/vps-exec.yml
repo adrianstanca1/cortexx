@@ -50,6 +50,7 @@ jobs:
         env:
           CMD: ${{ inputs.command }}
           TIMEOUT_S: ${{ inputs.timeout_s }}
+          VPS_PASSWORD: ${{ secrets.VPS_ROOT_PASSWORD }}
         run: |
           # Clamp timeout
           t=${TIMEOUT_S:-300}
