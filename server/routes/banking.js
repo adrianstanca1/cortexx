@@ -244,12 +244,25 @@ router.get('/banking/transactions', async (req, res) => {
             { headers: { authorization: 'Bearer ' + tok } }
           ).then(r => r.json());
           for (const t of (tx.results || [])) {
+            const signedAmount = Number(t.amount) || 0;
+            const fallbackId = crypto.createHash('sha256').update([
+              conn.id, a.account_id, t.timestamp || '', signedAmount,
+              t.description || t.merchant_name || t.transaction_type || '',
+            ].join('|')).digest('hex');
             all.push({
+              externalId: t.transaction_id || fallbackId,
+              transactionId: t.transaction_id || null,
+              occurredAt: t.timestamp || null,
               date: (t.timestamp || '').slice(0, 10),
+              description: t.description || t.merchant_name || t.transaction_type || '',
               desc: t.description || t.merchant_name || t.transaction_type || '',
-              amount: Math.abs(+t.amount || 0),
-              kind: t.transaction_type === 'CREDIT' || (+t.amount > 0) ? 'credit' : 'debit',
-              connectionId: conn.id, accountId: a.account_id,
+              amount: signedAmount,
+              currency: t.currency || a.currency || 'GBP',
+              kind: t.transaction_type === 'CREDIT' || signedAmount > 0 ? 'credit' : 'debit',
+              connectionId: conn.id,
+              accountId: a.account_id,
+              accountName: a.display_name || a.account_number?.number || conn.bank_name || null,
+              reference: t.transaction_id || null,
               raw: t.description || '',
             });
           }

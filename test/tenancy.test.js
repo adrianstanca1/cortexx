@@ -18,7 +18,7 @@ const OWNED_MODELS = new Set([
   'Material', 'PurchaseOrder', 'SubInvoice', 'Drawing', 'DrawingRevision',
   'Milestone', 'Permit', 'Rams', 'Tender', 'Inspection', 'Meeting', 'Risk',
   'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident', 'SafetyCorrectiveAction',
-  'PayrollRun', 'LeaveRequest', 'BankTransaction', 'CarbonEntry',
+  'PayrollRun', 'LeaveRequest', 'BankTransaction', 'BankAllocation', 'CarbonEntry',
   'WasteEntry', 'Appraisal', 'DocumentTemplate', 'FormDefinition',
   'Reminder', 'SavedView', 'Tag', 'Goal', 'Improvement', 'KaizenCard',
   'ProcessDoc', 'SiteReview', 'Apprenticeship', 'InsuranceClaim',

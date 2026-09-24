@@ -89,7 +89,7 @@ const OWNED_MODELS = new Set<string>([
   'Milestone', 'Permit', 'Rams', 'Tender', 'Inspection', 'Meeting', 'Risk',
   'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident', 'SafetyCorrectiveAction', 'TrainingCourse',
   // ── Legacy-parity v1.1 modules
-  'PayrollRun', 'LeaveRequest', 'BankTransaction', 'CarbonEntry',
+  'PayrollRun', 'LeaveRequest', 'BankTransaction', 'BankAllocation', 'CarbonEntry',
   'WasteEntry', 'Appraisal', 'DocumentTemplate', 'FormDefinition',
   'Reminder', 'SavedView', 'Tag', 'Goal', 'Improvement', 'KaizenCard',
   'ProcessDoc', 'SiteReview', 'Apprenticeship', 'InsuranceClaim',
