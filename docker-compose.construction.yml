@@ -44,7 +44,7 @@ services:
       NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.tech
       REDIS_URL: redis://redis:6379
       UPLOAD_DIR: /app/uploads
-      npm_package_version: 1.4.0
+      npm_package_version: 1.5.0
     depends_on:
       db:
         condition: service_healthy
