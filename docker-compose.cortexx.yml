@@ -66,8 +66,9 @@ services:
       - ./admin.html:/srv/app/admin.html:ro
       - ./admin.js:/srv/app/admin.js:ro
       - ./cortex-core.js:/srv/app/cortex-core.js:ro
-      - ./cortexx-3d-theme.js:/srv/app/cortexx-3d-theme.js:ro
       - ./support.html:/srv/app/support.html:ro
+      - ./privacy.html:/srv/app/privacy.html:ro
+      - ./terms.html:/srv/app/terms.html:ro
       - ./portal.html:/srv/app/portal.html:ro
       - ./manifest.json:/srv/app/manifest.json:ro
       - ./sw.js:/srv/app/sw.js:ro

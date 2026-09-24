@@ -327,7 +327,7 @@ app.use('/api/portal', portalLimiter, require('./routes/portal')(pool, bus));   
 // deliberately not covered twice.
 app.use('/api', apiLimiter);
 
-app.use('/api', require('./routes/sync')(pool, auth));               // sync + portal inbox
+app.use('/api', require('./routes/sync')(pool, auth, bus));               // sync + portal inbox
 app.use('/api', require('./routes/ledger')(pool, auth));            // ledger CSV
 app.use('/api', require('./routes/agents')(pool, auth, bus));                    // AI triage + inbound webhooks (rate-limited; /triage calls a paid upstream)
 app.use('/api', integrationAuth, require('./routes/llm'));           // local LLM (Ollama/OpenAI-compat) — replaces third-party API
@@ -342,7 +342,8 @@ app.use('/api', require('./routes/intelligence')(pool, auth));       // v1.7 ser
 // The collection registry (which tables are typed, their table names, order
 // columns and the workspace-scoped upsert) lives in ./collections so it can be
 // asserted against schema.sql in tests.
-const { NATIVE, TYPED_JSONB, tableFor, orderColumnFor, typedUpsertSql } = require('./collections');
+const { NATIVE, tableFor, orderColumnFor } = require('./collections');
+const { validateOperation, applyOperations } = require('./collection-store');
 
 app.get('/api/:collection', auth, wrap(async (req, res) => {
   const { collection } = req.params;
@@ -390,63 +391,22 @@ app.get('/api/:collection', auth, wrap(async (req, res) => {
   res.json(paginate(rows));
 }));
 
-app.post('/api/:collection', auth, wrap(async (req, res) => {
-  const { collection } = req.params;
-  if (isRestrictedCollection(collection))
-    return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
-  const docId = req.body.id || crypto.randomUUID();
-  if (TYPED_JSONB.has(collection)) {
-    const tbl = tableFor(collection);
-    const r = await pool.query(typedUpsertSql(tbl), [docId, req.user.ws, req.body]);
-    // Zero rows means the id is already held by a different workspace — see
-    // typedUpsertSql. Refuse rather than write into another tenant.
-    if (!r.rowCount) return res.status(409).json({ error: 'id_conflict', message: 'That id is already in use.' });
-    bus.emit(req.user.ws, { type: 'change', collection, op: 'create', id: docId });
-    return res.json({ id: docId, ...req.body });
-  }
-  await pool.query(
-    `INSERT INTO documents_store(workspace_id, collection, doc_id, data) VALUES($1,$2,$3,$4)
-     ON CONFLICT (workspace_id, collection, doc_id) DO UPDATE SET data=$4, updated_at=now()`,
-    [req.user.ws, collection, docId, req.body]
-  );
-  bus.emit(req.user.ws, { type: 'change', collection, op: 'create', id: docId });
-  res.json({ id: docId, ...req.body });
-}));
-
-app.put('/api/:collection/:id', auth, wrap(async (req, res) => {
-  const { collection, id } = req.params;
-  if (isRestrictedCollection(collection))
-    return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
-  if (TYPED_JSONB.has(collection)) {
-    const tbl = tableFor(collection);
-    const r = await pool.query(typedUpsertSql(tbl), [id, req.user.ws, { ...req.body, id }]);
-    if (!r.rowCount) return res.status(409).json({ error: 'id_conflict', message: 'That id is already in use.' });
-    bus.emit(req.user.ws, { type: 'change', collection, op: 'update', id });
-    return res.json({ id, ...req.body });
-  }
-  await pool.query(
-    `INSERT INTO documents_store(workspace_id, collection, doc_id, data) VALUES($1,$2,$3,$4)
-     ON CONFLICT (workspace_id, collection, doc_id) DO UPDATE SET data=$4, updated_at=now()`,
-    [req.user.ws, collection, id, { ...req.body, id }]
-  );
-  bus.emit(req.user.ws, { type: 'change', collection, op: 'update', id });
-  res.json({ id, ...req.body });
-}));
-
-app.delete('/api/:collection/:id', auth, wrap(async (req, res) => {
-  const { collection, id } = req.params;
-  if (isRestrictedCollection(collection))
-    return res.status(403).json({ error: 'collection_restricted', message: `The '${collection}' collection is not accessible via the generic API.` });
-  if (TYPED_JSONB.has(collection)) {
-    const tbl = tableFor(collection);
-    await pool.query(`DELETE FROM ${tbl} WHERE id=$1 AND workspace_id=$2`, [id, req.user.ws]);
-    bus.emit(req.user.ws, { type: 'change', collection, op: 'delete', id });
-    return res.json({ ok: true });
-  }
-  await pool.query('DELETE FROM documents_store WHERE workspace_id=$1 AND collection=$2 AND doc_id=$3', [req.user.ws, collection, id]);
-  bus.emit(req.user.ws, { type: 'change', collection, op: 'delete', id });
-  res.json({ ok: true });
-}));
+for (const [method, op, route] of [
+  ['post', 'create', '/api/:collection'],
+  ['put', 'update', '/api/:collection/:id'],
+  ['delete', 'delete', '/api/:collection/:id'],
+]) {
+  app[method](route, auth, wrap(async (req, res) => {
+    const { collection } = req.params;
+    const id = op === 'create' ? (req.body?.id ?? crypto.randomUUID()) : req.params.id;
+    const operation = { collection, op, id, data: req.body };
+    const error = validateOperation(operation);
+    if (error) return res.status(error === 'collection_restricted' ? 403 : 400).json({ error });
+    await applyOperations(pool, req.user.ws, [operation]);
+    bus.emit(req.user.ws, { type: 'change', collection, op, id });
+    res.json(op === 'delete' ? { ok: true } : { ...req.body, id });
+  }));
+}
 
 // ── AI proxy (local-first: Ollama; Anthropic only if a key is present) ──
 app.post('/api/ai', auth, wrap(async (req, res) => {

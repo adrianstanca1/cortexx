@@ -236,33 +236,11 @@ function CaptureContent() {
         return
       }
       if (id === 'incident') {
-        const title = `Incident: ${activeProject?.name || 'site'}`
-        const res = await fetch('/api/tasks', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            title,
-            description: 'Site incident — investigate and document',
-            priority: 'critical',
-            projectId: activeProject?.id || null,
-          }),
-        })
-        if (!res.ok) throw new Error('Failed to log incident')
-        await logActivity('reported an incident', 'alert')
-        finishWith('Incident logged')
+        router.push('/safety?new=1')
         return
       }
       if (id === 'checkin') {
-        if (activeProject) {
-          // Bump onSiteCount and log activity
-          await fetch(`/api/projects/${activeProject.id}`, {
-            method: 'PUT',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ onSiteCount: (activeProject.onSiteCount || 0) + 1 }),
-          }).catch(() => {})
-        }
-        await logActivity('checked in on site', 'pin', 'GPS logged')
-        finishWith('Checked in')
+        router.push('/check-in?new=1')
         return
       }
       // fallback

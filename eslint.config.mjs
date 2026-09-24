@@ -13,6 +13,7 @@ const config = [
   { ignores: ['.next/**', 'node_modules/**', 'public/legacy/**', 'archive/**', 'ios/**', 'lib/**', 'dist/**', 'playwright-report/**', 'test-results/**'] },
   ...next,
   {
+    files: ['**/*.{js,jsx,mjs,ts,tsx,mts,cts}'],
     rules: {
       "react-hooks/set-state-in-effect": 'off',
       'react-hooks/purity': 'warn',

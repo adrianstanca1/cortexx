@@ -78,6 +78,10 @@ export default function SafetyPage() {
 
   useModalEffects(showAdd || active !== null, () => { setShowAdd(false); setActive(null) })
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('new') === '1') setShowAdd(true)
+  }, [])
+
   const load = useCallback(() => {
     const qs = filter === 'all' ? '' : `?status=${filter}`
     fetch(`/api/safety${qs}`)

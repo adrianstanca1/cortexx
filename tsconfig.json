@@ -41,6 +41,7 @@
     "app-store",
     "archive",
     "expo",
-    "packages"
+    "packages",
+    "agent-os"
   ]
 }

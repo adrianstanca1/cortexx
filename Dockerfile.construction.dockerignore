@@ -1,0 +1,17 @@
+.git
+node_modules
+**/node_modules
+.next
+.env
+.env.*
+**/.env
+**/.env.*
+*.log
+uploads
+backups
+coverage
+test-results
+playwright-report
+
+archive
+.owner-credentials

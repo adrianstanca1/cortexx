@@ -41,68 +41,128 @@ jobs:
 
       - uses: actions/checkout@v7
 
-      - name: Deploy to VPS
+      - name: Deploy CortexBuild Pro v1.5 construction stack
         run: |
           set -euo pipefail
           SSH_OPTS="-o StrictHostKeyChecking=no -o ConnectTimeout=15"
-
-          # SSH key rejected by VPS — use password auth instead
           export SSHPASS="$VPS_PASSWORD"
-          SSH_CMD="sshpass -e ssh ${SSH_OPTS} ${VPS_USER}@${VPS_HOST}"
+          SSH_CMD="sshpass -e ssh $SSH_OPTS $VPS_USER@$VPS_HOST"
 
           $SSH_CMD 'bash -s' << 'REMOTE'
             set -euo pipefail
             APP_DIR=/opt/cortexx
+            mkdir -p "$APP_DIR"
 
-            echo "=== Install deploy artifacts if first run ==="
-            if [ ! -d "$APP_DIR" ]; then
-              mkdir -p "$APP_DIR"
-              git clone https://github.com/adrianstanca1/cortexx.git "$APP_DIR" 2>&1 | tail -3
+            if [ ! -d "$APP_DIR/.git" ]; then
+              git clone https://github.com/adrianstanca1/cortexx.git "$APP_DIR"
             fi
             cd "$APP_DIR"
-            git fetch origin
+            git fetch origin --prune
             git reset --hard origin/main
-            echo "Checked out: $(git rev-parse --short HEAD)"
+            echo "Deploying $(git rev-parse --short HEAD) — package $(node -p "require('./package.json').version")"
 
-            echo "=== Write compose + env if missing ==="
-            if [ ! -f docker-compose.cortexx.yml ]; then
-              # docker-compose.cortexx.yml is now in the repo — no external artifacts needed
-              echo "  ⚠ docker-compose.cortexx.yml not in repo — cannot deploy"
+            umask 077
+            if [ ! -f .env.construction ]; then
+              DBPASS="$(openssl rand -hex 24)"
+              AUTHSECRET="$(openssl rand -hex 32)"
+              JWTSECRET="$(openssl rand -hex 32)"
+              ADMINPASS="$(openssl rand -hex 24)"
+              printf '%s\n' \
+                "POSTGRES_PASSWORD=$DBPASS" \
+                "DATABASE_URL=postgresql://construction:$DBPASS@db:5432/construction?schema=public" \
+                "REDIS_URL=redis://redis:6379" \
+                "NEXTAUTH_SECRET=$AUTHSECRET" \
+                "AUTH_SECRET=$AUTHSECRET" \
+                "JWT_SECRET=$JWTSECRET" \
+                "NEXTAUTH_URL=https://cortexbuildpro.tech" \
+                "AUTH_URL=https://cortexbuildpro.tech" \
+                "APP_URL=https://cortexbuildpro.tech" \
+                "NEXT_PUBLIC_SITE_URL=https://cortexbuildpro.tech" \
+                "NEXT_PUBLIC_API_URL=https://cortexbuildpro.tech" \
+                "ADMIN_EMAIL=admin@cortexbuildpro.tech" \
+                "ADMIN_PASSWORD=$ADMINPASS" \
+                "OLLAMA_BASE_URL=http://ollama:11434" \
+                "OLLAMA_MODEL=qwen3:4b" \
+                "OLLAMA_VISION_MODEL=moondream" \
+                "NODE_ENV=production" > .env.construction
+              chmod 600 .env.construction
+              printf '%s\n' \
+                "URL=https://cortexbuildpro.tech" \
+                "EMAIL=admin@cortexbuildpro.tech" \
+                "PASSWORD=$ADMINPASS" > .owner-credentials
+              chmod 600 .owner-credentials
+              echo "Created fresh production environment and private owner credential file."
+            fi
+
+            set -a
+            . ./.env.construction
+            set +a
+
+            echo "=== Build isolated construction images ==="
+            docker compose -f docker-compose.construction.yml build app tools
+
+            echo "=== Start data + AI services ==="
+            docker compose -f docker-compose.construction.yml up -d db redis ollama
+
+            echo "=== Apply database migrations ==="
+            docker compose -f docker-compose.construction.yml --profile tools run --rm tools
+
+            echo "=== Bootstrap owner/workspace (idempotent) ==="
+            docker compose -f docker-compose.construction.yml --profile tools run --rm tools npx tsx scripts/bootstrap-construction.ts
+
+            echo "=== Start construction app ==="
+            docker compose -f docker-compose.construction.yml up -d app
+
+            echo "=== Verify direct construction health before cutover ==="
+            healthy=false
+            for n in $(seq 1 45); do
+              if curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3020/api/health | node scripts/check-construction-health.cjs >/dev/null; then
+                healthy=true
+                break
+              fi
+              sleep 2
+            done
+            if [ "$healthy" != true ]; then
+              docker compose -f docker-compose.construction.yml logs --tail=160 app
               exit 1
             fi
-            if [ ! -f server/.env ]; then
-              cp server/.env.example server/.env 2>/dev/null || cp server.env.template server/.env 2>/dev/null || true
+
+            echo "=== Prime local AI models (best effort) ==="
+            docker compose -f docker-compose.construction.yml exec -T ollama ollama pull qwen3:4b || true
+            docker compose -f docker-compose.construction.yml exec -T ollama ollama pull moondream || true
+
+            echo "=== Cut cortexbuildpro.tech over only after direct health passes ==="
+            INGRESS=/home/administrator/video-lab/Caddyfile.viral-shorts
+            BACKUP_DIR=/home/administrator/backups/construction-cutover-20260924
+            mkdir -p "$BACKUP_DIR"
+            if [ ! -f "$BACKUP_DIR/Caddyfile.before-v1.5" ]; then
+              cp "$INGRESS" "$BACKUP_DIR/Caddyfile.before-v1.5"
             fi
+            if grep -q 'reverse_proxy 127.0.0.1:3020' "$INGRESS"; then
+              echo "Ingress already points to construction."
+            elif grep -q 'reverse_proxy 127.0.0.1:3010' "$INGRESS"; then
+              sed -i '0,/reverse_proxy 127.0.0.1:3010/s//reverse_proxy 127.0.0.1:3020/' "$INGRESS"
+            else
+              echo "Expected CortexBuild ingress target was not found; refusing unsafe cutover." >&2
+              exit 1
+            fi
+            docker exec viral-shorts-caddy caddy validate --config /etc/caddy/Caddyfile
+            docker exec viral-shorts-caddy caddy reload --config /etc/caddy/Caddyfile
 
-            echo "=== Bring stack up ==="
-            docker compose -f docker-compose.cortexx.yml pull
-            for up in 1 2 3; do
-              sleep 5
-              if docker compose -f docker-compose.cortexx.yml up -d --build --remove-orphans 2>&1; then
-                break
+            echo "=== Verify public construction service ==="
+            for n in $(seq 1 20); do
+              if curl --fail --silent --show-error --max-time 8 https://cortexbuildpro.tech/api/health | node scripts/check-construction-health.cjs >/dev/null; then
+                echo "CortexBuild Pro v1.5 is live."
+                exit 0
               fi
-              echo "docker compose up attempt $up failed — retrying"
-              sleep 10
+              sleep 2
             done
-
-            echo "=== Wait for health ==="
-            for n in $(seq 1 36); do
-              code=$(curl -s --max-time 5 -o /dev/null -w "%{http_code}" https://cortexbuildpro.tech/api/health 2>/dev/null || echo 000)
-              if [ "$code" = "200" ]; then
-                echo "API healthy: HTTP 200"
-                break
-              fi
-              echo "  try $n: HTTP $code"
-              sleep 5
-            done
+            echo "Public cutover did not become healthy." >&2
+            exit 1
           REMOTE
 
-      - name: Verify deployment
+      - name: Verify public release
         run: |
-          curl -s -o /dev/null --max-time 20 -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.tech/
-          curl -s -o /dev/null --max-time 20 -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.tech/api/health
-          echo "=== Health body ==="
-          curl -s --max-time 10 https://cortexbuildpro.tech/api/health
-          echo ""
-          echo "=== Direct (port 8080) ==="
-          curl -s -o /dev/null --max-time 10 -w "Direct health -> %{http_code}\n" http://${VPS_HOST}:8080/api/health
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 20 https://cortexbuildpro.tech/api/health | node scripts/check-construction-health.cjs
+          curl --fail --silent --show-error -o /dev/null --max-time 20 -w "HTTPS root -> %{http_code}\n" https://cortexbuildpro.tech/

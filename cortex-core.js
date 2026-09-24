@@ -21,9 +21,14 @@ var CortexCore = (() => {
   // packages/core/src/index.ts
   var index_exports = {};
   __export(index_exports, {
+    CAPABILITIES: () => CAPABILITIES,
+    CORTEX_ROLES: () => CORTEX_ROLES,
     api: () => api,
+    assertCapability: () => assertCapability,
+    capabilitiesFor: () => capabilitiesFor,
     createApiClient: () => createApiClient,
     flushQueue: () => flushQueue,
+    hasCapability: () => hasCapability,
     onQueueChange: () => onQueueChange,
     onStreamEvent: () => onStreamEvent,
     pendingWrites: () => pendingWrites,
@@ -33,33 +38,154 @@ var CortexCore = (() => {
     startStream: () => startStream,
     stopStream: () => stopStream
   });
+
+  // packages/core/src/rbac.ts
+  var CORTEX_ROLES = [
+    "super_admin",
+    "platform_admin",
+    "company_admin",
+    "project_manager",
+    "operative",
+    "client"
+  ];
+  var CAPABILITIES = [
+    "workspace.read",
+    "workspace.manage",
+    "workspace.billing",
+    "workspace.members",
+    "project.read",
+    "project.create",
+    "project.manage",
+    "task.read",
+    "task.create",
+    "task.assign",
+    "task.approve",
+    "time.read",
+    "time.clock",
+    "time.approve",
+    "procurement.read",
+    "procurement.create",
+    "procurement.approve",
+    "finance.read",
+    "finance.create",
+    "finance.approve",
+    "documents.read",
+    "documents.create",
+    "documents.approve",
+    "drawings.read",
+    "drawings.annotate",
+    "drawings.approve",
+    "safety.read",
+    "safety.create",
+    "safety.approve",
+    "quality.read",
+    "quality.create",
+    "quality.approve",
+    "client.read",
+    "client.communicate",
+    "client.approve",
+    "ai.use",
+    "ai.execute",
+    "ai.approve",
+    "audit.read"
+  ];
+  var ALL = new Set(CAPABILITIES);
+  var ROLE_CAPABILITIES = {
+    super_admin: ALL,
+    platform_admin: new Set(CAPABILITIES.filter((c) => !c.startsWith("client."))),
+    company_admin: new Set(CAPABILITIES),
+    project_manager: /* @__PURE__ */ new Set([
+      "workspace.read",
+      "project.read",
+      "project.create",
+      "project.manage",
+      "task.read",
+      "task.create",
+      "task.assign",
+      "task.approve",
+      "time.read",
+      "time.approve",
+      "procurement.read",
+      "procurement.create",
+      "finance.read",
+      "documents.read",
+      "documents.create",
+      "documents.approve",
+      "drawings.read",
+      "drawings.annotate",
+      "safety.read",
+      "safety.create",
+      "quality.read",
+      "quality.create",
+      "client.read",
+      "client.communicate",
+      "ai.use",
+      "ai.execute",
+      "ai.approve",
+      "audit.read"
+    ]),
+    operative: /* @__PURE__ */ new Set([
+      "workspace.read",
+      "project.read",
+      "task.read",
+      "task.create",
+      "time.read",
+      "time.clock",
+      "documents.read",
+      "documents.create",
+      "drawings.read",
+      "drawings.annotate",
+      "safety.read",
+      "safety.create",
+      "quality.read",
+      "quality.create",
+      "ai.use"
+    ]),
+    client: /* @__PURE__ */ new Set([
+      "project.read",
+      "task.read",
+      "documents.read",
+      "drawings.read",
+      "quality.read",
+      "client.read",
+      "client.communicate",
+      "client.approve"
+    ])
+  };
+  function hasCapability(role, capability) {
+    const set = ROLE_CAPABILITIES[role];
+    return !!set && ALL.has(capability) && set.has(capability);
+  }
+  function capabilitiesFor(role) {
+    const set = ROLE_CAPABILITIES[role];
+    return set ? CAPABILITIES.filter((c) => set.has(c)) : [];
+  }
+  function assertCapability(role, capability) {
+    if (!hasCapability(role, capability)) throw new Error(`forbidden:${capability}`);
+  }
+
+  // packages/core/src/index.ts
   var API_URL_FALLBACK = "https://cortexbuildpro.com";
   var _memToken = null;
   function defaultTokenStorage() {
     try {
-      if (typeof localStorage !== "undefined") {
-        return {
-          get: () => localStorage.getItem("cb_token"),
-          set: (t) => localStorage.setItem("cb_token", t),
-          clear: () => localStorage.removeItem("cb_token")
-        };
-      }
+      if (typeof localStorage !== "undefined") return {
+        get: () => localStorage.getItem("cb_token"),
+        set: (t) => localStorage.setItem("cb_token", t),
+        clear: () => localStorage.removeItem("cb_token")
+      };
     } catch {
     }
-    return {
-      get: () => _memToken,
-      set: (t) => {
-        _memToken = t;
-      },
-      clear: () => {
-        _memToken = null;
-      }
-    };
+    return { get: () => _memToken, set: (t) => {
+      _memToken = t;
+    }, clear: () => {
+      _memToken = null;
+    } };
   }
+  var _store = defaultTokenStorage();
   function setTokenStorage(store) {
     _store = store;
   }
-  var _store = defaultTokenStorage();
   var _cache = null;
   function setOfflineCache(c) {
     _cache = c;
@@ -103,8 +229,7 @@ var CortexCore = (() => {
     return _queue.length;
   }
   async function queuePersist() {
-    if (!_queueStore) return;
-    try {
+    if (_queueStore) try {
       await _queueStore.set("cb_queue", JSON.stringify(_queue));
     } catch {
     }
@@ -121,36 +246,27 @@ var CortexCore = (() => {
   }
   async function flushQueue(opts) {
     var _a;
-    if (_queue.length === 0) return { ok: 0, failed: 0 };
-    const API_URL = (opts == null ? void 0 : opts.apiUrl) || API_URL_FALLBACK;
+    const snapshot = [..._queue];
     let ok = 0;
     let failed = 0;
-    const snapshot = [..._queue];
-    for (const w of snapshot) {
-      try {
-        const headers = { "content-type": "application/json" };
-        const t = (_a = opts == null ? void 0 : opts.token) != null ? _a : await _store.get();
-        if (t) headers["authorization"] = `Bearer ${t}`;
-        const r = await fetch(`${API_URL}/api/${w.collection}${w.rowId ? "/" + w.rowId : ""}`, {
-          method: w.method,
-          headers,
-          body: JSON.stringify(w.body)
-        });
-        if (r.ok) {
-          await dequeue(w.id);
-          ok++;
-        } else failed++;
-      } catch {
-        failed++;
-      }
+    const API_URL = (opts == null ? void 0 : opts.apiUrl) || API_URL_FALLBACK;
+    for (const w of snapshot) try {
+      const headers = { "content-type": "application/json" };
+      const t = (_a = opts == null ? void 0 : opts.token) != null ? _a : await _store.get();
+      if (t) headers.authorization = `Bearer ${t}`;
+      const r = await fetch(`${API_URL}/api/${w.collection}${w.rowId ? "/" + w.rowId : ""}`, { method: w.method, headers, body: JSON.stringify(w.body) });
+      if (r.ok) {
+        await dequeue(w.id);
+        ok++;
+      } else failed++;
+    } catch {
+      failed++;
     }
     return { ok, failed };
   }
   var _streamListeners = [];
   var _streamController = null;
   var _streamTimer = null;
-  var _streamToken = null;
-  var _streamUrl = "";
   function onStreamEvent(cb) {
     _streamListeners.push(cb);
     return () => {
@@ -158,33 +274,24 @@ var CortexCore = (() => {
     };
   }
   function emitStream(e) {
-    for (const f of _streamListeners) {
-      try {
-        f(e);
-      } catch {
-      }
+    for (const f of _streamListeners) try {
+      f(e);
+    } catch {
     }
   }
   function startStream(opts) {
     stopStream();
-    _streamUrl = (opts.apiUrl || "").replace(/\/$/, "");
-    _streamToken = opts.token;
+    const base = opts.apiUrl.replace(/\/$/, "");
     const connect = async () => {
-      if (!_streamUrl || !_streamToken) return;
       const ctrl = new AbortController();
       _streamController = ctrl;
       try {
-        const res = await fetch(`${_streamUrl}/api/stream?token=${encodeURIComponent(_streamToken)}`, {
-          headers: { Accept: "text/event-stream" },
-          signal: ctrl.signal
-        });
-        if (!res.ok || !res.body) {
-          throw new Error("stream " + res.status);
-        }
+        const res = await fetch(`${base}/api/stream?token=${encodeURIComponent(opts.token)}`, { headers: { Accept: "text/event-stream" }, signal: ctrl.signal });
+        if (!res.ok || !res.body) throw new Error("stream " + res.status);
         const reader = res.body.getReader();
         const dec = new TextDecoder();
         let buf = "";
-        const pump = async () => {
+        while (true) {
           const { done, value } = await reader.read();
           if (done) throw new Error("stream closed");
           buf += dec.decode(value, { stream: true });
@@ -198,15 +305,12 @@ var CortexCore = (() => {
             } catch {
             }
           }
-          await pump();
-        };
-        await pump();
-      } catch (e) {
-        if (ctrl.signal.aborted) return;
-        _streamTimer = setTimeout(connect, 4e3);
+        }
+      } catch {
+        if (!ctrl.signal.aborted) _streamTimer = setTimeout(connect, 4e3);
       }
     };
-    connect();
+    void connect();
   }
   function stopStream() {
     try {
@@ -214,22 +318,16 @@ var CortexCore = (() => {
     } catch {
     }
     _streamController = null;
-    if (_streamTimer) {
-      clearTimeout(_streamTimer);
-      _streamTimer = null;
-    }
+    if (_streamTimer) clearTimeout(_streamTimer);
+    _streamTimer = null;
   }
   function createApiClient(opts = {}) {
     const API_URL = opts.apiUrl || API_URL_FALLBACK;
     const store = opts.tokenStorage || _store;
-    async function token() {
-      return await store.get();
-    }
+    const token = async () => await store.get();
     async function apiGet(path) {
       const t = await token();
-      const r = await fetch(`${API_URL}${path}`, {
-        headers: t ? { authorization: `Bearer ${t}` } : {}
-      });
+      const r = await fetch(`${API_URL}${path}`, { headers: t ? { authorization: `Bearer ${t}` } : {} });
       if (r.status === 401) {
         await store.clear();
         throw new Error("unauthorized");
@@ -239,14 +337,7 @@ var CortexCore = (() => {
     }
     async function apiPost(path, body) {
       const t = await token();
-      const r = await fetch(`${API_URL}${path}`, {
-        method: "POST",
-        headers: {
-          "content-type": "application/json",
-          ...t ? { authorization: `Bearer ${t}` } : {}
-        },
-        body: JSON.stringify(body)
-      });
+      const r = await fetch(`${API_URL}${path}`, { method: "POST", headers: { "content-type": "application/json", ...t ? { authorization: `Bearer ${t}` } : {} }, body: JSON.stringify(body) });
       if (r.status === 401) {
         await store.clear();
         throw new Error("unauthorized");
@@ -263,14 +354,10 @@ var CortexCore = (() => {
       setToken: (t) => store.set(t),
       clearToken: () => store.clear(),
       async login(email, password) {
-        const r = await fetch(`${API_URL}/api/auth/login`, {
-          method: "POST",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ email, password })
-        });
+        const r = await fetch(`${API_URL}/api/auth/login`, { method: "POST", headers: { "content-type": "application/json" }, body: JSON.stringify({ email, password }) });
         if (!r.ok) {
           const e = await r.json().catch(() => ({}));
-          throw new Error(e.error === "invalid credentials" ? "Invalid email or password." : e.error || "Login failed");
+          throw new Error(e.error || "Login failed");
         }
         const d = await r.json();
         if (!d.token) throw new Error("No token returned");
@@ -290,12 +377,12 @@ var CortexCore = (() => {
       },
       async getProjects() {
         const d = await apiGet("/api/projects?limit=100");
-        return Array.isArray(d) ? d : d.rows || [];
+        return Array.isArray(d) ? d : d.rows || d.projects || [];
       },
       async getCollection(name, limit = 100) {
         try {
           const d = await apiGet(`/api/${name}?limit=${limit}`);
-          const rows = Array.isArray(d) ? d : [];
+          const rows = Array.isArray(d) ? d : d.rows || d[name] || [];
           await cacheSet(name, rows);
           return rows;
         } catch (e) {
@@ -304,20 +391,9 @@ var CortexCore = (() => {
           if (cached) {
             const err = new Error("offline-cache");
             err.cached = cached;
-            err.message = "No signal \u2014 showing last saved data";
             throw err;
           }
           throw e;
-        }
-      },
-      async postCisSub(body) {
-        try {
-          return await apiPost("/api/cisSubs", body);
-        } catch (e) {
-          if ((e == null ? void 0 : e.message) === "unauthorized") throw e;
-          const id = "cw_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-          await enqueue({ id, method: "POST", collection: "cisSubs", body });
-          return { id, _queued: true, ...body };
         }
       },
       postCollection(name, body) {
@@ -331,13 +407,9 @@ var CortexCore = (() => {
       async putCollection(name, id, body) {
         const t = await token();
         const headers = { "content-type": "application/json" };
-        if (t) headers["authorization"] = `Bearer ${t}`;
+        if (t) headers.authorization = `Bearer ${t}`;
         try {
-          const r = await fetch(`${API_URL}/api/${name}/${id}`, {
-            method: "PUT",
-            headers,
-            body: JSON.stringify(body)
-          });
+          const r = await fetch(`${API_URL}/api/${name}/${id}`, { method: "PUT", headers, body: JSON.stringify(body) });
           if (r.status === 401) {
             await store.clear();
             throw new Error("unauthorized");
@@ -354,10 +426,6 @@ var CortexCore = (() => {
           return { id, _queued: true, ...body };
         }
       },
-      async lookupTickets(email) {
-        const r = await apiPost("/api/support/tickets/lookup", { email });
-        return Array.isArray(r) ? r : r.tickets || [];
-      },
       apiGet,
       apiPost,
       onQueueChange,
@@ -369,8 +437,6 @@ var CortexCore = (() => {
     };
   }
   var api = createApiClient();
-  if (typeof window !== "undefined") {
-    window.CortexCore = { createApiClient, api, API_URL: API_URL_FALLBACK };
-  }
+  if (typeof window !== "undefined") window.CortexCore = { createApiClient, api, API_URL: API_URL_FALLBACK };
   return __toCommonJS(index_exports);
 })();

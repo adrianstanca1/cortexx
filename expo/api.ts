@@ -24,5 +24,7 @@ export const api = createApiClient({
 });
 
 // Re-export the shared contract so existing screens keep working unchanged.
-export const { login, getMe, getProjects, apiGet, apiPost, getCollection, postCollection, putCollection, postCisSub, onQueueChange, pendingWrites, flushQueue, startStream, stopStream, onStreamEvent, getToken, setToken, clearToken } = api;
+export const { login, getMe, getProjects, apiGet, apiPost, getCollection, postCollection, putCollection, onQueueChange, pendingWrites, flushQueue, startStream, stopStream, onStreamEvent, getToken, setToken, clearToken } = api;
+
+export const postCisSub = (body: any): Promise<any> => api.postCollection('cisSubs', body);
 export type AuthUser = { id: string; email: string; role: string; name?: string };

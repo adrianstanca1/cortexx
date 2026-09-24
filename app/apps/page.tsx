@@ -30,15 +30,15 @@ interface CaptureAction {
 }
 
 const CAPTURE: CaptureAction[] = [
-  { id: 'smart-parse', label: 'Smart parse', sub: 'Paste anything → structured records', Icon: IcSpark, color: '#8b5cf6', ai: true },
+  { id: 'smart-parse', label: 'Smart parse', sub: 'Paste anything → structured records', Icon: IcSpark, color: '#8b5cf6', ai: true, href: '/smart-parse' },
   { id: 'new-task',    label: 'New task',    sub: 'Quick add to your queue',          Icon: IcCheck, color: '#2563eb', href: '/tasks?new=1' },
-  { id: 'ai-estimate', label: 'AI estimate', sub: 'Brief in → quote out',             Icon: IcDoc,   color: '#60a5fa', ai: true },
-  { id: 'site-photo',  label: 'Site progress photo', sub: 'Geo-tagged · added to project', Icon: IcCamera, color: '#2563eb', href: '/capture?type=photo' },
-  { id: 'snag-photo',  label: 'Snag from photo',    sub: 'AI detects defects · auto-files', Icon: IcAlert, color: '#f59e0b', ai: true },
-  { id: 'scan-receipt',label: 'Scan receipt', sub: 'AI OCR + auto-file',              Icon: IcReceipt, color: '#f59e0b', ai: true, href: '/capture?type=receipt' },
+  { id: 'ai-estimate', label: 'AI estimate', sub: 'Brief in → quote out',             Icon: IcDoc,   color: '#60a5fa', ai: true, href: '/quotes?new=1&ai=1' },
+  { id: 'site-photo',  label: 'Site progress photo', sub: 'Photo evidence · added to project', Icon: IcCamera, color: '#2563eb', href: '/capture?type=photo' },
+  { id: 'snag-photo',  label: 'Snag from photo',    sub: 'Attach photo · AI defect analysis', Icon: IcAlert, color: '#f59e0b', ai: true, href: '/snags?new=1&photo=1' },
+  { id: 'scan-receipt',label: 'Scan receipt', sub: 'Capture receipt · added to documents',              Icon: IcReceipt, color: '#f59e0b', ai: true, href: '/capture?type=receipt' },
   { id: 'voice-rfi',   label: 'Voice note / RFI', sub: 'Transcribed by Cortex',       Icon: IcMic,   color: '#06b6d4', href: '/capture?type=voice' },
-  { id: 'site-checkin',label: 'Site check-in', sub: 'GPS verified · logs hours',     Icon: IcPin,   color: '#10b981', href: '/capture?type=checkin' },
-  { id: 'incident',    label: 'Report incident', sub: 'Notify HSE if required',      Icon: IcAlert, color: '#ef4444', href: '/capture?type=incident' },
+  { id: 'site-checkin',label: 'Site check-in', sub: 'GPS verified · logs hours',     Icon: IcPin,   color: '#10b981', href: '/check-in?new=1' },
+  { id: 'incident',    label: 'Report incident', sub: 'RIDDOR-aware safety workflow', Icon: IcAlert, color: '#ef4444', href: '/safety?new=1' },
 ]
 
 const SECTIONS: { title: string; items: ModuleItem[] }[] = [
@@ -247,7 +247,6 @@ export default function AppsPage() {
 
   const handleCapture = (item: CaptureAction) => {
     if (item.href) router.push(item.href)
-    // else: AI features are stubs for now
   }
 
   return (

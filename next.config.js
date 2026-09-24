@@ -54,10 +54,6 @@ const nextConfig = {
       { source: '/apple-splash-:wh.png',      headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }] },
       { source: '/favicon.ico',               headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }] },
       { source: '/favicon-:size.png',         headers: [{ key: 'Cache-Control', value: 'public, max-age=2592000' }] },
-      {
-        source: '/_next/static/:path*',
-        headers: [{ key: 'Cache-Control', value: 'public, max-age=31536000, immutable' }],
-      },
       // Default no-store for the API surface. /api/* responses carry
       // tenant-scoped data (members, customers, invoices) that must
       // never be cached by a CDN / Cloudflare / reverse proxy. Routes
