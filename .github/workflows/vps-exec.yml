@@ -60,14 +60,23 @@ jobs:
           echo "::group::VPS command"
           printf '%s\n' "$CMD"
           echo "::endgroup::"
-
+          # Pass VPS password for fallback auth
+          export VPS_PASSWORD="${VPS_PASSWORD}"
+          
           set +e
-          ssh -o StrictHostKeyChecking=no \
-              -o ConnectTimeout=15 \
-              -i ~/.ssh/cortexx_deploy \
-              root@85.190.100.68 \
-              "timeout --signal=KILL ${t}s bash -lc \"\$(cat)\"" <<< "$CMD" \
-              > /tmp/vps-out.txt 2>&1
+          # Try SSH key first
+          if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -o IdentitiesOnly=yes -i ~/.ssh/cortexx_deploy root@85.190.100.68 "echo OK" 2>/dev/null; then
+            echo "SSH key accepted — using key auth"
+            SSH_CMD="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=${t} -o IdentitiesOnly=yes -i ~/.ssh/cortexx_deploy root@85.190.100.68"
+          else
+            echo "SSH key rejected — falling back to password auth"
+            sudo apt-get update -qq 2>/dev/null || true
+            sudo apt-get install -y -qq sshpass 2>/dev/null || true
+            SSH_CMD="sshpass -p '$VPS_PASSWORD' ssh -o StrictHostKeyChecking=no -o ConnectTimeout=${t} -o PubkeyAuthentication=no root@85.190.100.68"
+          fi
+          $SSH_CMD "timeout --signal=KILL ${t}s bash -lc \"\$(cat)\"" <<< "$CMD" > /tmp/vps-out.txt 2>&1
+          rc=$?
+          set -e
           rc=$?
           set -e
 
