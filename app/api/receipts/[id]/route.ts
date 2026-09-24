@@ -7,10 +7,13 @@ import { reportError } from '@/lib/errors'
 import { canManage, canWrite } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { auditLog, requestMeta } from '@/lib/audit'
+import costLedger from '@/lib/cost-ledger'
+import { postSourceCost } from '@/lib/cost-ledger-server'
 
 export const dynamic = 'force-dynamic'
 const STATUSES = new Set(['pending', 'extracted', 'needs_review', 'approved', 'reconciled'])
 const CATEGORIES = new Set(['materials', 'plant', 'tools', 'fuel', 'travel', 'accommodation', 'subcontract', 'office', 'other'])
+const { receiptPosting } = costLedger
 
 function numeric(value: unknown, nullable = true) {
   if (value === '' || value === null || value === undefined) return nullable ? null : NaN
@@ -48,8 +51,22 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (!existing) return NextResponse.json({ error: 'Receipt not found' }, { status: 404 })
     const body = await req.json()
     const data: Prisma.ExpenseReceiptUpdateInput = {}
+    if (existing.status === 'reconciled') {
+      const lockedFields = ['vendor', 'receiptDate', 'subtotal', 'vatAmount', 'totalAmount', 'category', 'items', 'costCodeId']
+      if (lockedFields.some(field => body[field] !== undefined) || (body.status !== undefined && body.status !== 'reconciled')) {
+        return NextResponse.json({ error: 'Reconciled receipt financial fields are locked; reclassify the ledger cost instead' }, { status: 409 })
+      }
+    }
 
     if (body.vendor !== undefined) data.vendor = String(body.vendor || '').trim().slice(0, 160) || null
+    if (body.costCodeId !== undefined) {
+      const costCodeId = body.costCodeId ? String(body.costCodeId) : null
+      if (costCodeId) {
+        const code = await prisma.costCode.findUnique({ where: { id: costCodeId }, select: { id: true, archivedAt: true } })
+        if (!code || code.archivedAt) return NextResponse.json({ error: 'Cost code not found or archived' }, { status: 400 })
+      }
+      data.costCode = costCodeId ? { connect: { id: costCodeId } } : { disconnect: true }
+    }
     for (const field of ['subtotal', 'vatAmount', 'totalAmount'] as const) {
       if (body[field] !== undefined) {
         const n = numeric(body[field])
@@ -90,14 +107,41 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       data.status = status
     }
 
-    const receipt = await prisma.expenseReceipt.update({
-      where: { id },
-      data,
-      include: { project: { select: { id: true, name: true } }, document: true },
+    const organizationId = getCurrentOrg()?.organizationId
+    if (!organizationId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
+    const transitioningToReconciled = body.status === 'reconciled' && existing.status !== 'reconciled'
+    const receipt = await prisma.$transaction(async tx => {
+      const updated = await tx.expenseReceipt.update({
+        where: { id },
+        data,
+        include: { project: { select: { id: true, name: true } }, document: true },
+      })
+      if (transitioningToReconciled) {
+        if (!updated.projectId) throw new Error('RECEIPT_PROJECT_REQUIRED')
+        if (updated.totalAmount == null) throw new Error('RECEIPT_AMOUNT_REQUIRED')
+        const amounts = receiptPosting(updated as unknown as Record<string, unknown>)
+        await postSourceCost(tx, {
+          organizationId,
+          projectId: updated.projectId,
+          sourceType: 'receipt',
+          sourceId: updated.id,
+          sourceReference: updated.vendor || updated.document?.name || null,
+          description: `Receipt${updated.vendor ? ` · ${updated.vendor}` : ''}`,
+          netAmount: amounts.netAmount,
+          vatAmount: amounts.vatAmount,
+          grossAmount: amounts.grossAmount,
+          costCodeId: updated.costCodeId,
+          occurredAt: updated.receiptDate || updated.capturedAt || updated.createdAt,
+          notes: updated.notes,
+        })
+      }
+      return updated
     })
-    auditLog({ action: 'receipt.update', resourceType: 'ExpenseReceipt', resourceId: id, metadata: { status: receipt.status }, ...requestMeta(req) })
+    auditLog({ action: transitioningToReconciled ? 'receipt.reconcile' : 'receipt.update', resourceType: 'ExpenseReceipt', resourceId: id, metadata: { status: receipt.status, projectId: receipt.projectId }, ...requestMeta(req) })
     return NextResponse.json(receipt)
   } catch (error) {
+    if (error instanceof Error && error.message === 'RECEIPT_PROJECT_REQUIRED') return NextResponse.json({ error: 'Assign the receipt to a project before reconciliation' }, { status: 409 })
+    if (error instanceof Error && error.message === 'RECEIPT_AMOUNT_REQUIRED') return NextResponse.json({ error: 'Receipt total is required before reconciliation' }, { status: 409 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to update receipt' }, { status: 500 })
   }

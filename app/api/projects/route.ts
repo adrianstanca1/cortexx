@@ -69,6 +69,9 @@ async function POST_impl(req: NextRequest, userId: string, role: string | null, 
     if (body.budget !== undefined && (!Number.isFinite(Number(body.budget)) || Number(body.budget) < 0)) {
       return NextResponse.json({ error: 'Budget must be a non-negative number' }, { status: 400 })
     }
+    if (body.spent !== undefined && Number(body.spent) !== 0) {
+      return NextResponse.json({ error: 'Opening spend must be posted through the project cost ledger' }, { status: 409 })
+    }
     if (body.progress !== undefined && (!Number.isFinite(Number(body.progress)) || Number(body.progress) < 0 || Number(body.progress) > 100)) {
       return NextResponse.json({ error: 'Progress must be between 0 and 100' }, { status: 400 })
     }
@@ -81,7 +84,7 @@ async function POST_impl(req: NextRequest, userId: string, role: string | null, 
         progress: body.progress || 0,
         clientName: body.clientName?.trim() || '',
         budget: body.budget || 0,
-        spent: body.spent || 0,
+        spent: 0,
         lat: body.lat || 51.5,
         lng: body.lng || -0.1,
         startDate: body.startDate ? new Date(body.startDate) : null,

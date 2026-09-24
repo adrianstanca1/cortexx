@@ -8,6 +8,7 @@ import { IcDoc, IcChevL, IcPlus, IcX, IcCheck, IcTrash, IcSend } from '@/compone
 import { useModalEffects } from '@/lib/useModalEffects'
 
 interface Project { id: string; name: string }
+interface CostCode { id: string; code: string; name: string }
 interface LineItem { description: string; quantity: number; unit?: string; unitPrice: number; total: number }
 interface PO {
   id: string
@@ -28,6 +29,8 @@ interface PO {
   createdAt: string
   notes: string | null
   project?: Project | null
+  costCodeId?: string | null
+  costCode?: CostCode | null
 }
 
 const SF = 'var(--font-system)'
@@ -41,6 +44,7 @@ export default function POsPage() {
   const [openCount, setOpenCount] = useState(0)
   const [committedValue, setCommittedValue] = useState(0)
   const [projects, setProjects] = useState<Project[]>([])
+  const [costCodes, setCostCodes] = useState<CostCode[]>([])
   const [filter, setFilter] = useState<'all' | PO['status']>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -50,7 +54,7 @@ export default function POsPage() {
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [form, setForm] = useState({
-    supplier: '', contactEmail: '', projectId: '', vatRate: '20', expectedDelivery: '', items: [blankItem()],
+    supplier: '', contactEmail: '', projectId: '', costCodeId: '', vatRate: '20', expectedDelivery: '', items: [blankItem()],
   })
   const [aiOpen, setAiOpen] = useState(false)
   const [aiBrief, setAiBrief] = useState('')
@@ -98,6 +102,7 @@ export default function POsPage() {
     fetch('/api/projects').then(r => r.ok ? r.json() : null).then(d => {
       setProjects((d?.projects || []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
     }).catch(() => {})
+    fetch('/api/cost-codes').then(r => r.ok ? r.json() : null).then(d => setCostCodes(d?.codes || [])).catch(() => {})
   }, [])
   useEffect(() => { load() }, [load])
 
@@ -131,6 +136,7 @@ export default function POsPage() {
           supplier: form.supplier.trim(),
           contactEmail: form.contactEmail.trim() || null,
           projectId: form.projectId || null,
+          costCodeId: form.costCodeId || null,
           vatRate: Number(form.vatRate),
           expectedDelivery: form.expectedDelivery || null,
           lineItems: form.items.filter(it => it.description.trim()),
@@ -138,7 +144,7 @@ export default function POsPage() {
       })
       if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Failed')
       setShowAdd(false)
-      setForm({ supplier: '', contactEmail: '', projectId: '', vatRate: '20', expectedDelivery: '', items: [blankItem()] })
+      setForm({ supplier: '', contactEmail: '', projectId: '', costCodeId: '', vatRate: '20', expectedDelivery: '', items: [blankItem()] })
       setAiOpen(false); setAiBrief(''); setAiError(null); setAiNotes(null)
       load()
       setToast({ msg: 'PO drafted' })
@@ -232,6 +238,7 @@ export default function POsPage() {
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: '#52749a' }}>{p.number}</span>
                 <span style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>{p.supplier}</span>
                 {p.project && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>· {p.project.name}</span>}
+                {p.costCode && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: '#f59e0b' }}>· {p.costCode.code}</span>}
                 <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 99, background: `${STATUS_COLOR[p.status]}22`, color: STATUS_COLOR[p.status], fontFamily: SF, fontSize: 9, fontWeight: 700, border: `1px solid ${STATUS_COLOR[p.status]}55`, textTransform: 'uppercase' }}>{STATUS_LABEL[p.status]}</span>
               </div>
               <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
@@ -332,6 +339,10 @@ export default function POsPage() {
               <option value="">— Project (optional) —</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
             </select>
+            <select value={form.costCodeId} onChange={e => setForm(p => ({ ...p, costCodeId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <option value="">— Cost code (optional) —</option>
+              {costCodes.map(c => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}
+            </select>
 
             <div>
               <label style={labelStyle}>Items</label>
@@ -379,6 +390,7 @@ export default function POsPage() {
               <div>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', fontWeight: 700 }}>{activePo.number}</div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: SF, marginTop: 2 }}>{activePo.supplier}</h2>
+                {activePo.costCode && <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#f59e0b', marginTop: 3 }}>{activePo.costCode.code} · {activePo.costCode.name}</div>}
               </div>
               <button onClick={() => setActivePo(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
             </div>

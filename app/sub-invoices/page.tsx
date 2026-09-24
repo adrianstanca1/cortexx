@@ -9,6 +9,8 @@ import { useModalEffects } from '@/lib/useModalEffects'
 
 interface Subcontractor { id: string; name: string; trade: string | null; cisStatus: 'gross' | '20' | '30' }
 interface Project { id: string; name: string }
+interface CostCode { id: string; code: string; name: string }
+interface PurchaseOrder { id: string; number: string; projectId: string | null; costCodeId?: string | null; costCode?: CostCode | null; supplier: string; status: string }
 interface SubInvoice {
   id: string
   number: string
@@ -26,6 +28,10 @@ interface SubInvoice {
   notes: string | null
   subcontractor?: Subcontractor
   project?: Project | null
+  purchaseOrderId?: string | null
+  purchaseOrder?: { id: string; number: string; costCodeId?: string | null } | null
+  costCodeId?: string | null
+  costCode?: CostCode | null
 }
 
 const SF = 'var(--font-system)'
@@ -41,6 +47,8 @@ export default function SubInvoicesPage() {
   const [pendingCisHeld, setPendingCisHeld] = useState(0)
   const [subs, setSubs] = useState<Subcontractor[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [costCodes, setCostCodes] = useState<CostCode[]>([])
+  const [purchaseOrders, setPurchaseOrders] = useState<PurchaseOrder[]>([])
   const [filter, setFilter] = useState<'all' | SubInvoice['status']>('all')
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -49,7 +57,7 @@ export default function SubInvoicesPage() {
   const [activeInv, setActiveInv] = useState<SubInvoice | null>(null)
   const [saving, setSaving] = useState(false)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
-  const [form, setForm] = useState({ subcontractorId: '', projectId: '', number: '', invoiceDate: new Date().toISOString().slice(0, 10), description: '', netAmount: '', vatRate: '20' })
+  const [form, setForm] = useState({ subcontractorId: '', projectId: '', purchaseOrderId: '', costCodeId: '', number: '', invoiceDate: new Date().toISOString().slice(0, 10), description: '', netAmount: '', vatRate: '20' })
 
   useModalEffects(showAdd || activeInv !== null, () => { setShowAdd(false); setActiveInv(null) })
 
@@ -66,6 +74,8 @@ export default function SubInvoicesPage() {
     fetch('/api/projects').then(r => r.ok ? r.json() : null).then(d => {
       setProjects((d?.projects || []).map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
     }).catch(() => {})
+    fetch('/api/cost-codes').then(r => r.ok ? r.json() : null).then(d => setCostCodes(d?.codes || [])).catch(() => {})
+    fetch('/api/pos?take=100').then(r => r.ok ? r.json() : null).then(d => setPurchaseOrders(d?.pos || [])).catch(() => {})
   }, [])
   useEffect(() => { load() }, [load])
 
@@ -88,6 +98,8 @@ export default function SubInvoicesPage() {
         body: JSON.stringify({
           subcontractorId: form.subcontractorId,
           projectId: form.projectId || null,
+          purchaseOrderId: form.purchaseOrderId || null,
+          costCodeId: form.costCodeId || null,
           number: form.number.trim(),
           invoiceDate: form.invoiceDate,
           description: form.description.trim() || null,
@@ -97,7 +109,7 @@ export default function SubInvoicesPage() {
       })
       if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Failed')
       setShowAdd(false)
-      setForm(prev => ({ ...prev, number: '', description: '', netAmount: '' }))
+      setForm(prev => ({ ...prev, purchaseOrderId: '', costCodeId: '', number: '', description: '', netAmount: '' }))
       load()
       setToast({ msg: 'Invoice recorded' })
     } catch (e) {
@@ -221,6 +233,8 @@ export default function SubInvoicesPage() {
                   {new Date(i.invoiceDate).toLocaleDateString('en-GB')}
                   {i.subcontractor && <span> · CIS {i.subcontractor.cisStatus}</span>}
                   {i.project && <span> · {i.project.name}</span>}
+                  {i.purchaseOrder && <span> · {i.purchaseOrder.number}</span>}
+                  {i.costCode && <span> · {i.costCode.code}</span>}
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
@@ -257,9 +271,21 @@ export default function SubInvoicesPage() {
               <input value={form.number} onChange={e => setForm(p => ({ ...p, number: e.target.value }))} placeholder="Invoice #" style={inputStyle} />
               <input type="date" value={form.invoiceDate} onChange={e => setForm(p => ({ ...p, invoiceDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
+            <select value={form.purchaseOrderId} onChange={e => {
+              const purchaseOrderId = e.target.value
+              const po = purchaseOrders.find(p => p.id === purchaseOrderId)
+              setForm(p => ({ ...p, purchaseOrderId, projectId: po?.projectId || p.projectId, costCodeId: po?.costCode?.id || po?.costCodeId || p.costCodeId }))
+            }} style={{ ...inputStyle, appearance: 'none' }}>
+              <option value="">— Match purchase order (optional) —</option>
+              {purchaseOrders.filter(p => !['cancelled'].includes(p.status)).map(p => <option key={p.id} value={p.id}>{p.number} · {p.supplier}</option>)}
+            </select>
             <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
               <option value="">— Project (optional) —</option>
               {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+            </select>
+            <select value={form.costCodeId} onChange={e => setForm(p => ({ ...p, costCodeId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <option value="">— Cost code (optional) —</option>
+              {costCodes.map(c => <option key={c.id} value={c.id}>{c.code} · {c.name}</option>)}
             </select>
             <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: 10 }}>
@@ -301,6 +327,8 @@ export default function SubInvoicesPage() {
                 <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
                   {new Date(activeInv.invoiceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   {activeInv.subcontractor && <> · CIS {activeInv.subcontractor.cisStatus}</>}
+                  {activeInv.purchaseOrder && <> · {activeInv.purchaseOrder.number}</>}
+                  {activeInv.costCode && <> · {activeInv.costCode.code}</>}
                 </div>
               </div>
               <button onClick={() => setActiveInv(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>

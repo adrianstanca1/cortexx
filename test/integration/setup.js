@@ -42,11 +42,11 @@ async function truncate(prisma) {
       // Owned models (will cascade via Organization FK anyway when we
       // delete orgs, but explicit truncate is faster for setup).
       'Activity', 'Comment', 'Assignment', 'TimeEntry', 'MileageEntry',
-      'SiteCheckIn', 'Task', 'Invoice', 'SubInvoice', 'PurchaseOrder',
+      'SiteCheckIn', 'Task', 'Invoice', 'ProjectCostEntry', 'SubInvoice', 'PurchaseOrder',
       'Material', 'Equipment', 'Snag', 'Rfi', 'Announcement', 'Observation',
       'Variation', 'Permit', 'Rams', 'Inspection', 'Meeting', 'Risk',
       'ToolboxTalk', 'MaintenanceSchedule', 'SafetyIncident', 'Certification',
-      'DrawingRevision', 'Drawing', 'Milestone', 'Document', 'CostItem',
+      'DrawingRevision', 'Drawing', 'Milestone', 'ExpenseReceipt', 'Document', 'CostCode', 'CostItem',
       'Subcontractor', 'Supplier', 'Lead', 'Customer', 'Quote', 'Tender',
       'TeamMember', 'Project',
       // Legacy-parity v1.1 modules

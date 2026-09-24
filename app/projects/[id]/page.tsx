@@ -25,9 +25,14 @@ type TabId = 'overview' | 'tasks' | 'team' | 'finance'
 
 type CommercialSummary = {
   originalContractValue: number; approvedVariations: number; adjustedContractValue: number; appliedToDate: number; certifiedToDate: number
-  retentionHeld: number; valuationCashReceived: number; clientInvoicesIssued: number; clientInvoicesPaid: number; committedPOs: number
+  retentionHeld: number; valuationCashReceived: number; clientInvoicesIssued: number; clientInvoicesPaid: number; committedPOs: number; uncodedCost: number; costCodingPct: number
   approvedSubcontract: number; paidSubcontract: number; recordedCost: number; openCommitments: number; forecastCost: number; earnedValue: number
   uncertifiedValue: number; forecastMargin: number; forecastMarginPct: number; cashPosition: number
+}
+
+type CostControlSummary = {
+  actualNet: number; actualVat: number; actualGross: number; uncodedNet: number; committedNet: number; openCommitments: number; forecastNet: number; codedPct: number
+  breakdown: Array<{ costCodeId: string | null; code: string; name: string; actualNet: number; openCommitments: number; forecastNet: number }>
 }
 
 export default function ProjectDetailPage() {
@@ -41,6 +46,7 @@ export default function ProjectDetailPage() {
   const [tab, setTab] = useState<TabId>('overview')
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [commercial, setCommercial] = useState<CommercialSummary | null>(null)
+  const [costControl, setCostControl] = useState<CostControlSummary | null>(null)
   const [commercialLoading, setCommercialLoading] = useState(false)
 
   // Task modal
@@ -99,8 +105,8 @@ export default function ProjectDetailPage() {
     setCommercialLoading(true)
     fetch(`/api/projects/${id}/commercial`)
       .then(r => { if (!r.ok) throw new Error('Commercial summary unavailable'); return r.json() })
-      .then(d => setCommercial(d.summary || null))
-      .catch(() => setCommercial(null))
+      .then(d => { setCommercial(d.summary || null); setCostControl(d.costControl || null) })
+      .catch(() => { setCommercial(null); setCostControl(null) })
       .finally(() => setCommercialLoading(false))
   }, [id])
 
@@ -710,6 +716,7 @@ export default function ProjectDetailPage() {
                 <div style={{ background: '#152641', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 14 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', rowGap: 6, columnGap: 10, fontFamily: 'var(--font-system)', fontSize: 11 }}>
                     <span style={{ color: '#8ea8c5' }}>Recorded project cost</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.recordedCost)}</strong>
+                    <span style={{ color: '#8ea8c5' }}>Cost coding</span><strong style={{ color: commercial.uncodedCost > 0 ? '#f59e0b' : '#10b981' }}>{commercial.costCodingPct.toFixed(1)}% · {gbp(commercial.uncodedCost)} uncoded</strong>
                     <span style={{ color: '#8ea8c5' }}>PO commitments</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.committedPOs)}</strong>
                     <span style={{ color: '#8ea8c5' }}>Approved subcontract liabilities</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.approvedSubcontract)}</strong>
                     <span style={{ color: '#8ea8c5' }}>Valuation cash less recorded cost</span><strong style={{ color: commercial.cashPosition >= 0 ? '#10b981' : '#ef4444' }}>{gbp(commercial.cashPosition)}</strong>
@@ -721,6 +728,32 @@ export default function ProjectDetailPage() {
                     <Link href="/sub-invoices" style={commercialLinkStyle}>Subcontract costs</Link>
                   </div>
                 </div>
+                {costControl && (
+                  <div style={{ background: '#0f1d31', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 14 }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 9 }}>
+                      <div>
+                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 800, color: '#eef3fa' }}>Cost-code control</div>
+                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#6f8cac', marginTop: 2 }}>{costControl.breakdown.length} buckets · net cost basis</div>
+                      </div>
+                      <div style={{ display: 'flex', gap: 6 }}><Link href="/cost-codes" style={commercialLinkStyle}>Manage codes</Link><Link href="/receipts" style={commercialLinkStyle}>Review receipts</Link></div>
+                    </div>
+                    {costControl.breakdown.length === 0 ? (
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#6f8cac', padding: '5px 0' }}>No posted cost or commitments yet.</div>
+                    ) : (
+                      <div style={{ display: 'flex', flexDirection: 'column', gap: 7 }}>
+                        {costControl.breakdown.slice(0, 8).map(row => (
+                          <div key={row.costCodeId || 'uncoded'} style={{ display: 'grid', gridTemplateColumns: 'minmax(0,1fr) auto', gap: 10, alignItems: 'center' }}>
+                            <div style={{ minWidth: 0 }}>
+                              <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: row.costCodeId ? '#dce8f6' : '#f59e0b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.code} · {row.name}</div>
+                              <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#6f8cac', marginTop: 1 }}>{gbp(row.actualNet)} actual + {gbp(row.openCommitments)} open</div>
+                            </div>
+                            <strong style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#eef3fa' }}>{gbp(row.forecastNet)}</strong>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                )}
               </>
             )}
 

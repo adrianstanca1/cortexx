@@ -56,7 +56,7 @@ export async function GET(req: NextRequest) {
     const [pos, openCount, committed] = await Promise.all([
       prisma.purchaseOrder.findMany({
         where,
-        include: { project: { select: { id: true, name: true } } },
+        include: { project: { select: { id: true, name: true } }, costCode: { select: { id: true, code: true, name: true } } },
         orderBy: [{ status: 'asc' }, { createdAt: 'desc' }],
         take,
       }),
@@ -99,6 +99,12 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'VAT rate must be 0-100' }, { status: 400 })
     }
 
+    const costCodeId = body.costCodeId ? String(body.costCodeId) : null
+    if (costCodeId) {
+      const code = await prisma.costCode.findUnique({ where: { id: costCodeId }, select: { id: true, archivedAt: true } })
+      if (!code || code.archivedAt) return NextResponse.json({ error: 'Cost code not found or archived' }, { status: 400 })
+    }
+
     const lineItems = validateLineItems(body.lineItems)
     const { subtotal, vatAmount, total } = recalc(lineItems, vatRate)
 
@@ -120,6 +126,7 @@ export async function POST(req: NextRequest) {
       data: {
         number,
         projectId,
+        costCodeId,
         supplier,
         contactEmail: body.contactEmail?.toString().trim() || null,
         contactPhone: body.contactPhone?.toString().trim() || null,
@@ -135,7 +142,7 @@ export async function POST(req: NextRequest) {
         receivedAt: status === 'received' ? new Date() : null,
         closedAt: status === 'closed' ? new Date() : null,
       },
-      include: { project: { select: { id: true, name: true } } },
+      include: { project: { select: { id: true, name: true } }, costCode: { select: { id: true, code: true, name: true } } },
     })
 
     if (projectId) {

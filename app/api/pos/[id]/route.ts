@@ -50,6 +50,14 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (body.contactEmail !== undefined) data.contactEmail = body.contactEmail?.toString().trim() || null
     if (body.contactPhone !== undefined) data.contactPhone = body.contactPhone?.toString().trim() || null
     if (body.notes !== undefined) data.notes = body.notes?.toString().trim() || null
+    if (body.costCodeId !== undefined) {
+      const costCodeId = body.costCodeId ? String(body.costCodeId) : null
+      if (costCodeId) {
+        const code = await prisma.costCode.findUnique({ where: { id: costCodeId }, select: { id: true, archivedAt: true } })
+        if (!code || code.archivedAt) return NextResponse.json({ error: 'Cost code not found or archived' }, { status: 400 })
+      }
+      data.costCodeId = costCodeId
+    }
     if (body.vatRate !== undefined) {
       const v = Number(body.vatRate)
       if (isNaN(v) || v < 0 || v > 100) return NextResponse.json({ error: 'VAT 0-100' }, { status: 400 })
@@ -88,7 +96,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     const po = await prisma.purchaseOrder.update({
       where: { id: params.id },
       data,
-      include: { project: { select: { id: true, name: true } } },
+      include: { project: { select: { id: true, name: true } }, costCode: { select: { id: true, code: true, name: true } } },
     })
     return NextResponse.json(po)
   } catch (error) {

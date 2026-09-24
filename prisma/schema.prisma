@@ -66,25 +66,25 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id                  String           @id @default(cuid())
+  id                  String             @id @default(cuid())
   name                String
   address             String
   postcode            String
-  status              String           @default("active") // active, snagging, quoting, complete
-  progress            Int              @default(0)
-  clientName          String           @default("")
-  shareToken          String?          @unique
+  status              String             @default("active") // active, snagging, quoting, complete
+  progress            Int                @default(0)
+  clientName          String             @default("")
+  shareToken          String?            @unique
   shareTokenExpiresAt DateTime?
-  budget              Float            @default(0)
-  spent               Float            @default(0)
-  lat                 Float            @default(51.5)
-  lng                 Float            @default(-0.1)
+  budget              Float              @default(0)
+  spent               Float              @default(0)
+  lat                 Float              @default(51.5)
+  lng                 Float              @default(-0.1)
   startDate           DateTime?
   endDate             DateTime?
-  onSiteCount         Int              @default(0)
+  onSiteCount         Int                @default(0)
   archivedAt          DateTime?
-  createdAt           DateTime         @default(now())
-  updatedAt           DateTime         @updatedAt
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
   tasks               Task[]
   assignments         Assignment[]
   invoices            Invoice[]
@@ -92,6 +92,7 @@ model Project {
   timeEntries         TimeEntry[]
   documents           Document[]
   expenseReceipts     ExpenseReceipt[]
+  costEntries         ProjectCostEntry[]
   comments            Comment[]
   snags               Snag[]
   rfis                Rfi[]
@@ -426,6 +427,8 @@ model ExpenseReceipt {
   totalAmount    Float?
   currency       String        @default("GBP")
   category       String?
+  costCodeId     String?
+  costCode       CostCode?     @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
   items          Json          @default("[]")
   confidence     Float?
   notes          String?
@@ -443,6 +446,7 @@ model ExpenseReceipt {
   @@index([projectId, status])
   @@index([status, receiptDate])
   @@index([vendor])
+  @@index([costCodeId])
   @@index([organizationId])
 }
 
@@ -747,6 +751,58 @@ model MileageEntry {
   @@index([organizationId])
 }
 
+model CostCode {
+  id              String             @id @default(cuid())
+  code            String
+  name            String
+  category        String?
+  description     String?
+  archivedAt      DateTime?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  costEntries     ProjectCostEntry[]
+  purchaseOrders  PurchaseOrder[]
+  expenseReceipts ExpenseReceipt[]
+  subInvoices     SubInvoice[]
+  organizationId  String?
+  organization    Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, code])
+  @@index([category])
+  @@index([archivedAt])
+  @@index([organizationId])
+}
+
+model ProjectCostEntry {
+  id              String        @id @default(cuid())
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  costCodeId      String?
+  costCode        CostCode?     @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
+  sourceType      String // opening_balance, receipt, sub_invoice, manual, import
+  sourceId        String?
+  sourceReference String?
+  description     String
+  netAmount       Float         @default(0)
+  vatAmount       Float         @default(0)
+  grossAmount     Float         @default(0)
+  status          String        @default("posted") // posted, void
+  occurredAt      DateTime      @default(now())
+  postedAt        DateTime      @default(now())
+  voidedAt        DateTime?
+  notes           String?
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, sourceType, sourceId])
+  @@index([projectId, status, occurredAt])
+  @@index([costCodeId, status])
+  @@index([sourceType, sourceId])
+  @@index([organizationId])
+}
+
 model CostItem {
   id          String    @id @default(cuid())
   code        String?
@@ -883,55 +939,63 @@ model Material {
 }
 
 model PurchaseOrder {
-  id               String    @id @default(cuid())
-  number           String    @unique
+  id               String       @id @default(cuid())
+  number           String       @unique
   projectId        String?
   supplier         String
   contactEmail     String?
   contactPhone     String?
-  status           String    @default("draft") // draft, sent, received, closed, cancelled
-  lineItems        Json      @default("[]")
-  subtotal         Float     @default(0)
-  vatRate          Float     @default(20)
-  vatAmount        Float     @default(0)
-  total            Float     @default(0)
+  status           String       @default("draft") // draft, sent, received, closed, cancelled
+  lineItems        Json         @default("[]")
+  subtotal         Float        @default(0)
+  vatRate          Float        @default(20)
+  vatAmount        Float        @default(0)
+  total            Float        @default(0)
   expectedDelivery DateTime?
   receivedAt       DateTime?
   sentAt           DateTime?
   closedAt         DateTime?
   notes            String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  project          Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt        DateTime     @default(now())
+  updatedAt        DateTime     @updatedAt
+  project          Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  costCodeId       String?
+  costCode         CostCode?    @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
+  subInvoices      SubInvoice[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([projectId, status])
   @@index([status])
+  @@index([costCodeId])
   @@index([expectedDelivery])
   @@index([organizationId])
 }
 
 model SubInvoice {
-  id              String        @id @default(cuid())
+  id              String         @id @default(cuid())
   number          String
   subcontractorId String
   projectId       String?
   invoiceDate     DateTime
   description     String?
-  netAmount       Float         @default(0)
-  vatAmount       Float         @default(0)
-  cisAmount       Float         @default(0)
-  grossAmount     Float         @default(0)
-  payableAmount   Float         @default(0)
-  status          String        @default("received") // received, approved, paid, disputed
+  netAmount       Float          @default(0)
+  vatAmount       Float          @default(0)
+  cisAmount       Float          @default(0)
+  grossAmount     Float          @default(0)
+  payableAmount   Float          @default(0)
+  status          String         @default("received") // received, approved, paid, disputed
   paidAt          DateTime?
   notes           String?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
-  subcontractor   Subcontractor @relation(fields: [subcontractorId], references: [id], onDelete: Cascade)
-  project         Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt       DateTime       @default(now())
+  updatedAt       DateTime       @updatedAt
+  subcontractor   Subcontractor  @relation(fields: [subcontractorId], references: [id], onDelete: Cascade)
+  project         Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  purchaseOrderId String?
+  purchaseOrder   PurchaseOrder? @relation(fields: [purchaseOrderId], references: [id], onDelete: SetNull)
+  costCodeId      String?
+  costCode        CostCode?      @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -939,6 +1003,8 @@ model SubInvoice {
   @@unique([subcontractorId, number])
   @@index([subcontractorId, status])
   @@index([status, invoiceDate])
+  @@index([purchaseOrderId])
+  @@index([costCodeId])
   @@index([organizationId])
 }
 
@@ -1362,6 +1428,8 @@ model Organization {
   quotes                  Quote[]
   siteCheckIns            SiteCheckIn[]
   mileageEntries          MileageEntry[]
+  costCodes               CostCode[]
+  projectCostEntries      ProjectCostEntry[]
   costItems               CostItem[]
   subcontractors          Subcontractor[]
   equipment               Equipment[]
