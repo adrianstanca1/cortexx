@@ -55,6 +55,34 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Document type is required' }, { status: 400 })
     }
     const tags = Array.isArray(body.tags) ? body.tags.filter((t: unknown): t is string => typeof t === 'string' && t.trim() !== '').map((t: string) => t.trim()) : []
+
+    let capturedAt: Date | null = null
+    if (body.capturedAt) {
+      capturedAt = new Date(body.capturedAt)
+      if (Number.isNaN(capturedAt.getTime())) return NextResponse.json({ error: 'Invalid capturedAt timestamp' }, { status: 400 })
+    }
+    const latitude = body.latitude === undefined || body.latitude === null ? null : Number(body.latitude)
+    const longitude = body.longitude === undefined || body.longitude === null ? null : Number(body.longitude)
+    const accuracyM = body.accuracyM === undefined || body.accuracyM === null ? null : Number(body.accuracyM)
+    if (latitude !== null && (!Number.isFinite(latitude) || latitude < -90 || latitude > 90)) {
+      return NextResponse.json({ error: 'Latitude must be between -90 and 90' }, { status: 400 })
+    }
+    if (longitude !== null && (!Number.isFinite(longitude) || longitude < -180 || longitude > 180)) {
+      return NextResponse.json({ error: 'Longitude must be between -180 and 180' }, { status: 400 })
+    }
+    if (accuracyM !== null && (!Number.isFinite(accuracyM) || accuracyM < 0 || accuracyM > 100000)) {
+      return NextResponse.json({ error: 'Invalid GPS accuracy' }, { status: 400 })
+    }
+    let metadata: Prisma.InputJsonValue = {}
+    if (body.metadata !== undefined) {
+      if (!body.metadata || typeof body.metadata !== 'object' || Array.isArray(body.metadata)) {
+        return NextResponse.json({ error: 'metadata must be an object' }, { status: 400 })
+      }
+      const serialized = JSON.stringify(body.metadata)
+      if (serialized.length > 8192) return NextResponse.json({ error: 'metadata is too large' }, { status: 413 })
+      metadata = body.metadata as Prisma.InputJsonValue
+    }
+
     const document = await prisma.document.create({
       data: {
         name: body.name.trim(),
@@ -65,6 +93,11 @@ export async function POST(req: NextRequest) {
         size: Number.isFinite(body.size) ? Math.floor(body.size) : null,
         mimeType: typeof body.mimeType === 'string' && body.mimeType ? body.mimeType : null,
         tags: tags as Prisma.InputJsonValue,
+        capturedAt,
+        latitude,
+        longitude,
+        accuracyM,
+        metadata,
       },
       include: { project: true },
     })

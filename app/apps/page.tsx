@@ -35,7 +35,7 @@ const CAPTURE: CaptureAction[] = [
   { id: 'ai-estimate', label: 'AI estimate', sub: 'Brief in → quote out',             Icon: IcDoc,   color: '#60a5fa', ai: true, href: '/quotes?new=1&ai=1' },
   { id: 'site-photo',  label: 'Site progress photo', sub: 'Photo evidence · added to project', Icon: IcCamera, color: '#2563eb', href: '/capture?type=photo' },
   { id: 'snag-photo',  label: 'Snag from photo',    sub: 'Attach photo · AI defect analysis', Icon: IcAlert, color: '#f59e0b', ai: true, href: '/snags?new=1&photo=1' },
-  { id: 'scan-receipt',label: 'Scan receipt', sub: 'Capture receipt · added to documents',              Icon: IcReceipt, color: '#f59e0b', ai: true, href: '/capture?type=receipt' },
+  { id: 'scan-receipt',label: 'Scan receipt', sub: 'AI OCR · GPS evidence · review queue', Icon: IcReceipt, color: '#f59e0b', ai: true, href: '/capture?type=receipt' },
   { id: 'voice-rfi',   label: 'Voice note / RFI', sub: 'Transcribed by Cortex',       Icon: IcMic,   color: '#06b6d4', href: '/capture?type=voice' },
   { id: 'site-checkin',label: 'Site check-in', sub: 'GPS verified · logs hours',     Icon: IcPin,   color: '#10b981', href: '/check-in?new=1' },
   { id: 'incident',    label: 'Report incident', sub: 'RIDDOR-aware safety workflow', Icon: IcAlert, color: '#ef4444', href: '/safety?new=1' },
@@ -81,6 +81,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     items: [
       { href: '/reports',     label: 'Money',        Icon: IcReceipt, color: '#10b981' },
       { href: '/invoices',    label: 'Invoices',     Icon: IcReceipt, color: '#10b981' },
+      { href: '/receipts',    label: 'Receipts',     Icon: IcReceipt, color: '#f59e0b' },
       { href: '/pos',         label: 'POs',          Icon: IcDoc,     color: '#f59e0b', badgeKey: 'pos' },
       { href: '/sub-invoices',label: 'Sub invoices', Icon: IcDoc,     color: '#f59e0b', badgeKey: 'subinvoices' },
       { href: '/valuations',  label: 'Valuations',   Icon: IcPound,   color: '#06b6d4' },

@@ -91,6 +91,7 @@ model Project {
   activities          Activity[]
   timeEntries         TimeEntry[]
   documents           Document[]
+  expenseReceipts     ExpenseReceipt[]
   comments            Comment[]
   snags               Snag[]
   rfis                Rfi[]
@@ -383,18 +384,24 @@ model Comment {
 }
 
 model Document {
-  id        String    @id @default(cuid())
-  projectId String?
-  type      String // rams, report, photo, receipt, audio
-  name      String
-  url       String?
-  size      Int?
-  mimeType  String?
-  expiresAt DateTime?
-  tags      Json      @default("[]")
-  version   Int       @default(1)
-  createdAt DateTime  @default(now())
-  project   Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  id             String          @id @default(cuid())
+  projectId      String?
+  type           String // rams, report, photo, receipt, audio
+  name           String
+  url            String?
+  size           Int?
+  mimeType       String?
+  expiresAt      DateTime?
+  tags           Json            @default("[]")
+  version        Int             @default(1)
+  capturedAt     DateTime?
+  latitude       Float?
+  longitude      Float?
+  accuracyM      Float?
+  metadata       Json            @default("{}")
+  createdAt      DateTime        @default(now())
+  project        Project?        @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  expenseReceipt ExpenseReceipt?
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -402,6 +409,40 @@ model Document {
   @@index([projectId])
   @@index([expiresAt])
   @@index([type])
+  @@index([capturedAt])
+  @@index([organizationId])
+}
+
+model ExpenseReceipt {
+  id             String        @id @default(cuid())
+  documentId     String        @unique
+  document       Document      @relation(fields: [documentId], references: [id], onDelete: Cascade)
+  projectId      String?
+  project        Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  vendor         String?
+  receiptDate    DateTime?
+  subtotal       Float?
+  vatAmount      Float?
+  totalAmount    Float?
+  currency       String        @default("GBP")
+  category       String?
+  items          Json          @default("[]")
+  confidence     Float?
+  notes          String?
+  status         String        @default("pending") // pending, extracted, approved, reconciled, needs_review
+  capturedAt     DateTime?
+  latitude       Float?
+  longitude      Float?
+  accuracyM      Float?
+  extraction     Json          @default("{}")
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status])
+  @@index([status, receiptDate])
+  @@index([vendor])
   @@index([organizationId])
 }
 
@@ -1270,6 +1311,7 @@ model Organization {
   activities            Activity[]
   comments              Comment[]
   documents             Document[]
+  expenseReceipts       ExpenseReceipt[]
   snags                 Snag[]
   certifications        Certification[]
   trainingCourses       TrainingCourse[]

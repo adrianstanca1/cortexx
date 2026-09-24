@@ -119,6 +119,11 @@ export interface Document {
   size?: number | null
   mimeType?: string | null
   expiresAt: string | null
+  capturedAt?: string | null
+  latitude?: number | null
+  longitude?: number | null
+  accuracyM?: number | null
+  metadata?: Record<string, unknown> | null
   createdAt: string
   project?: Project | null
 }
