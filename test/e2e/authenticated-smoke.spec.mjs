@@ -95,3 +95,15 @@ test('invalid credentials return a recoverable error state', async ({ page, cont
   await expect(page.getByText('Invalid email or password', { exact: true })).toBeVisible()
   await expect(submitButton).toBeEnabled()
 })
+
+
+test('site diary hydrates without browser errors', async ({ page }) => {
+  const errors = []
+  page.on('pageerror', error => errors.push(error.message))
+  await page.goto('/site-diary')
+  await expect(page.getByRole('heading', { name: 'Site diary', exact: true })).toBeVisible()
+  const date = page.locator('input[type="date"]')
+  await date.fill('2026-09-24')
+  await expect(page.getByText('Thursday 24 September 2026', { exact: true })).toBeVisible()
+  expect(errors).toEqual([])
+})

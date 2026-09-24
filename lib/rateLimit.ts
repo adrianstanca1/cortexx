@@ -58,7 +58,7 @@ async function rateLimitRedis(key: string, max: number, windowMs: number, now: n
     if (!results) return rateLimitInMemory(key, max, windowMs, now)
     const count = Number(results[2]?.[1] ?? 0)
     if (count > max) {
-      const oldest = await redis.zrange(k, 0, 0, 'WITHSCORES')
+      const oldest = await redis.zrange(k, '0', '0', 'WITHSCORES')
       const oldestTs = Number(oldest[1] ?? now)
       const retryAfterMs = Math.max(0, oldestTs + windowMs - now)
       return { ok: false, remaining: 0, retryAfterMs }

@@ -4,13 +4,13 @@ import { auth } from './auth'
 import { prisma } from './db'
 import { MULTITENANT_ENFORCED } from './org'
 import { reportError } from './errors'
-import { setOrgContext } from './tenancy'
+import { beginOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
 import { bearerToken, verifyMobileToken } from './mobileAuth'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
-async function mobileBearerSession() {
+async function mobileBearerSession(orgContext: { organizationId: string | null; userId: string | null; role: string | null }) {
   let token: string | null = null
   try { token = bearerToken((await headers()).get('authorization')) } catch { return null }
   if (!token) return null
@@ -43,7 +43,7 @@ async function mobileBearerSession() {
       },
       expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
     }
-    setOrgContext({ organizationId: org.id, userId: membership.user.id, role: membership.role })
+    Object.assign(orgContext, { organizationId: org.id, userId: membership.user.id, role: membership.role })
     return session
   } catch {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -84,14 +84,16 @@ async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[]
  *   if (session instanceof NextResponse) return session
  *   // session.user.id, session.user.name, etc.
  *
- * SIDE EFFECT: when the user has an active organization, exposes it in the
- * current AsyncLocalStorage context for immediate consumers. Routes that touch
- * tenant-owned Prisma models must still execute their full handler inside
- * runWithOrg(), normally via withRoute(), because lazy Prisma execution can
- * cross later async boundaries.
+ * SIDE EFFECT (intentional, transparent to callers): when the user has
+ * an active organization, threads it into the AsyncLocalStorage that
+ * powers the Prisma tenancy extension. Every Prisma query for an owned
+ * model in the rest of this request will auto-filter by organizationId
+ * without the route handler doing anything explicit. This is what lets
+ * the 120+ existing routes opt in to multi-tenancy without a codemod.
  */
 export async function requireAuth() {
-  const mobile = await mobileBearerSession()
+  const orgContext = beginOrgContext()
+  const mobile = await mobileBearerSession(orgContext)
   if (mobile) return mobile
 
   const session = await auth()
@@ -115,7 +117,7 @@ export async function requireAuth() {
         if (match) active = match
       }
     } catch { /* not in a request context */ }
-    setOrgContext({ organizationId: active.id, userId, role: active.role })
+    Object.assign(orgContext, { organizationId: active.id, userId, role: active.role })
   }
 
   return session
@@ -123,16 +125,30 @@ export async function requireAuth() {
 
 /**
  * Returns the auth session + resolved active organization, or a NextResponse
- * error (401 / 403). Until MULTITENANT_ENFORCED is flipped on in production,
- * requests without an organization return null in `orgId` instead of 403 —
- * routes can opt in to scoping by passing the orgId through to their queries
- * when it exists.
+ * error (401 / 403). Web sessions and native bearer sessions both establish
+ * the same request-scoped organization context used by the Prisma tenancy
+ * extension.
  */
 export async function requireOrg() {
-  const session = await requireAuth()
-  if (session instanceof NextResponse) return session
+  const orgContext = beginOrgContext()
+  const mobile = await mobileBearerSession(orgContext)
+  let session
+
+  if (mobile) {
+    if (mobile instanceof NextResponse) return mobile
+    session = mobile
+  } else {
+    session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+  }
+
   const userId = (session.user as { id?: string }).id
-  const orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
+  if (orgs.length === 0 && userId) {
+    orgs = await refetchOrgsFromDb(userId)
+  }
 
   if (orgs.length === 0) {
     if (MULTITENANT_ENFORCED) {
@@ -149,10 +165,18 @@ export async function requireOrg() {
       const match = orgs.find(o => o.id === cookieValue)
       if (match) active = match
     }
-  } catch { /* native bearer requests have no cookie store requirement */ }
+  } catch { /* native bearer requests have no cookie requirement */ }
 
-  setOrgContext({ organizationId: active.id, userId: userId ?? null, role: active.role })
-  return { session, userId, orgId: active.id, orgSlug: active.slug, orgName: active.name, role: active.role }
+  Object.assign(orgContext, { organizationId: active.id, userId: userId ?? null, role: active.role })
+
+  return {
+    session,
+    userId,
+    orgId: active.id,
+    orgSlug: active.slug,
+    orgName: active.name,
+    role: active.role,
+  }
 }
 
 /**

@@ -1,158 +1,201 @@
-name: Deploy to Hostinger VPS
-
-# Deploys the Cortexx Docker stack (docker-compose.yml: api + db + ollama +
-# caddy) to the Hostinger VPS. TLS + routing are handled by Traefik/Caddy that
-# already run on the host, so this workflow only needs to pull the latest code
-# and bring the containers up. This replaces the older Next.js/pm2/nginx
-# workflow, which did not match the current containerised app and failed at the
-# `systemctl reload nginx` step (nginx is not part of the stack).
+name: Deploy CortexBuild Pro — One.com VPS
 
 on:
   workflow_dispatch:
-  push:
+  workflow_run:
+    workflows: [CI]
     branches: [main]
-    paths-ignore:
-      - 'README.md'
-      - 'docs/**'
-      - '.github/workflows/ci.yml'
-      - '.github/workflows/debug-vps.yml'
+    types: [completed]
 
 concurrency:
-  group: deploy-vps
+  group: cortexbuild-production
   cancel-in-progress: false
 
 jobs:
   deploy:
+    if: >-
+      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
+      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      actions: read
+    env:
+      VPS_HOST: 85.190.100.68
+      VPS_USER: administrator
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+      VPS_PASSWORD: ${{ secrets.VPS_ROOT_PASSWORD }}
+      APP_URL: https://cortexbuildpro.tech
+      RELEASE_SHA: ${{ github.event.workflow_run.head_sha || github.sha }}
     steps:
       - uses: actions/checkout@v7
+        with:
+          ref: ${{ env.RELEASE_SHA }}
 
-      - name: Setup SSH
+      - name: Require successful CI for this release
+        env:
+          GH_TOKEN: ${{ github.token }}
         run: |
+          set -euo pipefail
+          [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+          PASSED=$(gh api "repos/$GITHUB_REPOSITORY/actions/workflows/ci.yml/runs?head_sha=$RELEASE_SHA&branch=main&event=push&status=success" --jq '.total_count')
+          if [[ "$PASSED" -lt 1 ]]; then
+            echo "::error::This exact main commit has not passed CI."
+            exit 1
+          fi
+
+      - name: Configure SSH client
+        run: |
+          set -euo pipefail
+          if [[ -z "${VPS_SSH_KEY:-}" && -z "${VPS_PASSWORD:-}" ]]; then
+            echo "::error::Configure VPS_SSH_PRIVATE_KEY or VPS_ROOT_PASSWORD."
+            exit 1
+          fi
           mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
-          chmod 600 ~/.ssh/cortexx_deploy
-          ssh-keyscan -H 72.62.132.43 >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 700 ~/.ssh
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          chmod 600 ~/.ssh/known_hosts
+          if [[ -n "${VPS_SSH_KEY:-}" ]]; then
+            printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/cortexx_deploy
+            chmod 600 ~/.ssh/cortexx_deploy
+          fi
+          if [[ -n "${VPS_PASSWORD:-}" ]]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq sshpass
+          fi
 
-      - name: Verify SSH access (retry up to 8 times)
+      - name: Resolve SSH authentication
         run: |
-          for attempt in 1 2 3 4 5 6 7 8; do
-            if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=15 -i ~/.ssh/cortexx_deploy root@72.62.132.43 'echo SSH_OK && uname -a' 2>&1; then
+          set -euo pipefail
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=15)
+          if [[ -s ~/.ssh/cortexx_deploy ]] && ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+            echo "CORTEXX_SSH_MODE=key" >> "$GITHUB_ENV"
+            echo "SSH key authentication ready."
+            exit 0
+          fi
+          if [[ -n "${VPS_PASSWORD:-}" ]]; then
+            export SSHPASS="$VPS_PASSWORD"
+            if sshpass -e ssh "${SSH_BASE[@]}" "$VPS_USER@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+              echo "CORTEXX_SSH_MODE=password" >> "$GITHUB_ENV"
+              echo "SSH password authentication ready."
               exit 0
             fi
-            wait=$((attempt * 5))
-            echo "SSH attempt $attempt failed, waiting ${wait}s"
-            sleep $wait
-          done
-          echo "SSH connection failed after 8 attempts"
+          fi
+          echo "::error::Could not authenticate to $VPS_USER@$VPS_HOST."
           exit 1
 
-      # The app containers can all be healthy while the site is still dark:
-      # Traefik owns host ports 80/443 and runs outside this compose stack
-      # (at /docker/traefik). If it is down or wedged, every public probe
-      # times out even though `docker compose ps` looks fine — exactly the
-      # failure mode of deploy runs 404/405. Diagnose the edge first and
-      # restart Traefik when 443 is unresponsive from the host itself.
-      - name: Ensure Traefik edge is up
+      - name: Deploy isolated construction stack
         run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
-            set -uo pipefail
-            echo "=== containers ==="
-            docker ps --format '{{.Names}}\t{{.Status}}\t{{.Ports}}'
-            echo "=== listeners on 80/443 ==="
-            ss -tlnp | grep -E ':(80|443) ' || echo "NOTHING listening on 80/443"
-            code=$(curl -sk --max-time 5 -o /dev/null -w '%{http_code}' https://127.0.0.1/ || true)
-            echo "local https probe -> ${code:-000}"
-            if [ "${code:-000}" = "000" ]; then
-              echo "Edge unresponsive — attempting recovery"
-              # Run 406 diagnostics: after a host reboot the legacy nginx
-              # systemd unit (a leftover of the retired pm2/nginx stack)
-              # grabs :80 before Traefik starts, and Traefik then crashloops
-              # on "listen tcp :80: bind: address already in use" — leaving
-              # :443 with no listener at all. Host nginx serves nothing in
-              # the current stack (Traefik + containerised Caddy), so evict
-              # it for good before restarting Traefik.
-              if ss -tlnp | grep ':80 ' | grep -q nginx; then
-                echo "Legacy host nginx holds port 80 — stopping and disabling it"
-                systemctl stop nginx || true
-                systemctl disable nginx || true
-                systemctl mask nginx || true
-              fi
-              tname=$(docker ps -a --format '{{.Names}}' | grep -im1 traefik || true)
-              echo "traefik container: ${tname:-<none found>}"
-              [ -n "$tname" ] && docker logs --tail 30 "$tname" 2>&1 | tail -30 || true
-              if [ -d /docker/traefik ]; then
-                (cd /docker/traefik && docker compose up -d --force-recreate) || true
-              elif [ -n "$tname" ]; then
-                docker restart "$tname" || true
-              fi
-              sleep 10
-              ss -tlnp | grep -E ':(80|443) ' || echo "STILL nothing on 80/443 after restart"
-              curl -sk --max-time 5 -o /dev/null -w 'local https probe after restart -> %{http_code}\n' https://127.0.0.1/ || true
-            fi
-          REMOTE
-
-      - name: Deploy via docker compose
-        env:
-          # Read-only token — only used to authenticate the git pull of this
-          # (private) repo on the VPS. Scoped to this run.
-          GH_PAT: ${{ secrets.GITHUB_TOKEN }}
-        run: |
-          ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 'bash -s' << 'REMOTE'
+          set -euo pipefail
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20)
+          if [[ "$CORTEXX_SSH_MODE" == key ]]; then
+            REMOTE=(ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST")
+          else
+            export SSHPASS="$VPS_PASSWORD"
+            REMOTE=(sshpass -e ssh "${SSH_BASE[@]}" "$VPS_USER@$VPS_HOST")
+          fi
+          "${REMOTE[@]}" "bash -s -- '$RELEASE_SHA'" <<'REMOTE_SCRIPT'
             set -euo pipefail
-            APP_DIR=/opt/cortexx
-
+            RELEASE_SHA="$1"
+            [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+            APP_DIR=/home/administrator/production/cortexx
+            REPO=https://github.com/adrianstanca1/cortexx.git
+            mkdir -p "$(dirname "$APP_DIR")"
             if [ ! -d "$APP_DIR/.git" ]; then
-              echo "::error:: $APP_DIR is not a git checkout — aborting"
-              exit 1
+              git clone "$REPO" "$APP_DIR"
             fi
             cd "$APP_DIR"
+            git fetch origin --prune
+            if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+              echo "Deployment checkout has local edits; preserve and review them before deploying." >&2
+              exit 1
+            fi
+            if [ "$(git rev-parse origin/main)" != "$RELEASE_SHA" ]; then
+              echo "Release superseded by a newer main commit; skipping stale deployment."
+              exit 0
+            fi
+            git reset --hard "$RELEASE_SHA"
+            echo "Deploying $(git rev-parse --short HEAD)"
 
-            # Pull latest (origin is already set to the public URL on the VPS).
-            git fetch origin
-            git reset --hard origin/main
-            echo "Checked out: $(git rev-parse --short HEAD)"
+            umask 077
+            if [ ! -f .env.construction ]; then
+              DBPASS="$(openssl rand -hex 24)"
+              AUTHSECRET="$(openssl rand -hex 32)"
+              JWTSECRET="$(openssl rand -hex 32)"
+              ADMINPASS="$(openssl rand -hex 24)"
+              printf '%s\n' \
+                "POSTGRES_PASSWORD=$DBPASS" \
+                "DATABASE_URL=postgresql://construction:$DBPASS@db:5432/construction?schema=public" \
+                "REDIS_URL=redis://redis:6379" \
+                "NEXTAUTH_SECRET=$AUTHSECRET" \
+                "AUTH_SECRET=$AUTHSECRET" \
+                "JWT_SECRET=$JWTSECRET" \
+                "NEXTAUTH_URL=https://cortexbuildpro.tech" \
+                "AUTH_URL=https://cortexbuildpro.tech" \
+                "APP_URL=https://cortexbuildpro.tech" \
+                "NEXT_PUBLIC_SITE_URL=https://cortexbuildpro.tech" \
+                "NEXT_PUBLIC_API_URL=https://cortexbuildpro.tech" \
+                "ADMIN_EMAIL=admin@cortexbuildpro.tech" \
+                "ADMIN_PASSWORD=$ADMINPASS" \
+                "OLLAMA_BASE_URL=http://ollama:11434" \
+                "OLLAMA_MODEL=qwen3:4b" \
+                "OLLAMA_VISION_MODEL=moondream" \
+                "NODE_ENV=production" > .env.construction
+              printf '%s\n' "URL=https://cortexbuildpro.tech" "EMAIL=admin@cortexbuildpro.tech" "PASSWORD=$ADMINPASS" > .owner-credentials
+              chmod 600 .env.construction .owner-credentials
+            fi
 
-            # Bring the stack up. Build the api image; reuse the published
-            # postgres/ollama/caddy images. `unless-stopped` restart policy is
-            # already set in docker-compose.yml so this survives reboots.
-            docker compose pull
+            docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools
+            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama
+            docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm tools
+            docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm tools npx tsx scripts/bootstrap-construction.ts
+            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d app
 
-            # Tolerate the transient "removal of container ... is already in
-            # progress" race: a previous deploy's container teardown can still
-            # be finishing in the daemon when this run starts. Wait for any
-            # in-flight removal to settle, then retry the up a few times.
-            for up in 1 2 3; do
-              # Give the daemon a moment to finish any async container removal.
-              sleep 5
-              if docker compose up -d --build --remove-orphans; then
+            healthy=false
+            for n in $(seq 1 45); do
+              if curl --fail --silent --show-error --max-time 5 http://127.0.0.1:3020/api/health | node scripts/check-construction-health.cjs >/dev/null; then
+                healthy=true
                 break
               fi
-              echo "docker compose up attempt $up failed — retrying (likely daemon teardown race)"
-              sleep 10
+              sleep 2
             done
+            if [ "$healthy" != true ]; then
+              docker compose --env-file .env.construction -f docker-compose.construction.yml logs --tail=180 app
+              exit 1
+            fi
 
-            # Wait for the API to report healthy (via traefik public path).
-            echo "Waiting for API health..."
-            for n in $(seq 1 24); do
-              code=$(curl -s --max-time 5 -o /dev/null -w "%{http_code}" https://cortexbuildpro.com/api/health 2>/dev/null || echo 000)
-              if [ "$code" = "200" ]; then
-                echo "API healthy after ~$((n*5))s (HTTP 200)"
-                break
-              fi
-              echo "  try $n: api http $code"
-              sleep 5
-            done
-          REMOTE
+            INGRESS=/home/administrator/video-lab/Caddyfile.viral-shorts
+            if [ ! -f "$INGRESS" ]; then
+              echo "Ingress file missing: $INGRESS" >&2
+              exit 1
+            fi
+            BACKUP_DIR=/home/administrator/backups/cortexbuild-cutover
+            mkdir -p "$BACKUP_DIR"
+            INGRESS_BACKUP="$BACKUP_DIR/Caddyfile.$(date +%Y%m%d-%H%M%S)"
+            cp "$INGRESS" "$INGRESS_BACKUP"
+            rollback_ingress() {
+              cat "$INGRESS_BACKUP" > "$INGRESS"
+              docker exec viral-shorts-caddy caddy reload --config /etc/caddy/Caddyfile || true
+            }
+            trap rollback_ingress ERR
+            if grep -q 'reverse_proxy 127.0.0.1:3020' "$INGRESS"; then
+              echo "Ingress already targets CortexBuild."
+            elif grep -q 'reverse_proxy 127.0.0.1:3010' "$INGRESS"; then
+              sed '0,/reverse_proxy 127.0.0.1:3010/s//reverse_proxy 127.0.0.1:3020/' "$INGRESS_BACKUP" > "$INGRESS"
+            else
+              echo "Expected current ingress target not found; refusing blind cutover." >&2
+              exit 1
+            fi
+            docker exec viral-shorts-caddy caddy validate --config /etc/caddy/Caddyfile
+            docker exec viral-shorts-caddy caddy reload --config /etc/caddy/Caddyfile
 
-      - name: Verify deployment
+            curl --fail --silent --show-error --max-time 15 https://cortexbuildpro.tech/api/health | node scripts/check-construction-health.cjs
+            trap - ERR
+            docker compose --env-file .env.construction -f docker-compose.construction.yml ps
+          REMOTE_SCRIPT
+
+      - name: Verify public release
         run: |
-          sleep 5
-          echo "=== Public ==="
-          curl -s -o /dev/null --max-time 20 -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.com/
-          curl -s -o /dev/null --max-time 20 -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.com/api/health
-          echo "=== Health body ==="
-          curl -s --max-time 10 https://cortexbuildpro.com/api/health
-          echo ""
+          set -euo pipefail
+          curl --fail --silent --show-error --max-time 20 "$APP_URL/api/health" | node scripts/check-construction-health.cjs
+          curl --fail --silent --show-error --max-time 20 -o /dev/null "$APP_URL/"
