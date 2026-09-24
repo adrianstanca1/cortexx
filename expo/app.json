@@ -34,7 +34,6 @@
       "bundler": "metro"
     },
     "plugins": [
-      "expo-router",
       [
         "expo-secure-store",
         {
@@ -45,7 +44,6 @@
     ],
     "extra": {
       "apiUrl": "https://cortexbuildpro.com",
-      "router": {},
       "eas": {
         "projectId": "3b86383b-6d52-4ec4-afae-c8583b49f3d6"
       }

@@ -1,0 +1,17 @@
+export type AppRoute =
+  | 'overview'
+  | 'projects'
+  | 'tasks'
+  | 'field'
+  | 'more'
+  | 'checkin'
+  | 'timesheets'
+  | 'diary'
+  | 'snags'
+  | 'safety'
+  | 'invoices'
+  | 'cis'
+  | 'quotes'
+  | 'tickets'
+  | 'notifications'
+  | 'profile';

@@ -12,7 +12,7 @@ Superseded repositories remain preserved in GitHub as read-only archives; their 
 - Multi-tenant isolation and RBAC are test-covered.
 - Offline sync preserves create/update/delete, chunks large queues, handles partial acknowledgement, isolates accounts and protects pending edits.
 - Bulk sync validates before write and rolls back failed transactions.
-- Web/PWA/native/backend/shared-core/deployment are consolidated.
+- Web/PWA/native/backend/shared-core/deployment are consolidated. Native field workflows now use the same tenant-scoped canonical APIs as web, with SecureStore tokens and offline queue/cache.
 - Construction roles and high-risk AI approval boundaries are test-covered.
 - Prisma/raw-SQL drift checking exists.
 - Core domains exist across projects, tasks, team, timesheets, documents/drawings, RFIs, submittals, defects, safety, equipment, materials, procurement, suppliers, commercial, tenders, scheduling, portals, analytics and Vera/AI.
@@ -38,7 +38,7 @@ Drawing intelligence; spatial site layer; Tender Scout and procurement intellige
 ## Roadmap
 **Gate A — Canonical release:** merge verified release to `main`, protect it with tests/lint/build/drift/security gates, keep one production source of truth and remove stale contradictory docs.
 
-**Gate B — P0 closure:** deepen invoice/accounting reconciliation and cost coding; native high-value field parity; broaden tenant/RBAC mutation coverage. Persistent applications/certificates/payments, project WIP/cashflow control, CSV commercial export, Smart Parse, receipt OCR/review, GPS-tagged field evidence, governed incident/RIDDOR investigation-closeout, Apps workflow routing, Company Admin/PM/Foreman/Operative browser journeys and Company Admin-only project creation are complete.
+**Gate B — P0 closure:** deepen invoice/accounting reconciliation and cost coding; broaden tenant/RBAC mutation coverage. Native high-value field parity is now implemented for the core site loop: secure mobile bearer auth with current-membership validation, assignment-scoped jobs/tasks, five-section role-aware navigation, GPS check-in/out, time logging, site diary, photo snags, safety reporting, offline cache/write replay and canonical realtime SSE. Persistent applications/certificates/payments, project WIP/cashflow control, CSV commercial export, Smart Parse, receipt OCR/review, GPS-tagged field evidence, governed incident/RIDDOR investigation-closeout, Apps workflow routing, Company Admin/PM/Foreman/Operative browser journeys and Company Admin-only project creation are complete. Native store/device/accessibility hardening remains a Gate F release task.
 
 **Gate C — Commercial/procurement backbone:** unify commercial ledger, complete procurement lifecycle, supplier scorecards, immutable audit events, approval matrices and accounting adapter boundary.
 

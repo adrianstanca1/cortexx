@@ -7,7 +7,8 @@
 //   - expo-secure-store  → auth token survives app restarts (not plaintext localStorage)
 //   - AsyncStorage        → offline cache (last-known-good lists) + write queue (pending creates/edits)
 // When signal returns, the queue auto-replays so nothing is lost.
-import 'expo-router/entry';
+import { registerRootComponent } from 'expo';
+import App from './App';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { setTokenStorage, setOfflineCache, setQueueStore, flushQueue, startStream } from '@cortexbuild/core';
@@ -74,3 +75,5 @@ setOfflineCache({
 
   startRealtime();
 })();
+
+registerRootComponent(App);

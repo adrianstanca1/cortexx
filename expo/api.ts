@@ -46,7 +46,14 @@ export async function login(email: string, password: string, totp?: string): Pro
 export async function getMe(): Promise<AuthUser | null> {
   try {
     const body = await api.apiGet('/api/mobile/auth/me');
-    return (body?.user || null) as AuthUser | null;
+    const user = (body?.user || null) as AuthUser | null;
+    if (!user) return null;
+    const active = user.organizations?.[0];
+    return {
+      ...user,
+      organizationRole: user.organizationRole || active?.role,
+      organization: user.organization || (active ? { id: active.id, slug: active.slug, name: active.name } : undefined),
+    };
   } catch {
     await api.clearToken();
     return null;

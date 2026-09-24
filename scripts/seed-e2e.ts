@@ -32,7 +32,7 @@ async function upsertPersona(persona: PersonaSeed, passwordHash: string, organiz
 }
 
 async function main() {
-  const password = process.env.E2E_ADMIN_PASSWORD || process.env.ADMIN_PASSWORD || 'changeme-please-1234'
+  const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
   const organizationSlug = process.env.DEFAULT_ORG_SLUG || 'cortexbuildpro'
   const organizationName = process.env.DEFAULT_ORG_NAME || 'Cortexbuild Pro'
   const passwordHash = await bcrypt.hash(password, 12)

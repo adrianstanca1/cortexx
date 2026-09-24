@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Colors } from './theme';
-import { login, startStream, getToken } from './api';
+import { login, startStream, getToken, type AuthUser } from './api';
 import { API_URL } from './theme';
 
-export default function LoginScreen({ onAuthed }: { onAuthed: () => void }) {
+export default function LoginScreen({ onAuthed }: { onAuthed: (user: AuthUser) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [totp, setTotp] = useState('');
@@ -16,10 +16,10 @@ export default function LoginScreen({ onAuthed }: { onAuthed: () => void }) {
     if (totpRequired && !totp.trim()) { Alert.alert('Two-factor authentication', 'Enter your 6-digit authenticator code.'); return; }
     setWorking(true);
     try {
-      await login(email.trim(), password, totpRequired ? totp.trim() : undefined);
+      const result = await login(email.trim(), password, totpRequired ? totp.trim() : undefined);
       const tok = await getToken();
       if (tok) startStream({ apiUrl: API_URL, token: tok });
-      onAuthed();
+      onAuthed(result.user);
     } catch (e: any) {
       if (e?.code === 'TOTP_REQUIRED' || e?.code === 'TOTP_INVALID') {
         setTotpRequired(true);
