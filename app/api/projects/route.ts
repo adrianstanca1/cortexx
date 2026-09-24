@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireAuth, requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { canCreateProject } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
@@ -41,9 +42,13 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  if (!org.role || !canCreateProject(org.role)) {
+    return NextResponse.json({ error: 'Only company administrators can create projects' }, { status: 403 })
+  }
+  const auth = org.session
+  const __limited = await enforceRateLimit(req, 'write', org.userId)
   if (__limited) return __limited
 
   try {

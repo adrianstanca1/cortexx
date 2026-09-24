@@ -55,7 +55,7 @@ services:
       REDIS_URL: redis://redis:6379
       OLLAMA_BASE_URL: http://ollama:11434
       UPLOAD_DIR: /app/uploads
-      npm_package_version: 1.5.0
+      npm_package_version: 1.5.1
     depends_on:
       db:
         condition: service_healthy

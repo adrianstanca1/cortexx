@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import { canManage } from '@/lib/rbac'
-import { getCurrentOrg } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,8 +15,8 @@ function clampRetention(value: unknown): number {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
 
   try {
     const sp = req.nextUrl.searchParams
@@ -56,11 +55,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const role = getCurrentOrg()?.role
-  if (role && !canManage(role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  if (!org.role || !canManage(org.role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', org.userId)
   if (limited) return limited
 
   try {
@@ -136,7 +134,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId,
-        actorName: actorName(auth),
+        actorName: actorName(org.session),
         actorType: 'human',
         action: 'created valuation VAL-' + String(valuation.applicationNumber).padStart(3, '0'),
         detail: 'Net due £' + valuation.netDue.toFixed(2),

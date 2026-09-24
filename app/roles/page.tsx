@@ -13,7 +13,7 @@ import TabBar from '@/components/ui/TabBar'
 import Avatar from '@/components/ui/Avatar'
 import { IcChevL, IcTeam } from '@/components/ui/Icons'
 
-type Role = 'owner' | 'admin' | 'member' | 'viewer'
+type Role = 'owner' | 'company_admin' | 'project_manager' | 'foreman' | 'operative' | 'client' | 'viewer' | 'admin' | 'member'
 
 interface MemberRow {
   userId: string
@@ -26,6 +26,11 @@ interface MemberRow {
 
 const ROLE_COLOR: Record<Role, string> = {
   owner: '#f59e0b',
+  company_admin: '#06b6d4',
+  project_manager: '#8b5cf6',
+  foreman: '#3b82f6',
+  operative: '#10b981',
+  client: '#ec4899',
   admin: '#06b6d4',
   member: '#10b981',
   viewer: '#52749a',
@@ -33,8 +38,13 @@ const ROLE_COLOR: Record<Role, string> = {
 
 const ROLE_LABEL: Record<Role, string> = {
   owner: 'Owner',
-  admin: 'Admin',
-  member: 'Member',
+  company_admin: 'Company Admin',
+  project_manager: 'Project Manager',
+  foreman: 'Foreman',
+  operative: 'Operative',
+  client: 'Client',
+  admin: 'Admin (legacy)',
+  member: 'Member (legacy)',
   viewer: 'Viewer',
 }
 
@@ -51,7 +61,7 @@ export default function RolesPage() {
       .finally(() => setLoading(false))
   }, [])
 
-  const grouped: Record<Role, MemberRow[]> = { owner: [], admin: [], member: [], viewer: [] }
+  const grouped: Record<Role, MemberRow[]> = { owner: [], company_admin: [], project_manager: [], foreman: [], operative: [], client: [], viewer: [], admin: [], member: [] }
   for (const r of rows) {
     if (grouped[r.role]) grouped[r.role].push(r)
   }
@@ -77,7 +87,7 @@ export default function RolesPage() {
         ) : error ? (
           <p style={{ color: '#ef4444', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>{error}</p>
         ) : (
-          (['owner', 'admin', 'member', 'viewer'] as const).map(role => {
+          (['owner', 'company_admin', 'project_manager', 'foreman', 'operative', 'client', 'viewer', 'admin', 'member'] as const).map(role => {
             const members = grouped[role]
             if (members.length === 0) return null
             return (

@@ -1,7 +1,7 @@
 /** Shared capability model for the CortexBuild construction OS. */
 
 export const CORTEX_ROLES = [
-  'super_admin', 'platform_admin', 'company_admin', 'project_manager', 'operative', 'client',
+  'super_admin', 'platform_admin', 'company_admin', 'project_manager', 'foreman', 'operative', 'client',
 ] as const;
 export type CortexRole = typeof CORTEX_ROLES[number];
 
@@ -27,13 +27,22 @@ const ROLE_CAPABILITIES: Record<CortexRole, ReadonlySet<Capability>> = {
   platform_admin: new Set(CAPABILITIES.filter((c) => !c.startsWith('client.'))),
   company_admin: new Set(CAPABILITIES),
   project_manager: new Set([
-    'workspace.read', 'project.read', 'project.create', 'project.manage',
+    'workspace.read', 'project.read', 'project.manage',
     'task.read', 'task.create', 'task.assign', 'task.approve',
     'time.read', 'time.approve', 'procurement.read', 'procurement.create',
     'finance.read', 'documents.read', 'documents.create', 'documents.approve',
-    'drawings.read', 'drawings.annotate', 'safety.read', 'safety.create',
-    'quality.read', 'quality.create', 'client.read', 'client.communicate',
+    'drawings.read', 'drawings.annotate', 'drawings.approve', 'safety.read', 'safety.create', 'safety.approve',
+    'quality.read', 'quality.create', 'quality.approve', 'client.read', 'client.communicate',
     'ai.use', 'ai.execute', 'ai.approve', 'audit.read',
+  ]),
+  foreman: new Set([
+    'workspace.read', 'project.read', 'project.manage',
+    'task.read', 'task.create', 'task.assign',
+    'time.read', 'time.clock', 'procurement.read',
+    'documents.read', 'documents.create',
+    'drawings.read', 'drawings.annotate',
+    'safety.read', 'safety.create', 'quality.read', 'quality.create',
+    'ai.use',
   ]),
   operative: new Set([
     'workspace.read', 'project.read', 'task.read', 'task.create',

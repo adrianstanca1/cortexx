@@ -9,7 +9,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
 
-const ALLOWED_ROLES = new Set(['admin', 'member', 'viewer'])
+const ALLOWED_ROLES = new Set(['company_admin', 'project_manager', 'foreman', 'operative', 'client', 'viewer', 'admin', 'member'])
 
 interface RouteParams { params: Promise<{ id: string }> }
 
@@ -80,7 +80,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
   if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     return NextResponse.json({ error: 'Valid email is required' }, { status: 400 })
   }
-  const role = typeof body.role === 'string' && ALLOWED_ROLES.has(body.role) ? body.role : 'member'
+  const role = typeof body.role === 'string' && ALLOWED_ROLES.has(body.role) ? body.role : 'operative'
 
   // Reject if the email is already a member of this org.
   const existingUser = await prisma.user.findUnique({ where: { email }, select: { id: true } })

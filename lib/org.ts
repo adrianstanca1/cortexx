@@ -19,7 +19,7 @@ const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
 export interface OrgContext {
   organizationId: string
-  role: 'owner' | 'admin' | 'member' | 'viewer'
+  role: import('./rbac').OrgRole
   organization: {
     id: string
     slug: string

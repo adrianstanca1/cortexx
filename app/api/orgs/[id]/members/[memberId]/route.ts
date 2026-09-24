@@ -6,7 +6,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
 
-const ALLOWED_ROLES = new Set(['owner', 'admin', 'member', 'viewer'])
+const ALLOWED_ROLES = new Set(['owner', 'company_admin', 'project_manager', 'foreman', 'operative', 'client', 'viewer', 'admin', 'member'])
 
 interface RouteParams { params: Promise<{ id: string; memberId: string }> }
 

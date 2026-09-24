@@ -1,62 +1,98 @@
-# Cortexx — Product Status
+# CortexBuild Pro — Product Status
 
-_One-page status as of **2026-07-18** · v1.4.0 · supersedes the 6 Jun 2026 review below the fold_
+**Audit date:** 24 September 2026  
+**Canonical repository:** `adrianstanca1/cortexx`  
+**Production branch:** `main`  
+**Release candidate:** **v1.5.1**
 
-Cortexx (**CortexBuild Pro**) is a UK SMB construction-management platform live at **cortexbuildpro.com**: an autonomous AI CEO (Vera) plus contractor tooling, delivered as a monorepo with three client stacks over one backend.
+CortexBuild Pro is the single canonical construction-management product. The repository contains the Next.js web application, offline-first PWA, shared TypeScript contract, Prisma/PostgreSQL application data, Express/raw-SQL compatibility services, Expo/native field client, deployment assets, local AI runtime and Agent OS experiments.
 
----
+## Current audited surface
 
-## Architecture
+| Area | Current state |
+|---|---:|
+| Next.js pages | 112 |
+| Next.js API route files | 207 |
+| Prisma models | 85 |
+| Prisma migrations | 37 |
+| PWA/lib modules | 117 compiled modules |
+| Native | Expo SDK 57.0.24 / React Native 0.86.3 |
+| Production domain | cortexbuildpro.tech |
+| Root release line | v1.5.x |
 
-**One backend, three frontends** (all consume `/api/*`; contract shared via `@cortexbuild/core`):
+## Verified in the current release line
 
-| Target | Path | Stack |
-|--------|------|-------|
-| Offline PWA | `Cortexx.html` + `lib/` → `dist/` | Vanilla JS, Babel-in-browser, no bundler; offline-first; private Ollama LLM |
-| Web admin | `app/`, `prisma/` | Next.js 16, React 19, next-auth v5, Prisma 7, Tailwind v4 |
-| Native | `expo/`, `ios/` | Expo SDK 57 / Capacitor 8.4 |
+- Multi-tenant organization scoping is enforced through the Prisma tenancy extension when `MULTITENANT_ENFORCED=true`.
+- Offline replay preserves create/update/delete semantics, isolates account queues, retains partial failures, chunks large batches and protects pending local changes.
+- Bulk sync validates before writes and rolls a failed batch back atomically.
+- Fresh PostgreSQL migration from zero applies the full migration chain, including the persistent Valuation ledger.
+- Persistent Valuations now support draft → submitted → certified → paid/rejected lifecycle, retention, previous-certified calculations, audit retention and tenant scoping.
+- Smart Parse is a real authenticated/rate-limited AI workflow rather than an Apps tile stub.
+- Apps quick actions now route to authoritative quote, snag, safety and GPS check-in workflows.
+- Project creation is being hardened to Company Admin/Owner only; Project Manager is explicitly not a project-creation role.
+- Foreman is now a first-class construction role in the shared capability contract.
+- Expo native client typechecks, Expo Doctor passes 21/21 and a web bundle export succeeds.
+- Construction deployment is self-contained with PostgreSQL, Redis, Ollama, application runtime and persistent uploads.
 
-**Backend** (`server/`): Express + PostgreSQL, multi-tenant (`workspace_id`), JWT + magic-link auth, SSE realtime, Ollama LLM. 11 route modules (banking, hmrc, iap, llm, payments, push, sync, portal, ledger, intelligence, agents). Deployed via `docker-compose.yml` (Postgres 16 + Express + Ollama + Caddy). Canonical data model is **raw SQL** (`server/db/schema.sql`).
+## Role model
 
----
+The target hierarchy is:
 
-## What's live
+- **Platform / Super Admin** — platform operations across tenants.
+- **Owner** — tenant owner; Company Admin rights plus billing/ownership/destructive workspace controls.
+- **Company Admin** — all company tools and financial/managerial controls; creates projects; manages users/roles.
+- **Project Manager** — manages assigned projects, team/tasks/approvals, procurement creation, drawings, quality and full safety functions; **cannot create projects**.
+- **Foreman** — site-lead workflow: daily tasks, site records, team coordination, drawings, safety and quality capture.
+- **Operative** — assigned field work, clocking, photos/documents, safety/quality reporting.
+- **Client / Viewer** — restricted external/read/approval access.
 
-- ✅ Production PWA at cortexbuildpro.com — **113** precompiled modules (phases through 118), **15** dashboard layouts, `<1s` cold start, offline-capable.
-- ✅ Express + Postgres backend — multi-tenant, JWT + magic-link, SSE realtime, local Ollama LLM (no external keys).
-- ✅ Next.js 16 web admin — **110+** pages.
-- ✅ Monorepo consolidation with shared `@cortexbuild/core` (commit `7865114d`).
-- ✅ iOS Capacitor 8 + Expo SDK 57 native shell, build-ready (commit `b3974259`).
-- ✅ 8-dangling-nav fix (commit `d2cc8713`); cloud-sync on shared core (commit `8e83da72`).
-- ✅ **234 tests passing** (`npm test`); `node build-dist.js --check` reports `dist/` in sync with `lib/`.
-- ✅ Vera autonomous CEO + 5-person leadership team (Marcus Pound, Pip Carter, Ada Whitfield, River Ng).
+Legacy `admin/member/viewer` memberships remain accepted while role migration completes.
 
----
+## Important gaps that remain
 
-## What's blocked
+### P0 — correctness and tenant architecture
+1. **Project assignment scoping:** org-level tenancy is enforced, but PM/Foreman/Operative access is not yet universally restricted to assigned projects. A reliable User ↔ TeamMember identity relation must be added first, then project policy must be enforced at the data layer.
+2. **Physical tenant isolation:** the product requirement is separate database/storage per company. Current production architecture provides logical `organizationId` isolation in shared databases. Physical tenant DB/storage routing is not yet implemented.
+3. **One canonical data plane:** Next.js/Prisma and the Express/raw-SQL PWA compatibility layer still represent two persistence paths. Drift checks exist, but the long-term target is one canonical tenant data service.
+4. **End-to-end authorization coverage:** every critical mutation still needs role × tenant × project-assignment integration tests and Admin/PM/Foreman/Operative Playwright journeys.
 
-- 🚧 **iOS App Store submission** — requires a **Mac + Apple Developer account** (provisioning, universal-links/AASA, StoreKit IAP). **Not reproducible from this Linux VPS.** Runbooks: `expo/DEPLOY-IOS.md`, `ios/README.md`, `app-store/SUBMISSION.md`.
-- ⚠️ Native Expo app is a **thin 5-screen shell**, not a full mirror of the PWA — feature parity is future work.
+### P1 — workflow completion
+- Commercial ledger: connect contract sum, variations, commitments, valuations/certificates, retention, invoices, WIP, forecast value/cost and cash.
+- Procurement: requisition → RFQ → comparison → approval → PO → delivery → invoice/3-way match → supplier score.
+- Programme: dependencies, baselines/revisions, critical path, look-ahead, resources, delays and progress.
+- Documents/drawings: revisions, distribution acknowledgement, mark-up/transmittals, OCR/indexing and approvals.
+- Safety/quality: consistent investigation, evidence, root-cause, corrective action and closeout across incidents/NCRs/snags/observations.
+- Capture: receipt OCR/structured accounting extraction and geotagged progress-photo metadata.
+- Native: high-value mobile parity for the field workflows above.
 
----
+### P2 — differentiation
+- Tender Scout + Procurement Agent.
+- Drawing revision intelligence and construction-document RAG with source citations.
+- Spatial site layer / live site map.
+- Predictive commercial, programme, quality and safety controls.
+- No-code construction automation marketplace.
+- Configurable role-specific field application builder.
 
-## Top 3 P0 fixes
+## Security / dependency position
 
-1. **Nav registry** — replace the **184-branch** `sheet === '…'` dispatcher in `lib/app-main.jsx` with a declarative **SheetRegistry** (`test/nav-registry.test.js` seeds this).
-2. **Docs accuracy** — README/ROADMAP/STATUS were stale (wrong module count, outdated Capacitor version, "no backend" and static-only deploy claims). **Fixed in this pass** — keep them true to v1.4.0.
-3. **Data-model unification** — two divergent models: **raw SQL (34 tables)** canonical vs **Prisma (82 models)** parallel. Unify. See [`docs/DATA_MODEL_DRIFT.md`](docs/DATA_MODEL_DRIFT.md) + `scripts/align-prisma-to-sql.mjs`.
+- The critical Next.js advisory found during the clean-install audit was removed by non-breaking dependency updates.
+- Root npm still reports high-severity advisories in Prisma CLI/config transitive dependencies. The offered automatic fix is a breaking Prisma 7 → 6 downgrade, so it is not forced into production.
+- Expo/Metro still has upstream dependency advisories where the offered force-fix would regress the SDK-compatible router/runtime. Native compatibility gates remain green.
+- Security work must continue through dependency monitoring, image scanning, secret scanning, authorization tests and regular upgrade windows.
 
----
+## Launch gates
 
-## Health snapshot
+A feature is only complete when it is reachable, persists real data, has validation/loading/empty/error states, enforces role + tenant + project policy server-side, creates audit evidence where material, defines offline behavior, and passes E2E for its main journey.
 
-| Signal | State |
-|--------|-------|
-| Version | 1.4.0 |
-| Tests | 234 passing |
-| `dist/` ↔ `lib/` | in sync (`build-dist.js --check` = 0) |
-| Workaround markers (TODO/FIXME/HACK/XXX/WORKAROUND) | ~32 across `lib/`+`server/`+`app/`+`packages/` — triage backlog |
-| Nav dispatcher | 184 branches — refactor pending |
-| Data models | 2 (drifted) — unify pending |
-
-See [`ROADMAP.md`](ROADMAP.md) § Status (2026-07-18) for detail and [`CLAUDE.md`](CLAUDE.md) for architecture + deployment.
+Production release also requires:
+- clean install
+- lint + TypeScript
+- full unit/integration suite
+- Prisma migration from fresh database
+- schema/drift checks
+- production Next build
+- native typecheck/Expo Doctor/export
+- Docker build and health check
+- browser E2E
+- backup/restore verification
+- post-deploy health and rollback check

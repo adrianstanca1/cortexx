@@ -8,16 +8,17 @@ const assert = require('node:assert/strict')
 // ─── RBAC ────────────────────────────────────────────────────────────
 // Mirror of lib/rbac.ts. Kept in sync via the rank ordering below.
 
-const RANK = { viewer: 0, member: 1, admin: 2, owner: 3 }
+const RANK = { viewer: 0, client: 0, operative: 1, member: 1, foreman: 2, project_manager: 3, company_admin: 4, admin: 4, owner: 5 }
 function hasRole(actual, required) {
   const a = RANK[actual]
   const r = RANK[required]
   if (a === undefined || r === undefined) return false
   return a >= r
 }
-function canWrite(role) { return hasRole(role, 'member') }
-function canManage(role) { return hasRole(role, 'admin') }
-function isOwner(role) { return hasRole(role, 'owner') }
+function canWrite(role) { return ['owner', 'admin', 'company_admin', 'project_manager', 'foreman', 'operative', 'member'].includes(role) }
+function canManage(role) { return ['owner', 'admin', 'company_admin'].includes(role) }
+function canCreateProject(role) { return ['owner', 'admin', 'company_admin'].includes(role) }
+function isOwner(role) { return role === 'owner' }
 
 test('hasRole: viewer cannot do anything beyond viewing', () => {
   assert.equal(hasRole('viewer', 'viewer'), true)
@@ -43,6 +44,16 @@ test('hasRole: owner can everything', () => {
   assert.equal(canManage('owner'), true)
   assert.equal(isOwner('owner'), true)
 })
+test('construction hierarchy: PM cannot create projects and Foreman cannot manage workspace', () => {
+  assert.equal(canCreateProject('company_admin'), true)
+  assert.equal(canCreateProject('project_manager'), false)
+  assert.equal(canManage('project_manager'), false)
+  assert.equal(canWrite('project_manager'), true)
+  assert.equal(canWrite('foreman'), true)
+  assert.equal(canManage('foreman'), false)
+  assert.equal(canWrite('operative'), true)
+})
+
 
 test('hasRole: unknown role grants nothing', () => {
   assert.equal(hasRole('hacker', 'viewer'), false)

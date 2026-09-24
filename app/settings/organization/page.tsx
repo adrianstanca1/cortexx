@@ -10,7 +10,7 @@ interface Member {
   userId: string
   email: string
   name: string | null
-  role: 'owner' | 'admin' | 'member' | 'viewer' | string
+  role: 'owner' | 'company_admin' | 'project_manager' | 'foreman' | 'operative' | 'client' | 'viewer' | 'admin' | 'member' | string
   joinedAt: string
 }
 
@@ -21,7 +21,7 @@ interface Invite {
   expiresAt: string
 }
 
-const RANK: Record<string, number> = { viewer: 0, member: 1, admin: 2, owner: 3 }
+const ASSIGNABLE_ROLES = ['company_admin', 'project_manager', 'foreman', 'operative', 'client', 'viewer'] as const
 
 export default function OrganizationSettingsPage() {
   const { data: session } = useSession()
@@ -36,7 +36,7 @@ export default function OrganizationSettingsPage() {
   const [error, setError] = useState<string | null>(null)
 
   const [inviteEmail, setInviteEmail] = useState('')
-  const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
+  const [inviteRole, setInviteRole] = useState<(typeof ASSIGNABLE_ROLES)[number]>('operative')
   const [inviteBusy, setInviteBusy] = useState(false)
   const [inviteMsg, setInviteMsg] = useState<string | null>(null)
 
@@ -173,9 +173,7 @@ export default function OrganizationSettingsPage() {
                     onChange={e => changeRole(m.id, e.target.value)}
                     style={{ background: '#06101e', color: '#eef3fa', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', fontFamily: 'var(--font-system)', fontSize: 12 }}
                   >
-                    <option value="admin">admin</option>
-                    <option value="member">member</option>
-                    <option value="viewer">viewer</option>
+                    {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{role.replace(/_/g, ' ')}</option>)}
                   </select>
                 ) : (
                   <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, color: m.role === 'owner' ? '#f59e0b' : '#52749a' }}>
@@ -209,10 +207,8 @@ export default function OrganizationSettingsPage() {
               onChange={e => setInviteEmail(e.target.value)}
               style={{ ...inputStyle, flex: 1 }}
             />
-            <select value={inviteRole} onChange={e => setInviteRole(e.target.value as 'admin' | 'member' | 'viewer')} style={{ ...inputStyle, width: 110, padding: '12px 10px' }}>
-              <option value="admin">admin</option>
-              <option value="member">member</option>
-              <option value="viewer">viewer</option>
+            <select value={inviteRole} onChange={e => setInviteRole(e.target.value as (typeof ASSIGNABLE_ROLES)[number])} style={{ ...inputStyle, width: 150, padding: '12px 10px' }}>
+              {ASSIGNABLE_ROLES.map(role => <option key={role} value={role}>{role.replace(/_/g, ' ')}</option>)}
             </select>
             <button
               type="submit"
@@ -275,9 +271,6 @@ const inputStyle: React.CSSProperties = {
   outline: 'none',
   boxSizing: 'border-box',
 }
-
-// Suppress unused-var lint for RANK (kept for future role-sort use)
-void RANK
 
 // Plan catalogue is fetched from /api/billing/plans (single source of
 // truth — backed by lib/billing.ts PLANS). Prior to this we duplicated

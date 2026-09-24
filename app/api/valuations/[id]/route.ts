@@ -1,10 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import { canManage } from '@/lib/rbac'
-import { getCurrentOrg } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,11 +17,10 @@ const TRANSITIONS: Record<string, Set<string>> = {
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const role = getCurrentOrg()?.role
-  if (role && !canManage(role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  if (!org.role || !canManage(org.role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', org.userId)
   if (limited) return limited
 
   try {
@@ -88,7 +86,7 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
       prisma.activity.create({
         data: {
           projectId: valuation.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(org.session),
           actorType: 'human',
           action: 'marked VAL-' + String(valuation.applicationNumber).padStart(3, '0') + ' ' + valuation.status,
           iconType: 'receipt',
@@ -104,11 +102,10 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const role = getCurrentOrg()?.role
-  if (role && !canManage(role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  if (!org.role || !canManage(org.role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', org.userId)
   if (limited) return limited
 
   try {
