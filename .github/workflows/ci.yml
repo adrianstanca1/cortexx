@@ -154,7 +154,15 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        project: [desktop-chromium, mobile-chromium, pwa-desktop-chromium, pwa-mobile-chromium]
+        include:
+          - project: desktop-chromium
+            workers: 4
+          - project: mobile-chromium
+            workers: 1
+          - project: pwa-desktop-chromium
+            workers: 1
+          - project: pwa-mobile-chromium
+            workers: 1
     services:
       postgres:
         image: postgres:16-alpine
@@ -200,7 +208,7 @@ jobs:
         shell: bash
         run: |
           set -o pipefail
-          npx playwright test --project=${{ matrix.project }} 2>&1 | tee playwright-e2e.log
+          npx playwright test --project=${{ matrix.project }} --workers=${{ matrix.workers }} 2>&1 | tee playwright-e2e.log
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7
