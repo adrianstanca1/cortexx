@@ -11,8 +11,8 @@ jobs:
     env:
       VPS_HOST: 85.190.100.68
       VPS_USER: administrator
-      VPS_SSH_KEY: ${{ secrets.VPS_SSH_KEY }}
-      VPS_PASSWORD: ${{ secrets.VPS_PASSWORD }}
+      VPS_SSH_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
+      VPS_PASSWORD: ${{ secrets.VPS_ROOT_PASSWORD }}
       APP_URL: https://cortexbuildpro.tech
     steps:
       - name: Validate deployment credentials
