@@ -6,7 +6,7 @@ Audit date: 24 September 2026. Canonical repository: `adrianstanca1/cortexx`. Pr
 CortexBuild Pro is one product/codebase containing the Next.js web app, offline PWA, Express/PostgreSQL services, Expo/native client, shared API contract, deployment manifests and Agent OS. A page existing is not treated as workflow completion: UI, persistence, authorization, tenant isolation, offline behavior, auditability, error handling and tests must close the loop.
 
 ## Consolidation
-Preserved source snapshots live under `archive/sources/`. Superseded repositories archived in this pass: `cortexbuild-field`, `cortexbuildpro.com`, `BuildTrack`, `cortexx-deploy`, `management`, `yes-i3e0`, `chat-p3kfyf`. Existing archived predecessors include `cortexbuild-pro`, `cortexx-pwa`, `BuildTrack-iOS`, `buildtrack-web`, `buildtrack-api`, `constructtime_pro`, HORUS and `openclaw-mobile`. Unrelated products are intentionally untouched.
+Superseded repositories remain preserved in GitHub as read-only archives; their feature inventories were compared against the canonical product before archival. Archived in this pass: `cortexbuild-field`, `cortexbuildpro.com`, `BuildTrack`, `cortexx-deploy`, `management`, `yes-i3e0`, `chat-p3kfyf`. Existing archived predecessors include `cortexbuild-pro`, `cortexx-pwa`, `BuildTrack-iOS`, `buildtrack-web`, `buildtrack-api`, `constructtime_pro`, HORUS and `openclaw-mobile`. Unrelated products are intentionally untouched.
 
 ## Verified strengths
 - Multi-tenant isolation and RBAC are test-covered.
