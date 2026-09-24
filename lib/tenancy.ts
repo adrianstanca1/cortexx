@@ -26,7 +26,16 @@ export interface OrgRequestContext {
   bypass?: boolean
 }
 
-const storage = new AsyncLocalStorage<OrgRequestContext>()
+const globalForTenancy = globalThis as unknown as {
+  cortexxOrgStorage?: AsyncLocalStorage<OrgRequestContext>
+}
+
+// Next/Turbopack can evaluate this module in multiple server chunks. Sharing
+// one storage instance prevents the auth/route chunk and Prisma-extension
+// chunk from observing different tenant contexts. AsyncLocalStorage still
+// isolates each concurrent request; only the storage instance is global.
+const storage = globalForTenancy.cortexxOrgStorage ?? new AsyncLocalStorage<OrgRequestContext>()
+globalForTenancy.cortexxOrgStorage = storage
 
 /** Set up the org context for the duration of `fn`. Returns whatever fn returns.
  *

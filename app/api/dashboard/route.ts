@@ -1,14 +1,13 @@
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
+
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
-export async function GET() {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+async function GET_impl() {
   try {
     const now = new Date()
     const weekStart = new Date(now)
@@ -107,3 +106,5 @@ export async function GET() {
     return NextResponse.json({ error: 'Failed to fetch dashboard data' }, { status: 500 })
   }
 }
+
+export const GET = withRoute(() => GET_impl(), { permission: 'read' })

@@ -1,18 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { canManage } from '@/lib/rbac'
+
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 const MAX_TAKE = 100
 
-export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-
+async function GET_impl(req: NextRequest) {
   try {
     const { searchParams } = new URL(req.url)
     const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
@@ -40,10 +40,11 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+async function POST_impl(req: NextRequest, userId: string, role: string | null, session: { user?: { name?: string | null; email?: string | null } }) {
+  if (!role || !canManage(role)) {
+    return NextResponse.json({ error: 'Company admin permission required to create projects' }, { status: 403 })
+  }
+  const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
 
   try {
@@ -83,7 +84,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId: project.id,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'human',
         action: `created project ${project.name}`,
         iconType: 'pin',
@@ -95,3 +96,6 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Failed to create project' }, { status: 500 })
   }
 }
+
+export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
+export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, role, session), { permission: 'read' })
