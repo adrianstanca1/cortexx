@@ -82,11 +82,14 @@ jobs:
             REPO=https://github.com/adrianstanca1/cortexx.git
             mkdir -p "$(dirname "$APP_DIR")"
             if [ ! -d "$APP_DIR/.git" ]; then
-              rm -rf "$APP_DIR"
               git clone "$REPO" "$APP_DIR"
             fi
             cd "$APP_DIR"
             git fetch origin --prune
+            if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+              echo "Deployment checkout has local edits; preserve and review them before deploying." >&2
+              exit 1
+            fi
             git reset --hard origin/main
             echo "Deploying $(git rev-parse --short HEAD)"
 
@@ -118,11 +121,11 @@ jobs:
               chmod 600 .env.construction .owner-credentials
             fi
 
-            docker compose -f docker-compose.construction.yml build app tools
-            docker compose -f docker-compose.construction.yml up -d db redis ollama
-            docker compose -f docker-compose.construction.yml --profile tools run --rm tools
-            docker compose -f docker-compose.construction.yml --profile tools run --rm tools npx tsx scripts/bootstrap-construction.ts
-            docker compose -f docker-compose.construction.yml up -d app
+            docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools
+            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama
+            docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm tools
+            docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm tools npx tsx scripts/bootstrap-construction.ts
+            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d app
 
             healthy=false
             for n in $(seq 1 45); do
@@ -133,7 +136,7 @@ jobs:
               sleep 2
             done
             if [ "$healthy" != true ]; then
-              docker compose -f docker-compose.construction.yml logs --tail=180 app
+              docker compose --env-file .env.construction -f docker-compose.construction.yml logs --tail=180 app
               exit 1
             fi
 
@@ -144,11 +147,17 @@ jobs:
             fi
             BACKUP_DIR=/home/administrator/backups/cortexbuild-cutover
             mkdir -p "$BACKUP_DIR"
-            cp "$INGRESS" "$BACKUP_DIR/Caddyfile.$(date +%Y%m%d-%H%M%S)"
+            INGRESS_BACKUP="$BACKUP_DIR/Caddyfile.$(date +%Y%m%d-%H%M%S)"
+            cp "$INGRESS" "$INGRESS_BACKUP"
+            rollback_ingress() {
+              cat "$INGRESS_BACKUP" > "$INGRESS"
+              docker exec viral-shorts-caddy caddy reload --config /etc/caddy/Caddyfile || true
+            }
+            trap rollback_ingress ERR
             if grep -q 'reverse_proxy 127.0.0.1:3020' "$INGRESS"; then
               echo "Ingress already targets CortexBuild."
             elif grep -q 'reverse_proxy 127.0.0.1:3010' "$INGRESS"; then
-              sed -i '0,/reverse_proxy 127.0.0.1:3010/s//reverse_proxy 127.0.0.1:3020/' "$INGRESS"
+              sed '0,/reverse_proxy 127.0.0.1:3010/s//reverse_proxy 127.0.0.1:3020/' "$INGRESS_BACKUP" > "$INGRESS"
             else
               echo "Expected current ingress target not found; refusing blind cutover." >&2
               exit 1
@@ -157,7 +166,8 @@ jobs:
             docker exec viral-shorts-caddy caddy reload --config /etc/caddy/Caddyfile
 
             curl --fail --silent --show-error --max-time 15 https://cortexbuildpro.tech/api/health | node scripts/check-construction-health.cjs
-            docker compose -f docker-compose.construction.yml ps
+            trap - ERR
+            docker compose --env-file .env.construction -f docker-compose.construction.yml ps
           REMOTE_SCRIPT
 
       - name: Verify public release
