@@ -3,6 +3,8 @@
 # Falls back to plain HTTP on :80 for IP-only deploys.
 #
 # SITE_ADDRESS is injected from the environment by docker-compose.
+# Set to the domain for automatic HTTPS (Let's Encrypt), or :80 for
+# IP-only / behind-existing-reverse-proxy deploys.
 {$SITE_ADDRESS} {
 	# ── Static app (Cortexx.html + lib/ + dist/ + portal.html + assets) ──
 	root * /srv/app

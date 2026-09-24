@@ -58,17 +58,31 @@ jobs:
             set -euo pipefail
             APP_DIR=/opt/cortexx
 
-            echo "=== Pull latest code ==="
+            echo "=== Install deploy artifacts if first run ==="
+            if [ ! -d "$APP_DIR" ]; then
+              mkdir -p "$APP_DIR"
+              git clone https://github.com/adrianstanca1/cortexx.git "$APP_DIR" 2>&1 | tail -3
+            fi
             cd "$APP_DIR"
             git fetch origin
             git reset --hard origin/main
             echo "Checked out: $(git rev-parse --short HEAD)"
 
+            echo "=== Write compose + env if missing ==="
+            if [ ! -f docker-compose.cortexx.yml ]; then
+              # docker-compose.cortexx.yml is now in the repo — no external artifacts needed
+              echo "  ⚠ docker-compose.cortexx.yml not in repo — cannot deploy"
+              exit 1
+            fi
+            if [ ! -f server/.env ]; then
+              cp server/.env.example server/.env 2>/dev/null || cp server.env.template server/.env 2>/dev/null || true
+            fi
+
             echo "=== Bring stack up ==="
-            docker compose pull
+            docker compose -f docker-compose.cortexx.yml pull
             for up in 1 2 3; do
               sleep 5
-              if docker compose up -d --build --remove-orphans 2>&1; then
+              if docker compose -f docker-compose.cortexx.yml up -d --build --remove-orphans 2>&1; then
                 break
               fi
               echo "docker compose up attempt $up failed — retrying"
@@ -89,10 +103,10 @@ jobs:
 
       - name: Verify deployment
         run: |
-          sleep 10
-          echo "=== Public ==="
           curl -s -o /dev/null --max-time 20 -w "HTTPS root   -> %{http_code}\n" https://cortexbuildpro.tech/
           curl -s -o /dev/null --max-time 20 -w "HTTPS health -> %{http_code}\n" https://cortexbuildpro.tech/api/health
           echo "=== Health body ==="
           curl -s --max-time 10 https://cortexbuildpro.tech/api/health
           echo ""
+          echo "=== Direct (port 8080) ==="
+          curl -s -o /dev/null --max-time 10 -w "Direct health -> %{http_code}\n" http://${VPS_HOST}:8080/api/health

@@ -1,0 +1,94 @@
+version: '3.8'
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: cortexx
+      POSTGRES_PASSWORD: "${POSTGRES_PASSWORD}"
+    volumes:
+      - cortexx_pgdata:/var/lib/postgresql/data
+      - ./server/db/schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+      - ./server/db/seed.sql:/docker-entrypoint-initdb.d/02-seed.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d cortexx"]
+      interval: 5s
+      timeout: 3s
+      retries: 12
+
+  api:
+    build: ./server
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    env_file: ./server/.env
+    environment:
+      DATABASE_URL: >-
+        postgres://postgres:${POSTGRES_PASSWORD}@db:5432/cortexx
+      PORT: 3001
+      NODE_ENV: production
+      OLLAMA_BASE: http://ollama:11434
+    expose: ["3001"]
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:3001/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+      start_period: 15s
+
+  ollama:
+    image: ollama/ollama:latest
+    restart: unless-stopped
+    volumes:
+      - cortexx_ollama:/root/.ollama
+      - ./server/ollama-init.sh:/ollama-init.sh:ro
+    entrypoint: ["/bin/sh", "/ollama-init.sh"]
+    expose: ["11434"]
+    healthcheck:
+      test: ["CMD", "ollama", "list"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  web:
+    image: caddy:2-alpine
+    restart: unless-stopped
+    depends_on: [api]
+    ports:
+      - "8080:80"
+    volumes:
+      - ./Caddyfile:/etc/caddy/Caddyfile:ro
+      - ./dist:/srv/app/dist:ro
+      - ./lib:/srv/app/lib:ro
+      - ./landing.html:/srv/app/landing.html:ro
+      - ./Cortexx.html:/srv/app/Cortexx.html:ro
+      - ./admin.html:/srv/app/admin.html:ro
+      - ./admin.js:/srv/app/admin.js:ro
+      - ./cortex-core.js:/srv/app/cortex-core.js:ro
+      - ./cortexx-3d-theme.js:/srv/app/cortexx-3d-theme.js:ro
+      - ./support.html:/srv/app/support.html:ro
+      - ./portal.html:/srv/app/portal.html:ro
+      - ./manifest.json:/srv/app/manifest.json:ro
+      - ./sw.js:/srv/app/sw.js:ro
+      - ./icon-192.png:/srv/app/icon-192.png:ro
+      - ./icon-512.png:/srv/app/icon-512.png:ro
+      - ./icon.svg:/srv/app/icon.svg:ro
+      - ./browserconfig.xml:/srv/app/browserconfig.xml:ro
+      - ./apple-touch-icon.png:/srv/app/apple-touch-icon.png:ro
+      - ./public:/srv/app/public:ro
+      - cortexx_caddy_data:/data
+      - cortexx_caddy_config:/config
+    environment:
+      SITE_ADDRESS: ":80"
+    healthcheck:
+      test: ["CMD", "wget", "-qO-", "http://localhost:80/api/health"]
+      interval: 30s
+      timeout: 3s
+      retries: 5
+
+volumes:
+  cortexx_pgdata:
+  cortexx_ollama:
+  cortexx_caddy_data:
+  cortexx_caddy_config:
