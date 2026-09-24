@@ -83,6 +83,12 @@ async function main() {
   const adminTask = await prisma.task.findFirst({ where: { title: 'E2E Admin Only Task', projectId: adminOnlyProject.id, organizationId: organization.id } })
   if (!adminTask) await prisma.task.create({ data: { title: 'E2E Admin Only Task', projectId: adminOnlyProject.id, status: 'todo', priority: 'medium', organizationId: organization.id } })
 
+  await prisma.invoice.upsert({
+    where: { number: 'E2E-ADMIN-001' },
+    update: { projectId: adminOnlyProject.id, clientName: 'Admin Client', amount: 1250, status: 'sent', dueDate: new Date('2026-10-15T00:00:00.000Z'), organizationId: organization.id },
+    create: { number: 'E2E-ADMIN-001', projectId: adminOnlyProject.id, clientName: 'Admin Client', amount: 1250, status: 'sent', dueDate: new Date('2026-10-15T00:00:00.000Z'), organizationId: organization.id },
+  })
+
   const operativeMember = seeded.get('operative')?.member
   if (operativeMember) {
     const assignedDate = new Date('2026-09-24T08:00:00.000Z')
