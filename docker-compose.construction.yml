@@ -1,0 +1,77 @@
+name: cortexbuild-construction
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_DB: construction
+      POSTGRES_USER: construction
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:?Set a generated database password}
+    volumes:
+      - construction_db:/var/lib/postgresql/data
+    healthcheck:
+      test: [CMD-SHELL, 'pg_isready -U construction -d construction']
+      interval: 5s
+      timeout: 5s
+      retries: 20
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    command: [redis-server, --appendonly, 'yes']
+    volumes:
+      - construction_redis:/data
+    healthcheck:
+      test: [CMD, redis-cli, ping]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+  app:
+    build:
+      context: .
+      dockerfile: Dockerfile.construction
+      target: runtime
+    restart: unless-stopped
+    env_file: .env.construction
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      HOSTNAME: 0.0.0.0
+      ADMIN_TENANT: 'true'
+      MULTITENANT_ENFORCED: 'true'
+      AUTH_TRUST_HOST: 'true'
+      NEXTAUTH_URL: https://cortexbuildpro.tech
+      AUTH_URL: https://cortexbuildpro.tech
+      NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.tech
+      REDIS_URL: redis://redis:6379
+      UPLOAD_DIR: /app/uploads
+      npm_package_version: 1.4.0
+    depends_on:
+      db:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+    ports:
+      - '127.0.0.1:3020:3000'
+    volumes:
+      - construction_uploads:/app/uploads
+    networks:
+      - default
+      - existing_ai
+  tools:
+    profiles: [tools]
+    build:
+      context: .
+      dockerfile: Dockerfile.construction
+      target: tools
+    env_file: .env.construction
+    depends_on:
+      db:
+        condition: service_healthy
+volumes:
+  construction_db:
+  construction_redis:
+  construction_uploads:
+networks:
+  existing_ai:
+    external: true
+    name: viral-shorts-studio_default

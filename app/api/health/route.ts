@@ -22,7 +22,7 @@ export async function GET() {
     await prisma.$queryRaw`SELECT 1`
     checks.database = { ok: true, ms: Date.now() - dbStart }
   } catch (e) {
-    checks.database = { ok: false, ms: Date.now() - dbStart, error: e instanceof Error ? e.message : 'unknown' }
+    checks.database = { ok: false, ms: Date.now() - dbStart, error: 'Database unavailable' }
   }
 
   // Disk space (where the app runs)
@@ -47,6 +47,7 @@ export async function GET() {
   return NextResponse.json(
     {
       status: allOk ? 'ok' : 'degraded',
+      service: 'cortexbuild-construction',
       checks,
       uptime: process.uptime(),
       version: process.env.npm_package_version || 'unknown',
