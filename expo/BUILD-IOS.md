@@ -44,10 +44,7 @@ them it still proves the native project is structurally valid (prebuild +
 pod install succeed).
 
 ## Notes
-- The RN app uses **password login** → `POST /api/auth/login` (verified live,
-  401 on bad creds). The backend `apiUrl` is `https://cortexbuildpro.com`
-  (set in `app.json` → `extra.apiUrl`); the app is fully wired to the live API.
-- Native push: `expo-notifications` is installed; `AppEntry.native.tsx`
-  registers the Expo push token against `/api/push/subscribe` on launch.
+- The RN app uses the dedicated **mobile bearer login** → `POST /api/mobile/auth/login`; issued tokens are stored in SecureStore and every native data request reuses the canonical tenant-scoped web API. The backend `apiUrl` is `https://cortexbuildpro.com` (set in `app.json` → `extra.apiUrl`).
+- Native realtime currently uses authenticated SSE via `/api/events/stream`. `expo-notifications` remains installed for the future typed native push transport, but the app does not register Expo tokens against the web-push subscription schema.
 - `expo-system-ui` added so the dark `backgroundColor` applies in the native
   build (prebuild warning resolved).

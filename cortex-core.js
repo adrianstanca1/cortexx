@@ -45,6 +45,7 @@ var CortexCore = (() => {
     "platform_admin",
     "company_admin",
     "project_manager",
+    "foreman",
     "operative",
     "client"
   ];
@@ -97,7 +98,6 @@ var CortexCore = (() => {
     project_manager: /* @__PURE__ */ new Set([
       "workspace.read",
       "project.read",
-      "project.create",
       "project.manage",
       "task.read",
       "task.create",
@@ -123,6 +123,26 @@ var CortexCore = (() => {
       "ai.execute",
       "ai.approve",
       "audit.read"
+    ]),
+    foreman: /* @__PURE__ */ new Set([
+      "workspace.read",
+      "project.read",
+      "project.manage",
+      "task.read",
+      "task.create",
+      "task.assign",
+      "time.read",
+      "time.clock",
+      "documents.read",
+      "documents.create",
+      "drawings.read",
+      "drawings.annotate",
+      "safety.read",
+      "safety.create",
+      "quality.read",
+      "quality.create",
+      "ai.use",
+      "ai.execute"
     ]),
     operative: /* @__PURE__ */ new Set([
       "workspace.read",
@@ -286,7 +306,7 @@ var CortexCore = (() => {
       const ctrl = new AbortController();
       _streamController = ctrl;
       try {
-        const res = await fetch(`${base}/api/stream?token=${encodeURIComponent(opts.token)}`, { headers: { Accept: "text/event-stream" }, signal: ctrl.signal });
+        const res = await fetch(`${base}/api/events/stream`, { headers: { Accept: "text/event-stream", Authorization: `Bearer ${opts.token}` }, signal: ctrl.signal });
         if (!res.ok || !res.body) throw new Error("stream " + res.status);
         const reader = res.body.getReader();
         const dec = new TextDecoder();
@@ -381,18 +401,23 @@ var CortexCore = (() => {
       },
       async getCollection(name, limit = 100) {
         try {
-          const d = await apiGet(`/api/${name}?limit=${limit}`);
-          const rows = Array.isArray(d) ? d : d.rows || d[name] || [];
+          const d = await apiGet(`/api/${name}?limit=${limit}&take=${limit}`);
+          const responseKey = {
+            timeentries: "entries",
+            checkins: "checkins",
+            safety: "incidents",
+            team: "team",
+            documents: "documents",
+            receipts: "receipts"
+          };
+          const key = responseKey[name] || name;
+          const rows = Array.isArray(d) ? d : d.rows || d[key] || [];
           await cacheSet(name, rows);
           return rows;
         } catch (e) {
           if ((e == null ? void 0 : e.message) === "unauthorized") throw e;
           const cached = await cacheGet(name);
-          if (cached) {
-            const err = new Error("offline-cache");
-            err.cached = cached;
-            throw err;
-          }
+          if (cached) return cached;
           throw e;
         }
       },

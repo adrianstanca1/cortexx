@@ -1,13 +1,54 @@
 import { NextResponse } from 'next/server'
-import { cookies } from 'next/headers'
+import { cookies, headers } from 'next/headers'
 import { auth } from './auth'
 import { prisma } from './db'
 import { MULTITENANT_ENFORCED } from './org'
 import { reportError } from './errors'
 import { beginOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
+import { bearerToken, verifyMobileToken } from './mobileAuth'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
+
+async function mobileBearerSession(orgContext: { organizationId: string | null; userId: string | null; role: string | null }) {
+  let token: string | null = null
+  try { token = bearerToken((await headers()).get('authorization')) } catch { return null }
+  if (!token) return null
+
+  try {
+    const claims = await verifyMobileToken(token)
+    const membership = await prisma.userOrganization.findUnique({
+      where: { userId_organizationId: { userId: claims.sub, organizationId: claims.orgId } },
+      include: {
+        user: { select: { id: true, email: true, name: true, role: true } },
+        organization: { select: { id: true, slug: true, name: true } },
+      },
+    })
+    if (!membership || membership.user.email.toLowerCase() !== claims.email.toLowerCase()) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    const org = {
+      id: membership.organization.id,
+      slug: membership.organization.slug,
+      name: membership.organization.name,
+      role: membership.role,
+    } satisfies SessionOrgMembership
+    const session = {
+      user: {
+        id: membership.user.id,
+        email: membership.user.email,
+        name: membership.user.name,
+        role: membership.user.role,
+        organizations: [org],
+      },
+      expires: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+    }
+    Object.assign(orgContext, { organizationId: org.id, userId: membership.user.id, role: membership.role })
+    return session
+  } catch {
+    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  }
+}
 
 /**
  * When the JWT carries `orgs: []`, hit the DB once to confirm the user
@@ -52,6 +93,9 @@ async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[]
  */
 export async function requireAuth() {
   const orgContext = beginOrgContext()
+  const mobile = await mobileBearerSession(orgContext)
+  if (mobile) return mobile
+
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -81,17 +125,25 @@ export async function requireAuth() {
 
 /**
  * Returns the auth session + resolved active organization, or a NextResponse
- * error (401 / 403). Until MULTITENANT_ENFORCED is flipped on in production,
- * requests without an organization return null in `orgId` instead of 403 —
- * routes can opt in to scoping by passing the orgId through to their queries
- * when it exists.
+ * error (401 / 403). Web sessions and native bearer sessions both establish
+ * the same request-scoped organization context used by the Prisma tenancy
+ * extension.
  */
 export async function requireOrg() {
   const orgContext = beginOrgContext()
-  const session = await auth()
-  if (!session?.user) {
-    return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  const mobile = await mobileBearerSession(orgContext)
+  let session
+
+  if (mobile) {
+    if (mobile instanceof NextResponse) return mobile
+    session = mobile
+  } else {
+    session = await auth()
+    if (!session?.user) {
+      return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
   }
+
   const userId = (session.user as { id?: string }).id
   let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
   if (orgs.length === 0 && userId) {
@@ -113,12 +165,8 @@ export async function requireOrg() {
       const match = orgs.find(o => o.id === cookieValue)
       if (match) active = match
     }
-  } catch {
-    // Not in a request context — fall through.
-  }
+  } catch { /* native bearer requests have no cookie requirement */ }
 
-  // Thread the org into the async context so the Prisma tenancy extension
-  // can auto-scope every query for the rest of this request.
   Object.assign(orgContext, { organizationId: active.id, userId: userId ?? null, role: active.role })
 
   return {

@@ -7,12 +7,11 @@
 //   - expo-secure-store  → auth token survives app restarts (not plaintext localStorage)
 //   - AsyncStorage        → offline cache (last-known-good lists) + write queue (pending creates/edits)
 // When signal returns, the queue auto-replays so nothing is lost.
-import 'expo-router/entry';
+import { registerRootComponent } from 'expo';
+import App from './App';
 import * as SecureStore from 'expo-secure-store';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import * as Notifications from 'expo-notifications';
-import Constants from 'expo-constants';
-import { setTokenStorage, setOfflineCache, setQueueStore, flushQueue, startStream, api } from '@cortexbuild/core';
+import { setTokenStorage, setOfflineCache, setQueueStore, flushQueue, startStream } from '@cortexbuild/core';
 import { API_URL } from './theme';
 
 setTokenStorage({
@@ -21,36 +20,15 @@ setTokenStorage({
   clear: () => SecureStore.deleteItemAsync('cb_token'),
 });
 
-// Register for native push. The backend /api/push/subscribe stores the Expo
-// token (platform:'ios'); /api/push/send delivers to Expo's push service, so
-// the office's broadcasts reach the device even when the app is backgrounded.
-// No-ops gracefully if the projectId isn't set yet (Expo dev / pre-EAS).
-async function registerPush() {
-  try {
-    const projectId = (Constants.expoConfig?.extra as any)?.eas?.projectId;
-    if (!projectId) return;
-    const { status } = await Notifications.getPermissionsAsync();
-    if (status !== 'granted') {
-      const r = await Notifications.requestPermissionsAsync();
-      if (r.status !== 'granted') return;
-    }
-    const token = (await Notifications.getExpoPushTokenAsync({ projectId })).data;
-    const auth = await SecureStore.getItemAsync('cb_token');
-    if (!auth) return;
-    await fetch(`${API_URL}/api/push/subscribe`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${auth}` },
-      body: JSON.stringify({ platform: 'ios', subscription: { token } }),
-    }).catch(() => { /* offline: will re-subscribe on next launch */ });
-  } catch { /* no-op */ }
-}
+// Native push transport is intentionally separate from the web-push subscription schema.
+// Field parity uses realtime SSE now; Expo push tokens will be added through a typed native transport.
 
 // Start the live realtime stream (job/task/invoice updates pushed to device).
 // Called on boot (token already stored) and after (re)login.
 async function startRealtime() {
   try {
     const t = await SecureStore.getItemAsync('cb_token');
-    if (t) { startStream({ apiUrl: API_URL, token: t }); registerPush(); }
+    if (t) startStream({ apiUrl: API_URL, token: t });
   } catch { /* ignore */ }
 }
 
@@ -84,8 +62,8 @@ setOfflineCache({
       try {
         const s = await NetInfo.getNetworkStateAsync();
         if (s.isConnected && !wasOnline) {
-          const t = await api.getToken();
-          if (t) await flushQueue({ token: t });
+          const t = await SecureStore.getItemAsync('cb_token');
+          if (t) await flushQueue({ token: t, apiUrl: API_URL });
         }
         wasOnline = !!s.isConnected;
       } catch { /* ignore */ }
@@ -97,3 +75,5 @@ setOfflineCache({
 
   startRealtime();
 })();
+
+registerRootComponent(App);

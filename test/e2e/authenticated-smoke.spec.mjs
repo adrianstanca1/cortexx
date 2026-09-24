@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 
 const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
-const password = process.env.E2E_ADMIN_PASSWORD || 'changeme-please-1234'
+const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
 
 const coreRoutes = [
   '/dashboard',

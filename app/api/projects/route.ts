@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db'
 import { actorName } from '@/lib/requireAuth'
@@ -12,13 +13,20 @@ export const dynamic = 'force-dynamic'
 
 const MAX_TAKE = 100
 
-async function GET_impl(req: NextRequest) {
+async function GET_impl(req: NextRequest, session: { user?: { email?: string | null; role?: string } }) {
   try {
     const { searchParams } = new URL(req.url)
     const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
     const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
     const include = searchParams.get('include') // 'archived' to include, 'only-archived' to show only archived
-    const where = include === 'archived' ? {} : include === 'only-archived' ? { archivedAt: { not: null } } : { archivedAt: null }
+    const appRole = session.user?.role || ''
+    const email = session.user?.email?.trim() || ''
+    const assignmentScoped = ['project_manager', 'foreman', 'operative'].includes(appRole)
+    const archiveWhere: Prisma.ProjectWhereInput = include === 'archived' ? {} : include === 'only-archived' ? { archivedAt: { not: null } } : { archivedAt: null }
+    const where: Prisma.ProjectWhereInput = {
+      ...archiveWhere,
+      ...(assignmentScoped ? (email ? { assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } } : { id: '__no_assigned_project__' }) : {}),
+    }
 
     const [projects, total] = await Promise.all([
       prisma.project.findMany({
@@ -97,5 +105,5 @@ async function POST_impl(req: NextRequest, userId: string, role: string | null, 
   }
 }
 
-export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
+export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
 export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, role, session), { permission: 'read' })

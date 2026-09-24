@@ -1,11 +1,33 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { canManage } from '@/lib/rbac'
+import { getCurrentOrg } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
+
+function scopedProjectWhere(id: string, auth: { user?: { email?: string | null; role?: string } }): Prisma.ProjectWhereInput {
+  const appRole = auth.user?.role || ''
+  const email = auth.user?.email?.trim() || ''
+  if (!['project_manager', 'foreman', 'operative'].includes(appRole)) return { id }
+  if (!email) return { id: '__no_assigned_project__' }
+  return { id, assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } }
+}
+
+function canOperationallyEditProject(auth: { user?: { role?: string } }): boolean {
+  const orgRole = getCurrentOrg()?.role
+  if (orgRole && canManage(orgRole)) return true
+  return auth.user?.role === 'project_manager'
+}
+
+function isCompanyAdmin(): boolean {
+  const orgRole = getCurrentOrg()?.role
+  return !!orgRole && canManage(orgRole)
+}
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
@@ -17,8 +39,8 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     // ship megabytes of nested JSON to a single page, freezing the
     // worker on serialise. Sub-resource pagination is via the per-
     // type routes (/api/tasks?projectId=…, /api/documents?projectId=…).
-    const project = await prisma.project.findUnique({
-      where: { id: params.id },
+    const project = await prisma.project.findFirst({
+      where: scopedProjectWhere(params.id, auth),
       include: {
         tasks: { include: { assignee: true }, orderBy: { dueDate: 'asc' }, take: 200 },
         assignments: { include: { member: true }, take: 200 },
@@ -42,8 +64,20 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   if (auth instanceof NextResponse) return auth
   const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
   if (limited) return limited
+  if (!canOperationallyEditProject(auth)) {
+    return NextResponse.json({ error: 'Project Manager or Company Admin permission required' }, { status: 403 })
+  }
   try {
     const body = await req.json()
+    const appRole = (auth.user as { role?: string }).role || ''
+    if (appRole === 'project_manager') {
+      const assigned = await prisma.project.findFirst({ where: scopedProjectWhere(params.id, auth), select: { id: true } })
+      if (!assigned) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
+      const adminOnlyFields = ['name', 'clientName', 'budget', 'spent', 'onSiteCount']
+      if (adminOnlyFields.some(key => body[key] !== undefined)) {
+        return NextResponse.json({ error: 'Company admin permission required for project setup and financial fields' }, { status: 403 })
+      }
+    }
     if (body.name !== undefined && !String(body.name).trim()) {
       return NextResponse.json({ error: 'Project name cannot be empty' }, { status: 400 })
     }
@@ -83,6 +117,9 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
+  if (!isCompanyAdmin()) {
+    return NextResponse.json({ error: 'Company admin permission required to delete projects' }, { status: 403 })
+  }
   try {
     const project = await prisma.project.findUnique({ where: { id: params.id }, select: { name: true } })
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 404 })

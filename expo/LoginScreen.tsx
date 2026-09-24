@@ -1,59 +1,45 @@
 import React, { useState } from 'react';
 import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
 import { Colors } from './theme';
-import { login, startStream } from './api';
+import { login, startStream, getToken, type AuthUser } from './api';
+import { API_URL } from './theme';
 
-export default function LoginScreen({ onAuthed }: { onAuthed: () => void }) {
+export default function LoginScreen({ onAuthed }: { onAuthed: (user: AuthUser) => void }) {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [totp, setTotp] = useState('');
+  const [totpRequired, setTotpRequired] = useState(false);
   const [working, setWorking] = useState(false);
 
   const submit = async () => {
     if (!email || !password) { Alert.alert('Missing', 'Enter email and password.'); return; }
+    if (totpRequired && !totp.trim()) { Alert.alert('Two-factor authentication', 'Enter your 6-digit authenticator code.'); return; }
     setWorking(true);
     try {
-      const { user } = await login(email.trim(), password);
-      const tok = await (await import('./api')).getToken();
-      if (tok) startStream({ apiUrl: (await import('./theme')).API_URL, token: tok });
-      if (!['owner', 'admin', 'director', 'member'].includes(user.role)) {
-        Alert.alert('Access', 'This account cannot use the mobile app.');
-        return;
-      }
-      onAuthed();
+      const result = await login(email.trim(), password, totpRequired ? totp.trim() : undefined);
+      const tok = await getToken();
+      if (tok) startStream({ apiUrl: API_URL, token: tok });
+      onAuthed(result.user);
     } catch (e: any) {
-      Alert.alert('Sign-in failed', e?.message || 'Unknown error');
-    } finally {
-      setWorking(false);
-    }
+      if (e?.code === 'TOTP_REQUIRED' || e?.code === 'TOTP_INVALID') {
+        setTotpRequired(true);
+        Alert.alert('Two-factor authentication', e?.message || 'Enter your authenticator code.');
+      } else {
+        Alert.alert('Sign-in failed', e?.message || 'Unknown error');
+      }
+    } finally { setWorking(false); }
   };
 
   return (
     <View style={styles.wrap}>
-      <View style={styles.logo}>
-        <Text style={styles.logoMark}>CB</Text>
-      </View>
+      <View style={styles.logo}><Text style={styles.logoMark}>CB</Text></View>
       <Text style={styles.title}>CortexBuild Pro</Text>
       <Text style={styles.sub}>The construction OS that thinks with you.</Text>
-
-      <TextInput
-        style={styles.input}
-        placeholder="you@cortexbuild.app"
-        placeholderTextColor={Colors.t3}
-        autoCapitalize="none"
-        keyboardType="email-address"
-        value={email}
-        onChangeText={setEmail}
-      />
-      <TextInput
-        style={styles.input}
-        placeholder="Password"
-        placeholderTextColor={Colors.t3}
-        secureTextEntry
-        value={password}
-        onChangeText={setPassword}
-      />
+      <TextInput style={styles.input} placeholder="you@company.co.uk" placeholderTextColor={Colors.t3} autoCapitalize="none" keyboardType="email-address" value={email} onChangeText={setEmail} />
+      <TextInput style={styles.input} placeholder="Password" placeholderTextColor={Colors.t3} secureTextEntry value={password} onChangeText={setPassword} />
+      {totpRequired ? <TextInput style={styles.input} placeholder="6-digit authenticator code" placeholderTextColor={Colors.t3} keyboardType="number-pad" maxLength={6} value={totp} onChangeText={setTotp} /> : null}
       <TouchableOpacity style={styles.btn} onPress={submit} disabled={working}>
-        {working ? <ActivityIndicator color="#06101e" /> : <Text style={styles.btnText}>Sign in</Text>}
+        {working ? <ActivityIndicator color="#06101e" /> : <Text style={styles.btnText}>{totpRequired ? 'Verify & sign in' : 'Sign in'}</Text>}
       </TouchableOpacity>
     </View>
   );

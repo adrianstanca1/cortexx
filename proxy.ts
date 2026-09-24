@@ -121,6 +121,7 @@ const PUBLIC_PATHS = new Set<string>([
 ])
 const PUBLIC_API_PREFIXES = [
   '/api/auth/',
+  '/api/mobile/auth/login',
   '/api/health',
   '/api/webhooks/',  // Stripe et al; signature-verified inside the handlers
   '/api/cron/',      // CRON_SECRET bearer header verified inside the handlers
@@ -134,6 +135,28 @@ const NO_ORG_ALLOWED = new Set<string>([
   '/settings',
   '/settings/notifications',
 ])
+const MOBILE_BEARER_API_PREFIXES = [
+  '/api/mobile/auth/me',
+  '/api/dashboard',
+  '/api/inbox',
+  '/api/projects',
+  '/api/tasks',
+  '/api/team',
+  '/api/timeentries',
+  '/api/checkins',
+  '/api/site-diary',
+  '/api/snags',
+  '/api/safety',
+  '/api/uploads',
+  '/api/documents',
+  '/api/receipts',
+  '/api/events/stream',
+]
+
+function isMobileBearerApi(pathname: string): boolean {
+  return MOBILE_BEARER_API_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
+}
+
 const NO_ORG_ALLOWED_API_PREFIXES = [
   '/api/orgs',                  // create/list/switch
   '/api/invites/',              // accept an invite
@@ -208,6 +231,13 @@ export default auth(req => {
   }
 
   if (!req.auth) {
+    const bearer = req.headers.get('authorization') || ''
+    if (isMobileBearerApi(pathname) && /^Bearer\s+\S+$/i.test(bearer.trim())) {
+      // The route-level requireAuth()/withRoute verifies the signature, current
+      // user membership and organization role. Proxy only permits the request
+      // to reach that verifier on this explicit API allow-list.
+      return withSecurityHeaders(NextResponse.next(nextOpts), nonce, pathname)
+    }
     if (pathname.startsWith('/api/')) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
     }

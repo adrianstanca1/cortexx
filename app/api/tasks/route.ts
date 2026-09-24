@@ -1,4 +1,5 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db'
 import { actorName } from '@/lib/requireAuth'
@@ -12,7 +13,7 @@ export const dynamic = 'force-dynamic'
 
 const MAX_TAKE = 100
 
-async function GET_impl(req: NextRequest) {
+async function GET_impl(req: NextRequest, session: { user?: { email?: string | null; role?: string } }) {
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
@@ -20,7 +21,19 @@ async function GET_impl(req: NextRequest) {
     const take = Math.min(parseInt(searchParams.get('take') || '100') || 100, MAX_TAKE)
     const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
 
-    const where = { ...(projectId && { projectId }), ...(status && { status }) }
+    const appRole = session.user?.role || ''
+    const email = session.user?.email?.trim() || ''
+    const assignmentScoped = ['project_manager', 'foreman'].includes(appRole)
+    const operativeScoped = appRole === 'operative'
+    const personaWhere: Prisma.TaskWhereInput = assignmentScoped
+      ? (email ? { OR: [
+          { project: { assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } } },
+          { assignee: { email: { equals: email, mode: 'insensitive' } } },
+        ] } : { id: '__no_assigned_task__' })
+      : operativeScoped
+        ? (email ? { assignee: { email: { equals: email, mode: 'insensitive' } } } : { id: '__no_assigned_task__' })
+        : {}
+    const where: Prisma.TaskWhereInput = { ...(projectId && { projectId }), ...(status && { status }), ...personaWhere }
     const [tasks, total] = await Promise.all([
       prisma.task.findMany({
         where,
@@ -105,5 +118,5 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
   }
 }
 
-export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
+export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
 export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })
