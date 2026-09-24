@@ -46,7 +46,7 @@ Drawing intelligence; spatial site layer; Tender Scout and procurement intellige
 
 **Gate E — Intelligent construction OS:** governed Vera/agent action bus, tenant-isolated project knowledge/RAG with source citations, Tender Scout + Procurement Agent, drawing/vision intelligence, predictive controls and no-code automation marketplace.
 
-**Gate F — Reliability/launch:** browser/device/accessibility/performance/load gates; backup/restore and RPO/RTO drills; observability; security scans and abuse controls; canary/rollback rehearsals; native store releases after parity gates.
+**Gate F — Reliability/launch:** browser/device/accessibility/performance/load gates; backup/restore and RPO/RTO drills; observability; security scans and abuse controls; canary/rollback rehearsals; native store releases after parity gates. Production dependency audit is now clean (`npm audit --omit=dev`: 0 findings) after upgrading Playwright to 1.63.0 and compatibility-tested overrides for Prisma's vulnerable `mysql2`/`deepmerge-ts` transitives. Three moderate findings remain dev-only in the Capacitor CLI toolchain; the automated fix would downgrade/misalign Capacitor, so they remain tracked pending an upstream-compatible release.
 
 ## Definition of done
 A page is done only when reachable; loading/empty/error states exist; domain actions persist; server authorization and tenant boundaries are tested; validation is shared; material changes are audited; offline behavior is defined; required notifications fire; accessibility is checked; and E2E proves the main journey. Integrations additionally require secure auth/secrets, health state, retry/idempotency, visible failures, revoke/disconnect, audit logging and contract tests.
