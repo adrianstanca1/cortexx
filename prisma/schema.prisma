@@ -1239,24 +1239,40 @@ model Supplier {
 }
 
 model SafetyIncident {
-  id               String    @id @default(cuid())
-  projectId        String?
-  title            String
-  description      String?
-  type             String    @default("near_miss") // near_miss, first_aid, accident, dangerous_occurrence, environmental, security
-  severity         String    @default("low") // near_miss, low, medium, high, critical
-  status           String    @default("open") // open, investigating, closed
-  location         String?
-  reportedBy       String?
-  injuredParty     String?
-  photoUrl         String?
-  riddorReportable Boolean   @default(false) // Reportable to HSE under RIDDOR
-  occurredAt       DateTime  @default(now())
-  closedAt         DateTime?
-  notes            String?
-  createdAt        DateTime  @default(now())
-  updatedAt        DateTime  @updatedAt
-  project          Project?  @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  id                       String                   @id @default(cuid())
+  projectId                String?
+  title                    String
+  description              String?
+  type                     String                   @default("near_miss") // near_miss, first_aid, accident, dangerous_occurrence, environmental, security
+  severity                 String                   @default("low") // near_miss, low, medium, high, critical
+  status                   String                   @default("open") // open, investigating, closed
+  location                 String?
+  reportedBy               String?
+  injuredParty             String?
+  photoUrl                 String?
+  riddorReportable         Boolean                  @default(false) // Reportable to HSE under RIDDOR
+  riddorStatus             String                   @default("not_assessed") // not_assessed, not_reportable, reportable, submitted
+  riddorDecisionReason     String?
+  riddorReference          String?
+  riddorSubmittedAt        DateTime?
+  investigatorName         String?
+  immediateActions         String?
+  investigationSummary     String?
+  rootCause                String?
+  lessonsLearned           String?
+  investigationStartedAt   DateTime?
+  investigationCompletedAt DateTime?
+  witnesses                Json                     @default("[]")
+  evidence                 Json                     @default("[]")
+  closeoutVerifiedBy       String?
+  closeoutVerifiedAt       DateTime?
+  occurredAt               DateTime                 @default(now())
+  closedAt                 DateTime?
+  notes                    String?
+  createdAt                DateTime                 @default(now())
+  updatedAt                DateTime                 @updatedAt
+  project                  Project?                 @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  correctiveActions        SafetyCorrectiveAction[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -1264,6 +1280,28 @@ model SafetyIncident {
   @@index([projectId, status])
   @@index([status, occurredAt])
   @@index([severity])
+  @@index([organizationId])
+}
+
+model SafetyCorrectiveAction {
+  id             String         @id @default(cuid())
+  incidentId     String
+  incident       SafetyIncident @relation(fields: [incidentId], references: [id], onDelete: Cascade)
+  title          String
+  description    String?
+  ownerName      String?
+  dueDate        DateTime?
+  status         String         @default("open") // open, in_progress, complete
+  completedAt    DateTime?
+  evidenceUrl    String?
+  notes          String?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  organizationId String?
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([incidentId, status])
+  @@index([dueDate, status])
   @@index([organizationId])
 }
 
@@ -1287,66 +1325,67 @@ model PushSubscription {
 // follow-up migration. See docs/v1-completion-plan.md.
 
 model Organization {
-  id                    String                 @id @default(cuid())
-  slug                  String                 @unique
-  name                  String
-  plan                  String                 @default("trial") // trial / starter / pro / enterprise
-  subscriptionStatus    String                 @default("active") // active / past_due / cancelled
-  trialEndsAt           DateTime?
-  stripeCustomerId      String?                @unique
-  stripeSubscriptionId  String?                @unique
-  brandingLogoUrl       String?
-  brandingAccent        String?
-  createdAt             DateTime               @default(now())
-  updatedAt             DateTime               @updatedAt
-  members               UserOrganization[]
-  invites               OrganizationInvite[]
-  auditEvents           AuditEvent[]
-  projects              Project[]
-  tasks                 Task[]
-  teamMembers           TeamMember[]
-  assignments           Assignment[]
-  invoices              Invoice[]
-  timeEntries           TimeEntry[]
-  activities            Activity[]
-  comments              Comment[]
-  documents             Document[]
-  expenseReceipts       ExpenseReceipt[]
-  snags                 Snag[]
-  certifications        Certification[]
-  trainingCourses       TrainingCourse[]
-  rfis                  Rfi[]
-  announcements         Announcement[]
-  observations          Observation[]
-  variations            Variation[]
-  leads                 Lead[]
-  customers             Customer[]
-  quotes                Quote[]
-  siteCheckIns          SiteCheckIn[]
-  mileageEntries        MileageEntry[]
-  costItems             CostItem[]
-  subcontractors        Subcontractor[]
-  equipment             Equipment[]
-  materials             Material[]
-  purchaseOrders        PurchaseOrder[]
-  subInvoices           SubInvoice[]
-  drawings              Drawing[]
-  drawingRevisions      DrawingRevision[]
-  milestones            Milestone[]
-  permits               Permit[]
-  rams                  Rams[]
-  tenders               Tender[]
-  inspections           Inspection[]
-  meetings              Meeting[]
-  risks                 Risk[]
-  toolboxTalks          ToolboxTalk[]
-  maintenanceSchedules  MaintenanceSchedule[]
-  suppliers             Supplier[]
-  safetyIncidents       SafetyIncident[]
-  valuations            Valuation[]
-  valuationCertificates ValuationCertificate[]
-  valuationPayments     ValuationPayment[]
-  valuationVariations   ValuationVariation[]
+  id                      String                   @id @default(cuid())
+  slug                    String                   @unique
+  name                    String
+  plan                    String                   @default("trial") // trial / starter / pro / enterprise
+  subscriptionStatus      String                   @default("active") // active / past_due / cancelled
+  trialEndsAt             DateTime?
+  stripeCustomerId        String?                  @unique
+  stripeSubscriptionId    String?                  @unique
+  brandingLogoUrl         String?
+  brandingAccent          String?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  members                 UserOrganization[]
+  invites                 OrganizationInvite[]
+  auditEvents             AuditEvent[]
+  projects                Project[]
+  tasks                   Task[]
+  teamMembers             TeamMember[]
+  assignments             Assignment[]
+  invoices                Invoice[]
+  timeEntries             TimeEntry[]
+  activities              Activity[]
+  comments                Comment[]
+  documents               Document[]
+  expenseReceipts         ExpenseReceipt[]
+  snags                   Snag[]
+  certifications          Certification[]
+  trainingCourses         TrainingCourse[]
+  rfis                    Rfi[]
+  announcements           Announcement[]
+  observations            Observation[]
+  variations              Variation[]
+  leads                   Lead[]
+  customers               Customer[]
+  quotes                  Quote[]
+  siteCheckIns            SiteCheckIn[]
+  mileageEntries          MileageEntry[]
+  costItems               CostItem[]
+  subcontractors          Subcontractor[]
+  equipment               Equipment[]
+  materials               Material[]
+  purchaseOrders          PurchaseOrder[]
+  subInvoices             SubInvoice[]
+  drawings                Drawing[]
+  drawingRevisions        DrawingRevision[]
+  milestones              Milestone[]
+  permits                 Permit[]
+  rams                    Rams[]
+  tenders                 Tender[]
+  inspections             Inspection[]
+  meetings                Meeting[]
+  risks                   Risk[]
+  toolboxTalks            ToolboxTalk[]
+  maintenanceSchedules    MaintenanceSchedule[]
+  suppliers               Supplier[]
+  safetyIncidents         SafetyIncident[]
+  safetyCorrectiveActions SafetyCorrectiveAction[]
+  valuations              Valuation[]
+  valuationCertificates   ValuationCertificate[]
+  valuationPayments       ValuationPayment[]
+  valuationVariations     ValuationVariation[]
 
   // ── Legacy-parity v1.1 modules
   payrollRuns         PayrollRun[]
