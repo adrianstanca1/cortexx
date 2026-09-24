@@ -20,7 +20,7 @@ try { webpush = require('web-push'); } catch (e) { /* optional dep */ }
 
 const VAPID_PUB = () => getSecret('vapid_public');
 const VAPID_PRIV = () => getSecret('vapid_private');
-const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:sales@cortexbuildpro.com';
+const VAPID_SUBJECT = process.env.VAPID_SUBJECT || 'mailto:sales@cortexbuildpro.tech';
 
 // Re-apply VAPID details at request time (so a rotation via /api/admin/connections
 // takes effect without a restart). Safe to call repeatedly.

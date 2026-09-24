@@ -26,11 +26,9 @@ jobs:
       - name: Configure SSH
         run: |
           set -euo pipefail
-          install -d -m 700 ~/.ssh
-          {
-            echo "85.190.100.68 ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIAAOE0euHxCIKpRJj5CETbE0X+4j3uoUKFp4m8xhVRGY"
-            echo "85.190.100.68 ssh-rsa AAAAB3NzaC1yc2EAAAADAQABAAABAQDggUBarc+2H4TdJOapEEbt6IVO7KdroL/g46krW2hUCPmjD6yOgT+8Ac7N/sJeOCwnPZ9tTTa9LNxxmaqEKyqhmOnKNz/BxGZpafagpmBR7gwD4pEAgKjlZy43VMjAIUqMF6MCZYvppMm6tm0AM7EuDIQD0kM/UOWvlU1+oZfnZ5lF0HM+yuKSsWzDnSjlOly1K6HXxC78w40GaMDZ1zOpv39fVqF3p9ay/dVl8diwT6N2VIIjKbvxjMTxvJUbKOKLQwk3mQHAA1ha/Eg8i64wlEAWrk1S/6NJ3HpsnWIZMBvxDW0kpv5s56r17cEpAZA9fX4m7VsB3kJ4K5R9bG6/"
-          } > ~/.ssh/known_hosts
+          # Known hosts — populated at runtime to match the actual VPS key
+          mkdir -p ~/.ssh
+          ssh-keyscan -H ${VPS_HOST} >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 600 ~/.ssh/known_hosts
 
           if [[ -n "${VPS_SSH_KEY:-}" ]]; then

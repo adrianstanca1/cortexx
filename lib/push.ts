@@ -4,7 +4,7 @@
  * VAPID keys are required for push delivery. Set them as env vars:
  *   VAPID_PUBLIC_KEY=...      (also exposed to the client as NEXT_PUBLIC_VAPID_PUBLIC_KEY)
  *   VAPID_PRIVATE_KEY=...
- *   VAPID_CONTACT_EMAIL=admin@cortexbuildpro.com
+ *   VAPID_CONTACT_EMAIL=admin@cortexbuildpro.tech
  *
  * Generate keys: `npx web-push generate-vapid-keys`
  *
@@ -17,7 +17,7 @@ import { prisma } from './db'
 
 const PUBLIC = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
 const PRIVATE = process.env.VAPID_PRIVATE_KEY
-const CONTACT = process.env.VAPID_CONTACT_EMAIL || 'admin@cortexbuildpro.com'
+const CONTACT = process.env.VAPID_CONTACT_EMAIL || 'admin@cortexbuildpro.tech'
 
 let configured = false
 export function isPushConfigured(): boolean {

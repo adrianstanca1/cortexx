@@ -185,7 +185,7 @@ app.post('/api/auth/magic/request', authLimiter, wrap(async (req, res) => {
         headers: { 'content-type': 'application/json', authorization: `Bearer ${sendgridKey}` },
         body: JSON.stringify({
           personalizations: [{ to: [{ email }] }],
-          from: { email: (process.env.MAIL_FROM || 'login@cortexbuildpro.com').replace(/^.*<(.*)>$/, '$1') },
+          from: { email: (process.env.MAIL_FROM || 'login@cortexbuildpro.tech').replace(/^.*<(.*)>$/, '$1') },
           subject: 'Your CortexBuild Pro sign-in link',
           content: [{ type: 'text/html', value: `<p>Tap to sign in (expires in 15 minutes):</p><p><a href="${link}">Sign in to CortexBuild Pro</a></p><p>If you didn't request this, ignore this email.</p>` }],
         }),
@@ -199,7 +199,7 @@ app.post('/api/auth/magic/request', authLimiter, wrap(async (req, res) => {
         method: 'POST',
         headers: { 'content-type': 'application/json', authorization: `Bearer ${resendKey}` },
         body: JSON.stringify({
-          from: process.env.MAIL_FROM || 'CortexBuild Pro <login@cortexbuildpro.com>',
+          from: process.env.MAIL_FROM || 'CortexBuild Pro <login@cortexbuildpro.tech>',
           to: [email],
           subject: 'Your CortexBuild Pro sign-in link',
           html: `<p>Tap to sign in (expires in 15 minutes):</p><p><a href="${link}">Sign in to CortexBuild Pro</a></p><p>If you didn't request this, ignore this email.</p>`,

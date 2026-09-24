@@ -20,7 +20,7 @@ const { getSecret } = require('../lib/secret-store');
 const STRIPE_KEY = () => getSecret('stripe_secret_key');
 const STRIPE_WEBHOOK_SECRET = () => getSecret('stripe_webhook_secret');
 const APPLE_SHARED_SECRET = () => getSecret('apple_shared_secret');
-const APP_URL = process.env.PUBLIC_BASE_URL || 'https://cortexbuildpro.com';
+const APP_URL = process.env.PUBLIC_BASE_URL || 'https://cortexbuildpro.tech';
 
 // Verify a Stripe webhook signature against the RAW request body.
 // Header format: "t=<unix>,v1=<hex hmac>[,v1=...]". We HMAC-SHA256 `${t}.${raw}`
