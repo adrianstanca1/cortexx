@@ -4,7 +4,7 @@ import { auth } from './auth'
 import { prisma } from './db'
 import { MULTITENANT_ENFORCED } from './org'
 import { reportError } from './errors'
-import { setOrgContext } from './tenancy'
+import { beginOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
@@ -51,6 +51,7 @@ async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[]
  * the 120+ existing routes opt in to multi-tenancy without a codemod.
  */
 export async function requireAuth() {
+  const orgContext = beginOrgContext()
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -72,7 +73,7 @@ export async function requireAuth() {
         if (match) active = match
       }
     } catch { /* not in a request context */ }
-    setOrgContext({ organizationId: active.id, userId, role: active.role })
+    Object.assign(orgContext, { organizationId: active.id, userId, role: active.role })
   }
 
   return session
@@ -86,6 +87,7 @@ export async function requireAuth() {
  * when it exists.
  */
 export async function requireOrg() {
+  const orgContext = beginOrgContext()
   const session = await auth()
   if (!session?.user) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
@@ -117,7 +119,7 @@ export async function requireOrg() {
 
   // Thread the org into the async context so the Prisma tenancy extension
   // can auto-scope every query for the rest of this request.
-  setOrgContext({ organizationId: active.id, userId: userId ?? null, role: active.role })
+  Object.assign(orgContext, { organizationId: active.id, userId: userId ?? null, role: active.role })
 
   return {
     session,
