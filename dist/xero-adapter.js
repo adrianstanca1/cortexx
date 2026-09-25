@@ -1,23 +1,13 @@
 'use strict'
 
-const crypto = require('crypto')
-
 const XERO_SCOPES = Object.freeze([
   'openid',
   'profile',
   'email',
   'offline_access',
-  'accounting.invoices',
-  'accounting.payments',
-  'accounting.contacts',
-  'accounting.settings',
+  'accounting.banktransactions.read',
+  'accounting.settings.read',
 ])
-
-function formatDate(value) {
-  const d = value instanceof Date ? value : new Date(value)
-  if (Number.isNaN(d.getTime())) throw new Error('Invalid date')
-  return d.toISOString().slice(0, 10)
-}
 
 function buildAuthorizeUrl({ clientId, redirectUri, state, scopes = XERO_SCOPES }) {
   const url = new URL('https://login.xero.com/identity/connect/authorize')
@@ -32,11 +22,7 @@ function buildAuthorizeUrl({ clientId, redirectUri, state, scopes = XERO_SCOPES 
 function decodeJwtPayload(token) {
   const part = String(token || '').split('.')[1]
   if (!part) return {}
-  try {
-    return JSON.parse(Buffer.from(part, 'base64url').toString('utf8'))
-  } catch {
-    return {}
-  }
+  try { return JSON.parse(Buffer.from(part, 'base64url').toString('utf8')) } catch { return {} }
 }
 
 function selectAuthorizedConnection(connections, accessToken, existingTenantId) {
@@ -45,79 +31,62 @@ function selectAuthorizedConnection(connections, accessToken, existingTenantId) 
     const existing = rows.find(row => row && row.tenantId === existingTenantId)
     if (existing) return existing
   }
-  const payload = decodeJwtPayload(accessToken)
-  const eventId = payload.authentication_event_id
+  const eventId = decodeJwtPayload(accessToken).authentication_event_id
   if (eventId) {
     const current = rows.filter(row => row && row.authEventId === eventId)
     if (current.length === 1) return current[0]
-    if (current.length > 1) {
-      return [...current].sort((a, b) => String(b.updatedDateUtc || '').localeCompare(String(a.updatedDateUtc || '')))[0]
-    }
+    if (current.length > 1) return [...current].sort((a, b) => String(b.updatedDateUtc || '').localeCompare(String(a.updatedDateUtc || '')))[0]
   }
-  if (rows.length === 1) return rows[0]
-  return null
+  return rows.length === 1 ? rows[0] : null
 }
 
-function requiredSetting(settings, key) {
-  const value = settings && typeof settings[key] === 'string' ? settings[key].trim() : ''
-  if (!value) throw new Error(`Xero setting ${key} is required before sync`)
-  return value
+function parseXeroDate(value) {
+  if (value instanceof Date && !Number.isNaN(value.getTime())) return value
+  const raw = String(value || '').trim()
+  const legacy = raw.match(/^\/Date\((-?\d+)/)
+  if (legacy) {
+    const date = new Date(Number(legacy[1]))
+    return Number.isNaN(date.getTime()) ? null : date
+  }
+  const date = new Date(raw)
+  return Number.isNaN(date.getTime()) ? null : date
 }
 
-function salesInvoicePayload(invoice, settings = {}) {
-  const accountCode = requiredSetting(settings, 'salesAccountCode')
-  const taxType = requiredSetting(settings, 'salesTaxType')
+function xeroBankAmount(transaction) {
+  const total = Math.abs(Number(transaction?.Total || 0))
+  if (!Number.isFinite(total)) return null
+  const type = String(transaction?.Type || '').toUpperCase()
+  if (type.startsWith('SPEND')) return -total
+  if (type.startsWith('RECEIVE')) return total
+  const raw = Number(transaction?.Total)
+  return Number.isFinite(raw) ? raw : null
+}
+
+function normalizeXeroBankTransaction(transaction) {
+  if (!transaction || typeof transaction !== 'object') return null
+  const externalId = String(transaction.BankTransactionID || '').trim()
+  const occurredAt = parseXeroDate(transaction.DateString || transaction.Date)
+  const amount = xeroBankAmount(transaction)
+  if (!externalId || !occurredAt || amount == null) return null
+  const lineItems = Array.isArray(transaction.LineItems) ? transaction.LineItems : []
+  const lineDescription = lineItems.map(item => String(item?.Description || '').trim()).filter(Boolean).join(' · ')
+  const contact = String(transaction.Contact?.Name || '').trim()
+  const type = String(transaction.Type || '').trim()
+  const description = [contact, lineDescription || type].filter(Boolean).join(' · ').slice(0, 1000) || type || 'Xero bank transaction'
   return {
-    Type: 'ACCREC',
-    Contact: { Name: String(invoice.clientName || '').trim() },
-    Date: formatDate(invoice.issuedDate),
-    DueDate: formatDate(invoice.dueDate),
-    InvoiceNumber: String(invoice.number),
-    Reference: invoice.project && invoice.project.name ? `Cortexx · ${invoice.project.name}` : `Cortexx · ${invoice.id}`,
-    LineAmountTypes: 'Inclusive',
-    LineItems: [{
-      Description: String(invoice.notes || invoice.project?.name || 'Construction services').slice(0, 4000),
-      Quantity: 1,
-      UnitAmount: Number(invoice.amount),
-      AccountCode: accountCode,
-      TaxType: taxType,
-    }],
-    Status: 'DRAFT',
+    externalId,
+    occurredAt,
+    amount,
+    currency: String(transaction.CurrencyCode || 'GBP').trim().slice(0, 8) || 'GBP',
+    description,
+    reference: String(transaction.Reference || externalId).trim().slice(0, 500),
+    accountName: String(transaction.BankAccount?.Name || '').trim().slice(0, 300) || null,
   }
 }
 
-function purchaseBillPayload(invoice, settings = {}) {
-  const accountCode = requiredSetting(settings, 'purchaseAccountCode')
-  const taxType = requiredSetting(settings, 'purchaseTaxType')
-  const cisNote = Number(invoice.cisAmount || 0) > 0 ? ` · CIS held in Cortexx £${Number(invoice.cisAmount).toFixed(2)}; review before authorising in Xero` : ''
-  return {
-    Type: 'ACCPAY',
-    Contact: { Name: String(invoice.subcontractor?.name || '').trim() },
-    Date: formatDate(invoice.invoiceDate),
-    InvoiceNumber: String(invoice.number),
-    Reference: invoice.project?.name ? `Cortexx · ${invoice.project.name}` : `Cortexx · ${invoice.id}`,
-    LineAmountTypes: 'Inclusive',
-    LineItems: [{
-      Description: `${String(invoice.description || 'Subcontractor invoice').slice(0, 3500)}${cisNote}`,
-      Quantity: 1,
-      UnitAmount: Number(invoice.grossAmount),
-      AccountCode: accountCode,
-      TaxType: taxType,
-    }],
-    Status: 'DRAFT',
-  }
-}
-
-function payloadHash(payload) {
-  return crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex')
-}
-
-function xeroStatusToLocal(status, resourceType) {
-  const value = String(status || '').toUpperCase()
-  if (value === 'PAID') return resourceType === 'sub_invoice' ? 'paid' : 'paid'
-  if (resourceType === 'invoice' && value === 'AUTHORISED') return 'sent'
-  if (resourceType === 'sub_invoice' && value === 'AUTHORISED') return 'approved'
-  return null
+function bankTransactionsFromResponse(body) {
+  const rows = body && Array.isArray(body.BankTransactions) ? body.BankTransactions : []
+  return rows.map(normalizeXeroBankTransaction).filter(Boolean)
 }
 
 module.exports = {
@@ -125,8 +94,8 @@ module.exports = {
   buildAuthorizeUrl,
   decodeJwtPayload,
   selectAuthorizedConnection,
-  salesInvoicePayload,
-  purchaseBillPayload,
-  payloadHash,
-  xeroStatusToLocal,
+  parseXeroDate,
+  xeroBankAmount,
+  normalizeXeroBankTransaction,
+  bankTransactionsFromResponse,
 }

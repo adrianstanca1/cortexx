@@ -1,36 +1,35 @@
-# Xero accounting integration
+# Xero accounting adapter
 
-Cortexx keeps its project cost, valuation, bank and procurement ledgers canonical. The Xero adapter transfers accounting records without bypassing those ledgers.
+Cortexx connects each company to its own Xero organisation through OAuth 2.0. The first production slice is deliberately read-only: Xero bank transactions are imported into the canonical Cortexx bank-reconciliation ledger; Cortexx does not create or modify Xero invoices, bills, contacts or payments.
 
 ## Platform setup
 
-Create a Xero OAuth 2.0 web app and register the exact callback URL:
+Register a Xero OAuth app with this callback (replace the host for non-production environments):
 
 `https://cortexbuildpro.tech/api/integrations/xero/callback`
 
-Set these deployment secrets (never commit real values):
+Set these deployment secrets; never commit real values:
 
 - `XERO_CLIENT_ID`
 - `XERO_CLIENT_SECRET`
 - `XERO_REDIRECT_URI`
 - `XERO_TOKEN_ENCRYPTION_KEY` — generate with `openssl rand -hex 32`
 
-The connector requests granular scopes for invoices, payments, contacts and accounting settings plus `offline_access`; it does not request the deprecated broad transaction scope.
+The connector requests only identity/offline access plus granular read scopes for bank transactions and accounting settings. It does not request the deprecated broad transaction scope or any accounting write scope.
 
 ## Company setup
 
-A Company Admin opens **Settings → Xero accounting**, connects the company Xero organisation, then enters the Xero sales/purchase account codes and tax types. Subcontract bill sync is opt-in.
+A Company Admin opens **Settings → Xero accounting**, connects the company Xero organisation, tests the connection, and chooses a bounded import page limit (1–10; default 5). OAuth access and rotating refresh tokens are AES-256-GCM encrypted at rest. The OAuth callback is bound to the signed-in user who initiated the connection and rechecks their admin membership before storing the grant.
 
-## Sync behaviour
+## Bank import behaviour
 
-- Sales invoices are created/updated as Xero `ACCREC` drafts.
-- Subcontract invoices are optional Xero `ACCPAY` drafts; Cortexx CIS retention is called out for accounting review rather than silently changing the Xero bill total.
-- Sync is bounded to 25 records per action and uses persistent local↔remote links to avoid duplicate creates.
-- Pull sync only moves local lifecycle status forward when Xero becomes authorised/paid; it does not overwrite Cortexx amounts.
-- Refresh tokens are encrypted at rest with AES-256-GCM and rotated on refresh.
-- Disconnect targets only the stored Xero connection ID for that company, then clears local OAuth secrets while retaining sync history.
-- Configuration, connect/disconnect and sync actions are tenant-scoped and audited.
+- Xero `RECEIVE*` transactions import as positive amounts and `SPEND*` transactions as negative amounts.
+- Xero `BankTransactionID` is the idempotency key. Re-running imports updates source evidence without duplicating rows.
+- Existing Cortexx bank allocations, matched status and reconciliation decisions are never overwritten by a Xero refresh.
+- After the first bounded import, subsequent runs use `If-Modified-Since` with a five-minute overlap for resilient incremental updates.
+- Xero 429 responses surface `Retry-After` to the caller. A 401 triggers one refresh-token rotation/retry; failed refreshes mark the connection `reauth_required`.
+- Imported bank history stays in Cortexx if Xero is disconnected.
 
-## Operational state
+## Deliberate write boundary
 
-If platform Xero credentials are absent, the UI fails safely with **Platform setup required**. This is expected until a Xero app is registered and secrets are configured.
+Outbound invoice/bill/payment sync is not enabled in this slice. A future write adapter will introduce its mapping records only when write scopes are enabled and account-code, tax/VAT, CIS and approval semantics are explicitly mapped and contract-tested.

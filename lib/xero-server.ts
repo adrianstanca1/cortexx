@@ -20,6 +20,17 @@ export type XeroTenantConnection = {
   updatedDateUtc?: string
 }
 
+export class XeroApiError extends Error {
+  status: number
+  retryAfter: number | null
+  constructor(message: string, status: number, retryAfter: number | null = null) {
+    super(message)
+    this.name = 'XeroApiError'
+    this.status = status
+    this.retryAfter = retryAfter
+  }
+}
+
 const TOKEN_URL = 'https://identity.xero.com/connect/token'
 const CONNECTIONS_URL = 'https://api.xero.com/connections'
 const API_BASE = 'https://api.xero.com/api.xro/2.0'
@@ -50,11 +61,7 @@ export function xeroPlatformConfig(origin?: string) {
 async function fetchWithTimeout(url: string, init: RequestInit = {}, timeoutMs = 15000) {
   const controller = new AbortController()
   const timer = setTimeout(() => controller.abort(), timeoutMs)
-  try {
-    return await fetch(url, { ...init, signal: controller.signal })
-  } finally {
-    clearTimeout(timer)
-  }
+  try { return await fetch(url, { ...init, signal: controller.signal }) } finally { clearTimeout(timer) }
 }
 
 async function parseJsonOrText(response: Response) {
@@ -68,57 +75,39 @@ async function tokenRequest(params: URLSearchParams, origin?: string): Promise<X
   if (!cfg.configured) throw new Error(`Xero platform integration is not configured: ${cfg.missing.join(', ')}`)
   const response = await fetchWithTimeout(TOKEN_URL, {
     method: 'POST',
-    headers: {
-      Authorization: basicAuth(cfg.clientId, cfg.clientSecret),
-      'Content-Type': 'application/x-www-form-urlencoded',
-      Accept: 'application/json',
-    },
+    headers: { Authorization: basicAuth(cfg.clientId, cfg.clientSecret), 'Content-Type': 'application/x-www-form-urlencoded', Accept: 'application/json' },
     body: params,
   })
   const body = await parseJsonOrText(response)
-  if (!response.ok) throw new Error(`Xero token exchange failed (${response.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`)
+  if (!response.ok) throw new XeroApiError(`Xero token exchange failed (${response.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`, response.status)
   return body as XeroTokenSet
 }
 
 export function exchangeXeroCode(code: string, origin?: string) {
   const cfg = xeroPlatformConfig(origin)
-  return tokenRequest(new URLSearchParams({
-    grant_type: 'authorization_code',
-    code,
-    redirect_uri: cfg.redirectUri,
-  }), origin)
+  return tokenRequest(new URLSearchParams({ grant_type: 'authorization_code', code, redirect_uri: cfg.redirectUri }), origin)
 }
 
 export function refreshXeroTokens(refreshToken: string, origin?: string) {
-  return tokenRequest(new URLSearchParams({
-    grant_type: 'refresh_token',
-    refresh_token: refreshToken,
-  }), origin)
+  return tokenRequest(new URLSearchParams({ grant_type: 'refresh_token', refresh_token: refreshToken }), origin)
 }
 
 export async function listXeroConnections(accessToken: string): Promise<XeroTenantConnection[]> {
-  const response = await fetchWithTimeout(CONNECTIONS_URL, {
-    headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
-  })
+  const response = await fetchWithTimeout(CONNECTIONS_URL, { headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } })
   const body = await parseJsonOrText(response)
-  if (!response.ok) throw new Error(`Xero connections failed (${response.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`)
+  if (!response.ok) throw new XeroApiError(`Xero connections failed (${response.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`, response.status)
   return Array.isArray(body) ? body as XeroTenantConnection[] : []
 }
 
 export async function removeXeroConnection(accessToken: string, connectionId: string) {
-  const response = await fetchWithTimeout(`${CONNECTIONS_URL}/${encodeURIComponent(connectionId)}`, {
-    method: 'DELETE',
-    headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' },
-  })
+  const response = await fetchWithTimeout(`${CONNECTIONS_URL}/${encodeURIComponent(connectionId)}`, { method: 'DELETE', headers: { Authorization: `Bearer ${accessToken}`, Accept: 'application/json' } })
   if (!response.ok) {
     const body = await parseJsonOrText(response)
-    throw new Error(`Xero disconnect failed (${response.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`)
+    throw new XeroApiError(`Xero disconnect failed (${response.status}): ${typeof body === 'string' ? body : JSON.stringify(body)}`, response.status)
   }
 }
 
-function tokenExpiry(expiresIn?: number) {
-  return new Date(Date.now() + Math.max(60, Number(expiresIn || 1800)) * 1000)
-}
+function tokenExpiry(expiresIn?: number) { return new Date(Date.now() + Math.max(60, Number(expiresIn || 1800)) * 1000) }
 
 export function encryptedTokenData(tokens: XeroTokenSet) {
   return {
@@ -129,9 +118,9 @@ export function encryptedTokenData(tokens: XeroTokenSet) {
   }
 }
 
-export async function ensureXeroAccessToken(connection: AccountingConnection): Promise<{ token: string; connection: AccountingConnection }> {
+export async function ensureXeroAccessToken(connection: AccountingConnection, forceRefresh = false): Promise<{ token: string; connection: AccountingConnection }> {
   const validUntil = connection.accessTokenExpiresAt?.getTime() || 0
-  if (connection.accessTokenCipher && validUntil > Date.now() + 120_000) {
+  if (!forceRefresh && connection.accessTokenCipher && validUntil > Date.now() + 120_000) {
     return { token: decryptXeroToken(connection.accessTokenCipher), connection }
   }
   if (!connection.refreshTokenCipher) {
@@ -158,30 +147,38 @@ export async function ensureXeroAccessToken(connection: AccountingConnection): P
   }
 }
 
-export async function xeroApiRequest(connection: AccountingConnection, path: string, init: RequestInit = {}) {
-  if (!connection.externalTenantId) throw new Error('Xero tenant is not linked')
-  const { token, connection: current } = await ensureXeroAccessToken(connection)
-  if (!current.externalTenantId) throw new Error('Xero tenant is not linked')
+async function apiCall(token: string, tenantId: string, path: string, init: RequestInit) {
   const response = await fetchWithTimeout(`${API_BASE}${path}`, {
     ...init,
     headers: {
       Authorization: `Bearer ${token}`,
-      'xero-tenant-id': current.externalTenantId,
+      'xero-tenant-id': tenantId,
       Accept: 'application/json',
       ...(init.body ? { 'Content-Type': 'application/json' } : {}),
       ...(init.headers || {}),
     },
   })
-  const body = await parseJsonOrText(response)
-  if (!response.ok) {
-    const retry = response.headers.get('retry-after')
-    const suffix = retry ? ` retry-after=${retry}s` : ''
-    throw new Error(`Xero API ${path} failed (${response.status})${suffix}: ${typeof body === 'string' ? body : JSON.stringify(body)}`)
-  }
-  return body as Record<string, unknown>
+  return { response, body: await parseJsonOrText(response) }
 }
 
-export function safeXeroConnection(connection: AccountingConnection | null, linkCount = 0) {
+export async function xeroApiRequest(connection: AccountingConnection, path: string, init: RequestInit = {}) {
+  if (!connection.externalTenantId) throw new Error('Xero tenant is not linked')
+  let current = await ensureXeroAccessToken(connection)
+  let result = await apiCall(current.token, current.connection.externalTenantId || connection.externalTenantId, path, init)
+  if (result.response.status === 401 && current.connection.refreshTokenCipher) {
+    current = await ensureXeroAccessToken(current.connection, true)
+    result = await apiCall(current.token, current.connection.externalTenantId || connection.externalTenantId, path, init)
+  }
+  if (!result.response.ok) {
+    const retryHeader = result.response.headers.get('retry-after')
+    const retryAfter = retryHeader && Number.isFinite(Number(retryHeader)) ? Number(retryHeader) : null
+    const suffix = retryAfter != null ? ` retry-after=${retryAfter}s` : ''
+    throw new XeroApiError(`Xero API ${path} failed (${result.response.status})${suffix}: ${typeof result.body === 'string' ? result.body : JSON.stringify(result.body)}`, result.response.status, retryAfter)
+  }
+  return result.body as Record<string, unknown>
+}
+
+export function safeXeroConnection(connection: AccountingConnection | null, importedCount = 0) {
   if (!connection) return null
   return {
     id: connection.id,
@@ -192,9 +189,11 @@ export function safeXeroConnection(connection: AccountingConnection | null, link
     scopes: connection.scopes?.split(' ').filter(Boolean) || [],
     settings: connection.settings,
     lastConnectedAt: connection.lastConnectedAt,
+    lastHealthAt: connection.lastHealthAt,
+    lastHealthError: connection.lastHealthError,
     lastSyncAt: connection.lastSyncAt,
     lastSyncStatus: connection.lastSyncStatus,
     lastSyncError: connection.lastSyncError,
-    linkCount,
+    importedCount,
   }
 }

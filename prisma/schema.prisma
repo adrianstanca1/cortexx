@@ -1521,10 +1521,10 @@ model PushSubscription {
 // follow-up migration. See docs/v1-completion-plan.md.
 
 model AccountingConnection {
-  id                   String               @id @default(cuid())
+  id                   String       @id @default(cuid())
   organizationId       String
-  organization         Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  provider             String               @default("xero")
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider             String       @default("xero")
   externalConnectionId String?
   externalTenantId     String?
   externalTenantName   String?
@@ -1532,16 +1532,17 @@ model AccountingConnection {
   refreshTokenCipher   String?
   accessTokenExpiresAt DateTime?
   scopes               String?
-  status               String               @default("disconnected") // disconnected, connected, error, reauth_required
-  settings             Json                 @default("{}")
+  status               String       @default("disconnected") // disconnected, connected, error, reauth_required
+  settings             Json         @default("{}")
   lastConnectedAt      DateTime?
   disconnectedAt       DateTime?
+  lastHealthAt         DateTime?
+  lastHealthError      String?
   lastSyncAt           DateTime?
   lastSyncStatus       String?
   lastSyncError        String?
-  createdAt            DateTime             @default(now())
-  updatedAt            DateTime             @updatedAt
-  syncLinks            AccountingSyncLink[]
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
 
   @@unique([organizationId, provider])
   @@unique([provider, externalTenantId])
@@ -1562,30 +1563,6 @@ model AccountingOAuthState {
   @@index([organizationId, provider, expiresAt])
 }
 
-model AccountingSyncLink {
-  id             String               @id @default(cuid())
-  organizationId String
-  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  connectionId   String
-  connection     AccountingConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
-  provider       String               @default("xero")
-  resourceType   String // invoice, sub_invoice
-  localId        String
-  remoteId       String?
-  remoteNumber   String?
-  status         String               @default("pending") // pending, synced, error
-  payloadHash    String?
-  lastSyncedAt   DateTime?
-  lastError      String?
-  createdAt      DateTime             @default(now())
-  updatedAt      DateTime             @updatedAt
-
-  @@unique([organizationId, provider, resourceType, localId])
-  @@index([connectionId, status])
-  @@index([provider, remoteId])
-  @@index([organizationId])
-}
-
 model Organization {
   id                      String                   @id @default(cuid())
   slug                    String                   @unique
@@ -1604,7 +1581,6 @@ model Organization {
   auditEvents             AuditEvent[]
   accountingConnections   AccountingConnection[]
   accountingOAuthStates   AccountingOAuthState[]
-  accountingSyncLinks     AccountingSyncLink[]
   projects                Project[]
   tasks                   Task[]
   teamMembers             TeamMember[]

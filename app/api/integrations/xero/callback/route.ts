@@ -6,6 +6,7 @@ import { auditLog } from '@/lib/audit'
 import xeroAdapter from '@/lib/xero-adapter'
 import { encryptedTokenData, exchangeXeroCode, listXeroConnections } from '@/lib/xero-server'
 import { reportError } from '@/lib/errors'
+import { auth } from '@/lib/auth'
 
 export const dynamic = 'force-dynamic'
 const { selectAuthorizedConnection } = xeroAdapter
@@ -17,6 +18,9 @@ function redirect(req: NextRequest, params: Record<string, string>) {
 }
 
 export async function GET(req: NextRequest) {
+  const session = await auth()
+  const sessionUserId = (session?.user as { id?: string } | undefined)?.id || null
+  if (!sessionUserId) return redirect(req, { error: 'xero_session_required' })
   const state = req.nextUrl.searchParams.get('state') || ''
   const code = req.nextUrl.searchParams.get('code') || ''
   const oauthError = req.nextUrl.searchParams.get('error')
@@ -29,6 +33,16 @@ export async function GET(req: NextRequest) {
       if (!pending || pending.provider !== 'xero' || pending.expiresAt.getTime() < Date.now()) {
         if (pending) await prisma.accountingOAuthState.delete({ where: { id: pending.id } }).catch(() => undefined)
         return redirect(req, { error: 'xero_state_invalid_or_expired' })
+      }
+      if (pending.requestedById && pending.requestedById !== sessionUserId) {
+        return redirect(req, { error: 'xero_session_mismatch' })
+      }
+      const membership = await prisma.userOrganization.findUnique({
+        where: { userId_organizationId: { userId: sessionUserId, organizationId: pending.organizationId } },
+        select: { role: true },
+      })
+      if (!membership || !['owner', 'admin'].includes(membership.role)) {
+        return redirect(req, { error: 'xero_company_admin_required' })
       }
       await prisma.accountingOAuthState.delete({ where: { id: pending.id } })
       const tokens = await exchangeXeroCode(code, req.nextUrl.origin)
