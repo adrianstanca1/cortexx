@@ -66,25 +66,25 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id                      String                   @id @default(cuid())
+  id                      String                      @id @default(cuid())
   name                    String
   address                 String
   postcode                String
-  status                  String                   @default("active") // active, snagging, quoting, complete
-  progress                Int                      @default(0)
-  clientName              String                   @default("")
-  shareToken              String?                  @unique
+  status                  String                      @default("active") // active, snagging, quoting, complete
+  progress                Int                         @default(0)
+  clientName              String                      @default("")
+  shareToken              String?                     @unique
   shareTokenExpiresAt     DateTime?
-  budget                  Float                    @default(0)
-  spent                   Float                    @default(0)
-  lat                     Float                    @default(51.5)
-  lng                     Float                    @default(-0.1)
+  budget                  Float                       @default(0)
+  spent                   Float                       @default(0)
+  lat                     Float                       @default(51.5)
+  lng                     Float                       @default(-0.1)
   startDate               DateTime?
   endDate                 DateTime?
-  onSiteCount             Int                      @default(0)
+  onSiteCount             Int                         @default(0)
   archivedAt              DateTime?
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
   tasks                   Task[]
   assignments             Assignment[]
   invoices                Invoice[]
@@ -107,6 +107,8 @@ model Project {
   milestones              Milestone[]
   programmeActivities     ProgrammeActivity[]
   programmeDependencies   ProgrammeDependency[]
+  programmeBaselines      ProgrammeBaselineRevision[]
+  programmeDelayEvents    ProgrammeDelayEvent[]
   permits                 Permit[]
   rams                    Rams[]
   tenders                 Tender[]
@@ -1204,6 +1206,7 @@ model ProgrammeActivity {
   sortOrder           Int                   @default(0)
   predecessors        ProgrammeDependency[] @relation("ProgrammeSuccessor")
   successors          ProgrammeDependency[] @relation("ProgrammePredecessor")
+  delayEvents         ProgrammeDelayEvent[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   organizationId      String?
@@ -1233,6 +1236,56 @@ model ProgrammeDependency {
   @@unique([predecessorId, successorId, type])
   @@index([projectId])
   @@index([successorId])
+  @@index([organizationId])
+}
+
+model ProgrammeBaselineRevision {
+  id              String        @id @default(cuid())
+  projectId       String
+  project         Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revision        Int
+  label           String?
+  reason          String
+  snapshot        Json
+  status          String        @default("active") // active, superseded
+  effectiveAt     DateTime      @default(now())
+  createdByUserId String?
+  createdAt       DateTime      @default(now())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([projectId, revision])
+  @@index([projectId, status])
+  @@index([effectiveAt])
+  @@index([organizationId])
+}
+
+model ProgrammeDelayEvent {
+  id              String             @id @default(cuid())
+  projectId       String
+  project         Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activityId      String?
+  activity        ProgrammeActivity? @relation(fields: [activityId], references: [id], onDelete: SetNull)
+  title           String
+  category        String             @default("other") // weather, client, design, supply, labour, access, other
+  cause           String?
+  impact          String?
+  startDate       DateTime
+  endDate         DateTime?
+  delayDays       Int                @default(0)
+  status          String             @default("open") // open, accepted, rejected, closed
+  decisionNotes   String?
+  decidedAt       DateTime?
+  decidedByUserId String?
+  closedAt        DateTime?
+  createdByUserId String?
+  createdAt       DateTime           @default(now())
+  updatedAt       DateTime           @updatedAt
+  organizationId  String?
+  organization    Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, status, startDate])
+  @@index([activityId, status])
   @@index([organizationId])
 }
 
@@ -1621,18 +1674,18 @@ model AccountingOAuthState {
 }
 
 model Organization {
-  id                      String                   @id @default(cuid())
-  slug                    String                   @unique
+  id                      String                      @id @default(cuid())
+  slug                    String                      @unique
   name                    String
-  plan                    String                   @default("trial") // trial / starter / pro / enterprise
-  subscriptionStatus      String                   @default("active") // active / past_due / cancelled
+  plan                    String                      @default("trial") // trial / starter / pro / enterprise
+  subscriptionStatus      String                      @default("active") // active / past_due / cancelled
   trialEndsAt             DateTime?
-  stripeCustomerId        String?                  @unique
-  stripeSubscriptionId    String?                  @unique
+  stripeCustomerId        String?                     @unique
+  stripeSubscriptionId    String?                     @unique
   brandingLogoUrl         String?
   brandingAccent          String?
-  createdAt               DateTime                 @default(now())
-  updatedAt               DateTime                 @updatedAt
+  createdAt               DateTime                    @default(now())
+  updatedAt               DateTime                    @updatedAt
   members                 UserOrganization[]
   invites                 OrganizationInvite[]
   auditEvents             AuditEvent[]
@@ -1677,6 +1730,8 @@ model Organization {
   milestones              Milestone[]
   programmeActivities     ProgrammeActivity[]
   programmeDependencies   ProgrammeDependency[]
+  programmeBaselines      ProgrammeBaselineRevision[]
+  programmeDelayEvents    ProgrammeDelayEvent[]
   permits                 Permit[]
   rams                    Rams[]
   tenders                 Tender[]

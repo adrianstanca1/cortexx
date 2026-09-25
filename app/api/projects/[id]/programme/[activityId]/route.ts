@@ -33,6 +33,10 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (!existing) return NextResponse.json({ error: 'Programme activity not found' }, { status: 404 })
     const body = await req.json()
     const planner = canPlanProgramme(auth)
+    if (planner && (body.baselineStart !== undefined || body.baselineEnd !== undefined)) {
+      const baselineLocked = await prisma.programmeBaselineRevision.count({ where: { projectId: id } }).then(count => count > 0)
+      if (baselineLocked) return NextResponse.json({ error: 'Baseline dates are revision-controlled. Update planned dates, then create a new programme baseline revision.' }, { status: 409 })
+    }
     if (!planner) {
       const forbidden = Object.keys(body).some(key => !FOREMAN_FIELDS.has(key))
       if (forbidden) return NextResponse.json({ error: 'Foreman can update field progress only; programme dates and dependencies require Project Manager or Company Admin' }, { status: 403 })

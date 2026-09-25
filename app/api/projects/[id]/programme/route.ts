@@ -29,7 +29,7 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
       select: { id: true, name: true, startDate: true, endDate: true, progress: true },
     })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
-    const [activities, dependencies, team] = await Promise.all([
+    const [activities, dependencies, team, baselines, delays] = await Promise.all([
       prisma.programmeActivity.findMany({
         where: { projectId: id },
         include: { responsibleMember: { select: { id: true, name: true, email: true, role: true } } },
@@ -38,10 +38,22 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
       }),
       prisma.programmeDependency.findMany({ where: { projectId: id }, orderBy: { createdAt: 'asc' }, take: 3000 }),
       prisma.assignment.findMany({ where: { projectId: id }, include: { member: { select: { id: true, name: true, email: true, role: true } } }, take: 500 }),
+      prisma.programmeBaselineRevision.findMany({
+        where: { projectId: id },
+        select: { id: true, revision: true, label: true, reason: true, status: true, effectiveAt: true, createdAt: true, createdByUserId: true },
+        orderBy: { revision: 'desc' },
+        take: 100,
+      }),
+      prisma.programmeDelayEvent.findMany({
+        where: { projectId: id },
+        include: { activity: { select: { id: true, code: true, title: true } } },
+        orderBy: [{ startDate: 'desc' }, { createdAt: 'desc' }],
+        take: 300,
+      }),
     ])
     const lookaheadDays = Math.max(1, Math.min(84, Number(req.nextUrl.searchParams.get('days')) || 21))
     const summary = programmeSummary(activities, dependencies, { lookaheadDays })
-    return NextResponse.json({ project, activities, dependencies, team: team.map(a => a.member), summary, permissions: { plan: canPlanProgramme(auth), progress: auth.user?.role === 'foreman' || canPlanProgramme(auth) } })
+    return NextResponse.json({ project, activities, dependencies, team: team.map(a => a.member), summary, baselines, delays, baselineLocked: baselines.length > 0, latestBaseline: baselines[0] || null, permissions: { plan: canPlanProgramme(auth), progress: auth.user?.role === 'foreman' || canPlanProgramme(auth) } })
   } catch (error) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to load project programme' }, { status: 500 })
@@ -59,6 +71,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
   try {
     const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
+    const baselineLocked = await prisma.programmeBaselineRevision.count({ where: { projectId: id } }).then(count => count > 0)
     const body = await req.json()
     const title = String(body.title || '').trim().slice(0, 220)
     if (!title) return NextResponse.json({ error: 'Activity title is required' }, { status: 400 })
@@ -66,8 +79,8 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     const plannedEnd = parseDate(body.plannedEnd)
     if (!plannedStart || !plannedEnd) return NextResponse.json({ error: 'Valid planned start and end dates are required' }, { status: 400 })
     if (plannedEnd < plannedStart) return NextResponse.json({ error: 'Planned end must be on or after planned start' }, { status: 400 })
-    const baselineStart = parseDate(body.baselineStart) || plannedStart
-    const baselineEnd = parseDate(body.baselineEnd) || plannedEnd
+    const baselineStart = baselineLocked ? plannedStart : (parseDate(body.baselineStart) || plannedStart)
+    const baselineEnd = baselineLocked ? plannedEnd : (parseDate(body.baselineEnd) || plannedEnd)
     if (baselineEnd < baselineStart) return NextResponse.json({ error: 'Baseline end must be on or after baseline start' }, { status: 400 })
     const progress = Math.max(0, Math.min(100, Number(body.progress) || 0))
     const status = STATUSES.has(String(body.status)) ? String(body.status) : progress >= 100 ? 'complete' : progress > 0 ? 'in_progress' : 'not_started'
