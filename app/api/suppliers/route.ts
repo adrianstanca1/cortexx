@@ -1,7 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
+import { canWrite, canManage } from '@/lib/rbac'
+import { auditLog, requestMeta } from '@/lib/audit'
 import { enforceRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
@@ -9,8 +11,9 @@ export const dynamic = 'force-dynamic'
 const ALLOWED_CATEGORY = new Set(['materials', 'plant', 'services', 'other'])
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!auth.orgId) return NextResponse.json({ error: 'Active company required' }, { status: 403 })
   try {
     const { searchParams } = new URL(req.url)
     const category = searchParams.get('category')
@@ -18,6 +21,7 @@ export async function GET(req: NextRequest) {
     const search = searchParams.get('q')?.trim()
 
     const where = {
+      organizationId: auth.orgId,
       ...(category && ALLOWED_CATEGORY.has(category) && { category }),
       ...(!includeArchived && { archivedAt: null }),
       ...(search && {
@@ -32,7 +36,7 @@ export async function GET(req: NextRequest) {
       orderBy: [{ name: 'asc' }],
       take: 300,
     })
-    return NextResponse.json({ suppliers, total: suppliers.length })
+    return NextResponse.json({ suppliers, total: suppliers.length, permissions: { canEdit: canWrite(auth.role || ''), canDelete: canManage(auth.role || ''), canViewPerformance: canManage(auth.role || '') } }, { headers: { 'Cache-Control': 'private, no-store' } })
   } catch (error) {
     console.error('[suppliers] GET failed:', error)
     return NextResponse.json({ error: 'Failed to fetch suppliers' }, { status: 500 })
@@ -40,9 +44,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!auth.orgId) return NextResponse.json({ error: 'Active company required' }, { status: 403 })
+  if (!canWrite(auth.role || '')) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
+  const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -52,6 +58,7 @@ export async function POST(req: NextRequest) {
 
     const supplier = await prisma.supplier.create({
       data: {
+        organizationId: auth.orgId,
         name: name.slice(0, 200),
         category,
         contactName: typeof body.contactName === 'string' && body.contactName ? body.contactName.slice(0, 100) : null,
@@ -64,6 +71,7 @@ export async function POST(req: NextRequest) {
         notes: typeof body.notes === 'string' && body.notes ? body.notes.slice(0, 2000) : null,
       },
     })
+    auditLog({ action: 'supplier.create', resourceType: 'Supplier', resourceId: supplier.id, ...requestMeta(req) })
     return NextResponse.json(supplier, { status: 201 })
   } catch (error) {
     console.error('[suppliers] POST failed:', error)

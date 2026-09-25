@@ -1,3 +1,5 @@
+> Current planning: see [Canonical Product Audit & Roadmap](docs/CANONICAL_PRODUCT_AUDIT_2026-09-24.md) and [current status](STATUS.md). The June/July entries below are a historical inventory, not the current release status.
+
 # Cortexx — Roadmap
 
 Date: 6 Jun 2026 · Maintainer: Adrian Stanca
