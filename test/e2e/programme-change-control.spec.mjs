@@ -29,9 +29,10 @@ async function project(page) {
   return p
 }
 
-test('Company Admin commits immutable baseline and closes accepted delay', async ({ page }) => {
-  // Cold CI dev servers compile these new API routes lazily; the mobile shard
-  // is single-worker, so this one governance journey needs a larger budget.
+test('Company Admin commits immutable baseline and closes accepted delay', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Mutation governance is viewport-independent and covered on desktop.')
+  // Cold CI dev servers compile these new API routes lazily, so this complete
+  // governance journey has a larger budget while retaining strict assertions.
   test.setTimeout(120_000)
   await signIn(page, users.admin)
   const p = await project(page)
@@ -60,14 +61,16 @@ test('Company Admin commits immutable baseline and closes accepted delay', async
   await expect(page.getByText(/Baseline Rev/)).toBeVisible()
 })
 
-test('Project Manager can create a governed delay on assigned project', async ({ page }) => {
+test('Project Manager can create a governed delay on assigned project', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Mutation governance is viewport-independent and covered on desktop.')
   await signIn(page, users.pm)
   const p = await project(page)
   const delay = await api(page, `/api/projects/${p.id}/programme/delays`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: `PM delay ${Date.now()}`, category: 'design', startDate: '2026-10-16', delayDays: 1 }) })
   expect(delay.status).toBe(201)
 })
 
-test('Foreman can read change control but cannot govern baselines or delays', async ({ page }) => {
+test('Foreman can read change control but cannot govern baselines or delays', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Mutation governance is viewport-independent and covered on desktop.')
   await signIn(page, users.foreman)
   const p = await project(page)
   const list = await api(page, `/api/projects/${p.id}/programme`)
@@ -80,7 +83,8 @@ test('Foreman can read change control but cannot govern baselines or delays', as
   expect(delayDenied.status).toBe(403)
 })
 
-test('Operative can read change-control evidence but cannot mutate it', async ({ page }) => {
+test('Operative can read change-control evidence but cannot mutate it', async ({ page, isMobile }) => {
+  test.skip(isMobile, 'Mutation governance is viewport-independent and covered on desktop.')
   await signIn(page, users.operative)
   const p = await project(page)
   const list = await api(page, `/api/projects/${p.id}/programme`)
@@ -88,4 +92,13 @@ test('Operative can read change-control evidence but cannot mutate it', async ({
   expect(list.body?.permissions?.plan).toBe(false)
   const delayDenied = await api(page, `/api/projects/${p.id}/programme/delays`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ title: 'Operative forbidden delay', startDate: '2026-10-17' }) })
   expect(delayDenied.status).toBe(403)
+})
+
+test('mobile programme change-control page renders', async ({ page, isMobile }) => {
+  test.skip(!isMobile, 'Mobile-specific rendering smoke check.')
+  await signIn(page, users.admin)
+  const p = await project(page)
+  await page.goto(`/projects/${p.id}/programme`)
+  await expect(page.getByText('CHANGE CONTROL')).toBeVisible()
+  await expect(page.getByText(/Baseline Rev|No baseline committed/i)).toBeVisible()
 })
