@@ -6,6 +6,7 @@ import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
 import programme from '@/lib/programme'
+import { lockProgrammeProject } from '@/lib/programme-change-control-server'
 
 export const dynamic = 'force-dynamic'
 const TYPES = new Set(['FS', 'SS', 'FF', 'SF'])
@@ -27,17 +28,20 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     if (!predecessorId || !successorId || predecessorId === successorId) return NextResponse.json({ error: 'Choose two different programme activities' }, { status: 400 })
     const type = TYPES.has(String(body.type)) ? String(body.type) : 'FS'
     const lagDays = Math.max(-365, Math.min(365, Number(body.lagDays) || 0))
-    const activities = await prisma.programmeActivity.findMany({ where: { projectId: id }, select: { id: true, plannedStart: true, plannedEnd: true, status: true, progress: true } })
-    const ids = new Set(activities.map(a => a.id))
-    if (!ids.has(predecessorId) || !ids.has(successorId)) return NextResponse.json({ error: 'Both activities must belong to this project' }, { status: 400 })
-    const dependencies = await prisma.programmeDependency.findMany({ where: { projectId: id } })
-    if (wouldCreateCycle(activities, dependencies, { predecessorId, successorId, type, lagDays })) {
-      return NextResponse.json({ error: 'Dependency would create a programme cycle' }, { status: 409 })
-    }
-    const dependency = await prisma.programmeDependency.create({ data: { projectId: id, predecessorId, successorId, type, lagDays } })
+    const dependency = await prisma.$transaction(async tx => {
+      await lockProgrammeProject(tx, id)
+      const activities = await tx.programmeActivity.findMany({ where: { projectId: id }, select: { id: true, plannedStart: true, plannedEnd: true, status: true, progress: true } })
+      const ids = new Set(activities.map(a => a.id))
+      if (!ids.has(predecessorId) || !ids.has(successorId)) throw new Error('DEPENDENCY_ACTIVITY_MISMATCH')
+      const dependencies = await tx.programmeDependency.findMany({ where: { projectId: id } })
+      if (wouldCreateCycle(activities, dependencies, { predecessorId, successorId, type, lagDays })) throw new Error('PROGRAMME_CYCLE')
+      return tx.programmeDependency.create({ data: { projectId: id, predecessorId, successorId, type, lagDays } })
+    })
     auditLog({ action: 'programme.dependency.create', resourceType: 'ProgrammeDependency', resourceId: dependency.id, metadata: { projectId: id, predecessorId, successorId, type, lagDays }, ...requestMeta(req) })
     return NextResponse.json(dependency, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'DEPENDENCY_ACTIVITY_MISMATCH') return NextResponse.json({ error: 'Both activities must belong to this project' }, { status: 400 })
+    if (error instanceof Error && error.message === 'PROGRAMME_CYCLE') return NextResponse.json({ error: 'Dependency would create a programme cycle' }, { status: 409 })
     if ((error as { code?: string })?.code === 'P2002') return NextResponse.json({ error: 'Dependency already exists' }, { status: 409 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to create programme dependency' }, { status: 500 })

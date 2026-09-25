@@ -16,6 +16,8 @@ type Activity = {
   notes?: string | null; sortOrder: number
 }
 type Dependency = { id: string; predecessorId: string; successorId: string; type: string; lagDays: number }
+type Baseline = { id: string; revision: number; label?: string | null; reason: string; status: string; effectiveAt: string; createdAt: string; createdByUserId?: string | null }
+type DelayEvent = { id: string; activityId?: string | null; activity?: { id: string; code?: string | null; title: string } | null; title: string; category: string; cause?: string | null; impact?: string | null; startDate: string; endDate?: string | null; delayDays: number; status: string; decisionNotes?: string | null; decidedAt?: string | null; closedAt?: string | null }
 type CpmRow = { id: string; durationDays: number; totalFloatDays: number; critical: boolean }
 type ProgrammeSummary = {
   progressPct: number; totalActivities: number; complete: number; overdue: number; blocked: number; lookaheadCount: number
@@ -26,6 +28,7 @@ type ProgrammeSummary = {
 type Payload = {
   project: { id: string; name: string; startDate?: string | null; endDate?: string | null; progress: number }
   activities: Activity[]; dependencies: Dependency[]; team: Member[]; summary: ProgrammeSummary
+  baselines: Baseline[]; delays: DelayEvent[]; baselineLocked: boolean; latestBaseline?: Baseline | null
   permissions: { plan: boolean; progress: boolean }
 }
 
@@ -52,10 +55,16 @@ export default function ProgrammePage() {
   const [saving, setSaving] = useState(false)
   const [showDependency, setShowDependency] = useState(false)
   const [depForm, setDepForm] = useState({ predecessorId: '', successorId: '', type: 'FS', lagDays: '0' })
+  const [showBaseline, setShowBaseline] = useState(false)
+  const [baselineForm, setBaselineForm] = useState({ label: '', reason: '', effectiveAt: '' })
+  const [showDelay, setShowDelay] = useState(false)
+  const [delayForm, setDelayForm] = useState({ title: '', category: 'other', activityId: '', startDate: '', endDate: '', delayDays: '0', cause: '', impact: '' })
   const [message, setMessage] = useState<string | null>(null)
 
   useModalEffects(showActivity, () => setShowActivity(false))
   useModalEffects(showDependency, () => setShowDependency(false))
+  useModalEffects(showBaseline, () => setShowBaseline(false))
+  useModalEffects(showDelay, () => setShowDelay(false))
 
   const load = useCallback(async () => {
     if (!id) return
@@ -96,7 +105,9 @@ export default function ProgrammePage() {
     setSaving(true); setMessage(null)
     try {
       const url = editing ? `/api/projects/${id}/programme/${editing.id}` : `/api/projects/${id}/programme`
-      const res = await fetch(url, { method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...form, responsibleMemberId: form.responsibleMemberId || null }) })
+      const payload = { ...form, responsibleMemberId: form.responsibleMemberId || null } as Record<string, unknown>
+      if (data?.baselineLocked) { delete payload.baselineStart; delete payload.baselineEnd }
+      const res = await fetch(url, { method: editing ? 'PUT' : 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) })
       const body = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(body.error || 'Failed to save activity')
       setShowActivity(false); setEditing(null); setMessage(editing ? 'Activity updated' : 'Activity added'); await load()
@@ -129,6 +140,45 @@ export default function ProgrammePage() {
     const body = await res.json().catch(() => ({}))
     if (!res.ok) { setMessage(body.error || 'Failed to remove dependency'); return }
     await load()
+  }
+  const openBaseline = () => {
+    const nextRevision = (data?.latestBaseline?.revision || 0) + 1
+    setBaselineForm({ label: `Revision ${nextRevision}`, reason: '', effectiveAt: new Date().toISOString().slice(0, 10) })
+    setShowBaseline(true)
+  }
+  const createBaseline = async () => {
+    if (!baselineForm.reason.trim()) return
+    if (!window.confirm('Create a new immutable baseline from the current planned dates? Existing active baseline history will be preserved.')) return
+    const res = await fetch(`/api/projects/${id}/programme/baselines`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(baselineForm) })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) { setMessage(body.error || 'Failed to create baseline'); return }
+    setShowBaseline(false); setMessage(`Baseline Rev ${body.revision} created`); await load()
+  }
+  const openDelay = () => {
+    setDelayForm({ title: '', category: 'other', activityId: '', startDate: new Date().toISOString().slice(0, 10), endDate: '', delayDays: '0', cause: '', impact: '' })
+    setShowDelay(true)
+  }
+  const createDelay = async () => {
+    if (!delayForm.title.trim() || !delayForm.startDate) return
+    const res = await fetch(`/api/projects/${id}/programme/delays`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ ...delayForm, activityId: delayForm.activityId || null, endDate: delayForm.endDate || null, delayDays: Number(delayForm.delayDays) || 0 }) })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) { setMessage(body.error || 'Failed to create delay event'); return }
+    setShowDelay(false); setMessage('Delay event recorded'); await load()
+  }
+  const transitionDelay = async (delay: DelayEvent, status: string) => {
+    const decisionNotes = window.prompt(status === 'closed' ? 'Closeout note (optional)' : `${status === 'accepted' ? 'Acceptance' : 'Rejection'} note (optional)`, delay.decisionNotes || '')
+    if (decisionNotes === null) return
+    const res = await fetch(`/api/projects/${id}/programme/delays/${delay.id}`, { method: 'PUT', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status, decisionNotes }) })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) { setMessage(body.error || 'Failed to update delay event'); return }
+    setMessage(`Delay marked ${status}`); await load()
+  }
+  const removeDelay = async (delay: DelayEvent) => {
+    if (!window.confirm(`Delete open delay event “${delay.title}”?`)) return
+    const res = await fetch(`/api/projects/${id}/programme/delays/${delay.id}`, { method: 'DELETE' })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok) { setMessage(body.error || 'Failed to delete delay event'); return }
+    setMessage('Delay event deleted'); await load()
   }
 
   if (loading) return <Shell><div style={centerStyle}>Loading programme…</div></Shell>
@@ -169,6 +219,16 @@ export default function ProgrammePage() {
           {data.summary.criticalPath.hasCycle && <p style={warningStyle}>Dependency cycle detected. Remove a circular link before using critical-path dates.</p>}
           {data.summary.dependencyViolations.map(v => <p key={v.dependencyId} style={warningStyle}>{byId.get(v.predecessorId)?.title || 'Predecessor'} → {byId.get(v.successorId)?.title || 'Successor'} ({v.type}) is {v.shortfallDays}d inside its required constraint.</p>)}
         </section>}
+
+        <section style={panelStyle}>
+          <div style={sectionHeader}>
+            <div><div style={eyebrow}>CHANGE CONTROL</div><div style={{ color: '#eef3fa', fontWeight: 700, marginTop: 2 }}>{data.latestBaseline ? `Baseline Rev ${data.latestBaseline.revision}` : 'No committed baseline'} · {data.delays.filter(d => d.status === 'open').length} open delays</div></div>
+            {data.permissions.plan && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}><button onClick={openBaseline} disabled={data.activities.length === 0} style={secondaryButton}>+ Baseline</button><button onClick={openDelay} style={secondaryButton}>+ Delay</button></div>}
+          </div>
+          {data.latestBaseline && <div style={{ padding: '10px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, flexWrap: 'wrap' }}><b style={{ color: '#eef3fa', fontSize: 12 }}>Rev {data.latestBaseline.revision}{data.latestBaseline.label ? ` · ${data.latestBaseline.label}` : ''}</b><span style={{ color: '#52749a', fontSize: 10 }}>{prettyDate(data.latestBaseline.effectiveAt)}</span></div><div style={{ color: '#8ea8c5', fontSize: 11, marginTop: 4 }}>{data.latestBaseline.reason}</div></div>}
+          {data.baselines.length > 1 && <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', padding: '9px 0', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>{data.baselines.slice(1, 5).map(b => <span key={b.id} style={{ ...codeBadge, color: b.status === 'active' ? '#10b981' : '#8ea8c5' }}>Rev {b.revision} · {b.status}</span>)}</div>}
+          {data.delays.length === 0 ? <Empty text="No programme delay events recorded." /> : <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 8 }}>{data.delays.slice(0, 12).map(delay => <div key={delay.id} style={{ background: '#0d1b2d', border: '1px solid rgba(255,255,255,0.06)', borderRadius: 10, padding: 10 }}><div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'flex-start' }}><div style={{ minWidth: 0 }}><div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}><b style={{ color: '#eef3fa', fontSize: 12 }}>{delay.title}</b><span style={codeBadge}>{delay.category}</span><span style={{ ...codeBadge, color: delay.status === 'open' ? '#f59e0b' : delay.status === 'accepted' ? '#10b981' : delay.status === 'rejected' ? '#ef4444' : '#8ea8c5' }}>{delay.status}</span></div><div style={{ color: '#52749a', fontSize: 10, marginTop: 4 }}>{prettyDate(delay.startDate)}{delay.endDate ? ` → ${prettyDate(delay.endDate)}` : ''} · {delay.delayDays}d{delay.activity?.title ? ` · ${delay.activity.title}` : ''}</div>{delay.impact && <div style={{ color: '#8ea8c5', fontSize: 11, marginTop: 4 }}>{delay.impact}</div>}{delay.decisionNotes && <div style={{ color: '#8ea8c5', fontSize: 10, marginTop: 4 }}>Decision: {delay.decisionNotes}</div>}</div>{data.permissions.plan && <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', justifyContent: 'flex-end' }}>{delay.status === 'open' && <><button onClick={() => transitionDelay(delay, 'accepted')} style={miniButton}>Accept</button><button onClick={() => transitionDelay(delay, 'rejected')} style={{ ...miniButton, color: '#ef4444' }}>Reject</button><button onClick={() => removeDelay(delay)} aria-label={`Delete ${delay.title}`} style={iconButton}><IcTrash size={13} color="#ef4444" /></button></>}{delay.status === 'accepted' && <button onClick={() => transitionDelay(delay, 'closed')} style={miniButton}>Close</button>}</div>}</div></div>)}</div>}
+        </section>
 
         <section style={panelStyle}>
           <div style={sectionHeader}>
@@ -214,7 +274,7 @@ export default function ProgrammePage() {
         <Field label="Title *"><input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} style={inputStyle} /></Field>
         <div style={twoCol}><Field label="Code"><input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="A120" style={inputStyle} /></Field><Field label="Responsible"><select value={form.responsibleMemberId} onChange={e => setForm(p => ({ ...p, responsibleMemberId: e.target.value }))} style={inputStyle}><option value="">Unassigned</option>{data.team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}</select></Field></div>
         <div style={twoCol}><Field label="Planned start *"><input type="date" value={form.plannedStart} onChange={e => setForm(p => ({ ...p, plannedStart: e.target.value }))} style={inputStyle} /></Field><Field label="Planned end *"><input type="date" value={form.plannedEnd} onChange={e => setForm(p => ({ ...p, plannedEnd: e.target.value }))} style={inputStyle} /></Field></div>
-        <div style={twoCol}><Field label="Baseline start"><input type="date" value={form.baselineStart} onChange={e => setForm(p => ({ ...p, baselineStart: e.target.value }))} style={inputStyle} /></Field><Field label="Baseline end"><input type="date" value={form.baselineEnd} onChange={e => setForm(p => ({ ...p, baselineEnd: e.target.value }))} style={inputStyle} /></Field></div>
+        {data.baselineLocked ? <div style={{ padding: '9px 10px', borderRadius: 9, background: 'rgba(245,158,11,0.08)', color: '#f59e0b', fontSize: 11, lineHeight: 1.5 }}>Baseline Rev {data.latestBaseline?.revision} is locked. Change planned dates here, then create a new baseline revision from Change control.</div> : <div style={twoCol}><Field label="Baseline start"><input type="date" value={form.baselineStart} onChange={e => setForm(p => ({ ...p, baselineStart: e.target.value }))} style={inputStyle} /></Field><Field label="Baseline end"><input type="date" value={form.baselineEnd} onChange={e => setForm(p => ({ ...p, baselineEnd: e.target.value }))} style={inputStyle} /></Field></div>}
         <Field label="Location"><input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="Level 03 / East elevation" style={inputStyle} /></Field>
         <Field label="Description"><textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' }} /></Field>
         <Field label="Notes"><textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} /></Field>
@@ -226,6 +286,24 @@ export default function ProgrammePage() {
         <Field label="Successor"><select value={depForm.successorId} onChange={e => setDepForm(p => ({ ...p, successorId: e.target.value }))} style={inputStyle}><option value="">Select activity</option>{data.activities.map(a => <option key={a.id} value={a.id}>{a.code ? `${a.code} · ` : ''}{a.title}</option>)}</select></Field>
         <div style={twoCol}><Field label="Type"><select value={depForm.type} onChange={e => setDepForm(p => ({ ...p, type: e.target.value }))} style={inputStyle}><option value="FS">Finish → Start</option><option value="SS">Start → Start</option><option value="FF">Finish → Finish</option><option value="SF">Start → Finish</option></select></Field><Field label="Lag days"><input type="number" min={-365} max={365} value={depForm.lagDays} onChange={e => setDepForm(p => ({ ...p, lagDays: e.target.value }))} style={inputStyle} /></Field></div>
         <button onClick={createDependency} disabled={!depForm.predecessorId || !depForm.successorId} style={{ ...primaryButton, width: '100%', justifyContent: 'center', padding: '12px 14px' }}>Add dependency</button>
+      </Modal>}
+
+      {showBaseline && <Modal onClose={() => setShowBaseline(false)} title="Create programme baseline">
+        <div style={{ padding: '9px 10px', borderRadius: 9, background: 'rgba(245,158,11,0.08)', color: '#f59e0b', fontSize: 11, lineHeight: 1.5 }}>Current planned dates and dependencies will be captured as an immutable revision. Activity baseline dates will then adopt the current planned dates.</div>
+        <Field label="Label"><input value={baselineForm.label} onChange={e => setBaselineForm(p => ({ ...p, label: e.target.value }))} placeholder="Client agreed Rev B" style={inputStyle} /></Field>
+        <Field label="Reason *"><textarea value={baselineForm.reason} onChange={e => setBaselineForm(p => ({ ...p, reason: e.target.value }))} rows={3} placeholder="Approved programme revision following design release" style={{ ...inputStyle, resize: 'vertical' }} /></Field>
+        <Field label="Effective date"><input type="date" value={baselineForm.effectiveAt} onChange={e => setBaselineForm(p => ({ ...p, effectiveAt: e.target.value }))} style={inputStyle} /></Field>
+        <button onClick={createBaseline} disabled={!baselineForm.reason.trim()} style={{ ...primaryButton, width: '100%', justifyContent: 'center', padding: '12px 14px' }}>Commit baseline revision</button>
+      </Modal>}
+
+      {showDelay && <Modal onClose={() => setShowDelay(false)} title="Record programme delay">
+        <Field label="Title *"><input autoFocus value={delayForm.title} onChange={e => setDelayForm(p => ({ ...p, title: e.target.value }))} placeholder="Cladding delivery delayed" style={inputStyle} /></Field>
+        <div style={twoCol}><Field label="Category"><select value={delayForm.category} onChange={e => setDelayForm(p => ({ ...p, category: e.target.value }))} style={inputStyle}><option value="weather">Weather</option><option value="client">Client</option><option value="design">Design</option><option value="supply">Supply</option><option value="labour">Labour</option><option value="access">Access</option><option value="other">Other</option></select></Field><Field label="Activity"><select value={delayForm.activityId} onChange={e => setDelayForm(p => ({ ...p, activityId: e.target.value }))} style={inputStyle}><option value="">Whole project</option>{data.activities.map(a => <option key={a.id} value={a.id}>{a.code ? `${a.code} · ` : ''}{a.title}</option>)}</select></Field></div>
+        <div style={twoCol}><Field label="Start *"><input type="date" value={delayForm.startDate} onChange={e => setDelayForm(p => ({ ...p, startDate: e.target.value }))} style={inputStyle} /></Field><Field label="End"><input type="date" value={delayForm.endDate} onChange={e => setDelayForm(p => ({ ...p, endDate: e.target.value }))} style={inputStyle} /></Field></div>
+        <Field label="Delay days"><input type="number" min={0} max={3650} value={delayForm.delayDays} onChange={e => setDelayForm(p => ({ ...p, delayDays: e.target.value }))} style={inputStyle} /></Field>
+        <Field label="Cause"><textarea value={delayForm.cause} onChange={e => setDelayForm(p => ({ ...p, cause: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} /></Field>
+        <Field label="Impact"><textarea value={delayForm.impact} onChange={e => setDelayForm(p => ({ ...p, impact: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} /></Field>
+        <button onClick={createDelay} disabled={!delayForm.title.trim() || !delayForm.startDate} style={{ ...primaryButton, width: '100%', justifyContent: 'center', padding: '12px 14px' }}>Record delay event</button>
       </Modal>}
     </Shell>
   )
@@ -244,6 +322,7 @@ const sectionHeader: React.CSSProperties = { display: 'flex', justifyContent: 's
 const eyebrow: React.CSSProperties = { color: '#52749a', fontSize: 10, fontWeight: 800, letterSpacing: 0.7, fontFamily: 'var(--font-system)' }
 const primaryButton: React.CSSProperties = { display: 'flex', alignItems: 'center', gap: 5, border: 0, borderRadius: 9, background: '#f59e0b', color: '#fff', fontSize: 12, fontWeight: 750, padding: '8px 11px', cursor: 'pointer', fontFamily: 'var(--font-system)' }
 const secondaryButton: React.CSSProperties = { border: '1px solid rgba(245,158,11,0.22)', borderRadius: 9, background: 'rgba(245,158,11,0.08)', color: '#f59e0b', fontSize: 11, fontWeight: 700, padding: '7px 9px', cursor: 'pointer', fontFamily: 'var(--font-system)' }
+const miniButton: React.CSSProperties = { border: '1px solid rgba(255,255,255,0.08)', borderRadius: 7, background: 'rgba(255,255,255,0.04)', color: '#10b981', fontSize: 10, fontWeight: 700, padding: '5px 7px', cursor: 'pointer', fontFamily: 'var(--font-system)' }
 const iconButton: React.CSSProperties = { width: 29, height: 29, borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#06101e', color: '#eef3fa', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 9, padding: '10px 11px', fontFamily: 'var(--font-system)', fontSize: 13 }
 const selectStyle: React.CSSProperties = { ...inputStyle, width: 'auto', padding: '7px 8px', fontSize: 11 }

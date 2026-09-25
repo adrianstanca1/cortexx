@@ -155,10 +155,14 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - name: desktop-chromium
+          - name: desktop-chromium-1
             project: desktop-chromium
-            workers: 4
-            shard: ''
+            workers: 2
+            shard: '1/2'
+          - name: desktop-chromium-2
+            project: desktop-chromium
+            workers: 2
+            shard: '2/2'
           - name: mobile-chromium-1
             project: mobile-chromium
             workers: 1
