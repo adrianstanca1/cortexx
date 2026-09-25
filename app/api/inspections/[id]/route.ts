@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import controls from '@/lib/field-controls'
 
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_TYPE = new Set(['general', 'safety', 'quality', 'scaffold', 'electrical'])
 const ALLOWED_STATUS = new Set(['draft', 'in_progress', 'passed', 'failed'])
+const RELEASE_STATUS = new Set(['pending', 'released', 'rejected', 'not_required'])
 const ITEM_RESULT = new Set(['pass', 'fail', 'na'])
 
 interface ChecklistItem { id: string; label: string; result?: 'pass' | 'fail' | 'na'; note?: string }
@@ -52,19 +54,41 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       if (d === undefined && body.scheduledAt) return NextResponse.json({ error: 'Invalid scheduledAt' }, { status: 400 })
       data.scheduledAt = d ?? null
     }
+    if (typeof body.location === 'string') data.location = controls.cleanText(body.location, 160) || null
+    if (body.evidence && typeof body.evidence === 'object') data.evidence = controls.sanitizeEvidence(body.evidence) as unknown as object
+
+    let finalReleaseStatus = existing.releaseStatus
+    if (typeof body.releaseStatus === 'string' && RELEASE_STATUS.has(body.releaseStatus)) {
+      if (existing.pointType === 'inspection' && body.releaseStatus !== 'not_required') {
+        return NextResponse.json({ error: 'Standard inspections do not use hold-point release' }, { status: 409 })
+      }
+      finalReleaseStatus = body.releaseStatus
+      data.releaseStatus = body.releaseStatus
+      if (body.releaseStatus === 'released') {
+        if (existing.pointType === 'witness') {
+          data.witnessedBy = controls.cleanText(body.releasedBy, 120) || actorName(auth)
+          data.witnessedAt = existing.witnessedAt || new Date()
+        } else {
+          data.releasedBy = controls.cleanText(body.releasedBy, 120) || actorName(auth)
+          data.releasedAt = existing.releasedAt || new Date()
+        }
+      } else if (body.releaseStatus === 'rejected') {
+        data.releasedBy = null
+        data.releasedAt = null
+        data.witnessedBy = null
+        data.witnessedAt = null
+      }
+    }
+
     if (typeof body.status === 'string' && ALLOWED_STATUS.has(body.status)) {
+      if (body.status === 'passed' && !controls.canCompletePoint(existing.pointType, finalReleaseStatus)) {
+        return NextResponse.json({ error: `${existing.pointType} point must be released before it can pass` }, { status: 409 })
+      }
       data.status = body.status
-      // Auto-derive overallResult + completedAt on terminal status.
-      // Map status -> result enum ('pass'/'fail') to match the documented
-      // 4-char enum on the column.
       if (body.status === 'passed' || body.status === 'failed') {
         data.overallResult = body.status === 'passed' ? 'pass' : 'fail'
         data.completedAt = existing.completedAt || new Date()
       }
-      // Only wipe stamps when actually transitioning FROM a terminal state.
-      // Re-asserting the existing non-terminal status (e.g. the page sends
-      // status='in_progress' on every checklist tick) must not silently demote
-      // a passed/failed inspection if the client's snapshot is stale.
       if (
         (body.status === 'draft' || body.status === 'in_progress') &&
         (existing.status === 'passed' || existing.status === 'failed')
@@ -77,8 +101,25 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     const inspection = await prisma.inspection.update({
       where: { id: params.id },
       data,
-      include: { project: { select: { id: true, name: true } } },
+      include: {
+        project: { select: { id: true, name: true } },
+        drawing: { select: { id: true, number: true, title: true } },
+        drawingRevision: { select: { id: true, revision: true, fileUrl: true } },
+      },
     })
+
+    if (data.releaseStatus && data.releaseStatus !== existing.releaseStatus) {
+      prisma.activity.create({
+        data: {
+          projectId: inspection.projectId,
+          actorName: actorName(auth),
+          actorType: 'human',
+          action: `${inspection.pointType} point ${inspection.title}: ${existing.releaseStatus} → ${String(data.releaseStatus)}`,
+          detail: inspection.drawing ? `Drawing ${inspection.drawing.number}${inspection.drawingRevision ? ` · Rev ${inspection.drawingRevision.revision}` : ''}` : undefined,
+          iconType: data.releaseStatus === 'released' ? 'check' : 'alert',
+        },
+      }).catch(() => {})
+    }
 
     if (data.status && data.status !== existing.status) {
       prisma.activity.create({

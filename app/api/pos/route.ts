@@ -71,7 +71,7 @@ export async function GET(req: NextRequest) {
           requisition: { select: { id: true, number: true, status: true } },
           supplierQuote: { select: { id: true, reference: true, rfq: { select: { id: true, reference: true } } } },
           goodsReceipts: {
-            select: { id: true, deliveredAt: true, deliveryNote: true, netReceived: true, lineItems: true },
+            select: { id: true, deliveredAt: true, deliveryNote: true, receivedBy: true, netReceived: true, lineItems: true, notes: true, evidence: true },
             orderBy: { deliveredAt: 'desc' },
           },
         },
