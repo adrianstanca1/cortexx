@@ -1,49 +1,43 @@
 #!/bin/bash
-# Xcode Cloud — runs automatically AFTER the repo is cloned and BEFORE the
-# first build. Without this:
-#   1. `ios/App/Pods/` is never installed (it is gitignored), so App.xcodeproj
-#      cannot find its base configuration
-#      `Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig` and the
-#      build fails with: "Unable to open base configuration reference file …".
-#   2. `ios/www/` (the web bundle Capacitor wraps) is gitignored and only
-#      produced by `npm run build:web`; if it is missing/stale, archive fails
-#      because the native target has no synced web assets.
+# Xcode Cloud post-clone bootstrap.
 #
-# Fix: install JS deps -> build web assets -> `cap sync ios` (generates the
-# CocoaPods workspace + copies www/ into the native project) -> `pod install`.
+# Xcode Cloud executes this script from ci_scripts/, not necessarily from the
+# repository root. Use Apple's documented CI_PRIMARY_REPOSITORY_PATH and fall
+# back to the script's parent directory for local/manual verification.
+#
+# The native wrapper has an intentionally independent Capacitor 6 toolchain in
+# ios/. Root Cortexx uses Capacitor 8 for the PWA/native shell. Never run the
+# root Capacitor CLI against ios/App: sync from ios/ so its package lock,
+# capacitor.config.ts and Podfile all resolve the same Capacitor generation.
 set -euo pipefail
 
-WS="${CI_WORKSPACE:-$(pwd)}"
-echo "→ [ci_post_clone] workspace: $WS"
+SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
+REPO_ROOT="${CI_PRIMARY_REPOSITORY_PATH:-$(cd "$SCRIPT_DIR/.." && pwd)}"
+IOS_DIR="$REPO_ROOT/ios"
+APP_DIR="$IOS_DIR/App"
 
-cd "$WS"
+echo "→ [ci_post_clone] repository: $REPO_ROOT"
+echo "→ [ci_post_clone] iOS project: $IOS_DIR"
 
-# 1) JS dependencies — required so the Capacitor Podfile can find
-#    ../node_modules/@capacitor/ios etc.
-if [ -f package-lock.json ]; then
-  npm ci --no-audit --no-fund || npm install --no-audit --no-fund
-else
-  npm install --no-audit --no-fund
+if [ ! -f "$IOS_DIR/package.json" ] || [ ! -f "$IOS_DIR/package-lock.json" ]; then
+  echo "::error::iOS package manifest/lockfile not found under $IOS_DIR"
+  exit 1
 fi
 
-# 2) Build the web bundle (Cortexx.html -> ios/www/index.html) so the
-#    native project has assets to wrap. Runs from the ios/ folder.
-if [ -f ios/package.json ]; then
-  ( cd ios && npm install --no-audit --no-fund )
-  ( cd ios && npm run build:web )
-fi
+# Install exactly the iOS-local JS dependency graph, build the offline web
+# payload, then sync with that same local Capacitor CLI/configuration.
+cd "$IOS_DIR"
+npm ci --no-audit --no-fund
+npm run build:web
+npx cap sync ios
 
-# 3) Sync Capacitor (copies www/ into ios/App and updates native config).
-if [ -x node_modules/.bin/cap ]; then
-  npx cap sync ios
-fi
-
-# 4) CocoaPods — generates Pods-App.*.xcconfig + Pods.xcworkspace.
-cd "$WS/ios/App"
+# Capacitor's Podfile resolves ../node_modules from ios/App, i.e. ios/node_modules.
+cd "$APP_DIR"
 if ! command -v pod >/dev/null 2>&1; then
   echo "  pod not found — installing via gem"
   gem install cocoapods --no-document
 fi
+
 if [ -f Gemfile ]; then
   bundle install --local || bundle install
   bundle exec pod install --no-repo-update
@@ -51,4 +45,4 @@ else
   pod install --no-repo-update
 fi
 
-echo "→ [ci_post_clone] CocoaPods installed — ios/App ready to build"
+echo "→ [ci_post_clone] iOS dependencies and Capacitor assets are ready"

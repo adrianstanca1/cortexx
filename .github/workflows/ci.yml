@@ -148,21 +148,33 @@ jobs:
         run: npm run test:integration
 
   browser-e2e-project:
-    name: browser-e2e-${{ matrix.project }}
+    name: browser-e2e-${{ matrix.name }}
     runs-on: ubuntu-latest
     timeout-minutes: 20
     strategy:
       fail-fast: false
       matrix:
         include:
-          - project: desktop-chromium
+          - name: desktop-chromium
+            project: desktop-chromium
             workers: 4
-          - project: mobile-chromium
+            shard: ''
+          - name: mobile-chromium-1
+            project: mobile-chromium
             workers: 1
-          - project: pwa-desktop-chromium
+            shard: '1/2'
+          - name: mobile-chromium-2
+            project: mobile-chromium
             workers: 1
-          - project: pwa-mobile-chromium
+            shard: '2/2'
+          - name: pwa-desktop-chromium
+            project: pwa-desktop-chromium
             workers: 1
+            shard: ''
+          - name: pwa-mobile-chromium
+            project: pwa-mobile-chromium
+            workers: 1
+            shard: ''
     services:
       postgres:
         image: postgres:16-alpine
@@ -204,16 +216,24 @@ jobs:
         run: npx tsx scripts/seed-e2e.ts
       - name: Install Playwright and Chromium
         run: npm run e2e:install
-      - name: Run browser journeys — ${{ matrix.project }}
+      - name: Run browser journeys — ${{ matrix.name }}
         shell: bash
+        env:
+          PLAYWRIGHT_PROJECT: ${{ matrix.project }}
+          PLAYWRIGHT_WORKERS: ${{ matrix.workers }}
+          PLAYWRIGHT_SHARD: ${{ matrix.shard }}
         run: |
           set -o pipefail
-          npx playwright test --project=${{ matrix.project }} --workers=${{ matrix.workers }} 2>&1 | tee playwright-e2e.log
+          args=(--project="$PLAYWRIGHT_PROJECT" --workers="$PLAYWRIGHT_WORKERS")
+          if [ -n "$PLAYWRIGHT_SHARD" ]; then
+            args+=(--shard="$PLAYWRIGHT_SHARD")
+          fi
+          npx playwright test "${args[@]}" 2>&1 | tee playwright-e2e.log
       - name: Upload Playwright report
         if: always()
         uses: actions/upload-artifact@v7
         with:
-          name: playwright-report-${{ matrix.project }}
+          name: playwright-report-${{ matrix.name }}
           path: |
             playwright-report/
             test-results/playwright/
