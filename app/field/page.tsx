@@ -32,6 +32,23 @@ type DashboardPayload = {
   stats?: { hoursThisWeek?: number; activeSites?: number }
 }
 
+type LiveCheckin = {
+  id: string
+  checkedInAt: string
+  member?: { id?: string; name?: string; role?: string } | null
+}
+
+type FieldEvent = {
+  id: string
+  actorName: string
+  type: string
+  title: string
+  detail?: string | null
+  location?: string | null
+  severity: string
+  occurredAt: string
+}
+
 type FieldPulse = {
   activePermits: number
   expiringPermits: number
@@ -57,6 +74,11 @@ type Action = {
 }
 
 const SF = 'var(--font-system)'
+const EVENT_TYPES = ['progress', 'delay', 'delivery', 'instruction', 'access', 'labour', 'quality', 'safety', 'weather', 'other'] as const
+const EVENT_LABEL: Record<string, string> = {
+  progress: 'Progress', delay: 'Delay', delivery: 'Delivery', instruction: 'Instruction',
+  access: 'Access', labour: 'Labour', quality: 'Quality', safety: 'Safety', weather: 'Weather', other: 'Other',
+}
 
 const START_SHIFT: Action[] = [
   { label: 'Check in / out', sub: 'GPS-backed attendance', href: '/check-in?new=1', color: '#10b981', Icon: IcPin },
@@ -70,6 +92,7 @@ const WORK: Action[] = [
   { label: 'Tasks', sub: 'Today, assigned and urgent work', href: '/tasks', color: '#06b6d4', Icon: IcCheck },
   { label: 'Drawings', sub: 'Latest revisions on site', href: '/drawings', color: '#8b5cf6', Icon: IcLayers },
   { label: 'Voice RFI', sub: 'Raise an RFI hands-free', href: '/capture?type=voice', color: '#06b6d4', Icon: IcMic },
+  { label: 'Deliveries', sub: 'Expected and received materials', href: '/field/deliveries', color: '#f59e0b', Icon: IcTruck },
   { label: 'Materials', sub: 'Materials and site requirements', href: '/materials', color: '#f59e0b', Icon: IcTruck },
   { label: 'Requisitions', sub: 'Request what the site needs', href: '/requisitions', color: '#8b5cf6', Icon: IcDoc },
 ]
@@ -98,6 +121,10 @@ export default function FieldOperationsPage() {
   const [taskBusy, setTaskBusy] = useState<string | null>(null)
   const [pulse, setPulse] = useState<FieldPulse>(EMPTY_PULSE)
   const [note, setNote] = useState('')
+  const [eventType, setEventType] = useState<(typeof EVENT_TYPES)[number]>('progress')
+  const [eventSeverity, setEventSeverity] = useState('info')
+  const [fieldEvents, setFieldEvents] = useState<FieldEvent[]>([])
+  const [crew, setCrew] = useState<LiveCheckin[]>([])
   const [noteSaving, setNoteSaving] = useState(false)
   const [noteStatus, setNoteStatus] = useState('')
 
@@ -164,6 +191,36 @@ export default function FieldOperationsPage() {
     return () => { cancelled = true }
   }, [projectId, online])
 
+  useEffect(() => {
+    if (!projectId || !online) {
+      setCrew([])
+      return
+    }
+    let cancelled = false
+    fetch('/api/live-status', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { byProject: [] })
+      .then(payload => {
+        if (cancelled) return
+        const group = (payload?.byProject || []).find((entry: { project?: { id?: string }; checkins?: LiveCheckin[] }) => entry.project?.id === projectId)
+        setCrew(group?.checkins || [])
+      })
+      .catch(() => { if (!cancelled) setCrew([]) })
+    return () => { cancelled = true }
+  }, [projectId, online])
+
+  useEffect(() => {
+    if (!projectId || !online) {
+      setFieldEvents([])
+      return
+    }
+    let cancelled = false
+    fetch(`/api/field-events?projectId=${encodeURIComponent(projectId)}&take=6`, { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : { events: [] })
+      .then(payload => { if (!cancelled) setFieldEvents(payload?.events || []) })
+      .catch(() => { if (!cancelled) setFieldEvents([]) })
+    return () => { cancelled = true }
+  }, [projectId, online])
+
   const selected = data?.projects?.find(p => p.id === projectId) || null
   const tasks = useMemo(
     () => (data?.tasks || []).filter(t => !projectId || t.projectId === projectId || t.project?.id === projectId).slice(0, 6),
@@ -171,7 +228,7 @@ export default function FieldOperationsPage() {
   )
   const openTasks = tasks.filter(t => t.status !== 'done')
   const urgentTasks = openTasks.filter(t => ['high', 'critical'].includes(String(t.priority || '').toLowerCase()))
-  const peopleOnSite = selected?.assignments?.length || 0
+  const peopleOnSite = crew.length
 
   const saveSiteNote = async () => {
     const detail = note.trim()
@@ -179,17 +236,25 @@ export default function FieldOperationsPage() {
     setNoteSaving(true)
     setNoteStatus('')
     try {
-      const res = await fetch('/api/activity', {
+      const res = await fetch('/api/field-events', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ projectId, action: 'logged a site note', iconType: 'doc', detail }),
+        body: JSON.stringify({
+          projectId,
+          type: eventType,
+          severity: eventSeverity,
+          title: detail.slice(0, 120),
+          detail,
+        }),
       })
-      if (!res.ok) throw new Error('Failed to save note')
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload?.error || 'Failed to save event')
       setNote('')
-      setNoteStatus('Added to the site record')
+      setNoteStatus(`${EVENT_LABEL[eventType]} logged`)
+      if (payload?.event) setFieldEvents(current => [payload.event, ...current].slice(0, 6))
       await load()
     } catch {
-      setNoteStatus('Could not save note')
+      setNoteStatus('Could not save field event')
     } finally {
       setNoteSaving(false)
     }
@@ -283,12 +348,52 @@ export default function FieldOperationsPage() {
         </section>
 
         <section style={{ marginBottom: 18 }}>
-          <SectionTitle title="Quick site note" />
+          <SectionTitle title="Log field event" />
           <div style={{ borderRadius: 14, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 12 }}>
+            <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 8 }}>
+              {EVENT_TYPES.map(type => (
+                <button
+                  type="button"
+                  key={type}
+                  onClick={() => setEventType(type)}
+                  style={{
+                    flexShrink: 0, borderRadius: 999, padding: '7px 10px',
+                    border: `1px solid ${eventType === type ? '#f59e0b' : 'rgba(255,255,255,.09)'}`,
+                    background: eventType === type ? 'rgba(245,158,11,.16)' : '#0b1a30',
+                    color: eventType === type ? '#fbbf24' : '#8ea8c5',
+                    fontFamily: SF, fontSize: 10.5, fontWeight: 800, cursor: 'pointer',
+                  }}
+                >
+                  {EVENT_LABEL[type]}
+                </button>
+              ))}
+            </div>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 7, marginBottom: 9 }}>
+              {[
+                ['info', 'Info', '#10b981'],
+                ['attention', 'Attention', '#f59e0b'],
+                ['urgent', 'Urgent', '#ef4444'],
+              ].map(([value, label, color]) => (
+                <button
+                  type="button"
+                  key={value}
+                  onClick={() => setEventSeverity(value)}
+                  style={{
+                    borderRadius: 9, padding: '8px 6px',
+                    border: `1px solid ${eventSeverity === value ? color : 'rgba(255,255,255,.08)'}`,
+                    background: eventSeverity === value ? `${color}18` : '#0b1a30',
+                    color: eventSeverity === value ? color : '#8ea8c5',
+                    fontFamily: SF, fontSize: 10.5, fontWeight: 800, cursor: 'pointer',
+                  }}
+                >
+                  {label}
+                </button>
+              ))}
+            </div>
             <textarea
               value={note}
               onChange={e => { setNote(e.target.value); setNoteStatus('') }}
-              placeholder="Delay, delivery, progress, access issue, instruction…"
+              placeholder="What happened? Add enough detail for the site record…"
               maxLength={500}
               rows={3}
               style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: '1px solid rgba(255,255,255,.09)', borderRadius: 11, background: '#0b1a30', color: '#eef3fa', padding: 11, fontFamily: SF, fontSize: 13, lineHeight: 1.45 }}
@@ -303,10 +408,28 @@ export default function FieldOperationsPage() {
                 disabled={!note.trim() || !projectId || noteSaving || !online}
                 style={{ border: 'none', borderRadius: 10, padding: '9px 12px', background: '#f59e0b', color: '#06101e', fontFamily: SF, fontSize: 11, fontWeight: 900, opacity: (!note.trim() || !projectId || noteSaving || !online) ? .45 : 1, cursor: 'pointer' }}
               >
-                {noteSaving ? 'Saving…' : 'Add to site record'}
+                {noteSaving ? 'Saving…' : 'Log event'}
               </button>
             </div>
           </div>
+          {fieldEvents.length > 0 && (
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 7, marginTop: 9 }}>
+              {fieldEvents.map(event => {
+                const tone = event.severity === 'urgent' ? '#ef4444' : event.severity === 'attention' ? '#f59e0b' : '#10b981'
+                return (
+                  <div key={event.id} style={{ borderRadius: 11, border: '1px solid rgba(255,255,255,.07)', background: '#0d1c31', padding: '10px 11px', borderLeft: `3px solid ${tone}` }}>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
+                      <span style={{ color: '#eef3fa', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>{event.title}</span>
+                      <span style={{ color: tone, fontFamily: SF, fontSize: 9.5, fontWeight: 900, textTransform: 'uppercase', flexShrink: 0 }}>{EVENT_LABEL[event.type] || event.type}</span>
+                    </div>
+                    <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 4 }}>
+                      {event.actorName} · {new Date(event.occurredAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
+                    </div>
+                  </div>
+                )
+              })}
+            </div>
+          )}
         </section>
 
         <ActionSection title="3 · QA & safety" actions={QA_SAFETY} />
@@ -319,6 +442,16 @@ export default function FieldOperationsPage() {
             <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 12, marginTop: 5 }}>
               {(data?.activities || []).length} recent activity events · {(data?.stats?.hoursThisWeek || 0).toFixed(1)}h logged this week
             </div>
+            {crew.length > 0 && (
+              <div style={{ marginTop: 9, display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                {crew.slice(0, 8).map(checkin => (
+                  <span key={checkin.id} style={{ padding: '6px 8px', borderRadius: 999, background: 'rgba(6,182,212,.10)', border: '1px solid rgba(6,182,212,.22)', color: '#67e8f9', fontFamily: SF, fontSize: 10.5, fontWeight: 800 }}>
+                    {checkin.member?.name || 'Team member'}
+                  </span>
+                ))}
+                {crew.length > 8 && <span style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, alignSelf: 'center' }}>+{crew.length - 8} more</span>}
+              </div>
+            )}
             <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
               <QuickLink href="/site-diary" label="Daily record" />
               <QuickLink href="/photos" label="Evidence" />
