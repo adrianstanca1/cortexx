@@ -408,7 +408,8 @@ var CortexCore = (() => {
             safety: "incidents",
             team: "team",
             documents: "documents",
-            receipts: "receipts"
+            receipts: "receipts",
+            "equipment-checks": "checks"
           };
           const key = responseKey[name] || name;
           const rows = Array.isArray(d) ? d : d.rows || d[key] || [];

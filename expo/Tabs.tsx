@@ -14,6 +14,8 @@ import DiaryScreen from './DiaryScreen';
 import NotificationsScreen from './NotificationsScreen';
 import OverviewScreen from './OverviewScreen';
 import CheckInScreen from './CheckInScreen';
+import FieldReadinessScreen from './FieldReadinessScreen';
+import DeliveriesScreen from './DeliveriesScreen';
 import SafetyScreen from './SafetyScreen';
 import FieldHubScreen from './FieldHubScreen';
 import MoreScreen from './MoreScreen';
@@ -28,7 +30,7 @@ const MAIN_TABS: Array<{ key: AppRoute; label: string }> = [
   { key: 'field', label: 'Field' },
   { key: 'more', label: 'More' },
 ];
-const FIELD_ROUTES = new Set<AppRoute>(['field', 'checkin', 'timesheets', 'diary', 'snags', 'safety']);
+const FIELD_ROUTES = new Set<AppRoute>(['field', 'checkin', 'readiness', 'deliveries', 'timesheets', 'diary', 'snags', 'safety']);
 const MORE_ROUTES = new Set<AppRoute>(['more', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile']);
 
 function rootFor(route: AppRoute): AppRoute {
@@ -89,6 +91,10 @@ export default function Tabs({ user, onLogout }: { user: AuthUser; onLogout: () 
     <FieldHubScreen user={user} onNavigate={setTab} />
   ) : tab === 'checkin' ? (
     <CheckInScreen onLogout={onLogout} />
+  ) : tab === 'readiness' ? (
+    <FieldReadinessScreen onLogout={onLogout} />
+  ) : tab === 'deliveries' ? (
+    <DeliveriesScreen onLogout={onLogout} />
   ) : tab === 'timesheets' ? (
     <TimesheetsScreen onLogout={onLogout} />
   ) : tab === 'diary' ? (

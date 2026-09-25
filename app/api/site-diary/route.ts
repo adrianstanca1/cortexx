@@ -79,7 +79,7 @@ async function GET_impl(req: NextRequest) {
         activityEvents: activities.length,
       },
       timeEntries,
-      activities,
+      activities: activities.map(presentActivity),
       snagsRaised,
       snagsClosed,
       photos,
@@ -93,6 +93,23 @@ async function GET_impl(req: NextRequest) {
 
 function sanitize(s: string, maxLen = 500): string {
   return String(s).replace(/[\x00-\x1F\x7F]/g, '').trim().slice(0, maxLen)
+}
+
+function presentActivity<T extends { action: string; detail: string | null }>(activity: T): T {
+  if (!activity.action.startsWith('field event:') || !activity.detail) return activity
+  try {
+    const parsed = JSON.parse(activity.detail) as { type?: string; title?: string; detail?: string; location?: string; severity?: string }
+    const type = sanitize(parsed.type || 'field event', 40).replaceAll('_', ' ')
+    const title = sanitize(parsed.title || activity.action, 220)
+    const detail = [
+      parsed.detail ? sanitize(parsed.detail, 1000) : '',
+      parsed.location ? `Location: ${sanitize(parsed.location, 160)}` : '',
+      parsed.severity && parsed.severity !== 'info' ? `Priority: ${sanitize(parsed.severity, 40)}` : '',
+    ].filter(Boolean).join(' · ')
+    return { ...activity, action: `${type}: ${title}`, detail: detail || null }
+  } catch {
+    return activity
+  }
 }
 
 /**

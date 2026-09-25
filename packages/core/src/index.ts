@@ -116,7 +116,7 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
       try {
         const d = await apiGet(`/api/${name}?limit=${limit}&take=${limit}`);
         const responseKey: Record<string, string> = {
-          timeentries: 'entries', checkins: 'checkins', safety: 'incidents', team: 'team', documents: 'documents', receipts: 'receipts',
+          timeentries: 'entries', checkins: 'checkins', safety: 'incidents', team: 'team', documents: 'documents', receipts: 'receipts', 'equipment-checks': 'checks',
         };
         const key = responseKey[name] || name;
         const rows = Array.isArray(d) ? d : d.rows || d[key] || [];

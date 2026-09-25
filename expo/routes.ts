@@ -5,6 +5,8 @@ export type AppRoute =
   | 'field'
   | 'more'
   | 'checkin'
+  | 'readiness'
+  | 'deliveries'
   | 'timesheets'
   | 'diary'
   | 'snags'
