@@ -32,6 +32,22 @@ type DashboardPayload = {
   stats?: { hoursThisWeek?: number; activeSites?: number }
 }
 
+type FieldPulse = {
+  activePermits: number
+  expiringPermits: number
+  openInspections: number
+  failedInspections: number
+  openSnags: number
+  overdueChecks: number
+  openRfis: number
+  overdueRfis: number
+}
+
+const EMPTY_PULSE: FieldPulse = {
+  activePermits: 0, expiringPermits: 0, openInspections: 0, failedInspections: 0,
+  openSnags: 0, overdueChecks: 0, openRfis: 0, overdueRfis: 0,
+}
+
 type Action = {
   label: string
   sub: string
@@ -80,6 +96,10 @@ export default function FieldOperationsPage() {
   const [online, setOnline] = useState(true)
   const [loading, setLoading] = useState(true)
   const [taskBusy, setTaskBusy] = useState<string | null>(null)
+  const [pulse, setPulse] = useState<FieldPulse>(EMPTY_PULSE)
+  const [note, setNote] = useState('')
+  const [noteSaving, setNoteSaving] = useState(false)
+  const [noteStatus, setNoteStatus] = useState('')
 
   const load = useCallback(async () => {
     setLoading(true)
@@ -107,6 +127,43 @@ export default function FieldOperationsPage() {
     }
   }, [])
 
+  useEffect(() => {
+    if (!projectId || !online) {
+      setPulse(EMPTY_PULSE)
+      return
+    }
+    let cancelled = false
+    const read = async <T,>(url: string): Promise<T> => {
+      const response = await fetch(url, { cache: 'no-store' })
+      return (response.ok ? await response.json() : {}) as T
+    }
+    Promise.all([
+      read<{ activeCount?: number; expiringSoon?: number }>(`/api/permits?projectId=${encodeURIComponent(projectId)}`),
+      read<{ openCount?: number; failedCount?: number }>(`/api/inspections?projectId=${encodeURIComponent(projectId)}`),
+      read<{ openCount?: number }>(`/api/snags?projectId=${encodeURIComponent(projectId)}&take=1`),
+      read<{ checks?: Array<{ project?: { id?: string } | null }> }>('/api/equipment-checks/overdue'),
+      read<{ openCount?: number; overdueCount?: number }>(`/api/rfis?projectId=${encodeURIComponent(projectId)}&take=1`),
+    ]).then(([permits, inspections, snags, equipment, rfis]) => {
+      if (cancelled) return
+      const overdueChecks = Array.isArray(equipment?.checks)
+        ? equipment.checks.filter((c: { project?: { id?: string } | null }) => c.project?.id === projectId).length
+        : 0
+      setPulse({
+        activePermits: Number(permits?.activeCount || 0),
+        expiringPermits: Number(permits?.expiringSoon || 0),
+        openInspections: Number(inspections?.openCount || 0),
+        failedInspections: Number(inspections?.failedCount || 0),
+        openSnags: Number(snags?.openCount || 0),
+        overdueChecks,
+        openRfis: Number(rfis?.openCount || 0),
+        overdueRfis: Number(rfis?.overdueCount || 0),
+      })
+    }).catch(() => {
+      if (!cancelled) setPulse(EMPTY_PULSE)
+    })
+    return () => { cancelled = true }
+  }, [projectId, online])
+
   const selected = data?.projects?.find(p => p.id === projectId) || null
   const tasks = useMemo(
     () => (data?.tasks || []).filter(t => !projectId || t.projectId === projectId || t.project?.id === projectId).slice(0, 6),
@@ -115,6 +172,28 @@ export default function FieldOperationsPage() {
   const openTasks = tasks.filter(t => t.status !== 'done')
   const urgentTasks = openTasks.filter(t => ['high', 'critical'].includes(String(t.priority || '').toLowerCase()))
   const peopleOnSite = selected?.assignments?.length || 0
+
+  const saveSiteNote = async () => {
+    const detail = note.trim()
+    if (!detail || !projectId || noteSaving) return
+    setNoteSaving(true)
+    setNoteStatus('')
+    try {
+      const res = await fetch('/api/activity', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ projectId, action: 'logged a site note', iconType: 'doc', detail }),
+      })
+      if (!res.ok) throw new Error('Failed to save note')
+      setNote('')
+      setNoteStatus('Added to the site record')
+      await load()
+    } catch {
+      setNoteStatus('Could not save note')
+    } finally {
+      setNoteSaving(false)
+    }
+  }
 
   const toggleTask = async (task: Task) => {
     const nextStatus = task.status === 'done' ? 'todo' : 'done'
@@ -170,6 +249,17 @@ export default function FieldOperationsPage() {
           </div>
         )}
 
+        <section style={{ marginBottom: 18 }}>
+          <SectionTitle title="Live readiness" />
+          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+            <PulseCard href="/permits" label="Active permits" value={pulse.activePermits} alert={pulse.expiringPermits > 0} sub={pulse.expiringPermits ? `${pulse.expiringPermits} expiring soon` : 'No expiry alerts'} />
+            <PulseCard href="/inspections" label="Open inspections" value={pulse.openInspections} alert={pulse.failedInspections > 0} sub={pulse.failedInspections ? `${pulse.failedInspections} failed` : 'No failed inspections'} />
+            <PulseCard href="/snags" label="Open snags" value={pulse.openSnags} alert={pulse.openSnags > 0} sub="Outstanding defects" />
+            <PulseCard href="/equipment-checks?status=overdue" label="Checks overdue" value={pulse.overdueChecks} alert={pulse.overdueChecks > 0} sub="Equipment / plant" />
+            <PulseCard href="/rfis" label="Open RFIs" value={pulse.openRfis} alert={pulse.overdueRfis > 0} sub={pulse.overdueRfis ? `${pulse.overdueRfis} overdue` : 'No overdue RFIs'} />
+          </div>
+        </section>
+
         <ActionSection title="1 · Start shift" actions={START_SHIFT} />
         <ActionSection title="2 · Execute work" actions={WORK} />
 
@@ -189,6 +279,33 @@ export default function FieldOperationsPage() {
                 </button>
               )
             })}
+          </div>
+        </section>
+
+        <section style={{ marginBottom: 18 }}>
+          <SectionTitle title="Quick site note" />
+          <div style={{ borderRadius: 14, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 12 }}>
+            <textarea
+              value={note}
+              onChange={e => { setNote(e.target.value); setNoteStatus('') }}
+              placeholder="Delay, delivery, progress, access issue, instruction…"
+              maxLength={500}
+              rows={3}
+              style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: '1px solid rgba(255,255,255,.09)', borderRadius: 11, background: '#0b1a30', color: '#eef3fa', padding: 11, fontFamily: SF, fontSize: 13, lineHeight: 1.45 }}
+            />
+            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 9 }}>
+              <span style={{ color: noteStatus.includes('Could not') ? '#ef4444' : noteStatus ? '#10b981' : '#52749a', fontFamily: SF, fontSize: 10.5 }}>
+                {noteStatus || `${note.length}/500`}
+              </span>
+              <button
+                type="button"
+                onClick={saveSiteNote}
+                disabled={!note.trim() || !projectId || noteSaving || !online}
+                style={{ border: 'none', borderRadius: 10, padding: '9px 12px', background: '#f59e0b', color: '#06101e', fontFamily: SF, fontSize: 11, fontWeight: 900, opacity: (!note.trim() || !projectId || noteSaving || !online) ? .45 : 1, cursor: 'pointer' }}
+              >
+                {noteSaving ? 'Saving…' : 'Add to site record'}
+              </button>
+            </div>
           </div>
         </section>
 
@@ -256,6 +373,19 @@ function Metric({ label, value, color }: { label: string; value: string; color: 
 
 function Empty({ text }: { text: string }) {
   return <div style={{ padding: '18px 14px', borderRadius: 12, background: '#102039', color: '#52749a', textAlign: 'center', fontFamily: SF, fontSize: 12 }}>{text}</div>
+}
+
+function PulseCard({ href, label, value, sub, alert }: { href: string; label: string; value: number; sub: string; alert?: boolean }) {
+  const color = alert ? '#f59e0b' : '#10b981'
+  return (
+    <Link href={href} style={{ minHeight: 82, textDecoration: 'none', borderRadius: 12, background: '#102039', border: `1px solid ${alert ? 'rgba(245,158,11,.28)' : 'rgba(255,255,255,.07)'}`, padding: 11 }}>
+      <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
+        <span style={{ color: '#eef3fa', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>{label}</span>
+        <span style={{ color, fontFamily: SF, fontSize: 20, fontWeight: 900 }}>{value}</span>
+      </div>
+      <div style={{ color: alert ? '#fbbf24' : '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 7 }}>{sub}</div>
+    </Link>
+  )
 }
 
 function QuickLink({ href, label }: { href: string; label: string }) {
