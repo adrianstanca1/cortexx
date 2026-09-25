@@ -108,7 +108,7 @@ async function runOverdueScan() {
     bucket.rows.push(inv)
   }
 
-  const appUrl = process.env.NEXTAUTH_URL || process.env.APP_URL || 'https://cortexbuildpro.com'
+  const appUrl = process.env.NEXTAUTH_URL || process.env.APP_URL || 'https://cortexbuildpro.tech'
   let totalEmails = 0
   const orgErrors: Array<{ orgId: string; error: string }> = []
 

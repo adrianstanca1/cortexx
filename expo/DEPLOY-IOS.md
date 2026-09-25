@@ -15,7 +15,7 @@ End-to-end build + submit for the Expo iOS app. Run from a Mac with Xcode + EAS 
 | Slug | `cortexbuild-pro` |
 | Bundle ID | `com.cortexbuild.app` |
 | EAS projectId | `3b86383b-6d52-4ec4-afae-c8583b49f3d6` |
-| API endpoint | `https://cortexbuildpro.com` |
+| API endpoint | `https://cortexbuildpro.tech` |
 | Submit Apple ID | `Adrian.stanca1@icloud.com` |
 
 ## Credentials status (as of 2026-07-16)

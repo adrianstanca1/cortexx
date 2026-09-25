@@ -180,7 +180,7 @@ function CloudSyncScreen({
   }, React.createElement(Field, {
     value: apiUrl,
     onChange: e => setApiUrl(e.target.value),
-    placeholder: "https://cortexbuildpro.com",
+    placeholder: "https://cortexbuildpro.tech",
     autoCapitalize: "none",
     autoCorrect: "off"
   }), React.createElement("button", {

@@ -21,7 +21,7 @@ export default function SupportPage() {
         <Link className="card" href="/">
           <div className="ico">🚀</div>
           <div className="t">Open the app</div>
-          <div className="s">cortexbuildpro.com</div>
+          <div className="s">cortexbuildpro.tech</div>
         </Link>
       </div>
 
@@ -29,12 +29,12 @@ export default function SupportPage() {
 
       <details>
         <summary>Where&apos;s my data stored?</summary>
-        <p>On your device for the PWA build, or in our Postgres for the web app. Cortexx is local-first where possible — projects, photos, invoices and notes live on your phone or tablet when running the standalone PWA. The hosted web app at cortexbuildpro.com syncs to a UK-resident Postgres so multi-device access just works. Back up regularly via <strong>Settings → Database → Export</strong>.</p>
+        <p>On your device for the PWA build, or in our Postgres for the web app. Cortexx is local-first where possible — projects, photos, invoices and notes live on your phone or tablet when running the standalone PWA. The hosted web app at cortexbuildpro.tech syncs to a UK-resident Postgres so multi-device access just works. Back up regularly via <strong>Settings → Database → Export</strong>.</p>
       </details>
 
       <details>
         <summary>How do I install Cortexx on my iPhone without the App Store?</summary>
-        <p>Open <a href="https://cortexbuildpro.com">cortexbuildpro.com</a> in Safari on your iPhone. Tap the share button (the square with an up arrow), scroll down, tap <strong>Add to Home Screen</strong>. Cortexx installs as a real-feeling app — full-screen, offline, with its own icon.</p>
+        <p>Open <a href="https://cortexbuildpro.tech">cortexbuildpro.tech</a> in Safari on your iPhone. Tap the share button (the square with an up arrow), scroll down, tap <strong>Add to Home Screen</strong>. Cortexx installs as a real-feeling app — full-screen, offline, with its own icon.</p>
       </details>
 
       <details>

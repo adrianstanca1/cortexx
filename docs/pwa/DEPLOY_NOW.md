@@ -91,11 +91,11 @@ Use this for:
 
 ```bash
 # 1. Service worker is fresh on every load
-curl -I https://cortexbuildpro.com/sw.js | grep -i cache-control
+curl -I https://cortexbuildpro.tech/sw.js | grep -i cache-control
 # expect: no-cache, no-store, must-revalidate
 
 # 2. Manifest is reachable
-curl -I https://cortexbuildpro.com/manifest.json
+curl -I https://cortexbuildpro.tech/manifest.json
 
 # 3. PWA install prompt fires on iOS Safari
 #    - open in iPhone Safari, tap Share, scroll down for "Add to Home Screen"

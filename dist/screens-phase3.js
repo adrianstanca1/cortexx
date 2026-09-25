@@ -749,7 +749,7 @@ function SettingsScreen({
     title: "CortexBuild Pro \xB7 Enterprise",
     sub: "Custom \xB7 51+ staff \xB7 SSO + audit",
     isLast: true,
-    onClick: () => window.open('mailto:sales@cortexbuildpro.com?subject=CortexBuild%20Pro%20Enterprise%20enquiry', '_blank')
+    onClick: () => window.open('mailto:sales@cortexbuildpro.tech?subject=CortexBuild%20Pro%20Enterprise%20enquiry', '_blank')
   })))), section === 'integrations' && React.createElement(Section, {
     title: "Connected"
   }, React.createElement(GroupedList, null, [{
@@ -859,7 +859,7 @@ function SettingsScreen({
     sub: "GDPR \u2014 permanent",
     danger: true,
     isLast: true,
-    onClick: () => window.open('mailto:hello@cortexbuildpro.com?subject=GDPR%20deletion%20request&body=Please%20delete%20my%20CortexBuild%20Pro%20workspace%20and%20all%20personal%20data.', '_blank')
+    onClick: () => window.open('mailto:hello@cortexbuildpro.tech?subject=GDPR%20deletion%20request&body=Please%20delete%20my%20CortexBuild%20Pro%20workspace%20and%20all%20personal%20data.', '_blank')
   }))), section === 'about' && React.createElement(React.Fragment, null, React.createElement(Section, null, React.createElement("div", {
     style: {
       textAlign: 'center',
@@ -916,8 +916,8 @@ function SettingsScreen({
     icon: Ic.mail,
     iconBg: T.green,
     title: "Contact support",
-    sub: "hello@cortexbuildpro.com",
-    onClick: () => window.open('mailto:hello@cortexbuildpro.com', '_blank')
+    sub: "hello@cortexbuildpro.tech",
+    onClick: () => window.open('mailto:hello@cortexbuildpro.tech', '_blank')
   }), React.createElement(Row, {
     icon: Ic.share,
     iconBg: T.purple,
@@ -1074,8 +1074,8 @@ function HelpScreen({
     icon: Ic.mail,
     iconBg: T.blue,
     title: "Email support",
-    sub: "hello@cortexbuildpro.com \xB7 ~2 hours",
-    onClick: () => window.open('mailto:hello@cortexbuildpro.com?subject=CortexBuild%20Pro%20support', '_blank')
+    sub: "hello@cortexbuildpro.tech \xB7 ~2 hours",
+    onClick: () => window.open('mailto:hello@cortexbuildpro.tech?subject=CortexBuild%20Pro%20support', '_blank')
   }), React.createElement(Row, {
     icon: Ic.phone,
     iconBg: T.green,
@@ -1086,7 +1086,7 @@ function HelpScreen({
     icon: Ic.book,
     iconBg: T.purple,
     title: "Help centre",
-    sub: "cortexbuildpro.com/help",
+    sub: "cortexbuildpro.tech/help",
     isLast: true,
     onClick: () => window.open('/help', '_blank')
   })))));

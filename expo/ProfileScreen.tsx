@@ -7,9 +7,9 @@ import { Colors } from './theme';
 import { getMe, clearToken, type AuthUser } from './api';
 
 const LINKS = [
-  { key: 'privacy', label: 'Privacy Policy', url: 'https://cortexbuildpro.com/privacy' },
-  { key: 'support', label: 'Support', url: 'https://cortexbuildpro.com/support' },
-  { key: 'site', label: 'Web app', url: 'https://cortexbuildpro.com' },
+  { key: 'privacy', label: 'Privacy Policy', url: 'https://cortexbuildpro.tech/privacy' },
+  { key: 'support', label: 'Support', url: 'https://cortexbuildpro.tech/support' },
+  { key: 'site', label: 'Web app', url: 'https://cortexbuildpro.tech' },
 ];
 
 export default function ProfileScreen({ onLogout }: { onLogout: () => void }) {
@@ -73,7 +73,7 @@ export default function ProfileScreen({ onLogout }: { onLogout: () => void }) {
       <View style={styles.card}>
         <Row label="App version" value={`${appVersion} (${buildNumber})`} />
         <Row label="Platform" value="iOS · Expo SDK 57" />
-        <Row label="Backend" value="cortexbuildpro.com" />
+        <Row label="Backend" value="cortexbuildpro.tech" />
       </View>
 
       <TouchableOpacity style={styles.signout} onPress={signOut}>

@@ -115,7 +115,7 @@ location /api/ {
 Include `lib/cloud-sync.js` after `lib/backend.js` in `Cortexx.html`, then:
 ```js
 // after login
-await cortexxCloud.login('https://cortexbuildpro.com', email, password);
+await cortexxCloud.login('https://cortexbuildpro.tech', email, password);
 // every Backend.db write also calls cortexxCloud.push(...)
 ```
 To make every write sync, the `mk()` table factory in `backend.js` calls `window.cortexxCloud?.push(collection, op, id, data)` after persisting locally. Offline writes queue in localStorage and replay on reconnect.

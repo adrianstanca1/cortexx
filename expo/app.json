@@ -43,7 +43,7 @@
       "expo-status-bar"
     ],
     "extra": {
-      "apiUrl": "https://cortexbuildpro.com",
+      "apiUrl": "https://cortexbuildpro.tech",
       "eas": {
         "projectId": "3b86383b-6d52-4ec4-afae-c8583b49f3d6"
       }

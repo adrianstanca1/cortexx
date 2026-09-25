@@ -1,7 +1,7 @@
 # Apple App Site Association (AASA)
 
 `apple-app-site-association` is the server-side half of iOS Universal Links.
-The file is served at `https://cortexbuildpro.com/.well-known/apple-app-site-association`
+The file is served at `https://cortexbuildpro.tech/.well-known/apple-app-site-association`
 with **no** `.json` extension (Apple fetches it exactly at that path).
 
 ## Before this file takes effect you MUST (on a Mac):
@@ -21,10 +21,10 @@ with **no** `.json` extension (Apple fetches it exactly at that path).
 
 After steps 1–3, from a Mac:
 ```
-curl -I https://cortexbuildpro.com/.well-known/apple-app-site-association
+curl -I https://cortexbuildpro.tech/.well-known/apple-app-site-association
 # expect: HTTP/2 200, content-type application/json
 ```
-And on a device: long-press a shared `https://cortexbuildpro.com/portal/...`
+And on a device: long-press a shared `https://cortexbuildpro.tech/portal/...`
 link → it should open the app, not Safari.
 
 Note: `webcredentials` lets users save passwords to the iOS Keychain and

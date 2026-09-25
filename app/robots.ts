@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const SITE_URL = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'
+const SITE_URL = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.tech'
 
 /**
  * Generates /robots.txt at build time. Allows the marketing surface

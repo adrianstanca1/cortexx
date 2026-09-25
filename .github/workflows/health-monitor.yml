@@ -15,8 +15,8 @@ jobs:
         id: check
         run: |
           set +e
-          RESPONSE=$(curl -s --max-time 15 https://cortexbuildpro.com/api/health)
-          STATUS=$(curl -s -o /dev/null --max-time 15 -w "%{http_code}" https://cortexbuildpro.com/api/health)
+          RESPONSE=$(curl -s --max-time 15 https://cortexbuildpro.tech/api/health)
+          STATUS=$(curl -s -o /dev/null --max-time 15 -w "%{http_code}" https://cortexbuildpro.tech/api/health)
           echo "HTTP $STATUS"
           echo "Response: $RESPONSE"
           echo "status_code=$STATUS" >> $GITHUB_OUTPUT
@@ -24,7 +24,7 @@ jobs:
 
           # Check each main page
           for path in / /dashboard /projects /tasks /team; do
-            CODE=$(curl -s -o /dev/null --max-time 15 -w "%{http_code}" "https://cortexbuildpro.com$path")
+            CODE=$(curl -s -o /dev/null --max-time 15 -w "%{http_code}" "https://cortexbuildpro.tech$path")
             echo "$path → $CODE"
             if [ "$CODE" != "200" ] && [ "$CODE" != "307" ] && [ "$CODE" != "308" ]; then
               echo "::warning::Page $path returned $CODE"

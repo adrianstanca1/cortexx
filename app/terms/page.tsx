@@ -14,7 +14,7 @@ export default function TermsPage() {
       </div>
 
       <h2>1 · Who you&apos;re contracting with</h2>
-      <p>Cortexx is operated by <strong>CortexBuild Ltd</strong>, a company registered in England and Wales. References to &quot;we&quot;, &quot;us&quot; and &quot;our&quot; mean CortexBuild Ltd. &quot;Cortexx&quot; means the iOS app, Android app, web app at cortexbuildpro.com and any associated services.</p>
+      <p>Cortexx is operated by <strong>CortexBuild Ltd</strong>, a company registered in England and Wales. References to &quot;we&quot;, &quot;us&quot; and &quot;our&quot; mean CortexBuild Ltd. &quot;Cortexx&quot; means the iOS app, Android app, web app at cortexbuildpro.tech and any associated services.</p>
 
       <h2>2 · Your account</h2>
       <p>You can use the Free tier of Cortexx without creating an account — your data lives on your device. For paid tiers, multi-device sync or team features, you&apos;ll create an account with an email and password. You&apos;re responsible for keeping your password safe; we&apos;ll only ever ask for it through the official login flow.</p>

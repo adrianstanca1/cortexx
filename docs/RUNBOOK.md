@@ -7,14 +7,14 @@ deployment on Hostinger; Next.js 16 + Postgres + Redis + pm2 cluster.
 
 | What | Where |
 |---|---|
-| Production URL | https://cortexbuildpro.com |
+| Production URL | https://cortexbuildpro.tech |
 | GitHub repo | https://github.com/adrianstanca1/cortexx |
 | VPS | `root@72.62.132.43` (Hostinger) |
 | App directory | `/opt/cortexx` |
 | Env file | `/opt/cortexx/.env.production` (chmod 600) |
 | Logs | `pm2 logs cortexx` + `journalctl -u cron` |
-| Health | https://cortexbuildpro.com/api/health · in-app `/status` |
-| Status | https://cortexbuildpro.com/status |
+| Health | https://cortexbuildpro.tech/api/health · in-app `/status` |
+| Status | https://cortexbuildpro.tech/status |
 
 ## How to make changes
 
@@ -39,7 +39,7 @@ and `.env.production` keys that the workflow knows about.
 |---|---|---|
 | `DATABASE_URL` | ✅ | Built by deploy from `cortexx-db-password` |
 | `NEXTAUTH_SECRET` | ✅ | GitHub repo secret |
-| `NEXTAUTH_URL` | ✅ | Hardcoded to `https://cortexbuildpro.com` |
+| `NEXTAUTH_URL` | ✅ | Hardcoded to `https://cortexbuildpro.tech` |
 | `MULTITENANT_ENFORCED` | ✅ | Always `true` post-v1.0 |
 | `REDIS_URL` | ✅ | `redis://127.0.0.1:6379` (local) |
 | `VAPID_PUBLIC_KEY` + `VAPID_PRIVATE_KEY` + `VAPID_CONTACT_EMAIL` | ✅ | GH repo secrets — web push |
@@ -129,7 +129,7 @@ gh workflow run migrate-debug.yml --ref main
 ## Incident triage
 
 1. **App down** → check `/api/health` from outside the VPS first
-   (`curl -k https://cortexbuildpro.com/api/health`). If 5xx,
+   (`curl -k https://cortexbuildpro.tech/api/health`). If 5xx,
    `gh workflow run vps-exec.yml ... 'pm2 status'`.
 2. **DB down** → `db-rescue.yml` with `action=inspect` shows
    connection state. Postgres runs as a docker container — `docker

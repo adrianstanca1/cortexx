@@ -77,7 +77,7 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  const appUrl = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'
+  const appUrl = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.tech'
   const checkout = await stripe.checkout.sessions.create({
     mode: 'subscription',
     customer: customerId,

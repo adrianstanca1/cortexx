@@ -26,9 +26,9 @@ Open your app in App Store Connect → **App Information** tab.
 | Secondary category | Productivity |
 | Content rights | Yes, the app contains third-party content (only if you embed any) — usually **No** |
 | Age rating | Click **Edit** → answer the questionnaire. Cortexx = **4+** (no restricted content). |
-| Privacy Policy URL | https://cortexbuildpro.com/privacy (required) |
-| Support URL | https://cortexbuildpro.com/support (required) |
-| Marketing URL | https://cortexbuildpro.com (optional but recommended) |
+| Privacy Policy URL | https://cortexbuildpro.tech/privacy (required) |
+| Support URL | https://cortexbuildpro.tech/support (required) |
+| Marketing URL | https://cortexbuildpro.tech (optional but recommended) |
 | Contact information | Public phone & email for App Review to reach you |
 | Routing app coverage file | n/a (not a navigation app) |
 
@@ -175,10 +175,10 @@ Made in the UK. Built by builders.
 `construction,builder,contractor,CIS,UK,RAMS,quotes,invoices,site,trades,SMB,subbie,refurb,snag,diary`
 
 ### Support URL
-`https://cortexbuildpro.com/support`
+`https://cortexbuildpro.tech/support`
 
 ### Marketing URL (optional)
-`https://cortexbuildpro.com`
+`https://cortexbuildpro.tech`
 
 ### Copyright
 `© 2026 CortexBuild Ltd`

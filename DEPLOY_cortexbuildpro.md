@@ -51,9 +51,9 @@ cd /opt/cortexx && docker compose up -d
 The script prints these (the secret is auto-generated in `server/.env`):
 
 ```
-WhatsApp callback : https://cortexbuildpro.com/api/webhooks/<SECRET>/whatsapp
+WhatsApp callback : https://cortexbuildpro.tech/api/webhooks/<SECRET>/whatsapp
 WhatsApp verify   : <WA_VERIFY_TOKEN>
-Email inbound     : https://cortexbuildpro.com/api/webhooks/<SECRET>/email
+Email inbound     : https://cortexbuildpro.tech/api/webhooks/<SECRET>/email
 ```
 
 - **Meta → WhatsApp → Configuration**: Callback URL = the WhatsApp URL, Verify
@@ -64,8 +64,8 @@ Email inbound     : https://cortexbuildpro.com/api/webhooks/<SECRET>/email
 
 ## 5 · Point the app at the API
 
-Open `https://cortexbuildpro.com` → **Settings → Cloud sync**:
-1. API endpoint = `https://cortexbuildpro.com` → **Test** → ✓ Reachable
+Open `https://cortexbuildpro.tech` → **Settings → Cloud sync**:
+1. API endpoint = `https://cortexbuildpro.tech` → **Test** → ✓ Reachable
 2. Sign in — demo seed: `demo@cortexbuild.app` / `demo1234`
 3. **Live sync** on → inbound WhatsApp/email leads stream in via SSE.
 
@@ -74,10 +74,10 @@ Open `https://cortexbuildpro.com` → **Settings → Cloud sync**:
 ## 6 · Smoke test (the script prints these too)
 
 ```sh
-curl -s https://cortexbuildpro.com/api/health
-curl -s https://cortexbuildpro.com/api/portal/demo-brixton | head -c 120
+curl -s https://cortexbuildpro.tech/api/health
+curl -s https://cortexbuildpro.tech/api/portal/demo-brixton | head -c 120
 # WhatsApp verify handshake (use values from server/.env):
-curl "https://cortexbuildpro.com/api/webhooks/<SECRET>/whatsapp?hub.verify_token=<WA_VERIFY_TOKEN>&hub.challenge=ok123"
+curl "https://cortexbuildpro.tech/api/webhooks/<SECRET>/whatsapp?hub.verify_token=<WA_VERIFY_TOKEN>&hub.challenge=ok123"
 ```
 
 ---

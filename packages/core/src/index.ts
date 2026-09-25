@@ -6,7 +6,7 @@
 
 export * from './rbac';
 
-const API_URL_FALLBACK = 'https://cortexbuildpro.com';
+const API_URL_FALLBACK = 'https://cortexbuildpro.tech';
 
 let _memToken: string | null = null;
 function defaultTokenStorage(): ApiClientOptions['tokenStorage'] {

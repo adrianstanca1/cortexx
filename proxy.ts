@@ -150,6 +150,15 @@ const MOBILE_BEARER_API_PREFIXES = [
   '/api/uploads',
   '/api/documents',
   '/api/receipts',
+  '/api/permits',
+  '/api/inspections',
+  '/api/rfis',
+  '/api/equipment-checks',
+  '/api/pos',
+  '/api/field-constraints',
+  '/api/field-handovers',
+  '/api/field-production',
+  '/api/live-status',
   '/api/events/stream',
 ]
 

@@ -3,7 +3,7 @@
 // Configure via server/.env:
 //   TRUELAYER_CLIENT_ID=…           (sandbox or live)
 //   TRUELAYER_CLIENT_SECRET=…
-//   TRUELAYER_REDIRECT_URI=https://cortexbuildpro.com/api/banking/callback
+//   TRUELAYER_REDIRECT_URI=https://cortexbuildpro.tech/api/banking/callback
 //   TRUELAYER_ENV=sandbox            (or 'live')
 //
 // Auto-disabled if TRUELAYER_CLIENT_ID is unset.
