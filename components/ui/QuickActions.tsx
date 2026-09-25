@@ -30,7 +30,7 @@ interface QuickActionsProps {
  * Bottom-sheet quick-action menu — replaces the single-target FAB.
  * Tap the floating + → sheet slides up with categorised shortcuts.
  */
-export default function QuickActions({ accent = '#f59e0b' }: QuickActionsProps) {
+export default function QuickActions({ accent = 'var(--accent)' }: QuickActionsProps) {
   const router = useRouter()
   const [open, setOpen] = useState(false)
   const sheetRef = useRef<HTMLDivElement>(null)
@@ -66,9 +66,9 @@ export default function QuickActions({ accent = '#f59e0b' }: QuickActionsProps) 
           transform: 'translateX(-50%)',
           width: 56,
           height: 56,
-          borderRadius: '50%',
-          background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
-          boxShadow: `0 0 22px ${accent}77, 0 4px 14px rgba(0,0,0,0.45)`,
+          borderRadius: 18,
+          background: accent,
+          boxShadow: '0 0 0 6px rgba(215,255,63,.08), 0 12px 32px rgba(0,0,0,.5)',
           border: 'none',
           cursor: 'pointer',
           display: 'flex',
@@ -78,7 +78,7 @@ export default function QuickActions({ accent = '#f59e0b' }: QuickActionsProps) 
           transition: 'transform 0.18s',
         }}
       >
-        <IcPlus size={26} color="#fff" />
+        <IcPlus size={26} color="#0a0c0c" />
       </button>
 
       {open && (
@@ -95,10 +95,10 @@ export default function QuickActions({ accent = '#f59e0b' }: QuickActionsProps) 
             ref={sheetRef}
             style={{
               position: 'relative',
-              background: '#0c1a2e',
+              background: 'linear-gradient(180deg, rgba(31,38,41,.99), rgba(12,15,17,.99))',
               borderRadius: '20px 20px 0 0',
               padding: '20px 16px calc(28px + env(safe-area-inset-bottom, 0px))',
-              borderTop: '1px solid rgba(255,255,255,0.08)',
+              borderTop: '1px solid var(--hairMid)',
               maxHeight: '85dvh',
               overflowY: 'auto',
               animation: 'qaslide 0.18s ease-out',
@@ -106,8 +106,8 @@ export default function QuickActions({ accent = '#f59e0b' }: QuickActionsProps) 
           >
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 }}>
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: 'var(--font-system)' }}>Quick actions</h2>
-                <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>Create or capture from anywhere</p>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: 'var(--font-system)' }}>Quick actions</h2>
+                <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>Create or capture from anywhere</p>
               </div>
               <button
                 onClick={() => setOpen(false)}
@@ -129,7 +129,7 @@ export default function QuickActions({ accent = '#f59e0b' }: QuickActionsProps) 
                     gap: 14,
                     padding: '14px 14px',
                     borderRadius: 14,
-                    background: 'rgba(255,255,255,0.04)',
+                    background: 'rgba(255,255,255,0.035)',
                     border: '1px solid rgba(255,255,255,0.07)',
                     cursor: 'pointer',
                     textAlign: 'left',
@@ -141,10 +141,10 @@ export default function QuickActions({ accent = '#f59e0b' }: QuickActionsProps) 
                     <a.Icon size={20} color={a.color} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <p style={{ fontSize: 15, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.01em' }}>{a.label}</p>
-                    <p style={{ fontSize: 12, color: '#8ea8c5', marginTop: 1 }}>{a.sub}</p>
+                    <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.01em' }}>{a.label}</p>
+                    <p style={{ fontSize: 12, color: 'var(--t2)', marginTop: 1 }}>{a.sub}</p>
                   </div>
-                  <span style={{ color: '#52749a', fontSize: 18 }}>›</span>
+                  <span style={{ color: 'var(--t3)', fontSize: 18 }}>›</span>
                 </button>
               ))}
             </div>

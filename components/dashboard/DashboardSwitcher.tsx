@@ -1,7 +1,7 @@
 'use client'
 
 import { useState, useEffect } from 'react'
-import { useSearchParams } from 'next/navigation'
+import { useRouter, useSearchParams } from 'next/navigation'
 import dynamic from 'next/dynamic'
 import Link from 'next/link'
 import { useDashboardData } from '@/lib/useDashboardData'
@@ -45,20 +45,7 @@ const variants = [
   { id: 'v15', label: '15', sub: 'Site notice',   Comp: SiteNotice },
 ]
 
-const accent = '#f59e0b'
-
-const iconBtnStyle: React.CSSProperties = {
-  flexShrink: 0,
-  display: 'flex',
-  alignItems: 'center',
-  justifyContent: 'center',
-  width: 34,
-  height: 34,
-  borderRadius: 10,
-  background: 'rgba(255,255,255,0.06)',
-  border: '0.5px solid rgba(255,255,255,0.07)',
-  marginRight: 2,
-}
+const accent = 'var(--accent)'
 
 interface CompProps {
   accent?: string
@@ -66,6 +53,7 @@ interface CompProps {
 }
 
 export default function DashboardSwitcher() {
+  const router = useRouter()
   const searchParams = useSearchParams()
   const vParam = searchParams.get('v')
   const [active, setActive] = useState(() => {
@@ -87,7 +75,7 @@ export default function DashboardSwitcher() {
     const fetchInbox = () => {
       fetch('/api/inbox').then(r => {
         if (r.status === 401) {
-          window.location.assign('/login?callbackUrl=' + encodeURIComponent(window.location.pathname + window.location.search))
+          router.push('/login?callbackUrl=' + encodeURIComponent(window.location.pathname + window.location.search))
           return null
         }
         return r.ok ? r.json() : null
@@ -98,7 +86,7 @@ export default function DashboardSwitcher() {
       if (document.visibilityState === 'visible') fetchInbox()
     }, 60000)
     return () => clearInterval(i)
-  }, [])
+  }, [router])
 
   // Adjust state when the URL ?v= param changes — the React 19 idiom: track
   // the previous value in state, run the sync during render when it changes.
@@ -115,112 +103,55 @@ export default function DashboardSwitcher() {
 
   return (
     <div style={{ display: 'flex', flexDirection: 'column', height: '100%' }}>
-      {/* Variant switcher strip */}
-      <div style={{
-        overflowX: 'auto',
-        display: 'flex',
-        alignItems: 'center',
-        gap: 6,
-        padding: '12px 56px 8px 60px',
-        background: 'rgba(6,16,30,0.95)',
-        backdropFilter: 'blur(12px)',
-        borderBottom: '0.5px solid rgba(255,255,255,0.07)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 20,
-        flexShrink: 0,
-      }}>
-        <Link
-          href="/search"
-          aria-label="Search workspace"
-          style={iconBtnStyle}
-        >
-          <IcSearch size={16} color="#8ea8c5" />
-        </Link>
-        <Link
-          href="/activity"
-          aria-label="Activity feed"
-          style={iconBtnStyle}
-        >
-          <IcClock size={16} color="#8ea8c5" />
-        </Link>
-        <Link
-          href="/reports"
-          aria-label="Reports"
-          style={iconBtnStyle}
-        >
-          <IcReceipt size={16} color="#8ea8c5" />
-        </Link>
-        <Link
-          href="/documents"
-          aria-label="Documents"
-          style={iconBtnStyle}
-        >
-          <IcDoc size={16} color="#8ea8c5" />
-        </Link>
-        <Link
-          href="/inbox"
-          aria-label={inboxCount > 0 ? `Inbox (${inboxCount})` : 'Inbox'}
-          style={{ ...iconBtnStyle, marginRight: 4, position: 'relative' }}
-        >
-          <IcBell size={16} color={inboxCount > 0 ? '#f59e0b' : '#8ea8c5'} />
-          {inboxCount > 0 && (
-            <span style={{ position: 'absolute', top: -4, right: -4, background: '#ef4444', color: '#fff', fontSize: 9, fontWeight: 700, minWidth: 16, height: 16, padding: '0 4px', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-system)', border: '2px solid #06101e', boxSizing: 'content-box' }}>
-              {inboxCount > 99 ? '99+' : inboxCount}
-            </span>
-          )}
-        </Link>
-        <span
-          role="status"
-          aria-live="polite"
-          aria-label={connected ? 'Live updates connected' : 'Live updates reconnecting'}
-          title={connected ? 'Live updates connected' : 'Reconnecting…'}
-          style={{
-            flexShrink: 0,
-            width: 8,
-            height: 8,
-            borderRadius: '50%',
-            background: connected ? '#10b981' : '#52749a',
-            boxShadow: connected ? '0 0 6px #10b98166' : 'none',
-            transition: 'all 0.3s',
-            marginRight: 4,
-          }}
-        />
-        {variants.map(v => {
-          const isActive = v.id === active
-          return (
-            <button
-              key={v.id}
-              onClick={() => setActive(v.id)}
-              aria-label={`Switch to ${v.sub} dashboard variant`}
-              aria-pressed={isActive}
+      <div className="dashboard-commandbar">
+        <div>
+          <div className="section-kicker">Cortex command centre</div>
+          <div style={{ display: 'flex', alignItems: 'baseline', gap: 10, marginTop: 3 }}>
+            <span className="display-title" style={{ fontSize: 20, color: 'var(--t1)' }}>{current.sub}</span>
+            <span
+              role="status"
+              aria-live="polite"
+              title={connected ? 'Live updates connected' : 'Reconnecting…'}
               style={{
-                flexShrink: 0,
-                display: 'flex',
-                flexDirection: 'column',
-                alignItems: 'center',
-                gap: 2,
-                padding: '6px 10px',
-                borderRadius: 10,
-                background: isActive ? accent : 'rgba(255,255,255,0.06)',
-                border: isActive ? 'none' : '0.5px solid rgba(255,255,255,0.07)',
-                cursor: 'pointer',
-                transition: 'background 0.15s',
+                width: 7, height: 7, borderRadius: '50%',
+                background: connected ? 'var(--green)' : 'var(--t3)',
+                boxShadow: connected ? '0 0 12px rgba(69,209,138,.55)' : 'none',
               }}
-            >
-              <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: isActive ? '#fff' : '#52749a', letterSpacing: 0.5 }}>{v.label}</span>
-              <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: isActive ? '#fff' : '#8ea8c5', whiteSpace: 'nowrap' }}>{v.sub}</span>
-            </button>
-          )
-        })}
+            />
+          </div>
+        </div>
+
+        <div className="dashboard-commandbar-actions">
+          <Link href="/search" aria-label="Search workspace" className="command-icon-btn"><IcSearch size={16} /></Link>
+          <Link href="/activity" aria-label="Activity feed" className="command-icon-btn"><IcClock size={16} /></Link>
+          <Link href="/reports" aria-label="Reports" className="command-icon-btn"><IcReceipt size={16} /></Link>
+          <Link href="/documents" aria-label="Documents" className="command-icon-btn"><IcDoc size={16} /></Link>
+          <Link href="/inbox" aria-label={inboxCount > 0 ? `Inbox (${inboxCount})` : 'Inbox'} className="command-icon-btn" style={{ position: 'relative' }}>
+            <IcBell size={16} color={inboxCount > 0 ? 'var(--accent)' : 'currentColor'} />
+            {inboxCount > 0 && <span style={{
+              position: 'absolute', top: -5, right: -5, minWidth: 17, height: 17,
+              padding: '0 4px', borderRadius: 10, display: 'grid', placeItems: 'center',
+              background: 'var(--red)', color: '#fff', fontSize: 8.5, fontWeight: 900,
+              border: '2px solid var(--bg0)',
+            }}>{inboxCount > 99 ? '99+' : inboxCount}</span>}
+          </Link>
+          <select
+            className="dashboard-layout-select"
+            aria-label="Dashboard layout"
+            value={active}
+            onChange={e => setActive(e.target.value)}
+          >
+            {variants.map(v => <option key={v.id} value={v.id}>{v.label} · {v.sub}</option>)}
+          </select>
+        </div>
       </div>
 
       {/* Dashboard content */}
       <div style={{ flex: 1, overflowY: 'auto' }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 14 }}>Loading…</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 14 }}>Loading…</div>
         ) : error ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14 }}>{error}</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--red)', fontFamily: 'var(--font-system)', fontSize: 14 }}>{error}</div>
         ) : (
           <ErrorBoundary key={active}>
             <FirstRunBanner data={data} />
