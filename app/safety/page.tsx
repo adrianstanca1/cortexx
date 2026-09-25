@@ -171,12 +171,12 @@ export default function SafetyPage() {
 
   return <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
     {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
-    <div className="module-header" data-kicker="Safety command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-header" data-kicker="Safety command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(9,11,13,0.88)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
       <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}><IcChevL size={18} color="var(--t3)" /><span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span></Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}><div><h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Safety</h1><p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>Incident · investigation · RIDDOR · closeout</p></div><button onClick={() => setShowAdd(true)} style={primaryBtn('#ef4444')}><IcPlus size={12} color="#fff" /> Log incident</button></div>
     </div>
 
-    <div style={{ padding: '14px 16px 8px', display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8 }}>
+    <div style={{ padding: '14px 16px 8px', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(150px, 1fr))', gap: 8 }}>
       <KPI icon={<IcHardhat size={14} color="#10b981" />} label="Days since" value={String(daysWithout)} color="#10b981" />
       <KPI icon={<IcAlert size={14} color="#ef4444" />} label="Open" value={String(openCount)} color="#ef4444" />
       <KPI icon={<IcAlert size={14} color="#f59e0b" />} label="RIDDOR" value={String(ridorCount)} color="#f59e0b" />
