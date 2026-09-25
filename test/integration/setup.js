@@ -46,7 +46,7 @@ async function truncate(prisma) {
       'Material', 'Equipment', 'Snag', 'Rfi', 'Announcement', 'Observation',
       'Variation', 'Permit', 'Rams', 'Inspection', 'Meeting', 'Risk',
       'ToolboxTalk', 'MaintenanceSchedule', 'SafetyIncident', 'Certification',
-      'DrawingRevision', 'Drawing', 'Milestone', 'ExpenseReceipt', 'Document', 'CostCode', 'CostItem',
+      'DrawingRevision', 'Drawing', 'ProgrammeDependency', 'ProgrammeActivity', 'Milestone', 'ExpenseReceipt', 'Document', 'CostCode', 'CostItem',
       'Subcontractor', 'Supplier', 'Lead', 'Customer', 'Quote', 'Tender',
       'TeamMember', 'Project',
       // Legacy-parity v1.1 modules

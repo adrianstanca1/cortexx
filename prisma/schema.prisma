@@ -105,6 +105,8 @@ model Project {
   subInvoices             SubInvoice[]
   drawings                Drawing[]
   milestones              Milestone[]
+  programmeActivities     ProgrammeActivity[]
+  programmeDependencies   ProgrammeDependency[]
   permits                 Permit[]
   rams                    Rams[]
   tenders                 Tender[]
@@ -265,21 +267,22 @@ model Task {
 }
 
 model TeamMember {
-  id             String          @id @default(cuid())
-  name           String
-  role           String
-  email          String?
-  phone          String?
-  avatarColor    String          @default("#2563eb")
-  dailyRate      Float           @default(0)
-  onSite         Boolean         @default(false)
-  createdAt      DateTime        @default(now())
-  tasks          Task[]
-  assignments    Assignment[]
-  timeEntries    TimeEntry[]
-  certifications Certification[]
-  siteCheckIns   SiteCheckIn[]
-  mileageEntries MileageEntry[]
+  id                  String              @id @default(cuid())
+  name                String
+  role                String
+  email               String?
+  phone               String?
+  avatarColor         String              @default("#2563eb")
+  dailyRate           Float               @default(0)
+  onSite              Boolean             @default(false)
+  createdAt           DateTime            @default(now())
+  tasks               Task[]
+  assignments         Assignment[]
+  timeEntries         TimeEntry[]
+  certifications      Certification[]
+  siteCheckIns        SiteCheckIn[]
+  mileageEntries      MileageEntry[]
+  programmeActivities ProgrammeActivity[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -1179,6 +1182,60 @@ model DrawingRevision {
   @@index([organizationId])
 }
 
+model ProgrammeActivity {
+  id                  String                @id @default(cuid())
+  projectId           String
+  project             Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  code                String?
+  title               String
+  description         String?
+  baselineStart       DateTime
+  baselineEnd         DateTime
+  plannedStart        DateTime
+  plannedEnd          DateTime
+  actualStart         DateTime?
+  actualEnd           DateTime?
+  progress            Int                   @default(0)
+  status              String                @default("not_started") // not_started, in_progress, complete, blocked
+  responsibleMemberId String?
+  responsibleMember   TeamMember?           @relation(fields: [responsibleMemberId], references: [id], onDelete: SetNull)
+  location            String?
+  notes               String?
+  sortOrder           Int                   @default(0)
+  predecessors        ProgrammeDependency[] @relation("ProgrammeSuccessor")
+  successors          ProgrammeDependency[] @relation("ProgrammePredecessor")
+  createdAt           DateTime              @default(now())
+  updatedAt           DateTime              @updatedAt
+  organizationId      String?
+  organization        Organization?         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, plannedStart])
+  @@index([projectId, plannedEnd])
+  @@index([responsibleMemberId, plannedStart])
+  @@index([status, plannedEnd])
+  @@index([organizationId])
+}
+
+model ProgrammeDependency {
+  id             String            @id @default(cuid())
+  projectId      String
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  predecessorId  String
+  predecessor    ProgrammeActivity @relation("ProgrammePredecessor", fields: [predecessorId], references: [id], onDelete: Cascade)
+  successorId    String
+  successor      ProgrammeActivity @relation("ProgrammeSuccessor", fields: [successorId], references: [id], onDelete: Cascade)
+  type           String            @default("FS") // FS, SS, FF, SF
+  lagDays        Int               @default(0)
+  createdAt      DateTime          @default(now())
+  organizationId String?
+  organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([predecessorId, successorId, type])
+  @@index([projectId])
+  @@index([successorId])
+  @@index([organizationId])
+}
+
 model Milestone {
   id           String    @id @default(cuid())
   projectId    String
@@ -1618,6 +1675,8 @@ model Organization {
   drawings                Drawing[]
   drawingRevisions        DrawingRevision[]
   milestones              Milestone[]
+  programmeActivities     ProgrammeActivity[]
+  programmeDependencies   ProgrammeDependency[]
   permits                 Permit[]
   rams                    Rams[]
   tenders                 Tender[]
