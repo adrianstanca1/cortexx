@@ -3,7 +3,9 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const path = require('node:path')
 
-const script = fs.readFileSync(path.join(__dirname, '..', 'ci_scripts', 'ci_post_clone.sh'), 'utf8')
+const scriptPath = path.join(__dirname, '..', 'ios', 'App', 'ci_scripts', 'ci_post_clone.sh')
+const schemePath = path.join(__dirname, '..', 'ios', 'App', 'App.xcodeproj', 'xcshareddata', 'xcschemes', 'App.xcscheme')
+const script = fs.readFileSync(scriptPath, 'utf8')
 
 test('Xcode Cloud bootstrap uses Apple repository path instead of script cwd', () => {
   assert.match(script, /CI_PRIMARY_REPOSITORY_PATH/)
@@ -20,4 +22,18 @@ test('Xcode Cloud installs Pods only after syncing the ios project', () => {
   const appAt = script.indexOf('cd "$APP_DIR"')
   const podAt = script.indexOf('pod install --no-repo-update')
   assert.ok(syncAt > -1 && appAt > syncAt && podAt > appAt)
+})
+
+
+test('Xcode Cloud assets are colocated with the committed iOS workspace', () => {
+  assert.equal(fs.existsSync(path.join(__dirname, '..', 'ios', 'App', 'App.xcworkspace')), true)
+  assert.equal(fs.existsSync(scriptPath), true)
+})
+
+test('App scheme is shared and archive-enabled for Xcode Cloud', () => {
+  const scheme = fs.readFileSync(schemePath, 'utf8')
+  assert.match(scheme, /BlueprintIdentifier = "504EC3031FED79650016851F"/)
+  assert.match(scheme, /BlueprintName = "App"/)
+  assert.match(scheme, /buildForArchiving = "YES"/)
+  assert.match(scheme, /<ArchiveAction[\s\S]*buildConfiguration = "Release"/)
 })
