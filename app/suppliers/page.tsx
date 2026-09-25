@@ -31,6 +31,7 @@ const CATEGORY_COLOR: Record<Supplier['category'], string> = {
 const SF = 'var(--font-system)'
 
 export default function SuppliersPage() {
+  const [permissions, setPermissions] = useState({ canEdit: false, canDelete: false, canViewPerformance: false })
   const [suppliers, setSuppliers] = useState<Supplier[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
@@ -61,6 +62,7 @@ export default function SuppliersPage() {
       if (!res.ok) throw new Error('Failed to load')
       const d = await res.json()
       setSuppliers(d.suppliers || [])
+      setPermissions(d.permissions || { canEdit: false, canDelete: false, canViewPerformance: false })
       setError(null)
     } catch (e) { setError(e instanceof Error ? e.message : 'Unknown error') }
     finally { setLoading(false) }
@@ -110,9 +112,10 @@ export default function SuppliersPage() {
   const remove = async (id: string) => {
     try {
       const res = await fetch(`/api/suppliers/${id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Delete failed')
       setConfirmDelete(null); load()
-    } catch { setToast({ msg: 'Delete failed', type: 'error' }) }
+    } catch (error) { setToast({ msg: error instanceof Error ? error.message : 'Delete failed', type: 'error' }) }
   }
 
   return (
@@ -131,10 +134,10 @@ export default function SuppliersPage() {
               {suppliers.filter(s => !s.archivedAt).length} active
             </p>
           </div>
-          <button onClick={openAdd} aria-label="Add supplier" style={{ background: '#8b5cf6', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          {permissions.canEdit && <button type="button" onClick={openAdd} aria-label="Add supplier" style={{ background: '#8b5cf6', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Add</span>
-          </button>
+          </button>}
         </div>
       </div>
 
@@ -167,7 +170,7 @@ export default function SuppliersPage() {
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
         {suppliers.map(s => (
           <div key={s.id} style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 14, opacity: s.archivedAt ? 0.55 : 1 }}>
-            <div onClick={() => openEdit(s)} style={{ cursor: 'pointer' }}>
+            <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                 <span style={{ background: CATEGORY_COLOR[s.category] + '33', color: CATEGORY_COLOR[s.category], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{CATEGORY_LABEL[s.category]}</span>
                 {s.archivedAt && <span style={{ color: '#52749a', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>ARCHIVED</span>}
@@ -179,13 +182,14 @@ export default function SuppliersPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-              <Link href={`/suppliers/${s.id}/performance`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Performance</Link>
+              {permissions.canViewPerformance && <Link href={`/suppliers/${s.id}/performance`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Performance</Link>}
               {s.contactEmail && <a href={`mailto:${s.contactEmail}`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Email</a>}
               {s.contactPhone && <a href={`tel:${s.contactPhone}`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Call</a>}
-              <button onClick={() => toggleArchive(s)} style={pillBtn('#1a2f4e', '#c1d2e8')}>{s.archivedAt ? 'Restore' : 'Archive'}</button>
-              <button onClick={() => setConfirmDelete(s.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
+              {permissions.canEdit && <button type="button" onClick={() => openEdit(s)} style={pillBtn('#1a2f4e', '#c1d2e8')}>Edit</button>}
+              {permissions.canEdit && <button type="button" onClick={() => toggleArchive(s)} style={pillBtn('#1a2f4e', '#c1d2e8')}>{s.archivedAt ? 'Restore' : 'Archive'}</button>}
+              {permissions.canDelete && <button type="button" onClick={() => setConfirmDelete(s.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                 <IcTrash size={11} color="#fca5a5" /> Delete
-              </button>
+              </button>}
             </div>
             {confirmDelete === s.id && (
               <div style={{ marginTop: 10, padding: 10, background: 'rgba(239,68,68,0.1)', border: '0.5px solid rgba(239,68,68,0.4)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>

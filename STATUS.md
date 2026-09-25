@@ -1,62 +1,25 @@
-# Cortexx — Product Status
+# CortexBuild Pro — current status
 
-_One-page status as of **2026-07-18** · v1.4.0 · supersedes the 6 Jun 2026 review below the fold_
+Reviewed 25 September 2026. Canonical repository: `adrianstanca1/cortexx`; release branch: `main`; product line: v1.5.x.
 
-Cortexx (**CortexBuild Pro**) is a UK SMB construction-management platform live at **cortexbuildpro.com**: an autonomous AI CEO (Vera) plus contractor tooling, delivered as a monorepo with three client stacks over one backend.
+The current workflow roadmap is [Canonical Product Audit & Roadmap](docs/CANONICAL_PRODUCT_AUDIT_2026-09-24.md). Older June/July feature inventories are historical and must not be used as deployment or launch evidence.
 
----
+## Implemented in main
 
-## Architecture
+- Governed procurement: requisitions, approvals, RFQs, quote comparison, manual award, linked purchase orders, goods receipts and invoice three-way matching (PRs #203–204).
+- Supplier performance: recorded delivery reliability, overdue issued orders, net values, receipt commitments and evidence links (PR #205). Missing dates remain unassessed.
+- Consolidated construction web, PWA, native field client and shared APIs. Role journeys cover Company Admin, Project Manager, Foreman and Operative; only Company Admin creates projects.
+- The detailed audit tracks the existing commercial ledger, bank reconciliation, field capture, safety closeout, tenant scope and offline workflow work.
 
-**One backend, three frontends** (all consume `/api/*`; contract shared via `@cortexbuild/core`):
+## Current review changes
 
-| Target | Path | Stack |
-|--------|------|-------|
-| Offline PWA | `Cortexx.html` + `lib/` → `dist/` | Vanilla JS, Babel-in-browser, no bundler; offline-first; private Ollama LLM |
-| Web admin | `app/`, `prisma/` | Next.js 16, React 19, next-auth v5, Prisma 7, Tailwind v4 |
-| Native | `expo/`, `ios/` | Expo SDK 57 / Capacitor 8.4 |
+Supplier mutations now require an active company and explicit write/admin permissions. Creation and updates are audited. Deletion requires Company Admin access and rejects suppliers with procurement history in a serializable transaction; archive remains available. UI actions follow server-returned permissions. These changes are release candidates until their PR passes CI and merges.
 
-**Backend** (`server/`): Express + PostgreSQL, multi-tenant (`workspace_id`), JWT + magic-link auth, SSE realtime, Ollama LLM. 11 route modules (banking, hmrc, iap, llm, payments, push, sync, portal, ledger, intelligence, agents). Deployed via `docker-compose.yml` (Postgres 16 + Express + Ollama + Caddy). Canonical data model is **raw SQL** (`server/db/schema.sql`).
+## Release evidence and remaining work
 
----
+- As checked on 25 September, deployment run `36099971646` succeeded for main `843380b` (requisition/RFQ release).
+- The deployment for scorecard main `4b23b0e` was skipped by the CI gate. Merged code must not be described as deployed until its main CI and deployment succeed.
+- Xcode Cloud project-layout fixes are in PR #206. Linux checks do not establish a successful Apple archive or TestFlight upload.
+- External accounting adapters, supplier quality/defect evidence, programme/drawing workflow depth, governed agent tools, device/accessibility/load verification, and backup/restore/rollback drills remain tracked in the canonical roadmap.
 
-## What's live
-
-- ✅ Production PWA at cortexbuildpro.com — **113** precompiled modules (phases through 118), **15** dashboard layouts, `<1s` cold start, offline-capable.
-- ✅ Express + Postgres backend — multi-tenant, JWT + magic-link, SSE realtime, local Ollama LLM (no external keys).
-- ✅ Next.js 16 web admin — **110+** pages.
-- ✅ Monorepo consolidation with shared `@cortexbuild/core` (commit `7865114d`).
-- ✅ iOS Capacitor 8 + Expo SDK 57 native shell, build-ready (commit `b3974259`).
-- ✅ 8-dangling-nav fix (commit `d2cc8713`); cloud-sync on shared core (commit `8e83da72`).
-- ✅ **234 tests passing** (`npm test`); `node build-dist.js --check` reports `dist/` in sync with `lib/`.
-- ✅ Vera autonomous CEO + 5-person leadership team (Marcus Pound, Pip Carter, Ada Whitfield, River Ng).
-
----
-
-## What's blocked
-
-- 🚧 **iOS App Store submission** — requires a **Mac + Apple Developer account** (provisioning, universal-links/AASA, StoreKit IAP). **Not reproducible from this Linux VPS.** Runbooks: `expo/DEPLOY-IOS.md`, `ios/README.md`, `app-store/SUBMISSION.md`.
-- ⚠️ Native Expo app is a **thin 5-screen shell**, not a full mirror of the PWA — feature parity is future work.
-
----
-
-## Top 3 P0 fixes
-
-1. **Nav registry** — replace the **184-branch** `sheet === '…'` dispatcher in `lib/app-main.jsx` with a declarative **SheetRegistry** (`test/nav-registry.test.js` seeds this).
-2. **Docs accuracy** — README/ROADMAP/STATUS were stale (wrong module count, outdated Capacitor version, "no backend" and static-only deploy claims). **Fixed in this pass** — keep them true to v1.4.0.
-3. **Data-model unification** — two divergent models: **raw SQL (34 tables)** canonical vs **Prisma (82 models)** parallel. Unify. See [`docs/DATA_MODEL_DRIFT.md`](docs/DATA_MODEL_DRIFT.md) + `scripts/align-prisma-to-sql.mjs`.
-
----
-
-## Health snapshot
-
-| Signal | State |
-|--------|-------|
-| Version | 1.4.0 |
-| Tests | 234 passing |
-| `dist/` ↔ `lib/` | in sync (`build-dist.js --check` = 0) |
-| Workaround markers (TODO/FIXME/HACK/XXX/WORKAROUND) | ~32 across `lib/`+`server/`+`app/`+`packages/` — triage backlog |
-| Nav dispatcher | 184 branches — refactor pending |
-| Data models | 2 (drifted) — unify pending |
-
-See [`ROADMAP.md`](ROADMAP.md) § Status (2026-07-18) for detail and [`CLAUDE.md`](CLAUDE.md) for architecture + deployment.
+A successful build or a page existing does not establish complete launch readiness. Use current CI, integration/browser results and deployment logs for each release.

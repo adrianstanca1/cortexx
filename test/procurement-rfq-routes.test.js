@@ -119,3 +119,18 @@ test('issuing an RFQ-awarded PO rebases quoted lead time from the actual send da
     7 * 24 * 60 * 60 * 1000,
   )
 })
+
+test('repeated PO approval or rejection cannot overwrite the original decision', async () => {
+  for (const role of ['member', 'owner']) for (const status of ['approved', 'rejected']) {
+    let writes = 0
+    const { PUT } = handler('app/api/pos/[id]/route.ts', {
+      purchaseOrder: {
+        findUnique: async () => ({ id: 'po1', status, subtotal: 100 }),
+        update: async () => { writes++; return {} },
+      },
+    }, role)
+    const result = await PUT(request({ status, rejectionReason: 'replacement' }), { params: Promise.resolve({ id: 'po1' }) })
+    assert.equal(result.status, 409)
+    assert.equal(writes, 0)
+  }
+})
