@@ -13,18 +13,30 @@ interface Inspection {
   projectId: string
   title: string
   type: 'general' | 'safety' | 'quality' | 'scaffold' | 'electrical'
+  pointType: 'inspection' | 'hold' | 'witness'
   status: 'draft' | 'in_progress' | 'passed' | 'failed'
   checklistItems: ChecklistItem[]
   overallResult: 'pass' | 'fail' | null
   conductedBy: string | null
   scheduledAt: string | null
   completedAt: string | null
+  location: string | null
+  drawingId: string | null
+  drawingRevisionId: string | null
+  releaseStatus: 'not_required' | 'pending' | 'released' | 'rejected'
+  releasedBy: string | null
+  releasedAt: string | null
+  witnessedBy: string | null
+  witnessedAt: string | null
   notes: string | null
   createdAt: string
   updatedAt: string
   project?: { id: string; name: string } | null
+  drawing?: { id: string; number: string; title: string } | null
+  drawingRevision?: { id: string; revision: string; fileUrl?: string | null } | null
 }
 interface Project { id: string; name: string }
+interface Drawing { id: string; projectId: string; number: string; title: string; revisions?: Array<{ id: string; revision: string; fileUrl?: string | null }> }
 
 const TYPE_LABEL: Record<Inspection['type'], string> = {
   general: 'General', safety: 'Safety', quality: 'Quality', scaffold: 'Scaffold', electrical: 'Electrical',
@@ -51,6 +63,7 @@ const DEFAULT_CHECKLISTS: Record<Inspection['type'], string[]> = {
 export default function InspectionsPage() {
   const [inspections, setInspections] = useState<Inspection[]>([])
   const [projects, setProjects] = useState<Project[]>([])
+  const [drawings, setDrawings] = useState<Drawing[]>([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [statusFilter, setStatusFilter] = useState<'all' | Inspection['status']>('all')
@@ -61,7 +74,8 @@ export default function InspectionsPage() {
   const [expanded, setExpanded] = useState<string | null>(null)
 
   const [form, setForm] = useState({
-    projectId: '', title: '', type: 'general' as Inspection['type'], scheduledAt: '',
+    projectId: '', title: '', type: 'general' as Inspection['type'], pointType: 'inspection' as Inspection['pointType'],
+    scheduledAt: '', location: '', drawingId: '', drawingRevisionId: '',
   })
 
   useModalEffects(showModal, () => setShowModal(false))
@@ -70,9 +84,10 @@ export default function InspectionsPage() {
     try {
       const params = new URLSearchParams()
       if (statusFilter !== 'all') params.set('status', statusFilter)
-      const [iRes, prjRes] = await Promise.all([
+      const [iRes, prjRes, drawingRes] = await Promise.all([
         fetch(`/api/inspections?${params.toString()}`),
         fetch('/api/projects?status=active'),
+        fetch('/api/drawings?take=200'),
       ])
       if (!iRes.ok) throw new Error('Failed to load inspections')
       const id = await iRes.json()
@@ -80,6 +95,10 @@ export default function InspectionsPage() {
       if (prjRes.ok) {
         const pd = await prjRes.json()
         setProjects((pd.projects || []).map((p: Project) => ({ id: p.id, name: p.name })))
+      }
+      if (drawingRes.ok) {
+        const dd = await drawingRes.json()
+        setDrawings(dd.drawings || [])
       }
       setError(null)
     } catch (e) { setError(e instanceof Error ? e.message : 'Unknown error') }
@@ -89,7 +108,7 @@ export default function InspectionsPage() {
   useEffect(() => { load() }, [load])
 
   const openAdd = () => {
-    setForm({ projectId: projects[0]?.id || '', title: '', type: 'general', scheduledAt: '' })
+    setForm({ projectId: projects[0]?.id || '', title: '', type: 'general', pointType: 'inspection', scheduledAt: '', location: '', drawingId: '', drawingRevisionId: '' })
     setShowModal(true)
   }
 
@@ -99,9 +118,11 @@ export default function InspectionsPage() {
     setSaving(true)
     try {
       const checklist = DEFAULT_CHECKLISTS[form.type].map((label, i) => ({ id: `item-${i}`, label }))
+      const selectedDrawing = drawings.find(d => d.id === form.drawingId)
+      const latestRevisionId = form.drawingRevisionId || selectedDrawing?.revisions?.[0]?.id || ''
       const res = await fetch('/api/inspections', {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ ...form, checklistItems: checklist }),
+        body: JSON.stringify({ ...form, drawingId: form.drawingId || null, drawingRevisionId: latestRevisionId || null, checklistItems: checklist }),
       })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data.error || 'Failed to save')
@@ -126,9 +147,26 @@ export default function InspectionsPage() {
   const setStatus = async (i: Inspection, status: Inspection['status']) => {
     try {
       const res = await fetch(`/api/inspections/${i.id}`, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status }) })
-      if (!res.ok) throw new Error()
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Update failed')
       load()
-    } catch { setToast({ msg: 'Update failed', type: 'error' }) }
+    } catch (e) { setToast({ msg: e instanceof Error ? e.message : 'Update failed', type: 'error' }) }
+  }
+
+  const releasePoint = async (i: Inspection, releaseStatus: 'released' | 'rejected') => {
+    try {
+      const res = await fetch(`/api/inspections/${i.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ releaseStatus }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Release update failed')
+      setToast({ msg: releaseStatus === 'released' ? `${i.pointType} point released` : `${i.pointType} point rejected`, type: releaseStatus === 'released' ? 'success' : 'error' })
+      load()
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Release update failed', type: 'error' })
+    }
   }
 
   const remove = async (id: string) => {
@@ -190,13 +228,16 @@ export default function InspectionsPage() {
               <div onClick={() => setExpanded(isOpen ? null : i.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                   <span style={{ background: TYPE_COLOR[i.type] + '33', color: TYPE_COLOR[i.type], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[i.type]}</span>
+                  {i.pointType !== 'inspection' && <span style={{ background: '#8b5cf633', color: '#c4b5fd', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{i.pointType} point</span>}
+                  {i.pointType !== 'inspection' && <span style={{ background: (i.releaseStatus === 'released' ? '#10b981' : i.releaseStatus === 'rejected' ? '#ef4444' : '#f59e0b') + '22', color: i.releaseStatus === 'released' ? '#10b981' : i.releaseStatus === 'rejected' ? '#ef4444' : '#f59e0b', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{i.releaseStatus}</span>}
                   <span style={{ background: STATUS_COLOR[i.status] + '33', color: STATUS_COLOR[i.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{STATUS_LABEL[i.status]}</span>
                   {failed > 0 && i.status !== 'passed' && <span style={{ color: '#ef4444', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{failed} FAIL</span>}
                 </div>
                 <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>{i.title}</div>
                 <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
-                  {i.project?.name || '—'}{i.scheduledAt ? ` · ${new Date(i.scheduledAt).toLocaleDateString('en-GB')}` : ''} · {done}/{total} checked
+                  {i.project?.name || '—'}{i.location ? ` · ${i.location}` : ''}{i.scheduledAt ? ` · ${new Date(i.scheduledAt).toLocaleDateString('en-GB')}` : ''} · {done}/{total} checked
                 </div>
+                {i.drawing && <div style={{ fontFamily: SF, fontSize: 10.5, color: '#8b5cf6', marginTop: 3 }}>Drawing {i.drawing.number}{i.drawingRevision ? ` · Rev ${i.drawingRevision.revision}` : ''} · {i.drawing.title}</div>}
               </div>
 
               {isOpen && (
@@ -214,6 +255,14 @@ export default function InspectionsPage() {
                     ))}
                   </div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                    {i.pointType !== 'inspection' && i.releaseStatus !== 'released' && (
+                      <button onClick={() => releasePoint(i, 'released')} style={pillBtn('#8b5cf6')}>
+                        <IcCheck size={11} color="#fff" /> {i.pointType === 'witness' ? 'Witness / release' : 'Release hold'}
+                      </button>
+                    )}
+                    {i.pointType !== 'inspection' && i.releaseStatus === 'pending' && (
+                      <button onClick={() => releasePoint(i, 'rejected')} style={pillBtn('#7f1d1d', '#fecaca', '#ef444466')}>Reject point</button>
+                    )}
                     {i.status !== 'passed' && (
                       <button onClick={() => setStatus(i, 'passed')} style={pillBtn('#10b981')}>
                         <IcCheck size={11} color="#fff" /> Pass
@@ -259,7 +308,7 @@ export default function InspectionsPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <Field label="Project *">
-                <select value={form.projectId} onChange={e => setForm(f => ({ ...f, projectId: e.target.value }))} style={inputStyle}>
+                <select value={form.projectId} onChange={e => setForm(f => ({ ...f, projectId: e.target.value, drawingId: '', drawingRevisionId: '' }))} style={inputStyle}>
                   <option value="">Select…</option>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
@@ -276,11 +325,32 @@ export default function InspectionsPage() {
                   ))}
                 </div>
               </Field>
+              <Field label="Control point">
+                <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
+                  {(['inspection', 'hold', 'witness'] as const).map(pointType => (
+                    <button key={pointType} type="button" onClick={() => setForm(f => ({ ...f, pointType }))} style={{ background: form.pointType === pointType ? '#8b5cf6' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.pointType === pointType ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}>
+                      {pointType === 'inspection' ? 'Standard inspection' : `${pointType} point`}
+                    </button>
+                  ))}
+                </div>
+              </Field>
+              <Field label="Location / workface">
+                <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} style={inputStyle} placeholder="East elevation · Level 4 · Grid E3" />
+              </Field>
+              <Field label="Drawing / latest revision">
+                <select value={form.drawingId} onChange={e => {
+                  const drawing = drawings.find(d => d.id === e.target.value)
+                  setForm(f => ({ ...f, drawingId: e.target.value, drawingRevisionId: drawing?.revisions?.[0]?.id || '' }))
+                }} style={inputStyle}>
+                  <option value="">No drawing link</option>
+                  {drawings.filter(d => d.projectId === form.projectId).map(d => <option key={d.id} value={d.id}>{d.number} · {d.title}{d.revisions?.[0] ? ` · Rev ${d.revisions[0].revision}` : ''}</option>)}
+                </select>
+              </Field>
               <Field label="Scheduled for">
                 <input type="datetime-local" value={form.scheduledAt} onChange={e => setForm(f => ({ ...f, scheduledAt: e.target.value }))} style={inputStyle} />
               </Field>
               <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', background: 'rgba(16,185,129,0.08)', borderRadius: 8, padding: 10 }}>
-                A starter checklist for <strong>{TYPE_LABEL[form.type]}</strong> ({DEFAULT_CHECKLISTS[form.type].length} items) will be pre-populated. Tap items on the card to mark pass / fail / N/A.
+                A starter checklist for <strong>{TYPE_LABEL[form.type]}</strong> ({DEFAULT_CHECKLISTS[form.type].length} items) will be pre-populated. {form.pointType === 'hold' ? 'This hold point cannot pass until it is formally released.' : form.pointType === 'witness' ? 'This witness point cannot pass until witness/release is recorded.' : 'Tap items on the card to mark pass / fail / N/A.'}
               </div>
               <button onClick={save} disabled={saving} style={{ background: '#10b981', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Schedule'}

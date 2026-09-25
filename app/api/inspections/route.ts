@@ -3,11 +3,13 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import controls from '@/lib/field-controls'
 
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_TYPE = new Set(['general', 'safety', 'quality', 'scaffold', 'electrical'])
 const ALLOWED_STATUS = new Set(['draft', 'in_progress', 'passed', 'failed'])
+const POINT_TYPES = new Set(['inspection', 'hold', 'witness'])
 const ITEM_RESULT = new Set(['pass', 'fail', 'na'])
 
 interface ChecklistItem { id: string; label: string; result?: 'pass' | 'fail' | 'na'; note?: string }
@@ -48,7 +50,11 @@ export async function GET(req: NextRequest) {
     const [inspections, openCount, failedCount] = await Promise.all([
       prisma.inspection.findMany({
         where,
-        include: { project: { select: { id: true, name: true } } },
+        include: {
+          project: { select: { id: true, name: true } },
+          drawing: { select: { id: true, number: true, title: true } },
+          drawingRevision: { select: { id: true, revision: true, fileUrl: true } },
+        },
         orderBy: [{ status: 'asc' }, { scheduledAt: 'asc' }, { updatedAt: 'desc' }],
         take: 200,
       }),
@@ -77,22 +83,47 @@ export async function POST(req: NextRequest) {
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
 
     const type = ALLOWED_TYPE.has(body.type) ? body.type : 'general'
+    const pointType = POINT_TYPES.has(body.pointType) ? body.pointType : 'inspection'
     const checklistItems = sanitizeChecklist(body.checklistItems)
     const scheduledAt = parseDate(body.scheduledAt)
     if (scheduledAt === undefined && body.scheduledAt) return NextResponse.json({ error: 'Invalid scheduledAt' }, { status: 400 })
+
+    let drawingId = body.drawingId ? String(body.drawingId) : null
+    let drawingRevisionId = body.drawingRevisionId ? String(body.drawingRevisionId) : null
+    if (drawingRevisionId) {
+      const revision = await prisma.drawingRevision.findUnique({
+        where: { id: drawingRevisionId },
+        include: { drawing: { select: { id: true, projectId: true } } },
+      })
+      if (!revision || revision.drawing.projectId !== projectId) return NextResponse.json({ error: 'Drawing revision is not part of this project' }, { status: 400 })
+      drawingId = revision.drawing.id
+    } else if (drawingId) {
+      const drawing = await prisma.drawing.findFirst({ where: { id: drawingId, projectId }, select: { id: true } })
+      if (!drawing) return NextResponse.json({ error: 'Drawing is not part of this project' }, { status: 400 })
+    }
 
     const inspection = await prisma.inspection.create({
       data: {
         projectId,
         title: title.slice(0, 200),
         type,
+        pointType,
         status: 'draft',
         checklistItems: checklistItems as unknown as object,
         conductedBy: actorName(auth),
         scheduledAt: (scheduledAt ?? null) as Date | null,
+        location: controls.cleanText(body.location, 160) || null,
+        drawingId,
+        drawingRevisionId,
+        releaseStatus: controls.initialReleaseStatus(pointType),
+        evidence: controls.sanitizeEvidence(body.evidence) as unknown as object,
         notes: typeof body.notes === 'string' && body.notes ? body.notes.slice(0, 2000) : null,
       },
-      include: { project: { select: { id: true, name: true } } },
+      include: {
+        project: { select: { id: true, name: true } },
+        drawing: { select: { id: true, number: true, title: true } },
+        drawingRevision: { select: { id: true, revision: true, fileUrl: true } },
+      },
     })
 
     prisma.activity.create({

@@ -6,6 +6,7 @@ import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import procurementControl from '@/lib/procurement-control'
+import fieldControls from '@/lib/field-controls'
 
 export const dynamic = 'force-dynamic'
 const { receiptValue } = procurementControl
@@ -93,6 +94,7 @@ export async function POST(
           lineItems: valuation.lineItems as unknown as object,
           netReceived: valuation.netReceived,
           notes: body.notes?.toString().trim() || null,
+          evidence: fieldControls.sanitizeEvidence(body.evidence) as unknown as object,
           organizationId: auth.orgId,
         },
       })

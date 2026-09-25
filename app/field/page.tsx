@@ -58,11 +58,17 @@ type FieldPulse = {
   overdueChecks: number
   openRfis: number
   overdueRfis: number
+  openConstraints: number
+  criticalConstraints: number
+  pendingQaPoints: number
+  pendingHandovers: number
+  planHit: number | null
 }
 
 const EMPTY_PULSE: FieldPulse = {
   activePermits: 0, expiringPermits: 0, openInspections: 0, failedInspections: 0,
   openSnags: 0, overdueChecks: 0, openRfis: 0, overdueRfis: 0,
+  openConstraints: 0, criticalConstraints: 0, pendingQaPoints: 0, pendingHandovers: 0, planHit: null,
 }
 
 type Action = {
@@ -92,13 +98,15 @@ const WORK: Action[] = [
   { label: 'Tasks', sub: 'Today, assigned and urgent work', href: '/tasks', color: '#06b6d4', Icon: IcCheck },
   { label: 'Drawings', sub: 'Latest revisions on site', href: '/drawings', color: '#8b5cf6', Icon: IcLayers },
   { label: 'Voice RFI', sub: 'Raise an RFI hands-free', href: '/capture?type=voice', color: '#06b6d4', Icon: IcMic },
-  { label: 'Deliveries', sub: 'Expected and received materials', href: '/field/deliveries', color: '#f59e0b', Icon: IcTruck },
+  { label: 'Deliveries', sub: 'Expected, received and delivery evidence', href: '/field/deliveries', color: '#f59e0b', Icon: IcTruck },
+  { label: 'Productivity', sub: 'Planned vs installed by area/elevation', href: '/field/productivity', color: '#10b981', Icon: IcLayers },
   { label: 'Materials', sub: 'Materials and site requirements', href: '/materials', color: '#f59e0b', Icon: IcTruck },
   { label: 'Requisitions', sub: 'Request what the site needs', href: '/requisitions', color: '#8b5cf6', Icon: IcDoc },
 ]
 
 const QA_SAFETY: Action[] = [
-  { label: 'Inspections', sub: 'Quality checks and sign-off', href: '/inspections', color: '#10b981', Icon: IcCheck },
+  { label: 'Inspections', sub: 'Inspections, hold and witness points', href: '/inspections', color: '#10b981', Icon: IcCheck },
+  { label: 'Constraints', sub: 'Blockers, owners, dates and resolution', href: '/field/constraints', color: '#ef4444', Icon: IcAlert },
   { label: 'Snags', sub: 'Defects with photo evidence', href: '/snags', color: '#ef4444', Icon: IcAlert },
   { label: 'Observations', sub: 'Good practice and concerns', href: '/observations', color: '#22c55e', Icon: IcCheck },
   { label: 'Equipment checks', sub: 'Pre-use and recurring checks', href: '/equipment-checks', color: '#f59e0b', Icon: IcWrench },
@@ -107,6 +115,7 @@ const QA_SAFETY: Action[] = [
 ]
 
 const CLOSE_SHIFT: Action[] = [
+  { label: 'Shift handover', sub: 'Pass priorities, risks and open items', href: '/field/handover', color: '#f59e0b', Icon: IcTeam },
   { label: 'Site diary', sub: 'Progress, delays and evidence', href: '/site-diary', color: '#10b981', Icon: IcDoc },
   { label: 'Timesheet', sub: 'Check and submit hours', href: '/timesheets', color: '#8b5cf6', Icon: IcClock },
   { label: 'Photos', sub: 'Review today’s evidence', href: '/photos', color: '#2563eb', Icon: IcCamera },
@@ -166,11 +175,14 @@ export default function FieldOperationsPage() {
     }
     Promise.all([
       read<{ activeCount?: number; expiringSoon?: number }>(`/api/permits?projectId=${encodeURIComponent(projectId)}`),
-      read<{ openCount?: number; failedCount?: number }>(`/api/inspections?projectId=${encodeURIComponent(projectId)}`),
+      read<{ openCount?: number; failedCount?: number; inspections?: Array<{ pointType?: string; releaseStatus?: string }> }>(`/api/inspections?projectId=${encodeURIComponent(projectId)}`),
       read<{ openCount?: number }>(`/api/snags?projectId=${encodeURIComponent(projectId)}&take=1`),
       read<{ checks?: Array<{ project?: { id?: string } | null }> }>('/api/equipment-checks/overdue'),
       read<{ openCount?: number; overdueCount?: number }>(`/api/rfis?projectId=${encodeURIComponent(projectId)}&take=1`),
-    ]).then(([permits, inspections, snags, equipment, rfis]) => {
+      read<{ openCount?: number; criticalCount?: number }>(`/api/field-constraints?projectId=${encodeURIComponent(projectId)}`),
+      read<{ pendingAcceptance?: number }>(`/api/field-handovers?projectId=${encodeURIComponent(projectId)}&take=20`),
+      read<{ summary?: { completionPct?: number | null } }>(`/api/field-production?projectId=${encodeURIComponent(projectId)}`),
+    ]).then(([permits, inspections, snags, equipment, rfis, constraints, handovers, production]) => {
       if (cancelled) return
       const overdueChecks = Array.isArray(equipment?.checks)
         ? equipment.checks.filter((c: { project?: { id?: string } | null }) => c.project?.id === projectId).length
@@ -184,6 +196,13 @@ export default function FieldOperationsPage() {
         overdueChecks,
         openRfis: Number(rfis?.openCount || 0),
         overdueRfis: Number(rfis?.overdueCount || 0),
+        openConstraints: Number(constraints?.openCount || 0),
+        criticalConstraints: Number(constraints?.criticalCount || 0),
+        pendingQaPoints: Array.isArray(inspections?.inspections)
+          ? inspections.inspections.filter(point => ['hold', 'witness'].includes(String(point.pointType)) && point.releaseStatus !== 'released').length
+          : 0,
+        pendingHandovers: Number(handovers?.pendingAcceptance || 0),
+        planHit: typeof production?.summary?.completionPct === 'number' ? production.summary.completionPct : null,
       })
     }).catch(() => {
       if (!cancelled) setPulse(EMPTY_PULSE)
@@ -322,6 +341,10 @@ export default function FieldOperationsPage() {
             <PulseCard href="/snags" label="Open snags" value={pulse.openSnags} alert={pulse.openSnags > 0} sub="Outstanding defects" />
             <PulseCard href="/equipment-checks?status=overdue" label="Checks overdue" value={pulse.overdueChecks} alert={pulse.overdueChecks > 0} sub="Equipment / plant" />
             <PulseCard href="/rfis" label="Open RFIs" value={pulse.openRfis} alert={pulse.overdueRfis > 0} sub={pulse.overdueRfis ? `${pulse.overdueRfis} overdue` : 'No overdue RFIs'} />
+            <PulseCard href="/field/constraints" label="Open constraints" value={pulse.openConstraints} alert={pulse.criticalConstraints > 0} sub={pulse.criticalConstraints ? `${pulse.criticalConstraints} critical` : 'No critical blockers'} />
+            <PulseCard href="/inspections" label="QA release waiting" value={pulse.pendingQaPoints} alert={pulse.pendingQaPoints > 0} sub="Hold / witness points" />
+            <PulseCard href="/field/handover" label="Handover waiting" value={pulse.pendingHandovers} alert={pulse.pendingHandovers > 0} sub="Awaiting incoming acceptance" />
+            <PulseCard href="/field/productivity" label="Plan achieved" value={pulse.planHit == null ? 0 : Math.round(pulse.planHit)} alert={pulse.planHit != null && pulse.planHit < 80} sub={pulse.planHit == null ? 'No production logged' : `${pulse.planHit.toFixed(1)}% of plan`} suffix={pulse.planHit == null ? '' : '%'} />
           </div>
         </section>
 
@@ -508,13 +531,13 @@ function Empty({ text }: { text: string }) {
   return <div style={{ padding: '18px 14px', borderRadius: 12, background: '#102039', color: '#52749a', textAlign: 'center', fontFamily: SF, fontSize: 12 }}>{text}</div>
 }
 
-function PulseCard({ href, label, value, sub, alert }: { href: string; label: string; value: number; sub: string; alert?: boolean }) {
+function PulseCard({ href, label, value, sub, alert, suffix = '' }: { href: string; label: string; value: number; sub: string; alert?: boolean; suffix?: string }) {
   const color = alert ? '#f59e0b' : '#10b981'
   return (
     <Link href={href} style={{ minHeight: 82, textDecoration: 'none', borderRadius: 12, background: '#102039', border: `1px solid ${alert ? 'rgba(245,158,11,.28)' : 'rgba(255,255,255,.07)'}`, padding: 11 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
         <span style={{ color: '#eef3fa', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>{label}</span>
-        <span style={{ color, fontFamily: SF, fontSize: 20, fontWeight: 900 }}>{value}</span>
+        <span style={{ color, fontFamily: SF, fontSize: 20, fontWeight: 900 }}>{value}{suffix}</span>
       </div>
       <div style={{ color: alert ? '#fbbf24' : '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 7 }}>{sub}</div>
     </Link>

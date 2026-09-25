@@ -8,7 +8,8 @@ import { IcChevL, IcCheck, IcClock, IcDoc, IcTruck } from '@/components/ui/Icons
 type Project = { id: string; name: string }
 type LineItem = { description: string; quantity: number; unit?: string; unitPrice: number; total: number }
 type ReceiptLine = { lineIndex: number; quantity: number }
-type GoodsReceipt = { id: string; deliveredAt: string; deliveryNote?: string | null; receivedBy?: string | null; lineItems?: ReceiptLine[]; notes?: string | null }
+type DeliveryEvidence = { photoUrls?: string[]; signatureUrl?: string | null; signedBy?: string | null; condition?: string | null; storageLocation?: string | null }
+type GoodsReceipt = { id: string; deliveredAt: string; deliveryNote?: string | null; receivedBy?: string | null; lineItems?: ReceiptLine[]; notes?: string | null; evidence?: DeliveryEvidence }
 type PO = {
   id: string
   number: string
@@ -35,6 +36,11 @@ export default function FieldDeliveriesPage() {
   const [qty, setQty] = useState<QtyMap>({})
   const [deliveryNote, setDeliveryNote] = useState('')
   const [notes, setNotes] = useState('')
+  const [photoFiles, setPhotoFiles] = useState<File[]>([])
+  const [signatureFile, setSignatureFile] = useState<File | null>(null)
+  const [signedBy, setSignedBy] = useState('')
+  const [condition, setCondition] = useState('Good')
+  const [storageLocation, setStorageLocation] = useState('')
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
 
@@ -92,8 +98,22 @@ export default function FieldDeliveriesPage() {
     setQty(initial)
     setDeliveryNote('')
     setNotes('')
+    setPhotoFiles([])
+    setSignatureFile(null)
+    setSignedBy('')
+    setCondition('Good')
+    setStorageLocation('')
     setMessage('')
     setReceiving(po)
+  }
+
+  const uploadEvidenceFile = async (file: File) => {
+    const fd = new FormData()
+    fd.append('file', file)
+    const res = await fetch('/api/uploads', { method: 'POST', body: fd })
+    const body = await res.json().catch(() => ({}))
+    if (!res.ok || !body?.url) throw new Error(body?.error || 'Evidence upload failed')
+    return String(body.url)
   }
 
   const submitReceipt = async () => {
@@ -118,6 +138,9 @@ export default function FieldDeliveriesPage() {
     setSaving(true)
     setMessage('')
     try {
+      const photoUrls: string[] = []
+      for (const file of photoFiles.slice(0, 6)) photoUrls.push(await uploadEvidenceFile(file))
+      const signatureUrl = signatureFile ? await uploadEvidenceFile(signatureFile) : null
       const res = await fetch(`/api/pos/${receiving.id}/receipts`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -126,6 +149,13 @@ export default function FieldDeliveriesPage() {
           deliveryNote: deliveryNote.trim() || null,
           notes: notes.trim() || null,
           deliveredAt: new Date().toISOString(),
+          evidence: {
+            photoUrls,
+            signatureUrl,
+            signedBy: signedBy.trim() || null,
+            condition: condition.trim() || null,
+            storageLocation: storageLocation.trim() || null,
+          },
         }),
       })
       const body = await res.json().catch(() => ({}))
@@ -228,6 +258,7 @@ export default function FieldDeliveriesPage() {
                   {(po.goodsReceipts || []).length > 0 && (
                     <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', padding: '9px 13px', color: '#8ea8c5', fontFamily: SF, fontSize: 10.5 }}>
                       <IcCheck size={12} color="#10b981" /> {(po.goodsReceipts || []).length} receipt{(po.goodsReceipts || []).length === 1 ? '' : 's'} logged
+                      {(po.goodsReceipts || []).some(r => (r.evidence?.photoUrls || []).length > 0 || r.evidence?.signatureUrl || r.evidence?.signedBy) && <span style={{ color: '#8b5cf6' }}> · evidence attached</span>}
                     </div>
                   )}
                 </section>
@@ -275,7 +306,21 @@ export default function FieldDeliveriesPage() {
             })}
 
             <label style={labelStyle}>Delivery note / reference<input value={deliveryNote} maxLength={160} onChange={e => setDeliveryNote(e.target.value)} placeholder="e.g. DN-38122" style={inputStyle} /></label>
-            <label style={labelStyle}>Condition / shortages / notes<textarea value={notes} maxLength={1000} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Damaged packs, missing items, storage location…" style={{ ...inputStyle, resize: 'vertical' }} /></label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
+              <label style={labelStyle}>Condition<input value={condition} maxLength={120} onChange={e => setCondition(e.target.value)} placeholder="Good / damaged / wet…" style={inputStyle} /></label>
+              <label style={labelStyle}>Storage location<input value={storageLocation} maxLength={160} onChange={e => setStorageLocation(e.target.value)} placeholder="Laydown area / Level 3" style={inputStyle} /></label>
+            </div>
+            <label style={labelStyle}>Delivery photos (max 6)
+              <input type="file" accept="image/*" capture="environment" multiple onChange={e => setPhotoFiles(Array.from(e.target.files || []).slice(0,6))} style={{ ...inputStyle, padding: 8 }} />
+              {photoFiles.length > 0 && <span style={{ color: '#10b981', marginTop: 3 }}>{photoFiles.length} photo{photoFiles.length === 1 ? '' : 's'} ready</span>}
+            </label>
+            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
+              <label style={labelStyle}>Signed by<input value={signedBy} maxLength={120} onChange={e => setSignedBy(e.target.value)} placeholder="Name receiving / checking delivery" style={inputStyle} /></label>
+              <label style={labelStyle}>Signed-note photo
+                <input type="file" accept="image/*" capture="environment" onChange={e => setSignatureFile(e.target.files?.[0] || null)} style={{ ...inputStyle, padding: 8 }} />
+              </label>
+            </div>
+            <label style={labelStyle}>Shortages / damage / notes<textarea value={notes} maxLength={1000} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Damaged packs, missing items, quarantine instructions…" style={{ ...inputStyle, resize: 'vertical' }} /></label>
 
             {message && <div style={{ color: '#ef4444', fontFamily: SF, fontSize: 11, marginBottom: 9 }}>{message}</div>}
             <button type="button" disabled={saving} onClick={submitReceipt} style={{ width: '100%', border: 'none', borderRadius: 11, padding: '12px 14px', background: '#10b981', color: '#06101e', fontFamily: SF, fontSize: 12, fontWeight: 900, opacity: saving ? .6 : 1, cursor: 'pointer' }}>

@@ -66,6 +66,18 @@ export const postCollection = (name: string, body: any) => api.postCollection(na
 export const putCollection = (name: string, id: string, body: any) => api.putCollection(name, id, body);
 export const apiGet = (path: string) => api.apiGet(path);
 export const apiPost = (path: string, body: any) => api.apiPost(path, body);
+export async function apiPatch(path: string, body: any) {
+  const token = await getToken();
+  const res = await fetch(`${API_URL}${path}`, {
+    method: 'PATCH',
+    headers: { 'content-type': 'application/json', ...(token ? { Authorization: `Bearer ${token}` } : {}) },
+    body: JSON.stringify(body),
+  });
+  const payload = await res.json().catch(() => ({}));
+  if (res.status === 401) { await clearToken(); throw new Error('unauthorized'); }
+  if (!res.ok) throw new Error(payload?.error || 'Update failed');
+  return payload;
+}
 export const onQueueChange = api.onQueueChange;
 export const pendingWrites = api.pendingWrites;
 export const flushQueue = api.flushQueue;

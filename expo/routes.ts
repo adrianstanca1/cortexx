@@ -7,6 +7,7 @@ export type AppRoute =
   | 'checkin'
   | 'readiness'
   | 'deliveries'
+  | 'controls'
   | 'timesheets'
   | 'diary'
   | 'snags'

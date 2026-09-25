@@ -7,7 +7,8 @@ import type { AuthUser } from './api';
 const ITEMS: Array<{ route: AppRoute; title: string; sub: string; tone: string }> = [
   { route: 'checkin', title: 'Check in / out', sub: 'GPS-backed site attendance', tone: Colors.green },
   { route: 'readiness', title: 'Site readiness', sub: 'Permits, QA blockers, RFIs and equipment checks', tone: Colors.red },
-  { route: 'deliveries', title: 'Deliveries', sub: 'Expected materials and goods received', tone: Colors.orange },
+  { route: 'deliveries', title: 'Deliveries', sub: 'Goods received with field evidence', tone: Colors.orange },
+  { route: 'controls', title: 'Site controls', sub: 'Blockers, handover, output and QA release', tone: Colors.purple },
   { route: 'tasks', title: 'Today’s tasks', sub: 'Assigned work, priorities and completion', tone: Colors.amber },
   { route: 'timesheets', title: 'My time', sub: 'Log hours and review approvals', tone: Colors.blue },
   { route: 'diary', title: 'Site diary', sub: 'Progress, delays and daily notes', tone: Colors.amber },

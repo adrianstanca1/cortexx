@@ -3,13 +3,15 @@ import {
   ActivityIndicator, Alert, Modal, RefreshControl, ScrollView, StyleSheet,
   Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors } from './theme';
-import { apiGet, apiPost, getProjects } from './api';
+import { apiGet, apiPost, getProjects, uploadNativeFile } from './api';
 
 type Project = { id: string; name: string };
 type LineItem = { description: string; quantity: number; unit?: string };
 type ReceiptLine = { lineIndex: number; quantity: number };
-type Receipt = { id: string; lineItems?: ReceiptLine[] };
+type DeliveryEvidence = { photoUrls?: string[]; signatureUrl?: string | null; signedBy?: string | null; condition?: string | null; storageLocation?: string | null };
+type Receipt = { id: string; lineItems?: ReceiptLine[]; evidence?: DeliveryEvidence };
 type PO = {
   id: string;
   number: string;
@@ -31,6 +33,11 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
   const [qty, setQty] = useState<Record<number, string>>({});
   const [deliveryNote, setDeliveryNote] = useState('');
   const [notes, setNotes] = useState('');
+  const [deliveryPhoto, setDeliveryPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [signedNotePhoto, setSignedNotePhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [signedBy, setSignedBy] = useState('');
+  const [condition, setCondition] = useState('Good');
+  const [storageLocation, setStorageLocation] = useState('');
   const [saving, setSaving] = useState(false);
 
   const load = async (preferred?: string) => {
@@ -81,7 +88,37 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
     setQty(next);
     setDeliveryNote('');
     setNotes('');
+    setDeliveryPhoto(null);
+    setSignedNotePhoto(null);
+    setSignedBy('');
+    setCondition('Good');
+    setStorageLocation('');
     setReceiving(po);
+  };
+
+  const takeEvidencePhoto = async (kind: 'delivery' | 'signature') => {
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (permission.status !== 'granted') {
+      Alert.alert('Camera', 'Camera permission is required.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.65,
+    });
+    if (result.canceled || !result.assets[0]) return;
+    if (kind === 'delivery') setDeliveryPhoto(result.assets[0]);
+    else setSignedNotePhoto(result.assets[0]);
+  };
+
+  const uploadEvidence = async (asset: ImagePicker.ImagePickerAsset | null, prefix: string) => {
+    if (!asset) return null;
+    const uploaded = await uploadNativeFile({
+      uri: asset.uri,
+      name: asset.fileName || `${prefix}-${Date.now()}.jpg`,
+      mimeType: asset.mimeType || 'image/jpeg',
+    });
+    return uploaded.url;
   };
 
   const saveReceipt = async () => {
@@ -105,11 +142,22 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
 
     setSaving(true);
     try {
+      const [deliveryPhotoUrl, signatureUrl] = await Promise.all([
+        uploadEvidence(deliveryPhoto, 'delivery'),
+        uploadEvidence(signedNotePhoto, 'signed-note'),
+      ]);
       await apiPost(`/api/pos/${receiving.id}/receipts`, {
         lineItems,
         deliveryNote: deliveryNote.trim() || null,
         notes: notes.trim() || null,
         deliveredAt: new Date().toISOString(),
+        evidence: {
+          photoUrls: deliveryPhotoUrl ? [deliveryPhotoUrl] : [],
+          signatureUrl,
+          signedBy: signedBy.trim() || null,
+          condition: condition.trim() || null,
+          storageLocation: storageLocation.trim() || null,
+        },
       });
       setReceiving(null);
       Alert.alert('Delivery recorded', 'Purchase order quantities and audit trail were updated.');
@@ -229,8 +277,33 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
               })}
               <Text style={styles.label}>Delivery note / reference</Text>
               <TextInput value={deliveryNote} onChangeText={setDeliveryNote} maxLength={160} placeholder="e.g. DN-38122" placeholderTextColor={Colors.t3} style={styles.input} />
-              <Text style={styles.label}>Condition / shortages / notes</Text>
-              <TextInput value={notes} onChangeText={setNotes} maxLength={1000} multiline placeholder="Damaged packs, missing items, storage location…" placeholderTextColor={Colors.t3} style={[styles.input, { minHeight: 72, textAlignVertical: 'top' }]} />
+
+              <View style={styles.twoCol}>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Condition</Text>
+                  <TextInput value={condition} onChangeText={setCondition} maxLength={120} placeholder="Good / damaged / wet…" placeholderTextColor={Colors.t3} style={styles.input} />
+                </View>
+                <View style={{ flex: 1 }}>
+                  <Text style={styles.label}>Storage</Text>
+                  <TextInput value={storageLocation} onChangeText={setStorageLocation} maxLength={160} placeholder="Laydown / Level 3" placeholderTextColor={Colors.t3} style={styles.input} />
+                </View>
+              </View>
+
+              <Text style={styles.label}>Delivery evidence</Text>
+              <View style={styles.evidenceRow}>
+                <TouchableOpacity style={[styles.evidenceBtn, deliveryPhoto && styles.evidenceReady]} onPress={() => takeEvidencePhoto('delivery')}>
+                  <Text style={[styles.evidenceText, deliveryPhoto && { color: Colors.green }]}>{deliveryPhoto ? '✓ Delivery photo' : 'Take delivery photo'}</Text>
+                </TouchableOpacity>
+                <TouchableOpacity style={[styles.evidenceBtn, signedNotePhoto && styles.evidenceReady]} onPress={() => takeEvidencePhoto('signature')}>
+                  <Text style={[styles.evidenceText, signedNotePhoto && { color: Colors.green }]}>{signedNotePhoto ? '✓ Signed note photo' : 'Photograph signed note'}</Text>
+                </TouchableOpacity>
+              </View>
+
+              <Text style={styles.label}>Signed / checked by</Text>
+              <TextInput value={signedBy} onChangeText={setSignedBy} maxLength={120} placeholder="Name receiving the delivery" placeholderTextColor={Colors.t3} style={styles.input} />
+
+              <Text style={styles.label}>Shortages / damage / notes</Text>
+              <TextInput value={notes} onChangeText={setNotes} maxLength={1000} multiline placeholder="Damaged packs, missing items, quarantine instructions…" placeholderTextColor={Colors.t3} style={[styles.input, { minHeight: 72, textAlignVertical: 'top' }]} />
             </ScrollView>
 
             <TouchableOpacity disabled={saving} onPress={saveReceipt} style={[styles.confirm, saving && { opacity: 0.6 }]}>
@@ -284,6 +357,11 @@ const styles = StyleSheet.create({
   qtyInput: { width: 92, backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 9, color: Colors.t1, padding: 10, textAlign: 'right' },
   label: { color: Colors.t2, fontSize: 10.5, fontWeight: '800', marginTop: 12, marginBottom: 5 },
   input: { backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 9, color: Colors.t1, padding: 10 },
+  twoCol: { flexDirection: 'row', gap: 8 },
+  evidenceRow: { flexDirection: 'row', gap: 8 },
+  evidenceBtn: { flex: 1, minHeight: 50, backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 9, alignItems: 'center', justifyContent: 'center', padding: 8 },
+  evidenceReady: { borderColor: Colors.green },
+  evidenceText: { color: Colors.t2, fontSize: 10.5, fontWeight: '800', textAlign: 'center' },
   confirm: { backgroundColor: Colors.green, borderRadius: 11, padding: 13, alignItems: 'center', marginTop: 14 },
   confirmText: { color: Colors.ink, fontWeight: '900', fontSize: 12 },
 });

@@ -4,12 +4,12 @@ import {
   TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { Colors } from './theme';
-import { getCollection, getProjects, postCollection } from './api';
+import { apiGet, getCollection, getProjects, postCollection } from './api';
 
 type Project = { id: string; name: string };
 type ProjectLinked = { projectId?: string | null; project?: { id?: string; name?: string } | null };
 type Permit = ProjectLinked & { id: string; title: string; status: string; validTo?: string | null; riskLevel?: string };
-type Inspection = ProjectLinked & { id: string; title: string; status: string; scheduledAt?: string | null };
+type Inspection = ProjectLinked & { id: string; title: string; status: string; scheduledAt?: string | null; pointType?: string; releaseStatus?: string };
 type Snag = ProjectLinked & { id: string; title: string; status: string; priority?: string };
 type Rfi = ProjectLinked & { id: string; number?: string; subject: string; status: string; dueDate?: string | null; priority?: string };
 type Check = ProjectLinked & { id: string; status?: string; nextDueAt?: string | null; equipment?: { id?: string; name?: string; code?: string } | null };
@@ -22,11 +22,17 @@ type Pulse = {
   openSnags: number;
   overdueRfis: number;
   overdueChecks: number;
+  openConstraints: number;
+  criticalConstraints: number;
+  pendingQa: number;
+  pendingHandovers: number;
+  planHit: number | null;
 };
 
 const EMPTY: Pulse = {
   activePermits: 0, expiringPermits: 0, openInspections: 0, failedInspections: 0,
-  openSnags: 0, overdueRfis: 0, overdueChecks: 0,
+  openSnags: 0, overdueRfis: 0, overdueChecks: 0, openConstraints: 0,
+  criticalConstraints: 0, pendingQa: 0, pendingHandovers: 0, planHit: null,
 };
 
 const EVENT_TYPES = ['progress', 'delay', 'delivery', 'instruction', 'access', 'labour', 'quality', 'safety', 'weather', 'other'] as const;
@@ -64,12 +70,16 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
         return;
       }
 
-      const [allPermits, allInspections, allSnags, allRfis, allChecks] = await Promise.all([
+      const q = encodeURIComponent(nextProjectId);
+      const [allPermits, allInspections, allSnags, allRfis, allChecks, constraintData, handoverData, productionData] = await Promise.all([
         getCollection('permits', 200),
         getCollection('inspections', 200),
         getCollection('snags', 200),
         getCollection('rfis', 200),
         getCollection('equipment-checks', 200),
+        apiGet(`/api/field-constraints?projectId=${q}`).catch(() => ({ constraints: [], openCount: 0, criticalCount: 0 })),
+        apiGet(`/api/field-handovers?projectId=${q}&take=20`).catch(() => ({ handovers: [], pendingAcceptance: 0 })),
+        apiGet(`/api/field-production?projectId=${q}`).catch(() => ({ summary: null })),
       ]);
 
       const belongs = (item: ProjectLinked) => item.projectId === nextProjectId || item.project?.id === nextProjectId;
@@ -88,6 +98,10 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
         r.status !== 'closed' && !!r.dueDate && new Date(r.dueDate).getTime() < now
       ).length;
 
+      const pendingQa = inspections.filter(i =>
+        ['hold', 'witness'].includes(String(i.pointType || '')) && i.releaseStatus !== 'released'
+      ).length;
+
       setPulse({
         activePermits: permits.filter(p => p.status === 'active').length,
         expiringPermits,
@@ -96,6 +110,11 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
         openSnags: snags.filter(s => s.status !== 'closed').length,
         overdueRfis,
         overdueChecks: checks.length,
+        openConstraints: Number(constraintData?.openCount || 0),
+        criticalConstraints: Number(constraintData?.criticalCount || 0),
+        pendingQa,
+        pendingHandovers: Number(handoverData?.pendingAcceptance || 0),
+        planHit: typeof productionData?.summary?.completionPct === 'number' ? productionData.summary.completionPct : null,
       });
 
       const nextBlockers = [
@@ -118,6 +137,14 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
         ...checks
           .slice(0, 3)
           .map(c => ({ id: `check-${c.id}`, title: c.equipment?.name || c.equipment?.code || 'Equipment check', sub: 'Inspection/check overdue', tone: Colors.amber })),
+        ...(constraintData?.constraints || [])
+          .filter((c: { status?: string; priority?: string }) => c.status !== 'resolved' && ['high', 'critical'].includes(String(c.priority || '').toLowerCase()))
+          .slice(0, 4)
+          .map((c: { id: string; title: string; priority?: string }) => ({ id: `constraint-${c.id}`, title: c.title, sub: `${c.priority || 'high'} constraint`, tone: c.priority === 'critical' ? Colors.red : Colors.amber })),
+        ...inspections
+          .filter(i => ['hold', 'witness'].includes(String(i.pointType || '')) && i.releaseStatus !== 'released')
+          .slice(0, 4)
+          .map(i => ({ id: `qa-${i.id}`, title: i.title, sub: `${i.pointType} point awaiting release`, tone: Colors.purple })),
       ];
       setBlockers(nextBlockers.slice(0, 10));
     } catch (e: any) {
@@ -186,6 +213,10 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
         <Metric label="Open snags" value={pulse.openSnags} alert={pulse.openSnags > 0} sub="outstanding" />
         <Metric label="Overdue RFIs" value={pulse.overdueRfis} alert={pulse.overdueRfis > 0} sub="needs answer" />
         <Metric label="Checks overdue" value={pulse.overdueChecks} alert={pulse.overdueChecks > 0} sub="plant / equipment" />
+        <Metric label="Constraints" value={pulse.openConstraints} alert={pulse.criticalConstraints > 0} sub={pulse.criticalConstraints ? `${pulse.criticalConstraints} critical` : 'no critical'} />
+        <Metric label="QA release" value={pulse.pendingQa} alert={pulse.pendingQa > 0} sub="hold / witness" />
+        <Metric label="Handover" value={pulse.pendingHandovers} alert={pulse.pendingHandovers > 0} sub="awaiting acceptance" />
+        <Metric label="Plan hit" value={pulse.planHit == null ? '—' : `${Math.round(pulse.planHit)}%`} alert={pulse.planHit != null && pulse.planHit < 80} sub={pulse.planHit == null ? 'no output logged' : 'installed vs planned'} />
       </View>
 
       <Text style={styles.section}>BLOCKERS · {projectName}</Text>
@@ -236,7 +267,7 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
   );
 }
 
-function Metric({ label, value, sub, alert }: { label: string; value: number; sub: string; alert?: boolean }) {
+function Metric({ label, value, sub, alert }: { label: string; value: number | string; sub: string; alert?: boolean }) {
   return (
     <View style={[styles.metric, alert && styles.metricAlert]}>
       <Text style={styles.metricLabel}>{label}</Text>
