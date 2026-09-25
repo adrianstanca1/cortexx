@@ -1146,18 +1146,18 @@ model SubInvoice {
 }
 
 model Drawing {
-  id         String            @id @default(cuid())
-  projectId  String
-  number     String
-  title      String
-  discipline String? // architectural, structural, electrical, mechanical, plumbing, civil
-  status     String            @default("draft") // draft, approved, superseded, archived
-  notes      String?
-  archivedAt DateTime?
-  createdAt  DateTime          @default(now())
-  updatedAt  DateTime          @updatedAt
-  project    Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  revisions  DrawingRevision[]
+  id          String            @id @default(cuid())
+  projectId   String
+  number      String
+  title       String
+  discipline  String? // architectural, structural, electrical, mechanical, plumbing, civil
+  status      String            @default("draft") // draft, approved, superseded, archived
+  notes       String?
+  archivedAt  DateTime?
+  createdAt   DateTime          @default(now())
+  updatedAt   DateTime          @updatedAt
+  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revisions   DrawingRevision[]
   inspections Inspection[]
 
   organizationId String?
@@ -1170,16 +1170,16 @@ model Drawing {
 }
 
 model DrawingRevision {
-  id         String   @id @default(cuid())
-  drawingId  String
-  revision   String // e.g. "A", "B", "P01", "T01"
-  fileUrl    String?
-  fileName   String?
-  fileSize   Int?
-  mimeType   String?
-  notes      String?
-  uploadedAt DateTime @default(now())
-  drawing    Drawing  @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  id          String       @id @default(cuid())
+  drawingId   String
+  revision    String // e.g. "A", "B", "P01", "T01"
+  fileUrl     String?
+  fileName    String?
+  fileSize    Int?
+  mimeType    String?
+  notes       String?
+  uploadedAt  DateTime     @default(now())
+  drawing     Drawing      @relation(fields: [drawingId], references: [id], onDelete: Cascade)
   inspections Inspection[]
 
   organizationId String?
@@ -1400,13 +1400,13 @@ model Tender {
 }
 
 model Inspection {
-  id                String    @id @default(cuid())
+  id                String           @id @default(cuid())
   projectId         String
   title             String
-  type              String    @default("general") // general, safety, quality, scaffold, electrical
-  pointType         String    @default("inspection") // inspection, hold, witness
-  status            String    @default("draft") // draft, in_progress, passed, failed
-  checklistItems    Json      @default("[]") // [{ id, label, result: 'pass'|'fail'|'na', note? }]
+  type              String           @default("general") // general, safety, quality, scaffold, electrical
+  pointType         String           @default("inspection") // inspection, hold, witness
+  status            String           @default("draft") // draft, in_progress, passed, failed
+  checklistItems    Json             @default("[]") // [{ id, label, result: 'pass'|'fail'|'na', note? }]
   overallResult     String? // pass, fail
   conductedBy       String?
   scheduledAt       DateTime?
@@ -1414,17 +1414,17 @@ model Inspection {
   location          String?
   drawingId         String?
   drawingRevisionId String?
-  releaseStatus     String    @default("not_required") // not_required, pending, released, rejected
+  releaseStatus     String           @default("not_required") // not_required, pending, released, rejected
   releasedBy        String?
   releasedAt        DateTime?
   witnessedBy       String?
   witnessedAt       DateTime?
-  evidence          Json      @default("{}")
+  evidence          Json             @default("{}")
   notes             String?
-  createdAt         DateTime  @default(now())
-  updatedAt         DateTime  @updatedAt
-  project           Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  drawing           Drawing?  @relation(fields: [drawingId], references: [id], onDelete: SetNull)
+  createdAt         DateTime         @default(now())
+  updatedAt         DateTime         @updatedAt
+  project           Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  drawing           Drawing?         @relation(fields: [drawingId], references: [id], onDelete: SetNull)
   drawingRevision   DrawingRevision? @relation(fields: [drawingRevisionId], references: [id], onDelete: SetNull)
 
   organizationId String?
@@ -1440,21 +1440,21 @@ model Inspection {
 }
 
 model FieldConstraint {
-  id             String    @id @default(cuid())
+  id             String        @id @default(cuid())
   projectId      String
-  category       String    @default("other") // access, design, material, labour, plant, client, weather, quality, safety, other
+  category       String        @default("other") // access, design, material, labour, plant, client, weather, quality, safety, other
   title          String
   detail         String?
   location       String?
-  priority       String    @default("medium") // low, medium, high, critical
-  status         String    @default("open") // open, mitigating, resolved
+  priority       String        @default("medium") // low, medium, high, critical
+  status         String        @default("open") // open, mitigating, resolved
   ownerName      String?
   dueDate        DateTime?
   resolution     String?
   resolvedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -1465,10 +1465,10 @@ model FieldConstraint {
 }
 
 model FieldHandover {
-  id             String    @id @default(cuid())
+  id             String        @id @default(cuid())
   projectId      String
-  shiftDate      DateTime  @default(now())
-  shiftType      String    @default("day") // day, night, weekend, other
+  shiftDate      DateTime      @default(now())
+  shiftType      String        @default("day") // day, night, weekend, other
   outgoingBy     String?
   incomingBy     String?
   summary        String?
@@ -1478,12 +1478,12 @@ model FieldHandover {
   qualityNotes   String?
   materialsNotes String?
   plantNotes     String?
-  openItems      Json      @default("[]")
+  openItems      Json          @default("[]")
   acceptedBy     String?
   acceptedAt     DateTime?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
@@ -1493,22 +1493,22 @@ model FieldHandover {
 }
 
 model FieldProductionLog {
-  id             String    @id @default(cuid())
+  id             String        @id @default(cuid())
   projectId      String
-  date           DateTime  @default(now())
+  date           DateTime      @default(now())
   area           String
   elevation      String?
   activity       String
-  unit           String    @default("m2")
-  plannedQty     Float     @default(0)
-  installedQty   Float     @default(0)
-  crewSize       Int       @default(0)
-  labourHours    Float     @default(0)
+  unit           String        @default("m2")
+  plannedQty     Float         @default(0)
+  installedQty   Float         @default(0)
+  crewSize       Int           @default(0)
+  labourHours    Float         @default(0)
   notes          String?
   createdBy      String?
-  createdAt      DateTime  @default(now())
-  updatedAt      DateTime  @updatedAt
-  project        Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
