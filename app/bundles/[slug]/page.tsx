@@ -157,28 +157,28 @@ export default function BundlePage() {
 
   if (!bundle) {
     return (
-      <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', fontFamily: SF }}>
+      <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#ef4444', fontFamily: SF }}>
         Unknown role pack
       </div>
     )
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="[Slug] command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/bundles" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Role packs</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Role packs</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 12 }}>
           <div style={{ width: 44, height: 44, borderRadius: 12, background: `${bundle.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
             <IcLayers size={22} color={bundle.color} />
           </div>
           <div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>{bundle.title}</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>{bundle.subtitle}</p>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>{bundle.title}</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{bundle.subtitle}</p>
           </div>
         </div>
       </div>
@@ -197,13 +197,13 @@ export default function BundlePage() {
                   gap: 10,
                   padding: '12px 10px',
                   borderRadius: 10,
-                  background: '#152641',
+                  background: 'var(--surface-raised)',
                   border: '0.5px solid rgba(255,255,255,0.07)',
                   textDecoration: 'none',
                 }}
               >
                 <Icon size={18} color={p.color} />
-                <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: '#eef3fa' }}>{p.label}</span>
+                <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{p.label}</span>
               </Link>
             )
           })}
@@ -211,7 +211,7 @@ export default function BundlePage() {
 
         {bundle.actions.length > 0 && (
           <div style={{ marginBottom: 16 }}>
-            <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, marginLeft: 4 }}>
+            <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8, marginLeft: 4 }}>
               Quick actions
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -228,14 +228,14 @@ export default function BundlePage() {
                       gap: 8,
                       padding: '12px 10px',
                       borderRadius: 10,
-                      background: '#152641',
+                      background: 'var(--surface-raised)',
                       border: '0.5px solid rgba(255,255,255,0.07)',
                       cursor: 'pointer',
                       textAlign: 'left',
                     }}
                   >
                     <Icon size={18} color={a.color} />
-                    <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: '#eef3fa' }}>{a.label}</span>
+                    <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{a.label}</span>
                   </button>
                 )
               })}
@@ -243,15 +243,15 @@ export default function BundlePage() {
           </div>
         )}
 
-        <div style={{ background: '#152641', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+        <div style={{ background: 'var(--surface-raised)', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
           <div style={{ padding: '12px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 8 }}>
             <IcSpark size={16} color={bundle.color} />
-            <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 700, color: '#eef3fa' }}>Ask the {bundle.title.split(' ')[0]} agent</span>
+            <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>Ask the {bundle.title.split(' ')[0]} agent</span>
           </div>
 
           <div style={{ padding: 12, maxHeight: '45vh', overflowY: 'auto' }}>
             {messages.length === 0 ? (
-              <div style={{ color: '#52749a', fontFamily: SF, fontSize: 13, padding: '12px 4px' }}>
+              <div style={{ color: 'var(--t3)', fontFamily: SF, fontSize: 13, padding: '12px 4px' }}>
                 Ask anything about {bundle.subtitle.toLowerCase()}. The agent knows the pages in this pack and current workspace context.
               </div>
             ) : (
@@ -291,7 +291,7 @@ export default function BundlePage() {
                 border: '1px solid rgba(255,255,255,0.1)',
                 borderRadius: 10,
                 padding: '10px 12px',
-                color: '#eef3fa',
+                color: 'var(--t1)',
                 fontFamily: SF,
                 fontSize: 14,
                 outline: 'none',
@@ -468,7 +468,7 @@ function ActionFormFields({ action, fields, projects, onChange }: ActionFormFiel
         </>
       )
     default:
-      return <div style={{ color: '#52749a', fontFamily: SF, fontSize: 13 }}>Unknown action</div>
+      return <div style={{ color: 'var(--t3)', fontFamily: SF, fontSize: 13 }}>Unknown action</div>
   }
 }
 

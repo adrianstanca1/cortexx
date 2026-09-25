@@ -126,18 +126,18 @@ export default function CostCatalogPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Cost Catalog command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Cost catalog</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>{items.length} items · {categories.length} categories</p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Cost catalog</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{items.length} items · {categories.length} categories</p>
           </div>
           <button onClick={() => { setEditing(null); setForm({ code: '', description: '', category: '', unit: 'item', unitCost: '', vendor: '', notes: '' }); setShowAdd(true) }} aria-label="Add item" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
@@ -146,26 +146,26 @@ export default function CostCatalogPage() {
 
         <div style={{ position: 'relative', marginBottom: 8 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search description / code / vendor…" style={{ ...inputStyle, paddingLeft: 32, fontSize: 13 }} />
-          <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="#52749a" /></div>
+          <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="var(--t3)" /></div>
         </div>
 
         {categories.length > 0 && (
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-            <button onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
+            <button onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
             {categories.map(c => (
-              <button key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
+              <button key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
             ))}
           </div>
         )}
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : items.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcLayers size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcLayers size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No items in the catalog</p>
           <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Add first item
@@ -175,20 +175,20 @@ export default function CostCatalogPage() {
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
           {Object.entries(grouped).map(([cat, list]) => (
             <div key={cat}>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, paddingLeft: 4 }}>{cat} · {list.length}</div>
-              <div style={{ background: '#152641', borderRadius: 12, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, paddingLeft: 4 }}>{cat} · {list.length}</div>
+              <div style={{ background: 'var(--surface-raised)', borderRadius: 12, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
                 {list.map((it, i) => (
                   <button key={it.id} onClick={() => openEdit(it)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: i < list.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none', textAlign: 'left', cursor: 'pointer' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa' }}>{it.description}</div>
-                      <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 1 }}>
+                      <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)' }}>{it.description}</div>
+                      <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 1 }}>
                         {it.code && <><span style={{ fontFamily: 'ui-monospace, monospace' }}>{it.code}</span> · </>}
                         {it.vendor && <span>{it.vendor}</span>}
                       </div>
                     </div>
                     <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: '#eef3fa', fontWeight: 700 }}>£{it.unitCost.toFixed(2)}</div>
-                      <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a' }}>per {it.unit}</div>
+                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: 'var(--t1)', fontWeight: 700 }}>£{it.unitCost.toFixed(2)}</div>
+                      <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)' }}>per {it.unit}</div>
                     </div>
                   </button>
                 ))}
@@ -203,10 +203,10 @@ export default function CostCatalogPage() {
       {(showAdd || editing) && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => { setShowAdd(false); setEditing(null) }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>{editing ? 'Edit item' : 'Add item'}</h2>
-              <button onClick={() => { setShowAdd(false); setEditing(null) }} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{editing ? 'Edit item' : 'Add item'}</h2>
+              <button onClick={() => { setShowAdd(false); setEditing(null) }} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <input autoFocus value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -248,8 +248,8 @@ export default function CostCatalogPage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

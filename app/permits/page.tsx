@@ -36,7 +36,7 @@ const TYPE_LABEL: Record<Permit['type'], string> = {
   general: 'General',
 }
 const STATUS_COLOR: Record<Permit['status'], string> = {
-  draft: '#52749a', active: '#10b981', expired: '#ef4444', cancelled: '#8ea8c5',
+  draft: 'var(--t3)', active: '#10b981', expired: '#ef4444', cancelled: 'var(--t2)',
 }
 const RISK_COLOR: Record<Permit['riskLevel'], string> = {
   low: '#10b981', medium: '#06b6d4', high: '#f59e0b', critical: '#ef4444',
@@ -130,18 +130,18 @@ export default function PermitsPage() {
   const fmt = (d: string | null) => d ? new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' }) : '—'
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Permits command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcAlert size={20} color="#f59e0b" /> Permits to work
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {permits.length} permits · {permits.filter(p => p.status === 'active').length} active
             </p>
           </div>
@@ -156,35 +156,35 @@ export default function PermitsPage() {
         {(['all', 'draft', 'active', 'expired', 'cancelled'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#f59e0b' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#f59e0b' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {s}
             </button>
           )
         })}
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && permits.length === 0 && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No permits yet. Raise one for hot work, working at height, confined spaces…</div>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No permits yet. Raise one for hot work, working at height, confined spaces…</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
         {permits.map(p => (
-          <div key={p.id} style={{ background: '#152641', border: `0.5px solid ${p.status === 'active' && p.validTo && new Date(p.validTo).getTime() < expiringSoonThreshold ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
+          <div key={p.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${p.status === 'active' && p.validTo && new Date(p.validTo).getTime() < expiringSoonThreshold ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, flexWrap: 'wrap', marginBottom: 4 }}>
-                  <span style={{ background: '#1a2f4e', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[p.type]}</span>
+                  <span style={{ background: 'var(--bg3)', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[p.type]}</span>
                   <span style={{ background: RISK_COLOR[p.riskLevel] + '33', border: `0.5px solid ${RISK_COLOR[p.riskLevel]}66`, color: RISK_COLOR[p.riskLevel], padding: '2px 7px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{p.riskLevel}</span>
                   <span style={{ background: STATUS_COLOR[p.status] + '33', color: STATUS_COLOR[p.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{p.status}</span>
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+                <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{p.title}</div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                   {p.project?.name || '—'}{p.location ? ` · ${p.location}` : ''}
                 </div>
                 {(p.validFrom || p.validTo) && (
-                  <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 4 }}>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 4 }}>
                     Valid {fmt(p.validFrom)} → {fmt(p.validTo)}
                   </div>
                 )}
@@ -199,8 +199,8 @@ export default function PermitsPage() {
               )}
               {p.status === 'active' && (
                 <>
-                  <button onClick={() => setStatus(p, 'expired')} style={pillBtn('#1a2f4e', '#fca5a5')}>Expire</button>
-                  <button onClick={() => setStatus(p, 'cancelled')} style={pillBtn('#1a2f4e', '#c1d2e8')}>Cancel</button>
+                  <button onClick={() => setStatus(p, 'expired')} style={pillBtn('var(--bg3)', '#fca5a5')}>Expire</button>
+                  <button onClick={() => setStatus(p, 'cancelled')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Cancel</button>
                 </>
               )}
               <button onClick={() => setConfirmDelete(p.id)} aria-label="Delete permit" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
@@ -224,9 +224,9 @@ export default function PermitsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Raise permit</h2>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Raise permit</h2>
               <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <IcX size={18} color="#52749a" />
+                <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -242,7 +242,7 @@ export default function PermitsPage() {
               <Field label="Type">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(TYPE_LABEL) as Permit['type'][]).map(t => (
-                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#f59e0b' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#f59e0b' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {TYPE_LABEL[t]}
                     </button>
                   ))}
@@ -251,7 +251,7 @@ export default function PermitsPage() {
               <Field label="Risk level">
                 <div style={{ display: 'flex', gap: 6 }}>
                   {(['low', 'medium', 'high', 'critical'] as const).map(r => (
-                    <button key={r} onClick={() => setForm(f => ({ ...f, riskLevel: r }))} style={{ background: form.riskLevel === r ? RISK_COLOR[r] : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.riskLevel === r ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
+                    <button key={r} onClick={() => setForm(f => ({ ...f, riskLevel: r }))} style={{ background: form.riskLevel === r ? RISK_COLOR[r] : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.riskLevel === r ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
                       {r}
                     </button>
                   ))}
@@ -288,9 +288,9 @@ export default function PermitsPage() {
   )
 }
 
-const inputStyle = { background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
+const inputStyle = { background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
 }
 function pillBtn(bg: string, color = '#fff', borderColor = 'rgba(255,255,255,0.1)'): React.CSSProperties {
   return { background: bg, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: '6px 10px', color, fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }

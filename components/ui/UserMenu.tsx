@@ -43,9 +43,9 @@ export default function UserMenu() {
           width: 36,
           height: 36,
           borderRadius: '50%',
-          background: 'linear-gradient(135deg, #f59e0b, #ef4444)',
-          border: '2px solid rgba(255,255,255,0.15)',
-          color: '#fff',
+          background: 'linear-gradient(135deg, var(--accent), #48d8ff)',
+          border: '1px solid rgba(215,255,63,.35)',
+          color: '#090b0d',
           fontFamily: 'var(--font-system)',
           fontSize: 14,
           fontWeight: 700,
@@ -53,7 +53,7 @@ export default function UserMenu() {
           display: 'flex',
           alignItems: 'center',
           justifyContent: 'center',
-          boxShadow: '0 2px 8px rgba(0,0,0,0.4)',
+          boxShadow: '0 0 0 5px rgba(215,255,63,.07), 0 8px 24px rgba(0,0,0,.38)',
         }}
       >
         {initial}
@@ -66,21 +66,21 @@ export default function UserMenu() {
             top: 44,
             right: 0,
             minWidth: 200,
-            background: '#152641',
-            border: '1px solid rgba(255,255,255,0.1)',
+            background: 'linear-gradient(180deg, rgba(28,34,39,.99), rgba(14,18,21,.99))',
+            border: '1px solid var(--hairMid)',
             borderRadius: 12,
-            boxShadow: '0 8px 24px rgba(0,0,0,0.5)',
+            boxShadow: '0 18px 50px rgba(0,0,0,.5)',
             overflow: 'hidden',
             fontFamily: 'var(--font-system)',
           }}
         >
           <div style={{ padding: '14px 16px', borderBottom: '1px solid rgba(255,255,255,0.06)' }}>
-            <div style={{ fontSize: 14, fontWeight: 700, color: '#eef3fa' }}>{label}</div>
+            <div style={{ fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>{label}</div>
             {session.user.email && (
-              <div style={{ fontSize: 11, color: '#8ea8c5', marginTop: 2 }}>{session.user.email}</div>
+              <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>{session.user.email}</div>
             )}
             {session.user.role === 'admin' && (
-              <div style={{ marginTop: 4, display: 'inline-block', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, letterSpacing: 0.5, textTransform: 'uppercase' }}>
+              <div style={{ marginTop: 4, display: 'inline-block', background: 'rgba(215,255,63,.12)', color: 'var(--accent)', fontSize: 10, fontWeight: 700, padding: '1px 6px', borderRadius: 4, letterSpacing: 0.5, textTransform: 'uppercase' }}>
                 admin
               </div>
             )}
@@ -89,7 +89,7 @@ export default function UserMenu() {
             href="/settings"
             onClick={() => setOpen(false)}
             role="menuitem"
-            style={{ display: 'block', padding: '11px 16px', color: '#eef3fa', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
+            style={{ display: 'block', padding: '11px 16px', color: 'var(--t1)', fontSize: 13, textDecoration: 'none', borderBottom: '1px solid rgba(255,255,255,0.06)' }}
           >
             Account settings
           </Link>

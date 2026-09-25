@@ -107,7 +107,7 @@ export default function PricingPage() {
   const selfServeBilling = isBillingConfigured()
 
   return (
-    <main style={{ background: '#06101e', minHeight: '100dvh', padding: '60px 24px 80px', color: '#eef3fa' }}>
+    <main style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '60px 24px 80px', color: 'var(--t1)' }}>
       <div style={{ maxWidth: 1080, margin: '0 auto' }}>
         {!selfServeBilling && (
           <div style={{
@@ -119,7 +119,7 @@ export default function PricingPage() {
             borderRadius: 12,
             fontFamily: 'var(--font-system)',
             fontSize: 13,
-            color: '#eef3fa',
+            color: 'var(--t1)',
             textAlign: 'center',
           }}>
             <strong style={{ color: '#f59e0b' }}>Early access:</strong> self-serve checkout is being polished —
@@ -133,7 +133,7 @@ export default function PricingPage() {
           <h1 style={{ fontSize: 40, fontWeight: 700, letterSpacing: '-0.03em', margin: '0 0 12px', fontFamily: 'var(--font-system)' }}>
             Run your build, not your spreadsheets.
           </h1>
-          <p style={{ fontSize: 17, color: '#8ea8c5', maxWidth: 580, margin: '0 auto', lineHeight: 1.5, fontFamily: 'var(--font-system)' }}>
+          <p style={{ fontSize: 17, color: 'var(--t2)', maxWidth: 580, margin: '0 auto', lineHeight: 1.5, fontFamily: 'var(--font-system)' }}>
             Construction-management software for UK contractors. RFIs, snags, RAMS, timesheets, invoices, drawings — and AI that actually helps.
           </p>
         </div>
@@ -143,7 +143,7 @@ export default function PricingPage() {
             <div
               key={plan.key}
               style={{
-                background: plan.accent ? 'linear-gradient(180deg, #2a1d3c 0%, #152641 100%)' : '#152641',
+                background: plan.accent ? 'linear-gradient(180deg, #2a1d3c 0%, #152641 100%)' : 'var(--surface-raised)',
                 borderRadius: 18,
                 padding: 28,
                 border: plan.accent ? '1px solid rgba(245,158,11,0.35)' : '0.5px solid rgba(255,255,255,0.07)',
@@ -151,15 +151,15 @@ export default function PricingPage() {
               }}
             >
               {plan.accent && (
-                <div style={{ position: 'absolute', top: -10, right: 20, background: '#f59e0b', color: '#06101e', fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 1 }}>
+                <div style={{ position: 'absolute', top: -10, right: 20, background: '#f59e0b', color: 'var(--bg0)', fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, padding: '4px 10px', borderRadius: 999, textTransform: 'uppercase', letterSpacing: 1 }}>
                   Recommended
                 </div>
               )}
-              <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, color: '#eef3fa', marginBottom: 4 }}>{plan.name}</div>
-              <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', marginBottom: 16, lineHeight: 1.4 }}>{plan.description}</div>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>{plan.name}</div>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', marginBottom: 16, lineHeight: 1.4 }}>{plan.description}</div>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 4, marginBottom: 20 }}>
                 <span style={{ fontFamily: 'var(--font-system)', fontSize: 34, fontWeight: 700, letterSpacing: '-0.02em' }}>{plan.price}</span>
-                {plan.cadence && <span style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: '#8ea8c5' }}>{plan.cadence}</span>}
+                {plan.cadence && <span style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: 'var(--t2)' }}>{plan.cadence}</span>}
               </div>
               <Link
                 href={plan.href}
@@ -170,7 +170,7 @@ export default function PricingPage() {
                   borderRadius: 12,
                   background: plan.accent ? '#f59e0b' : 'transparent',
                   border: plan.accent ? 'none' : '1px solid rgba(255,255,255,0.13)',
-                  color: plan.accent ? '#06101e' : '#eef3fa',
+                  color: plan.accent ? 'var(--bg0)' : 'var(--t1)',
                   fontFamily: 'var(--font-system)',
                   fontSize: 14,
                   fontWeight: 700,
@@ -180,7 +180,7 @@ export default function PricingPage() {
               >
                 {plan.cta}
               </Link>
-              <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', lineHeight: 1.7 }}>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0, fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', lineHeight: 1.7 }}>
                 {plan.features.map(f => (
                   <li key={f} style={{ display: 'flex', alignItems: 'flex-start', gap: 8 }}>
                     <span style={{ color: '#10b981', flexShrink: 0 }}>✓</span>
@@ -199,11 +199,11 @@ export default function PricingPage() {
           </h2>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
             {FAQ.map(item => (
-              <details key={item.q} style={{ background: '#152641', borderRadius: 12, padding: '16px 20px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
-                <summary style={{ cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: '#eef3fa', listStyle: 'none' }}>
+              <details key={item.q} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '16px 20px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+                <summary style={{ cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: 'var(--t1)', listStyle: 'none' }}>
                   {item.q}
                 </summary>
-                <p style={{ margin: '12px 0 0', fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', lineHeight: 1.6 }}>
+                <p style={{ margin: '12px 0 0', fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', lineHeight: 1.6 }}>
                   {item.a}
                 </p>
               </details>
@@ -212,10 +212,10 @@ export default function PricingPage() {
         </div>
 
         <div style={{ textAlign: 'center', marginTop: 48, display: 'flex', flexDirection: 'column', gap: 12 }}>
-          <Link href="/login" style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', textDecoration: 'none' }}>
+          <Link href="/login" style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', textDecoration: 'none' }}>
             Already have an account? <span style={{ color: '#f59e0b', fontWeight: 600 }}>Sign in</span>
           </Link>
-          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontFamily: 'var(--font-system)', fontSize: 12, color: '#52749a' }}>
+          <div style={{ display: 'flex', justifyContent: 'center', gap: 16, fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t3)' }}>
             <a href="/marketing" style={{ color: 'inherit', textDecoration: 'none' }}>About Cortexx</a>
             <span>·</span>
             <a href="/legacy/" style={{ color: 'inherit', textDecoration: 'none' }}>Live demo</a>

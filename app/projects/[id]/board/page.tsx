@@ -20,12 +20,12 @@ interface Task {
 }
 
 const COLUMNS = [
-  { id: 'todo', label: 'To do', color: '#52749a' },
+  { id: 'todo', label: 'To do', color: 'var(--t3)' },
   { id: 'in_progress', label: 'In progress', color: '#f59e0b' },
   { id: 'done', label: 'Done', color: '#10b981' },
 ]
 
-const priorityColor: Record<string, string> = { critical: '#ef4444', high: '#f59e0b', medium: '#2563eb', low: '#52749a' }
+const priorityColor: Record<string, string> = { critical: '#ef4444', high: '#f59e0b', medium: '#2563eb', low: 'var(--t3)' }
 
 export default function ProjectBoardPage() {
   const { id } = useParams<{ id: string }>()
@@ -82,15 +82,15 @@ export default function ProjectBoardPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Board command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href={`/projects/${id}`} style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>{projectName}</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>{projectName}</span>
         </Link>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Board</h1>
-        <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>Drag tasks between columns or tap to advance</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Board</h1>
+        <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>Drag tasks between columns or tap to advance</p>
       </div>
 
       <div style={{ padding: '12px 12px 16px', display: 'flex', gap: 8, overflowX: 'auto' }}>
@@ -105,11 +105,11 @@ export default function ProjectBoardPage() {
             >
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '0 4px 4px' }}>
                 <span style={{ width: 8, height: 8, borderRadius: 4, background: col.color }} />
-                <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, color: '#eef3fa', textTransform: 'uppercase', letterSpacing: 0.4 }}>{col.label}</span>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a' }}>· {colTasks.length}</span>
+                <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, color: 'var(--t1)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{col.label}</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)' }}>· {colTasks.length}</span>
               </div>
               {loading ? null : colTasks.length === 0 ? (
-                <p style={{ padding: 12, textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 11 }}>No tasks</p>
+                <p style={{ padding: 12, textAlign: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 11 }}>No tasks</p>
               ) : (
                 colTasks.map(t => {
                   const next = col.id === 'todo' ? 'in_progress' : col.id === 'in_progress' ? 'done' : 'todo'
@@ -119,15 +119,15 @@ export default function ProjectBoardPage() {
                       draggable
                       onDragStart={e => onDragStart(e, t.id)}
                       onClick={() => move(t.id, next)}
-                      style={{ background: '#152641', borderRadius: 10, padding: 10, border: `0.5px solid ${priorityColor[t.priority] || '#52749a'}33`, cursor: 'pointer', opacity: col.id === 'done' ? 0.7 : 1 }}
+                      style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: 10, border: `0.5px solid ${priorityColor[t.priority] || 'var(--t3)'}33`, cursor: 'pointer', opacity: col.id === 'done' ? 0.7 : 1 }}
                     >
-                      <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, color: '#eef3fa', textDecoration: col.id === 'done' ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</p>
+                      <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, color: 'var(--t1)', textDecoration: col.id === 'done' ? 'line-through' : 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.title}</p>
                       {t.description && (
-                        <p style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#8ea8c5', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.description}</p>
+                        <p style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t2)', marginTop: 2, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{t.description}</p>
                       )}
                       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 6 }}>
                         <span style={{ width: 6, height: 6, borderRadius: 3, background: priorityColor[t.priority] }} />
-                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 9, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: 0.3, fontWeight: 600 }}>{t.priority}</span>
+                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 9, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: 0.3, fontWeight: 600 }}>{t.priority}</span>
                         {t.assignee && (
                           <span style={{ marginLeft: 'auto' }}>
                             <Avatar name={t.assignee.name} color={t.assignee.avatarColor} size={18} />

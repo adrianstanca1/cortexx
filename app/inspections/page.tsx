@@ -42,10 +42,10 @@ const TYPE_LABEL: Record<Inspection['type'], string> = {
   general: 'General', safety: 'Safety', quality: 'Quality', scaffold: 'Scaffold', electrical: 'Electrical',
 }
 const TYPE_COLOR: Record<Inspection['type'], string> = {
-  general: '#52749a', safety: '#ef4444', quality: '#06b6d4', scaffold: '#f59e0b', electrical: '#8b5cf6',
+  general: 'var(--t3)', safety: '#ef4444', quality: '#06b6d4', scaffold: '#f59e0b', electrical: '#8b5cf6',
 }
 const STATUS_COLOR: Record<Inspection['status'], string> = {
-  draft: '#52749a', in_progress: '#06b6d4', passed: '#10b981', failed: '#ef4444',
+  draft: 'var(--t3)', in_progress: '#06b6d4', passed: '#10b981', failed: '#ef4444',
 }
 const STATUS_LABEL: Record<Inspection['status'], string> = {
   draft: 'Draft', in_progress: 'In progress', passed: 'Passed', failed: 'Failed',
@@ -178,18 +178,18 @@ export default function InspectionsPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Inspections command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcCheck size={20} color="#10b981" /> Inspections
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {inspections.length} total · {inspections.filter(i => i.status === 'failed').length} failed
             </p>
           </div>
@@ -204,17 +204,17 @@ export default function InspectionsPage() {
         {(['all', 'draft', 'in_progress', 'passed', 'failed'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#10b981' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#10b981' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {s.replace(/_/g, ' ')}
             </button>
           )
         })}
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && inspections.length === 0 && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No inspections yet. Schedule a safety / quality / scaffold check.</div>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No inspections yet. Schedule a safety / quality / scaffold check.</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
@@ -224,7 +224,7 @@ export default function InspectionsPage() {
           const done = i.checklistItems.filter(it => it.result).length
           const failed = i.checklistItems.filter(it => it.result === 'fail').length
           return (
-            <div key={i.id} style={{ background: '#152641', border: `0.5px solid ${i.status === 'failed' ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
+            <div key={i.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${i.status === 'failed' ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
               <div onClick={() => setExpanded(isOpen ? null : i.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                   <span style={{ background: TYPE_COLOR[i.type] + '33', color: TYPE_COLOR[i.type], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[i.type]}</span>
@@ -233,8 +233,8 @@ export default function InspectionsPage() {
                   <span style={{ background: STATUS_COLOR[i.status] + '33', color: STATUS_COLOR[i.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{STATUS_LABEL[i.status]}</span>
                   {failed > 0 && i.status !== 'passed' && <span style={{ color: '#ef4444', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{failed} FAIL</span>}
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>{i.title}</div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+                <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>{i.title}</div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                   {i.project?.name || '—'}{i.location ? ` · ${i.location}` : ''}{i.scheduledAt ? ` · ${new Date(i.scheduledAt).toLocaleDateString('en-GB')}` : ''} · {done}/{total} checked
                 </div>
                 {i.drawing && <div style={{ fontFamily: SF, fontSize: 10.5, color: '#8b5cf6', marginTop: 3 }}>Drawing {i.drawing.number}{i.drawingRevision ? ` · Rev ${i.drawingRevision.revision}` : ''} · {i.drawing.title}</div>}
@@ -247,7 +247,7 @@ export default function InspectionsPage() {
                       <div key={item.id} style={{ background: '#0a1426', borderRadius: 8, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ flex: 1, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>{item.label}</div>
                         {(['pass', 'fail', 'na'] as const).map(r => (
-                          <button key={r} onClick={() => updateItem(i, item.id, r)} style={{ background: item.result === r ? (r === 'pass' ? '#10b981' : r === 'fail' ? '#ef4444' : '#52749a') : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', color: item.result === r ? '#fff' : '#8ea8c5', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
+                          <button key={r} onClick={() => updateItem(i, item.id, r)} style={{ background: item.result === r ? (r === 'pass' ? '#10b981' : r === 'fail' ? '#ef4444' : 'var(--t3)') : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', color: item.result === r ? '#fff' : 'var(--t2)', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
                             {r}
                           </button>
                         ))}
@@ -274,7 +274,7 @@ export default function InspectionsPage() {
                       </button>
                     )}
                     {(i.status === 'passed' || i.status === 'failed') && (
-                      <button onClick={() => setStatus(i, 'in_progress')} style={pillBtn('#1a2f4e', '#c1d2e8')}>Reopen</button>
+                      <button onClick={() => setStatus(i, 'in_progress')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Reopen</button>
                     )}
                     <button onClick={() => setConfirmDelete(i.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                       <IcTrash size={11} color="#fca5a5" /> Delete
@@ -301,9 +301,9 @@ export default function InspectionsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Schedule inspection</h2>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Schedule inspection</h2>
               <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <IcX size={18} color="#52749a" />
+                <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -319,7 +319,7 @@ export default function InspectionsPage() {
               <Field label="Type">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(TYPE_LABEL) as Inspection['type'][]).map(t => (
-                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? TYPE_COLOR[t] : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? TYPE_COLOR[t] : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {TYPE_LABEL[t]}
                     </button>
                   ))}
@@ -328,7 +328,7 @@ export default function InspectionsPage() {
               <Field label="Control point">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(['inspection', 'hold', 'witness'] as const).map(pointType => (
-                    <button key={pointType} type="button" onClick={() => setForm(f => ({ ...f, pointType }))} style={{ background: form.pointType === pointType ? '#8b5cf6' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.pointType === pointType ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}>
+                    <button key={pointType} type="button" onClick={() => setForm(f => ({ ...f, pointType }))} style={{ background: form.pointType === pointType ? '#8b5cf6' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.pointType === pointType ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}>
                       {pointType === 'inspection' ? 'Standard inspection' : `${pointType} point`}
                     </button>
                   ))}
@@ -349,7 +349,7 @@ export default function InspectionsPage() {
               <Field label="Scheduled for">
                 <input type="datetime-local" value={form.scheduledAt} onChange={e => setForm(f => ({ ...f, scheduledAt: e.target.value }))} style={inputStyle} />
               </Field>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', background: 'rgba(16,185,129,0.08)', borderRadius: 8, padding: 10 }}>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', background: 'rgba(16,185,129,0.08)', borderRadius: 8, padding: 10 }}>
                 A starter checklist for <strong>{TYPE_LABEL[form.type]}</strong> ({DEFAULT_CHECKLISTS[form.type].length} items) will be pre-populated. {form.pointType === 'hold' ? 'This hold point cannot pass until it is formally released.' : form.pointType === 'witness' ? 'This witness point cannot pass until witness/release is recorded.' : 'Tap items on the card to mark pass / fail / N/A.'}
               </div>
               <button onClick={save} disabled={saving} style={{ background: '#10b981', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
@@ -366,9 +366,9 @@ export default function InspectionsPage() {
   )
 }
 
-const inputStyle = { background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
+const inputStyle = { background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
 }
 function pillBtn(bg: string, color = '#fff', borderColor = 'rgba(255,255,255,0.1)'): React.CSSProperties {
   return { background: bg, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: '6px 10px', color, fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }

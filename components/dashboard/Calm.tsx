@@ -42,22 +42,22 @@ export default function Calm({ accent = '#2563eb', data }: CalmProps) {
   return (
     <div style={{ paddingBottom: 110 }}>
       <div style={{ padding: '8px 24px 4px' }}>
-        <div style={{ fontFamily: SF, fontSize: 13, color: '#52749a', fontWeight: 500 }}>{dayDate}</div>
+        <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)', fontWeight: 500 }}>{dayDate}</div>
       </div>
       <div style={{ padding: '0 24px 28px' }}>
-        <div style={{ fontFamily: SF, fontSize: 30, fontWeight: 600, color: '#eef3fa', letterSpacing: -0.8, lineHeight: 1.1 }}>
+        <div style={{ fontFamily: SF, fontSize: 30, fontWeight: 600, color: 'var(--t1)', letterSpacing: -0.8, lineHeight: 1.1 }}>
           {greeting},<br />{firstName}.
         </div>
       </div>
 
       {/* Single hero stat */}
       <div style={{ padding: '0 24px 32px' }}>
-        <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1.2 }}>Today</div>
-        <div style={{ fontFamily: SF, fontSize: 44, fontWeight: 600, color: '#eef3fa', marginTop: 6, letterSpacing: -1.2, lineHeight: 1 }}>
+        <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 1.2 }}>Today</div>
+        <div style={{ fontFamily: SF, fontSize: 44, fontWeight: 600, color: 'var(--t1)', marginTop: 6, letterSpacing: -1.2, lineHeight: 1 }}>
           {count === 0 ? 'All clear' : `${count} thing${count === 1 ? '' : 's'}`}
         </div>
         {summary && (
-          <div style={{ fontFamily: SF, fontSize: 14, color: '#8ea8c5', marginTop: 8, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
+          <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t2)', marginTop: 8, lineHeight: 1.5, whiteSpace: 'pre-line' }}>
             {summary}
           </div>
         )}
@@ -89,11 +89,11 @@ export default function Calm({ accent = '#2563eb', data }: CalmProps) {
                   marginTop: 2, letterSpacing: 0.3, width: 18, flexShrink: 0,
                 }}>{num}</div>
                 <div style={{ flex: 1 }}>
-                  <div style={{ fontFamily: SF, fontSize: 17, fontWeight: 500, color: '#eef3fa', lineHeight: 1.3, letterSpacing: -0.2 }}>{t.title}</div>
-                  <div style={{ fontFamily: SF, fontSize: 13, color: '#8ea8c5', marginTop: 4 }}>{sub}</div>
+                  <div style={{ fontFamily: SF, fontSize: 17, fontWeight: 500, color: 'var(--t1)', lineHeight: 1.3, letterSpacing: -0.2 }}>{t.title}</div>
+                  <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t2)', marginTop: 4 }}>{sub}</div>
                 </div>
-                <div style={{ color: '#52749a', marginTop: 4 }}>
-                  <IcArrowRight size={16} color="#52749a" />
+                <div style={{ color: 'var(--t3)', marginTop: 4 }}>
+                  <IcArrowRight size={16} color="var(--t3)" />
                 </div>
               </div>
             )

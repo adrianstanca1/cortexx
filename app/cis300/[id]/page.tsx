@@ -32,7 +32,7 @@ interface Cis300Return {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  draft: '#52749a',
+  draft: 'var(--t3)',
   submitted: '#f59e0b',
   accepted: '#22c55e',
   rejected: '#ef4444',
@@ -112,21 +112,21 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
     : []
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
       <Link
         href="/cis300"
         style={{ display: 'inline-flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}
       >
-        <IcChevL size={18} color="#52749a" />
-        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>CIS300 returns</span>
+        <IcChevL size={18} color="var(--t3)" />
+        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>CIS300 returns</span>
       </Link>
 
       {loading ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
       ) : error ? (
         <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
       ) : !item ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Not found</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Not found</div>
       ) : (
         <>
           <div style={{ display: 'flex', alignItems: 'center', gap: 12, marginBottom: 8 }}>
@@ -134,7 +134,7 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
               style={{
                 fontSize: 24,
                 fontWeight: 700,
-                color: '#eef3fa',
+                color: 'var(--t1)',
                 letterSpacing: '-0.03em',
                 fontFamily: 'var(--font-system)',
                 margin: 0,
@@ -146,8 +146,8 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
               style={{
                 padding: '4px 10px',
                 borderRadius: 99,
-                background: `${STATUS_COLOR[item.status] || '#52749a'}22`,
-                color: STATUS_COLOR[item.status] || '#52749a',
+                background: `${STATUS_COLOR[item.status] || 'var(--t3)'}22`,
+                color: STATUS_COLOR[item.status] || 'var(--t3)',
                 fontSize: 11,
                 fontWeight: 700,
                 textTransform: 'uppercase',
@@ -158,8 +158,8 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
             </span>
           </div>
           {item.hmrcReference && (
-            <div style={{ fontSize: 12, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginBottom: 16 }}>
-              HMRC reference: <strong style={{ color: '#eef3fa' }}>{item.hmrcReference}</strong>
+            <div style={{ fontSize: 12, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginBottom: 16 }}>
+              HMRC reference: <strong style={{ color: 'var(--t1)' }}>{item.hmrcReference}</strong>
               {item.submittedAt && <> · submitted {new Date(item.submittedAt).toLocaleString('en-GB')}</>}
             </div>
           )}
@@ -181,13 +181,13 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
               <div
                 key={t.label}
                 style={{
-                  background: '#152641',
+                  background: 'var(--surface-raised)',
                   borderRadius: 10,
                   padding: 16,
                   border: '0.5px solid rgba(255,255,255,0.07)',
                 }}
               >
-                <div style={{ fontSize: 11, color: '#8ea8c5', fontFamily: 'var(--font-system)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
+                <div style={{ fontSize: 11, color: 'var(--t2)', fontFamily: 'var(--font-system)', textTransform: 'uppercase', letterSpacing: '0.04em', marginBottom: 6 }}>
                   {t.label}
                 </div>
                 <div style={{ fontSize: 22, fontWeight: 700, color: t.color, fontFamily: 'var(--font-system)' }}>
@@ -206,7 +206,7 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
                 padding: '8px 16px',
                 borderRadius: 10,
                 background: '#2563eb',
-                color: '#eef3fa',
+                color: 'var(--t1)',
                 fontFamily: 'var(--font-system)',
                 fontSize: 13,
                 fontWeight: 700,
@@ -225,7 +225,7 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
                     borderRadius: 10,
                     background: '#10b981',
                     border: 'none',
-                    color: '#0c1a2e',
+                    color: 'var(--bg1)',
                     fontFamily: 'var(--font-system)',
                     fontSize: 13,
                     fontWeight: 700,
@@ -260,7 +260,7 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
           {/* Sub line items */}
           <div
             style={{
-              background: '#152641',
+              background: 'var(--surface-raised)',
               borderRadius: 10,
               border: '0.5px solid rgba(255,255,255,0.07)',
               overflow: 'hidden',
@@ -271,7 +271,7 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
                 style={{
                   padding: 20,
                   textAlign: 'center',
-                  color: '#52749a',
+                  color: 'var(--t3)',
                   fontSize: 13,
                   fontFamily: 'var(--font-system)',
                 }}
@@ -282,20 +282,20 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
               <table style={{ width: '100%', borderCollapse: 'collapse', fontFamily: 'var(--font-system)', fontSize: 13 }}>
                 <thead>
                   <tr style={{ background: 'rgba(255,255,255,0.04)' }}>
-                    <th style={{ textAlign: 'left', padding: 10, fontSize: 11, fontWeight: 600, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Name</th>
-                    <th style={{ textAlign: 'left', padding: 10, fontSize: 11, fontWeight: 600, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>UTR</th>
-                    <th style={{ textAlign: 'left', padding: 10, fontSize: 11, fontWeight: 600, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CIS</th>
-                    <th style={{ textAlign: 'right', padding: 10, fontSize: 11, fontWeight: 600, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Gross</th>
-                    <th style={{ textAlign: 'right', padding: 10, fontSize: 11, fontWeight: 600, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CIS deducted</th>
+                    <th style={{ textAlign: 'left', padding: 10, fontSize: 11, fontWeight: 600, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Name</th>
+                    <th style={{ textAlign: 'left', padding: 10, fontSize: 11, fontWeight: 600, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>UTR</th>
+                    <th style={{ textAlign: 'left', padding: 10, fontSize: 11, fontWeight: 600, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CIS</th>
+                    <th style={{ textAlign: 'right', padding: 10, fontSize: 11, fontWeight: 600, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>Gross</th>
+                    <th style={{ textAlign: 'right', padding: 10, fontSize: 11, fontWeight: 600, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: '0.04em' }}>CIS deducted</th>
                   </tr>
                 </thead>
                 <tbody>
                   {lineItems.map(li => (
                     <tr key={li.subcontractorId} style={{ borderTop: '0.5px solid rgba(255,255,255,0.05)' }}>
-                      <td style={{ padding: 10, color: '#eef3fa' }}>{li.name}</td>
-                      <td style={{ padding: 10, color: '#8ea8c5', fontFamily: 'monospace', fontSize: 12 }}>{li.utr || '—'}</td>
-                      <td style={{ padding: 10, color: '#8ea8c5' }}>{li.cisStatus}</td>
-                      <td style={{ padding: 10, color: '#eef3fa', textAlign: 'right' }}>{fmtMoney(li.gross)}</td>
+                      <td style={{ padding: 10, color: 'var(--t1)' }}>{li.name}</td>
+                      <td style={{ padding: 10, color: 'var(--t2)', fontFamily: 'monospace', fontSize: 12 }}>{li.utr || '—'}</td>
+                      <td style={{ padding: 10, color: 'var(--t2)' }}>{li.cisStatus}</td>
+                      <td style={{ padding: 10, color: 'var(--t1)', textAlign: 'right' }}>{fmtMoney(li.gross)}</td>
                       <td style={{ padding: 10, color: '#f59e0b', textAlign: 'right' }}>{fmtMoney(li.cis)}</td>
                     </tr>
                   ))}

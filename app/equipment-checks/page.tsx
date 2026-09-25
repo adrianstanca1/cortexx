@@ -52,7 +52,7 @@ const STATUS_LABEL: Record<Check['status'], string> = {
   failed: 'Failed',
 }
 const STATUS_COLOR: Record<Check['status'], string> = {
-  draft: '#52749a',
+  draft: 'var(--t3)',
   in_progress: '#06b6d4',
   passed: '#10b981',
   failed: '#ef4444',
@@ -251,20 +251,20 @@ export default function EquipmentChecksPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Equipment Checks command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcWrench size={20} color="#f59e0b" /> Equipment checks
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>{checks.length} checks · {checks.filter(c => c.status === 'failed').length} failed</span>
               {(() => {
                 const overdueCount = checks.filter(
@@ -295,7 +295,7 @@ export default function EquipmentChecksPage() {
                     padding: '5px 12px',
                     borderRadius: 999,
                     border: 'none',
-                    background: statusFilter === s ? color : '#152641',
+                    background: statusFilter === s ? color : 'var(--surface-raised)',
                     color: statusFilter === s ? '#fff' : '#c1d2e8',
                     fontFamily: SF,
                     fontSize: 12,
@@ -326,7 +326,7 @@ export default function EquipmentChecksPage() {
             key={t.value}
             onClick={() => openCreate(t.value)}
             style={{
-              background: '#152641',
+              background: 'var(--surface-raised)',
               border: '0.5px solid rgba(255,255,255,0.07)',
               borderRadius: 12,
               padding: '12px 14px',
@@ -341,17 +341,17 @@ export default function EquipmentChecksPage() {
               <IcPlus size={18} color={t.color} />
             </div>
             <div style={{ flex: 1 }}>
-              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>New {t.label} check</div>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>{EQUIPMENT_CHECK_TEMPLATES[t.value]?.items.length || 0} standard items</div>
+              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>New {t.label} check</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{EQUIPMENT_CHECK_TEMPLATES[t.value]?.items.length || 0} standard items</div>
             </div>
           </button>
         ))}
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && checks.length === 0 && (
-        <div style={{ padding: '40px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No equipment checks yet. Pick a type above to start.</div>
+        <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No equipment checks yet. Pick a type above to start.</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
@@ -367,7 +367,7 @@ export default function EquipmentChecksPage() {
               ? `Repeats ${c.frequency}`
               : null
           return (
-            <div key={c.id} style={{ background: '#152641', border: `0.5px solid ${c.status === 'failed' || overdue ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
+            <div key={c.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${c.status === 'failed' || overdue ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
               <div onClick={() => setExpanded(isOpen ? null : c.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                   <span style={{ background: 'rgba(255,255,255,0.08)', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'capitalize' }}>{c.type.replace(/_/g, ' ')}</span>
@@ -375,8 +375,8 @@ export default function EquipmentChecksPage() {
                   {failed > 0 && c.status !== 'passed' && <span style={{ color: '#ef4444', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{failed} FAIL</span>}
                   {overdue && <span style={{ background: '#ef444433', color: '#ef4444', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>Overdue</span>}
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>{c.title}</div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: overdue ? '#fca5a5' : '#52749a', marginTop: 2 }}>
+                <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>{c.title}</div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: overdue ? '#fca5a5' : 'var(--t3)', marginTop: 2 }}>
                   {c.project?.name || '—'}
                   {c.equipment && <span> · {c.equipment.name} {c.equipment.code && `(${c.equipment.code})`}</span>}
                   {c.conductedBy && <span> · {c.conductedBy}</span>}
@@ -396,11 +396,11 @@ export default function EquipmentChecksPage() {
                             key={r}
                             onClick={() => updateItem(c, item.id, r)}
                             style={{
-                              background: item.result === r ? (r === 'pass' ? '#10b981' : r === 'fail' ? '#ef4444' : '#52749a') : 'transparent',
+                              background: item.result === r ? (r === 'pass' ? '#10b981' : r === 'fail' ? '#ef4444' : 'var(--t3)') : 'transparent',
                               border: '0.5px solid rgba(255,255,255,0.1)',
                               borderRadius: 6,
                               padding: '4px 8px',
-                              color: item.result === r ? '#fff' : '#8ea8c5',
+                              color: item.result === r ? '#fff' : 'var(--t2)',
                               fontFamily: SF,
                               fontSize: 10,
                               fontWeight: 700,
@@ -428,8 +428,8 @@ export default function EquipmentChecksPage() {
                     {(c.status === 'passed' || c.status === 'failed') && (
                       <Button size="sm" variant="secondary" onClick={() => setStatus(c, 'in_progress')}>Reopen</Button>
                     )}
-                    <Button size="sm" variant="ghost" onClick={() => openEdit(c)} style={{ color: '#8ea8c5' }}>
-                      <IcEdit size={11} color="#8ea8c5" /> Edit
+                    <Button size="sm" variant="ghost" onClick={() => openEdit(c)} style={{ color: 'var(--t2)' }}>
+                      <IcEdit size={11} color="var(--t2)" /> Edit
                     </Button>
                     <Button size="sm" variant="ghost" onClick={() => setConfirmDelete(c.id)} style={{ color: '#fca5a5' }}>
                       <IcTrash size={11} color="#fca5a5" /> Delete

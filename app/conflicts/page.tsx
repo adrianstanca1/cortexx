@@ -29,7 +29,7 @@ const FILTERS: { id: FilterId; label: string }[] = [
 ]
 
 const SEVERITY_COLOR: Record<string, string> = {
-  low: '#52749a',
+  low: 'var(--t3)',
   medium: '#f59e0b',
   high: '#ef4444',
   critical: '#ef4444',
@@ -132,7 +132,7 @@ export default function ConflictsPage() {
                 border: 'none',
                 fontSize: 12,
                 fontWeight: active ? 700 : 500,
-                color: active ? '#0c1a2e' : '#52749a',
+                color: active ? 'var(--bg1)' : 'var(--t3)',
                 background: active ? '#ef4444' : 'rgba(255,255,255,0.06)',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-system)',
@@ -145,7 +145,7 @@ export default function ConflictsPage() {
                   style={{
                     fontSize: 11,
                     fontWeight: 700,
-                    color: active ? '#0c1a2e' : '#8ea8c5',
+                    color: active ? 'var(--bg1)' : 'var(--t2)',
                     opacity: active ? 0.8 : 1,
                   }}
                 >
@@ -158,11 +158,11 @@ export default function ConflictsPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
       ) : error ? (
         <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
       ) : visible.length === 0 ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)', padding: 32, textAlign: 'center' }}>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)', padding: 32, textAlign: 'center' }}>
           No records yet. Click <strong style={{ color: '#ef4444' }}>+ New</strong> to add the first one.
         </div>
       ) : (
@@ -178,7 +178,7 @@ export default function ConflictsPage() {
                 key={r.id}
                 onClick={() => setSelected(r)}
                 style={{
-                  background: '#152641',
+                  background: 'var(--surface-raised)',
                   borderRadius: 10,
                   padding: '12px 14px',
                   border: isCritical
@@ -186,7 +186,7 @@ export default function ConflictsPage() {
                     : '0.5px solid rgba(255,255,255,0.07)',
                   fontFamily: 'var(--font-system)',
                   fontSize: 13,
-                  color: '#eef3fa',
+                  color: 'var(--t1)',
                   cursor: 'pointer',
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -201,7 +201,7 @@ export default function ConflictsPage() {
                       alignItems: 'center',
                       gap: 8,
                       fontWeight: 600,
-                      color: isResolved ? '#52749a' : '#eef3fa',
+                      color: isResolved ? 'var(--t3)' : 'var(--t1)',
                       textDecoration: isResolved ? 'line-through' : 'none',
                     }}
                   >
@@ -228,7 +228,7 @@ export default function ConflictsPage() {
                           padding: '2px 7px',
                           borderRadius: 99,
                           background: 'rgba(255,255,255,0.06)',
-                          color: '#8ea8c5',
+                          color: 'var(--t2)',
                           textDecoration: 'none',
                           flexShrink: 0,
                         }}
@@ -237,7 +237,7 @@ export default function ConflictsPage() {
                       </span>
                     )}
                   </div>
-                  <div style={{ fontSize: 11, color: '#52749a', marginTop: 4, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {r.parties && <span>{r.parties}</span>}
                     {r.owner && <span>Owner: {r.owner}</span>}
                     <span>Raised {relativeTime(raised as string)}</span>

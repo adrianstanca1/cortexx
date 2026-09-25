@@ -40,10 +40,10 @@ function LoginForm() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <form onSubmit={onSubmit} style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>Sign in to Cortexx</h1>
-        <p style={{ fontSize: 13, color: '#8ea8c5', marginBottom: 8, fontFamily: 'var(--font-system)' }}>Mobile-first construction management</p>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>Sign in to Cortexx</h1>
+        <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 8, fontFamily: 'var(--font-system)' }}>Mobile-first construction management</p>
 
         <label htmlFor="email" style={labelStyle}>Email</label>
         <input
@@ -76,20 +76,20 @@ function LoginForm() {
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
 
-        <p style={{ textAlign: 'center', fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginTop: 12 }}>New? <Link href="/register" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 600 }}>Create an account</Link></p>
+        <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginTop: 12 }}>New? <Link href="/register" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 600 }}>Create an account</Link></p>
       </form>
     </div>
   )
 }
 
 export default function LoginPage() {
-  return <Suspense fallback={<div style={{ background: '#06101e', minHeight: '100dvh' }} />}><LoginForm /></Suspense>
+  return <Suspense fallback={<div style={{ background: 'var(--bg0)', minHeight: '100dvh' }} />}><LoginForm /></Suspense>
 }
 
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-system)',
   fontSize: 11,
-  color: '#52749a',
+  color: 'var(--t3)',
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: 0.5,
@@ -97,11 +97,11 @@ const labelStyle: React.CSSProperties = {
 
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#152641',
+  background: 'var(--surface-raised)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 12,
   padding: '13px 16px',
-  color: '#eef3fa',
+  color: 'var(--t1)',
   fontFamily: 'var(--font-system)',
   fontSize: 15,
   outline: 'none',

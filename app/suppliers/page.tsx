@@ -26,7 +26,7 @@ const CATEGORY_LABEL: Record<Supplier['category'], string> = {
   materials: 'Materials', plant: 'Plant', services: 'Services', other: 'Other',
 }
 const CATEGORY_COLOR: Record<Supplier['category'], string> = {
-  materials: '#f59e0b', plant: '#06b6d4', services: '#8b5cf6', other: '#52749a',
+  materials: '#f59e0b', plant: '#06b6d4', services: '#8b5cf6', other: 'var(--t3)',
 }
 const SF = 'var(--font-system)'
 
@@ -119,18 +119,18 @@ export default function SuppliersPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Suppliers command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcTeam size={20} color="#8b5cf6" /> Suppliers
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {suppliers.filter(s => !s.archivedAt).length} active
             </p>
           </div>
@@ -146,7 +146,7 @@ export default function SuppliersPage() {
           const active = categoryFilter === c
           const color = c === 'all' ? '#8b5cf6' : CATEGORY_COLOR[c as Supplier['category']]
           return (
-            <button key={c} onClick={() => setCategoryFilter(c)} style={{ background: active ? color : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button key={c} onClick={() => setCategoryFilter(c)} style={{ background: active ? color : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {c === 'all' ? 'All' : CATEGORY_LABEL[c as Supplier['category']]}
             </button>
           )
@@ -154,39 +154,39 @@ export default function SuppliersPage() {
       </div>
 
       <div style={{ padding: '0 16px 12px', display: 'flex', gap: 8, alignItems: 'center' }}>
-        <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or contact…" style={{ flex: 1, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 12px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none' }} />
-        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: SF, fontSize: 12, color: '#8ea8c5', cursor: 'pointer' }}>
+        <input type="text" value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name or contact…" style={{ flex: 1, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 12px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none' }} />
+        <label style={{ display: 'flex', alignItems: 'center', gap: 6, fontFamily: SF, fontSize: 12, color: 'var(--t2)', cursor: 'pointer' }}>
           <input type="checkbox" checked={includeArchived} onChange={e => setIncludeArchived(e.target.checked)} />
           Archived
         </label>
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && suppliers.length === 0 && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No suppliers yet. Add your first one.</div>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No suppliers yet. Add your first one.</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
         {suppliers.map(s => (
-          <div key={s.id} style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 14, opacity: s.archivedAt ? 0.55 : 1 }}>
+          <div key={s.id} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 14, opacity: s.archivedAt ? 0.55 : 1 }}>
             <div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                 <span style={{ background: CATEGORY_COLOR[s.category] + '33', color: CATEGORY_COLOR[s.category], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{CATEGORY_LABEL[s.category]}</span>
-                {s.archivedAt && <span style={{ color: '#52749a', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>ARCHIVED</span>}
-                {s.paymentTerms && <span style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{s.paymentTerms}</span>}
+                {s.archivedAt && <span style={{ color: 'var(--t3)', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>ARCHIVED</span>}
+                {s.paymentTerms && <span style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{s.paymentTerms}</span>}
               </div>
-              <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>{s.name}</div>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+              <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>{s.name}</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                 {s.contactName || '—'}{s.postcode ? ` · ${s.postcode}` : ''}{s.accountNumber ? ` · A/C ${s.accountNumber}` : ''}
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
-              {permissions.canViewPerformance && <Link href={`/suppliers/${s.id}/performance`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Performance</Link>}
-              {s.contactEmail && <a href={`mailto:${s.contactEmail}`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Email</a>}
-              {s.contactPhone && <a href={`tel:${s.contactPhone}`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Call</a>}
-              {permissions.canEdit && <button type="button" onClick={() => openEdit(s)} style={pillBtn('#1a2f4e', '#c1d2e8')}>Edit</button>}
-              {permissions.canEdit && <button type="button" onClick={() => toggleArchive(s)} style={pillBtn('#1a2f4e', '#c1d2e8')}>{s.archivedAt ? 'Restore' : 'Archive'}</button>}
+              {permissions.canViewPerformance && <Link href={`/suppliers/${s.id}/performance`} style={{ ...pillBtn('var(--bg3)', '#c1d2e8'), textDecoration: 'none' }}>Performance</Link>}
+              {s.contactEmail && <a href={`mailto:${s.contactEmail}`} style={{ ...pillBtn('var(--bg3)', '#c1d2e8'), textDecoration: 'none' }}>Email</a>}
+              {s.contactPhone && <a href={`tel:${s.contactPhone}`} style={{ ...pillBtn('var(--bg3)', '#c1d2e8'), textDecoration: 'none' }}>Call</a>}
+              {permissions.canEdit && <button type="button" onClick={() => openEdit(s)} style={pillBtn('var(--bg3)', '#c1d2e8')}>Edit</button>}
+              {permissions.canEdit && <button type="button" onClick={() => toggleArchive(s)} style={pillBtn('var(--bg3)', '#c1d2e8')}>{s.archivedAt ? 'Restore' : 'Archive'}</button>}
               {permissions.canDelete && <button type="button" onClick={() => setConfirmDelete(s.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                 <IcTrash size={11} color="#fca5a5" /> Delete
               </button>}
@@ -208,9 +208,9 @@ export default function SuppliersPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>{editing ? 'Edit supplier' : 'Add supplier'}</h2>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>{editing ? 'Edit supplier' : 'Add supplier'}</h2>
               <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <IcX size={18} color="#52749a" />
+                <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -220,7 +220,7 @@ export default function SuppliersPage() {
               <Field label="Category">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(CATEGORY_LABEL) as Supplier['category'][]).map(c => (
-                    <button key={c} onClick={() => setForm(f => ({ ...f, category: c }))} style={{ background: form.category === c ? CATEGORY_COLOR[c] : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.category === c ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button key={c} onClick={() => setForm(f => ({ ...f, category: c }))} style={{ background: form.category === c ? CATEGORY_COLOR[c] : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.category === c ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {CATEGORY_LABEL[c]}
                     </button>
                   ))}
@@ -270,9 +270,9 @@ export default function SuppliersPage() {
   )
 }
 
-const inputStyle = { background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
+const inputStyle = { background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
 }
 function pillBtn(bg: string, color = '#fff', borderColor = 'rgba(255,255,255,0.1)'): React.CSSProperties {
   return { background: bg, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: '6px 10px', color, fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4 }

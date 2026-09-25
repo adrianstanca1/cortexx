@@ -69,20 +69,20 @@ export default function AuditLogPage() {
   }
 
   if (!activeOrg) {
-    return <div style={{ background: '#06101e', minHeight: '100dvh', padding: 24, color: '#8ea8c5', fontFamily: 'var(--font-system)' }}>No active workspace.</div>
+    return <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: 24, color: 'var(--t2)', fontFamily: 'var(--font-system)' }}>No active workspace.</div>
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
       <Link href="/settings/organization" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-        <IcChevL size={18} color="#52749a" />
-        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Workspace</span>
+        <IcChevL size={18} color="var(--t3)" />
+        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Workspace</span>
       </Link>
 
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
         Audit log
       </h1>
-      <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginBottom: 16 }}>
+      <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginBottom: 16 }}>
         Immutable forensic log of every workspace change. {total.toLocaleString('en-GB')} event{total === 1 ? '' : 's'} tracked.
       </p>
 
@@ -91,7 +91,7 @@ export default function AuditLogPage() {
           <button
             key={f || 'all'}
             onClick={() => setFilter(f)}
-            style={{ padding: '5px 10px', borderRadius: 999, background: filter === f ? '#f59e0b' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', color: filter === f ? '#06101e' : '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}
+            style={{ padding: '5px 10px', borderRadius: 999, background: filter === f ? '#f59e0b' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', color: filter === f ? 'var(--bg0)' : 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}
           >
             {f || 'all'}
           </button>
@@ -99,29 +99,29 @@ export default function AuditLogPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
       ) : error ? (
         <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
       ) : events.length === 0 ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>No events yet.</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>No events yet.</div>
       ) : (
-        <div style={{ background: '#152641', borderRadius: 14, padding: 4, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: 4, border: '0.5px solid rgba(255,255,255,0.07)' }}>
           {events.map(e => (
             <div key={e.id} style={{ padding: '10px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.05)', display: 'grid', gridTemplateColumns: '110px 1fr auto', gap: 12, alignItems: 'center' }}>
-              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#52749a', whiteSpace: 'nowrap' }}>
+              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'var(--t3)', whiteSpace: 'nowrap' }}>
                 {new Date(e.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </div>
               <div style={{ minWidth: 0 }}>
-                <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#eef3fa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   <span style={{ color: '#f59e0b', fontWeight: 600 }}>{e.action}</span>
-                  <span style={{ color: '#52749a' }}> · {e.resourceType}</span>
+                  <span style={{ color: 'var(--t3)' }}> · {e.resourceType}</span>
                 </div>
-                <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                   {e.actor ? (e.actor.name || e.actor.email) : 'system'}
-                  {e.ipAddress && <span style={{ color: '#52749a' }}> · {e.ipAddress}</span>}
+                  {e.ipAddress && <span style={{ color: 'var(--t3)' }}> · {e.ipAddress}</span>}
                 </div>
               </div>
-              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: '#52749a', textAlign: 'right' }}>
+              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: 'var(--t3)', textAlign: 'right' }}>
                 {e.resourceId.slice(0, 8)}
               </div>
             </div>
@@ -130,13 +130,13 @@ export default function AuditLogPage() {
             <button
               onClick={loadMore}
               disabled={loadingMore}
-              style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', borderTop: '0.5px solid rgba(255,255,255,0.05)', fontFamily: 'var(--font-system)', fontSize: 11, color: loadingMore ? '#52749a' : '#f59e0b', textAlign: 'center', cursor: loadingMore ? 'default' : 'pointer', fontWeight: 600 }}
+              style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', borderTop: '0.5px solid rgba(255,255,255,0.05)', fontFamily: 'var(--font-system)', fontSize: 11, color: loadingMore ? 'var(--t3)' : '#f59e0b', textAlign: 'center', cursor: loadingMore ? 'default' : 'pointer', fontWeight: 600 }}
             >
               {loadingMore ? 'Loading…' : `Load more (${events.length} of ${total.toLocaleString('en-GB')})`}
             </button>
           )}
           {!hasMore && events.length > 0 && (
-            <div style={{ padding: '10px 12px', fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', textAlign: 'center' }}>
+            <div style={{ padding: '10px 12px', fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', textAlign: 'center' }}>
               End of log · {events.length.toLocaleString('en-GB')} event{events.length === 1 ? '' : 's'} shown
             </div>
           )}

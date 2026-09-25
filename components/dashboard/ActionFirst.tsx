@@ -76,19 +76,19 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
       <div style={{ padding: '20px 20px 0' }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <p style={{ fontSize: 13, color: '#52749a', fontFamily: 'var(--font-system)' }}>
+            <p style={{ fontSize: 13, color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>
               {dayName}, {dateStr}
             </p>
             <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-              <h2 style={{ fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginTop: 2 }}>
+              <h2 style={{ fontSize: 26, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginTop: 2 }}>
                 Good morning
               </h2>
-              <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+              <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : 'var(--t3)', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
             </div>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '8px 12px', background: 'rgba(255,255,255,0.07)', borderRadius: 12 }}>
             <IcWeather size={16} color="#60a5fa" />
-            <span style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)' }}>
+            <span style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)' }}>
               {data?.projects?.[0]?.postcode?.split(' ')[0] || (data?.projects?.length ? 'On site' : 'No sites')}
             </span>
           </div>
@@ -176,7 +176,7 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
       {/* Then today */}
       {todayTasks.length > 0 && (
         <div style={{ padding: '24px 20px 0' }}>
-          <p style={{ fontSize: 11, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)', marginBottom: 12 }}>
+          <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)', marginBottom: 12 }}>
             Open tasks
           </p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -185,7 +185,7 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
               const color = task.priority === 'critical' ? '#ef4444' : task.priority === 'high' ? '#f59e0b' : '#2563eb'
               return (
                 <div key={task.id} onClick={() => task.projectId && router.push(`/projects/${task.projectId}`)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', cursor: task.projectId ? 'pointer' : 'default' }}>
-                  <span style={{ fontSize: 12, fontWeight: 600, color: '#52749a', width: 40, fontFamily: 'var(--font-system)' }}>
+                  <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t3)', width: 40, fontFamily: 'var(--font-system)' }}>
                     {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
                   </span>
                   <div style={{ width: 32, height: 32, borderRadius: 10, background: `${color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
@@ -194,8 +194,8 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
                     {iconName === 'truck' && <IcTruck size={15} color={color} />}
                     {iconName === 'hardhat' && <IcHardhat size={15} color={color} />}
                   </div>
-                  <span style={{ fontSize: 13, color: '#eef3fa', flex: 1, fontFamily: 'var(--font-system)' }}>{task.title}</span>
-                  <IcArrowRight size={14} color="#52749a" />
+                  <span style={{ fontSize: 13, color: 'var(--t1)', flex: 1, fontFamily: 'var(--font-system)' }}>{task.title}</span>
+                  <IcArrowRight size={14} color="var(--t3)" />
                 </div>
               )
             })}
@@ -213,7 +213,7 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
           ].map((stat) => (
             <div key={stat.label} style={{ flex: 1, padding: '12px 10px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', textAlign: 'center' }}>
               <div style={{ fontSize: 22, fontWeight: 700, color: stat.color, letterSpacing: '-0.02em', fontFamily: 'var(--font-system)' }}>{stat.value}</div>
-              <div style={{ fontSize: 10, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>{stat.label}</div>
+              <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>{stat.label}</div>
             </div>
           ))}
         </div>

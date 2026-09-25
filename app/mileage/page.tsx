@@ -170,18 +170,18 @@ export default function MileagePage() {
   })()
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Mileage command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Mileage</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>{monthLabel} · HMRC rate</p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Mileage</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{monthLabel} · HMRC rate</p>
           </div>
           <button onClick={() => setShowAdd(true)} aria-label="Log journey" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
@@ -189,12 +189,12 @@ export default function MileagePage() {
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
-          <div style={{ background: '#152641', borderRadius: 10, padding: '8px 12px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
-            <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Miles</div>
+          <div style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '8px 12px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Miles</div>
             <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, color: '#06b6d4', fontWeight: 700, marginTop: 2 }}>{totals.miles.toFixed(0)}</div>
           </div>
-          <div style={{ background: '#152641', borderRadius: 10, padding: '8px 12px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
-            <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Claimable</div>
+          <div style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '8px 12px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Claimable</div>
             <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, color: '#10b981', fontWeight: 700, marginTop: 2 }}>£{totals.amount.toFixed(2)}</div>
           </div>
         </div>
@@ -202,25 +202,25 @@ export default function MileagePage() {
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
           <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', padding: '5px 10px', fontSize: 12, width: 'auto' }} />
           {(['all', 'pending', 'approved'] as const).map(f => (
-            <button key={f} onClick={() => setApprovedFilter(f)} style={{ padding: '4px 10px', borderRadius: 99, border: 'none', background: approvedFilter === f ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: approvedFilter === f ? '#fff' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: approvedFilter === f ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button key={f} onClick={() => setApprovedFilter(f)} style={{ padding: '4px 10px', borderRadius: 99, border: 'none', background: approvedFilter === f ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: approvedFilter === f ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: approvedFilter === f ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {f}
             </button>
           ))}
           {entries.length > 0 && (
-            <button onClick={exportCsv} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
-              <IcSend size={11} color="#8ea8c5" /> CSV
+            <button onClick={exportCsv} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <IcSend size={11} color="var(--t2)" /> CSV
             </button>
           )}
         </div>
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : entries.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcTruck size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcTruck size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No journeys this month</p>
           <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Log first journey
@@ -229,18 +229,18 @@ export default function MileagePage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {entries.map(e => (
-            <div key={e.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+            <div key={e.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 4 }}>
-                <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 600 }}>
+                <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 600 }}>
                   {new Date(e.date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                 </span>
-                {e.member && <span style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>· {e.member.name}</span>}
+                {e.member && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>· {e.member.name}</span>}
                 <span style={{ marginLeft: 'auto', fontFamily: 'ui-monospace, monospace', fontSize: 14, color: '#10b981', fontWeight: 700 }}>£{e.amount.toFixed(2)}</span>
               </div>
-              <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa', lineHeight: 1.3 }}>
-                {e.fromAddress}{e.fromPostcode ? ` (${e.fromPostcode})` : ''} <span style={{ color: '#52749a' }}>→</span> {e.toAddress}{e.toPostcode ? ` (${e.toPostcode})` : ''}
+              <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)', lineHeight: 1.3 }}>
+                {e.fromAddress}{e.fromPostcode ? ` (${e.fromPostcode})` : ''} <span style={{ color: 'var(--t3)' }}>→</span> {e.toAddress}{e.toPostcode ? ` (${e.toPostcode})` : ''}
               </div>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, fontFamily: SF, fontSize: 11, color: '#52749a' }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 6, fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>
                 <span style={{ fontFamily: 'ui-monospace, monospace', color: '#06b6d4', fontWeight: 600 }}>{e.miles.toFixed(1)} mi</span>
                 <span>·</span>
                 <span style={{ textTransform: 'capitalize' }}>{e.vehicleType} @ {e.ratePence}p</span>
@@ -263,10 +263,10 @@ export default function MileagePage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Log journey</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Log journey</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -316,7 +316,7 @@ export default function MileagePage() {
             <input value={form.purpose} onChange={e => setForm(p => ({ ...p, purpose: e.target.value }))} placeholder="Purpose (e.g. site visit, supplier collection)" style={inputStyle} />
 
             {form.miles && !isNaN(Number(form.miles)) && (
-              <div style={{ background: '#1a2f4e', borderRadius: 10, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: SF, fontSize: 13, color: '#eef3fa' }}>
+              <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontFamily: SF, fontSize: 13, color: 'var(--t1)' }}>
                 <span>Claim at {VEHICLE_RATE[form.vehicleType]}p × {Number(form.miles).toFixed(1)} mi</span>
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 700, color: '#10b981' }}>
                   £{((Number(form.miles) * VEHICLE_RATE[form.vehicleType]) / 100).toFixed(2)}
@@ -335,8 +335,8 @@ export default function MileagePage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

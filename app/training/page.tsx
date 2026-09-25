@@ -18,7 +18,7 @@ const STATUS_COLOR: Record<StatusBucket, string> = {
   valid: '#10b981',
   expiring: '#f59e0b',
   expired: '#ef4444',
-  no_expiry: '#52749a',
+  no_expiry: 'var(--t3)',
 }
 const STATUS_LABEL: Record<StatusBucket, string> = {
   valid: 'Valid',
@@ -119,18 +119,18 @@ export default function TrainingPage() {
   const openEdit = (c: Certification) => { setEditing(c); setDialogOpen(true) }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Training command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Training & CSCS</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Training & CSCS</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {counts.total} certifications · {counts.expired} expired
               {counts.expiring > 0 && <span style={{ color: '#f59e0b', marginLeft: 6 }}>· {counts.expiring} expiring soon</span>}
             </p>
@@ -144,7 +144,7 @@ export default function TrainingPage() {
           {(['valid', 'expiring', 'expired'] as const).map(b => (
             <button key={b} onClick={() => setStatusFilter(statusFilter === b ? 'all' : b)} style={{ background: statusFilter === b ? `${STATUS_COLOR[b]}28` : 'rgba(255,255,255,0.04)', border: `0.5px solid ${statusFilter === b ? STATUS_COLOR[b] : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, fontWeight: 700, color: STATUS_COLOR[b] }}>{counts[b]}</div>
-              <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#52749a', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{STATUS_LABEL[b]}</div>
+              <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{STATUS_LABEL[b]}</div>
             </button>
           ))}
         </div>
@@ -159,12 +159,12 @@ export default function TrainingPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcHardhat size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcHardhat size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{certs.length === 0 ? 'No certifications recorded yet' : 'Nothing in this filter'}</p>
           {certs.length === 0 && (
             <button onClick={openCreate} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -175,23 +175,23 @@ export default function TrainingPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(c => (
-            <div key={c.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center' }}>
+            <div key={c.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{c.holderName}</div>
-                  <span style={{ padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: '#8ea8c5', fontFamily: SF, fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>{c.category}</span>
+                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{c.holderName}</div>
+                  <span style={{ padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: 'var(--t2)', fontFamily: SF, fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>{c.category}</span>
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
+                <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>
                   {c.type}{c.number ? ` · #${c.number}` : ''}
-                  {c.course && <span style={{ color: '#52749a' }}> · {c.course.name}</span>}
-                  {c.expiryDate && <span style={{ color: '#52749a' }}> · expires {new Date(c.expiryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
+                  {c.course && <span style={{ color: 'var(--t3)' }}> · {c.course.name}</span>}
+                  {c.expiryDate && <span style={{ color: 'var(--t3)' }}> · expires {new Date(c.expiryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}</span>}
                 </div>
               </div>
               <span style={{ flexShrink: 0, padding: '3px 9px', borderRadius: 99, background: `${STATUS_COLOR[c.statusBucket || 'no_expiry']}22`, color: STATUS_COLOR[c.statusBucket || 'no_expiry'], fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${STATUS_COLOR[c.statusBucket || 'no_expiry']}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {STATUS_LABEL[c.statusBucket || 'no_expiry']}
               </span>
               <button onClick={() => openEdit(c)} aria-label="Edit" style={{ flexShrink: 0, background: 'none', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer' }}>
-                <IcEdit size={14} color="#8ea8c5" />
+                <IcEdit size={14} color="var(--t2)" />
               </button>
               <button onClick={() => remove(c.id)} aria-label={confirmDelete === c.id ? 'Confirm delete' : 'Delete'} style={{ flexShrink: 0, background: confirmDelete === c.id ? 'rgba(239,68,68,0.2)' : 'none', border: 'none', borderRadius: 4, padding: confirmDelete === c.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <IcTrash size={13} color="#ef4444" />

@@ -26,7 +26,7 @@ interface Meeting {
 interface Project { id: string; name: string }
 
 const STATUS_COLOR: Record<Meeting['status'], string> = {
-  scheduled: '#06b6d4', completed: '#10b981', cancelled: '#52749a',
+  scheduled: '#06b6d4', completed: '#10b981', cancelled: 'var(--t3)',
 }
 const SF = 'var(--font-system)'
 
@@ -133,18 +133,18 @@ export default function MeetingsPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Meetings command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcClock size={20} color="#06b6d4" /> Meetings
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {meetings.filter(m => m.status === 'scheduled' && new Date(m.scheduledAt) > new Date()).length} upcoming
             </p>
           </div>
@@ -157,16 +157,16 @@ export default function MeetingsPage() {
 
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'scheduled', 'completed', 'cancelled'] as const).map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#06b6d4' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+          <button key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#06b6d4' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
             {s}
           </button>
         ))}
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && meetings.length === 0 && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No meetings yet. Schedule one to track minutes and actions.</div>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No meetings yet. Schedule one to track minutes and actions.</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
@@ -175,14 +175,14 @@ export default function MeetingsPage() {
           const when = new Date(m.scheduledAt)
           const openActions = m.actionItems.filter(a => !a.done).length
           return (
-            <div key={m.id} style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 14 }}>
+            <div key={m.id} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 14 }}>
               <div onClick={() => setExpanded(isOpen ? null : m.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <span style={{ background: STATUS_COLOR[m.status] + '33', color: STATUS_COLOR[m.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{m.status}</span>
                   {openActions > 0 && <span style={{ color: '#f59e0b', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{openActions} OPEN</span>}
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>{m.title}</div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+                <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>{m.title}</div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                   {when.toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })} · {m.durationMin} min
                   {m.location ? ` · ${m.location}` : ''}
                   {m.project ? ` · ${m.project.name}` : ''}
@@ -193,26 +193,26 @@ export default function MeetingsPage() {
                 <>
                   {m.attendees && (
                     <div style={{ marginTop: 10, background: '#0a1426', borderRadius: 8, padding: 10 }}>
-                      <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Attendees</div>
+                      <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Attendees</div>
                       <div style={{ fontFamily: SF, fontSize: 12, color: '#c1d2e8', whiteSpace: 'pre-wrap' }}>{m.attendees}</div>
                     </div>
                   )}
 
                   <div style={{ marginTop: 10 }}>
-                    <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Minutes</div>
+                    <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Minutes</div>
                     <textarea value={m.minutes || ''} onChange={e => setMeetings(prev => prev.map(x => x.id === m.id ? { ...x, minutes: e.target.value } : x))} onBlur={e => update(m, { minutes: e.target.value })} placeholder="Add minutes…" rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
                   </div>
 
                   <div style={{ marginTop: 10 }}>
-                    <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Action items</div>
+                    <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Action items</div>
                     {m.actionItems.map(a => (
-                      <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: a.done ? '#0a1426' : '#1a2f4e', borderRadius: 6, marginBottom: 4 }}>
+                      <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: a.done ? '#0a1426' : 'var(--bg3)', borderRadius: 6, marginBottom: 4 }}>
                         <button onClick={() => toggleAction(m, a.id)} style={{ width: 18, height: 18, borderRadius: 4, border: '0.5px solid rgba(255,255,255,0.2)', background: a.done ? '#10b981' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {a.done && <IcCheck size={11} color="#fff" />}
                         </button>
-                        <span style={{ flex: 1, fontFamily: SF, fontSize: 12, color: a.done ? '#52749a' : '#c1d2e8', textDecoration: a.done ? 'line-through' : 'none' }}>{a.title}</span>
-                        {a.assignee && <span style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5' }}>@{a.assignee}</span>}
-                        <button onClick={() => removeAction(m, a.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 2 }}><IcTrash size={11} color="#52749a" /></button>
+                        <span style={{ flex: 1, fontFamily: SF, fontSize: 12, color: a.done ? 'var(--t3)' : '#c1d2e8', textDecoration: a.done ? 'line-through' : 'none' }}>{a.title}</span>
+                        {a.assignee && <span style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)' }}>@{a.assignee}</span>}
+                        <button onClick={() => removeAction(m, a.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 2 }}><IcTrash size={11} color="var(--t3)" /></button>
                       </div>
                     ))}
                     <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
@@ -223,7 +223,7 @@ export default function MeetingsPage() {
 
                   <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
                     {m.status !== 'completed' && <button onClick={() => update(m, { status: 'completed' })} style={pillBtn('#10b981')}>Mark completed</button>}
-                    {m.status !== 'cancelled' && m.status !== 'completed' && <button onClick={() => update(m, { status: 'cancelled' })} style={pillBtn('#1a2f4e', '#c1d2e8')}>Cancel</button>}
+                    {m.status !== 'cancelled' && m.status !== 'completed' && <button onClick={() => update(m, { status: 'cancelled' })} style={pillBtn('var(--bg3)', '#c1d2e8')}>Cancel</button>}
                     <button onClick={() => setConfirmDelete(m.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                       <IcTrash size={11} color="#fca5a5" /> Delete
                     </button>
@@ -249,9 +249,9 @@ export default function MeetingsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Schedule meeting</h2>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Schedule meeting</h2>
               <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <IcX size={18} color="#52749a" />
+                <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -292,9 +292,9 @@ export default function MeetingsPage() {
   )
 }
 
-const inputStyle = { background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
+const inputStyle = { background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
 }
 function pillBtn(bg: string, color = '#fff', borderColor = 'rgba(255,255,255,0.1)'): React.CSSProperties {
   return { background: bg, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: '6px 10px', color, fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }

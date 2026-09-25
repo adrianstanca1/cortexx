@@ -129,28 +129,28 @@ export default function OrganizationSettingsPage() {
   }
 
   if (!orgResolved) {
-    return <div style={{ background: '#06101e', minHeight: '100dvh', padding: 24, color: '#52749a', fontFamily: 'var(--font-system)' }}>Loading workspace…</div>
+    return <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: 24, color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>Loading workspace…</div>
   }
 
   if (!activeOrg) {
     return (
-      <div style={{ background: '#06101e', minHeight: '100dvh', padding: 24, color: '#8ea8c5', fontFamily: 'var(--font-system)' }}>
+      <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: 24, color: 'var(--t2)', fontFamily: 'var(--font-system)' }}>
         No active workspace. <Link href="/onboarding" style={{ color: '#f59e0b' }}>Create one</Link>.
       </div>
     )
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
       <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-        <IcChevL size={18} color="#52749a" />
-        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Settings</span>
+        <IcChevL size={18} color="var(--t3)" />
+        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Settings</span>
       </Link>
 
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
         {activeOrg.name}
       </h1>
-      <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginBottom: 24 }}>
+      <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginBottom: 24 }}>
         {activeOrg.slug} · access {activeOrg.role} · {personaLabel(activeOrg.personaRole || (activeOrg.role === 'owner' ? 'company_admin' : 'operative'))}
       </p>
 
@@ -161,10 +161,10 @@ export default function OrganizationSettingsPage() {
       {canManage && (
         <Link
           href="/settings/audit-log"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginBottom: 16, background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginBottom: 16, background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
         >
           <span>Audit log</span>
-          <span style={{ color: '#52749a' }}>→</span>
+          <span style={{ color: 'var(--t3)' }}>→</span>
         </Link>
       )}
 
@@ -172,18 +172,18 @@ export default function OrganizationSettingsPage() {
       <section style={sectionStyle}>
         <div style={labelStyle}>Team members ({members.length})</div>
         {loading ? (
-          <div style={{ color: '#52749a', fontSize: 12, fontFamily: 'var(--font-system)' }}>Loading…</div>
+          <div style={{ color: 'var(--t3)', fontSize: 12, fontFamily: 'var(--font-system)' }}>Loading…</div>
         ) : error ? (
           <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {members.map(m => (
-              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: '#1a2f4e', borderRadius: 10 }}>
+              <div key={m.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '10px 12px', background: 'var(--bg3)', borderRadius: 10 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: '#eef3fa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {m.name || m.email}
                   </div>
-                  <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                  <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                     {m.email}
                   </div>
                 </div>
@@ -193,7 +193,7 @@ export default function OrganizationSettingsPage() {
                       aria-label={`Workspace access for ${m.email}`}
                       value={m.role}
                       onChange={e => changeMember(m.id, { role: e.target.value })}
-                      style={{ background: '#06101e', color: '#eef3fa', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 8px', fontFamily: 'var(--font-system)', fontSize: 11 }}
+                      style={{ background: 'var(--bg0)', color: 'var(--t1)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 8px', fontFamily: 'var(--font-system)', fontSize: 11 }}
                     >
                       <option value="admin">admin access</option>
                       <option value="member">member access</option>
@@ -207,12 +207,12 @@ export default function OrganizationSettingsPage() {
                       aria-label={`Construction persona for ${m.email}`}
                       value={m.personaRole || 'operative'}
                       onChange={e => changeMember(m.id, { personaRole: e.target.value, ...(e.target.value === 'company_admin' ? { role: 'admin' } : {}) })}
-                      style={{ background: '#06101e', color: '#eef3fa', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 8px', fontFamily: 'var(--font-system)', fontSize: 11 }}
+                      style={{ background: 'var(--bg0)', color: 'var(--t1)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 8px', fontFamily: 'var(--font-system)', fontSize: 11 }}
                     >
                       {ASSIGNABLE_PERSONAS.map(role => <option key={role} value={role}>{personaLabel(role)}</option>)}
                     </select>
                   ) : (
-                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#8ea8c5' }}>{personaLabel(m.personaRole || 'company_admin')}</div>
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t2)' }}>{personaLabel(m.personaRole || 'company_admin')}</div>
                   )}
                 </div>
                 {canManage && m.role !== 'owner' && (
@@ -274,10 +274,10 @@ export default function OrganizationSettingsPage() {
               <div style={{ ...labelStyle, marginTop: 18 }}>Pending invites ({invites.length})</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
                 {invites.map(i => (
-                  <div key={i.id} style={{ padding: '8px 12px', background: '#1a2f4e', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                  <div key={i.id} style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
                     <div>
-                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa' }}>{i.email}</div>
-                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a' }}>{personaLabel(i.personaRole || 'operative')} · {i.role} access · expires {new Date(i.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)' }}>{i.email}</div>
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)' }}>{personaLabel(i.personaRole || 'operative')} · {i.role} access · expires {new Date(i.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                     </div>
                   </div>
                 ))}
@@ -291,7 +291,7 @@ export default function OrganizationSettingsPage() {
 }
 
 const sectionStyle: React.CSSProperties = {
-  background: '#152641',
+  background: 'var(--surface-raised)',
   borderRadius: 14,
   padding: 16,
   marginBottom: 16,
@@ -300,17 +300,17 @@ const sectionStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-system)',
   fontSize: 11,
-  color: '#52749a',
+  color: 'var(--t3)',
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: 0.5,
 }
 const inputStyle: React.CSSProperties = {
-  background: '#1a2f4e',
+  background: 'var(--bg3)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 10,
   padding: '12px 14px',
-  color: '#eef3fa',
+  color: 'var(--t1)',
   fontFamily: 'var(--font-system)',
   fontSize: 14,
   outline: 'none',
@@ -438,14 +438,14 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
         </div>
       )}
       {billing?.plan && (
-        <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: '4px 0 12px' }}>
-          Current plan: <strong style={{ color: '#eef3fa' }}>{billing.plan}</strong>
+        <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', margin: '4px 0 12px' }}>
+          Current plan: <strong style={{ color: 'var(--t1)' }}>{billing.plan}</strong>
           {billing.trialEndsAt && new Date(billing.trialEndsAt) > new Date() && (
             <> · trial ends {new Date(billing.trialEndsAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</>
           )}
         </p>
       )}
-      <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: '8px 0 12px' }}>
+      <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', margin: '8px 0 12px' }}>
         Start free, upgrade when you&apos;re ready. Cancel anytime.
       </p>
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(160px, 1fr))', gap: 8 }}>
@@ -455,10 +455,10 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
           // de-provision users on next sync.
           const memberOverflow = billing && billing.memberCount > plan.limits.users
           return (
-          <div key={plan.key} style={{ background: '#1a2f4e', borderRadius: 10, padding: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
-            <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, color: '#eef3fa' }}>{plan.name}</div>
+          <div key={plan.key} style={{ background: 'var(--bg3)', borderRadius: 10, padding: 12, border: '1px solid rgba(255,255,255,0.05)' }}>
+            <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>{plan.name}</div>
             <div style={{ fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, color: '#f59e0b', margin: '4px 0 8px' }}>£{plan.priceMonthlyGbp}/mo</div>
-            <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5' }}>
+            <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)' }}>
               {plan.features.slice(0, 5).map(f => <li key={f} style={{ marginBottom: 2 }}>• {f}</li>)}
             </ul>
             {canManage && plan.key !== 'enterprise' && (
@@ -484,7 +484,7 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
         <button
           onClick={openPortal}
           disabled={!!busy}
-          style={{ marginTop: 12, padding: '8px 14px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
+          style={{ marginTop: 12, padding: '8px 14px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', opacity: busy ? 0.5 : 1 }}
         >
           {busy === 'portal' ? 'Opening…' : 'Manage current subscription'}
         </button>

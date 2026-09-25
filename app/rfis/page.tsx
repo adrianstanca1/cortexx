@@ -30,7 +30,7 @@ interface Rfi {
 const SF = 'var(--font-system)'
 const STATUS_COLOR: Record<Rfi['status'], string> = { open: '#3b82f6', answered: '#10b981', closed: '#6b7280' }
 const STATUS_LABEL: Record<Rfi['status'], string> = { open: 'Open', answered: 'Answered', closed: 'Closed' }
-const PRIORITY_COLOR: Record<Rfi['priority'], string> = { low: '#52749a', medium: '#06b6d4', high: '#ef4444' }
+const PRIORITY_COLOR: Record<Rfi['priority'], string> = { low: 'var(--t3)', medium: '#06b6d4', high: '#ef4444' }
 const COMMON_ASSIGNEES = ['Structural Engineer', 'Architect', 'Civil Engineer', 'M&E Engineer', 'Quantity Surveyor', 'Client']
 
 export default function RfisPage() {
@@ -161,18 +161,18 @@ export default function RfisPage() {
   const filtered = filter === 'all' ? rfis : rfis.filter(r => r.status === filter)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Rfis command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>RFIs</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>RFIs</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {rfis.length} total · {openCount} open
               {overdueCount > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {overdueCount} overdue</span>}
             </p>
@@ -183,7 +183,7 @@ export default function RfisPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'open', 'answered', 'closed'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -191,12 +191,12 @@ export default function RfisPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcAlert size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcAlert size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{rfis.length === 0 ? 'No RFIs raised yet' : 'Nothing in this filter'}</p>
           {rfis.length === 0 && projects.length > 0 && (
             <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -207,16 +207,16 @@ export default function RfisPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(r => (
-            <button key={r.id} onClick={() => { setActiveRfi(r); setResponseText(r.response || '') }} style={{ background: '#152641', borderRadius: 14, padding: '14px', border: `0.5px solid ${isOverdue(r) ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.07)'}`, textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button key={r.id} onClick={() => { setActiveRfi(r); setResponseText(r.response || '') }} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: `0.5px solid ${isOverdue(r) ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.07)'}`, textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: '#52749a', letterSpacing: 0.5 }}>{r.number}</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: 'var(--t3)', letterSpacing: 0.5 }}>{r.number}</span>
                 <span style={{ fontFamily: SF, fontSize: 9, fontWeight: 800, color: PRIORITY_COLOR[r.priority], textTransform: 'uppercase', letterSpacing: 0.5 }}>{r.priority}</span>
-                {r.project && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>· {r.project.name}</span>}
+                {r.project && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>· {r.project.name}</span>}
                 <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 99, background: `${STATUS_COLOR[r.status]}22`, color: STATUS_COLOR[r.status], fontFamily: SF, fontSize: 9, fontWeight: 700, border: `1px solid ${STATUS_COLOR[r.status]}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{STATUS_LABEL[r.status]}</span>
               </div>
-              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', textDecoration: r.status === 'closed' ? 'line-through' : 'none' }}>{r.subject}</div>
+              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)', textDecoration: r.status === 'closed' ? 'line-through' : 'none' }}>{r.subject}</div>
               {(r.assignee || r.dueDate) && (
-                <div style={{ display: 'flex', gap: 10, fontFamily: SF, fontSize: 11, color: isOverdue(r) ? '#ef4444' : '#52749a' }}>
+                <div style={{ display: 'flex', gap: 10, fontFamily: SF, fontSize: 11, color: isOverdue(r) ? '#ef4444' : 'var(--t3)' }}>
                   {r.assignee && <span>→ {r.assignee}</span>}
                   {r.dueDate && <span>{isOverdue(r) ? 'Overdue ' : 'Due '}{new Date(r.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
                 </div>
@@ -231,10 +231,10 @@ export default function RfisPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF }}>Raise RFI</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Raise RFI</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <input value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))} placeholder="Subject" style={inputStyle} />
@@ -280,26 +280,26 @@ export default function RfisPage() {
       {activeRfi && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setActiveRfi(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', fontWeight: 700, letterSpacing: 0.5 }}>{activeRfi.number}</div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeRfi.subject}</h2>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 700, letterSpacing: 0.5 }}>{activeRfi.number}</div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeRfi.subject}</h2>
               </div>
-              <button onClick={() => setActiveRfi(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <button onClick={() => setActiveRfi(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <span style={{ padding: '3px 9px', borderRadius: 99, background: `${STATUS_COLOR[activeRfi.status]}22`, color: STATUS_COLOR[activeRfi.status], fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${STATUS_COLOR[activeRfi.status]}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{STATUS_LABEL[activeRfi.status]}</span>
               <span style={{ padding: '3px 9px', borderRadius: 99, background: `${PRIORITY_COLOR[activeRfi.priority]}22`, color: PRIORITY_COLOR[activeRfi.priority], fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${PRIORITY_COLOR[activeRfi.priority]}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{activeRfi.priority}</span>
-              {activeRfi.assignee && <span style={{ padding: '3px 9px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', color: '#8ea8c5', fontFamily: SF, fontSize: 10 }}>→ {activeRfi.assignee}</span>}
-              {activeRfi.dueDate && <span style={{ padding: '3px 9px', borderRadius: 99, background: isOverdue(activeRfi) ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.06)', color: isOverdue(activeRfi) ? '#ef4444' : '#8ea8c5', fontFamily: SF, fontSize: 10 }}>{isOverdue(activeRfi) ? 'Overdue ' : 'Due '}{new Date(activeRfi.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+              {activeRfi.assignee && <span style={{ padding: '3px 9px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', color: 'var(--t2)', fontFamily: SF, fontSize: 10 }}>→ {activeRfi.assignee}</span>}
+              {activeRfi.dueDate && <span style={{ padding: '3px 9px', borderRadius: 99, background: isOverdue(activeRfi) ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.06)', color: isOverdue(activeRfi) ? '#ef4444' : 'var(--t2)', fontFamily: SF, fontSize: 10 }}>{isOverdue(activeRfi) ? 'Overdue ' : 'Due '}{new Date(activeRfi.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
             </div>
 
-            <div style={{ background: '#1a2f4e', padding: '12px 14px', borderRadius: 10, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+            <div style={{ background: 'var(--bg3)', padding: '12px 14px', borderRadius: 10, border: '0.5px solid rgba(255,255,255,0.07)' }}>
               <div style={{ ...labelStyle, marginBottom: 4 }}>Question</div>
-              <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{activeRfi.body}</div>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 8 }}>
+              <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{activeRfi.body}</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 8 }}>
                 Raised{activeRfi.raisedBy ? ` by ${activeRfi.raisedBy}` : ''} · {new Date(activeRfi.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
               </div>
             </div>
@@ -315,12 +315,12 @@ export default function RfisPage() {
             ) : activeRfi.response ? (
               <div style={{ background: 'rgba(16,185,129,0.08)', padding: '12px 14px', borderRadius: 10, border: '0.5px solid rgba(16,185,129,0.3)' }}>
                 <div style={{ ...labelStyle, color: '#10b981', marginBottom: 4 }}>Answer</div>
-                <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{activeRfi.response}</div>
+                <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{activeRfi.response}</div>
               </div>
             ) : null}
 
             <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              <button onClick={() => cycleStatus(activeRfi)} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#8ea8c5', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={() => cycleStatus(activeRfi)} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 {activeRfi.status === 'open' ? 'Mark closed' : activeRfi.status === 'answered' ? 'Mark closed' : 'Reopen'}
               </button>
               <button onClick={() => remove(activeRfi.id)} style={{ padding: '10px 14px', borderRadius: 10, background: confirmDelete === activeRfi.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeRfi.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
@@ -336,8 +336,8 @@ export default function RfisPage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

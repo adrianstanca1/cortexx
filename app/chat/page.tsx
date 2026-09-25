@@ -124,18 +124,18 @@ export default function ChatIndexPage() {
   })()
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Chat command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Team chat</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Team chat</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {items.filter(i => !i.archivedAt).length} active conversation{items.filter(i => !i.archivedAt).length === 1 ? '' : 's'}
             </p>
           </div>
@@ -146,12 +146,12 @@ export default function ChatIndexPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : grouped.byProject.length === 0 && grouped.orphans.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcBell size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcBell size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No conversations yet</p>
           <button onClick={() => setShowCompose(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Start one
@@ -161,7 +161,7 @@ export default function ChatIndexPage() {
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
           {grouped.byProject.map(g => (
             <div key={g.project?.id || 'p'} style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4 }}>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4 }}>
                 {g.project?.name || 'Project'}
               </div>
               {g.rows.map(c => <Row key={c.id} c={c} />)}
@@ -169,7 +169,7 @@ export default function ChatIndexPage() {
           ))}
           {grouped.orphans.length > 0 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4 }}>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4 }}>
                 Other threads
               </div>
               {grouped.orphans.map(c => <Row key={c.id} c={c} />)}
@@ -183,10 +183,10 @@ export default function ChatIndexPage() {
       {showCompose && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowCompose(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF }}>New conversation</h2>
-              <button onClick={() => setShowCompose(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>New conversation</h2>
+              <button onClick={() => setShowCompose(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
@@ -217,10 +217,10 @@ function Row({ c }: { c: Conversation }) {
   const ago = relativeTime(new Date(stamp))
   return (
     <Link href={`/chat/${c.id}`} style={{ textDecoration: 'none' }}>
-      <div style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+      <div style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
         <div style={{ minWidth: 0, flex: 1 }}>
-          <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', letterSpacing: -0.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
-          <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+          <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)', letterSpacing: -0.1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{c.title}</div>
+          <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
             {c.lastMessageAt ? `Active ${ago}` : `Created ${ago}`}
           </div>
         </div>
@@ -246,8 +246,8 @@ function relativeTime(d: Date): string {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

@@ -10,7 +10,7 @@ import { useModalEffects } from '@/lib/useModalEffects'
 interface Defect { description: string; severity: 'cosmetic' | 'minor' | 'major' | 'safety'; location?: string }
 interface Analysis { defects: Defect[]; summary: string; notes?: string; loading?: boolean; error?: string }
 const SEVERITY_COLOR: Record<Defect['severity'], string> = {
-  cosmetic: '#52749a',
+  cosmetic: 'var(--t3)',
   minor: '#3b82f6',
   major: '#f59e0b',
   safety: '#ef4444',
@@ -49,7 +49,7 @@ const NEXT_STATUS: Record<Snag['status'], Snag['status']> = {
   closed: 'open',
 }
 const PRIORITY_COLOR: Record<Snag['priority'], string> = {
-  low: '#52749a',
+  low: 'var(--t3)',
   medium: '#06b6d4',
   high: '#f59e0b',
   critical: '#ef4444',
@@ -208,18 +208,18 @@ export default function SnagsPage() {
   const openCount = snags.filter(s => s.status !== 'closed').length
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Snags command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Snags</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Snags</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {snags.length} total{openCount > 0 ? ` · ${openCount} open` : ''}
             </p>
           </div>
@@ -229,7 +229,7 @@ export default function SnagsPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'open', 'in_progress', 'closed'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -237,12 +237,12 @@ export default function SnagsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcAlert size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcAlert size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{snags.length === 0 ? 'No snags raised yet' : 'Nothing in this filter'}</p>
           {snags.length === 0 && projects.length > 0 && (
             <button onClick={() => setShowModal(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -253,7 +253,7 @@ export default function SnagsPage() {
       ) : (
         <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(s => (
-            <div key={s.id} style={{ background: '#152641', borderRadius: 14, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10, border: '0.5px solid rgba(255,255,255,0.07)', opacity: s.status === 'closed' ? 0.7 : 1 }}>
+            <div key={s.id} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', display: 'flex', flexDirection: 'column', gap: 10, border: '0.5px solid rgba(255,255,255,0.07)', opacity: s.status === 'closed' ? 0.7 : 1 }}>
               <div style={{ display: 'flex', gap: 12 }}>
               {s.photoUrl ? (
                 <a href={s.photoUrl} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0 }}>
@@ -268,13 +268,13 @@ export default function SnagsPage() {
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', gap: 6, alignItems: 'center', marginBottom: 2 }}>
                   <span style={{ fontFamily: SF, fontSize: 9, fontWeight: 800, color: PRIORITY_COLOR[s.priority], textTransform: 'uppercase', letterSpacing: 0.5 }}>{s.priority}</span>
-                  {s.project && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>· {s.project.name}</span>}
+                  {s.project && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>· {s.project.name}</span>}
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', textDecoration: s.status === 'closed' ? 'line-through' : 'none' }}>{s.title}</div>
-                {s.description && <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2, lineHeight: 1.35 }}>{s.description}</div>}
+                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)', textDecoration: s.status === 'closed' ? 'line-through' : 'none' }}>{s.title}</div>
+                {s.description && <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2, lineHeight: 1.35 }}>{s.description}</div>}
                 <div style={{ display: 'flex', gap: 10, marginTop: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-                  {s.location && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>{s.location}</span>}
-                  {s.dueDate && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>Due {new Date(s.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
+                  {s.location && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{s.location}</span>}
+                  {s.dueDate && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>Due {new Date(s.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
@@ -316,20 +316,20 @@ export default function SnagsPage() {
                         <IcSpark size={12} color="#a78bfa" />
                         <span style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.5 }}>AI analysis</span>
                       </div>
-                      {analyses[s.id].summary && <div style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', marginBottom: 8, lineHeight: 1.4 }}>{analyses[s.id].summary}</div>}
+                      {analyses[s.id].summary && <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t1)', marginBottom: 8, lineHeight: 1.4 }}>{analyses[s.id].summary}</div>}
                       {analyses[s.id].defects.length > 0 && (
                         <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
                           {analyses[s.id].defects.map((d, i) => (
                             <div key={i} style={{ display: 'flex', gap: 6, alignItems: 'flex-start' }}>
                               <span style={{ fontFamily: SF, fontSize: 9, fontWeight: 700, color: SEVERITY_COLOR[d.severity], textTransform: 'uppercase', letterSpacing: 0.4, padding: '1px 5px', borderRadius: 3, background: `${SEVERITY_COLOR[d.severity]}22`, flexShrink: 0, marginTop: 1 }}>{d.severity}</span>
-                              <span style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', lineHeight: 1.35 }}>
-                                {d.description}{d.location && <span style={{ color: '#8ea8c5' }}> · {d.location}</span>}
+                              <span style={{ fontFamily: SF, fontSize: 12, color: 'var(--t1)', lineHeight: 1.35 }}>
+                                {d.description}{d.location && <span style={{ color: 'var(--t2)' }}> · {d.location}</span>}
                               </span>
                             </div>
                           ))}
                         </div>
                       )}
-                      {analyses[s.id].notes && <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 6, fontStyle: 'italic' }}>Note: {analyses[s.id].notes}</div>}
+                      {analyses[s.id].notes && <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 6, fontStyle: 'italic' }}>Note: {analyses[s.id].notes}</div>}
                     </>
                   )}
                 </div>
@@ -344,10 +344,10 @@ export default function SnagsPage() {
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF }}>Raise snag</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Raise snag</h2>
+              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What's the issue?" style={inputStyle} />
@@ -387,8 +387,8 @@ export default function SnagsPage() {
                   <button onClick={() => setForm(p => ({ ...p, photoUrl: '' }))} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#ef4444', borderRadius: 8, padding: '6px 10px', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Remove</button>
                 </div>
               ) : (
-                <button onClick={() => photoInputRef.current?.click()} disabled={photoUploading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', color: '#8ea8c5', fontFamily: SF, fontSize: 13, cursor: photoUploading ? 'wait' : 'pointer', width: '100%', justifyContent: 'center' }}>
-                  <IcCamera size={16} color="#8ea8c5" />
+                <button onClick={() => photoInputRef.current?.click()} disabled={photoUploading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 13, cursor: photoUploading ? 'wait' : 'pointer', width: '100%', justifyContent: 'center' }}>
+                  <IcCamera size={16} color="var(--t2)" />
                   {photoUploading ? 'Uploading…' : 'Attach photo'}
                 </button>
               )}
@@ -405,8 +405,8 @@ export default function SnagsPage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

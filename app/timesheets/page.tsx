@@ -229,18 +229,18 @@ export default function TimesheetsPage() {
   const pendingMembers = byMember.filter(m => !m.approved).length
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Timesheets command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Timesheets</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Timesheets</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               Wk {week} · {weekTotal.toFixed(1)}h logged
               {pendingMembers > 0 && <span style={{ color: '#f59e0b', marginLeft: 6 }}>· {pendingMembers} pending</span>}
             </p>
@@ -251,11 +251,11 @@ export default function TimesheetsPage() {
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={() => shiftWeek(-1)} aria-label="Previous week" style={navBtn}><IcChevL size={16} color="#8ea8c5" /></button>
-          <div style={{ flex: 1, textAlign: 'center', fontFamily: SF, fontSize: 13, color: '#eef3fa', fontWeight: 600 }}>
+          <button onClick={() => shiftWeek(-1)} aria-label="Previous week" style={navBtn}><IcChevL size={16} color="var(--t2)" /></button>
+          <div style={{ flex: 1, textAlign: 'center', fontFamily: SF, fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>
             {fmtWeekRange(monday)} {isCurrentWeek && <span style={{ color: '#10b981', fontSize: 11, marginLeft: 6 }}>· this week</span>}
           </div>
-          <button onClick={() => shiftWeek(1)} aria-label="Next week" style={navBtn}><IcChevR size={16} color="#8ea8c5" /></button>
+          <button onClick={() => shiftWeek(1)} aria-label="Next week" style={navBtn}><IcChevR size={16} color="var(--t2)" /></button>
           {!isCurrentWeek && (
             <button onClick={jumpToThisWeek} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.35)', color: '#a78bfa', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Today</button>
           )}
@@ -263,12 +263,12 @@ export default function TimesheetsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : byMember.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcClock size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcClock size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No hours logged for this week</p>
           {team.length > 0 && (
             <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#8b5cf6', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -284,11 +284,11 @@ export default function TimesheetsPage() {
             </div>
           )}
           {byMember.map(m => (
-            <div key={m.member.id} style={{ background: '#152641', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+            <div key={m.member.id} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
                 <div>
-                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{m.member.name}</div>
-                  <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>{m.member.role || 'Member'} · {m.totalHours.toFixed(1)}h</div>
+                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{m.member.name}</div>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{m.member.role || 'Member'} · {m.totalHours.toFixed(1)}h</div>
                 </div>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <span style={{ padding: '3px 9px', borderRadius: 99, background: m.approved ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.18)', color: m.approved ? '#10b981' : '#f59e0b', fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${m.approved ? 'rgba(16,185,129,0.45)' : 'rgba(245,158,11,0.45)'}` }}>
@@ -311,27 +311,27 @@ export default function TimesheetsPage() {
                   const isToday = isCurrentWeek && new Date().getDay() === (i === 6 ? 0 : i + 1)
                   return (
                     <div key={day} style={{ padding: '6px 4px', borderRadius: 6, background: hrs > 0 ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.03)', border: isToday ? '0.5px solid rgba(139,92,246,0.4)' : '0.5px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                      <div style={{ fontFamily: SF, fontSize: 9, color: '#52749a', fontWeight: 700, textTransform: 'uppercase' }}>{day}</div>
-                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: hrs > 0 ? '#eef3fa' : '#52749a', fontWeight: 600, marginTop: 2 }}>{hrs > 0 ? hrs.toFixed(1) : '–'}</div>
+                      <div style={{ fontFamily: SF, fontSize: 9, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase' }}>{day}</div>
+                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: hrs > 0 ? 'var(--t1)' : 'var(--t3)', fontWeight: 600, marginTop: 2 }}>{hrs > 0 ? hrs.toFixed(1) : '–'}</div>
                     </div>
                   )
                 })}
               </div>
 
               <details style={{ marginTop: 4 }}>
-                <summary style={{ cursor: 'pointer', fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 600 }}>{m.entries.length} {m.entries.length === 1 ? 'entry' : 'entries'}</summary>
+                <summary style={{ cursor: 'pointer', fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 600 }}>{m.entries.length} {m.entries.length === 1 ? 'entry' : 'entries'}</summary>
                 <div style={{ marginTop: 6, display: 'flex', flexDirection: 'column', gap: 4 }}>
                   {m.entries.map(e => (
                     <div key={e.id} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '6px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.02)' }}>
-                      <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', minWidth: 70 }}>
+                      <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', minWidth: 70 }}>
                         {new Date(e.date).toLocaleDateString('en-GB', { weekday: 'short', day: 'numeric' })}
                       </div>
-                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#eef3fa', fontWeight: 600, minWidth: 36 }}>{e.hours}h</div>
-                      <div style={{ flex: 1, fontFamily: SF, fontSize: 11, color: '#52749a', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t1)', fontWeight: 600, minWidth: 36 }}>{e.hours}h</div>
+                      <div style={{ flex: 1, fontFamily: SF, fontSize: 11, color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {e.project?.name || 'No project'}
                       </div>
                       <button onClick={() => toggleApprove(e)} disabled={approving === e.id} aria-label={e.approved ? 'Unapprove' : 'Approve'} style={{ background: 'transparent', border: 'none', padding: 2, cursor: 'pointer' }}>
-                        <IcCheck size={12} color={e.approved ? '#10b981' : '#52749a'} />
+                        <IcCheck size={12} color={e.approved ? '#10b981' : 'var(--t3)'} />
                       </button>
                       <button onClick={() => removeEntry(e.id)} aria-label={confirmDelete === e.id ? 'Confirm delete' : 'Delete entry'} style={{ background: confirmDelete === e.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === e.id ? '2px 6px' : 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                         <IcTrash size={11} color="#ef4444" />
@@ -351,10 +351,10 @@ export default function TimesheetsPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF }}>Log hours</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Log hours</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
@@ -397,8 +397,8 @@ const navBtn: React.CSSProperties = {
   width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer',
 }
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

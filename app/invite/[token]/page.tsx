@@ -57,14 +57,14 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   }
 
   if (loading) {
-    return <Frame><div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading invite…</div></Frame>
+    return <Frame><div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading invite…</div></Frame>
   }
 
   if (error || !invite) {
     return (
       <Frame>
         <h1 style={titleStyle}>Invite unavailable</h1>
-        <p style={{ color: '#8ea8c5', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 16 }}>
+        <p style={{ color: 'var(--t2)', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 16 }}>
           {error || 'This invitation could not be loaded.'}
         </p>
         <Link href="/login" style={ctaStyle}>Go to sign in</Link>
@@ -77,10 +77,10 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
     return (
       <Frame>
         <h1 style={titleStyle}>You&apos;ve been invited</h1>
-        <p style={{ color: '#8ea8c5', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 16, lineHeight: 1.5 }}>
-          Join <strong style={{ color: '#eef3fa' }}>{invite.organizationName}</strong> on Cortexx as <strong style={{ color: '#eef3fa' }}>{personaLabel(invite.personaRole)}</strong> ({invite.role} workspace access).
+        <p style={{ color: 'var(--t2)', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 16, lineHeight: 1.5 }}>
+          Join <strong style={{ color: 'var(--t1)' }}>{invite.organizationName}</strong> on Cortexx as <strong style={{ color: 'var(--t1)' }}>{personaLabel(invite.personaRole)}</strong> ({invite.role} workspace access).
         </p>
-        <p style={{ color: '#52749a', fontSize: 12, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 20 }}>
+        <p style={{ color: 'var(--t3)', fontSize: 12, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 20 }}>
           Sign in or create an account for {invite.email} to continue.
         </p>
         <button onClick={() => signIn(undefined, { callbackUrl: `/invite/${token}` })} style={ctaStyle}>
@@ -99,8 +99,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
     return (
       <Frame>
         <h1 style={titleStyle}>Different account</h1>
-        <p style={{ color: '#8ea8c5', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 16, lineHeight: 1.5 }}>
-          This invite is for <strong style={{ color: '#eef3fa' }}>{invite.email}</strong> but you&apos;re signed in as <strong style={{ color: '#eef3fa' }}>{sessionEmail}</strong>.
+        <p style={{ color: 'var(--t2)', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 16, lineHeight: 1.5 }}>
+          This invite is for <strong style={{ color: 'var(--t1)' }}>{invite.email}</strong> but you&apos;re signed in as <strong style={{ color: 'var(--t1)' }}>{sessionEmail}</strong>.
         </p>
         <button onClick={() => signIn(undefined, { callbackUrl: `/invite/${token}` })} style={ctaStyle}>
           Switch account
@@ -112,8 +112,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
   return (
     <Frame>
       <h1 style={titleStyle}>Join {invite.organizationName}</h1>
-      <p style={{ color: '#8ea8c5', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 24, lineHeight: 1.5 }}>
-        You&apos;ve been invited to join as a <strong style={{ color: '#eef3fa' }}>{invite.role}</strong>.
+      <p style={{ color: 'var(--t2)', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 24, lineHeight: 1.5 }}>
+        You&apos;ve been invited to join as a <strong style={{ color: 'var(--t1)' }}>{invite.role}</strong>.
       </p>
       {error && (
         <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13, marginBottom: 12 }}>
@@ -123,7 +123,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
       <button onClick={accept} disabled={accepting} style={{ ...ctaStyle, opacity: accepting ? 0.5 : 1 }}>
         {accepting ? 'Joining…' : 'Accept invitation'}
       </button>
-      <Link href="/dashboard" style={{ ...ctaStyle, background: 'transparent', color: '#52749a', border: '1px solid rgba(255,255,255,0.1)', marginTop: 8 }}>
+      <Link href="/dashboard" style={{ ...ctaStyle, background: 'transparent', color: 'var(--t3)', border: '1px solid rgba(255,255,255,0.1)', marginTop: 8 }}>
         Not now
       </Link>
     </Frame>
@@ -132,8 +132,8 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
 
 function Frame({ children }: { children: React.ReactNode }) {
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
-      <div style={{ width: '100%', maxWidth: 400, background: '#152641', borderRadius: 18, padding: 32, border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 4 }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+      <div style={{ width: '100%', maxWidth: 400, background: 'var(--surface-raised)', borderRadius: 18, padding: 32, border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 4 }}>
         {children}
       </div>
     </div>
@@ -143,7 +143,7 @@ function Frame({ children }: { children: React.ReactNode }) {
 const titleStyle: React.CSSProperties = {
   fontSize: 22,
   fontWeight: 700,
-  color: '#eef3fa',
+  color: 'var(--t1)',
   letterSpacing: '-0.02em',
   fontFamily: 'var(--font-system)',
   margin: '0 0 4px',

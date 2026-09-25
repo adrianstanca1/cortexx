@@ -24,7 +24,7 @@ interface Activity {
 }
 
 const PAGE_SIZE = 25
-const ACTOR_COLOR: Record<string, string> = { human: '#2563eb', ai: '#8b5cf6', system: '#52749a' }
+const ACTOR_COLOR: Record<string, string> = { human: '#2563eb', ai: '#8b5cf6', system: 'var(--t3)' }
 
 export default function ActivityPage() {
   const [activities, setActivities] = useState<Activity[]>([])
@@ -114,44 +114,44 @@ export default function ActivityPage() {
   }, [loadingMore, hasMore])
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Activity command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Back</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Back</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: 'var(--font-system)', margin: 0 }}>Activity</h1>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: 'var(--font-system)', margin: 0 }}>Activity</h1>
           <span
             role="status"
             aria-label={connected ? 'Live updates connected' : 'Reconnecting'}
             title={connected ? 'Live updates connected' : 'Reconnecting…'}
-            style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 6px #10b98166' : 'none', transition: 'all 0.3s' }}
+            style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : 'var(--t3)', boxShadow: connected ? '0 0 6px #10b98166' : 'none', transition: 'all 0.3s' }}
           />
           <PresencePill screen="activity" />
         </div>
 
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '9px 14px', marginTop: 10 }}>
-          <IcSearch size={14} color="#52749a" />
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '9px 14px', marginTop: 10 }}>
+          <IcSearch size={14} color="var(--t3)" />
           <input
             value={search}
             onChange={e => setSearch(e.target.value)}
             placeholder="Search activity…"
-            style={{ background: 'none', border: 'none', outline: 'none', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 13, flex: 1 }}
+            style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 13, flex: 1 }}
           />
-          {search && <button onClick={() => setSearch('')} aria-label="Clear search" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><IcX size={14} color="#52749a" /></button>}
+          {search && <button onClick={() => setSearch('')} aria-label="Clear search" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><IcX size={14} color="var(--t3)" /></button>}
         </div>
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginTop: 10 }}>
           {(['all', 'human', 'ai'] as const).map(t => (
-            <button key={t} onClick={() => setActorFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: actorFilter === t ? (t === 'ai' ? '#8b5cf6' : t === 'human' ? '#2563eb' : '#f59e0b') : 'rgba(255,255,255,0.06)', color: actorFilter === t ? '#fff' : '#52749a', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: actorFilter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button key={t} onClick={() => setActorFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: actorFilter === t ? (t === 'ai' ? '#8b5cf6' : t === 'human' ? '#2563eb' : '#f59e0b') : 'rgba(255,255,255,0.06)', color: actorFilter === t ? '#fff' : 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: actorFilter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {t}
             </button>
           ))}
           <select
             value={projectFilter}
             onChange={e => setProjectFilter(e.target.value)}
-            style={{ flexShrink: 0, padding: '5px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.07)', background: projectFilter ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)', color: projectFilter ? '#f59e0b' : '#52749a', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', appearance: 'none' }}
+            style={{ flexShrink: 0, padding: '5px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.07)', background: projectFilter ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)', color: projectFilter ? '#f59e0b' : 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', appearance: 'none' }}
           >
             <option value="">All projects</option>
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -163,7 +163,7 @@ export default function ActivityPage() {
         {loading ? (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {Array.from({ length: 6 }).map((_, i) => (
-              <div key={i} style={{ background: '#152641', borderRadius: 12, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
+              <div key={i} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
                 <Skeleton width={28} height={28} borderRadius="50%" />
                 <div style={{ flex: 1, display: 'flex', flexDirection: 'column', gap: 6 }}>
                   <Skeleton width="60%" height={13} />
@@ -173,26 +173,26 @@ export default function ActivityPage() {
             ))}
           </div>
         ) : liveActivities.length === 0 ? (
-          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)' }}>
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>
             {search || actorFilter !== 'all' || projectFilter ? 'No activity matches your filters.' : 'No activity yet.'}
           </div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {liveActivities.map(a => {
-              const color = ACTOR_COLOR[a.actorType] || '#52749a'
+              const color = ACTOR_COLOR[a.actorType] || 'var(--t3)'
               return (
-                <div key={a.id} style={{ background: '#152641', borderRadius: 12, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                <div key={a.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                     <Avatar name={a.actorName} color={color} size={28} />
                     <ActivityIcon iconType={a.iconType} size={14} color={color} />
                   </div>
                   <div style={{ flex: 1, minWidth: 0 }}>
-                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', lineHeight: 1.3 }}>
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', lineHeight: 1.3 }}>
                       <span style={{ fontWeight: 600 }}>{a.actorName}</span>{' '}
-                      <span style={{ color: '#8ea8c5' }}>{a.action}</span>
+                      <span style={{ color: 'var(--t2)' }}>{a.action}</span>
                     </div>
-                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                      {a.project?.name && <Link href={`/projects/${a.project.id}`} style={{ color: '#8ea8c5', textDecoration: 'none' }}>{a.project.name}</Link>}
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', marginTop: 1, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                      {a.project?.name && <Link href={`/projects/${a.project.id}`} style={{ color: 'var(--t2)', textDecoration: 'none' }}>{a.project.name}</Link>}
                       {a.project && a.detail && ' · '}
                       {a.detail}
                       {' · '}<RelativeTime date={a.createdAt} />
@@ -211,8 +211,8 @@ export default function ActivityPage() {
                   padding: '10px 16px',
                   borderRadius: 12,
                   border: '0.5px solid rgba(255,255,255,0.07)',
-                  background: '#152641',
-                  color: '#8ea8c5',
+                  background: 'var(--surface-raised)',
+                  color: 'var(--t2)',
                   fontFamily: 'var(--font-system)',
                   fontSize: 13,
                   cursor: loadingMore ? 'wait' : 'pointer',

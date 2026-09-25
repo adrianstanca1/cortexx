@@ -75,7 +75,7 @@ export default function InstallHint() {
         right: 12,
         bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))',
         zIndex: 130,
-        background: '#0c1a2e',
+        background: 'var(--bg1)',
         border: '1px solid rgba(245,158,11,0.4)',
         borderRadius: 14,
         padding: '12px 14px',
@@ -87,8 +87,8 @@ export default function InstallHint() {
       }}
     >
       <div style={{ flex: 1, fontFamily: 'var(--font-system)' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#eef3fa' }}>Install Cortexx</div>
-        <div style={{ fontSize: 11, color: '#8ea8c5', marginTop: 2 }}>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>Install Cortexx</div>
+        <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>
           {hint === 'ios'
             ? <>Tap <span aria-label="share">⬆</span> then <strong>Add to Home Screen</strong></>
             : 'Get a native app experience'}
@@ -105,7 +105,7 @@ export default function InstallHint() {
       <button
         onClick={dismiss}
         aria-label="Dismiss install hint"
-        style={{ background: 'rgba(255,255,255,0.06)', color: '#8ea8c5', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', fontSize: 16, lineHeight: 1, fontFamily: 'var(--font-system)' }}
+        style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--t2)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', fontSize: 16, lineHeight: 1, fontFamily: 'var(--font-system)' }}
       >
         ×
       </button>

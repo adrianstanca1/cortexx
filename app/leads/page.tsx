@@ -152,18 +152,18 @@ export default function LeadsPage() {
   leads.forEach(l => byStage[l.status].push(l))
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Leads command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Leads</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Leads</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {openCount} in pipeline · <span style={{ fontFamily: 'ui-monospace, monospace', color: '#22c55e' }}>£{pipelineValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</span> potential
             </p>
           </div>
@@ -174,12 +174,12 @@ export default function LeadsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : leads.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcArrowRight size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcArrowRight size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No leads yet</p>
           <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Add first lead
@@ -190,21 +190,21 @@ export default function LeadsPage() {
           {STAGES.map(stage => byStage[stage].length > 0 && (
             <div key={stage}>
               <div style={{ fontFamily: SF, fontSize: 11, color: STAGE_COLOR[stage], fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, display: 'flex', alignItems: 'center', gap: 6 }}>
-                {STAGE_LABEL[stage]} <span style={{ color: '#52749a' }}>· {byStage[stage].length}</span>
+                {STAGE_LABEL[stage]} <span style={{ color: 'var(--t3)' }}>· {byStage[stage].length}</span>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {byStage[stage].map(l => {
                   const stageIdx = STAGES.indexOf(l.status)
                   const nextStage = stageIdx < 3 ? STAGES[stageIdx + 1] : null
                   return (
-                    <div key={l.id} style={{ background: '#152641', borderRadius: 12, padding: '12px', border: `0.5px solid ${l.status === 'won' ? 'rgba(34,197,94,0.3)' : l.status === 'lost' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, opacity: l.status === 'lost' ? 0.65 : 1 }}>
+                    <div key={l.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px', border: `0.5px solid ${l.status === 'won' ? 'rgba(34,197,94,0.3)' : l.status === 'lost' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, opacity: l.status === 'lost' ? 0.65 : 1 }}>
                       <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{l.name}</div>
-                          {l.contactName && <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 1 }}>{l.contactName}{l.contactEmail ? ` · ${l.contactEmail}` : ''}</div>}
-                          {l.source && <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 4, textTransform: 'capitalize' }}>via {l.source}</div>}
+                          <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{l.name}</div>
+                          {l.contactName && <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 1 }}>{l.contactName}{l.contactEmail ? ` · ${l.contactEmail}` : ''}</div>}
+                          {l.source && <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 4, textTransform: 'capitalize' }}>via {l.source}</div>}
                         </div>
-                        <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, fontWeight: 700, color: l.value > 0 ? '#22c55e' : '#52749a', flexShrink: 0 }}>
+                        <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, fontWeight: 700, color: l.value > 0 ? '#22c55e' : 'var(--t3)', flexShrink: 0 }}>
                           £{l.value.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
                         </div>
                       </div>
@@ -225,7 +225,7 @@ export default function LeadsPage() {
                           </>
                         )}
                         {(l.status === 'won' || l.status === 'lost') && (
-                          <button onClick={() => moveStage(l, 'new')} style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#8ea8c5', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          <button onClick={() => moveStage(l, 'new')} style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                             Reopen
                           </button>
                         )}
@@ -248,10 +248,10 @@ export default function LeadsPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Add lead</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add lead</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Company / project name" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -283,8 +283,8 @@ export default function LeadsPage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

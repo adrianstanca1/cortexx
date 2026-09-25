@@ -62,14 +62,14 @@ export default function CommentsThread({ taskId }: { taskId: string }) {
 
   return (
     <div>
-      <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
-        Comments {comments.length > 0 && <span style={{ color: '#8ea8c5' }}>· {comments.length}</span>}
+      <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>
+        Comments {comments.length > 0 && <span style={{ color: 'var(--t2)' }}>· {comments.length}</span>}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, maxHeight: 240, overflowY: 'auto', marginBottom: 10 }}>
         {loading ? (
-          <div style={{ color: '#52749a', fontSize: 12, fontFamily: 'var(--font-system)', textAlign: 'center', padding: 12 }}>Loading…</div>
+          <div style={{ color: 'var(--t3)', fontSize: 12, fontFamily: 'var(--font-system)', textAlign: 'center', padding: 12 }}>Loading…</div>
         ) : comments.length === 0 ? (
-          <div style={{ color: '#52749a', fontSize: 12, fontFamily: 'var(--font-system)', textAlign: 'center', padding: 12 }}>No comments yet</div>
+          <div style={{ color: 'var(--t3)', fontSize: 12, fontFamily: 'var(--font-system)', textAlign: 'center', padding: 12 }}>No comments yet</div>
         ) : (
           comments.map(c => {
             const canDelete = userId === c.authorId || isAdmin
@@ -78,10 +78,10 @@ export default function CommentsThread({ taskId }: { taskId: string }) {
                 <Avatar name={c.authorName} color="#2563eb" size={24} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                    <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#eef3fa', fontWeight: 600 }}>{c.authorName}</span>
-                    <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a' }}>{relativeTime(c.createdAt)}</span>
+                    <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t1)', fontWeight: 600 }}>{c.authorName}</span>
+                    <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)' }}>{relativeTime(c.createdAt)}</span>
                   </div>
-                  <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#eef3fa', marginTop: 2, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{c.body}</p>
+                  <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t1)', marginTop: 2, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{c.body}</p>
                 </div>
                 {canDelete && (
                   <button
@@ -103,7 +103,7 @@ export default function CommentsThread({ taskId }: { taskId: string }) {
           onChange={e => setBody(e.target.value)}
           placeholder="Add a comment…"
           maxLength={2000}
-          style={{ flex: 1, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 12px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 13, outline: 'none' }}
+          style={{ flex: 1, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '8px 12px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 13, outline: 'none' }}
         />
         <button
           type="submit"

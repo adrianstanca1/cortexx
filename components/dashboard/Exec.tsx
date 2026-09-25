@@ -15,11 +15,11 @@ const SF = 'var(--font-system)'
 const MONO = 'ui-monospace, "SF Mono", Menlo, monospace'
 
 const T = {
-  bg: '#06101e',
-  bg2: '#152641',
-  t1: '#eef3fa',
-  t2: '#52749a',
-  t3: '#8ea8c5',
+  bg: 'var(--bg0)',
+  bg2: 'var(--surface-raised)',
+  t1: 'var(--t1)',
+  t2: 'var(--t3)',
+  t3: 'var(--t2)',
   hair: 'rgba(255,255,255,0.07)',
   green: '#10b981',
   amber: '#f59e0b',

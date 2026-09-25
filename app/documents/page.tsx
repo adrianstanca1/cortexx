@@ -298,18 +298,18 @@ export default function DocumentsPage() {
   const expiringCount = docs.filter(d => d.expiresAt && new Date(d.expiresAt).getTime() < now + EXPIRY_WARN_DAYS * 86400000).length
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Document control" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Back</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Back</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Documents</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Documents</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <span>{docs.length} total</span>
               {expiringCount > 0 && (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '2px 8px', borderRadius: 99, background: 'rgba(239,68,68,0.15)', color: '#ef4444', fontWeight: 700 }}>
@@ -319,13 +319,13 @@ export default function DocumentsPage() {
               )}
             </p>
           </div>
-          <button onClick={openAdd} aria-label="Add document" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button className="module-primary" onClick={openAdd} aria-label="Add document" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {['all', ...types].map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {t}
             </button>
           ))}
@@ -333,7 +333,7 @@ export default function DocumentsPage() {
         {allTags.length > 0 && (
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingTop: 8, paddingBottom: 2 }}>
             {allTags.map(tag => (
-              <button key={tag} onClick={() => setTagFilter(curr => curr === tag ? null : tag)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: tagFilter === tag ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.05)', color: tagFilter === tag ? '#f59e0b' : '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: tagFilter === tag ? 700 : 400, cursor: 'pointer' }}>
+              <button key={tag} onClick={() => setTagFilter(curr => curr === tag ? null : tag)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: tagFilter === tag ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.05)', color: tagFilter === tag ? '#f59e0b' : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: tagFilter === tag ? 700 : 400, cursor: 'pointer' }}>
                 #{tag}
               </button>
             ))}
@@ -345,7 +345,7 @@ export default function DocumentsPage() {
             { value: 'latest', label: 'Latest only' },
             { value: 'outdated', label: 'Has newer version' },
           ].map(opt => (
-            <button key={opt.value} onClick={() => setVersionFilter(opt.value as typeof versionFilter)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: versionFilter === opt.value ? 'rgba(82,116,154,0.25)' : 'rgba(255,255,255,0.05)', color: versionFilter === opt.value ? '#c1d2e8' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: versionFilter === opt.value ? 700 : 400, cursor: 'pointer' }}>
+            <button key={opt.value} onClick={() => setVersionFilter(opt.value as typeof versionFilter)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: versionFilter === opt.value ? 'rgba(82,116,154,0.25)' : 'rgba(255,255,255,0.05)', color: versionFilter === opt.value ? '#c1d2e8' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: versionFilter === opt.value ? 700 : 400, cursor: 'pointer' }}>
               {opt.label}
             </button>
           ))}
@@ -353,13 +353,13 @@ export default function DocumentsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : (
         <div style={{ padding: '12px 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {filtered.length === 0 ? (
-            <div style={{ padding: '40px 0', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No documents</div>
+            <div style={{ padding: '40px 0', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No documents</div>
           ) : (
             filtered.map(d => {
               const exp = d.expiresAt ? new Date(d.expiresAt).getTime() : null
@@ -369,33 +369,33 @@ export default function DocumentsPage() {
               const isPdf = d.mimeType === 'application/pdf'
               const tags = normalizeTags(d.tags)
               return (
-                <div key={d.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+                <div key={d.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
                   {isImage && d.url ? (
                     <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ flexShrink: 0 }}>
                       <Image src={d.url} alt="" width={36} height={36} unoptimized style={{ width: 36, height: 36, borderRadius: 8, objectFit: 'cover', display: 'block' }} />
                     </a>
                   ) : (
-                    <IcDoc size={20} color={expired ? '#ef4444' : expiring ? '#f59e0b' : isPdf ? '#ef4444' : '#52749a'} />
+                    <IcDoc size={20} color={expired ? '#ef4444' : expiring ? '#f59e0b' : isPdf ? '#ef4444' : 'var(--t3)'} />
                   )}
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {d.url ? (
-                      <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', textDecoration: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{d.name}</a>
+                      <a href={d.url} target="_blank" rel="noopener noreferrer" style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)', textDecoration: 'none', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', display: 'block' }}>{d.name}</a>
                     ) : (
-                      <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
+                      <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
                     )}
-                    <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>
+                    <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>
                       <span style={{ textTransform: 'capitalize' }}>{d.type}</span>
-                      {d.project && <> · <Link href={`/projects/${d.project.id}`} style={{ color: '#8ea8c5', textDecoration: 'none' }}>{d.project.name}</Link></>}
+                      {d.project && <> · <Link href={`/projects/${d.project.id}`} style={{ color: 'var(--t2)', textDecoration: 'none' }}>{d.project.name}</Link></>}
                       {d.size && <span> · {formatBytes(d.size)}</span>}
                       {typeof d.version === 'number' && d.version > 1 && <span> · v{d.version}</span>}
-                      {d.expiresAt && <span style={{ color: expired ? '#ef4444' : expiring ? '#f59e0b' : '#52749a' }}>
+                      {d.expiresAt && <span style={{ color: expired ? '#ef4444' : expiring ? '#f59e0b' : 'var(--t3)' }}>
                         {' '}· {expired ? 'Expired' : 'Expires'} {new Date(d.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                       </span>}
                     </div>
                     {tags.length > 0 && (
                       <div style={{ display: 'flex', flexWrap: 'wrap', gap: 4, marginTop: 6 }}>
                         {tags.map(tag => (
-                          <span key={tag} style={{ padding: '2px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: '#8ea8c5', fontFamily: SF, fontSize: 10, fontWeight: 600 }}>{tag}</span>
+                          <span key={tag} style={{ padding: '2px 8px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: 'var(--t2)', fontFamily: SF, fontSize: 10, fontWeight: 600 }}>{tag}</span>
                         ))}
                       </div>
                     )}
@@ -415,7 +415,7 @@ export default function DocumentsPage() {
                     aria-label="Edit document"
                     style={{ background: 'transparent', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                   >
-                    <IcEdit size={14} color="#8ea8c5" />
+                    <IcEdit size={14} color="var(--t2)" />
                   </button>
                   <button
                     onClick={() => remove(d.id)}
@@ -492,7 +492,7 @@ export default function DocumentsPage() {
             >
               <IcUpload size={24} color="#f59e0b" />
               <span>{uploading ? 'Uploading…' : 'Click to upload PDF, photo or receipt'}</span>
-              <span style={{ fontSize: 12, color: '#52749a' }}>Max 25 MB · PDF, JPG, PNG, HEIC</span>
+              <span style={{ fontSize: 12, color: 'var(--t3)' }}>Max 25 MB · PDF, JPG, PNG, HEIC</span>
             </button>
 
             {form.url && (
@@ -589,7 +589,7 @@ export default function DocumentsPage() {
           </div>
         </div>
 
-        <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 }}>Quick start templates</div>
+        <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 4 }}>Quick start templates</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
           {QUICK_TEMPLATES.map(t => {
             const Icon = t.icon

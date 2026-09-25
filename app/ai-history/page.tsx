@@ -65,18 +65,18 @@ export default function AiHistoryPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       <div style={{ padding: '16px 20px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>All apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>All apps</span>
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
               AI history
             </h1>
-            <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
+            <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
               Your prompts to <Link href="/ask" style={{ color: '#8b5cf6', textDecoration: 'none' }}>Ask Cortex</Link>.
               {!loading && entries.length > 0 && ` ${entries.length} conversation${entries.length === 1 ? '' : 's'} saved.`}
             </p>
@@ -95,30 +95,30 @@ export default function AiHistoryPage() {
 
       <div style={{ padding: '16px 20px' }}>
         {loading ? (
-          <p style={{ color: '#52749a', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>Loading…</p>
+          <p style={{ color: 'var(--t3)', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>Loading…</p>
         ) : error ? (
           <p style={{ color: '#ef4444', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>{error}</p>
         ) : entries.length === 0 ? (
-          <div style={{ color: '#52749a', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
+          <div style={{ color: 'var(--t3)', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
             <IcSpark size={32} color="#8b5cf6" />
             <p style={{ marginTop: 12 }}>No prompts yet.<br /><Link href="/ask" style={{ color: '#f59e0b', textDecoration: 'none' }}>Ask Cortex something →</Link></p>
           </div>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
             {entries.map((e) => (
-              <li key={e.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)' }}>
+              <li key={e.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)' }}>
                 <div style={{ display: 'flex', alignItems: 'flex-start', gap: 10 }}>
                   <IcSpark size={14} color="#8b5cf6" />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     {e.user_msg && (
-                      <div style={{ fontSize: 13, color: '#eef3fa', fontWeight: 600 }}>{e.user_msg}</div>
+                      <div style={{ fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>{e.user_msg}</div>
                     )}
                     {e.ai_reply && (
-                      <div style={{ fontSize: 12, color: '#8ea8c5', marginTop: 6, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
+                      <div style={{ fontSize: 12, color: 'var(--t2)', marginTop: 6, lineHeight: 1.5, whiteSpace: 'pre-wrap' }}>
                         {e.ai_reply.length > 240 ? e.ai_reply.slice(0, 240) + '…' : e.ai_reply}
                       </div>
                     )}
-                    <div style={{ fontSize: 10, color: '#52749a', marginTop: 6 }}>
+                    <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 6 }}>
                       {fmtDate(e.created_at)}
                     </div>
                   </div>

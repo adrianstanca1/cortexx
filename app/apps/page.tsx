@@ -88,7 +88,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/valuations',  label: 'Valuations',   Icon: IcPound,   color: '#06b6d4' },
       { href: '/materials',   label: 'Materials',    Icon: IcWrench,  color: '#f59e0b', badgeKey: 'materials' },
       { href: '/subs',        label: 'Subs',         Icon: IcTeam,    color: '#2563eb' },
-      { href: '/equipment',   label: 'Equipment',    Icon: IcWrench,  color: '#52749a' },
+      { href: '/equipment',   label: 'Equipment',    Icon: IcWrench,  color: 'var(--t3)' },
       { href: '/cost-catalog',label: 'Cost catalog', Icon: IcLayers,  color: '#06b6d4' },
       { href: '/mileage',     label: 'Mileage',      Icon: IcTruck,   color: '#06b6d4' },
     ],
@@ -152,13 +152,13 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/templates',     label: 'Templates',     Icon: IcDoc,     color: '#2563eb' },
       { href: '/forms',         label: 'Forms',         Icon: IcDoc,     color: '#06b6d4' },
       { href: '/reminders',     label: 'Reminders',     Icon: IcBell,    color: '#f59e0b' },
-      { href: '/saved-views',   label: 'Saved views',   Icon: IcLayers,  color: '#8ea8c5' },
+      { href: '/saved-views',   label: 'Saved views',   Icon: IcLayers,  color: 'var(--t2)' },
       { href: '/tags',          label: 'Tags',          Icon: IcLayers,  color: '#8b5cf6' },
       { href: '/process-library', label: 'Process library', Icon: IcDoc, color: '#06b6d4' },
       { href: '/tpl-library',   label: 'Template library', Icon: IcDoc,  color: '#2563eb' },
       { href: '/personas',      label: 'Personas',      Icon: IcTeam,    color: '#ec4899' },
-      { href: '/developer-api', label: 'Developer API', Icon: IcSpark,   color: '#8ea8c5' },
-      { href: '/infrastructure', label: 'Infrastructure', Icon: IcWrench, color: '#52749a' },
+      { href: '/developer-api', label: 'Developer API', Icon: IcSpark,   color: 'var(--t2)' },
+      { href: '/infrastructure', label: 'Infrastructure', Icon: IcWrench, color: 'var(--t3)' },
       { href: '/status',        label: 'Status',        Icon: IcCheck,   color: '#10b981' },
       { href: '/roles',         label: 'Roles',         Icon: IcTeam,    color: '#06b6d4' },
     ],
@@ -252,21 +252,21 @@ export default function AppsPage() {
   }
 
   return (
-    <div style={{ padding: '20px 0 100px', background: '#06101e', minHeight: '100dvh' }}>
+    <div style={{ padding: '20px 0 100px', background: 'var(--bg0)', minHeight: '100dvh' }}>
       {/* Header */}
       <div style={{ padding: '4px 20px 18px' }}>
-        <h1 style={{ fontFamily: 'var(--font-system)', fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Apps</h1>
-        <p style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', marginTop: 2 }}>
+        <h1 style={{ fontFamily: 'var(--font-system)', fontSize: 26, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em' }}>Apps</h1>
+        <p style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', marginTop: 2 }}>
           Quick capture + every module
         </p>
       </div>
 
       {/* CAPTURE list */}
       <div style={{ padding: '0 16px 8px' }}>
-        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#8ea8c5', letterSpacing: '0.12em', padding: '6px 6px 8px' }}>
+        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.12em', padding: '6px 6px 8px' }}>
           CAPTURE
         </div>
-        <div style={{ background: '#0c1a2e', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <div style={{ background: 'var(--bg1)', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.07)' }}>
           {CAPTURE.map((c, i) => (
             <div
               key={c.id}
@@ -285,13 +285,13 @@ export default function AppsPage() {
                 <c.Icon size={20} color={c.color} />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, fontWeight: 600, color: '#eef3fa' }}>{c.label}</div>
-                <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', marginTop: 1 }}>{c.sub}</div>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, fontWeight: 600, color: 'var(--t1)' }}>{c.label}</div>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', marginTop: 1 }}>{c.sub}</div>
               </div>
               {c.ai ? (
                 <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: '#8b5cf6' }}>AI</span>
               ) : (
-                <IcArrowRight size={16} color="#52749a" />
+                <IcArrowRight size={16} color="var(--t3)" />
               )}
             </div>
           ))}
@@ -300,13 +300,13 @@ export default function AppsPage() {
 
       {/* ALL APPS by section */}
       <div style={{ padding: '20px 16px 0' }}>
-        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#8ea8c5', letterSpacing: '0.12em', padding: '6px 6px 8px' }}>
+        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: 'var(--t2)', letterSpacing: '0.12em', padding: '6px 6px 8px' }}>
           ALL APPS
         </div>
         {SECTIONS.map(section => (
           <div key={section.title} style={{ marginBottom: 20 }}>
-            <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, color: '#8ea8c5', padding: '4px 6px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
-              <span style={{ color: '#52749a' }}>◆</span> {section.title}
+            <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, color: 'var(--t2)', padding: '4px 6px 10px', display: 'flex', alignItems: 'center', gap: 6 }}>
+              <span style={{ color: 'var(--t3)' }}>◆</span> {section.title}
             </div>
             <div style={{
               display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8,
@@ -322,10 +322,10 @@ export default function AppsPage() {
                     aria-label={soon ? `${m.label} (coming soon)` : m.label}
                     style={{
                       position: 'relative',
-                      background: '#0c1a2e', borderRadius: 12,
+                      background: 'var(--bg1)', borderRadius: 12,
                       padding: '14px 8px',
                       display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 6,
-                      textDecoration: 'none', color: '#eef3fa',
+                      textDecoration: 'none', color: 'var(--t1)',
                       border: '0.5px solid rgba(255,255,255,0.05)',
                       minHeight: 76,
                       opacity: soon ? 0.55 : 1,
@@ -359,7 +359,7 @@ export default function AppsPage() {
                     }}>
                       <m.Icon size={18} color={m.color} />
                     </div>
-                    <span style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 600, color: '#eef3fa', textAlign: 'center' }}>{m.label}</span>
+                    <span style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 600, color: 'var(--t1)', textAlign: 'center' }}>{m.label}</span>
                   </Link>
                 )
               })}
@@ -369,7 +369,7 @@ export default function AppsPage() {
       </div>
 
       {/* Footer indicator */}
-      <div style={{ textAlign: 'center', padding: '8px 20px 16px', fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a' }}>
+      <div style={{ textAlign: 'center', padding: '8px 20px 16px', fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)' }}>
         5 tabs · 12 dashboards · live Cortex AI
       </div>
     </div>

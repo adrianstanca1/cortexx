@@ -29,7 +29,7 @@ interface Sub {
 
 const SF = 'var(--font-system)'
 const COMMON_TRADES = ['Carpentry', 'Plumbing', 'Electrical', 'Plastering', 'Roofing', 'Bricklaying', 'Painting', 'Tiling', 'Groundwork', 'Steel', 'Glazing', 'M&E']
-const STATUS_COLOR: Record<ExpiryStatus, string> = { valid: '#22c55e', expiring: '#f59e0b', expired: '#ef4444', none: '#52749a' }
+const STATUS_COLOR: Record<ExpiryStatus, string> = { valid: '#22c55e', expiring: '#f59e0b', expired: '#ef4444', none: 'var(--t3)' }
 
 export default function SubsPage() {
   const [subs, setSubs] = useState<Sub[]>([])
@@ -121,18 +121,18 @@ export default function SubsPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Subs command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Subcontractors</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Subcontractors</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {subs.length} {showArchived ? 'archived' : 'active'}
               {alerts > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {alerts} alerts</span>}
             </p>
@@ -143,20 +143,20 @@ export default function SubsPage() {
         </div>
         <div style={{ position: 'relative', marginBottom: 8 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name / trade / contact…" style={{ ...inputStyle, paddingLeft: 32, fontSize: 13 }} />
-          <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="#52749a" /></div>
+          <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="var(--t3)" /></div>
         </div>
-        <button onClick={() => setShowArchived(s => !s)} style={{ background: showArchived ? 'rgba(255,255,255,0.1)' : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', color: showArchived ? '#eef3fa' : '#52749a', borderRadius: 99, padding: '3px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+        <button onClick={() => setShowArchived(s => !s)} style={{ background: showArchived ? 'rgba(255,255,255,0.1)' : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', color: showArchived ? 'var(--t1)' : 'var(--t3)', borderRadius: 99, padding: '3px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
           {showArchived ? '← Active' : 'Show archived'}
         </button>
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : subs.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcTeam size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcTeam size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No subcontractors</p>
           {!showArchived && (
             <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -167,18 +167,18 @@ export default function SubsPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {subs.map(s => (
-            <button key={s.id} onClick={() => setActiveSub(s)} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', textAlign: 'left', opacity: s.archivedAt ? 0.55 : 1 }}>
+            <button key={s.id} onClick={() => setActiveSub(s)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', textAlign: 'left', opacity: s.archivedAt ? 0.55 : 1 }}>
               <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: '#2563eb22', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>
                 {s.name.slice(0, 2).toUpperCase()}
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
-                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{s.name}</div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>
+                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{s.name}</div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>
                   {s.trade || 'Trade not set'}{s.contactName ? ` · ${s.contactName}` : ''}
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 3, alignItems: 'flex-end' }}>
-                <span style={{ padding: '1px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', fontFamily: SF, fontSize: 9, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase' }}>CIS {s.cisStatus}</span>
+                <span style={{ padding: '1px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', fontFamily: SF, fontSize: 9, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase' }}>CIS {s.cisStatus}</span>
                 {(s.insuranceStatus === 'expired' || s.insuranceStatus === 'expiring' || s.qualificationsStatus === 'expired' || s.qualificationsStatus === 'expiring') && (
                   <IcAlert size={13} color={(s.insuranceStatus === 'expired' || s.qualificationsStatus === 'expired') ? '#ef4444' : '#f59e0b'} />
                 )}
@@ -193,10 +193,10 @@ export default function SubsPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Add subcontractor</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add subcontractor</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Company name" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -234,13 +234,13 @@ export default function SubsPage() {
       {activeSub && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setActiveSub(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>{activeSub.name}</h2>
-                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>{activeSub.trade || 'Trade not set'} · CIS {activeSub.cisStatus}</div>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{activeSub.name}</h2>
+                <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>{activeSub.trade || 'Trade not set'} · CIS {activeSub.cisStatus}</div>
               </div>
-              <button onClick={() => setActiveSub(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <button onClick={() => setActiveSub(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -249,14 +249,14 @@ export default function SubsPage() {
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>
-              {activeSub.contactName && <div><span style={{ color: '#52749a' }}>Contact:</span> {activeSub.contactName}</div>}
-              {activeSub.contactEmail && <div><span style={{ color: '#52749a' }}>Email:</span> <a href={`mailto:${activeSub.contactEmail}`} style={{ color: '#60a5fa' }}>{activeSub.contactEmail}</a></div>}
-              {activeSub.contactPhone && <div><span style={{ color: '#52749a' }}>Phone:</span> <a href={`tel:${activeSub.contactPhone}`} style={{ color: '#60a5fa' }}>{activeSub.contactPhone}</a></div>}
-              {activeSub.utrNumber && <div><span style={{ color: '#52749a' }}>UTR:</span> <span style={{ fontFamily: 'ui-monospace, monospace' }}>{activeSub.utrNumber}</span></div>}
+              {activeSub.contactName && <div><span style={{ color: 'var(--t3)' }}>Contact:</span> {activeSub.contactName}</div>}
+              {activeSub.contactEmail && <div><span style={{ color: 'var(--t3)' }}>Email:</span> <a href={`mailto:${activeSub.contactEmail}`} style={{ color: '#60a5fa' }}>{activeSub.contactEmail}</a></div>}
+              {activeSub.contactPhone && <div><span style={{ color: 'var(--t3)' }}>Phone:</span> <a href={`tel:${activeSub.contactPhone}`} style={{ color: '#60a5fa' }}>{activeSub.contactPhone}</a></div>}
+              {activeSub.utrNumber && <div><span style={{ color: 'var(--t3)' }}>UTR:</span> <span style={{ fontFamily: 'ui-monospace, monospace' }}>{activeSub.utrNumber}</span></div>}
             </div>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button onClick={() => toggleArchive(activeSub)} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#8ea8c5', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={() => toggleArchive(activeSub)} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 {activeSub.archivedAt ? 'Unarchive' : 'Archive'}
               </button>
               <button onClick={() => remove(activeSub.id)} style={{ padding: '10px 14px', borderRadius: 10, background: confirmDelete === activeSub.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeSub.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
@@ -273,8 +273,8 @@ export default function SubsPage() {
 
 function ExpiryCard({ label, date, status }: { label: string; date: string | null; status: ExpiryStatus }) {
   return (
-    <div style={{ background: '#1a2f4e', borderRadius: 10, padding: '10px 12px', border: `0.5px solid ${STATUS_COLOR[status]}44` }}>
-      <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+    <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '10px 12px', border: `0.5px solid ${STATUS_COLOR[status]}44` }}>
+      <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: STATUS_COLOR[status], fontWeight: 700, marginTop: 2 }}>
         {date ? new Date(date).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' }) : 'Not set'}
       </div>
@@ -284,8 +284,8 @@ function ExpiryCard({ label, date, status }: { label: string; date: string | nul
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

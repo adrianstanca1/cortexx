@@ -32,7 +32,7 @@ interface Invoice {
 }
 
 const STATUS_COLOR: Record<Status, string> = {
-  draft: '#52749a',
+  draft: 'var(--t3)',
   sent: '#f59e0b',
   paid: '#10b981',
   overdue: '#ef4444',
@@ -81,21 +81,21 @@ export default function InvoicesPage() {
   }, [invoices])
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '16px 20px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Financial control" style={{ padding: '16px 20px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>All apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>All apps</span>
         </Link>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
           Invoices
         </h1>
-        <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
           Outgoing client invoices, across every project.
         </p>
       </div>
 
-      <div style={{ padding: '12px 20px', display: 'flex', gap: 8, overflowX: 'auto' }}>
+      <div className="module-filterbar" style={{ padding: '12px 20px', display: 'flex', gap: 8, overflowX: 'auto' }}>
         {(['all', 'overdue', 'sent', 'draft', 'paid'] as const).map(s => {
           const active = filter === s
           const t = totals[s]
@@ -107,9 +107,9 @@ export default function InvoicesPage() {
                 flexShrink: 0,
                 padding: '8px 12px',
                 borderRadius: 10,
-                background: active ? '#152641' : 'transparent',
+                background: active ? 'var(--surface-raised)' : 'transparent',
                 border: '0.5px solid ' + (active ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'),
-                color: '#eef3fa',
+                color: 'var(--t1)',
                 fontFamily: 'var(--font-system)',
                 fontSize: 12,
                 cursor: 'pointer',
@@ -118,23 +118,23 @@ export default function InvoicesPage() {
                 gap: 6,
               }}
             >
-              <span style={{ color: s === 'all' ? '#8ea8c5' : STATUS_COLOR[s] }}>
+              <span style={{ color: s === 'all' ? 'var(--t2)' : STATUS_COLOR[s] }}>
                 {s === 'all' ? 'All' : STATUS_LABEL[s]}
               </span>
-              <span style={{ color: '#52749a' }}>· {t.count}</span>
+              <span style={{ color: 'var(--t3)' }}>· {t.count}</span>
             </button>
           )
         })}
       </div>
 
-      <div style={{ padding: '0 20px' }}>
+      <div className="module-stack" style={{ padding: '0 20px' }}>
         {loading ? (
-          <p style={{ color: '#52749a', fontSize: 13, padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)' }}>Loading…</p>
+          <p style={{ color: 'var(--t3)', fontSize: 13, padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)' }}>Loading…</p>
         ) : error ? (
           <p style={{ color: '#ef4444', fontSize: 13, padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)' }}>{error}</p>
         ) : filtered.length === 0 ? (
-          <div style={{ color: '#52749a', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
-            <IcReceipt size={32} color="#52749a" />
+          <div style={{ color: 'var(--t3)', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
+            <IcReceipt size={32} color="var(--t3)" />
             <p style={{ marginTop: 12 }}>
               {filter === 'all' ? 'No invoices yet. Create one from a project.' : `No ${STATUS_LABEL[filter as Status].toLowerCase()} invoices.`}
             </p>
@@ -145,19 +145,19 @@ export default function InvoicesPage() {
               <li
                 key={inv.id}
                 onClick={() => inv.projectId && router.push(`/projects/${inv.projectId}`)}
-                style={{ background: '#152641', borderRadius: 12, padding: '14px 16px', border: '0.5px solid rgba(255,255,255,0.07)', cursor: inv.projectId ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-system)' }}
+                style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '14px 16px', border: '0.5px solid rgba(255,255,255,0.07)', cursor: inv.projectId ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-system)' }}
               >
                 <div style={{ width: 8, height: 8, borderRadius: 4, background: STATUS_COLOR[inv.status], flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>
+                  <div style={{ fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>
                     {inv.number} · {inv.clientName}
                   </div>
-                  <div style={{ fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
+                  <div style={{ fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>
                     {inv.project?.name || 'No project'} · Due {new Date(inv.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}
                   </div>
                 </div>
-                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, color: '#eef3fa', fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>
-                  <IcPound size={14} color="#8ea8c5" />
+                <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontSize: 14, color: 'var(--t1)', fontWeight: 700, fontFamily: 'ui-monospace, monospace' }}>
+                  <IcPound size={14} color="var(--t2)" />
                   {inv.amount.toLocaleString()}
                 </div>
               </li>

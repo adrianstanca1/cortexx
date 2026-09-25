@@ -33,7 +33,7 @@ interface Quote {
 
 const SF = 'var(--font-system)'
 const STATUS_COLOR: Record<Quote['status'], string> = {
-  draft: '#52749a',
+  draft: 'var(--t3)',
   sent: '#f59e0b',
   accepted: '#22c55e',
   rejected: '#ef4444',
@@ -236,18 +236,18 @@ export default function QuotesPage() {
   const filtered = filter === 'all' ? quotes : quotes.filter(q => q.status === filter)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Commercial control" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Quotes</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Quotes</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {quotes.length} total · <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f59e0b' }}>£{openValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</span> out
             </p>
           </div>
@@ -257,7 +257,7 @@ export default function QuotesPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'draft', 'sent', 'accepted', 'rejected'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -265,12 +265,12 @@ export default function QuotesPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcDoc size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcDoc size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{quotes.length === 0 ? 'No quotes drafted' : 'Nothing in this filter'}</p>
           {quotes.length === 0 && (
             <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -281,16 +281,16 @@ export default function QuotesPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(q => (
-            <button key={q.id} onClick={() => setActiveQuote(q)} style={{ background: '#152641', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button key={q.id} onClick={() => setActiveQuote(q)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: '#52749a', letterSpacing: 0.5 }}>{q.number}</span>
-                <span style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>{q.customerName}</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: 'var(--t3)', letterSpacing: 0.5 }}>{q.number}</span>
+                <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>{q.customerName}</span>
                 <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 99, background: `${STATUS_COLOR[q.status]}22`, color: STATUS_COLOR[q.status], fontFamily: SF, fontSize: 9, fontWeight: 700, border: `1px solid ${STATUS_COLOR[q.status]}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{STATUS_LABEL[q.status]}</span>
               </div>
-              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{q.title}</div>
+              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{q.title}</div>
               <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 700, color: '#eef3fa' }}>£{q.total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>incl. {q.vatRate}% VAT · {(q.lineItems || []).length} item{(q.lineItems || []).length === 1 ? '' : 's'}</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 700, color: 'var(--t1)' }}>£{q.total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>incl. {q.vatRate}% VAT · {(q.lineItems || []).length} item{(q.lineItems || []).length === 1 ? '' : 's'}</span>
               </div>
             </button>
           ))}
@@ -302,10 +302,10 @@ export default function QuotesPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Draft quote</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Draft quote</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Quote title" style={inputStyle} />
@@ -339,7 +339,7 @@ export default function QuotesPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: '#c4b5fd' }}>✨ Draft with AI</span>
                   <button onClick={() => { setAiOpen(false); setAiError(null) }} aria-label="Close" type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
-                    <IcX size={14} color="#8ea8c5" />
+                    <IcX size={14} color="var(--t2)" />
                   </button>
                 </div>
                 <textarea
@@ -372,7 +372,7 @@ export default function QuotesPage() {
                 >
                   {aiBusy ? 'Drafting (10–30s)…' : 'Generate line items'}
                 </button>
-                <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5' }}>
+                <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)' }}>
                   AI suggests realistic UK construction line items. Always review prices and quantities before sending.
                 </div>
               </div>
@@ -431,14 +431,14 @@ export default function QuotesPage() {
               </div>
             </div>
 
-            <div style={{ background: '#1a2f4e', borderRadius: 10, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 13, color: '#8ea8c5' }}>
+            <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 13, color: 'var(--t2)' }}>
                 <span>Subtotal</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>£{totals.subtotal.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 13, color: '#8ea8c5' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 13, color: 'var(--t2)' }}>
                 <span>VAT</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>£{totals.vatAmount.toFixed(2)}</span>
               </div>
-              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 15, color: '#eef3fa', fontWeight: 700, marginTop: 4, paddingTop: 4, borderTop: '0.5px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 15, color: 'var(--t1)', fontWeight: 700, marginTop: 4, paddingTop: 4, borderTop: '0.5px solid rgba(255,255,255,0.07)' }}>
                 <span>Total</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>£{totals.total.toFixed(2)}</span>
               </div>
             </div>
@@ -453,24 +453,24 @@ export default function QuotesPage() {
       {activeQuote && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setActiveQuote(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', fontWeight: 700, letterSpacing: 0.5 }}>{activeQuote.number}</div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeQuote.title}</h2>
-                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>For: {activeQuote.customerName}</div>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 700, letterSpacing: 0.5 }}>{activeQuote.number}</div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeQuote.title}</h2>
+                <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>For: {activeQuote.customerName}</div>
               </div>
-              <button onClick={() => setActiveQuote(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <button onClick={() => setActiveQuote(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
-            <div style={{ background: '#1a2f4e', padding: 12, borderRadius: 10 }}>
+            <div style={{ background: 'var(--bg3)', padding: 12, borderRadius: 10 }}>
               {(activeQuote.lineItems || []).map((li, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 70px', gap: 8, padding: '6px 0', borderBottom: i < activeQuote.lineItems.length - 1 ? '0.5px solid rgba(255,255,255,0.05)' : 'none' }}>
                   <div>
-                    <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa' }}>{li.description}</div>
-                    <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>{li.quantity}{li.unit ? ` ${li.unit}` : ''} × £{li.unitPrice.toFixed(2)}</div>
+                    <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)' }}>{li.description}</div>
+                    <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{li.quantity}{li.unit ? ` ${li.unit}` : ''} × £{li.unitPrice.toFixed(2)}</div>
                   </div>
-                  <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#eef3fa', fontWeight: 600, textAlign: 'right' }}>£{li.total.toFixed(2)}</div>
+                  <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: 'var(--t1)', fontWeight: 600, textAlign: 'right' }}>£{li.total.toFixed(2)}</div>
                 </div>
               ))}
               <div style={{ marginTop: 8, paddingTop: 8, borderTop: '0.5px solid rgba(255,255,255,0.1)', display: 'flex', flexDirection: 'column', gap: 2 }}>
@@ -482,7 +482,7 @@ export default function QuotesPage() {
 
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <span style={{ padding: '3px 9px', borderRadius: 99, background: `${STATUS_COLOR[activeQuote.status]}22`, color: STATUS_COLOR[activeQuote.status], fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${STATUS_COLOR[activeQuote.status]}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{STATUS_LABEL[activeQuote.status]}</span>
-              {activeQuote.validUntil && <span style={{ padding: '3px 9px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', color: '#8ea8c5', fontFamily: SF, fontSize: 10 }}>Valid until {new Date(activeQuote.validUntil).toLocaleDateString('en-GB')}</span>}
+              {activeQuote.validUntil && <span style={{ padding: '3px 9px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', color: 'var(--t2)', fontFamily: SF, fontSize: 10 }}>Valid until {new Date(activeQuote.validUntil).toLocaleDateString('en-GB')}</span>}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
@@ -504,10 +504,10 @@ export default function QuotesPage() {
                 </>
               )}
               {(activeQuote.status === 'accepted' || activeQuote.status === 'rejected') && (
-                <button onClick={() => changeStatus(activeQuote, 'sent')} style={statusBtn('#52749a')}>Reopen as sent</button>
+                <button onClick={() => changeStatus(activeQuote, 'sent')} style={statusBtn('var(--t3)')}>Reopen as sent</button>
               )}
               {activeQuote.status !== 'draft' && (
-                <button onClick={() => changeStatus(activeQuote, 'draft')} style={statusBtn('#52749a')}>Revert to draft</button>
+                <button onClick={() => changeStatus(activeQuote, 'draft')} style={statusBtn('var(--t3)')}>Revert to draft</button>
               )}
             </div>
 
@@ -524,7 +524,7 @@ export default function QuotesPage() {
 
 function Row({ label, value, bold, muted }: { label: string; value: string; bold?: boolean; muted?: boolean }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: bold ? 15 : 13, color: bold ? '#eef3fa' : muted ? '#8ea8c5' : '#eef3fa', fontWeight: bold ? 700 : 400 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: bold ? 15 : 13, color: bold ? 'var(--t1)' : muted ? 'var(--t2)' : 'var(--t1)', fontWeight: bold ? 700 : 400 }}>
       <span>{label}</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>{value}</span>
     </div>
   )
@@ -534,8 +534,8 @@ const statusBtn = (color: string): React.CSSProperties => ({
   padding: '10px', borderRadius: 10, background: `${color}22`, border: `0.5px solid ${color}66`, color, fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
 })
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

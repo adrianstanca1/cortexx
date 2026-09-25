@@ -50,19 +50,19 @@ export default function ProjectGalleryPage() {
   const filtered = docs.filter(d => filter === 'all' || d.type === filter)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Gallery command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href={`/projects/${id}`} style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>{projectName}</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>{projectName}</span>
         </Link>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Gallery</h1>
-        <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Gallery</h1>
+        <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>
           {docs.length} document{docs.length === 1 ? '' : 's'} · {docs.filter(d => d.type === 'photo').length} photo{docs.filter(d => d.type === 'photo').length === 1 ? '' : 's'}
         </p>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginTop: 10 }}>
           {['all', ...types].map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {t}
             </button>
           ))}
@@ -71,9 +71,9 @@ export default function ProjectGalleryPage() {
 
       <div style={{ padding: 16 }}>
         {loading ? (
-          <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 14 }}>Loading…</div>
+          <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 14 }}>Loading…</div>
         ) : filtered.length === 0 ? (
-          <div style={{ padding: '40px 20px', textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)' }}>
+          <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>
             <div style={{ fontSize: 32, marginBottom: 8 }}>📷</div>
             <p style={{ fontSize: 13 }}>No documents{filter !== 'all' ? ` of type "${filter}"` : ''} yet.</p>
             <Link href="/capture" style={{ display: 'inline-block', marginTop: 16, padding: '10px 18px', borderRadius: 12, background: '#f59e0b', color: '#fff', textDecoration: 'none', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700 }}>
@@ -83,16 +83,16 @@ export default function ProjectGalleryPage() {
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(140px, 1fr))', gap: 10 }}>
             {filtered.map(d => {
-              const meta = TYPE_ICONS[d.type] || { Icon: IcDoc, color: '#52749a' }
+              const meta = TYPE_ICONS[d.type] || { Icon: IcDoc, color: 'var(--t3)' }
               const Icon = meta.Icon
               return (
-                <div key={d.id} style={{ background: '#152641', borderRadius: 12, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
+                <div key={d.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
                   <div style={{ height: 110, background: `linear-gradient(135deg, ${meta.color}22, ${meta.color}08)`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <Icon size={42} color={meta.color} />
                   </div>
                   <div style={{ padding: 10 }}>
-                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#eef3fa', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
-                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', marginTop: 2 }}>
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t1)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{d.name}</div>
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>
                       <span style={{ textTransform: 'capitalize' }}>{d.type}</span> · {new Date(d.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                     </div>
                   </div>

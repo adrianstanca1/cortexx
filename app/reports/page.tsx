@@ -18,7 +18,7 @@ interface Report {
   }
 }
 
-const statusColor: Record<string, string> = { active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: '#52749a' }
+const statusColor: Record<string, string> = { active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: 'var(--t3)' }
 
 export default function ReportsPage() {
   const [r, setR] = useState<Report | null>(null)
@@ -33,18 +33,18 @@ export default function ReportsPage() {
   }, [])
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Reports command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Back</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Back</span>
         </Link>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Reports</h1>
-        <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>Across your entire workspace</p>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Reports</h1>
+        <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>Across your entire workspace</p>
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14 }}>{error}</div>
       ) : r ? (
@@ -76,16 +76,16 @@ export default function ReportsPage() {
             </div>
             {r.projects.margins.length > 0 && (
               <>
-                <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
+                <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>
                   Margins (lowest first)
                 </p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {r.projects.margins.slice(0, 8).map(p => (
                     <Link key={p.id} href={`/projects/${p.id}`} style={projRow}>
-                      <span style={{ width: 6, height: 6, borderRadius: 3, background: statusColor[p.status] || '#52749a' }} />
+                      <span style={{ width: 6, height: 6, borderRadius: 3, background: statusColor[p.status] || 'var(--t3)' }} />
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
-                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5' }}>£{p.spent.toLocaleString()} of £{p.budget.toLocaleString()}</div>
+                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', fontWeight: 600, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{p.name}</div>
+                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)' }}>£{p.spent.toLocaleString()} of £{p.budget.toLocaleString()}</div>
                       </div>
                       <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, fontWeight: 700, color: p.overBudget ? '#ef4444' : p.marginPct < 10 ? '#f59e0b' : '#10b981' }}>
                         {p.marginPct}%
@@ -107,7 +107,7 @@ export default function ReportsPage() {
             </div>
             <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6 }}>
               {['critical', 'high', 'medium', 'low'].map(p => (
-                <PillStat key={p} label={p} value={r.tasks.byPriority[p] || 0} color={{ critical: '#ef4444', high: '#f59e0b', medium: '#2563eb', low: '#52749a' }[p as 'critical']} />
+                <PillStat key={p} label={p} value={r.tasks.byPriority[p] || 0} color={{ critical: '#ef4444', high: '#f59e0b', medium: '#2563eb', low: 'var(--t3)' }[p as 'critical']} />
               ))}
             </div>
           </section>
@@ -124,7 +124,7 @@ export default function ReportsPage() {
 
           {r.cashflow && r.cashflow.months.length > 0 && (
             <section>
-              <h2 style={{ fontSize: 16, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.02em', margin: '24px 0 12px', fontFamily: 'var(--font-system)' }}>
+              <h2 style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.02em', margin: '24px 0 12px', fontFamily: 'var(--font-system)' }}>
                 Cost forecasting
               </h2>
               <CashflowChart months={r.cashflow.months} forecast={r.cashflow.forecast} />
@@ -140,7 +140,7 @@ export default function ReportsPage() {
 
 function SectionHeader({ children }: { children: React.ReactNode }) {
   return (
-    <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
+    <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>
       {children}
     </p>
   )
@@ -148,18 +148,18 @@ function SectionHeader({ children }: { children: React.ReactNode }) {
 
 function Stat({ label, value, accent, full }: { label: string; value: string; accent?: string; full?: boolean }) {
   return (
-    <div style={{ gridColumn: full ? 'span 2' : 'auto', background: '#152641', borderRadius: 12, padding: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
-      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 18, fontWeight: 700, color: accent || '#eef3fa', marginTop: 4 }}>{value}</div>
+    <div style={{ gridColumn: full ? 'span 2' : 'auto', background: 'var(--surface-raised)', borderRadius: 12, padding: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 18, fontWeight: 700, color: accent || 'var(--t1)', marginTop: 4 }}>{value}</div>
     </div>
   )
 }
 
 function PillStat({ label, value, color }: { label: string; value: number; color?: string }) {
   return (
-    <div style={{ background: `${color || '#52749a'}15`, borderRadius: 10, padding: '8px 10px', border: `1px solid ${color || '#52749a'}33` }}>
-      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#8ea8c5', fontWeight: 600, textTransform: 'capitalize' }}>{label}</div>
-      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 700, color: color || '#eef3fa', marginTop: 2 }}>{value}</div>
+    <div style={{ background: `${color || 'var(--t3)'}15`, borderRadius: 10, padding: '8px 10px', border: `1px solid ${color || 'var(--t3)'}33` }}>
+      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t2)', fontWeight: 600, textTransform: 'capitalize' }}>{label}</div>
+      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 700, color: color || 'var(--t1)', marginTop: 2 }}>{value}</div>
     </div>
   )
 }
@@ -181,14 +181,14 @@ function CashflowChart({
   const buckets = [...months, { ...forecast, ym: 'forecast', isForecast: true } as MonthBucket & { isForecast?: boolean }]
 
   return (
-    <div style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 16, fontFamily: 'var(--font-system)' }}>
+    <div style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 16, fontFamily: 'var(--font-system)' }}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: 8 }}>
-        <div style={{ display: 'flex', gap: 12, fontSize: 11, color: '#8ea8c5' }}>
+        <div style={{ display: 'flex', gap: 12, fontSize: 11, color: 'var(--t2)' }}>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Swatch color="#10b981" />Inflow</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Swatch color="#ef4444" />Outflow</span>
           <span style={{ display: 'flex', alignItems: 'center', gap: 4 }}><Swatch color="#f59e0b" />Forecast</span>
         </div>
-        <span style={{ fontSize: 10, color: '#52749a' }}>{forecast.basis}</span>
+        <span style={{ fontSize: 10, color: 'var(--t3)' }}>{forecast.basis}</span>
       </div>
 
       <div style={{ display: 'grid', gridTemplateColumns: `repeat(${buckets.length}, 1fr)`, gap: 6, alignItems: 'end', height: 140 }}>
@@ -202,7 +202,7 @@ function CashflowChart({
                 <div title={`Inflow £${b.inflow.toLocaleString()}`} style={{ width: '40%', height: inH, background: isForecast ? '#f59e0b' : '#10b981', borderRadius: '4px 4px 0 0', opacity: isForecast ? 0.7 : 1 }} />
                 <div title={`Outflow £${b.outflow.toLocaleString()}`} style={{ width: '40%', height: outH, background: isForecast ? '#f59e0b' : '#ef4444', borderRadius: '4px 4px 0 0', opacity: isForecast ? 0.7 : 1 }} />
               </div>
-              <div style={{ fontSize: 10, color: isForecast ? '#f59e0b' : '#8ea8c5', fontWeight: isForecast ? 700 : 400 }}>{b.label}</div>
+              <div style={{ fontSize: 10, color: isForecast ? '#f59e0b' : 'var(--t2)', fontWeight: isForecast ? 700 : 400 }}>{b.label}</div>
               <div style={{ fontSize: 9, color: b.net >= 0 ? '#10b981' : '#ef4444', fontFamily: 'ui-monospace, monospace' }}>
                 {b.net >= 0 ? '+' : ''}£{Math.round(b.net).toLocaleString()}
               </div>
@@ -219,7 +219,7 @@ function Swatch({ color }: { color: string }) {
 }
 
 const projRow: React.CSSProperties = {
-  background: '#152641',
+  background: 'var(--surface-raised)',
   border: '0.5px solid rgba(255,255,255,0.07)',
   borderRadius: 10,
   padding: '10px 12px',

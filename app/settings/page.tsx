@@ -195,23 +195,23 @@ export default function SettingsPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
       <Link href="/dashboard" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-        <IcChevL size={18} color="#52749a" />
-        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Back</span>
+        <IcChevL size={18} color="var(--t3)" />
+        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Back</span>
       </Link>
 
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
         Account settings
       </h1>
-      <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginBottom: 24 }}>
+      <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginBottom: 24 }}>
         {session?.user?.email || ''}
       </p>
 
       {/* Profile */}
-      <form onSubmit={saveName} style={{ background: '#152641', borderRadius: 14, padding: 16, marginBottom: 16, border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <form onSubmit={saveName} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: 16, marginBottom: 16, border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={labelStyle}>Profile</div>
-        <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5' }}>{session?.user?.email}</div>
+        <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)' }}>{session?.user?.email}</div>
         <input
           type="text"
           placeholder="Your name"
@@ -235,7 +235,7 @@ export default function SettingsPage() {
       </form>
 
       {/* Password change */}
-      <form onSubmit={submit} style={{ background: '#152641', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <form onSubmit={submit} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: 16, display: 'flex', flexDirection: 'column', gap: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
         <div style={labelStyle}>Change password</div>
 
         <input
@@ -289,52 +289,52 @@ export default function SettingsPage() {
       </form>
 
       {/* Security — 2FA + help */}
-      <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <section style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
         <div style={labelStyle}>Security</div>
         <Link
           href="/settings/security"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 10, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 10, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
         >
           <span>Two-factor authentication</span>
-          <span style={{ color: '#52749a' }}>→</span>
+          <span style={{ color: 'var(--t3)' }}>→</span>
         </Link>
         <Link
           href="/settings/integrations/xero"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
         >
           <span>Xero accounting</span>
-          <span style={{ color: '#52749a' }}>→</span>
+          <span style={{ color: 'var(--t3)' }}>→</span>
         </Link>
         <Link
           href="/settings/integrations"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
         >
           <span>Integrations</span>
-          <span style={{ color: '#52749a' }}>→</span>
+          <span style={{ color: 'var(--t3)' }}>→</span>
         </Link>
         <Link
           href="/help"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
         >
           <span>Help &amp; docs</span>
-          <span style={{ color: '#52749a' }}>→</span>
+          <span style={{ color: 'var(--t3)' }}>→</span>
         </Link>
       </section>
 
       {/* Workspace settings */}
-      <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <section style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
         <div style={labelStyle}>Workspace</div>
         <Link
           href="/settings/organization"
-          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 10, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 10, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
         >
           <span>Team members &amp; invites</span>
-          <span style={{ color: '#52749a' }}>→</span>
+          <span style={{ color: 'var(--t3)' }}>→</span>
         </Link>
       </section>
 
       {/* Export data */}
-      <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <section style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
         <div style={labelStyle}>Export data (CSV)</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 10 }}>
           {(['projects', 'tasks', 'invoices', 'team', 'timeentries'] as const).map(t => (
@@ -342,7 +342,7 @@ export default function SettingsPage() {
               key={t}
               href={`/api/export/${t}`}
               download
-              style={{ display: 'block', padding: '10px 0', textAlign: 'center', borderRadius: 10, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, textDecoration: 'none', textTransform: 'capitalize' }}
+              style={{ display: 'block', padding: '10px 0', textAlign: 'center', borderRadius: 10, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, textDecoration: 'none', textTransform: 'capitalize' }}
             >
               {t}
             </a>
@@ -351,9 +351,9 @@ export default function SettingsPage() {
       </section>
 
       {/* Push notifications */}
-      <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 10 }}>
+      <section style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={labelStyle}>Notifications</div>
-        <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: 0, lineHeight: 1.5 }}>
+        <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', margin: 0, lineHeight: 1.5 }}>
           Get push notifications on this device for new tasks, overdue invoices and site events. Works in the background even when the app is closed.
         </p>
 
@@ -401,7 +401,7 @@ export default function SettingsPage() {
                 type="button"
                 onClick={sendTestPush}
                 disabled={pushBusy}
-                style={{ padding: '10px 14px', borderRadius: 10, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: pushBusy ? 0.5 : 1 }}
+                style={{ padding: '10px 14px', borderRadius: 10, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: pushBusy ? 0.5 : 1 }}
               >
                 Send test
               </button>
@@ -418,15 +418,15 @@ export default function SettingsPage() {
 
       {/* Notification preferences */}
       {prefs && (
-        <section style={{ background: '#152641', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+        <section style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: 16, marginTop: 16, border: '0.5px solid rgba(255,255,255,0.07)' }}>
           <div style={labelStyle}>What to notify me about</div>
-          <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: '8px 0 12px', lineHeight: 1.5 }}>
+          <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', margin: '8px 0 12px', lineHeight: 1.5 }}>
             Pick the categories you want each channel for. Push is per device (above); email goes to {session?.user?.email}.
           </p>
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 70px 70px', gap: '8px 12px', alignItems: 'center', fontFamily: 'var(--font-system)', fontSize: 12 }}>
             <div></div>
-            <div style={{ color: '#52749a', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Push</div>
-            <div style={{ color: '#52749a', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Email</div>
+            <div style={{ color: 'var(--t3)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Push</div>
+            <div style={{ color: 'var(--t3)', fontSize: 10, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, textAlign: 'center' }}>Email</div>
 
             {([
               ['Tasks assigned to me', 'tasksPush', 'tasksEmail'],
@@ -435,7 +435,7 @@ export default function SettingsPage() {
               ['Announcements', 'announcementsPush', 'announcementsEmail'],
             ] as const).map(([label, pushKey, emailKey]) => (
               <>
-                <div key={`l-${pushKey}`} style={{ color: '#eef3fa' }}>{label}</div>
+                <div key={`l-${pushKey}`} style={{ color: 'var(--t1)' }}>{label}</div>
                 <input
                   key={`p-${pushKey}`}
                   type="checkbox"
@@ -453,7 +453,7 @@ export default function SettingsPage() {
               </>
             ))}
 
-            <div style={{ color: '#eef3fa', gridColumn: '1 / -1', marginTop: 10, paddingTop: 10, borderTop: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+            <div style={{ color: 'var(--t1)', gridColumn: '1 / -1', marginTop: 10, paddingTop: 10, borderTop: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <span>Weekly digest email</span>
               <input
                 type="checkbox"
@@ -481,18 +481,18 @@ export default function SettingsPage() {
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-system)',
   fontSize: 11,
-  color: '#52749a',
+  color: 'var(--t3)',
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: 0.5,
 }
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#1a2f4e',
+  background: 'var(--bg3)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 10,
   padding: '12px 14px',
-  color: '#eef3fa',
+  color: 'var(--t1)',
   fontFamily: 'var(--font-system)',
   fontSize: 14,
   outline: 'none',

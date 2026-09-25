@@ -151,18 +151,18 @@ export default function CheckInPage() {
   const filtered = filter === 'active' ? checkins.filter(c => !c.checkedOutAt) : checkins
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Check In command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Check in / out</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Check in / out</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {activeCount} active now · {checkins.length} total today
             </p>
           </div>
@@ -172,7 +172,7 @@ export default function CheckInPage() {
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {(['all', 'active'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#10b981' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#10b981' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All check-ins' : `Active (${activeCount})`}
             </button>
           ))}
@@ -180,12 +180,12 @@ export default function CheckInPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcPin size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcPin size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{checkins.length === 0 ? 'No check-ins yet' : 'Nothing in this filter'}</p>
         </div>
       ) : (
@@ -194,16 +194,16 @@ export default function CheckInPage() {
             const active = !ci.checkedOutAt
             const hrs = durationHrs(ci.checkedInAt, ci.checkedOutAt)
             return (
-              <div key={ci.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${active ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', gap: 12, alignItems: 'center' }}>
+              <div key={ci.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${active ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', gap: 12, alignItems: 'center' }}>
                 <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: (ci.member?.avatarColor || '#2563eb') + '22', color: ci.member?.avatarColor || '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>
                   {ci.member?.name.slice(0, 2).toUpperCase() || '??'}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{ci.member?.name || 'Unknown'}</div>
-                  <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>
+                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{ci.member?.name || 'Unknown'}</div>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>
                     {ci.project?.name || 'Unknown project'}
                   </div>
-                  <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                     {new Date(ci.checkedInAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                     {ci.checkedOutAt ? ` → ${new Date(ci.checkedOutAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}` : ' · still on site'}
                     {hrs > 0 && ` · ${hrs.toFixed(1)}h`}
@@ -231,10 +231,10 @@ export default function CheckInPage() {
       {showIn && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowIn(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Check in</h2>
-              <button onClick={() => setShowIn(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Check in</h2>
+              <button onClick={() => setShowIn(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
@@ -251,7 +251,7 @@ export default function CheckInPage() {
               </select>
             </div>
 
-            <div style={{ padding: '10px 12px', borderRadius: 10, background: geoStatus === 'got' ? 'rgba(16,185,129,0.1)' : geoStatus === 'denied' ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${geoStatus === 'got' ? 'rgba(16,185,129,0.35)' : geoStatus === 'denied' ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.1)'}`, fontFamily: SF, fontSize: 12, color: geoStatus === 'got' ? '#10b981' : geoStatus === 'denied' ? '#ef4444' : '#8ea8c5' }}>
+            <div style={{ padding: '10px 12px', borderRadius: 10, background: geoStatus === 'got' ? 'rgba(16,185,129,0.1)' : geoStatus === 'denied' ? 'rgba(239,68,68,0.1)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${geoStatus === 'got' ? 'rgba(16,185,129,0.35)' : geoStatus === 'denied' ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.1)'}`, fontFamily: SF, fontSize: 12, color: geoStatus === 'got' ? '#10b981' : geoStatus === 'denied' ? '#ef4444' : 'var(--t2)' }}>
               {geoStatus === 'asking' && '📍 Getting GPS location…'}
               {geoStatus === 'got' && geo && `📍 ${geo.lat.toFixed(5)}, ${geo.lng.toFixed(5)}`}
               {geoStatus === 'denied' && '⚠️ GPS unavailable — check-in will proceed without location'}
@@ -271,8 +271,8 @@ export default function CheckInPage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

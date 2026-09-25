@@ -29,7 +29,7 @@ const TYPE_LABEL: Record<Schedule['type'], string> = {
   service: 'Service', inspection: 'Inspection', calibration: 'Calibration', repair: 'Repair',
 }
 const STATUS_COLOR: Record<Schedule['status'], string> = {
-  scheduled: '#06b6d4', due: '#f59e0b', overdue: '#ef4444', completed: '#10b981', cancelled: '#52749a',
+  scheduled: '#06b6d4', due: '#f59e0b', overdue: '#ef4444', completed: '#10b981', cancelled: 'var(--t3)',
 }
 const SF = 'var(--font-system)'
 const niceDate = (s: string) => new Date(s).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' })
@@ -131,18 +131,18 @@ export default function MaintenancePage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Maintenance command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcWrench size={20} color="#06b6d4" /> Maintenance
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {overdueCount} overdue · {dueSoonCount} due in 7d
             </p>
           </div>
@@ -155,16 +155,16 @@ export default function MaintenancePage() {
 
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'scheduled', 'due', 'overdue', 'completed', 'cancelled'] as const).map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#06b6d4' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+          <button key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#06b6d4' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
             {s}
           </button>
         ))}
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && schedules.length === 0 && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No schedules. Add a service interval for a piece of kit.</div>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No schedules. Add a service interval for a piece of kit.</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
@@ -172,14 +172,14 @@ export default function MaintenancePage() {
           const isOverdue = s.status !== 'completed' && s.status !== 'cancelled' && new Date(s.dueDate) < new Date()
           const color = STATUS_COLOR[isOverdue ? 'overdue' : s.status]
           return (
-            <div key={s.id} style={{ background: '#152641', border: `0.5px solid ${isOverdue ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
+            <div key={s.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${isOverdue ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                <span style={{ background: '#1a2f4e', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[s.type]}</span>
+                <span style={{ background: 'var(--bg3)', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[s.type]}</span>
                 <span style={{ background: color + '33', color, padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{isOverdue ? 'OVERDUE' : s.status}</span>
-                {s.intervalDays && <span style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>EVERY {s.intervalDays}d</span>}
+                {s.intervalDays && <span style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>EVERY {s.intervalDays}d</span>}
               </div>
-              <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>{s.title}</div>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+              <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>{s.title}</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                 {s.equipment?.name || '—'}{s.equipment?.code ? ` (${s.equipment.code})` : ''} · due {niceDate(s.dueDate)}
                 {s.cost > 0 ? ` · ${money(s.cost)}` : ''}
                 {s.completedAt ? ` · completed ${niceDate(s.completedAt)}` : ''}
@@ -215,9 +215,9 @@ export default function MaintenancePage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Schedule maintenance</h2>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Schedule maintenance</h2>
               <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <IcX size={18} color="#52749a" />
+                <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -233,7 +233,7 @@ export default function MaintenancePage() {
               <Field label="Type">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(TYPE_LABEL) as Schedule['type'][]).map(t => (
-                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#06b6d4' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#06b6d4' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {TYPE_LABEL[t]}
                     </button>
                   ))}
@@ -267,9 +267,9 @@ export default function MaintenancePage() {
   )
 }
 
-const inputStyle = { background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
+const inputStyle = { background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
 }
 function pillBtn(bg: string, color = '#fff', borderColor = 'rgba(255,255,255,0.1)'): React.CSSProperties {
   return { background: bg, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: '6px 10px', color, fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }

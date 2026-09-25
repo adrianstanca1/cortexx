@@ -49,13 +49,13 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
       {activeProject && (
         <div style={{ padding: '8px 20px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div onClick={() => router.push('/projects')} style={{ cursor: 'pointer' }}>
-            <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', fontWeight: 600, letterSpacing: 0.3, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', fontWeight: 600, letterSpacing: 0.3, display: 'flex', alignItems: 'center', gap: 6 }}>
               SITE
-              <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 6, height: 6, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 6px #10b98166' : 'none', transition: 'all 0.3s' }} />
+              <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 6, height: 6, borderRadius: '50%', background: connected ? '#10b981' : 'var(--t3)', boxShadow: connected ? '0 0 6px #10b98166' : 'none', transition: 'all 0.3s' }} />
             </div>
-            <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: 6 }}>
+            <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, lineHeight: 1.1, display: 'flex', alignItems: 'center', gap: 6 }}>
               {activeProject.name}
-              <IcChevDown size={18} color="#eef3fa" />
+              <IcChevDown size={18} color="var(--t1)" />
             </div>
           </div>
           {onSite && (
@@ -118,7 +118,7 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
             key={x.l}
             onClick={() => router.push(x.href)}
             style={{
-              background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 16,
+              background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 16,
               padding: '16px 14px', cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
               minHeight: 88,
@@ -132,8 +132,8 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
               <x.I size={22} color={x.c} />
             </div>
             <div style={{ textAlign: 'left' }}>
-              <div style={{ fontFamily: SF, fontSize: 16, fontWeight: 700, color: '#eef3fa' }}>{x.l}</div>
-              <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 1 }}>{x.s}</div>
+              <div style={{ fontFamily: SF, fontSize: 16, fontWeight: 700, color: 'var(--t1)' }}>{x.l}</div>
+              <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 1 }}>{x.s}</div>
             </div>
           </button>
         ))}
@@ -141,13 +141,13 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
 
       {/* Today's jobs — chunky list */}
       <div style={{ padding: '4px 20px 8px' }}>
-        <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 700, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: 0.6 }}>
+        <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 700, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: 0.6 }}>
           Today&rsquo;s jobs · {openCount} left
         </div>
       </div>
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {projectTasks.length === 0 && (
-          <div style={{ padding: '20px 0', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 13 }}>All clear on this site</div>
+          <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 13 }}>All clear on this site</div>
         )}
         {projectTasks.map(task => {
           const done = task.status === 'done'
@@ -155,13 +155,13 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
           const detail = inProgress
             ? (task.assignee?.name ? `${task.assignee.name} · in progress` : 'in progress')
             : done ? 'Done' : task.dueTime ? `Due ${task.dueTime}` : task.dueDate ? `Due ${new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Today'
-          const c = done ? '#52749a' : inProgress ? accent : '#eef3fa'
+          const c = done ? 'var(--t3)' : inProgress ? accent : 'var(--t1)'
           return (
             <div
               key={task.id}
               onClick={() => toggleTask(task)}
               style={{
-                background: '#152641', borderRadius: 12, padding: '14px 16px',
+                background: 'var(--surface-raised)', borderRadius: 12, padding: '14px 16px',
                 border: '0.5px solid rgba(255,255,255,0.07)',
                 display: 'flex', alignItems: 'center', gap: 14, cursor: 'pointer',
               }}
@@ -178,7 +178,7 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
                 <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: c, textDecoration: done ? 'line-through' : 'none' }}>
                   {task.title}
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>{detail}</div>
+                <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>{detail}</div>
               </div>
             </div>
           )

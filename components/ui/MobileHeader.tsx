@@ -20,99 +20,37 @@ export default function MobileHeader({
   rightSlot,
 }: MobileHeaderProps) {
   return (
-    <header
-      style={{
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        padding: '16px 56px 12px 60px',
-        background: 'rgba(6,16,30,0.95)',
-        backdropFilter: 'blur(12px)',
-        WebkitBackdropFilter: 'blur(12px)',
-        borderBottom: '1px solid rgba(255,255,255,0.07)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 50,
-      }}
-    >
-      <div>
-        <h1
-          style={{
-            fontSize: 20,
-            fontWeight: 700,
-            color: '#eef3fa',
-            letterSpacing: '-0.02em',
-            lineHeight: 1.2,
-            fontFamily: 'var(--font-system)',
-          }}
-        >
-          {title}
-        </h1>
+    <header className="module-header" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 14 }}>
+      <div style={{ minWidth: 0 }}>
+        <div className="section-kicker">Workspace command</div>
+        <h1 style={{ color: 'var(--t1)', lineHeight: 1, marginTop: 5 }}>{title}</h1>
         {subtitle && (
-          <p
-            style={{
-              fontSize: 12,
-              color: '#52749a',
-              marginTop: 2,
-              fontFamily: 'var(--font-system)',
-            }}
-          >
+          <p style={{ fontSize: 11.5, color: 'var(--t2)', marginTop: 5, fontFamily: 'var(--font-system)' }}>
             {subtitle}
           </p>
         )}
       </div>
-      <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: 7, flexShrink: 0 }}>
         {rightSlot}
         {onSearch && (
-          <button
-            onClick={onSearch}
-            aria-label="Search"
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: 'rgba(255,255,255,0.07)',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-            }}
-          >
-            <IcSearch size={18} color="#8ea8c5" />
+          <button type="button" onClick={onSearch} aria-label="Search" className="command-icon-btn">
+            <IcSearch size={17} color="currentColor" />
           </button>
         )}
         {onNotif && (
           <button
+            type="button"
             onClick={onNotif}
             aria-label={notifCount > 0 ? `${notifCount} unread notifications` : 'Notifications'}
-            style={{
-              width: 36,
-              height: 36,
-              borderRadius: 10,
-              background: 'rgba(255,255,255,0.07)',
-              border: 'none',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              cursor: 'pointer',
-              position: 'relative',
-            }}
+            className="command-icon-btn"
+            style={{ position: 'relative' }}
           >
-            <IcBell size={18} color="#8ea8c5" />
+            <IcBell size={17} color={notifCount > 0 ? 'var(--accent)' : 'currentColor'} />
             {notifCount > 0 && (
-              <span
-                style={{
-                  position: 'absolute',
-                  top: 6,
-                  right: 6,
-                  width: 8,
-                  height: 8,
-                  borderRadius: '50%',
-                  background: '#ef4444',
-                  border: '1.5px solid #06101e',
-                }}
-              />
+              <span style={{
+                position: 'absolute', top: 5, right: 5, width: 7, height: 7,
+                borderRadius: '50%', background: 'var(--red)', border: '1.5px solid var(--bg0)',
+              }} />
             )}
           </button>
         )}

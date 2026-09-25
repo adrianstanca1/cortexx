@@ -31,7 +31,7 @@ type Requisition = {
 const SF = 'var(--font-system)'
 const UNITS = ['item', 'm', 'm²', 'm³', 'kg', 'tonne', 'l', 'day']
 const STATUS: Record<Requisition['status'], { label: string; color: string }> = {
-  draft: { label: 'Draft', color: '#52749a' },
+  draft: { label: 'Draft', color: 'var(--t3)' },
   submitted: { label: 'Approval', color: '#a78bfa' },
   approved: { label: 'Approved', color: '#38bdf8' },
   rejected: { label: 'Rejected', color: '#ef4444' },
@@ -190,16 +190,16 @@ export default function RequisitionsPage() {
   const filtered = filter === 'all' ? requisitions : requisitions.filter(row => row.status === filter)
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#06101e', paddingBottom: 100 }}>
+    <div className="module-page" style={{ minHeight: '100dvh', background: 'var(--bg0)', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
-      <header style={headerStyle}>
-        <Link href="/apps" style={backStyle}><IcChevL size={18} color="#52749a" /> Apps</Link>
+      <header className="module-header" data-kicker="Procurement request" style={headerStyle}>
+        <Link href="/apps" style={backStyle}><IcChevL size={18} color="var(--t3)" /> Apps</Link>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
           <div>
             <h1 style={titleStyle}><IcDoc size={20} color="#f59e0b" /> Requisitions</h1>
             <p style={subStyle}>{requisitions.length} total · request → approval → RFQ</p>
           </div>
-          <button onClick={() => setShowAdd(true)} style={primaryIconBtn} aria-label="New requisition"><IcPlus size={18} color="#fff" /></button>
+          <button className="module-primary" onClick={() => setShowAdd(true)} style={primaryIconBtn} aria-label="New requisition"><IcPlus size={18} color="#fff" /></button>
         </div>
         <ProcurementNav active="requisitions" />
       </header>
@@ -225,8 +225,8 @@ export default function RequisitionsPage() {
                       <span style={statusPill(meta.color)}>{meta.label}</span>
                       {row.costCode && <span style={{ ...monoSmall, color: '#f59e0b' }}>{row.costCode.code}</span>}
                     </div>
-                    <div style={{ marginTop: 5, fontFamily: SF, fontSize: 14, fontWeight: 700, color: '#eef3fa' }}>{row.project.name}</div>
-                    <div style={{ marginTop: 3, fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>
+                    <div style={{ marginTop: 5, fontFamily: SF, fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>{row.project.name}</div>
+                    <div style={{ marginTop: 3, fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>
                       {(row.lineItems || []).length} item{row.lineItems?.length === 1 ? '' : 's'} · estimate £{row.estimatedNet.toLocaleString('en-GB', { minimumFractionDigits: 2 })}
                       {row.neededBy ? ` · needed ${new Date(row.neededBy).toLocaleDateString('en-GB')}` : ''}
                     </div>
@@ -270,7 +270,7 @@ export default function RequisitionsPage() {
             <button onClick={() => setForm(v => ({ ...v, items: [...v.items, blankItem()] }))} style={smallBtn}>+ Item</button>
           </div>
           {form.items.map((item, index) => (
-            <div key={index} style={{ background: '#152641', borderRadius: 10, padding: 10, display: 'grid', gap: 7 }}>
+            <div key={index} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: 10, display: 'grid', gap: 7 }}>
               <input value={item.description} onChange={e => updateItem(index, { description: e.target.value })} placeholder="Description" style={inputStyle} />
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
                 <input type="number" min="0.01" step="0.01" value={item.quantity} onChange={e => updateItem(index, { quantity: Number(e.target.value) })} style={inputStyle} />
@@ -290,13 +290,13 @@ export default function RequisitionsPage() {
 
       {rfqFor && (
         <Modal title={`Issue RFQ · ${rfqFor.number}`} close={() => setRfqFor(null)}>
-          <p style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', margin: 0 }}>Select suppliers to invite. Quote comparison will remain factual; award is a manual Company Admin action.</p>
+          <p style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', margin: 0 }}>Select suppliers to invite. Quote comparison will remain factual; award is a manual Company Admin action.</p>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
             {suppliers.map(supplier => (
-              <label key={supplier.id} style={{ display: 'flex', alignItems: 'center', gap: 9, background: '#152641', padding: 10, borderRadius: 9, fontFamily: SF, fontSize: 12, color: '#eef3fa' }}>
+              <label key={supplier.id} style={{ display: 'flex', alignItems: 'center', gap: 9, background: 'var(--surface-raised)', padding: 10, borderRadius: 9, fontFamily: SF, fontSize: 12, color: 'var(--t1)' }}>
                 <input type="checkbox" checked={rfqForm.supplierIds.includes(supplier.id)} onChange={() => toggleSupplier(supplier.id)} />
                 <span style={{ flex: 1 }}>{supplier.name}</span>
-                <span style={{ color: '#52749a', fontSize: 10 }}>{supplier.category}</span>
+                <span style={{ color: 'var(--t3)', fontSize: 10 }}>{supplier.category}</span>
               </label>
             ))}
           </div>
@@ -322,8 +322,8 @@ function ProcurementNav({ active }: { active: 'requisitions' | 'rfqs' | 'pos' })
         <Link key={key} href={href} style={{
           flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px',
           fontFamily: SF, fontSize: 11, fontWeight: 700,
-          background: active === key ? '#f59e0b' : '#152641',
-          color: active === key ? '#fff' : '#8ea8c5',
+          background: active === key ? '#f59e0b' : 'var(--surface-raised)',
+          color: active === key ? '#fff' : 'var(--t2)',
         }}>{label}</Link>
       ))}
     </nav>
@@ -335,8 +335,8 @@ function Modal({ title, close, children }: { title: string; close: () => void; c
     <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.58)', display: 'flex', alignItems: 'flex-end' }}>
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#0a1426', borderRadius: '20px 20px 0 0', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, color: '#eef3fa', fontFamily: SF, fontSize: 18 }}>{title}</h2>
-          <button onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="#52749a" /></button>
+          <h2 style={{ margin: 0, color: 'var(--t1)', fontFamily: SF, fontSize: 18 }}>{title}</h2>
+          <button onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t3)" /></button>
         </div>
         {children}
       </div>
@@ -345,21 +345,21 @@ function Modal({ title, close, children }: { title: string; close: () => void; c
 }
 
 function Empty({ text }: { text: string }) {
-  return <div style={{ padding: 50, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 13 }}>{text}</div>
+  return <div style={{ padding: 50, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 13 }}>{text}</div>
 }
 
 const headerStyle: React.CSSProperties = { padding: '20px 16px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.96)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }
-const backStyle: React.CSSProperties = { display: 'flex', gap: 4, alignItems: 'center', marginBottom: 9, color: '#52749a', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
-const titleStyle: React.CSSProperties = { margin: 0, display: 'flex', gap: 7, alignItems: 'center', color: '#eef3fa', fontFamily: SF, fontSize: 21 }
-const subStyle: React.CSSProperties = { margin: '3px 0 0', color: '#52749a', fontFamily: SF, fontSize: 11 }
-const cardStyle: React.CSSProperties = { background: '#152641', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 13, padding: 13 }
-const monoSmall: React.CSSProperties = { fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#8ea8c5', fontWeight: 700 }
-const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 9, padding: '9px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 12, outline: 'none' }
-const labelStyle: React.CSSProperties = { marginTop: 3, fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 700 }
+const backStyle: React.CSSProperties = { display: 'flex', gap: 4, alignItems: 'center', marginBottom: 9, color: 'var(--t3)', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
+const titleStyle: React.CSSProperties = { margin: 0, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--t1)', fontFamily: SF, fontSize: 21 }
+const subStyle: React.CSSProperties = { margin: '3px 0 0', color: 'var(--t3)', fontFamily: SF, fontSize: 11 }
+const cardStyle: React.CSSProperties = { background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 13, padding: 13 }
+const monoSmall: React.CSSProperties = { fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'var(--t2)', fontWeight: 700 }
+const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 9, padding: '9px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 12, outline: 'none' }
+const labelStyle: React.CSSProperties = { marginTop: 3, fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 700 }
 const primaryBtn: React.CSSProperties = { background: '#f59e0b', border: 0, borderRadius: 10, padding: 11, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }
 const primaryIconBtn: React.CSSProperties = { width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
-const smallBtn: React.CSSProperties = { background: '#1a2f4e', border: '0.5px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '5px 9px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }
+const smallBtn: React.CSSProperties = { background: 'var(--bg3)', border: '0.5px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '5px 9px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }
 const dangerTextBtn: React.CSSProperties = { justifySelf: 'start', background: 'transparent', border: 0, color: '#fca5a5', fontFamily: SF, fontSize: 10, cursor: 'pointer' }
 const actionBtn = (color: string): React.CSSProperties => ({ background: color + '20', color, border: `0.5px solid ${color}66`, borderRadius: 8, padding: '6px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
 const statusPill = (color: string): React.CSSProperties => ({ background: color + '22', color, border: `0.5px solid ${color}55`, borderRadius: 99, padding: '2px 7px', fontFamily: SF, fontSize: 9, fontWeight: 800, textTransform: 'uppercase' })
-const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#f59e0b' : '#152641', color: active ? '#fff' : '#8ea8c5', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
+const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#f59e0b' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })

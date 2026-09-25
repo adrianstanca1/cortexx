@@ -39,7 +39,7 @@ const TYPE_LABEL: Record<Rams['type'], string> = {
   rams: 'RAMS', risk_assessment: 'Risk assessment', method_statement: 'Method statement',
 }
 const STATUS_COLOR: Record<Rams['status'], string> = {
-  draft: '#52749a', reviewed: '#8b5cf6', approved: '#f59e0b', active: '#10b981', expired: '#ef4444', archived: '#8ea8c5',
+  draft: 'var(--t3)', reviewed: '#8b5cf6', approved: '#f59e0b', active: '#10b981', expired: '#ef4444', archived: 'var(--t2)',
 }
 const STATUS_LABEL: Record<Rams['status'], string> = {
   draft: 'Draft', reviewed: 'Reviewed', approved: 'Approved', active: 'Active', expired: 'Expired', archived: 'Archived',
@@ -252,18 +252,18 @@ export default function RamsPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Rams command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcHardhat size={20} color="#22c55e" /> RAMS
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {docs.length} documents · {docs.filter(d => d.status === 'active').length} active
             </p>
           </div>
@@ -284,36 +284,36 @@ export default function RamsPage() {
         {(['all', 'draft', 'reviewed', 'approved', 'active', 'expired', 'archived'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#22c55e' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#22c55e' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {FILTER_LABEL[s]}
             </button>
           )
         })}
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && docs.length === 0 && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No RAMS yet. Add one before your team starts work.</div>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No RAMS yet. Add one before your team starts work.</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
         {docs.map(d => {
           const reviewDue = d.reviewBy && new Date(d.reviewBy).getTime() < reviewDueThreshold
           return (
-            <div key={d.id} style={{ background: '#152641', border: `0.5px solid ${reviewDue && d.status === 'active' ? '#f59e0b66' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
+            <div key={d.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${reviewDue && d.status === 'active' ? '#f59e0b66' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
-                    <span style={{ background: '#1a2f4e', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[d.type]}</span>
+                    <span style={{ background: 'var(--bg3)', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[d.type]}</span>
                     <span style={{ background: STATUS_COLOR[d.status] + '33', color: STATUS_COLOR[d.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{STATUS_LABEL[d.status]}</span>
                     {d.reviewedBy && <span style={{ color: '#8b5cf6', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>Reviewed by {d.reviewedBy}</span>}
                     {d.approvedBy && <span style={{ color: '#f59e0b', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>Approved by {d.approvedBy}</span>}
                     {d.signedBy && <span style={{ color: '#10b981', fontFamily: SF, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><IcCheck size={10} color="#10b981" /> Signed</span>}
                     {reviewDue && d.status === 'active' && <span style={{ color: '#f59e0b', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>REVIEW DUE</span>}
                   </div>
-                  <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
-                  <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+                  <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{d.title}</div>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                     {d.project?.name || '—'}{d.reviewBy ? ` · review by ${new Date(d.reviewBy).toLocaleDateString('en-GB')}` : ''}
                     {d.reviewedBy ? ` · reviewed by ${d.reviewedBy} on ${d.reviewedAt ? new Date(d.reviewedAt).toLocaleDateString('en-GB') : ''}` : ''}
                     {d.approvedBy ? ` · approved by ${d.approvedBy} on ${d.approvedAt ? new Date(d.approvedAt).toLocaleDateString('en-GB') : ''}` : ''}
@@ -342,23 +342,23 @@ export default function RamsPage() {
                   <button onClick={() => openSign(d, 'activate')} style={pillBtn('#10b981')}>Activate</button>
                 )}
                 {d.status === 'active' && (
-                  <button onClick={() => setStatus(d, 'expired')} style={pillBtn('#1a2f4e', '#fca5a5')}>Expire</button>
+                  <button onClick={() => setStatus(d, 'expired')} style={pillBtn('var(--bg3)', '#fca5a5')}>Expire</button>
                 )}
                 {(d.status === 'expired' || d.status === 'archived') && (
-                  <button onClick={() => setStatus(d, 'draft')} style={pillBtn('#1a2f4e', '#c1d2e8')}>Reopen draft</button>
+                  <button onClick={() => setStatus(d, 'draft')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Reopen draft</button>
                 )}
                 {d.status !== 'archived' && (
-                  <button onClick={() => setStatus(d, 'archived')} style={pillBtn('#1a2f4e', '#c1d2e8')}>Archive</button>
+                  <button onClick={() => setStatus(d, 'archived')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Archive</button>
                 )}
-                <button onClick={() => openEdit(d)} aria-label="Edit RAMS" style={pillBtn('#1a2f4e', '#8ea8c5')}>
-                  <IcEdit size={11} color="#8ea8c5" /> Edit
+                <button onClick={() => openEdit(d)} aria-label="Edit RAMS" style={pillBtn('var(--bg3)', 'var(--t2)')}>
+                  <IcEdit size={11} color="var(--t2)" /> Edit
                 </button>
                 <button onClick={() => setConfirmDelete(d.id)} aria-label="Delete RAMS" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                   <IcTrash size={11} color="#fca5a5" /> Delete
                 </button>
               </div>
               {STAGE_HELP[d.status] && (
-                <div style={{ marginTop: 8, fontFamily: SF, fontSize: 11, color: '#52749a', lineHeight: 1.4 }}>
+                <div style={{ marginTop: 8, fontFamily: SF, fontSize: 11, color: 'var(--t3)', lineHeight: 1.4 }}>
                   {STAGE_HELP[d.status]}
                 </div>
               )}
@@ -445,9 +445,9 @@ export default function RamsPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => { setShowModal(false); resetForm() }}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>{editingId ? 'Edit RAMS document' : 'Add RAMS document'}</h2>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>{editingId ? 'Edit RAMS document' : 'Add RAMS document'}</h2>
               <button onClick={() => { setShowModal(false); resetForm() }} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <IcX size={18} color="#52749a" />
+                <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -463,7 +463,7 @@ export default function RamsPage() {
               <Field label="Type">
                 <div style={{ display: 'flex', gap: 6 }}>
                   {(Object.keys(TYPE_LABEL) as Rams['type'][]).map(t => (
-                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#22c55e' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#22c55e' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {TYPE_LABEL[t]}
                     </button>
                   ))}
@@ -498,15 +498,15 @@ export default function RamsPage() {
 function Section({ label, body }: { label: string; body: string }) {
   return (
     <div style={{ background: '#0a1426', borderRadius: 8, padding: 8 }}>
-      <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
+      <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 4 }}>{label}</div>
       <div style={{ fontFamily: SF, fontSize: 12, color: '#c1d2e8', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{body}</div>
     </div>
   )
 }
 
-const inputStyle = { background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
+const inputStyle = { background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
 }
 function pillBtn(bg: string, color = '#fff', borderColor = 'rgba(255,255,255,0.1)'): React.CSSProperties {
   return { background: bg, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: '6px 10px', color, fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }

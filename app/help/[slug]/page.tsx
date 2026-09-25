@@ -25,9 +25,9 @@ export default async function HelpArticle({ params }: PageProps) {
   if (!article) notFound()
 
   return (
-    <main style={{ background: '#06101e', minHeight: '100dvh', padding: '60px 24px 80px', color: '#eef3fa' }}>
+    <main style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '60px 24px 80px', color: 'var(--t1)' }}>
       <div style={{ maxWidth: 680, margin: '0 auto' }}>
-        <Link href="/help" style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a', textDecoration: 'none', marginBottom: 24, display: 'inline-block' }}>
+        <Link href="/help" style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)', textDecoration: 'none', marginBottom: 24, display: 'inline-block' }}>
           ← All articles
         </Link>
 
@@ -35,11 +35,11 @@ export default async function HelpArticle({ params }: PageProps) {
         <h1 style={{ fontSize: 30, fontWeight: 700, letterSpacing: '-0.03em', margin: '0 0 12px', fontFamily: 'var(--font-system)' }}>
           {article.title}
         </h1>
-        <p style={{ fontSize: 15, color: '#8ea8c5', lineHeight: 1.5, fontFamily: 'var(--font-system)', margin: '0 0 32px' }}>
+        <p style={{ fontSize: 15, color: 'var(--t2)', lineHeight: 1.5, fontFamily: 'var(--font-system)', margin: '0 0 32px' }}>
           {article.oneLiner}
         </p>
 
-        <div style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 24 }}>
+        <div style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 24 }}>
           {article.body.map((p, i) => (
             <p key={i} style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: '#d6e2f1', lineHeight: 1.7, margin: i === 0 ? '0 0 14px' : '0 0 14px' }}>
               {p}
@@ -47,7 +47,7 @@ export default async function HelpArticle({ params }: PageProps) {
           ))}
         </div>
 
-        <div style={{ marginTop: 32, fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a', textAlign: 'center' }}>
+        <div style={{ marginTop: 32, fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)', textAlign: 'center' }}>
           Need more help? Email <a href="mailto:support@cortexbuildpro.com" style={{ color: '#f59e0b', fontWeight: 600 }}>support@cortexbuildpro.com</a>
         </div>
       </div>

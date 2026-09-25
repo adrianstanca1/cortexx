@@ -12,8 +12,8 @@ const statusColors: Record<string, string> = {
   active: '#10b981',
   snagging: '#f59e0b',
   quoting: '#8b5cf6',
-  complete: '#52749a',
-  todo: '#52749a',
+  complete: 'var(--t3)',
+  todo: 'var(--t3)',
   in_progress: '#2563eb',
   done: '#10b981',
   low: '#10b981',
@@ -23,11 +23,11 @@ const statusColors: Record<string, string> = {
   sent: '#2563eb',
   paid: '#10b981',
   overdue: '#ef4444',
-  draft: '#52749a',
+  draft: 'var(--t3)',
 }
 
 export default function Pill({ label, color, ghost = false, size = 'sm', dot = false }: PillProps) {
-  const resolvedColor = color || statusColors[label.toLowerCase()] || '#52749a'
+  const resolvedColor = color || statusColors[label.toLowerCase()] || 'var(--t3)'
 
   const paddingX = size === 'sm' ? '6px' : '10px'
   const paddingY = size === 'sm' ? '2px' : '5px'

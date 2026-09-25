@@ -91,7 +91,7 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
     <div style={{ padding: '16px 20px 100px' }}>
       {/* Agent card — Morning briefing per Claude design */}
       <div style={{
-        background: '#152641', borderRadius: 18, padding: 16,
+        background: 'var(--surface-raised)', borderRadius: 18, padding: 16,
         border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 16,
         position: 'relative', overflow: 'hidden',
       }}>
@@ -109,11 +109,11 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
             <IcSpark size={20} color="#fff" />
           </div>
           <div>
-            <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, color: '#eef3fa' }}>Morning briefing</div>
+            <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>Morning briefing</div>
             <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#10b981', fontWeight: 500 }}>● Updated just now</div>
           </div>
         </div>
-        <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: '#eef3fa', lineHeight: 1.5, position: 'relative' }}>
+        <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: 'var(--t1)', lineHeight: 1.5, position: 'relative' }}>
           {briefings.length > 0 ? (
             <>
               {briefings[0]}
@@ -145,7 +145,7 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
       </div>
 
       {/* Decision queue */}
-      <p style={{ fontSize: 11, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)', marginBottom: 10 }}>
+      <p style={{ fontSize: 11, fontWeight: 700, color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)', marginBottom: 10 }}>
         Decision queue {allDecisions.length > 0 && `· ${allDecisions.length}`}
       </p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginBottom: 20 }}>
@@ -153,8 +153,8 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
           <div key={d.id} style={{ padding: '14px 16px', borderRadius: 16, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)' }}>
             <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 }}>
               <div style={{ flex: 1 }}>
-                <p style={{ fontSize: 14, fontWeight: 600, color: '#eef3fa', fontFamily: 'var(--font-system)' }}>{d.title}</p>
-                <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>{d.detail}</p>
+                <p style={{ fontSize: 14, fontWeight: 600, color: 'var(--t1)', fontFamily: 'var(--font-system)' }}>{d.title}</p>
+                <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>{d.detail}</p>
               </div>
               <span style={{ fontSize: 9, fontWeight: 700, letterSpacing: '0.06em', textTransform: 'uppercase', padding: '3px 7px', borderRadius: 99, background: d.urgency === 'high' ? 'rgba(239,68,68,0.15)' : d.urgency === 'medium' ? 'rgba(245,158,11,0.15)' : 'rgba(16,185,129,0.15)', color: d.urgency === 'high' ? '#ef4444' : d.urgency === 'medium' ? '#f59e0b' : '#10b981', fontFamily: 'var(--font-system)' }}>
                 {d.urgency}
@@ -164,13 +164,13 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
               <button onClick={() => setDismissed(prev => [...prev, d.id])} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: '#10b98122', border: '1px solid #10b98144', fontSize: 13, fontWeight: 600, color: '#10b981', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcCheck size={13} color="#10b981" /> Done
               </button>
-              <button onClick={() => snoozeItem(d.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13, fontWeight: 600, color: '#8ea8c5', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                <IcClock size={13} color="#8ea8c5" /> Snooze 30m
+              <button onClick={() => snoozeItem(d.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13, fontWeight: 600, color: 'var(--t2)', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                <IcClock size={13} color="var(--t2)" /> Snooze 30m
               </button>
             </div>
           </div>
         )) : (
-          <div style={{ padding: '20px 0', textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 13 }}>Queue clear — great work!</div>
+          <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 13 }}>Queue clear — great work!</div>
         )}
       </div>
 
@@ -193,7 +193,7 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
           onChange={e => setAiQuery(e.target.value)}
           onKeyDown={e => e.key === 'Enter' && handleAsk()}
           placeholder="Ask Cortex anything…"
-          style={{ background: 'none', border: 'none', outline: 'none', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 13, flex: 1 }}
+          style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 13, flex: 1 }}
         />
         <button
           onClick={handleAsk}

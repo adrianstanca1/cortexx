@@ -38,15 +38,15 @@ const SF = 'var(--font-system)'
 
 export default function BundlesPage() {
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Bundles command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ marginBottom: 10 }}>
-          <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Role packs</h1>
-          <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>Curated tools + a dedicated AI agent for every role</p>
+          <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Role packs</h1>
+          <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>Curated tools + a dedicated AI agent for every role</p>
         </div>
       </div>
 
@@ -59,7 +59,7 @@ export default function BundlesPage() {
               href={`/bundles/${b.slug}`}
               style={{
                 display: 'block',
-                background: '#152641',
+                background: 'var(--surface-raised)',
                 borderRadius: 14,
                 padding: '16px 14px',
                 border: '0.5px solid rgba(255,255,255,0.07)',
@@ -71,8 +71,8 @@ export default function BundlesPage() {
                   <IcLayers size={22} color={b.color} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: SF, fontSize: 16, fontWeight: 700, color: '#eef3fa' }}>{b.title}</div>
-                  <div style={{ fontFamily: SF, fontSize: 12, color: '#52749a', marginTop: 2 }}>{b.subtitle}</div>
+                  <div style={{ fontFamily: SF, fontSize: 16, fontWeight: 700, color: 'var(--t1)' }}>{b.title}</div>
+                  <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t3)', marginTop: 2 }}>{b.subtitle}</div>
                 </div>
               </div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
@@ -88,7 +88,7 @@ export default function BundlesPage() {
                         padding: '4px 8px',
                         borderRadius: 6,
                         background: 'rgba(255,255,255,0.05)',
-                        color: '#8ea8c5',
+                        color: 'var(--t2)',
                         fontFamily: SF,
                         fontSize: 11,
                         fontWeight: 600,
@@ -99,7 +99,7 @@ export default function BundlesPage() {
                   )
                 })}
                 {b.pages.length > 5 && (
-                  <span style={{ padding: '4px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: '#52749a', fontFamily: SF, fontSize: 11 }}>+{b.pages.length - 5} more</span>
+                  <span style={{ padding: '4px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: 'var(--t3)', fontFamily: SF, fontSize: 11 }}>+{b.pages.length - 5} more</span>
                 )}
               </div>
             </Link>

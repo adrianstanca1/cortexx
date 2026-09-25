@@ -25,7 +25,7 @@ interface Tender {
 interface Project { id: string; name: string }
 
 const STATUS_COLOR: Record<Tender['status'], string> = {
-  draft: '#52749a', submitted: '#06b6d4', won: '#10b981', lost: '#ef4444', withdrawn: '#8ea8c5',
+  draft: 'var(--t3)', submitted: '#06b6d4', won: '#10b981', lost: '#ef4444', withdrawn: 'var(--t2)',
 }
 const STATUS_LABEL: Record<Tender['status'], string> = {
   draft: 'Draft', submitted: 'Submitted', won: 'Won', lost: 'Lost', withdrawn: 'Withdrawn',
@@ -124,18 +124,18 @@ export default function TendersPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Tenders command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcDoc size={20} color="#3b82f6" /> Tenders
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               Pipeline {money(pipelineValue)} · won {money(wonValue)}
             </p>
           </div>
@@ -150,47 +150,47 @@ export default function TendersPage() {
         {(['all', 'draft', 'submitted', 'won', 'lost', 'withdrawn'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#3b82f6' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#3b82f6' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {s}
             </button>
           )
         })}
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && tenders.length === 0 && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No tenders yet. Add one to start tracking the pipeline.</div>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No tenders yet. Add one to start tracking the pipeline.</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
         {tenders.map(t => {
           const isOverdue = t.status === 'draft' && t.deadline && new Date(t.deadline) < new Date()
           return (
-            <div key={t.id} style={{ background: '#152641', border: `0.5px solid ${isOverdue ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
+            <div key={t.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${isOverdue ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                     <span style={{ background: STATUS_COLOR[t.status] + '33', color: STATUS_COLOR[t.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{STATUS_LABEL[t.status]}</span>
                     {isOverdue && <span style={{ color: '#ef4444', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>OVERDUE</span>}
                   </div>
-                  <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
-                  <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+                  <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{t.title}</div>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                     {t.clientName || '—'}{t.project ? ` · ${t.project.name}` : ''}{t.deadline ? ` · due ${new Date(t.deadline).toLocaleDateString('en-GB')}` : ''}
                   </div>
                 </div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: '#eef3fa', fontWeight: 700, flexShrink: 0 }}>{money(t.totalValue)}</div>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: 'var(--t1)', fontWeight: 700, flexShrink: 0 }}>{money(t.totalValue)}</div>
               </div>
               <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                 {t.status === 'draft' && <button onClick={() => setStatus(t, 'submitted')} style={pillBtn('#06b6d4')}>Submit</button>}
                 {t.status === 'submitted' && (
                   <>
                     <button onClick={() => setStatus(t, 'won')} style={pillBtn('#10b981')}>Won</button>
-                    <button onClick={() => setStatus(t, 'lost')} style={pillBtn('#1a2f4e', '#fca5a5')}>Lost</button>
+                    <button onClick={() => setStatus(t, 'lost')} style={pillBtn('var(--bg3)', '#fca5a5')}>Lost</button>
                   </>
                 )}
                 {t.status !== 'draft' && t.status !== 'withdrawn' && (
-                  <button onClick={() => setStatus(t, 'draft')} style={pillBtn('#1a2f4e', '#c1d2e8')}>Reopen</button>
+                  <button onClick={() => setStatus(t, 'draft')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Reopen</button>
                 )}
                 <button onClick={() => setConfirmDelete(t.id)} aria-label="Delete tender" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                   <IcTrash size={11} color="#fca5a5" /> Delete
@@ -214,9 +214,9 @@ export default function TendersPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Add tender</h2>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Add tender</h2>
               <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <IcX size={18} color="#52749a" />
+                <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -257,9 +257,9 @@ export default function TendersPage() {
   )
 }
 
-const inputStyle = { background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
+const inputStyle = { background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
 }
 function pillBtn(bg: string, color = '#fff', borderColor = 'rgba(255,255,255,0.1)'): React.CSSProperties {
   return { background: bg, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: '6px 10px', color, fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }

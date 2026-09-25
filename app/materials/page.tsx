@@ -116,18 +116,18 @@ export default function MaterialsPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Materials command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Materials</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Materials</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {items.length} items{lowStockCount > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {lowStockCount} low stock</span>}
             </p>
           </div>
@@ -137,26 +137,26 @@ export default function MaterialsPage() {
         </div>
         <div style={{ position: 'relative', marginBottom: 8 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name / code / supplier…" style={{ ...inputStyle, paddingLeft: 32, fontSize: 13 }} />
-          <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="#52749a" /></div>
+          <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="var(--t3)" /></div>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', paddingBottom: 2 }}>
           <button onClick={() => setLowStockOnly(s => !s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: lowStockOnly ? '#ef4444' : 'rgba(239,68,68,0.12)', color: lowStockOnly ? '#fff' : '#ef4444', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
             <IcAlert size={11} color={lowStockOnly ? '#fff' : '#ef4444'} /> Low stock
           </button>
-          <button onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
+          <button onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
           {categories.map(c => (
-            <button key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
+            <button key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
           ))}
         </div>
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : items.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcWrench size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcWrench size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No materials</p>
           <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add first</button>
         </div>
@@ -165,16 +165,16 @@ export default function MaterialsPage() {
           {items.map(it => {
             const low = it.reorderPoint > 0 && it.stockLevel <= it.reorderPoint
             return (
-              <button key={it.id} onClick={() => setActiveItem(it)} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${low ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
+              <button key={it.id} onClick={() => setActiveItem(it)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${low ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{it.name}</div>
-                  <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>
+                  <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{it.name}</div>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>
                     {it.category || 'Uncategorised'}{it.supplier ? ` · ${it.supplier}` : ''}{it.location ? ` · ${it.location}` : ''}
                   </div>
                 </div>
                 <div style={{ textAlign: 'right', flexShrink: 0 }}>
-                  <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: low ? '#ef4444' : '#eef3fa', fontWeight: 700 }}>{it.stockLevel}{it.unit !== 'item' ? ` ${it.unit}` : ''}</div>
-                  <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a' }}>£{it.unitCost.toFixed(2)} / {it.unit}</div>
+                  <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: low ? '#ef4444' : 'var(--t1)', fontWeight: 700 }}>{it.stockLevel}{it.unit !== 'item' ? ` ${it.unit}` : ''}</div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)' }}>£{it.unitCost.toFixed(2)} / {it.unit}</div>
                 </div>
               </button>
             )
@@ -187,10 +187,10 @@ export default function MaterialsPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Add material</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add material</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Name (e.g. 25mm OSB sheet)" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -232,37 +232,37 @@ export default function MaterialsPage() {
       {activeItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setActiveItem(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>{activeItem.name}</h2>
-                {activeItem.code && <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', marginTop: 2 }}>{activeItem.code}</div>}
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{activeItem.name}</h2>
+                {activeItem.code && <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{activeItem.code}</div>}
               </div>
-              <button onClick={() => setActiveItem(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <button onClick={() => setActiveItem(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <div style={{ background: '#1a2f4e', padding: '10px 12px', borderRadius: 10 }}>
+              <div style={{ background: 'var(--bg3)', padding: '10px 12px', borderRadius: 10 }}>
                 <div style={{ ...labelStyle, marginBottom: 2 }}>In stock</div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, color: activeItem.reorderPoint > 0 && activeItem.stockLevel <= activeItem.reorderPoint ? '#ef4444' : '#eef3fa', fontWeight: 700 }}>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, color: activeItem.reorderPoint > 0 && activeItem.stockLevel <= activeItem.reorderPoint ? '#ef4444' : 'var(--t1)', fontWeight: 700 }}>
                   {activeItem.stockLevel} {activeItem.unit}
                 </div>
                 {activeItem.reorderPoint > 0 && (
-                  <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', marginTop: 1 }}>Reorder ≤ {activeItem.reorderPoint}</div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', marginTop: 1 }}>Reorder ≤ {activeItem.reorderPoint}</div>
                 )}
               </div>
-              <div style={{ background: '#1a2f4e', padding: '10px 12px', borderRadius: 10 }}>
+              <div style={{ background: 'var(--bg3)', padding: '10px 12px', borderRadius: 10 }}>
                 <div style={{ ...labelStyle, marginBottom: 2 }}>Unit cost</div>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, color: '#10b981', fontWeight: 700 }}>£{activeItem.unitCost.toFixed(2)}</div>
-                <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', marginTop: 1 }}>per {activeItem.unit}</div>
+                <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', marginTop: 1 }}>per {activeItem.unit}</div>
               </div>
             </div>
 
             {adjustingId === activeItem.id ? (
-              <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: '#1a2f4e', padding: '8px 10px', borderRadius: 10 }}>
+              <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'var(--bg3)', padding: '8px 10px', borderRadius: 10 }}>
                 <input autoFocus type="number" step="0.1" value={adjustDelta} onChange={e => setAdjustDelta(e.target.value)} placeholder="±qty (e.g. -2)" style={{ ...inputStyle, padding: '6px 10px', fontSize: 13 }} />
                 <button onClick={() => adjustStock(activeItem.id, Number(adjustDelta))} disabled={!adjustDelta} style={{ padding: '6px 10px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Apply</button>
-                <button onClick={() => { setAdjustingId(null); setAdjustDelta('') }} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#52749a', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => { setAdjustingId(null); setAdjustDelta('') }} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t3)', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 6 }}>
@@ -272,10 +272,10 @@ export default function MaterialsPage() {
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>
-              {activeItem.supplier && <div><span style={{ color: '#52749a' }}>Supplier:</span> {activeItem.supplier}</div>}
-              {activeItem.location && <div><span style={{ color: '#52749a' }}>Location:</span> {activeItem.location}</div>}
-              {activeItem.category && <div><span style={{ color: '#52749a' }}>Category:</span> {activeItem.category}</div>}
-              {activeItem.notes && <div style={{ marginTop: 6, padding: 10, background: '#1a2f4e', borderRadius: 8, whiteSpace: 'pre-wrap' }}>{activeItem.notes}</div>}
+              {activeItem.supplier && <div><span style={{ color: 'var(--t3)' }}>Supplier:</span> {activeItem.supplier}</div>}
+              {activeItem.location && <div><span style={{ color: 'var(--t3)' }}>Location:</span> {activeItem.location}</div>}
+              {activeItem.category && <div><span style={{ color: 'var(--t3)' }}>Category:</span> {activeItem.category}</div>}
+              {activeItem.notes && <div style={{ marginTop: 6, padding: 10, background: 'var(--bg3)', borderRadius: 8, whiteSpace: 'pre-wrap' }}>{activeItem.notes}</div>}
             </div>
 
             <button onClick={() => remove(activeItem.id)} style={{ marginTop: 6, padding: '10px', borderRadius: 10, background: confirmDelete === activeItem.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeItem.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
@@ -290,8 +290,8 @@ export default function MaterialsPage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

@@ -114,7 +114,7 @@ export default function QuickActions({ accent = 'var(--accent)' }: QuickActionsP
                 aria-label="Close"
                 style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
               >
-                <IcX size={18} color="#8ea8c5" />
+                <IcX size={18} color="var(--t2)" />
               </button>
             </div>
 

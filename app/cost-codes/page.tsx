@@ -75,21 +75,21 @@ export default function CostCodesPage() {
     }
   }
 
-  return <div style={{ minHeight: '100dvh', background: '#06101e', paddingBottom: 96 }}>
+  return <div style={{ minHeight: '100dvh', background: 'var(--bg0)', paddingBottom: 96 }}>
     {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
     <header style={{ padding: '18px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
-      <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 9 }}><IcChevL size={18} color="#52749a" /><span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span></Link>
+      <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 9 }}><IcChevL size={18} color="var(--t3)" /><span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span></Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
-        <div><h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 800, color: '#eef3fa' }}>Cost codes</h1><p style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>One coding structure for POs, receipts and subcontract cost.</p></div>
+        <div><h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 800, color: 'var(--t1)' }}>Cost codes</h1><p style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>One coding structure for POs, receipts and subcontract cost.</p></div>
         <button type="button" onClick={() => setShowAdd(true)} aria-label="Add cost code" style={{ width: 38, height: 38, border: 0, borderRadius: 11, background: '#f59e0b', display: 'grid', placeItems: 'center', cursor: 'pointer' }}><IcPlus size={18} color="#fff" /></button>
       </div>
-      <button type="button" onClick={() => { setLoading(true); setShowArchived(v => !v) }} style={{ marginTop: 10, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 99, background: showArchived ? 'rgba(245,158,11,0.12)' : 'transparent', color: showArchived ? '#f59e0b' : '#8ea8c5', padding: '5px 10px', fontFamily: SF, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>{showArchived ? 'Showing archived' : 'Show archived'}</button>
+      <button type="button" onClick={() => { setLoading(true); setShowArchived(v => !v) }} style={{ marginTop: 10, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 99, background: showArchived ? 'rgba(245,158,11,0.12)' : 'transparent', color: showArchived ? '#f59e0b' : 'var(--t2)', padding: '5px 10px', fontFamily: SF, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>{showArchived ? 'Showing archived' : 'Show archived'}</button>
     </header>
 
-    {loading ? <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF }}>Loading cost codes…</div> : codes.length === 0 ? <div style={{ padding: '64px 28px', textAlign: 'center' }}><div style={{ fontFamily: SF, fontSize: 15, fontWeight: 800, color: '#eef3fa' }}>No cost codes yet</div><div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 5 }}>Create codes such as MAT, LAB, PLANT, SUB and PRELIMS.</div></div> : <main style={{ padding: '12px 16px', display: 'grid', gap: 8 }}>
-      {codes.map(c => <div key={c.id} style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 13, padding: 13, opacity: c.archivedAt ? 0.58 : 1 }}>
+    {loading ? <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>Loading cost codes…</div> : codes.length === 0 ? <div style={{ padding: '64px 28px', textAlign: 'center' }}><div style={{ fontFamily: SF, fontSize: 15, fontWeight: 800, color: 'var(--t1)' }}>No cost codes yet</div><div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 5 }}>Create codes such as MAT, LAB, PLANT, SUB and PRELIMS.</div></div> : <main style={{ padding: '12px 16px', display: 'grid', gap: 8 }}>
+      {codes.map(c => <div key={c.id} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 13, padding: 13, opacity: c.archivedAt ? 0.58 : 1 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
-          <div style={{ minWidth: 0 }}><div style={{ display: 'flex', gap: 7, alignItems: 'baseline' }}><span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#f59e0b', fontWeight: 900 }}>{c.code}</span><span style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 700 }}>{c.name}</span></div><div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', marginTop: 3 }}>{c.category || 'Uncategorised'} · {c._count?.costEntries || 0} actual entries · {c._count?.purchaseOrders || 0} POs</div>{c.description && <div style={{ fontFamily: SF, fontSize: 10, color: '#6f8cac', marginTop: 5 }}>{c.description}</div>}</div>
+          <div style={{ minWidth: 0 }}><div style={{ display: 'flex', gap: 7, alignItems: 'baseline' }}><span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: '#f59e0b', fontWeight: 900 }}>{c.code}</span><span style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 700 }}>{c.name}</span></div><div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', marginTop: 3 }}>{c.category || 'Uncategorised'} · {c._count?.costEntries || 0} actual entries · {c._count?.purchaseOrders || 0} POs</div>{c.description && <div style={{ fontFamily: SF, fontSize: 10, color: '#6f8cac', marginTop: 5 }}>{c.description}</div>}</div>
           <button type="button" onClick={() => toggleArchived(c)} style={{ alignSelf: 'center', border: `1px solid ${c.archivedAt ? '#10b98155' : '#ef444455'}`, background: c.archivedAt ? '#10b98112' : '#ef444412', color: c.archivedAt ? '#10b981' : '#ef4444', borderRadius: 8, padding: '6px 8px', fontFamily: SF, fontSize: 9, fontWeight: 800, cursor: 'pointer' }}>{c.archivedAt ? 'Restore' : 'Archive'}</button>
         </div>
       </div>)}
@@ -98,8 +98,8 @@ export default function CostCodesPage() {
 
     {showAdd && <div style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
       <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
-      <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '22px 20px 34px', display: 'grid', gap: 11 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h2 style={{ fontFamily: SF, fontSize: 19, color: '#eef3fa' }}>New cost code</h2><button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="#8ea8c5" /></button></div>
+      <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 34px', display: 'grid', gap: 11 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>New cost code</h2><button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t2)" /></button></div>
         <input autoFocus value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="Code, e.g. MAT" style={inputStyle} />
         <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Name, e.g. Materials" style={inputStyle} />
         <input value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="Category (optional)" style={inputStyle} />
@@ -110,4 +110,4 @@ export default function CostCodesPage() {
   </div>
 }
 
-const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 9, color: '#eef3fa', padding: '10px 11px', fontFamily: SF, fontSize: 12, outline: 'none' }
+const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 9, color: 'var(--t1)', padding: '10px 11px', fontFamily: SF, fontSize: 12, outline: 'none' }

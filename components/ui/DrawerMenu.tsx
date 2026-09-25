@@ -14,20 +14,20 @@ interface MenuItem {
 }
 
 const PRIMARY: MenuItem[] = [
-  { href: '/dashboard', label: 'Dashboard', Icon: IcDashboard, color: '#f59e0b' },
-  { href: '/apps', label: 'All apps', Icon: IcSpark, color: '#8b5cf6' },
-  { href: '/projects', label: 'Projects', Icon: IcProjects, color: '#2563eb' },
-  { href: '/tasks', label: 'Tasks', Icon: IcTasks, color: '#10b981' },
-  { href: '/team', label: 'Team', Icon: IcTeam, color: '#8b5cf6' },
-  { href: '/capture', label: 'Capture', Icon: IcCamera, color: '#06b6d4' },
+  { href: '/dashboard', label: 'Command centre', Icon: IcDashboard, color: 'var(--accent)' },
+  { href: '/apps', label: 'All modules', Icon: IcSpark, color: '#a58bff' },
+  { href: '/projects', label: 'Projects', Icon: IcProjects, color: '#64a8ff' },
+  { href: '/tasks', label: 'Work', Icon: IcTasks, color: '#45d18a' },
+  { href: '/team', label: 'People', Icon: IcTeam, color: '#a58bff' },
+  { href: '/capture', label: 'Capture', Icon: IcCamera, color: '#48d8ff' },
 ]
 
 const SECONDARY: MenuItem[] = [
   { href: '/inbox', label: 'Inbox', Icon: IcBell, color: '#ef4444' },
-  { href: '/activity', label: 'Activity feed', Icon: IcClock, color: '#8ea8c5' },
-  { href: '/search', label: 'Search', Icon: IcSearch, color: '#8ea8c5' },
-  { href: '/reports', label: 'Reports', Icon: IcReceipt, color: '#10b981' },
-  { href: '/documents', label: 'Documents', Icon: IcDoc, color: '#2563eb' },
+  { href: '/activity', label: 'Activity feed', Icon: IcClock, color: 'var(--t2)' },
+  { href: '/search', label: 'Search', Icon: IcSearch, color: 'var(--t2)' },
+  { href: '/reports', label: 'Reports', Icon: IcReceipt, color: '#45d18a' },
+  { href: '/documents', label: 'Documents', Icon: IcDoc, color: '#64a8ff' },
 ]
 
 export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: () => void }) {
@@ -59,10 +59,10 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
       <aside
         style={{
           position: 'relative',
-          background: '#0c1a2e',
+          background: 'linear-gradient(180deg, rgba(20,25,29,.99), rgba(9,11,13,.99))',
           width: 'min(320px, 86vw)',
           height: '100dvh',
-          borderRight: '1px solid rgba(255,255,255,0.08)',
+          borderRight: '1px solid var(--hairMid)',
           padding: '20px 16px calc(20px + env(safe-area-inset-bottom, 0px))',
           display: 'flex',
           flexDirection: 'column',
@@ -73,15 +73,15 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
         {/* Header */}
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
-            <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #ef4444)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700 }}>
+            <div style={{ width: 36, height: 36, borderRadius: '50%', background: 'linear-gradient(135deg, var(--accent), #48d8ff)', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700 }}>
               {userInitial}
             </div>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, color: '#eef3fa', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, color: 'var(--t1)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                 {session?.user?.name || session?.user?.email || 'User'}
               </div>
               {session?.user?.email && session?.user?.name && (
-                <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
                   {session.user.email}
                 </div>
               )}
@@ -99,12 +99,12 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
         {/* Brand */}
         <div style={{ padding: '2px 4px 8px', borderBottom: '1px solid rgba(255,255,255,0.05)' }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-            <IcSpark size={14} color="#f59e0b" />
-            <span style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 800, color: '#eef3fa', letterSpacing: '-0.03em' }}>
-              Cortex<span style={{ color: '#f59e0b' }}>x</span>
+            <IcSpark size={14} color="var(--accent)" />
+            <span style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 800, color: 'var(--t1)', letterSpacing: '-0.03em' }}>
+              Cortex<span style={{ color: 'var(--accent)' }}>x</span>
             </span>
           </div>
-          <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', marginTop: 2 }}>Construction management</div>
+          <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>Construction management</div>
         </div>
 
         {/* Primary nav */}
@@ -128,7 +128,7 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
         </nav>
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
-          <DrawerLink item={{ href: '/settings', label: 'Settings', Icon: IcSettings, color: '#8ea8c5' }} onClick={onClose} active={isActive('/settings')} />
+          <DrawerLink item={{ href: '/settings', label: 'Settings', Icon: IcSettings, color: 'var(--t2)' }} onClick={onClose} active={isActive('/settings')} />
           <button
             onClick={() => { onClose(); signOut({ callbackUrl: '/login' }) }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'none', border: 'none', borderRadius: 10, cursor: 'pointer', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, textAlign: 'left', width: '100%' }}
@@ -159,12 +159,12 @@ function DrawerLink({ item, onClick, badge, active }: { item: MenuItem; onClick:
         padding: '10px 12px',
         borderRadius: 10,
         textDecoration: 'none',
-        color: '#eef3fa',
+        color: 'var(--t1)',
         fontFamily: 'var(--font-system)',
         fontSize: 14,
         fontWeight: active ? 600 : 400,
         background: activeBg,
-        borderLeft: active ? `3px solid ${item.color || '#f59e0b'}` : '3px solid transparent',
+        borderLeft: active ? `3px solid ${item.color || 'var(--accent)'}` : '3px solid transparent',
         paddingLeft: 9,
         transition: 'background 0.15s',
       }}
@@ -188,7 +188,7 @@ const menuLabel: React.CSSProperties = {
   fontFamily: 'var(--font-system)',
   fontSize: 10,
   fontWeight: 700,
-  color: '#52749a',
+  color: 'var(--t3)',
   textTransform: 'uppercase',
   letterSpacing: 0.6,
   padding: '4px 12px 0',

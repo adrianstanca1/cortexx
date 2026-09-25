@@ -47,11 +47,11 @@ export default function SiteReviewPage() {
       action={{ label: 'New', onClick: create }}
     >
       {loading ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
       ) : error ? (
         <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
       ) : rows.length === 0 ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)', padding: 32, textAlign: 'center' }}>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)', padding: 32, textAlign: 'center' }}>
           No records yet. Click <strong style={{ color: '#f59e0b' }}>New</strong> to add the first one.
         </div>
       ) : (
@@ -60,10 +60,10 @@ export default function SiteReviewPage() {
             <li
               key={r.id}
               onClick={() => setSelected(r)}
-              style={{ background: '#152641', borderRadius: 10, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', cursor: 'pointer' }}
+              style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', cursor: 'pointer' }}
             >
               <div>{[r.projectId, r.kind, r.reviewer].filter(Boolean).join(' · ') || r.id}</div>
-              <div style={{ fontSize: 11, color: '#52749a', marginTop: 4 }}>
+              <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4 }}>
                 {new Date(r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </div>
             </li>
