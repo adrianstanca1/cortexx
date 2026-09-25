@@ -95,6 +95,15 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
             </div>
           </button>
         </Link>
+        <Link href="/field" style={{ textDecoration: 'none', display: 'block', marginTop: 9 }}>
+          <div style={{
+            border: '1px solid rgba(245,158,11,0.28)', borderRadius: 12, padding: '10px 12px',
+            background: 'rgba(245,158,11,0.08)', color: '#fbbf24',
+            fontFamily: SF, fontSize: 12, fontWeight: 800, textAlign: 'center',
+          }}>
+            Open full field operations
+          </div>
+        </Link>
       </div>
 
       {/* 2x2 chunky tiles */}
