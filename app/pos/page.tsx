@@ -38,6 +38,8 @@ interface PO {
   project?: Project | null
   costCodeId?: string | null
   costCode?: CostCode | null
+  requisition?: { id: string; number: string; status: string } | null
+  supplierQuote?: { id: string; reference: string | null; rfq: { id: string; reference: string } } | null
 }
 
 const SF = 'var(--font-system)'
@@ -265,6 +267,11 @@ export default function POsPage() {
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
+        <div style={{ display: 'flex', gap: 6, marginBottom: 9 }}>
+          <Link href="/requisitions" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: '#152641', color: '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>Requisitions</Link>
+          <Link href="/rfqs" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: '#152641', color: '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>RFQs</Link>
+          <Link href="/pos" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: '#f59e0b', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>POs</Link>
+        </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'draft', 'pending_approval', 'approved', 'sent', 'part_received', 'received', 'closed'] as const).map(t => (
             <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
@@ -295,6 +302,8 @@ export default function POsPage() {
                 <span style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>{p.supplier}</span>
                 {p.project && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>· {p.project.name}</span>}
                 {p.costCode && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: '#f59e0b' }}>· {p.costCode.code}</span>}
+                {p.requisition && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: '#a78bfa' }}>· {p.requisition.number}</span>}
+                {p.supplierQuote?.rfq && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: '#8b5cf6' }}>· {p.supplierQuote.rfq.reference}</span>}
                 <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 99, background: `${STATUS_COLOR[p.status]}22`, color: STATUS_COLOR[p.status], fontFamily: SF, fontSize: 9, fontWeight: 700, border: `1px solid ${STATUS_COLOR[p.status]}55`, textTransform: 'uppercase' }}>{STATUS_LABEL[p.status]}</span>
               </div>
               <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
@@ -447,6 +456,11 @@ export default function POsPage() {
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', fontWeight: 700 }}>{activePo.number}</div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: SF, marginTop: 2 }}>{activePo.supplier}</h2>
                 {activePo.costCode && <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#f59e0b', marginTop: 3 }}>{activePo.costCode.code} · {activePo.costCode.name}</div>}
+                {(activePo.requisition || activePo.supplierQuote?.rfq) && (
+                  <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#a78bfa', marginTop: 3 }}>
+                    Source: {activePo.requisition?.number || 'Requisition'}{activePo.supplierQuote?.rfq ? ` · ${activePo.supplierQuote.rfq.reference}` : ''}
+                  </div>
+                )}
               </div>
               <button onClick={() => setActivePo(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
             </div>

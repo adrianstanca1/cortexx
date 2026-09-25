@@ -68,6 +68,8 @@ export async function GET(req: NextRequest) {
           project: { select: { id: true, name: true } },
           costCode: { select: { id: true, code: true, name: true } },
           supplierRef: { select: { id: true, name: true, category: true } },
+          requisition: { select: { id: true, number: true, status: true } },
+          supplierQuote: { select: { id: true, reference: true, rfq: { select: { id: true, reference: true } } } },
           goodsReceipts: {
             select: { id: true, deliveredAt: true, deliveryNote: true, netReceived: true, lineItems: true },
             orderBy: { deliveredAt: 'desc' },
@@ -211,6 +213,8 @@ export async function POST(req: NextRequest) {
         project: { select: { id: true, name: true } },
         costCode: { select: { id: true, code: true, name: true } },
         supplierRef: { select: { id: true, name: true, category: true } },
+        requisition: { select: { id: true, number: true, status: true } },
+        supplierQuote: { select: { id: true, reference: true, rfq: { select: { id: true, reference: true } } } },
         goodsReceipts: true,
       },
     })

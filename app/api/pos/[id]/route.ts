@@ -208,6 +208,8 @@ export async function PUT(
         project: { select: { id: true, name: true } },
         costCode: { select: { id: true, code: true, name: true } },
         supplierRef: { select: { id: true, name: true, category: true } },
+        requisition: { select: { id: true, number: true, status: true } },
+        supplierQuote: { select: { id: true, reference: true, rfq: { select: { id: true, reference: true } } } },
         goodsReceipts: { orderBy: { deliveredAt: 'desc' } },
       },
     })
