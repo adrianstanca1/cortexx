@@ -73,6 +73,15 @@ jobs:
             CODE_SIGNING_ALLOWED=NO -destination 'generic/platform=iOS Simulator' \
             build | tail -60
 
+      - name: Verify unsigned iOS archive
+        working-directory: ios/App
+        run: |
+          set -o pipefail
+          xcodebuild archive -workspace App.xcworkspace -scheme App \
+            -configuration Release -archivePath "$RUNNER_TEMP/Cortexx-unsigned.xcarchive" \
+            -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
+            | tail -80
+
       - name: Check signing configuration
         id: signing
         env:

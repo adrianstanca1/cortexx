@@ -6,6 +6,8 @@ const path = require('node:path')
 const scriptPath = path.join(__dirname, '..', 'ios', 'App', 'ci_scripts', 'ci_post_clone.sh')
 const schemePath = path.join(__dirname, '..', 'ios', 'App', 'App.xcodeproj', 'xcshareddata', 'xcschemes', 'App.xcscheme')
 const script = fs.readFileSync(scriptPath, 'utf8')
+const preBuildPath = path.join(__dirname, '..', 'ios', 'App', 'ci_scripts', 'ci_pre_xcodebuild.sh')
+const preBuild = fs.readFileSync(preBuildPath, 'utf8')
 
 test('Xcode Cloud bootstrap uses Apple repository path instead of script cwd', () => {
   assert.match(script, /CI_PRIMARY_REPOSITORY_PATH/)
@@ -36,4 +38,26 @@ test('App scheme is shared and archive-enabled for Xcode Cloud', () => {
   assert.match(scheme, /BlueprintName = "App"/)
   assert.match(scheme, /buildForArchiving = "YES"/)
   assert.match(scheme, /<ArchiveAction[\s\S]*buildConfiguration = "Release"/)
+})
+
+
+test('Xcode Cloud pre-build injects Cloud team, build number and bundle ID', () => {
+  assert.match(preBuild, /CI_TEAM_ID/)
+  assert.match(preBuild, /CI_BUILD_NUMBER/)
+  assert.match(preBuild, /CI_BUNDLE_ID/)
+  assert.match(preBuild, /DEVELOPMENT_TEAM/)
+  assert.match(preBuild, /CURRENT_PROJECT_VERSION/)
+  assert.match(preBuild, /PRODUCT_BUNDLE_IDENTIFIER/)
+})
+
+test('Xcode Cloud pre-build mutates only the temporary Cloud checkout', () => {
+  assert.match(preBuild, /CI_PRIMARY_REPOSITORY_PATH/)
+  assert.match(preBuild, /CI_XCODE_CLOUD/)
+  assert.match(preBuild, /App\.xcodeproj\/project\.pbxproj/)
+})
+
+test('native project deployment target matches the Podfile floor', () => {
+  const project = fs.readFileSync(path.join(__dirname, '..', 'ios', 'App', 'App.xcodeproj', 'project.pbxproj'), 'utf8')
+  assert.doesNotMatch(project, /IPHONEOS_DEPLOYMENT_TARGET = 13\.0/)
+  assert.match(project, /IPHONEOS_DEPLOYMENT_TARGET = 15\.0/)
 })
