@@ -83,6 +83,22 @@ async function main() {
   const adminTask = await prisma.task.findFirst({ where: { title: 'E2E Admin Only Task', projectId: adminOnlyProject.id, organizationId: organization.id } })
   if (!adminTask) await prisma.task.create({ data: { title: 'E2E Admin Only Task', projectId: adminOnlyProject.id, status: 'todo', priority: 'medium', organizationId: organization.id } })
 
+  const programmeA = await prisma.programmeActivity.upsert({
+    where: { id: 'e2e-programme-a' },
+    update: { projectId: project.id, code: 'E2E-A', title: 'E2E mobilisation', baselineStart: new Date('2026-09-25T00:00:00.000Z'), baselineEnd: new Date('2026-09-28T00:00:00.000Z'), plannedStart: new Date('2026-09-25T00:00:00.000Z'), plannedEnd: new Date('2026-09-28T00:00:00.000Z'), progress: 100, status: 'complete', organizationId: organization.id },
+    create: { id: 'e2e-programme-a', projectId: project.id, code: 'E2E-A', title: 'E2E mobilisation', baselineStart: new Date('2026-09-25T00:00:00.000Z'), baselineEnd: new Date('2026-09-28T00:00:00.000Z'), plannedStart: new Date('2026-09-25T00:00:00.000Z'), plannedEnd: new Date('2026-09-28T00:00:00.000Z'), progress: 100, status: 'complete', actualStart: new Date('2026-09-25T08:00:00.000Z'), actualEnd: new Date('2026-09-28T16:00:00.000Z'), organizationId: organization.id },
+  })
+  const programmeB = await prisma.programmeActivity.upsert({
+    where: { id: 'e2e-programme-b' },
+    update: { projectId: project.id, code: 'E2E-B', title: 'E2E façade installation', baselineStart: new Date('2026-09-28T00:00:00.000Z'), baselineEnd: new Date('2026-10-08T00:00:00.000Z'), plannedStart: new Date('2026-09-28T00:00:00.000Z'), plannedEnd: new Date('2026-10-08T00:00:00.000Z'), progress: 25, status: 'in_progress', organizationId: organization.id },
+    create: { id: 'e2e-programme-b', projectId: project.id, code: 'E2E-B', title: 'E2E façade installation', baselineStart: new Date('2026-09-28T00:00:00.000Z'), baselineEnd: new Date('2026-10-08T00:00:00.000Z'), plannedStart: new Date('2026-09-28T00:00:00.000Z'), plannedEnd: new Date('2026-10-08T00:00:00.000Z'), progress: 25, status: 'in_progress', actualStart: new Date('2026-09-28T08:00:00.000Z'), organizationId: organization.id },
+  })
+  await prisma.programmeDependency.upsert({
+    where: { predecessorId_successorId_type: { predecessorId: programmeA.id, successorId: programmeB.id, type: 'FS' } },
+    update: { projectId: project.id, lagDays: 0, organizationId: organization.id },
+    create: { projectId: project.id, predecessorId: programmeA.id, successorId: programmeB.id, type: 'FS', lagDays: 0, organizationId: organization.id },
+  })
+
   await prisma.invoice.upsert({
     where: { number: 'E2E-ADMIN-001' },
     update: { projectId: adminOnlyProject.id, clientName: 'Admin Client', amount: 1250, status: 'sent', dueDate: new Date('2026-10-15T00:00:00.000Z'), organizationId: organization.id },
