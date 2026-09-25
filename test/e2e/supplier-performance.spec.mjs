@@ -19,6 +19,6 @@ test('supplier performance renders delivery evidence and missing-history state',
   await page.unroute('**/api/suppliers/scorecard-fixture/performance')
   await page.route('**/api/suppliers/scorecard-fixture/performance', route => route.fulfill({ status: 403, json: { error: 'Company Admin permission required' } }))
   await page.reload()
-  await expect(page.getByRole('alert')).toContainText('Company Admin permission required')
+  await expect(page.getByRole('alert', { name: 'Supplier performance error' })).toContainText('Company Admin permission required')
   await expect(page.getByRole('button', { name: 'Try again' })).toBeVisible()
 })

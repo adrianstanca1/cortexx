@@ -42,3 +42,11 @@ test('due today is not overdue and invalid dates are treated as missing', () => 
   assert.equal(p.overdue, 0)
   assert.equal(p.missingDates, 1)
 })
+
+test('approved but unissued orders remain commitments without penalising supplier delivery', () => {
+  const p = supplierPerformance([{ ...base, status: 'approved' }], now)
+  assert.equal(p.overdue, 0)
+  assert.equal(p.outstandingNet, 100)
+  assert.equal(p.orderedNet, 100)
+  assert.equal(p.orders[0].delivery, 'not_assessed')
+})

@@ -1,5 +1,5 @@
 const { money, countsAsCommitment } = require('./procurement-control')
-const ACTIVE = new Set(['approved', 'sent', 'part_received'])
+const ACTIVE = new Set(['sent', 'part_received'])
 const ORDERED = new Set(['approved', 'sent', 'part_received', 'received', 'closed'])
 function day(value) {
   if (!value) return null

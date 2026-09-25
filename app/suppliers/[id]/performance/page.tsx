@@ -34,7 +34,7 @@ function PerformanceReport({ id }: { id: string }) {
       <div className="mx-auto max-w-5xl space-y-6">
         <Link href="/suppliers" className="text-sky-300 underline">Back to suppliers</Link>
         <h1 className="text-2xl font-bold">Supplier performance</h1>
-        {error ? <div role="alert" className="rounded-xl bg-red-950 p-4">
+        {error ? <div role="alert" aria-label="Supplier performance error" className="rounded-xl bg-red-950 p-4">
           <p>{error}</p><button type="button" className="mt-3 underline" onClick={() => { setError(''); setReport(null); setRetry(n => n + 1) }}>Try again</button>
         </div> : !report ? <p role="status">Loading supplier records…</p> : p ? <>
           <h2 className="text-xl font-semibold">{report.supplier.name}{report.supplier.archivedAt ? ' (archived)' : ''}</h2>
@@ -43,7 +43,7 @@ function PerformanceReport({ id }: { id: string }) {
           <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
             {[
               ['On-time delivery', p.onTimePercent === null ? 'Not enough data' : `${p.onTimePercent}%`, `${p.onTime} of ${p.assessed} assessed deliveries`],
-              ['Overdue orders', String(p.overdue), 'Open orders past their expected date'],
+              ['Overdue orders', String(p.overdue), 'Issued orders past their expected date'],
               ['Ordered value', gbp.format(p.orderedNet), 'Approved through closed orders'],
               ['Unreceived commitment', gbp.format(p.outstandingNet), 'Open commitment less recorded receipts'],
             ].map(([label, value, detail]) => <div key={label} className="rounded-xl border border-slate-700 bg-slate-900 p-4"><h3 className="text-sm text-slate-300">{label}</h3><p className="my-2 text-xl font-semibold">{value}</p><p className="text-xs text-slate-400">{detail}</p></div>)}
