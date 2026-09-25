@@ -18,6 +18,7 @@ function handler(path, prisma, role = 'owner') {
     '@/lib/errors': { reportError: () => {} },
     '@/lib/audit': { auditLog: () => {}, requestMeta: () => ({}) },
     '@/lib/procurement-rfq': require('../lib/procurement-rfq'),
+    '@/lib/procurement-control': require('../lib/procurement-control'),
   }
   const code = ts.transpileModule(fs.readFileSync(path, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true },
@@ -90,4 +91,31 @@ test('award loses a race to cancellation without creating a PO', async () => {
   const response = await POST(request({ quoteId: 'q1' }), params)
   assert.equal(response.status, 409)
   assert.equal(response.body.code, 'REQUISITION_NOT_OPEN')
+})
+
+
+test('issuing an RFQ-awarded PO rebases quoted lead time from the actual send date', async () => {
+  let updateArgs
+  const prisma = {
+    purchaseOrder: {
+      findUnique: async () => ({
+        id: 'po1', status: 'approved', sentAt: null, supplierQuoteId: 'q1',
+        subtotal: 100, vatRate: 20, lineItems: [{ description: 'Panel', quantity: 1, unitPrice: 100, total: 100 }],
+      }),
+      update: async args => {
+        updateArgs = args
+        return { id: 'po1', status: 'sent', supplierId: 's1', costCodeId: null }
+      },
+    },
+    supplierQuote: { findUnique: async () => ({ leadDays: 7 }) },
+  }
+  const { PUT } = handler('app/api/pos/[id]/route.ts', prisma)
+  const response = await PUT(request({ status: 'sent' }), { params: Promise.resolve({ id: 'po1' }) })
+  assert.equal(response.status, 200)
+  assert.ok(updateArgs.data.sentAt instanceof Date)
+  assert.ok(updateArgs.data.expectedDelivery instanceof Date)
+  assert.equal(
+    updateArgs.data.expectedDelivery.getTime() - updateArgs.data.sentAt.getTime(),
+    7 * 24 * 60 * 60 * 1000,
+  )
 })

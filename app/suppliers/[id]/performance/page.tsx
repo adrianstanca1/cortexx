@@ -21,7 +21,7 @@ function PerformanceReport({ id }: { id: string }) {
     const controller = new AbortController()
     fetch(`/api/suppliers/${encodeURIComponent(id)}/performance`, { signal: controller.signal, cache: 'no-store' })
       .then(async response => {
-        const data = await response.json()
+        const data = await response.json().catch(() => ({}))
         if (!response.ok) throw new Error(data.error || 'Could not load supplier performance')
         if (!controller.signal.aborted) setReport(data)
       })
@@ -54,7 +54,7 @@ function PerformanceReport({ id }: { id: string }) {
             <table className="w-full text-left text-sm">
               <caption className="p-3 text-left font-semibold">Evidence: {p.orderCount} linked purchase orders</caption>
               <thead className="bg-slate-900"><tr>{['Order', 'Status', 'Expected', 'Completed', 'Delivery', 'Net value'].map(label => <th key={label} scope="col" className="p-3">{label}</th>)}</tr></thead>
-              <tbody>{p.orders.map(order => <tr key={order.id} className="border-t border-slate-800"><td className="p-3"><Link className="text-sky-300 underline" href={`/api/pos/${encodeURIComponent(order.id)}/pdf`}>{order.number}</Link></td><td className="p-3">{order.status.replaceAll('_', ' ')}</td><td className="p-3 whitespace-nowrap">{order.expectedDelivery || 'Unknown'}</td><td className="p-3 whitespace-nowrap">{order.completedDelivery || 'Unknown'}</td><td className="p-3">{deliveryLabel[order.delivery]}</td><td className="p-3 whitespace-nowrap">{gbp.format(order.orderedNet)}</td></tr>)}</tbody>
+              <tbody>{p.orders.map(order => <tr key={order.id} className="border-t border-slate-800"><td className="p-3"><a className="text-sky-300 underline" href={`/api/pos/${encodeURIComponent(order.id)}/pdf`}>{order.number}</a></td><td className="p-3">{order.status.replaceAll('_', ' ')}</td><td className="p-3 whitespace-nowrap">{order.expectedDelivery || 'Unknown'}</td><td className="p-3 whitespace-nowrap">{order.completedDelivery || 'Unknown'}</td><td className="p-3">{deliveryLabel[order.delivery]}</td><td className="p-3 whitespace-nowrap">{gbp.format(order.orderedNet)}</td></tr>)}</tbody>
             </table>
           </div>}
         </> : null}
