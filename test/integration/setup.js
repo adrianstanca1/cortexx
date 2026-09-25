@@ -41,7 +41,7 @@ async function truncate(prisma) {
     const TABLES = [
       // Owned models (will cascade via Organization FK anyway when we
       // delete orgs, but explicit truncate is faster for setup).
-      'Activity', 'Comment', 'Assignment', 'TimeEntry', 'MileageEntry',
+      'AccountingOAuthState', 'AccountingConnection', 'Activity', 'Comment', 'Assignment', 'TimeEntry', 'MileageEntry',
       'SiteCheckIn', 'Task', 'Invoice', 'ProjectCostEntry', 'SubInvoice', 'GoodsReceipt', 'SupplierQuote', 'ProcurementRfq', 'ProcurementRequisition', 'PurchaseOrder',
       'Material', 'Equipment', 'Snag', 'Rfi', 'Announcement', 'Observation',
       'Variation', 'Permit', 'Rams', 'Inspection', 'Meeting', 'Risk',

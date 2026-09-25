@@ -1520,6 +1520,49 @@ model PushSubscription {
 // routes ignore them until the codemod adds organizationId filters in a
 // follow-up migration. See docs/v1-completion-plan.md.
 
+model AccountingConnection {
+  id                   String       @id @default(cuid())
+  organizationId       String
+  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider             String       @default("xero")
+  externalConnectionId String?
+  externalTenantId     String?
+  externalTenantName   String?
+  accessTokenCipher    String?
+  refreshTokenCipher   String?
+  accessTokenExpiresAt DateTime?
+  scopes               String?
+  status               String       @default("disconnected") // disconnected, connected, error, reauth_required
+  settings             Json         @default("{}")
+  lastConnectedAt      DateTime?
+  disconnectedAt       DateTime?
+  lastHealthAt         DateTime?
+  lastHealthError      String?
+  lastSyncAt           DateTime?
+  lastSyncStatus       String?
+  lastSyncError        String?
+  createdAt            DateTime     @default(now())
+  updatedAt            DateTime     @updatedAt
+
+  @@unique([organizationId, provider])
+  @@unique([provider, externalTenantId])
+  @@index([organizationId, status])
+}
+
+model AccountingOAuthState {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider       String       @default("xero")
+  stateHash      String       @unique
+  requestedById  String?
+  returnTo       String?
+  expiresAt      DateTime
+  createdAt      DateTime     @default(now())
+
+  @@index([organizationId, provider, expiresAt])
+}
+
 model Organization {
   id                      String                   @id @default(cuid())
   slug                    String                   @unique
@@ -1536,6 +1579,8 @@ model Organization {
   members                 UserOrganization[]
   invites                 OrganizationInvite[]
   auditEvents             AuditEvent[]
+  accountingConnections   AccountingConnection[]
+  accountingOAuthStates   AccountingOAuthState[]
   projects                Project[]
   tasks                   Task[]
   teamMembers             TeamMember[]

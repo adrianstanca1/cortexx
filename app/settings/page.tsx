@@ -299,6 +299,13 @@ export default function SettingsPage() {
           <span style={{ color: '#52749a' }}>→</span>
         </Link>
         <Link
+          href="/settings/integrations/xero"
+          style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
+        >
+          <span>Xero accounting</span>
+          <span style={{ color: '#52749a' }}>→</span>
+        </Link>
+        <Link
           href="/settings/integrations"
           style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '12px 14px', marginTop: 8, background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, textDecoration: 'none' }}
         >

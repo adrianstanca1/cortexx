@@ -27,6 +27,7 @@ const OWNED_MODELS = new Set([
   // v1.1 additions — keep in sync with lib/tenancy.ts OWNED_MODELS
   'ProjectBookmark', 'ActionPlan', 'Conflict', 'Cis300Return',
   'Conversation', 'ChatMessage', 'EquipmentCheck',
+  'AccountingConnection', 'AccountingOAuthState',
 ])
 
 const READ_OPERATIONS = new Set([
