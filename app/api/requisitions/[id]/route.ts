@@ -89,8 +89,16 @@ export async function PUT(
     }
 
     const requisition = await prisma.procurementRequisition.update({
-      where: { id: params.id },
-      data,
+      where: { id: params.id, status: existing.status },
+      data: {
+        ...data,
+        ...(data.status === 'cancelled' ? {
+          rfqs: { updateMany: {
+            where: { status: { in: ['draft', 'sent', 'closed'] } },
+            data: { status: 'cancelled', closedAt: new Date() },
+          } },
+        } : {}),
+      },
       include: {
         project: { select: { id: true, name: true } },
         costCode: { select: { id: true, code: true, name: true } },
@@ -108,6 +116,9 @@ export async function PUT(
     })
     return NextResponse.json(requisition)
   } catch (error) {
+    if ((error as { code?: string })?.code === 'P2025') {
+      return NextResponse.json({ error: 'Requisition changed; refresh and retry' }, { status: 409 })
+    }
     reportError(error)
     return NextResponse.json({ error: 'Failed to update requisition' }, { status: 500 })
   }

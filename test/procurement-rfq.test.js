@@ -44,3 +44,21 @@ test('supplier pricing is aligned to approved requisition quantities', () => {
   assert.deepEqual(rows[0], { description: 'Boards', quantity: 10, unit: 'item', unitPrice: 15.5, total: 155 })
   assert.throws(() => alignQuoteItems([{ description: 'Boards', quantity: 10 }], []), /QUOTE_LINES_MISMATCH/)
 })
+
+test('unchanged status is never an approval transition', () => {
+  for (const status of ['draft', 'submitted', 'approved', 'rejected', 'rfq_open', 'converted', 'cancelled']) {
+    assert.equal(canTransitionRequisition(status, status, false), false)
+    assert.equal(canTransitionRequisition(status, status, true), false)
+  }
+})
+
+test('unknown delivery times do not outrank actual supplier lead times', () => {
+  const rows = compareSupplierQuotes([
+    { id: 'unknown', leadDays: null, netAmount: 100 },
+    { id: 'known', leadDays: 4, netAmount: 110 },
+    { id: 'same-day', leadDays: 0, netAmount: 120 },
+  ])
+  assert.equal(rows[0].leadDays, null)
+  assert.equal(rows[0].fastestLead, false)
+  assert.equal(rows[2].fastestLead, true)
+})

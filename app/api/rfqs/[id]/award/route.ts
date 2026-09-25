@@ -51,6 +51,7 @@ export async function POST(
       })
       if (!rfq) throw new Error('RFQ_NOT_FOUND')
       if (!['sent', 'closed'].includes(rfq.status)) throw new Error('RFQ_NOT_OPEN')
+      if (rfq.requisition.status !== 'rfq_open') throw new Error('REQUISITION_NOT_OPEN')
       if (rfq.requisition.purchaseOrder) throw new Error('REQUISITION_ALREADY_CONVERTED')
 
       const quote = rfq.quotes.find(row => row.id === quoteId)
@@ -59,6 +60,14 @@ export async function POST(
       if (!Array.isArray(quote.lineItems) || quote.lineItems.length === 0 || quote.netAmount <= 0) {
         throw new Error('QUOTE_NOT_PRICED')
       }
+
+      // Claim the requisition before creating committed spend. A competing
+      // cancellation or award must not be overwritten by a stale read.
+      const claimed = await tx.procurementRequisition.updateMany({
+        where: { id: rfq.requisition.id, status: 'rfq_open' },
+        data: { status: 'converted' },
+      })
+      if (claimed.count !== 1) throw new Error('REQUISITION_NOT_OPEN')
 
       const last = await tx.purchaseOrder.findFirst({
         orderBy: { createdAt: 'desc' },
@@ -111,10 +120,6 @@ export async function POST(
         where: { id: rfq.id },
         data: { status: 'awarded', closedAt: now },
       })
-      await tx.procurementRequisition.update({
-        where: { id: rfq.requisition.id },
-        data: { status: 'converted' },
-      })
       await tx.activity.create({
         data: {
           projectId: rfq.requisition.projectId,
@@ -147,6 +152,7 @@ export async function POST(
     const known: Record<string, string> = {
       RFQ_NOT_FOUND: 'RFQ not found',
       RFQ_NOT_OPEN: 'RFQ is not open for award',
+      REQUISITION_NOT_OPEN: 'Requisition is no longer open for award',
       REQUISITION_ALREADY_CONVERTED: 'This requisition already has a purchase order',
       QUOTE_NOT_AVAILABLE: 'Supplier quote is not available for award',
       SUPPLIER_ARCHIVED: 'Supplier is archived',

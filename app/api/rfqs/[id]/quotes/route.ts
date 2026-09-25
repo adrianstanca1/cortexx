@@ -28,11 +28,11 @@ export async function POST(
     const rfq = await prisma.procurementRfq.findUnique({
       where: { id: params.id },
       include: {
-        requisition: { select: { id: true, lineItems: true } },
+        requisition: { select: { id: true, status: true, lineItems: true } },
       },
     })
     if (!rfq) return NextResponse.json({ error: 'RFQ not found' }, { status: 404 })
-    if (rfq.status !== 'sent') {
+    if (rfq.status !== 'sent' || rfq.requisition.status !== 'rfq_open') {
       return NextResponse.json({ error: 'Quotes can only be recorded while the RFQ is open' }, { status: 409 })
     }
 
