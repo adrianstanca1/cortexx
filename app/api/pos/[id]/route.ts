@@ -188,7 +188,21 @@ export async function PUT(
         data.rejectedAt = now
         data.rejectionReason = body.rejectionReason?.toString().trim() || 'Approval rejected'
       }
-      if (status === 'sent' && !existing.sentAt) data.sentAt = now
+      if (status === 'sent' && !existing.sentAt) {
+        data.sentAt = now
+        // RFQ lead time starts when the order is actually issued to the supplier,
+        // not when the quote is awarded internally. Rebase the expected delivery
+        // date on first issue so supplier performance is measured fairly.
+        if (existing.supplierQuoteId) {
+          const quote = await prisma.supplierQuote.findUnique({
+            where: { id: existing.supplierQuoteId },
+            select: { leadDays: true },
+          })
+          if (quote?.leadDays !== null && quote?.leadDays !== undefined) {
+            data.expectedDelivery = new Date(now.getTime() + quote.leadDays * 24 * 60 * 60 * 1000)
+          }
+        }
+      }
       if (status === 'closed' && !existing.closedAt) data.closedAt = now
       if (status === 'draft') {
         data.approvalRequestedAt = null

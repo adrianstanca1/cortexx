@@ -54,7 +54,7 @@ const TRANSITIONS = {
 const MANAGER_TARGETS = new Set(['approved', 'rejected', 'rfq_open', 'converted', 'cancelled'])
 
 function canTransitionRequisition(from, to, isManager) {
-  if (from === to) return true
+  if (from === to) return false
   if (!TRANSITIONS[from] || !TRANSITIONS[from].has(to)) return false
   if (MANAGER_TARGETS.has(to) && !isManager) return false
   return true
@@ -67,7 +67,7 @@ function compareSupplierQuotes(quotes) {
     supplierName: quote.supplier?.name || quote.supplierName || 'Supplier',
     netAmount: money(quote.netAmount),
     totalAmount: money(quote.totalAmount),
-    leadDays: Number.isFinite(Number(quote.leadDays)) ? Number(quote.leadDays) : null,
+    leadDays: quote.leadDays !== null && quote.leadDays !== undefined && quote.leadDays !== '' && Number.isFinite(Number(quote.leadDays)) ? Number(quote.leadDays) : null,
     status: quote.status || 'received',
   }))
   const eligible = rows.filter(row => row.status === 'received' || row.status === 'awarded')

@@ -179,6 +179,7 @@ export default function SuppliersPage() {
               </div>
             </div>
             <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
+              <Link href={`/suppliers/${s.id}/performance`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Performance</Link>
               {s.contactEmail && <a href={`mailto:${s.contactEmail}`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Email</a>}
               {s.contactPhone && <a href={`tel:${s.contactPhone}`} style={{ ...pillBtn('#1a2f4e', '#c1d2e8'), textDecoration: 'none' }}>Call</a>}
               <button onClick={() => toggleArchive(s)} style={pillBtn('#1a2f4e', '#c1d2e8')}>{s.archivedAt ? 'Restore' : 'Archive'}</button>
