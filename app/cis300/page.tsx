@@ -18,7 +18,7 @@ interface Cis300Row {
 }
 
 const STATUS_COLOR: Record<string, string> = {
-  draft: '#52749a',
+  draft: 'var(--t3)',
   submitted: '#f59e0b',
   accepted: '#22c55e',
   rejected: '#ef4444',
@@ -111,7 +111,7 @@ export default function Cis300Page() {
           flexWrap: 'wrap',
           marginBottom: 20,
           padding: 12,
-          background: '#152641',
+          background: 'var(--surface-raised)',
           borderRadius: 10,
           border: '0.5px solid rgba(255,255,255,0.07)',
         }}
@@ -119,7 +119,7 @@ export default function Cis300Page() {
         <label
           style={{
             fontSize: 12,
-            color: '#8ea8c5',
+            color: 'var(--t2)',
             fontFamily: 'var(--font-system)',
             display: 'flex',
             flexDirection: 'column',
@@ -135,8 +135,8 @@ export default function Cis300Page() {
               padding: '6px 10px',
               borderRadius: 8,
               border: '1px solid rgba(255,255,255,0.1)',
-              background: '#0c1a2e',
-              color: '#eef3fa',
+              background: 'var(--bg1)',
+              color: 'var(--t1)',
               fontFamily: 'var(--font-system)',
               fontSize: 13,
             }}
@@ -151,7 +151,7 @@ export default function Cis300Page() {
             borderRadius: 10,
             border: 'none',
             background: '#10b981',
-            color: '#0c1a2e',
+            color: 'var(--bg1)',
             fontFamily: 'var(--font-system)',
             fontSize: 13,
             fontWeight: 700,
@@ -164,13 +164,13 @@ export default function Cis300Page() {
       </div>
 
       {loading ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
       ) : error ? (
         <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
       ) : rows.length === 0 ? (
         <div
           style={{
-            color: '#52749a',
+            color: 'var(--t3)',
             fontSize: 13,
             fontFamily: 'var(--font-system)',
             padding: 32,
@@ -191,19 +191,19 @@ export default function Cis300Page() {
           }}
         >
           {rows.map(r => {
-            const statusColor = STATUS_COLOR[r.status] || '#52749a'
+            const statusColor = STATUS_COLOR[r.status] || 'var(--t3)'
             return (
               <li
                 key={r.id}
                 onClick={() => router.push(`/cis300/${r.id}`)}
                 style={{
-                  background: '#152641',
+                  background: 'var(--surface-raised)',
                   borderRadius: 10,
                   padding: '12px 14px',
                   border: '0.5px solid rgba(255,255,255,0.07)',
                   fontFamily: 'var(--font-system)',
                   fontSize: 13,
-                  color: '#eef3fa',
+                  color: 'var(--t1)',
                   cursor: 'pointer',
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -213,7 +213,7 @@ export default function Cis300Page() {
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 600, marginBottom: 4 }}>{formatTaxMonth(r.taxMonth)}</div>
-                  <div style={{ fontSize: 12, color: '#8ea8c5' }}>
+                  <div style={{ fontSize: 12, color: 'var(--t2)' }}>
                     {r.subCount} sub{r.subCount === 1 ? '' : 's'} · gross {fmtMoney(r.totalGross)} · CIS {fmtMoney(r.totalCis)}
                   </div>
                 </div>

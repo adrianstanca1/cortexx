@@ -10,10 +10,10 @@ import { IcChevL, IcCheck, IcClock, IcDoc, IcPlus, IcX, IcTrash, IcEdit } from '
 import { useModalEffects } from '@/lib/useModalEffects'
 import type { Project, Task, Invoice, TeamMember } from '@/lib/types'
 
-const statusColor: Record<string, string> = { active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: '#52749a' }
+const statusColor: Record<string, string> = { active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: 'var(--t3)' }
 const statusLabel: Record<string, string> = { active: 'Active', snagging: 'Snagging', quoting: 'Quoting', complete: 'Complete' }
-const priorityColor: Record<string, string> = { critical: '#ef4444', high: '#f59e0b', medium: '#2563eb', low: '#52749a' }
-const invoiceStatusColor: Record<string, string> = { draft: '#52749a', sent: '#f59e0b', paid: '#10b981', overdue: '#ef4444' }
+const priorityColor: Record<string, string> = { critical: '#ef4444', high: '#f59e0b', medium: '#2563eb', low: 'var(--t3)' }
+const invoiceStatusColor: Record<string, string> = { draft: 'var(--t3)', sent: '#f59e0b', paid: '#10b981', overdue: '#ef4444' }
 const invoiceNextStatus: Record<string, string> = { draft: 'sent', sent: 'paid', paid: 'draft', overdue: 'paid' }
 const gbp = (n: number) => n.toLocaleString('en-GB', { style: 'currency', currency: 'GBP', minimumFractionDigits: 0, maximumFractionDigits: 0 })
 
@@ -130,15 +130,15 @@ export default function ProjectDetailPage() {
   // Must sit above the early returns below — rules-of-hooks.
   const [now] = useState(() => Date.now())
 
-  if (loading) return <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#52749a', fontFamily: 'var(--font-system)' }}>Loading…</div>
+  if (loading) return <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>Loading…</div>
   if (error || !project) return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 16, padding: 24 }}>
       <div style={{ color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 16 }}>{error || 'Project not found'}</div>
       <Link href="/projects" style={{ color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 14 }}>← Back to projects</Link>
     </div>
   )
 
-  const sc = statusColor[project.status] || '#52749a'
+  const sc = statusColor[project.status] || 'var(--t3)'
   const margin = project.budget > 0 ? Math.round(((project.budget - project.spent) / project.budget) * 100) : 0
   const openTasks = project.tasks?.filter(t => t.status !== 'done') || []
   const doneTasks = project.tasks?.filter(t => t.status === 'done') || []
@@ -470,24 +470,24 @@ export default function ProjectDetailPage() {
   }
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 10, padding: '11px 14px', color: '#eef3fa',
+    width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 10, padding: '11px 14px', color: 'var(--t1)',
     fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box',
   }
   const labelStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700,
+    fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700,
     textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
       {/* Header */}
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Project command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/projects" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Projects</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Projects</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
           <div style={{ flex: 1, minWidth: 0, marginRight: 12 }}>
@@ -500,15 +500,15 @@ export default function ProjectDetailPage() {
                 <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, background: 'rgba(239,68,68,0.15)', color: '#ef4444', padding: '2px 7px', borderRadius: 5 }}>OVERDUE</span>
               )}
             </div>
-            <h1 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: 'var(--font-system)' }}>{project.name}</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)' }}>{project.clientName}{project.postcode ? ` · ${project.postcode}` : ''}</p>
+            <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: 'var(--font-system)' }}>{project.name}</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>{project.clientName}{project.postcode ? ` · ${project.postcode}` : ''}</p>
           </div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Link href={`/projects/${id}/board`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', border: '0.5px solid rgba(245,158,11,0.2)', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Board</Link>
             <Link href={`/projects/${id}/programme`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: '0.5px solid rgba(16,185,129,0.2)', color: '#10b981', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Programme</Link>
             <Link href={`/projects/${id}/gallery`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(37,99,235,0.1)', border: '0.5px solid rgba(37,99,235,0.2)', color: '#2563eb', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Gallery</Link>
-            <button onClick={() => { setEditForm({ status: project.status, progress: project.progress.toString(), budget: project.budget.toString(), name: project.name, clientName: project.clientName, startDate: project.startDate?.split('T')[0] || '', endDate: project.endDate?.split('T')[0] || '' }); setConfirmDeleteProject(false); setShowEditModal(true) }} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.1)', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer' }}>Edit</button>
-            <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 28, fontWeight: 700, color: sc }}>{project.progress}<span style={{ fontSize: 14, color: '#52749a' }}>%</span></div>
+            <button onClick={() => { setEditForm({ status: project.status, progress: project.progress.toString(), budget: project.budget.toString(), name: project.name, clientName: project.clientName, startDate: project.startDate?.split('T')[0] || '', endDate: project.endDate?.split('T')[0] || '' }); setConfirmDeleteProject(false); setShowEditModal(true) }} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer' }}>Edit</button>
+            <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 28, fontWeight: 700, color: sc }}>{project.progress}<span style={{ fontSize: 14, color: 'var(--t3)' }}>%</span></div>
           </div>
         </div>
         <div style={{ width: '100%', height: 4, background: 'rgba(255,255,255,0.07)', borderRadius: 2, overflow: 'hidden', marginTop: 10 }}>
@@ -516,7 +516,7 @@ export default function ProjectDetailPage() {
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 12, overflowX: 'auto' }}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: tab === t.id ? 700 : 400, color: tab === t.id ? '#f59e0b' : '#52749a', borderBottom: `2px solid ${tab === t.id ? '#f59e0b' : 'transparent'}`, whiteSpace: 'nowrap' }}>{t.label}</button>
+            <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: tab === t.id ? 700 : 400, color: tab === t.id ? '#f59e0b' : 'var(--t3)', borderBottom: `2px solid ${tab === t.id ? '#f59e0b' : 'transparent'}`, whiteSpace: 'nowrap' }}>{t.label}</button>
           ))}
         </div>
       </div>
@@ -527,16 +527,16 @@ export default function ProjectDetailPage() {
           <div>
             <InfoCard label="Client" value={project.clientName || '—'} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginTop: 12 }}>
-              <StatCard label="Budget" value={project.budget > 0 ? `£${(project.budget/1000).toFixed(0)}k` : '—'} sub="total" color="#eef3fa" />
+              <StatCard label="Budget" value={project.budget > 0 ? `£${(project.budget/1000).toFixed(0)}k` : '—'} sub="total" color="var(--t1)" />
               <StatCard label="Spent" value={project.budget > 0 ? `£${(project.spent/1000).toFixed(0)}k` : '—'} sub={project.budget > 0 ? `${Math.round(project.spent/project.budget*100)}% used` : '—'} color="#f59e0b" />
               <StatCard label="Margin" value={project.budget > 0 ? `${margin}%` : '—'} sub="remaining" color={margin > 20 ? '#10b981' : margin > 10 ? '#f59e0b' : '#ef4444'} />
               <StatCard label="On site" value={project.onSiteCount.toString()} sub="today" color="#2563eb" />
             </div>
             {(project.startDate || project.endDate) && (
-              <div style={{ marginTop: 12, background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+              <div style={{ marginTop: 12, background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
                 <div style={{ display: 'flex', gap: 24 }}>
-                  {project.startDate && <div><div style={labelStyle}>Started</div><div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa' }}>{new Date(project.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}</div></div>}
-                  {project.endDate && <div><div style={labelStyle}>Due</div><div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: daysLeft !== null && daysLeft <= 7 ? '#ef4444' : '#eef3fa' }}>{new Date(project.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}{daysLeft !== null && <span style={{ color: '#52749a', fontSize: 11 }}> ({daysLeft > 0 ? `${daysLeft}d left` : daysLeft === 0 ? 'today' : 'overdue'})</span>}</div></div>}
+                  {project.startDate && <div><div style={labelStyle}>Started</div><div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)' }}>{new Date(project.startDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}</div></div>}
+                  {project.endDate && <div><div style={labelStyle}>Due</div><div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: daysLeft !== null && daysLeft <= 7 ? '#ef4444' : 'var(--t1)' }}>{new Date(project.endDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: '2-digit' })}{daysLeft !== null && <span style={{ color: 'var(--t3)', fontSize: 11 }}> ({daysLeft > 0 ? `${daysLeft}d left` : daysLeft === 0 ? 'today' : 'overdue'})</span>}</div></div>}
                 </div>
               </div>
             )}
@@ -552,13 +552,13 @@ export default function ProjectDetailPage() {
                   {project.documents.map(doc => {
                     const expiring = doc.expiresAt && new Date(doc.expiresAt).getTime() < documentExpiryThreshold
                     return (
-                      <div key={doc.id} style={{ background: '#152641', borderRadius: 10, padding: '10px 12px', border: `0.5px solid ${expiring ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', gap: 10 }}>
-                        <IcDoc size={16} color={expiring ? '#ef4444' : '#52749a'} />
+                      <div key={doc.id} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '10px 12px', border: `0.5px solid ${expiring ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'center', gap: 10 }}>
+                        <IcDoc size={16} color={expiring ? '#ef4444' : 'var(--t3)'} />
                         <div style={{ flex: 1 }}>
-                          <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa' }}>{doc.name}</div>
-                          {doc.expiresAt && <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: expiring ? '#ef4444' : '#52749a', marginTop: 1 }}>Expires {new Date(doc.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}{expiring ? ' ⚠' : ''}</div>}
+                          <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)' }}>{doc.name}</div>
+                          {doc.expiresAt && <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: expiring ? '#ef4444' : 'var(--t3)', marginTop: 1 }}>Expires {new Date(doc.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}{expiring ? ' ⚠' : ''}</div>}
                         </div>
-                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, textTransform: 'capitalize' }}>{doc.type}</span>
+                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, textTransform: 'capitalize' }}>{doc.type}</span>
                         <button onClick={() => deleteDocument(doc.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, opacity: 0.5 }}>
                           <IcX size={12} color="#ef4444" />
                         </button>
@@ -567,7 +567,7 @@ export default function ProjectDetailPage() {
                   })}
                 </div>
               ) : (
-                <p style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a', fontStyle: 'italic' }}>No documents yet</p>
+                <p style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)', fontStyle: 'italic' }}>No documents yet</p>
               )}
             </div>
             {project.activities && project.activities.length > 0 && (
@@ -576,15 +576,15 @@ export default function ProjectDetailPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {project.activities.slice(0, 5).map(act => (
                     <div key={act.id} style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '8px 0', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
-                      <div style={{ width: 28, height: 28, borderRadius: 8, background: '#152641', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
+                      <div style={{ width: 28, height: 28, borderRadius: 8, background: 'var(--surface-raised)', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                         <span style={{ fontSize: 12 }}>
                           {act.iconType === 'camera' ? '📷' : act.iconType === 'mic' ? '🎙' : act.iconType === 'receipt' ? '🧾' : act.iconType === 'alert' ? '⚠️' : act.iconType === 'hardhat' ? '👷' : '✓'}
                         </span>
                       </div>
                       <div style={{ flex: 1, minWidth: 0 }}>
-                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5' }}><span style={{ color: '#eef3fa', fontWeight: 600 }}>{act.actorName}</span> {act.action}</span>
+                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)' }}><span style={{ color: 'var(--t1)', fontWeight: 600 }}>{act.actorName}</span> {act.action}</span>
                       </div>
-                      <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', flexShrink: 0 }}>{new Date(act.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                      <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', flexShrink: 0 }}>{new Date(act.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                     </div>
                   ))}
                 </div>
@@ -595,14 +595,14 @@ export default function ProjectDetailPage() {
                 <p style={{ ...labelStyle, marginBottom: 8 }}>Recent comments</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {recentComments.map(c => (
-                    <div key={c.id} style={{ background: '#152641', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.05)' }}>
+                    <div key={c.id} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.05)' }}>
                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 }}>
-                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, color: '#eef3fa' }}>{c.authorName}</span>
-                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a' }}>{new Date(c.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, color: 'var(--t1)' }}>{c.authorName}</span>
+                        <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)' }}>{new Date(c.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
                       </div>
-                      <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', margin: 0, lineHeight: 1.4 }}>{c.body}</p>
+                      <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', margin: 0, lineHeight: 1.4 }}>{c.body}</p>
                       {c.task && (
-                        <p style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', marginTop: 4 }}>on: {c.task.title}</p>
+                        <p style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>on: {c.task.title}</p>
                       )}
                     </div>
                   ))}
@@ -616,27 +616,27 @@ export default function ProjectDetailPage() {
         {tab === 'tasks' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>{openTasks.length} open · {doneTasks.length} done</span>
+              <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>{openTasks.length} open · {doneTasks.length} done</span>
               <button onClick={() => setShowTaskModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={14} color="#fff" /> Add task
               </button>
             </div>
             {openTasks.length === 0 && doneTasks.length === 0 && (
-              <div style={{ textAlign: 'center', color: '#52749a', padding: '40px 0', fontFamily: 'var(--font-system)', fontSize: 14 }}>No tasks yet — add one above</div>
+              <div style={{ textAlign: 'center', color: 'var(--t3)', padding: '40px 0', fontFamily: 'var(--font-system)', fontSize: 14 }}>No tasks yet — add one above</div>
             )}
             {openTasks.length > 0 && (
               <div style={{ marginBottom: 16 }}>
                 <p style={{ ...labelStyle, marginBottom: 8 }}>Open · {openTasks.length}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {openTasks.map(task => (
-                    <div key={task.id} onClick={() => toggleTask(task)} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${task.priority === 'critical' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
-                      <div style={{ width: 22, height: 22, borderRadius: 7, background: `${priorityColor[task.priority] || '#52749a'}22`, border: `1.5px solid ${priorityColor[task.priority] || '#52749a'}`, flexShrink: 0, marginTop: 1 }} />
+                    <div key={task.id} onClick={() => toggleTask(task)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${task.priority === 'critical' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                      <div style={{ width: 22, height: 22, borderRadius: 7, background: `${priorityColor[task.priority] || 'var(--t3)'}22`, border: `1.5px solid ${priorityColor[task.priority] || 'var(--t3)'}`, flexShrink: 0, marginTop: 1 }} />
                       <div style={{ flex: 1 }}>
-                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{task.title}</div>
-                        {task.description && <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#52749a', marginTop: 2, lineHeight: 1.4 }}>{task.description}</div>}
+                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{task.title}</div>
+                        {task.description && <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t3)', marginTop: 2, lineHeight: 1.4 }}>{task.description}</div>}
                         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 3 }}>
-                          <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: priorityColor[task.priority] || '#52749a', textTransform: 'capitalize' }}>{task.priority}</span>
-                          {task.dueDate && <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IcClock size={10} color="#52749a" /><span style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a' }}>{new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></div>}
+                          <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: priorityColor[task.priority] || 'var(--t3)', textTransform: 'capitalize' }}>{task.priority}</span>
+                          {task.dueDate && <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}><IcClock size={10} color="var(--t3)" /><span style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)' }}>{new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span></div>}
                         </div>
                       </div>
                       {task.assignee && <Avatar name={task.assignee.name} color={task.assignee.avatarColor} size={24} />}
@@ -650,9 +650,9 @@ export default function ProjectDetailPage() {
                 <p style={{ ...labelStyle, marginBottom: 8 }}>Done · {doneTasks.length}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {doneTasks.map(task => (
-                    <div key={task.id} onClick={() => toggleTask(task)} style={{ background: '#152641', borderRadius: 12, padding: '10px 14px', border: '0.5px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 10, opacity: 0.5, cursor: 'pointer' }}>
+                    <div key={task.id} onClick={() => toggleTask(task)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '10px 14px', border: '0.5px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 10, opacity: 0.5, cursor: 'pointer' }}>
                       <IcCheck size={14} color="#10b981" />
-                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', textDecoration: 'line-through' }}>{task.title}</div>
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', textDecoration: 'line-through' }}>{task.title}</div>
                     </div>
                   ))}
                 </div>
@@ -665,24 +665,24 @@ export default function ProjectDetailPage() {
         {tab === 'team' && (
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
-              <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>{project.assignments?.length || 0} assigned</span>
+              <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>{project.assignments?.length || 0} assigned</span>
               <button onClick={openAssignModal} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={14} color="#fff" /> Add member
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
-              {project.assignments?.length === 0 && <div style={{ textAlign: 'center', color: '#52749a', padding: '40px 0', fontFamily: 'var(--font-system)', fontSize: 14 }}>No team assigned yet</div>}
+              {project.assignments?.length === 0 && <div style={{ textAlign: 'center', color: 'var(--t3)', padding: '40px 0', fontFamily: 'var(--font-system)', fontSize: 14 }}>No team assigned yet</div>}
               {project.assignments?.map(a => (
-                <div key={a.id} style={{ background: '#152641', borderRadius: 14, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                <div key={a.id} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12 }}>
                   <div style={{ position: 'relative' }}>
                     <Avatar name={a.member?.name || '?'} color={a.member?.avatarColor || '#2563eb'} size={40} />
                     {a.onSite && <div style={{ position: 'absolute', bottom: 1, right: 1, width: 10, height: 10, borderRadius: 5, background: '#10b981', border: '1.5px solid #06101e' }} />}
                   </div>
                   <div style={{ flex: 1 }}>
-                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, fontWeight: 600, color: '#eef3fa' }}>{a.member?.name}</div>
-                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', marginTop: 1 }}>{a.role || a.member?.role}</div>
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, fontWeight: 600, color: 'var(--t1)' }}>{a.member?.name}</div>
+                    <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', marginTop: 1 }}>{a.role || a.member?.role}</div>
                   </div>
-                  <button onClick={() => toggleAssignmentOnSite(a.id, a.onSite)} style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: a.onSite ? '#10b981' : '#52749a', background: a.onSite ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${a.onSite ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}`, padding: '4px 8px', borderRadius: 6, cursor: 'pointer' }}>
+                  <button onClick={() => toggleAssignmentOnSite(a.id, a.onSite)} style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: a.onSite ? '#10b981' : 'var(--t3)', background: a.onSite ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${a.onSite ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}`, padding: '4px 8px', borderRadius: 6, cursor: 'pointer' }}>
                     {a.onSite ? '● ON SITE' : 'OFF SITE'}
                   </button>
                   <button onClick={() => removeAssignment(a.id, a.member?.name || 'member')} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
@@ -701,11 +701,11 @@ export default function ProjectDetailPage() {
               <p style={{ ...labelStyle, marginBottom: 0 }}>Commercial control</p>
               <a href={`/api/projects/${id}/commercial/export`} style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#2563eb', textDecoration: 'none', padding: '6px 9px', borderRadius: 8, background: 'rgba(37,99,235,0.10)' }}>Export CSV</a>
             </div>
-            {commercialLoading && <div style={{ color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 12, padding: '12px 0' }}>Calculating commercial position…</div>}
+            {commercialLoading && <div style={{ color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, padding: '12px 0' }}>Calculating commercial position…</div>}
             {commercial && (
               <>
                 <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2,minmax(0,1fr))', gap: 8, marginBottom: 10 }}>
-                  <CommercialMetric label="Adjusted contract" value={gbp(commercial.adjustedContractValue)} sub={`${gbp(commercial.approvedVariations)} approved variations`} color="#eef3fa" />
+                  <CommercialMetric label="Adjusted contract" value={gbp(commercial.adjustedContractValue)} sub={`${gbp(commercial.approvedVariations)} approved variations`} color="var(--t1)" />
                   <CommercialMetric label="Earned value" value={gbp(commercial.earnedValue)} sub={`${project.progress}% physical progress`} color="#06b6d4" />
                   <CommercialMetric label="Applied to date" value={gbp(commercial.appliedToDate)} sub="latest valuation" color="#3b82f6" />
                   <CommercialMetric label="Certified" value={gbp(commercial.certifiedToDate)} sub={`${gbp(commercial.retentionHeld)} retention held`} color="#f59e0b" />
@@ -714,13 +714,13 @@ export default function ProjectDetailPage() {
                   <CommercialMetric label="Forecast cost" value={gbp(commercial.forecastCost)} sub={`${gbp(commercial.openCommitments)} open commitments`} color="#ef4444" />
                   <CommercialMetric label="Forecast margin" value={gbp(commercial.forecastMargin)} sub={`${commercial.forecastMarginPct.toFixed(1)}% of adjusted contract`} color={commercial.forecastMarginPct >= 15 ? '#10b981' : commercial.forecastMarginPct >= 5 ? '#f59e0b' : '#ef4444'} />
                 </div>
-                <div style={{ background: '#152641', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 14 }}>
+                <div style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 14 }}>
                   <div style={{ display: 'grid', gridTemplateColumns: '1fr auto', rowGap: 6, columnGap: 10, fontFamily: 'var(--font-system)', fontSize: 11 }}>
-                    <span style={{ color: '#8ea8c5' }}>Recorded project cost</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.recordedCost)}</strong>
-                    <span style={{ color: '#8ea8c5' }}>Cost coding</span><strong style={{ color: commercial.uncodedCost > 0 ? '#f59e0b' : '#10b981' }}>{commercial.costCodingPct.toFixed(1)}% · {gbp(commercial.uncodedCost)} uncoded</strong>
-                    <span style={{ color: '#8ea8c5' }}>PO commitments</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.committedPOs)}</strong>
-                    <span style={{ color: '#8ea8c5' }}>Approved subcontract liabilities</span><strong style={{ color: '#eef3fa' }}>{gbp(commercial.approvedSubcontract)}</strong>
-                    <span style={{ color: '#8ea8c5' }}>Valuation cash less recorded cost</span><strong style={{ color: commercial.cashPosition >= 0 ? '#10b981' : '#ef4444' }}>{gbp(commercial.cashPosition)}</strong>
+                    <span style={{ color: 'var(--t2)' }}>Recorded project cost</span><strong style={{ color: 'var(--t1)' }}>{gbp(commercial.recordedCost)}</strong>
+                    <span style={{ color: 'var(--t2)' }}>Cost coding</span><strong style={{ color: commercial.uncodedCost > 0 ? '#f59e0b' : '#10b981' }}>{commercial.costCodingPct.toFixed(1)}% · {gbp(commercial.uncodedCost)} uncoded</strong>
+                    <span style={{ color: 'var(--t2)' }}>PO commitments</span><strong style={{ color: 'var(--t1)' }}>{gbp(commercial.committedPOs)}</strong>
+                    <span style={{ color: 'var(--t2)' }}>Approved subcontract liabilities</span><strong style={{ color: 'var(--t1)' }}>{gbp(commercial.approvedSubcontract)}</strong>
+                    <span style={{ color: 'var(--t2)' }}>Valuation cash less recorded cost</span><strong style={{ color: commercial.cashPosition >= 0 ? '#10b981' : '#ef4444' }}>{gbp(commercial.cashPosition)}</strong>
                   </div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 10, overflowX: 'auto' }}>
                     <Link href="/valuations" style={commercialLinkStyle}>Valuations</Link>
@@ -733,7 +733,7 @@ export default function ProjectDetailPage() {
                   <div style={{ background: '#0f1d31', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 14 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', marginBottom: 9 }}>
                       <div>
-                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 800, color: '#eef3fa' }}>Cost-code control</div>
+                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 800, color: 'var(--t1)' }}>Cost-code control</div>
                         <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#6f8cac', marginTop: 2 }}>{costControl.breakdown.length} buckets · net cost basis</div>
                       </div>
                       <div style={{ display: 'flex', gap: 6 }}><Link href="/cost-codes" style={commercialLinkStyle}>Manage codes</Link><Link href="/receipts" style={commercialLinkStyle}>Review receipts</Link></div>
@@ -748,7 +748,7 @@ export default function ProjectDetailPage() {
                               <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: row.costCodeId ? '#dce8f6' : '#f59e0b', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{row.code} · {row.name}</div>
                               <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#6f8cac', marginTop: 1 }}>{gbp(row.actualNet)} actual + {gbp(row.openCommitments)} open</div>
                             </div>
-                            <strong style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#eef3fa' }}>{gbp(row.forecastNet)}</strong>
+                            <strong style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t1)' }}>{gbp(row.forecastNet)}</strong>
                           </div>
                         ))}
                       </div>
@@ -761,13 +761,13 @@ export default function ProjectDetailPage() {
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
               <div style={{ background: 'rgba(16,185,129,0.08)', border: '0.5px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: 12 }}>
                 <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Invoiced</div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, fontWeight: 700, color: '#eef3fa' }}>£{(totalInvoiced/1000).toFixed(1)}k</div>
-                <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>{project.invoices?.length || 0} invoices</div>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, fontWeight: 700, color: 'var(--t1)' }}>£{(totalInvoiced/1000).toFixed(1)}k</div>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>{project.invoices?.length || 0} invoices</div>
               </div>
               <div style={{ background: 'rgba(16,185,129,0.08)', border: '0.5px solid rgba(16,185,129,0.2)', borderRadius: 14, padding: 12 }}>
                 <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Collected</div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, fontWeight: 700, color: '#eef3fa' }}>£{(paid/1000).toFixed(1)}k</div>
-                <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>{project.invoices?.filter(i => i.status === 'paid').length || 0} paid</div>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, fontWeight: 700, color: 'var(--t1)' }}>£{(paid/1000).toFixed(1)}k</div>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>{project.invoices?.filter(i => i.status === 'paid').length || 0} paid</div>
               </div>
             </div>
 
@@ -783,18 +783,18 @@ export default function ProjectDetailPage() {
             </div>
 
             {(!project.invoices || project.invoices.length === 0) && (
-              <div style={{ textAlign: 'center', color: '#52749a', padding: '30px 0', fontFamily: 'var(--font-system)', fontSize: 14 }}>No invoices yet</div>
+              <div style={{ textAlign: 'center', color: 'var(--t3)', padding: '30px 0', fontFamily: 'var(--font-system)', fontSize: 14 }}>No invoices yet</div>
             )}
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {project.invoices?.map(inv => {
-                const ic = invoiceStatusColor[inv.status] || '#52749a'
+                const ic = invoiceStatusColor[inv.status] || 'var(--t3)'
                 return (
-                  <div key={inv.id} style={{ background: '#152641', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12 }}>
+                  <div key={inv.id} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12 }}>
                     <div onClick={() => cycleInvoiceStatus(inv)} style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: ic, flexShrink: 0, cursor: 'pointer' }} />
                     <div onClick={() => cycleInvoiceStatus(inv)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
-                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#8ea8c5' }}>{inv.number}</div>
-                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', fontWeight: 500, marginTop: 1 }}>{inv.clientName}</div>
+                      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t2)' }}>{inv.number}</div>
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', fontWeight: 500, marginTop: 1 }}>{inv.clientName}</div>
                     </div>
                     <div onClick={() => cycleInvoiceStatus(inv)} style={{ textAlign: 'right', cursor: 'pointer' }}>
                       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: ic, fontWeight: 700 }}>£{inv.amount.toLocaleString()}</div>
@@ -814,7 +814,7 @@ export default function ProjectDetailPage() {
               })}
             </div>
             {project.invoices && project.invoices.length > 0 && (
-              <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', textAlign: 'center', marginTop: 8 }}>Tap an invoice to advance its status</p>
+              <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', textAlign: 'center', marginTop: 8 }}>Tap an invoice to advance its status</p>
             )}
           </div>
         )}
@@ -826,10 +826,10 @@ export default function ProjectDetailPage() {
       {showTaskModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowTaskModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Add task</h3>
-              <button onClick={() => setShowTaskModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Add task</h3>
+              <button onClick={() => setShowTaskModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
               <label style={labelStyle}>Title *</label>
@@ -843,7 +843,7 @@ export default function ProjectDetailPage() {
               <label style={labelStyle}>Priority</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {PRIORITIES.map(p => (
-                  <button key={p} onClick={() => setTaskForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: taskForm.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${taskForm.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: taskForm.priority === p ? priorityColor[p] : '#8ea8c5', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{p}</button>
+                  <button key={p} onClick={() => setTaskForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: taskForm.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${taskForm.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: taskForm.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{p}</button>
                 ))}
               </div>
             </div>
@@ -869,10 +869,10 @@ export default function ProjectDetailPage() {
       {showInvoiceModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowInvoiceModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>New invoice</h3>
-              <button onClick={() => setShowInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>New invoice</h3>
+              <button onClick={() => setShowInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {[
               { key: 'number', label: 'Invoice number *', placeholder: 'INV-001' },
@@ -892,7 +892,7 @@ export default function ProjectDetailPage() {
               <label style={labelStyle}>Status</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['draft', 'sent', 'paid'] as const).map(s => (
-                  <button key={s} onClick={() => setInvoiceForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: invoiceForm.status === s ? `${invoiceStatusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${invoiceForm.status === s ? invoiceStatusColor[s] : 'rgba(255,255,255,0.1)'}`, color: invoiceForm.status === s ? invoiceStatusColor[s] : '#8ea8c5', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{s}</button>
+                  <button key={s} onClick={() => setInvoiceForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: invoiceForm.status === s ? `${invoiceStatusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${invoiceForm.status === s ? invoiceStatusColor[s] : 'rgba(255,255,255,0.1)'}`, color: invoiceForm.status === s ? invoiceStatusColor[s] : 'var(--t2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{s}</button>
                 ))}
               </div>
             </div>
@@ -907,10 +907,10 @@ export default function ProjectDetailPage() {
       {showEditModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowEditModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Edit project</h3>
-              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Edit project</h3>
+              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
               <label style={labelStyle}>Project name</label>
@@ -924,7 +924,7 @@ export default function ProjectDetailPage() {
               <label style={labelStyle}>Status</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {STATUSES.map(s => (
-                  <button key={s} onClick={() => setEditForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: editForm.status === s ? `${statusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${editForm.status === s ? statusColor[s] : 'rgba(255,255,255,0.1)'}`, color: editForm.status === s ? statusColor[s] : '#8ea8c5', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{statusLabel[s]}</button>
+                  <button key={s} onClick={() => setEditForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: editForm.status === s ? `${statusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${editForm.status === s ? statusColor[s] : 'rgba(255,255,255,0.1)'}`, color: editForm.status === s ? statusColor[s] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{statusLabel[s]}</button>
                 ))}
               </div>
             </div>
@@ -953,14 +953,14 @@ export default function ProjectDetailPage() {
                 Restore from archive
               </button>
             ) : (
-              <button onClick={archiveProject} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(82,116,154,0.1)', border: '1px solid rgba(82,116,154,0.3)', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button onClick={archiveProject} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(82,116,154,0.1)', border: '1px solid rgba(82,116,154,0.3)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Archive project (recoverable)
               </button>
             )}
 
             {confirmDeleteProject ? (
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setConfirmDeleteProject(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setConfirmDeleteProject(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                 <button onClick={deleteProject} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Delete forever</button>
               </div>
             ) : (
@@ -976,13 +976,13 @@ export default function ProjectDetailPage() {
       {showAssignModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAssignModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Assign team member</h3>
-              <button onClick={() => setShowAssignModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Assign team member</h3>
+              <button onClick={() => setShowAssignModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {availableTeam.length === 0 ? (
-              <p style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: '#52749a', textAlign: 'center', padding: '20px 0' }}>All team members are already assigned to this project.</p>
+              <p style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: 'var(--t3)', textAlign: 'center', padding: '20px 0' }}>All team members are already assigned to this project.</p>
             ) : (
               <>
                 <div>
@@ -1008,10 +1008,10 @@ export default function ProjectDetailPage() {
       {showEditInvoiceModal && editInvoice && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowEditInvoiceModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Edit {editInvoice.number}</h3>
-              <button onClick={() => setShowEditInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Edit {editInvoice.number}</h3>
+              <button onClick={() => setShowEditInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
               <label style={labelStyle}>Amount (£) *</label>
@@ -1040,10 +1040,10 @@ export default function ProjectDetailPage() {
       {showDocModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowDocModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Add document</h3>
-              <button onClick={() => setShowDocModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Add document</h3>
+              <button onClick={() => setShowDocModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
               <label style={labelStyle}>Document name *</label>
@@ -1053,7 +1053,7 @@ export default function ProjectDetailPage() {
               <label style={labelStyle}>Type</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['rams', 'report', 'photo', 'other'] as const).map(t => (
-                  <button key={t} onClick={() => setDocForm(p => ({ ...p, type: t }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: docForm.type === t ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${docForm.type === t ? '#f59e0b' : 'rgba(255,255,255,0.1)'}`, color: docForm.type === t ? '#f59e0b' : '#8ea8c5', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
+                  <button key={t} onClick={() => setDocForm(p => ({ ...p, type: t }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: docForm.type === t ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${docForm.type === t ? '#f59e0b' : 'rgba(255,255,255,0.1)'}`, color: docForm.type === t ? '#f59e0b' : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
                     {t}
                   </button>
                 ))}
@@ -1074,33 +1074,33 @@ export default function ProjectDetailPage() {
 }
 
 const commercialLinkStyle: React.CSSProperties = {
-  flexShrink: 0, fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: '#8ea8c5', textDecoration: 'none',
+  flexShrink: 0, fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: 'var(--t2)', textDecoration: 'none',
   padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.08)',
 }
 
 function CommercialMetric({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
-  return <div style={{ background: '#152641', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)' }}>
-    <div style={{ fontFamily: 'var(--font-system)', fontSize: 9, fontWeight: 800, color: '#52749a', textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
+  return <div style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: 11, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div style={{ fontFamily: 'var(--font-system)', fontSize: 9, fontWeight: 800, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div>
     <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 800, color, marginTop: 3 }}>{value}</div>
-    <div style={{ fontFamily: 'var(--font-system)', fontSize: 9, color: '#52749a', marginTop: 2, lineHeight: 1.3 }}>{sub}</div>
+    <div style={{ fontFamily: 'var(--font-system)', fontSize: 9, color: 'var(--t3)', marginTop: 2, lineHeight: 1.3 }}>{sub}</div>
   </div>
 }
 
 function InfoCard({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 8 }}>
-      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, color: '#eef3fa', marginTop: 4 }}>{value}</div>
+    <div style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', marginBottom: 8 }}>
+      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, color: 'var(--t1)', marginTop: 4 }}>{value}</div>
     </div>
   )
 }
 
 function StatCard({ label, value, sub, color }: { label: string; value: string; sub: string; color: string }) {
   return (
-    <div style={{ background: '#152641', borderRadius: 12, padding: '12px 12px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
-      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+    <div style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 12px', border: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, fontWeight: 700, color, marginTop: 4, letterSpacing: -0.5 }}>{value}</div>
-      <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', marginTop: 2 }}>{sub}</div>
+      <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{sub}</div>
     </div>
   )
 }

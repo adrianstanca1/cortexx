@@ -49,10 +49,10 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
       {/* Header */}
       <div style={{ padding: '8px 20px 12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Dashboard</div>
-          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+          <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em' }}>Dashboard</div>
+          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : 'var(--t3)', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
         </div>
-        <div style={{ fontFamily: SF, fontSize: 13, color: '#8ea8c5', marginTop: 2 }}>{activeProject?.clientName || 'Cortexx'}</div>
+        <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t2)', marginTop: 2 }}>{activeProject?.clientName || 'Cortexx'}</div>
       </div>
 
       <div style={{ padding: '4px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -77,8 +77,8 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
                 }}>
                   ● ACTIVE NOW
                 </span>
-                <div style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa', marginTop: 8, letterSpacing: -0.3 }}>{activeProject.name}</div>
-                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
+                <div style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)', marginTop: 8, letterSpacing: -0.3 }}>{activeProject.name}</div>
+                <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>
                   {activeProject.onSiteCount || 0} on site · {activeProject.progress}% done
                 </div>
               </div>
@@ -100,14 +100,14 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
 
         {/* Cash card — col 1, spans 2 rows, with sparkline */}
         <div style={{
-          background: '#152641', borderRadius: 14, padding: 12,
+          background: 'var(--surface-raised)', borderRadius: 14, padding: 12,
           border: '0.5px solid rgba(255,255,255,0.07)', gridRow: 'span 2',
           display: 'flex', flexDirection: 'column', justifyContent: 'space-between',
         }}>
           <div>
             <div style={{ color: '#10b981', marginBottom: 4 }}><IcTrend size={14} color="#10b981" /></div>
-            <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Cash</div>
-            <div style={{ fontFamily: SFMono, fontSize: 22, color: '#eef3fa', fontWeight: 700, marginTop: 2, letterSpacing: -0.5 }}>{cashLabel}</div>
+            <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Cash</div>
+            <div style={{ fontFamily: SFMono, fontSize: 22, color: 'var(--t1)', fontWeight: 700, marginTop: 2, letterSpacing: -0.5 }}>{cashLabel}</div>
             <div style={{ fontFamily: SF, fontSize: 11, color: '#10b981', marginTop: 2, fontWeight: 500 }}>
               {cashflowDelta > 0 ? `£${cashflowDelta >= 1000 ? (cashflowDelta / 1000).toFixed(1) + 'k' : cashflowDelta} labour wk` : 'No hours this week'}
             </div>
@@ -120,26 +120,26 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
 
         {/* Owed — col 2 row 1 */}
         <div style={{
-          background: '#152641', borderRadius: 14, padding: 12,
+          background: 'var(--surface-raised)', borderRadius: 14, padding: 12,
           border: '0.5px solid rgba(255,255,255,0.07)',
         }}>
           <div style={{ color: '#f59e0b', marginBottom: 4 }}><IcReceipt size={14} color="#f59e0b" /></div>
-          <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Owed</div>
+          <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Owed</div>
           <div style={{ fontFamily: SFMono, fontSize: 18, color: '#f59e0b', fontWeight: 700, marginTop: 2 }}>{owedLabel}</div>
-          <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a' }}>
+          <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)' }}>
             {overdueInvoices.length > 0 ? `${overdueInvoices.length} overdue` : `${(data?.invoices || []).length} invoices`}
           </div>
         </div>
 
         {/* Hours — col 2 row 2 */}
         <div style={{
-          background: '#152641', borderRadius: 14, padding: 12,
+          background: 'var(--surface-raised)', borderRadius: 14, padding: 12,
           border: '0.5px solid rgba(255,255,255,0.07)',
         }}>
           <div style={{ color: accent, marginBottom: 4 }}><IcClock size={14} color={accent} /></div>
-          <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Hours</div>
-          <div style={{ fontFamily: SFMono, fontSize: 18, color: '#eef3fa', fontWeight: 700, marginTop: 2 }}>{hoursThisWeek}h</div>
-          <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a' }}>this week</div>
+          <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Hours</div>
+          <div style={{ fontFamily: SFMono, fontSize: 18, color: 'var(--t1)', fontWeight: 700, marginTop: 2 }}>{hoursThisWeek}h</div>
+          <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)' }}>this week</div>
         </div>
 
         {/* AI shortcut — wide */}
@@ -159,21 +159,21 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
             color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0,
           }}><IcSpark size={18} color="#fff" /></div>
           <div style={{ flex: 1 }}>
-            <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: '#eef3fa' }}>Ask Cortex anything</div>
-            <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>Ask about budgets, tasks, or site status</div>
+            <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>Ask Cortex anything</div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>Ask about budgets, tasks, or site status</div>
           </div>
-          <IcArrowRight size={16} color="#52749a" />
+          <IcArrowRight size={16} color="var(--t3)" />
         </div>
 
         {/* Alerts — wide */}
         {alerts.length > 0 && (
           <div style={{
             gridColumn: '1 / 3',
-            background: '#152641', borderRadius: 14, padding: '12px 14px',
+            background: 'var(--surface-raised)', borderRadius: 14, padding: '12px 14px',
             border: '0.5px solid rgba(255,255,255,0.07)',
           }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>Needs attention</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6 }}>Needs attention</div>
               <span style={{
                 padding: '2px 7px', borderRadius: 99,
                 background: 'rgba(239,68,68,0.15)', color: '#ef4444',
@@ -192,10 +192,10 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
                   <a.I size={13} color={a.c} />
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>
-                  <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.t}</div>
-                  <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5' }}>{a.s}</div>
+                  <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)', fontWeight: 500, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{a.t}</div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)' }}>{a.s}</div>
                 </div>
-                <IcArrowRight size={16} color="#52749a" />
+                <IcArrowRight size={16} color="var(--t3)" />
               </div>
             ))}
           </div>

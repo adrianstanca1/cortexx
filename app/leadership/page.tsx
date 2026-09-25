@@ -14,8 +14,8 @@ export default function LeadershipPage() {
     router.replace('/dashboard?v=13')
   }, [router])
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-      <p style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Opening executive view…</p>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+      <p style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Opening executive view…</p>
     </div>
   )
 }

@@ -9,23 +9,23 @@
 // ── Color tokens ────────────────────────────────────────────────────────────
 export const Colors = {
   // Surfaces (dark, blueprint ink-navy)
-  ink: '#06101e', // app background
-  ink2: '#0c1a30', // raised surface (sheets, tab bar)
-  ink3: '#13243f', // card surface
-  hair: '#22324d', // hairline borders
+  ink: '#090B0D', // app background
+  ink2: '#0F1316', // raised surface (sheets, tab bar)
+  ink3: '#171D22', // card surface
+  hair: '#293139', // hairline borders
   // Accents
-  amber: '#FFB000', // hi-vis primary accent
-  blue: '#2D7FF9', // electric blue secondary
-  purple: '#8B5CF6', // tertiary / info
+  amber: '#D7FF3F', // hi-vis primary accent
+  blue: '#64A8FF', // electric blue secondary
+  purple: '#A58BFF', // tertiary / info
   // Text
-  t1: '#F4F8FF', // primary text
-  t2: '#9FB2CC', // secondary text
-  t3: '#5E718E', // muted text
+  t1: '#F5F7F2', // primary text
+  t2: '#A7B2AA', // secondary text
+  t3: '#68756E', // muted text
   // Status / semantic
-  red: '#FF5C5C',
-  green: '#3DD68C',
-  yellow: '#FFC53D',
-  orange: '#FF8A3D',
+  red: '#FF6565',
+  green: '#45D18A',
+  yellow: '#E6FF78',
+  orange: '#FF9D4D',
 } as const;
 
 // Status → color map (reused by tickets, project pills, etc.)
@@ -94,14 +94,14 @@ export const Radius = {
 export const Elevation = {
   none: {},
   sm: {
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOpacity: 0.25,
     shadowRadius: 6,
     shadowOffset: { width: 0, height: 2 },
     elevation: 3,
   },
   md: {
-    shadowColor: '#000',
+    shadowColor: '#000000',
     shadowOpacity: 0.35,
     shadowRadius: 12,
     shadowOffset: { width: 0, height: 4 },

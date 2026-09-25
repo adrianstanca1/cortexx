@@ -218,15 +218,15 @@ export default function SmartParsePage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
       <div style={{ padding: '20px 20px 14px 60px', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
-        <h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa' }}>Smart Parse</h1>
-        <p style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 3 }}>Paste an email, brief or transcript. Cortex extracts records for you to review before saving.</p>
+        <h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: 'var(--t1)' }}>Smart Parse</h1>
+        <p style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 3 }}>Paste an email, brief or transcript. Cortex extracts records for you to review before saving.</p>
       </div>
 
       <div style={{ padding: 16, display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -235,7 +235,7 @@ export default function SmartParsePage() {
           onChange={e => { setText(e.target.value); setError(null) }}
           placeholder="Paste a site note, client email, voice transcript or commercial brief..."
           rows={8}
-          style={{ width: '100%', boxSizing: 'border-box', background: '#152641', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 14, color: '#eef3fa', padding: 14, fontFamily: SF, fontSize: 14, lineHeight: 1.5, resize: 'vertical', outline: 'none' }}
+          style={{ width: '100%', boxSizing: 'border-box', background: 'var(--surface-raised)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 14, color: 'var(--t1)', padding: 14, fontFamily: SF, fontSize: 14, lineHeight: 1.5, resize: 'vertical', outline: 'none' }}
         />
         <button
           type="button"
@@ -251,11 +251,11 @@ export default function SmartParsePage() {
           <>
             <div style={{ background: 'rgba(139,92,246,0.09)', border: '1px solid rgba(139,92,246,0.2)', borderRadius: 12, padding: 12 }}>
               <div style={{ fontFamily: SF, fontSize: 11, color: '#a78bfa', fontWeight: 800, textTransform: 'uppercase', letterSpacing: 0.5 }}>Summary</div>
-              <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa', marginTop: 4 }}>{result.summary || 'Records extracted'}</div>
+              <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)', marginTop: 4 }}>{result.summary || 'Records extracted'}</div>
             </div>
 
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-              <span style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5' }}>{result.records.length} record{result.records.length === 1 ? '' : 's'} found</span>
+              <span style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)' }}>{result.records.length} record{result.records.length === 1 ? '' : 's'} found</span>
               {result.records.length > 0 && (
                 <button type="button" onClick={saveAll} disabled={savingAll} style={{ background: 'rgba(16,185,129,0.15)', color: '#10b981', border: '1px solid rgba(16,185,129,0.3)', borderRadius: 9, padding: '7px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                   {savingAll ? 'Saving...' : 'Save all ready'}
@@ -264,11 +264,11 @@ export default function SmartParsePage() {
             </div>
 
             {result.records.map((rec, index) => (
-              <div key={index} style={{ background: '#152641', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.08)', padding: 14 }}>
+              <div key={index} style={{ background: 'var(--surface-raised)', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.08)', padding: 14 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                   <div>
                     <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 800, color: '#a78bfa', textTransform: 'uppercase', letterSpacing: 0.6 }}>{rec.type} · {Math.round(rec.confidence * 100)}%</div>
-                    <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 700, color: '#eef3fa', marginTop: 3 }}>{rec.title}</div>
+                    <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 700, color: 'var(--t1)', marginTop: 3 }}>{rec.title}</div>
                   </div>
                   <button
                     type="button"
@@ -280,10 +280,10 @@ export default function SmartParsePage() {
                     {rec.saved ? 'Saved' : 'Save'}
                   </button>
                 </div>
-                {rec.reason && <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 6 }}>{rec.reason}</div>}
+                {rec.reason && <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 6 }}>{rec.reason}</div>}
                 <div style={{ display: 'flex', gap: 5, flexWrap: 'wrap', marginTop: 9 }}>
                   {Object.entries(rec.fields || {}).slice(0, 8).map(([key, value]) => (
-                    <span key={key} style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', background: 'rgba(255,255,255,0.05)', padding: '3px 6px', borderRadius: 5 }}>
+                    <span key={key} style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', background: 'rgba(255,255,255,0.05)', padding: '3px 6px', borderRadius: 5 }}>
                       {key}: {String(value)}
                     </span>
                   ))}

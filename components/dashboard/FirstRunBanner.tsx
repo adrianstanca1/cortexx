@@ -41,10 +41,10 @@ export default function FirstRunBanner({ data }: Props) {
         marginBottom: 16,
         fontFamily: 'var(--font-system)',
       }}>
-        <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
+        <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
           Welcome to Cortexx
         </h2>
-        <p style={{ fontSize: 13, color: '#8ea8c5', margin: '0 0 16px' }}>
+        <p style={{ fontSize: 13, color: 'var(--t2)', margin: '0 0 16px' }}>
           Your workspace is empty. Three things to get going:
         </p>
 
@@ -57,14 +57,14 @@ export default function FirstRunBanner({ data }: Props) {
               gap: 8,
               padding: '10px 14px',
               background: '#f59e0b',
-              color: '#06101e',
+              color: 'var(--bg0)',
               borderRadius: 10,
               textDecoration: 'none',
               fontSize: 13,
               fontWeight: 700,
             }}
           >
-            <IcPlus size={14} color="#06101e" />
+            <IcPlus size={14} color="var(--bg0)" />
             Create your first project
           </Link>
           <Link
@@ -75,7 +75,7 @@ export default function FirstRunBanner({ data }: Props) {
               gap: 8,
               padding: '10px 14px',
               background: 'transparent',
-              color: '#eef3fa',
+              color: 'var(--t1)',
               border: '0.5px solid rgba(255,255,255,0.15)',
               borderRadius: 10,
               textDecoration: 'none',
@@ -83,7 +83,7 @@ export default function FirstRunBanner({ data }: Props) {
               fontWeight: 700,
             }}
           >
-            <IcTeam size={14} color="#8ea8c5" />
+            <IcTeam size={14} color="var(--t2)" />
             Invite teammates
           </Link>
           <Link
@@ -94,7 +94,7 @@ export default function FirstRunBanner({ data }: Props) {
               gap: 8,
               padding: '10px 14px',
               background: 'transparent',
-              color: '#eef3fa',
+              color: 'var(--t1)',
               border: '0.5px solid rgba(255,255,255,0.15)',
               borderRadius: 10,
               textDecoration: 'none',
@@ -102,13 +102,13 @@ export default function FirstRunBanner({ data }: Props) {
               fontWeight: 700,
             }}
           >
-            <IcLayers size={14} color="#8ea8c5" />
+            <IcLayers size={14} color="var(--t2)" />
             Explore all apps
           </Link>
         </div>
 
-        <p style={{ fontSize: 11, color: '#52749a', margin: '14px 0 0' }}>
-          Stuck? <Link href="/help/getting-started" style={{ color: '#8ea8c5', textDecoration: 'underline' }}>Read the getting-started guide</Link>.
+        <p style={{ fontSize: 11, color: 'var(--t3)', margin: '14px 0 0' }}>
+          Stuck? <Link href="/help/getting-started" style={{ color: 'var(--t2)', textDecoration: 'underline' }}>Read the getting-started guide</Link>.
         </p>
       </div>
     </div>

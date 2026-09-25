@@ -14,7 +14,7 @@ interface LegalShellProps {
 export default function LegalShell({ title, updated, children }: LegalShellProps) {
   return (
     <div style={{
-      background: '#06101e',
+      background: 'var(--bg0)',
       color: '#e8eef7',
       minHeight: '100dvh',
       fontFamily: '-apple-system, "SF Pro Text", system-ui, sans-serif',

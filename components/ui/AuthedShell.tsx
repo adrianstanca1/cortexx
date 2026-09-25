@@ -28,24 +28,9 @@ export default function AuthedShell() {
         onClick={() => setDrawerOpen(true)}
         aria-label="Open menu"
         aria-expanded={drawerOpen}
-        style={{
-          position: 'fixed',
-          top: 'calc(12px + env(safe-area-inset-top, 0px))',
-          left: 12,
-          width: 40,
-          height: 40,
-          borderRadius: 12,
-          background: 'rgba(12,26,46,0.85)',
-          backdropFilter: 'blur(10px)',
-          border: '1px solid rgba(255,255,255,0.08)',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 150,
-        }}
+        className="shell-menu-btn"
       >
-        <IcMenu size={18} color="#eef3fa" />
+        <IcMenu size={18} color="currentColor" />
       </button>
       <DrawerMenu open={drawerOpen} onClose={() => setDrawerOpen(false)} />
       <UserMenu />

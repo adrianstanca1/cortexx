@@ -129,8 +129,8 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
         style={{ background: '#0a1a31', borderRadius: 14, padding: 20, maxWidth: 560, width: '100%', maxHeight: '85vh', overflowY: 'auto', border: '0.5px solid rgba(255,255,255,0.1)', fontFamily: 'var(--font-system)' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-          <h2 style={{ fontSize: 16, color: '#eef3fa', fontWeight: 700, margin: 0 }}>Edit record</h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: '#52749a', fontSize: 20, cursor: 'pointer', padding: 0 }}>×</button>
+          <h2 style={{ fontSize: 16, color: 'var(--t1)', fontWeight: 700, margin: 0 }}>Edit record</h2>
+          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--t3)', fontSize: 20, cursor: 'pointer', padding: 0 }}>×</button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -139,7 +139,7 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
             const current = edits[key] ?? valueToInput(value, t)
             return (
               <label key={key} style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                <span style={{ fontSize: 11, color: '#52749a', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{key}</span>
+                <span style={{ fontSize: 11, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{key}</span>
                 {t === 'boolean' ? (
                   <select
                     value={current}
@@ -161,7 +161,7 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
             )
           })}
           {fields.length === 0 && (
-            <div style={{ color: '#52749a', fontSize: 13, padding: 16, textAlign: 'center' }}>No editable fields.</div>
+            <div style={{ color: 'var(--t3)', fontSize: 13, padding: 16, textAlign: 'center' }}>No editable fields.</div>
           )}
         </div>
 
@@ -178,11 +178,11 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
             Delete
           </button>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={onClose} disabled={saving} style={{ ...btnStyle, color: '#8ea8c5' }}>Cancel</button>
+            <button onClick={onClose} disabled={saving} style={{ ...btnStyle, color: 'var(--t2)' }}>Cancel</button>
             <button
               onClick={save}
               disabled={saving || Object.keys(edits).length === 0}
-              style={{ ...btnStyle, background: '#f59e0b', color: '#06101e', borderColor: 'transparent', opacity: saving || Object.keys(edits).length === 0 ? 0.5 : 1 }}
+              style={{ ...btnStyle, background: '#f59e0b', color: 'var(--bg0)', borderColor: 'transparent', opacity: saving || Object.keys(edits).length === 0 ? 0.5 : 1 }}
             >
               {saving ? 'Saving…' : 'Save'}
             </button>
@@ -194,11 +194,11 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
 }
 
 const inputStyle: React.CSSProperties = {
-  background: '#152641',
+  background: 'var(--surface-raised)',
   border: '0.5px solid rgba(255,255,255,0.1)',
   borderRadius: 8,
   padding: '8px 10px',
-  color: '#eef3fa',
+  color: 'var(--t1)',
   fontFamily: 'var(--font-system)',
   fontSize: 13,
   outline: 'none',

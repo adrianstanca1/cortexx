@@ -156,18 +156,18 @@ export default function RisksPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
+      <div className="module-header" data-kicker="Risks command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF, display: 'flex', alignItems: 'center', gap: 8 }}>
               <IcAlert size={20} color="#ef4444" /> Risk register
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {risks.filter(r => r.status === 'open').length} open · {risks.filter(r => r.score >= 15 && r.status !== 'closed').length} high
             </p>
           </div>
@@ -180,21 +180,21 @@ export default function RisksPage() {
 
       {/* 5x5 risk matrix */}
       <div style={{ padding: '16px', overflowX: 'auto' }}>
-        <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>5 × 5 matrix (open + mitigated + accepted)</div>
+        <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', marginBottom: 10 }}>5 × 5 matrix (open + mitigated + accepted)</div>
         <div style={{ display: 'inline-grid', gridTemplateColumns: '32px repeat(5, 48px)', gap: 4 }}>
           <div />
           {[1, 2, 3, 4, 5].map(l => (
-            <div key={l} style={{ textAlign: 'center', fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700 }}>L{l}</div>
+            <div key={l} style={{ textAlign: 'center', fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700 }}>L{l}</div>
           ))}
           {[5, 4, 3, 2, 1].map((impact, rowIdx) => (
             <Fragment key={`row-${impact}`}>
-              <div style={{ textAlign: 'right', alignSelf: 'center', fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, paddingRight: 4 }}>I{impact}</div>
+              <div style={{ textAlign: 'right', alignSelf: 'center', fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700, paddingRight: 4 }}>I{impact}</div>
               {[1, 2, 3, 4, 5].map(likelihood => {
                 const score = likelihood * impact
                 const count = matrix[rowIdx][likelihood - 1]
                 const color = riskColor(score)
                 return (
-                  <div key={`${impact}-${likelihood}`} style={{ background: color + (count > 0 ? '99' : '22'), border: `0.5px solid ${color}66`, borderRadius: 6, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SF, fontSize: 11, color: count > 0 ? '#fff' : '#52749a', fontWeight: 700 }}>
+                  <div key={`${impact}-${likelihood}`} style={{ background: color + (count > 0 ? '99' : '22'), border: `0.5px solid ${color}66`, borderRadius: 6, height: 36, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SF, fontSize: 11, color: count > 0 ? '#fff' : 'var(--t3)', fontWeight: 700 }}>
                     {count > 0 ? count : score}
                   </div>
                 )
@@ -206,37 +206,37 @@ export default function RisksPage() {
 
       <div style={{ padding: '0 16px 12px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'open', 'mitigated', 'accepted', 'closed'] as const).map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#ef4444' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+          <button key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#ef4444' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
             {s}
           </button>
         ))}
       </div>
 
-      {loading && <div style={{ padding: 24, color: '#8ea8c5', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
+      {loading && <div style={{ padding: 24, color: 'var(--t2)', fontFamily: SF, fontSize: 13 }}>Loading…</div>}
       {error && <div style={{ padding: 24, color: '#fca5a5', fontFamily: SF, fontSize: 13 }}>{error}</div>}
       {!loading && risks.length === 0 && (
-        <div style={{ padding: '60px 20px', textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>No risks logged yet.</div>
+        <div style={{ padding: '60px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>No risks logged yet.</div>
       )}
 
       <div style={{ display: 'flex', flexDirection: 'column', gap: 8, padding: '0 16px' }}>
         {risks.map(r => {
           const color = riskColor(r.score)
           return (
-            <div key={r.id} style={{ background: '#152641', border: `0.5px solid ${color}33`, borderRadius: 12, padding: 14 }}>
+            <div key={r.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${color}33`, borderRadius: 12, padding: 14 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 8, marginBottom: 6 }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
-                    <span style={{ background: '#1a2f4e', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{CATEGORY_LABEL[r.category]}</span>
+                    <span style={{ background: 'var(--bg3)', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{CATEGORY_LABEL[r.category]}</span>
                     <span style={{ background: color + '33', color, padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{riskLabel(r.score)} · {r.score}</span>
                     <span style={{ background: STATUS_COLOR[r.status] + '33', color: STATUS_COLOR[r.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{r.status}</span>
                   </div>
-                  <div style={{ fontFamily: SF, fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>{r.title}</div>
-                  <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', marginTop: 2 }}>
+                  <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>{r.title}</div>
+                  <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                     {r.project?.name || '—'} · Likelihood {r.likelihood}/5 × Impact {r.impact}/5{r.owner ? ` · ${r.owner}` : ''}
                   </div>
                   {r.mitigation && (
                     <div style={{ marginTop: 8, padding: 8, background: '#0a1426', borderRadius: 6, fontFamily: SF, fontSize: 12, color: '#c1d2e8', whiteSpace: 'pre-wrap' }}>
-                      <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Mitigation</div>
+                      <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 4 }}>Mitigation</div>
                       {r.mitigation}
                     </div>
                   )}
@@ -246,7 +246,7 @@ export default function RisksPage() {
                 {r.status === 'open' && <button onClick={() => setStatus(r, 'mitigated')} style={pillBtn('#f59e0b')}>Mitigate</button>}
                 {r.status === 'open' && <button onClick={() => setStatus(r, 'accepted')} style={pillBtn('#06b6d4')}>Accept</button>}
                 {r.status !== 'closed' && <button onClick={() => setStatus(r, 'closed')} style={pillBtn('#10b981')}>Close</button>}
-                {r.status === 'closed' && <button onClick={() => setStatus(r, 'open')} style={pillBtn('#1a2f4e', '#c1d2e8')}>Reopen</button>}
+                {r.status === 'closed' && <button onClick={() => setStatus(r, 'open')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Reopen</button>}
                 <button onClick={() => setConfirmDelete(r.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                   <IcTrash size={11} color="#fca5a5" /> Delete
                 </button>
@@ -269,9 +269,9 @@ export default function RisksPage() {
         <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
           <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '90vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
-              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Log risk</h2>
+              <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Log risk</h2>
               <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
-                <IcX size={18} color="#52749a" />
+                <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
@@ -287,7 +287,7 @@ export default function RisksPage() {
               <Field label="Category">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(CATEGORY_LABEL) as Risk['category'][]).map(c => (
-                    <button key={c} onClick={() => setForm(f => ({ ...f, category: c }))} style={{ background: form.category === c ? '#ef4444' : '#152641', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.category === c ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button key={c} onClick={() => setForm(f => ({ ...f, category: c }))} style={{ background: form.category === c ? '#ef4444' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.category === c ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {CATEGORY_LABEL[c]}
                     </button>
                   ))}
@@ -327,9 +327,9 @@ export default function RisksPage() {
   )
 }
 
-const inputStyle = { background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
+const inputStyle = { background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '8px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 13, outline: 'none', width: '100%', boxSizing: 'border-box' as const }
 function Field({ label, children }: { label: string; children: React.ReactNode }) {
-  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
+  return <div><label style={{ display: 'block', fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 600, marginBottom: 4 }}>{label}</label>{children}</div>
 }
 function pillBtn(bg: string, color = '#fff', borderColor = 'rgba(255,255,255,0.1)'): React.CSSProperties {
   return { background: bg, border: `0.5px solid ${borderColor}`, borderRadius: 8, padding: '6px 10px', color, fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }

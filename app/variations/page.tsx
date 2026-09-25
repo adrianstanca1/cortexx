@@ -30,7 +30,7 @@ interface ApprovedTotals { costImpact: number; daysImpact: number }
 const SF = 'var(--font-system)'
 
 const STATUS_COLOR: Record<Variation['status'], string> = {
-  draft: '#52749a',
+  draft: 'var(--t3)',
   submitted: '#f59e0b',
   approved: '#22c55e',
   rejected: '#ef4444',
@@ -150,18 +150,18 @@ export default function VariationsPage() {
   const filtered = filter === 'all' ? variations : variations.filter(v => v.status === filter)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Variations command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Variations</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Variations</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {variations.length} total · {pendingCount} pending
             </p>
           </div>
@@ -173,7 +173,7 @@ export default function VariationsPage() {
         {(approvedTotals.costImpact !== 0 || approvedTotals.daysImpact !== 0) && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
             <div style={{ background: 'rgba(34,197,94,0.08)', border: '0.5px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '8px 12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 <IcPound size={11} color="#22c55e" /> Approved cost
               </div>
               <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, color: approvedTotals.costImpact >= 0 ? '#22c55e' : '#ef4444', fontWeight: 700, marginTop: 2 }}>
@@ -181,7 +181,7 @@ export default function VariationsPage() {
               </div>
             </div>
             <div style={{ background: 'rgba(34,197,94,0.08)', border: '0.5px solid rgba(34,197,94,0.3)', borderRadius: 10, padding: '8px 12px' }}>
-              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
+              <div style={{ display: 'flex', alignItems: 'center', gap: 4, fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 <IcClock size={11} color="#22c55e" /> Approved days
               </div>
               <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, color: approvedTotals.daysImpact >= 0 ? '#22c55e' : '#ef4444', fontWeight: 700, marginTop: 2 }}>
@@ -193,7 +193,7 @@ export default function VariationsPage() {
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'draft', 'submitted', 'approved', 'rejected'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#8b5cf6' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#8b5cf6' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -201,12 +201,12 @@ export default function VariationsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcWrench size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcWrench size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{variations.length === 0 ? 'No variations yet' : 'Nothing in this filter'}</p>
           {variations.length === 0 && projects.length > 0 && (
             <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#8b5cf6', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -217,14 +217,14 @@ export default function VariationsPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(v => (
-            <button key={v.id} onClick={() => setActiveVar(v)} style={{ background: '#152641', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button key={v.id} onClick={() => setActiveVar(v)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: '#52749a', letterSpacing: 0.5 }}>{v.number}</span>
-                {v.project && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>{v.project.name}</span>}
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: 'var(--t3)', letterSpacing: 0.5 }}>{v.number}</span>
+                {v.project && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{v.project.name}</span>}
                 <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 99, background: `${STATUS_COLOR[v.status]}22`, color: STATUS_COLOR[v.status], fontFamily: SF, fontSize: 9, fontWeight: 700, border: `1px solid ${STATUS_COLOR[v.status]}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{STATUS_LABEL[v.status]}</span>
               </div>
-              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{v.title}</div>
-              <div style={{ display: 'flex', gap: 12, fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>
+              <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{v.title}</div>
+              <div style={{ display: 'flex', gap: 12, fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>
                 <span style={{ fontFamily: 'ui-monospace, monospace', color: v.costImpact >= 0 ? '#f59e0b' : '#10b981', fontWeight: 600 }}>
                   {v.costImpact >= 0 ? '+' : ''}£{v.costImpact.toLocaleString('en-GB', { maximumFractionDigits: 0 })}
                 </span>
@@ -242,10 +242,10 @@ export default function VariationsPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF }}>Draft variation</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Draft variation</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What changed scope?" style={inputStyle} />
@@ -288,23 +288,23 @@ export default function VariationsPage() {
       {activeVar && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setActiveVar(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', fontWeight: 700, letterSpacing: 0.5 }}>{activeVar.number}</div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeVar.title}</h2>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 700, letterSpacing: 0.5 }}>{activeVar.number}</div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeVar.title}</h2>
               </div>
-              <button onClick={() => setActiveVar(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <button onClick={() => setActiveVar(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-              <div style={{ background: '#1a2f4e', padding: '10px 12px', borderRadius: 10 }}>
+              <div style={{ background: 'var(--bg3)', padding: '10px 12px', borderRadius: 10 }}>
                 <div style={{ ...labelStyle, marginBottom: 4 }}>Cost impact</div>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 20, color: activeVar.costImpact >= 0 ? '#f59e0b' : '#10b981', fontWeight: 700 }}>
                   {activeVar.costImpact >= 0 ? '+' : ''}£{activeVar.costImpact.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                 </div>
               </div>
-              <div style={{ background: '#1a2f4e', padding: '10px 12px', borderRadius: 10 }}>
+              <div style={{ background: 'var(--bg3)', padding: '10px 12px', borderRadius: 10 }}>
                 <div style={{ ...labelStyle, marginBottom: 4 }}>Time impact</div>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 20, color: activeVar.daysImpact >= 0 ? '#f59e0b' : '#10b981', fontWeight: 700 }}>
                   {activeVar.daysImpact >= 0 ? '+' : ''}{activeVar.daysImpact} day{activeVar.daysImpact === 1 ? '' : 's'}
@@ -313,16 +313,16 @@ export default function VariationsPage() {
             </div>
 
             {activeVar.description && (
-              <div style={{ background: '#1a2f4e', padding: '10px 12px', borderRadius: 10 }}>
+              <div style={{ background: 'var(--bg3)', padding: '10px 12px', borderRadius: 10 }}>
                 <div style={{ ...labelStyle, marginBottom: 4 }}>Description</div>
-                <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{activeVar.description}</div>
+                <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{activeVar.description}</div>
               </div>
             )}
 
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
               <span style={{ padding: '3px 9px', borderRadius: 99, background: `${STATUS_COLOR[activeVar.status]}22`, color: STATUS_COLOR[activeVar.status], fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${STATUS_COLOR[activeVar.status]}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{STATUS_LABEL[activeVar.status]}</span>
-              {activeVar.project && <span style={{ padding: '3px 9px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', color: '#8ea8c5', fontFamily: SF, fontSize: 10 }}>{activeVar.project.name}</span>}
-              {activeVar.clientName && <span style={{ padding: '3px 9px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', color: '#8ea8c5', fontFamily: SF, fontSize: 10 }}>→ {activeVar.clientName}</span>}
+              {activeVar.project && <span style={{ padding: '3px 9px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', color: 'var(--t2)', fontFamily: SF, fontSize: 10 }}>{activeVar.project.name}</span>}
+              {activeVar.clientName && <span style={{ padding: '3px 9px', borderRadius: 99, background: 'rgba(255,255,255,0.06)', color: 'var(--t2)', fontFamily: SF, fontSize: 10 }}>→ {activeVar.clientName}</span>}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
@@ -336,7 +336,7 @@ export default function VariationsPage() {
                 </>
               )}
               {(activeVar.status === 'approved' || activeVar.status === 'rejected') && (
-                <button onClick={() => changeStatus(activeVar, 'submitted')} style={statusBtn('#52749a')}>Reopen as submitted</button>
+                <button onClick={() => changeStatus(activeVar, 'submitted')} style={statusBtn('var(--t3)')}>Reopen as submitted</button>
               )}
               <button onClick={() => sendForApproval(activeVar)} style={{ ...statusBtn('#8b5cf6'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcSend size={12} color="#fff" /> Email for approval
@@ -358,8 +358,8 @@ const statusBtn = (color: string): React.CSSProperties => ({
   padding: '10px', borderRadius: 10, background: `${color}22`, border: `0.5px solid ${color}66`, color, fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
 })
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

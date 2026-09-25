@@ -85,7 +85,7 @@ export default function SWRegister() {
         right: 12,
         bottom: 'calc(160px + env(safe-area-inset-bottom, 0px))',
         zIndex: 140,
-        background: '#0c1a2e',
+        background: 'var(--bg1)',
         border: '1px solid rgba(245,158,11,0.4)',
         borderRadius: 14,
         padding: '12px 14px',
@@ -96,8 +96,8 @@ export default function SWRegister() {
       }}
     >
       <div style={{ flex: 1, fontFamily: 'var(--font-system)' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: '#eef3fa' }}>New version available</div>
-        <div style={{ fontSize: 11, color: '#8ea8c5', marginTop: 2 }}>Reload to get the latest Cortexx</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>New version available</div>
+        <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>Reload to get the latest Cortexx</div>
       </div>
       <button
         onClick={apply}

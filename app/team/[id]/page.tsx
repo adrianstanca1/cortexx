@@ -39,7 +39,7 @@ interface MemberDetail {
   certifications: Certification[]
 }
 
-const statusColor: Record<string, string> = { active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: '#52749a' }
+const statusColor: Record<string, string> = { active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: 'var(--t3)' }
 const EXPIRING_WINDOW_DAYS = 60
 
 function bucket(expiry: string | null): Certification['statusBucket'] {
@@ -117,13 +117,13 @@ export default function MemberDetailPage() {
   const certs = member.certifications.map(c => ({ ...c, statusBucket: bucket(c.expiryDate) }))
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
       <div style={{ padding: '20px 20px 0 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)' }}>
         <Link href="/team" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Team</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Team</span>
         </Link>
       </div>
 
@@ -131,10 +131,10 @@ export default function MemberDetailPage() {
       <div style={{ padding: '0 20px 24px', display: 'flex', alignItems: 'center', gap: 16 }}>
         <Avatar name={member.name} color={member.avatarColor} size={72} />
         <div style={{ flex: 1, minWidth: 0 }}>
-          <h1 style={{ fontFamily: 'var(--font-system)', fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4 }}>
+          <h1 style={{ fontFamily: 'var(--font-system)', fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4 }}>
             {member.name}
           </h1>
-          <p style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', marginTop: 2 }}>{member.role}</p>
+          <p style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', marginTop: 2 }}>{member.role}</p>
           {member.onSite && (
             <span style={{ display: 'inline-flex', alignItems: 'center', gap: 4, marginTop: 6, fontSize: 11, fontWeight: 700, background: 'rgba(16,185,129,0.15)', color: '#10b981', padding: '3px 8px', borderRadius: 6 }}>
               <IcPin size={11} color="#10b981" /> On site
@@ -179,10 +179,10 @@ export default function MemberDetailPage() {
             <div key={c.id} style={{ ...cardStyle, justifyContent: 'space-between' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexWrap: 'wrap' }}>
-                  <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{c.type}</div>
-                  <span style={{ padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>{c.category}</span>
+                  <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{c.type}</div>
+                  <span style={{ padding: '2px 7px', borderRadius: 99, background: 'rgba(255,255,255,0.08)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase' }}>{c.category}</span>
                 </div>
-                <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
+                <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>
                   {c.number ? `#${c.number} · ` : ''}
                   {c.course && <span>{c.course.name} · </span>}
                   {c.expiryDate ? `expires ${new Date(c.expiryDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}` : 'No expiry'}
@@ -195,7 +195,7 @@ export default function MemberDetailPage() {
                   aria-label="Edit qualification"
                   style={{ background: 'none', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer' }}
                 >
-                  <IcEdit size={14} color="#8ea8c5" />
+                  <IcEdit size={14} color="var(--t2)" />
                 </button>
               </div>
             </div>
@@ -210,7 +210,7 @@ export default function MemberDetailPage() {
         ) : (
           member.assignments.map(a => (
             <Link key={a.id} href={`/projects/${a.project.id}`} style={{ ...cardStyle, textDecoration: 'none' }}>
-              <span style={{ width: 8, height: 8, borderRadius: 4, background: statusColor[a.project.status] || '#52749a' }} />
+              <span style={{ width: 8, height: 8, borderRadius: 4, background: statusColor[a.project.status] || 'var(--t3)' }} />
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={cardTitle}>{a.project.name}</div>
                 <div style={cardSub}>{a.role || 'Member'}{a.onSite ? ' · on site' : ''}</div>
@@ -233,7 +233,7 @@ export default function MemberDetailPage() {
                 <div style={cardSub}>{e.project?.name || 'No project'}</div>
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, fontWeight: 700, color: '#eef3fa' }}>{e.hours}h</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>{e.hours}h</span>
                 {e.approved && <IcCheck size={12} color="#10b981" />}
               </div>
             </div>
@@ -261,7 +261,7 @@ export default function MemberDetailPage() {
 function Section({ title, children }: { title: React.ReactNode; children: React.ReactNode }) {
   return (
     <section style={{ padding: '0 20px 16px' }}>
-      <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#52749a', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>{title}</p>
+      <p style={{ fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: 'var(--t3)', letterSpacing: '0.08em', textTransform: 'uppercase', marginBottom: 8 }}>{title}</p>
       <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>{children}</div>
     </section>
   )
@@ -270,8 +270,8 @@ function Section({ title, children }: { title: React.ReactNode; children: React.
 function Row({ label, value, href }: { label: string; value: string; href?: string }) {
   const content = (
     <div style={{ ...cardStyle, gap: 12 }}>
-      <div style={{ width: 80, fontFamily: 'var(--font-system)', fontSize: 12, color: '#52749a', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ flex: 1, fontFamily: 'var(--font-system)', fontSize: 14, color: '#eef3fa' }}>{value}</div>
+      <div style={{ width: 80, fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t3)', fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ flex: 1, fontFamily: 'var(--font-system)', fontSize: 14, color: 'var(--t1)' }}>{value}</div>
     </div>
   )
   return href ? <a href={href} style={{ textDecoration: 'none' }}>{content}</a> : content
@@ -279,24 +279,24 @@ function Row({ label, value, href }: { label: string; value: string; href?: stri
 
 function Stat({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: '#152641', borderRadius: 12, padding: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
-      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
-      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 18, fontWeight: 700, color: '#eef3fa', marginTop: 4 }}>{value}</div>
+    <div style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: 12, border: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{label}</div>
+      <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 18, fontWeight: 700, color: 'var(--t1)', marginTop: 4 }}>{value}</div>
     </div>
   )
 }
 
 function Empty({ msg }: { msg: string }) {
-  return <div style={{ padding: '20px 0', textAlign: 'center', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 13 }}>{msg}</div>
+  return <div style={{ padding: '20px 0', textAlign: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 13 }}>{msg}</div>
 }
 
 function Loading() {
-  return <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: '#52749a', fontFamily: 'var(--font-system)' }}>Loading…</div>
+  return <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>Loading…</div>
 }
 
 function ErrorView({ msg }: { msg: string }) {
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 12, padding: 24 }}>
       <div style={{ color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 16 }}>{msg}</div>
       <Link href="/team" style={{ color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 14 }}>← Back to team</Link>
     </div>
@@ -307,7 +307,7 @@ function StatusBadge({ status }: { status: Certification['statusBucket'] }) {
   const color =
     status === 'valid' ? '#10b981' :
     status === 'expiring' ? '#f59e0b' :
-    status === 'expired' ? '#ef4444' : '#52749a'
+    status === 'expired' ? '#ef4444' : 'var(--t3)'
   const label =
     status === 'valid' ? 'Valid' :
     status === 'expiring' ? 'Expiring' :
@@ -320,7 +320,7 @@ function StatusBadge({ status }: { status: Certification['statusBucket'] }) {
 }
 
 const cardStyle: React.CSSProperties = {
-  background: '#152641',
+  background: 'var(--surface-raised)',
   border: '0.5px solid rgba(255,255,255,0.07)',
   borderRadius: 12,
   padding: '12px 14px',
@@ -331,7 +331,7 @@ const cardStyle: React.CSSProperties = {
 const cardTitle: React.CSSProperties = {
   fontFamily: 'var(--font-system)',
   fontSize: 14,
-  color: '#eef3fa',
+  color: 'var(--t1)',
   fontWeight: 600,
   whiteSpace: 'nowrap',
   overflow: 'hidden',
@@ -340,6 +340,6 @@ const cardTitle: React.CSSProperties = {
 const cardSub: React.CSSProperties = {
   fontFamily: 'var(--font-system)',
   fontSize: 12,
-  color: '#8ea8c5',
+  color: 'var(--t2)',
   marginTop: 1,
 }

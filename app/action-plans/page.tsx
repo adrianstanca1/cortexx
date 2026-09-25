@@ -107,7 +107,7 @@ export default function ActionPlansPage() {
                 border: 'none',
                 fontSize: 12,
                 fontWeight: active ? 700 : 500,
-                color: active ? '#0c1a2e' : '#52749a',
+                color: active ? 'var(--bg1)' : 'var(--t3)',
                 background: active ? '#f59e0b' : 'rgba(255,255,255,0.06)',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-system)',
@@ -120,7 +120,7 @@ export default function ActionPlansPage() {
                   style={{
                     fontSize: 11,
                     fontWeight: 700,
-                    color: active ? '#0c1a2e' : '#8ea8c5',
+                    color: active ? 'var(--bg1)' : 'var(--t2)',
                     opacity: active ? 0.8 : 1,
                   }}
                 >
@@ -133,11 +133,11 @@ export default function ActionPlansPage() {
       </div>
 
       {loading ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
       ) : error ? (
         <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
       ) : visible.length === 0 ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)', padding: 32, textAlign: 'center' }}>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)', padding: 32, textAlign: 'center' }}>
           No records yet. Click <strong style={{ color: '#f59e0b' }}>+ New</strong> to add the first one.
         </div>
       ) : (
@@ -149,13 +149,13 @@ export default function ActionPlansPage() {
                 key={r.id}
                 onClick={() => setSelected(r)}
                 style={{
-                  background: '#152641',
+                  background: 'var(--surface-raised)',
                   borderRadius: 10,
                   padding: '12px 14px',
                   border: '0.5px solid rgba(255,255,255,0.07)',
                   fontFamily: 'var(--font-system)',
                   fontSize: 13,
-                  color: '#eef3fa',
+                  color: 'var(--t1)',
                   cursor: 'pointer',
                   display: 'flex',
                   justifyContent: 'space-between',
@@ -164,10 +164,10 @@ export default function ActionPlansPage() {
                 }}
               >
                 <div style={{ minWidth: 0, flex: 1 }}>
-                  <div style={{ fontWeight: 600, color: isDone ? '#52749a' : '#eef3fa', textDecoration: isDone ? 'line-through' : 'none' }}>
+                  <div style={{ fontWeight: 600, color: isDone ? 'var(--t3)' : 'var(--t1)', textDecoration: isDone ? 'line-through' : 'none' }}>
                     {r.title || r.id}
                   </div>
-                  <div style={{ fontSize: 11, color: '#52749a', marginTop: 4, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
+                  <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
                     {r.owner && <span>Owner: {r.owner}</span>}
                     {r.priority && <span>Priority: {r.priority}</span>}
                     {r.status && <span>Status: {r.status}</span>}

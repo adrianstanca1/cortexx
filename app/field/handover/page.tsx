@@ -125,9 +125,9 @@ export default function FieldHandoverPage() {
   const pending = items.filter(i => !i.acceptedAt).length
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#06101e', paddingBottom: 100 }}>
+    <div className="module-page" style={{ minHeight: '100dvh', background: 'var(--bg0)', paddingBottom: 100 }}>
       <header style={headerStyle}>
-        <Link href="/field" style={backStyle}><IcChevL size={15} color="#8ea8c5" /> Field operations</Link>
+        <Link href="/field" style={backStyle}><IcChevL size={15} color="var(--t2)" /> Field operations</Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginTop: 10 }}>
           <div>
             <h1 style={h1Style}>Shift handover</h1>
@@ -180,10 +180,10 @@ export default function FieldHandoverPage() {
                       <Badge label={item.shiftType} color="#06b6d4" />
                       <Badge label={item.acceptedAt ? 'accepted' : 'pending acceptance'} color={item.acceptedAt ? '#10b981' : '#f59e0b'} />
                     </div>
-                    <div style={{ color: '#eef3fa', fontFamily: SF, fontSize: 14, fontWeight: 900, marginTop: 7 }}>
+                    <div style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 14, fontWeight: 900, marginTop: 7 }}>
                       {new Date(item.shiftDate).toLocaleString('en-GB', { dateStyle: 'medium', timeStyle: 'short' })}
                     </div>
-                    <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 3 }}>
+                    <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, marginTop: 3 }}>
                       Out: {item.outgoingBy || '—'}{item.incomingBy ? ` · In: ${item.incomingBy}` : ''}
                     </div>
                   </div>
@@ -198,7 +198,7 @@ export default function FieldHandoverPage() {
                     {(item.openItems || []).map(open => <div key={open.id} style={openItemStyle}>• {open.title}</div>)}
                   </div>
                 )}
-                {!item.acceptedAt && <button type="button" onClick={() => accept(item)} style={{ ...primaryBtn, background: '#10b981', marginTop: 11 }}><IcCheck size={12} color="#06101e" /> Accept handover</button>}
+                {!item.acceptedAt && <button type="button" onClick={() => accept(item)} style={{ ...primaryBtn, background: '#10b981', marginTop: 11 }}><IcCheck size={12} color="var(--bg0)" /> Accept handover</button>}
                 {item.acceptedAt && <div style={{ color: '#10b981', fontFamily: SF, fontSize: 10.5, marginTop: 9 }}>Accepted by {item.acceptedBy || 'incoming shift'} · {new Date(item.acceptedAt).toLocaleString('en-GB')}</div>}
               </section>
             ))}
@@ -206,7 +206,7 @@ export default function FieldHandoverPage() {
         )}
 
         <div style={{ ...panelStyle, marginTop: 14 }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}><IcDoc size={15} color="#8b5cf6" /><strong style={{ color: '#eef3fa', fontFamily: SF, fontSize: 11.5 }}>Handover becomes project evidence</strong></div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}><IcDoc size={15} color="#8b5cf6" /><strong style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 11.5 }}>Handover becomes project evidence</strong></div>
           <p style={{ ...bodyStyle, marginBottom: 0 }}>Every handover and acceptance writes to the project activity stream so site management has a dated continuity record.</p>
         </div>
       </main>
@@ -232,19 +232,19 @@ function Area({ label, value, onChange, placeholder, compact }: { label: string;
 }
 
 const headerStyle: React.CSSProperties = { position: 'sticky', top: 0, zIndex: 30, padding: '16px 18px 13px', background: 'rgba(6,16,30,.96)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,.07)' }
-const backStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, color: '#8ea8c5', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
-const h1Style: React.CSSProperties = { margin: 0, color: '#eef3fa', fontFamily: SF, fontSize: 23, letterSpacing: '-.03em' }
-const subStyle: React.CSSProperties = { margin: '3px 0 0', color: '#8ea8c5', fontFamily: SF, fontSize: 11 }
-const selectStyle: React.CSSProperties = { marginTop: 13, width: '100%', boxSizing: 'border-box', borderRadius: 11, border: '1px solid rgba(255,255,255,.09)', background: '#102039', color: '#eef3fa', padding: '11px 12px', fontFamily: SF, fontSize: 13 }
-const panelStyle: React.CSSProperties = { background: '#102039', border: '1px solid rgba(255,255,255,.07)', borderRadius: 13, padding: 13, marginBottom: 14 }
-const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 5, color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, fontWeight: 800, marginBottom: 10 }
-const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', borderRadius: 9, border: '1px solid rgba(255,255,255,.09)', background: '#0b1a30', color: '#eef3fa', padding: '10px 11px', fontFamily: SF, fontSize: 12 }
+const backStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--t2)', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
+const h1Style: React.CSSProperties = { margin: 0, color: 'var(--t1)', fontFamily: SF, fontSize: 23, letterSpacing: '-.03em' }
+const subStyle: React.CSSProperties = { margin: '3px 0 0', color: 'var(--t2)', fontFamily: SF, fontSize: 11 }
+const selectStyle: React.CSSProperties = { marginTop: 13, width: '100%', boxSizing: 'border-box', borderRadius: 11, border: '1px solid rgba(255,255,255,.09)', background: 'var(--surface-strong)', color: 'var(--t1)', padding: '11px 12px', fontFamily: SF, fontSize: 13 }
+const panelStyle: React.CSSProperties = { background: 'var(--surface-strong)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 13, padding: 13, marginBottom: 14 }
+const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 5, color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, fontWeight: 800, marginBottom: 10 }
+const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', borderRadius: 9, border: '1px solid rgba(255,255,255,.09)', background: '#0b1a30', color: 'var(--t1)', padding: '10px 11px', fontFamily: SF, fontSize: 12 }
 const twoCol: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }
-const primaryBtn: React.CSSProperties = { border: 'none', borderRadius: 10, padding: '10px 12px', background: '#f59e0b', color: '#06101e', fontFamily: SF, fontSize: 11, fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }
-const metricStyle: React.CSSProperties = { borderRadius: 11, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 10 }
-const metricLabel: React.CSSProperties = { color: '#8ea8c5', fontFamily: SF, fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', marginTop: 2 }
+const primaryBtn: React.CSSProperties = { border: 'none', borderRadius: 10, padding: '10px 12px', background: '#f59e0b', color: 'var(--bg0)', fontFamily: SF, fontSize: 11, fontWeight: 900, cursor: 'pointer', display: 'inline-flex', alignItems: 'center', justifyContent: 'center', gap: 5 }
+const metricStyle: React.CSSProperties = { borderRadius: 11, background: 'var(--surface-strong)', border: '1px solid rgba(255,255,255,.07)', padding: 10 }
+const metricLabel: React.CSSProperties = { color: 'var(--t2)', fontFamily: SF, fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', marginTop: 2 }
 const bodyStyle: React.CSSProperties = { color: '#c8d7ea', fontFamily: SF, fontSize: 11, lineHeight: 1.5, whiteSpace: 'pre-wrap' }
-const sectionLabel: React.CSSProperties = { color: '#52749a', fontFamily: SF, fontSize: 9.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.06em' }
+const sectionLabel: React.CSSProperties = { color: 'var(--t3)', fontFamily: SF, fontSize: 9.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.06em' }
 const openItemStyle: React.CSSProperties = { color: '#fbbf24', fontFamily: SF, fontSize: 10.5, marginTop: 5 }
 const errorStyle: React.CSSProperties = { marginBottom: 12, padding: 10, borderRadius: 10, background: 'rgba(239,68,68,.10)', color: '#ef4444', fontFamily: SF, fontSize: 11 }
-const emptyStyle: React.CSSProperties = { padding: '28px 16px', borderRadius: 12, background: '#102039', color: '#52749a', fontFamily: SF, fontSize: 12, textAlign: 'center' }
+const emptyStyle: React.CSSProperties = { padding: '28px 16px', borderRadius: 12, background: 'var(--surface-strong)', color: 'var(--t3)', fontFamily: SF, fontSize: 12, textAlign: 'center' }

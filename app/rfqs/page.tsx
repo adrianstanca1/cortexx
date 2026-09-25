@@ -61,7 +61,7 @@ type Rfq = {
 
 const SF = 'var(--font-system)'
 const RFQ_META: Record<Rfq['status'], { label: string; color: string }> = {
-  draft: { label: 'Draft', color: '#52749a' },
+  draft: { label: 'Draft', color: 'var(--t3)' },
   sent: { label: 'Open', color: '#f59e0b' },
   awarded: { label: 'Awarded', color: '#22c55e' },
   closed: { label: 'Closed', color: '#06b6d4' },
@@ -174,10 +174,10 @@ export default function RfqsPage() {
   const filtered = filter === 'all' ? rfqs : rfqs.filter(rfq => rfq.status === filter)
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#06101e', paddingBottom: 100 }}>
+    <div className="module-page" style={{ minHeight: '100dvh', background: 'var(--bg0)', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
       <header style={headerStyle}>
-        <Link href="/apps" style={backStyle}><IcChevL size={18} color="#52749a" /> Apps</Link>
+        <Link href="/apps" style={backStyle}><IcChevL size={18} color="var(--t3)" /> Apps</Link>
         <h1 style={titleStyle}><IcDoc size={20} color="#8b5cf6" /> RFQ comparison</h1>
         <p style={subStyle}>{rfqs.length} RFQs · compare price and lead time without automatic award</p>
         <ProcurementNav />
@@ -203,10 +203,10 @@ export default function RfqsPage() {
                     <div style={{ display: 'flex', gap: 7, alignItems: 'center', flexWrap: 'wrap' }}>
                       <span style={mono}>{rfq.reference}</span>
                       <span style={statusPill(meta.color)}>{meta.label}</span>
-                      <span style={{ ...mono, color: '#52749a' }}>{rfq.requisition.number}</span>
+                      <span style={{ ...mono, color: 'var(--t3)' }}>{rfq.requisition.number}</span>
                     </div>
-                    <div style={{ marginTop: 5, fontFamily: SF, fontSize: 14, fontWeight: 700, color: '#eef3fa' }}>{rfq.requisition.project.name}</div>
-                    <div style={{ marginTop: 3, fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>
+                    <div style={{ marginTop: 5, fontFamily: SF, fontSize: 14, fontWeight: 700, color: 'var(--t1)' }}>{rfq.requisition.project.name}</div>
+                    <div style={{ marginTop: 3, fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>
                       {rfq.invitedSuppliers.length} invited · {rfq.quotes.length} quote{rfq.quotes.length === 1 ? '' : 's'}
                       {rfq.dueAt ? ` · due ${new Date(rfq.dueAt).toLocaleDateString('en-GB')}` : ''}
                     </div>
@@ -221,16 +221,16 @@ export default function RfqsPage() {
                     const quote = rfq.quotes.find(row => row.supplierId === supplier.id)
                     const compare = quote ? comparison.get(quote.id) : undefined
                     return (
-                      <div key={supplier.id} style={{ background: '#1a2f4e', borderRadius: 10, padding: 10, border: quote?.status === 'awarded' ? '1px solid rgba(34,197,94,.5)' : '0.5px solid rgba(255,255,255,.06)' }}>
+                      <div key={supplier.id} style={{ background: 'var(--bg3)', borderRadius: 10, padding: 10, border: quote?.status === 'awarded' ? '1px solid rgba(34,197,94,.5)' : '0.5px solid rgba(255,255,255,.06)' }}>
                         <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center' }}>
                           <div style={{ minWidth: 0 }}>
-                            <div style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: '#eef3fa' }}>{supplier.name}</div>
-                            <div style={{ marginTop: 2, fontFamily: SF, fontSize: 10, color: '#52749a' }}>
+                            <div style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>{supplier.name}</div>
+                            <div style={{ marginTop: 2, fontFamily: SF, fontSize: 10, color: 'var(--t3)' }}>
                               {supplier.paymentTerms || supplier.category}
                             </div>
                           </div>
                           {!quote && rfq.status === 'sent' && <button onClick={() => openQuote(rfq, supplier)} style={actionBtn('#8b5cf6')}>Enter quote</button>}
-                          {quote && rfq.status === 'sent' && quote.status === 'received' && <button onClick={() => openQuote(rfq, supplier)} style={actionBtn('#52749a')}>Edit</button>}
+                          {quote && rfq.status === 'sent' && quote.status === 'received' && <button onClick={() => openQuote(rfq, supplier)} style={actionBtn('var(--t3)')}>Edit</button>}
                         </div>
 
                         {quote && (
@@ -286,9 +286,9 @@ export default function RfqsPage() {
 
           <label style={labelStyle}>Price each requisition line</label>
           {quoteFor.rfq.requisition.lineItems.map((line, index) => (
-            <div key={index} style={{ background: '#152641', padding: 10, borderRadius: 9 }}>
-              <div style={{ fontFamily: SF, fontSize: 12, color: '#eef3fa', fontWeight: 700 }}>{line.description}</div>
-              <div style={{ marginTop: 2, fontFamily: SF, fontSize: 10, color: '#52749a' }}>{line.quantity} {line.unit || 'item'}</div>
+            <div key={index} style={{ background: 'var(--surface-raised)', padding: 10, borderRadius: 9 }}>
+              <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t1)', fontWeight: 700 }}>{line.description}</div>
+              <div style={{ marginTop: 2, fontFamily: SF, fontSize: 10, color: 'var(--t3)' }}>{line.quantity} {line.unit || 'item'}</div>
               <input type="number" min="0.01" step="0.01" value={quoteForm.prices[index] || ''} onChange={e => updatePrice(index, e.target.value)} placeholder="Unit price £" style={{ ...inputStyle, marginTop: 7 }} />
             </div>
           ))}
@@ -313,9 +313,9 @@ function ProcurementNav() {
 
 function Metric({ label, value }: { label: string; value: string }) {
   return (
-    <div style={{ background: '#152641', borderRadius: 8, padding: 7 }}>
-      <div style={{ fontFamily: SF, fontSize: 9, color: '#52749a', textTransform: 'uppercase', fontWeight: 700 }}>{label}</div>
-      <div style={{ marginTop: 2, fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#eef3fa' }}>{value}</div>
+    <div style={{ background: 'var(--surface-raised)', borderRadius: 8, padding: 7 }}>
+      <div style={{ fontFamily: SF, fontSize: 9, color: 'var(--t3)', textTransform: 'uppercase', fontWeight: 700 }}>{label}</div>
+      <div style={{ marginTop: 2, fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t1)' }}>{value}</div>
     </div>
   )
 }
@@ -325,8 +325,8 @@ function Modal({ title, close, children }: { title: string; close: () => void; c
     <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,.58)', display: 'flex', alignItems: 'flex-end' }}>
       <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#0a1426', borderRadius: '20px 20px 0 0', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <h2 style={{ margin: 0, color: '#eef3fa', fontFamily: SF, fontSize: 17 }}>{title}</h2>
-          <button onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="#52749a" /></button>
+          <h2 style={{ margin: 0, color: 'var(--t1)', fontFamily: SF, fontSize: 17 }}>{title}</h2>
+          <button onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t3)" /></button>
         </div>
         {children}
       </div>
@@ -335,20 +335,20 @@ function Modal({ title, close, children }: { title: string; close: () => void; c
 }
 
 function Empty({ text }: { text: string }) {
-  return <div style={{ padding: 50, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 13 }}>{text}</div>
+  return <div style={{ padding: 50, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 13 }}>{text}</div>
 }
 
 const headerStyle: React.CSSProperties = { padding: '20px 16px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,.96)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,.07)' }
-const backStyle: React.CSSProperties = { display: 'flex', gap: 4, alignItems: 'center', marginBottom: 9, color: '#52749a', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
-const titleStyle: React.CSSProperties = { margin: 0, display: 'flex', gap: 7, alignItems: 'center', color: '#eef3fa', fontFamily: SF, fontSize: 21 }
-const subStyle: React.CSSProperties = { margin: '3px 0 0', color: '#52749a', fontFamily: SF, fontSize: 11 }
-const cardStyle: React.CSSProperties = { background: '#152641', border: '0.5px solid rgba(255,255,255,.08)', borderRadius: 13, padding: 13 }
-const mono: React.CSSProperties = { fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#8ea8c5', fontWeight: 700 }
-const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#1a2f4e', border: '1px solid rgba(255,255,255,.1)', borderRadius: 9, padding: '9px 10px', color: '#eef3fa', fontFamily: SF, fontSize: 12, outline: 'none' }
-const labelStyle: React.CSSProperties = { marginTop: 3, fontFamily: SF, fontSize: 11, color: '#8ea8c5', fontWeight: 700 }
+const backStyle: React.CSSProperties = { display: 'flex', gap: 4, alignItems: 'center', marginBottom: 9, color: 'var(--t3)', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
+const titleStyle: React.CSSProperties = { margin: 0, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--t1)', fontFamily: SF, fontSize: 21 }
+const subStyle: React.CSSProperties = { margin: '3px 0 0', color: 'var(--t3)', fontFamily: SF, fontSize: 11 }
+const cardStyle: React.CSSProperties = { background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,.08)', borderRadius: 13, padding: 13 }
+const mono: React.CSSProperties = { fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'var(--t2)', fontWeight: 700 }
+const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 9, padding: '9px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 12, outline: 'none' }
+const labelStyle: React.CSSProperties = { marginTop: 3, fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 700 }
 const primaryBtn: React.CSSProperties = { background: '#8b5cf6', border: 0, borderRadius: 10, padding: 11, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }
 const actionBtn = (color: string): React.CSSProperties => ({ background: color + '20', color, border: `0.5px solid ${color}66`, borderRadius: 8, padding: '6px 9px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer' })
 const statusPill = (color: string): React.CSSProperties => ({ background: color + '22', color, border: `0.5px solid ${color}55`, borderRadius: 99, padding: '2px 7px', fontFamily: SF, fontSize: 9, fontWeight: 800, textTransform: 'uppercase' })
 const factPill = (color: string): React.CSSProperties => ({ background: color + '18', color, borderRadius: 99, padding: '3px 7px', fontFamily: SF, fontSize: 9, fontWeight: 700 })
-const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#8b5cf6' : '#152641', color: active ? '#fff' : '#8ea8c5', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
-const navLink = (active: boolean): React.CSSProperties => ({ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', fontFamily: SF, fontSize: 11, fontWeight: 700, background: active ? '#8b5cf6' : '#152641', color: active ? '#fff' : '#8ea8c5' })
+const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#8b5cf6' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
+const navLink = (active: boolean): React.CSSProperties => ({ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', fontFamily: SF, fontSize: 11, fontWeight: 700, background: active ? '#8b5cf6' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)' })

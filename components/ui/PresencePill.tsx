@@ -28,7 +28,7 @@ export default function PresencePill({ screen, focus }: PresencePillProps) {
         padding: '2px 8px',
         borderRadius: 99,
         background: 'rgba(37,99,235,0.15)',
-        color: '#8ea8c5',
+        color: 'var(--t2)',
         fontFamily: 'var(--font-system)',
         fontSize: 11,
         fontWeight: 500,

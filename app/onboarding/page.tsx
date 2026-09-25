@@ -65,20 +65,20 @@ export default function OnboardingPage() {
 
   if (!checked) {
     return (
-      <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-        <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Loading…</div>
+      <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+        <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Loading…</div>
       </div>
     )
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <form onSubmit={submit} style={{ width: '100%', maxWidth: 420, display: 'flex', flexDirection: 'column', gap: 14 }}>
         <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#f59e0b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2 }}>Step 1 of 1</div>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
           Name your workspace
         </h1>
-        <p style={{ fontSize: 14, color: '#8ea8c5', marginBottom: 4, fontFamily: 'var(--font-system)', lineHeight: 1.5 }}>
+        <p style={{ fontSize: 14, color: 'var(--t2)', marginBottom: 4, fontFamily: 'var(--font-system)', lineHeight: 1.5 }}>
           This is what your team and clients will see. You can change it later in settings.
         </p>
 
@@ -107,7 +107,7 @@ export default function OnboardingPage() {
           {busy ? 'Creating workspace…' : 'Create workspace'}
         </button>
 
-        <p style={{ fontSize: 12, color: '#52749a', marginTop: 12, fontFamily: 'var(--font-system)' }}>
+        <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 12, fontFamily: 'var(--font-system)' }}>
           You&apos;ll get a 14-day free trial of the Pro plan. No card required.
         </p>
       </form>
@@ -118,18 +118,18 @@ export default function OnboardingPage() {
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-system)',
   fontSize: 11,
-  color: '#52749a',
+  color: 'var(--t3)',
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: 0.5,
 }
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#152641',
+  background: 'var(--surface-raised)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 12,
   padding: '13px 16px',
-  color: '#eef3fa',
+  color: 'var(--t1)',
   fontFamily: 'var(--font-system)',
   fontSize: 15,
   outline: 'none',

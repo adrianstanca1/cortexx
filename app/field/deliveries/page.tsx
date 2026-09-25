@@ -171,18 +171,18 @@ export default function FieldDeliveriesPage() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#06101e', paddingBottom: 100 }}>
+    <div className="module-page" style={{ minHeight: '100dvh', background: 'var(--bg0)', paddingBottom: 100 }}>
       <header style={{ position: 'sticky', top: 0, zIndex: 30, padding: '16px 18px 13px', background: 'rgba(6,16,30,.96)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,.07)' }}>
-        <Link href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: '#8ea8c5', textDecoration: 'none', fontFamily: SF, fontSize: 12 }}>
-          <IcChevL size={15} color="#8ea8c5" /> Field operations
+        <Link href="/field" style={{ display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--t2)', textDecoration: 'none', fontFamily: SF, fontSize: 12 }}>
+          <IcChevL size={15} color="var(--t2)" /> Field operations
         </Link>
         <div style={{ display: 'flex', alignItems: 'center', gap: 11, marginTop: 10 }}>
           <div style={{ width: 42, height: 42, borderRadius: 12, background: 'rgba(245,158,11,.14)', display: 'grid', placeItems: 'center' }}>
             <IcTruck size={22} color="#f59e0b" />
           </div>
           <div>
-            <h1 style={{ margin: 0, color: '#eef3fa', fontFamily: SF, fontSize: 23, letterSpacing: '-.03em' }}>Site deliveries</h1>
-            <p style={{ margin: '3px 0 0', color: '#8ea8c5', fontFamily: SF, fontSize: 11 }}>Expected materials, shortages and goods received.</p>
+            <h1 style={{ margin: 0, color: 'var(--t1)', fontFamily: SF, fontSize: 23, letterSpacing: '-.03em' }}>Site deliveries</h1>
+            <p style={{ margin: '3px 0 0', color: 'var(--t2)', fontFamily: SF, fontSize: 11 }}>Expected materials, shortages and goods received.</p>
           </div>
         </div>
         <select value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
@@ -208,7 +208,7 @@ export default function FieldDeliveriesPage() {
           <div style={emptyStyle}>Loading deliveries…</div>
         ) : projectPos.length === 0 ? (
           <div style={emptyStyle}>
-            <IcTruck size={26} color="#52749a" />
+            <IcTruck size={26} color="var(--t3)" />
             <div style={{ marginTop: 9 }}>No sent purchase orders for this project.</div>
             <Link href="/pos" style={{ color: '#f59e0b', display: 'inline-block', marginTop: 10 }}>Open purchase orders</Link>
           </div>
@@ -225,12 +225,12 @@ export default function FieldDeliveriesPage() {
               const isLate = RECEIVABLE.has(po.status) && po.expectedDelivery && new Date(po.expectedDelivery).getTime() < today.getTime()
               const isOpen = RECEIVABLE.has(po.status)
               return (
-                <section key={po.id} style={{ borderRadius: 14, background: '#102039', border: `1px solid ${isLate ? 'rgba(239,68,68,.35)' : 'rgba(255,255,255,.07)'}`, overflow: 'hidden' }}>
+                <section key={po.id} style={{ borderRadius: 14, background: 'var(--surface-strong)', border: `1px solid ${isLate ? 'rgba(239,68,68,.35)' : 'rgba(255,255,255,.07)'}`, overflow: 'hidden' }}>
                   <div style={{ padding: 13 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
                       <div>
-                        <div style={{ color: '#eef3fa', fontFamily: SF, fontWeight: 900, fontSize: 14 }}>{po.number} · {po.supplier}</div>
-                        <div style={{ color: isLate ? '#ef4444' : '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 4 }}>
+                        <div style={{ color: 'var(--t1)', fontFamily: SF, fontWeight: 900, fontSize: 14 }}>{po.number} · {po.supplier}</div>
+                        <div style={{ color: isLate ? '#ef4444' : 'var(--t2)', fontFamily: SF, fontSize: 10.5, marginTop: 4 }}>
                           {po.expectedDelivery ? `${isLate ? 'Late · ' : ''}Expected ${new Date(po.expectedDelivery).toLocaleDateString('en-GB')}` : 'No expected delivery date'}
                         </div>
                       </div>
@@ -249,14 +249,14 @@ export default function FieldDeliveriesPage() {
                     </div>
 
                     {isOpen && (
-                      <button type="button" onClick={() => beginReceive(po)} style={{ width: '100%', marginTop: 11, border: 'none', borderRadius: 10, padding: '11px 12px', background: '#f59e0b', color: '#06101e', fontFamily: SF, fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>
+                      <button type="button" onClick={() => beginReceive(po)} style={{ width: '100%', marginTop: 11, border: 'none', borderRadius: 10, padding: '11px 12px', background: '#f59e0b', color: 'var(--bg0)', fontFamily: SF, fontSize: 12, fontWeight: 900, cursor: 'pointer' }}>
                         Record goods received
                       </button>
                     )}
                   </div>
 
                   {(po.goodsReceipts || []).length > 0 && (
-                    <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', padding: '9px 13px', color: '#8ea8c5', fontFamily: SF, fontSize: 10.5 }}>
+                    <div style={{ borderTop: '1px solid rgba(255,255,255,.06)', padding: '9px 13px', color: 'var(--t2)', fontFamily: SF, fontSize: 10.5 }}>
                       <IcCheck size={12} color="#10b981" /> {(po.goodsReceipts || []).length} receipt{(po.goodsReceipts || []).length === 1 ? '' : 's'} logged
                       {(po.goodsReceipts || []).some(r => (r.evidence?.photoUrls || []).length > 0 || r.evidence?.signatureUrl || r.evidence?.signedBy) && <span style={{ color: '#8b5cf6' }}> · evidence attached</span>}
                     </div>
@@ -267,12 +267,12 @@ export default function FieldDeliveriesPage() {
           </div>
         )}
 
-        <div style={{ marginTop: 16, borderRadius: 12, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 12 }}>
+        <div style={{ marginTop: 16, borderRadius: 12, background: 'var(--surface-strong)', border: '1px solid rgba(255,255,255,.07)', padding: 12 }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
             <IcDoc size={16} color="#8b5cf6" />
-            <div style={{ color: '#eef3fa', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>Commercial control stays linked</div>
+            <div style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>Commercial control stays linked</div>
           </div>
-          <p style={{ margin: '6px 0 0', color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, lineHeight: 1.45 }}>
+          <p style={{ margin: '6px 0 0', color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, lineHeight: 1.45 }}>
             Field receipts update the original purchase order and procurement audit trail. No duplicate delivery ledger is created.
           </p>
           <Link href="/pos" style={{ color: '#a78bfa', fontFamily: SF, fontSize: 11, fontWeight: 800, display: 'inline-block', marginTop: 8 }}>Open full procurement →</Link>
@@ -281,13 +281,13 @@ export default function FieldDeliveriesPage() {
 
       {receiving && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 80, background: 'rgba(2,8,18,.78)', display: 'flex', alignItems: 'flex-end' }}>
-          <div style={{ width: '100%', maxHeight: '88dvh', overflowY: 'auto', background: '#0c1a30', borderRadius: '20px 20px 0 0', borderTop: '1px solid rgba(255,255,255,.1)', padding: '18px 16px 28px' }}>
+          <div style={{ width: '100%', maxHeight: '88dvh', overflowY: 'auto', background: 'var(--bg1)', borderRadius: '20px 20px 0 0', borderTop: '1px solid rgba(255,255,255,.1)', padding: '18px 16px 28px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, marginBottom: 14 }}>
               <div>
-                <div style={{ color: '#eef3fa', fontFamily: SF, fontSize: 18, fontWeight: 900 }}>Receive {receiving.number}</div>
-                <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 11, marginTop: 3 }}>{receiving.supplier}</div>
+                <div style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 18, fontWeight: 900 }}>Receive {receiving.number}</div>
+                <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 11, marginTop: 3 }}>{receiving.supplier}</div>
               </div>
-              <button type="button" onClick={() => setReceiving(null)} style={{ border: 'none', background: 'transparent', color: '#8ea8c5', fontSize: 24, cursor: 'pointer' }}>×</button>
+              <button type="button" onClick={() => setReceiving(null)} style={{ border: 'none', background: 'transparent', color: 'var(--t2)', fontSize: 24, cursor: 'pointer' }}>×</button>
             </div>
 
             {receiving.lineItems.map((line, index) => {
@@ -297,8 +297,8 @@ export default function FieldDeliveriesPage() {
               return (
                 <label key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 92px', gap: 10, alignItems: 'center', marginBottom: 9 }}>
                   <span>
-                    <span style={{ display: 'block', color: '#eef3fa', fontFamily: SF, fontSize: 12, fontWeight: 700 }}>{line.description}</span>
-                    <span style={{ display: 'block', color: '#52749a', fontFamily: SF, fontSize: 10, marginTop: 2 }}>{remaining} {line.unit || ''} outstanding</span>
+                    <span style={{ display: 'block', color: 'var(--t1)', fontFamily: SF, fontSize: 12, fontWeight: 700 }}>{line.description}</span>
+                    <span style={{ display: 'block', color: 'var(--t3)', fontFamily: SF, fontSize: 10, marginTop: 2 }}>{remaining} {line.unit || ''} outstanding</span>
                   </span>
                   <input type="number" min="0" max={remaining} step="any" value={qty[index] || ''} onChange={e => setQty(current => ({ ...current, [index]: e.target.value }))} style={inputStyle} />
                 </label>
@@ -323,7 +323,7 @@ export default function FieldDeliveriesPage() {
             <label style={labelStyle}>Shortages / damage / notes<textarea value={notes} maxLength={1000} onChange={e => setNotes(e.target.value)} rows={3} placeholder="Damaged packs, missing items, quarantine instructions…" style={{ ...inputStyle, resize: 'vertical' }} /></label>
 
             {message && <div style={{ color: '#ef4444', fontFamily: SF, fontSize: 11, marginBottom: 9 }}>{message}</div>}
-            <button type="button" disabled={saving} onClick={submitReceipt} style={{ width: '100%', border: 'none', borderRadius: 11, padding: '12px 14px', background: '#10b981', color: '#06101e', fontFamily: SF, fontSize: 12, fontWeight: 900, opacity: saving ? .6 : 1, cursor: 'pointer' }}>
+            <button type="button" disabled={saving} onClick={submitReceipt} style={{ width: '100%', border: 'none', borderRadius: 11, padding: '12px 14px', background: '#10b981', color: 'var(--bg0)', fontFamily: SF, fontSize: 12, fontWeight: 900, opacity: saving ? .6 : 1, cursor: 'pointer' }}>
               {saving ? 'Recording…' : 'Confirm goods received'}
             </button>
           </div>
@@ -341,27 +341,27 @@ function sameDay(a: Date, b: Date) {
 
 function Metric({ label, value, color }: { label: string; value: number; color: string }) {
   return (
-    <div style={{ borderRadius: 11, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 10 }}>
+    <div style={{ borderRadius: 11, background: 'var(--surface-strong)', border: '1px solid rgba(255,255,255,.07)', padding: 10 }}>
       <div style={{ color, fontFamily: SF, fontSize: 20, fontWeight: 900 }}>{value}</div>
-      <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', marginTop: 2 }}>{label}</div>
+      <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', marginTop: 2 }}>{label}</div>
     </div>
   )
 }
 
 const selectStyle: React.CSSProperties = {
   marginTop: 13, width: '100%', boxSizing: 'border-box', borderRadius: 11,
-  border: '1px solid rgba(255,255,255,.09)', background: '#102039', color: '#eef3fa',
+  border: '1px solid rgba(255,255,255,.09)', background: 'var(--surface-strong)', color: 'var(--t1)',
   padding: '11px 12px', fontFamily: SF, fontSize: 13,
 }
 const inputStyle: React.CSSProperties = {
   width: '100%', boxSizing: 'border-box', borderRadius: 9, border: '1px solid rgba(255,255,255,.09)',
-  background: '#102039', color: '#eef3fa', padding: '10px 11px', fontFamily: SF, fontSize: 12,
+  background: 'var(--surface-strong)', color: 'var(--t1)', padding: '10px 11px', fontFamily: SF, fontSize: 12,
 }
 const labelStyle: React.CSSProperties = {
-  display: 'flex', flexDirection: 'column', gap: 5, color: '#8ea8c5', fontFamily: SF,
+  display: 'flex', flexDirection: 'column', gap: 5, color: 'var(--t2)', fontFamily: SF,
   fontSize: 10.5, fontWeight: 800, marginTop: 10,
 }
 const emptyStyle: React.CSSProperties = {
-  padding: '32px 18px', borderRadius: 13, background: '#102039', border: '1px solid rgba(255,255,255,.07)',
-  color: '#8ea8c5', textAlign: 'center', fontFamily: SF, fontSize: 12,
+  padding: '32px 18px', borderRadius: 13, background: 'var(--surface-strong)', border: '1px solid rgba(255,255,255,.07)',
+  color: 'var(--t2)', textAlign: 'center', fontFamily: SF, fontSize: 12,
 }

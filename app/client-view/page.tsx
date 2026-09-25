@@ -92,27 +92,27 @@ export default function ClientViewPage() {
   const withoutToken = projects.filter(p => !p.shareToken)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Client View command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
-        <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Client view</h1>
-        <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+        <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Client view</h1>
+        <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
           Public read-only project link · {withToken.length} active link{withToken.length === 1 ? '' : 's'}
         </p>
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : projects.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcLayers size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcLayers size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No projects yet</p>
           <Link href="/projects" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#10b981', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Create one</Link>
         </div>
@@ -125,17 +125,17 @@ export default function ClientViewPage() {
                 {withToken.map(p => {
                   const url = `${origin}/client/${p.shareToken}`
                   return (
-                    <div key={p.id} style={{ background: '#152641', borderRadius: 12, padding: '14px', border: '0.5px solid rgba(16,185,129,0.35)', display: 'flex', flexDirection: 'column', gap: 8 }}>
+                    <div key={p.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '14px', border: '0.5px solid rgba(16,185,129,0.35)', display: 'flex', flexDirection: 'column', gap: 8 }}>
                       <div>
-                        <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{p.name}</div>
-                        {p.clientName && <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>{p.clientName}</div>}
+                        <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{p.name}</div>
+                        {p.clientName && <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>{p.clientName}</div>}
                       </div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: '#1a2f4e', padding: '8px 10px', borderRadius: 8 }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: 6, background: 'var(--bg3)', padding: '8px 10px', borderRadius: 8 }}>
                         <span style={{ flex: 1, fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#10b981', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                         <button onClick={() => copy(url, p.id)} style={btnStyle('#06b6d4')}>Copy link</button>
-                        <Link href={url} target="_blank" rel="noopener noreferrer" style={{ ...btnStyle('#52749a'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>Preview</Link>
+                        <Link href={url} target="_blank" rel="noopener noreferrer" style={{ ...btnStyle('var(--t3)'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>Preview</Link>
                         <button onClick={() => share(url, p.name)} style={{ ...btnStyle('#8b5cf6'), display: 'flex', alignItems: 'center', gap: 4 }}>
                           <IcSend size={11} color="#a78bfa" /> Email
                         </button>
@@ -154,13 +154,13 @@ export default function ClientViewPage() {
 
           {withoutToken.length > 0 && (
             <div>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, paddingLeft: 4 }}>Not shared yet</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, paddingLeft: 4 }}>Not shared yet</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {withoutToken.map(p => (
-                  <div key={p.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
+                  <div key={p.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 10 }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
-                      <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{p.name}</div>
-                      {p.clientName && <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>{p.clientName}</div>}
+                      <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{p.name}</div>
+                      {p.clientName && <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>{p.clientName}</div>}
                     </div>
                     <button onClick={() => createOrRotate(p)} disabled={working === p.id} style={{ background: '#10b981', border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <IcCheck size={12} color="#fff" /> {working === p.id ? '…' : 'Create link'}

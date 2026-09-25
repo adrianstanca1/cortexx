@@ -78,14 +78,14 @@ const ARTICLES: Article[] = [
 
 export default function HelpIndex() {
   return (
-    <main style={{ background: '#06101e', minHeight: '100dvh', padding: '60px 24px 80px', color: '#eef3fa' }}>
+    <main style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '60px 24px 80px', color: 'var(--t1)' }}>
       <div style={{ maxWidth: 720, margin: '0 auto' }}>
         <div style={{ marginBottom: 32 }}>
           <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#f59e0b', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 2, marginBottom: 8 }}>Help</div>
           <h1 style={{ fontSize: 32, fontWeight: 700, letterSpacing: '-0.03em', margin: '0 0 12px', fontFamily: 'var(--font-system)' }}>
             Everything you need to know.
           </h1>
-          <p style={{ fontSize: 15, color: '#8ea8c5', lineHeight: 1.5, fontFamily: 'var(--font-system)', margin: 0 }}>
+          <p style={{ fontSize: 15, color: 'var(--t2)', lineHeight: 1.5, fontFamily: 'var(--font-system)', margin: 0 }}>
             Five articles cover the 90% of questions. Email <a href="mailto:support@cortexbuildpro.com" style={{ color: '#f59e0b', fontWeight: 600 }}>support@cortexbuildpro.com</a> for anything else.
           </p>
         </div>
@@ -95,15 +95,15 @@ export default function HelpIndex() {
             <Link
               key={a.slug}
               href={`/help/${a.slug}`}
-              style={{ display: 'block', background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 20, textDecoration: 'none', color: 'inherit' }}
+              style={{ display: 'block', background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 14, padding: 20, textDecoration: 'none', color: 'inherit' }}
             >
-              <div style={{ fontFamily: 'var(--font-system)', fontSize: 17, fontWeight: 700, color: '#eef3fa', marginBottom: 4 }}>{a.title}</div>
-              <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', lineHeight: 1.5 }}>{a.oneLiner}</div>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 17, fontWeight: 700, color: 'var(--t1)', marginBottom: 4 }}>{a.title}</div>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', lineHeight: 1.5 }}>{a.oneLiner}</div>
             </Link>
           ))}
         </div>
 
-        <div style={{ textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>
+        <div style={{ textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>
           <Link href="/" style={{ color: 'inherit', textDecoration: 'none' }}>← Back to home</Link>
         </div>
       </div>

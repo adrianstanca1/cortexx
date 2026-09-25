@@ -27,7 +27,7 @@ interface ActivityIconProps {
  * clock icon for unknown types so the UI never renders nothing.
  */
 export default function ActivityIcon({ iconType, size = 14, color }: ActivityIconProps) {
-  const c = color || '#8ea8c5'
+  const c = color || 'var(--t2)'
   switch (iconType) {
     case 'check':
       return <IcCheck size={size} color={c} />

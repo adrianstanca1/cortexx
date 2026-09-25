@@ -43,7 +43,7 @@ interface PO {
 }
 
 const SF = 'var(--font-system)'
-const STATUS_COLOR: Record<PO['status'], string> = { draft: '#52749a', pending_approval: '#a78bfa', rejected: '#ef4444', approved: '#38bdf8', sent: '#f59e0b', part_received: '#84cc16', received: '#22c55e', closed: '#06b6d4', cancelled: '#ef4444' }
+const STATUS_COLOR: Record<PO['status'], string> = { draft: 'var(--t3)', pending_approval: '#a78bfa', rejected: '#ef4444', approved: '#38bdf8', sent: '#f59e0b', part_received: '#84cc16', received: '#22c55e', closed: '#06b6d4', cancelled: '#ef4444' }
 const STATUS_LABEL: Record<PO['status'], string> = { draft: 'Draft', pending_approval: 'Approval', rejected: 'Rejected', approved: 'Approved', sent: 'Sent', part_received: 'Part received', received: 'Received', closed: 'Closed', cancelled: 'Cancelled' }
 const UNITS = ['item', 'hour', 'day', 'm', 'm²', 'm³', 'kg', 'tonne', 'l']
 const blankItem = (): LineItem => ({ description: '', quantity: 1, unit: 'item', unitPrice: 0, total: 0 })
@@ -248,33 +248,33 @@ export default function POsPage() {
   const filtered = filter === 'all' ? pos : pos.filter(p => p.status === filter)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Procurement control" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Purchase orders</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Purchase orders</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {pos.length} total · {openCount} open · <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f59e0b' }}>£{committedValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</span> committed
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Raise PO" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button className="module-primary" onClick={() => setShowAdd(true)} aria-label="Raise PO" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, marginBottom: 9 }}>
-          <Link href="/requisitions" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: '#152641', color: '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>Requisitions</Link>
-          <Link href="/rfqs" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: '#152641', color: '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>RFQs</Link>
+          <Link href="/requisitions" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: 'var(--surface-raised)', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>Requisitions</Link>
+          <Link href="/rfqs" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: 'var(--surface-raised)', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>RFQs</Link>
           <Link href="/pos" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: '#f59e0b', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>POs</Link>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'draft', 'pending_approval', 'approved', 'sent', 'part_received', 'received', 'closed'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -282,12 +282,12 @@ export default function POsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcDoc size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcDoc size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{pos.length === 0 ? 'No purchase orders' : 'Nothing in this filter'}</p>
           {pos.length === 0 && (
             <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Raise first PO</button>
@@ -296,19 +296,19 @@ export default function POsPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(p => (
-            <button key={p.id} onClick={() => setActivePo(p)} style={{ background: '#152641', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button key={p.id} onClick={() => setActivePo(p)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: '#52749a' }}>{p.number}</span>
-                <span style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>{p.supplier}</span>
-                {p.project && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>· {p.project.name}</span>}
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: 'var(--t3)' }}>{p.number}</span>
+                <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>{p.supplier}</span>
+                {p.project && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>· {p.project.name}</span>}
                 {p.costCode && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: '#f59e0b' }}>· {p.costCode.code}</span>}
                 {p.requisition && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: '#a78bfa' }}>· {p.requisition.number}</span>}
                 {p.supplierQuote?.rfq && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 9, color: '#8b5cf6' }}>· {p.supplierQuote.rfq.reference}</span>}
                 <span style={{ marginLeft: 'auto', padding: '2px 8px', borderRadius: 99, background: `${STATUS_COLOR[p.status]}22`, color: STATUS_COLOR[p.status], fontFamily: SF, fontSize: 9, fontWeight: 700, border: `1px solid ${STATUS_COLOR[p.status]}55`, textTransform: 'uppercase' }}>{STATUS_LABEL[p.status]}</span>
               </div>
               <div style={{ display: 'flex', gap: 12, alignItems: 'baseline' }}>
-                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15, fontWeight: 700, color: '#eef3fa' }}>£{p.total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
-                <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>{(p.lineItems || []).length} item{(p.lineItems || []).length === 1 ? '' : 's'}{p.expectedDelivery ? ` · expected ${new Date(p.expectedDelivery).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</span>
+                <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15, fontWeight: 700, color: 'var(--t1)' }}>£{p.total.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</span>
+                <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{(p.lineItems || []).length} item{(p.lineItems || []).length === 1 ? '' : 's'}{p.expectedDelivery ? ` · expected ${new Date(p.expectedDelivery).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : ''}</span>
               </div>
             </button>
           ))}
@@ -320,10 +320,10 @@ export default function POsPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Raise PO</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Raise PO</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <input autoFocus value={form.supplier} onChange={e => setForm(p => ({ ...p, supplier: e.target.value }))} placeholder="Supplier" style={inputStyle} />
             <input type="email" value={form.contactEmail} onChange={e => setForm(p => ({ ...p, contactEmail: e.target.value }))} placeholder="Supplier email" style={inputStyle} />
@@ -357,7 +357,7 @@ export default function POsPage() {
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: '#c4b5fd' }}>✨ Estimate with AI</span>
                   <button onClick={() => { setAiOpen(false); setAiError(null) }} aria-label="Close" type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
-                    <IcX size={14} color="#8ea8c5" />
+                    <IcX size={14} color="var(--t2)" />
                   </button>
                 </div>
                 <textarea
@@ -390,7 +390,7 @@ export default function POsPage() {
                 >
                   {aiBusy ? 'Estimating (10–30s)…' : 'Generate line items'}
                 </button>
-                <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5' }}>
+                <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)' }}>
                   AI suggests realistic UK construction materials and plant. Always confirm prices with your supplier before sending.
                 </div>
               </div>
@@ -436,7 +436,7 @@ export default function POsPage() {
               </div>
             </div>
 
-            <div style={{ background: '#1a2f4e', borderRadius: 10, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 15, color: '#eef3fa', fontWeight: 700 }}>
+            <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '10px 14px', display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 15, color: 'var(--t1)', fontWeight: 700 }}>
               <span>Total (inc VAT)</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>£{totals.total.toFixed(2)}</span>
             </div>
 
@@ -450,11 +450,11 @@ export default function POsPage() {
       {activePo && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setActivePo(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', fontWeight: 700 }}>{activePo.number}</div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: SF, marginTop: 2 }}>{activePo.supplier}</h2>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 700 }}>{activePo.number}</div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', fontFamily: SF, marginTop: 2 }}>{activePo.supplier}</h2>
                 {activePo.costCode && <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#f59e0b', marginTop: 3 }}>{activePo.costCode.code} · {activePo.costCode.name}</div>}
                 {(activePo.requisition || activePo.supplierQuote?.rfq) && (
                   <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#a78bfa', marginTop: 3 }}>
@@ -462,19 +462,19 @@ export default function POsPage() {
                   </div>
                 )}
               </div>
-              <button onClick={() => setActivePo(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <button onClick={() => setActivePo(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
-            <div style={{ background: '#1a2f4e', padding: 12, borderRadius: 10 }}>
+            <div style={{ background: 'var(--bg3)', padding: 12, borderRadius: 10 }}>
               {(activePo.lineItems || []).map((li, i) => (
                 <div key={i} style={{ display: 'grid', gridTemplateColumns: '1fr 70px', gap: 8, padding: '6px 0', borderBottom: i < activePo.lineItems.length - 1 ? '0.5px solid rgba(255,255,255,0.05)' : 'none' }}>
                   <div>
-                    <div style={{ fontFamily: SF, fontSize: 13, color: '#eef3fa' }}>{li.description}</div>
-                    <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>{li.quantity}{li.unit ? ` ${li.unit}` : ''} × £{li.unitPrice.toFixed(2)}</div>
+                    <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)' }}>{li.description}</div>
+                    <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{li.quantity}{li.unit ? ` ${li.unit}` : ''} × £{li.unitPrice.toFixed(2)}</div>
                   </div>
-                  <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#eef3fa', fontWeight: 600, textAlign: 'right' }}>£{li.total.toFixed(2)}</div>
+                  <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: 'var(--t1)', fontWeight: 600, textAlign: 'right' }}>£{li.total.toFixed(2)}</div>
                 </div>
               ))}
-              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '0.5px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 15, color: '#eef3fa', fontWeight: 700 }}>
+              <div style={{ marginTop: 8, paddingTop: 8, borderTop: '0.5px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: 15, color: 'var(--t1)', fontWeight: 700 }}>
                 <span>Total (inc {activePo.vatRate}% VAT)</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>£{activePo.total.toFixed(2)}</span>
               </div>
             </div>
@@ -534,5 +534,5 @@ export default function POsPage() {
 const statusBtn = (color: string): React.CSSProperties => ({
   padding: '10px', borderRadius: 10, background: `${color}22`, border: `0.5px solid ${color}66`, color, fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
 })
-const labelStyle: React.CSSProperties = { fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }
-const inputStyle: React.CSSProperties = { width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box' }
+const labelStyle: React.CSSProperties = { fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }
+const inputStyle: React.CSSProperties = { width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box' }

@@ -51,7 +51,7 @@ export default function Avatar({
         alignItems: 'center',
         justifyContent: 'center',
         flexShrink: 0,
-        border: ring ? `2px solid ${ringColor || '#06101e'}` : 'none',
+        border: ring ? `2px solid ${ringColor || 'var(--bg0)'}` : 'none',
         boxShadow: ring ? `0 0 0 1px ${color}44` : 'none',
       }}
     >

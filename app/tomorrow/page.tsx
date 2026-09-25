@@ -44,22 +44,22 @@ export default function TomorrowPage() {
   tomorrow.setDate(tomorrow.getDate() + 1)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       <div style={{ padding: '16px 20px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>All apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>All apps</span>
         </Link>
-        <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
+        <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
           Tomorrow
         </h1>
-        <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
+        <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
           {tomorrow.toLocaleDateString('en-GB', { weekday: 'long', day: '2-digit', month: 'long' })}{loading ? '' : ` · ${tasks.length} tasks · ${meetings.length} meetings`}
         </p>
       </div>
 
       <div style={{ padding: '16px 20px' }}>
-        {loading && <p style={{ color: '#52749a', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>Loading…</p>}
+        {loading && <p style={{ color: 'var(--t3)', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>Loading…</p>}
 
         {!loading && meetings.length > 0 && (
           <section style={{ marginBottom: 20 }}>
@@ -84,7 +84,7 @@ export default function TomorrowPage() {
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {tasks.map(t => (
                 <Link key={t.id} href="/tasks" style={card}>
-                  <IcCheck size={14} color={t.priority === 'critical' ? '#ef4444' : t.priority === 'high' ? '#f59e0b' : '#52749a'} />
+                  <IcCheck size={14} color={t.priority === 'critical' ? '#ef4444' : t.priority === 'high' ? '#f59e0b' : 'var(--t3)'} />
                   <div style={{ flex: 1, minWidth: 0 }}>
                     <div style={cardTitle}>{t.title}</div>
                     <div style={cardSub}>{t.project?.name || 'No project'} · {t.status}</div>
@@ -96,8 +96,8 @@ export default function TomorrowPage() {
         )}
 
         {!loading && tasks.length === 0 && meetings.length === 0 && (
-          <div style={{ color: '#52749a', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
-            <IcClock size={32} color="#52749a" />
+          <div style={{ color: 'var(--t3)', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
+            <IcClock size={32} color="var(--t3)" />
             <p style={{ marginTop: 12 }}>Nothing scheduled for tomorrow yet.<br />Looks like a clear day.</p>
           </div>
         )}
@@ -109,7 +109,7 @@ export default function TomorrowPage() {
 }
 
 const card: React.CSSProperties = {
-  background: '#152641',
+  background: 'var(--surface-raised)',
   borderRadius: 10,
   padding: '10px 12px',
   border: '0.5px solid rgba(255,255,255,0.07)',
@@ -119,5 +119,5 @@ const card: React.CSSProperties = {
   textDecoration: 'none',
   fontFamily: 'var(--font-system)',
 }
-const cardTitle: React.CSSProperties = { fontSize: 13, color: '#eef3fa', fontWeight: 600 }
-const cardSub: React.CSSProperties = { fontSize: 11, color: '#8ea8c5', marginTop: 2 }
+const cardTitle: React.CSSProperties = { fontSize: 13, color: 'var(--t1)', fontWeight: 600 }
+const cardSub: React.CSSProperties = { fontSize: 11, color: 'var(--t2)', marginTop: 2 }

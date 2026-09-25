@@ -37,11 +37,11 @@ const STATUS_LABEL: Record<Status, string> = {
 }
 const STATUS_COLOR: Record<Status, string> = {
   in_service: '#22c55e',
-  in_yard: '#52749a',
+  in_yard: 'var(--t3)',
   in_service_centre: '#f59e0b',
   out_of_service: '#ef4444',
 }
-const SERVICE_COLOR: Record<ServiceBucket, string> = { ok: '#22c55e', soon: '#f59e0b', overdue: '#ef4444', none: '#52749a' }
+const SERVICE_COLOR: Record<ServiceBucket, string> = { ok: '#22c55e', soon: '#f59e0b', overdue: '#ef4444', none: 'var(--t3)' }
 
 export default function EquipmentPage() {
   const [items, setItems] = useState<Equipment[]>([])
@@ -130,33 +130,33 @@ export default function EquipmentPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Equipment command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Equipment</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Equipment</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {items.length} items
               {alerts > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {alerts} service alerts</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Add equipment" style={{ width: 36, height: 36, borderRadius: 10, background: '#52749a', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button onClick={() => setShowAdd(true)} aria-label="Add equipment" style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--t3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ position: 'relative', marginBottom: 8 }}>
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name / code / serial…" style={{ ...inputStyle, paddingLeft: 32, fontSize: 13 }} />
-          <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="#52749a" /></div>
+          <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="var(--t3)" /></div>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
           {(['all', 'in_service', 'in_yard', 'in_service_centre', 'out_of_service'] as const).map(s => (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: statusFilter === s ? '#52749a' : 'rgba(255,255,255,0.06)', color: statusFilter === s ? '#fff' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <button key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: statusFilter === s ? 'var(--t3)' : 'rgba(255,255,255,0.06)', color: statusFilter === s ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               {s === 'all' ? 'All' : STATUS_LABEL[s]}
             </button>
           ))}
@@ -164,30 +164,30 @@ export default function EquipmentPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : items.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcWrench size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcWrench size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No equipment registered</p>
-          <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#52749a', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: 'var(--t3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Add first item
           </button>
         </div>
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {items.map(e => (
-            <button key={e.id} onClick={() => setActiveItem(e)} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
-              <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: '#52749a22', color: '#52749a', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                <IcWrench size={18} color="#52749a" />
+            <button key={e.id} onClick={() => setActiveItem(e)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
+              <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: '#52749a22', color: 'var(--t3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                <IcWrench size={18} color="var(--t3)" />
               </div>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{e.name}</span>
-                  {e.code && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a' }}>{e.code}</span>}
+                  <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{e.name}</span>
+                  {e.code && <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)' }}>{e.code}</span>}
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>
+                <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>
                   {e.category || 'Uncategorised'}
                   {e.ownership === 'hired' && e.hireCompany && <> · hired from {e.hireCompany}</>}
                   {e.location && <> · {e.location}</>}
@@ -213,10 +213,10 @@ export default function EquipmentPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Add equipment</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add equipment</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Equipment name (e.g. Hilti TE-50)" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
@@ -249,7 +249,7 @@ export default function EquipmentPage() {
                 <input type="date" value={form.nextServiceAt} onChange={e => setForm(p => ({ ...p, nextServiceAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
             </div>
-            <button onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#52749a', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: 'var(--t3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add</>}
             </button>
           </div>
@@ -259,27 +259,27 @@ export default function EquipmentPage() {
       {activeItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setActiveItem(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>{activeItem.name}</h2>
-                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>{activeItem.category || 'Uncategorised'} · {activeItem.ownership}</div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{activeItem.name}</h2>
+                <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>{activeItem.category || 'Uncategorised'} · {activeItem.ownership}</div>
               </div>
-              <button onClick={() => setActiveItem(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <button onClick={() => setActiveItem(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>
-              {activeItem.code && <div><span style={{ color: '#52749a' }}>Code:</span> <span style={{ fontFamily: 'ui-monospace, monospace' }}>{activeItem.code}</span></div>}
-              {activeItem.serial && <div><span style={{ color: '#52749a' }}>Serial:</span> <span style={{ fontFamily: 'ui-monospace, monospace' }}>{activeItem.serial}</span></div>}
-              {activeItem.location && <div><span style={{ color: '#52749a' }}>Location:</span> {activeItem.location}</div>}
-              {activeItem.hireCompany && <div><span style={{ color: '#52749a' }}>Hired from:</span> {activeItem.hireCompany}</div>}
-              {activeItem.lastServicedAt && <div><span style={{ color: '#52749a' }}>Last serviced:</span> {new Date(activeItem.lastServicedAt).toLocaleDateString('en-GB')}</div>}
-              {activeItem.nextServiceAt && <div><span style={{ color: '#52749a' }}>Next service:</span> <span style={{ color: SERVICE_COLOR[activeItem.serviceBucket] }}>{new Date(activeItem.nextServiceAt).toLocaleDateString('en-GB')}</span></div>}
+              {activeItem.code && <div><span style={{ color: 'var(--t3)' }}>Code:</span> <span style={{ fontFamily: 'ui-monospace, monospace' }}>{activeItem.code}</span></div>}
+              {activeItem.serial && <div><span style={{ color: 'var(--t3)' }}>Serial:</span> <span style={{ fontFamily: 'ui-monospace, monospace' }}>{activeItem.serial}</span></div>}
+              {activeItem.location && <div><span style={{ color: 'var(--t3)' }}>Location:</span> {activeItem.location}</div>}
+              {activeItem.hireCompany && <div><span style={{ color: 'var(--t3)' }}>Hired from:</span> {activeItem.hireCompany}</div>}
+              {activeItem.lastServicedAt && <div><span style={{ color: 'var(--t3)' }}>Last serviced:</span> {new Date(activeItem.lastServicedAt).toLocaleDateString('en-GB')}</div>}
+              {activeItem.nextServiceAt && <div><span style={{ color: 'var(--t3)' }}>Next service:</span> <span style={{ color: SERVICE_COLOR[activeItem.serviceBucket] }}>{new Date(activeItem.nextServiceAt).toLocaleDateString('en-GB')}</span></div>}
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
               {(Object.keys(STATUS_LABEL) as Status[]).map(s => (
-                <button key={s} onClick={() => setStatus(activeItem, s)} disabled={activeItem.status === s} style={{ padding: '8px', borderRadius: 8, border: `0.5px solid ${activeItem.status === s ? STATUS_COLOR[s] : 'rgba(255,255,255,0.1)'}`, background: activeItem.status === s ? `${STATUS_COLOR[s]}22` : 'rgba(255,255,255,0.04)', color: activeItem.status === s ? STATUS_COLOR[s] : '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: activeItem.status === s ? 'default' : 'pointer' }}>
+                <button key={s} onClick={() => setStatus(activeItem, s)} disabled={activeItem.status === s} style={{ padding: '8px', borderRadius: 8, border: `0.5px solid ${activeItem.status === s ? STATUS_COLOR[s] : 'rgba(255,255,255,0.1)'}`, background: activeItem.status === s ? `${STATUS_COLOR[s]}22` : 'rgba(255,255,255,0.04)', color: activeItem.status === s ? STATUS_COLOR[s] : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: activeItem.status === s ? 'default' : 'pointer' }}>
                   {STATUS_LABEL[s]}
                 </button>
               ))}
@@ -297,8 +297,8 @@ export default function EquipmentPage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

@@ -122,18 +122,18 @@ export default function MessagesPage() {
   const recent = filtered.filter(i => !i.isPinned)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Messages command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Messages</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Messages</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {items.length} announcement{items.length === 1 ? '' : 's'}
               {pinned.length > 0 && <span style={{ color: '#f59e0b', marginLeft: 6 }}>· {pinned.length} pinned</span>}
             </p>
@@ -144,7 +144,7 @@ export default function MessagesPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'general', 'safety', 'urgent', 'update'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : TYPE_CFG[t].label}
             </button>
           ))}
@@ -152,12 +152,12 @@ export default function MessagesPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcBell size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcBell size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No announcements yet</p>
           <button onClick={() => setShowCompose(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Post first
@@ -167,12 +167,12 @@ export default function MessagesPage() {
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {pinned.length > 0 && (
             <>
-              <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4 }}>📌 Pinned</div>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4 }}>📌 Pinned</div>
               {pinned.map(a => <Card key={a.id} a={a} onPin={togglePin} onDelete={remove} confirmDelete={confirmDelete} />)}
             </>
           )}
           {recent.length > 0 && pinned.length > 0 && (
-            <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4, marginTop: 8 }}>Recent</div>
+            <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, paddingLeft: 4, marginTop: 8 }}>Recent</div>
           )}
           {recent.map(a => <Card key={a.id} a={a} onPin={togglePin} onDelete={remove} confirmDelete={confirmDelete} />)}
         </div>
@@ -183,17 +183,17 @@ export default function MessagesPage() {
       {showCompose && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowCompose(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF }}>New announcement</h2>
-              <button onClick={() => setShowCompose(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>New announcement</h2>
+              <button onClick={() => setShowCompose(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
               <label style={labelStyle}>Type</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                 {(['general', 'safety', 'urgent', 'update'] as const).map(t => (
-                  <button key={t} onClick={() => setForm(p => ({ ...p, type: t }))} style={{ padding: '8px', borderRadius: 8, border: form.type === t ? `1px solid ${TYPE_CFG[t].color}` : '1px solid rgba(255,255,255,0.1)', background: form.type === t ? TYPE_CFG[t].bg : 'rgba(255,255,255,0.02)', color: form.type === t ? TYPE_CFG[t].color : '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <button key={t} onClick={() => setForm(p => ({ ...p, type: t }))} style={{ padding: '8px', borderRadius: 8, border: form.type === t ? `1px solid ${TYPE_CFG[t].color}` : '1px solid rgba(255,255,255,0.1)', background: form.type === t ? TYPE_CFG[t].bg : 'rgba(255,255,255,0.02)', color: form.type === t ? TYPE_CFG[t].color : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     {TYPE_CFG[t].label}
                   </button>
                 ))}
@@ -227,19 +227,19 @@ export default function MessagesPage() {
 function Card({ a, onPin, onDelete, confirmDelete }: { a: Announcement; onPin: (a: Announcement) => void; onDelete: (id: string) => void; confirmDelete: string | null }) {
   const cfg = TYPE_CFG[a.type]
   return (
-    <div style={{ background: '#152641', borderRadius: 14, padding: '14px', border: `0.5px solid ${a.isPinned ? `${cfg.color}55` : 'rgba(255,255,255,0.07)'}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
+    <div style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: `0.5px solid ${a.isPinned ? `${cfg.color}55` : 'rgba(255,255,255,0.07)'}`, display: 'flex', flexDirection: 'column', gap: 6 }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
         <span style={{ padding: '2px 8px', borderRadius: 99, background: cfg.bg, color: cfg.color, fontFamily: SF, fontSize: 9, fontWeight: 800, border: `1px solid ${cfg.color}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span>
-        {a.project && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>{a.project.name}</span>}
-        <span style={{ marginLeft: 'auto', fontFamily: SF, fontSize: 11, color: '#52749a' }}>{new Date(a.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
+        {a.project && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{a.project.name}</span>}
+        <span style={{ marginLeft: 'auto', fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{new Date(a.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</span>
       </div>
-      <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.2 }}>{a.title}</div>
+      <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.2 }}>{a.title}</div>
       <div style={{ fontFamily: SF, fontSize: 13, color: '#c1d2e8', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{a.body}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-        {a.authorName && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>— {a.authorName}</span>}
+        {a.authorName && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>— {a.authorName}</span>}
         <button onClick={() => onPin(a)} aria-label={a.isPinned ? 'Unpin' : 'Pin'} style={{ marginLeft: 'auto', background: a.isPinned ? `${cfg.color}22` : 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
-          <IcPin size={11} color={a.isPinned ? cfg.color : '#52749a'} />
-          <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: a.isPinned ? cfg.color : '#52749a' }}>{a.isPinned ? 'Pinned' : 'Pin'}</span>
+          <IcPin size={11} color={a.isPinned ? cfg.color : 'var(--t3)'} />
+          <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: a.isPinned ? cfg.color : 'var(--t3)' }}>{a.isPinned ? 'Pinned' : 'Pin'}</span>
         </button>
         <button onClick={() => onDelete(a.id)} aria-label={confirmDelete === a.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === a.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === a.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
           <IcTrash size={11} color="#ef4444" />
@@ -251,8 +251,8 @@ function Card({ a, onPin, onDelete, confirmDelete }: { a: Announcement; onPin: (
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

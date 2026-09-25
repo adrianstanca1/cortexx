@@ -40,8 +40,8 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
       {/* Header */}
       <div style={{ padding: '8px 20px 12px' }}>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em' }}>Site Status</div>
-          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+          <div style={{ fontFamily: SF, fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em' }}>Site Status</div>
+          <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : 'var(--t3)', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
         </div>
         <div style={{ fontFamily: SFMono, fontSize: 11, color: '#10b981', marginTop: 2, fontWeight: 600 }}>
           ● LIVE · {new Date().toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })} {Intl.DateTimeFormat().resolvedOptions().timeZone.split('/').pop()?.toUpperCase() || 'BST'}
@@ -52,7 +52,7 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
       <div style={{ padding: '4px 16px 12px' }}>
         <div style={{
           position: 'relative', borderRadius: 16, overflow: 'hidden',
-          background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)',
+          background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)',
         }}>
           <svg width="100%" height="160" style={{ display: 'block', background: '#0a1830' }}>
             <defs>
@@ -99,12 +99,12 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
               style={{ padding: '10px 14px', borderTop: '0.5px solid rgba(255,255,255,0.07)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
               <div>
-                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{heroProject.name}</div>
+                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{heroProject.name}</div>
                 <div style={{ fontFamily: SFMono, fontSize: 11, color: '#10b981' }}>
                   ● {heroProject.onSiteCount || 0} ON SITE · {heroProject.progress}% complete
                 </div>
               </div>
-              <IcArrowRight size={16} color="#52749a" />
+              <IcArrowRight size={16} color="var(--t3)" />
             </div>
           )}
         </div>
@@ -114,19 +114,19 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
       <div style={{ padding: '0 16px 12px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
         {kpis.map(k => (
           <div key={k.l} style={{
-            background: '#152641', borderRadius: 12, padding: 12,
+            background: 'var(--surface-raised)', borderRadius: 12, padding: 12,
             border: '0.5px solid rgba(255,255,255,0.07)', position: 'relative',
           }}>
             <div style={{ color: k.c, opacity: 0.7, marginBottom: 4 }}>
               <k.I size={14} color={k.c} />
             </div>
-            <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{k.l}</div>
+            <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>{k.l}</div>
             <div style={{ fontFamily: SFMono, fontSize: 22, fontWeight: 700, color: k.c, marginTop: 2, letterSpacing: -0.5, lineHeight: 1 }}>
-              {'s' in k && k.s === '£' && <span style={{ fontSize: 13, color: '#8ea8c5', marginRight: 1 }}>£</span>}
+              {'s' in k && k.s === '£' && <span style={{ fontSize: 13, color: 'var(--t2)', marginRight: 1 }}>£</span>}
               {k.v}
-              {'u' in k && k.u && <span style={{ fontSize: 13, color: '#8ea8c5' }}>{k.u}</span>}
+              {'u' in k && k.u && <span style={{ fontSize: 13, color: 'var(--t2)' }}>{k.u}</span>}
             </div>
-            <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', marginTop: 2 }}>
+            <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>
               {'this_wk' in k ? 'this wk' : k.s}
             </div>
           </div>
@@ -135,29 +135,29 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
 
       {/* All sites — compact telemetry rows */}
       <div style={{ padding: '0 20px 8px', display: 'flex', justifyContent: 'space-between' }}>
-        <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 700, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: 0.6 }}>All sites</span>
+        <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 700, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: 0.6 }}>All sites</span>
         <span style={{ fontFamily: SFMono, fontSize: 11, color: '#10b981' }}>
           {'●'.repeat(activeSites)}{'○'.repeat(Math.max(0, projects.length - activeSites))} live
         </span>
       </div>
       <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {projects.map(p => {
-          const c = p.status === 'active' ? '#10b981' : p.status === 'snagging' ? '#f59e0b' : p.status === 'quoting' ? '#8b5cf6' : '#52749a'
+          const c = p.status === 'active' ? '#10b981' : p.status === 'snagging' ? '#f59e0b' : p.status === 'quoting' ? '#8b5cf6' : 'var(--t3)'
           const stLabel = p.status.toUpperCase()
           return (
             <div
               key={p.id}
               onClick={() => router.push(`/projects/${p.id}`)}
               style={{
-                background: '#152641', borderRadius: 10, padding: '10px 12px',
+                background: 'var(--surface-raised)', borderRadius: 10, padding: '10px 12px',
                 border: '0.5px solid rgba(255,255,255,0.07)',
                 display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
               }}
             >
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: '#eef3fa' }}>{p.name}</span>
-                  <span style={{ fontFamily: SFMono, fontSize: 10, color: '#52749a' }}>
+                  <span style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{p.name}</span>
+                  <span style={{ fontFamily: SFMono, fontSize: 10, color: 'var(--t3)' }}>
                     {p.postcode?.split(' ')[0] || ''}
                   </span>
                 </div>
@@ -169,14 +169,14 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 600 }}>{p.onSiteCount || 0} on site</div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 600 }}>{p.onSiteCount || 0} on site</div>
                 <div style={{ fontFamily: SFMono, fontSize: 9, color: c, fontWeight: 700, marginTop: 2, letterSpacing: 0.3 }}>{stLabel}</div>
               </div>
             </div>
           )
         })}
         {projects.length === 0 && (
-          <p style={{ fontFamily: SF, fontSize: 13, color: '#52749a', padding: '20px 0', textAlign: 'center' }}>No projects yet</p>
+          <p style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)', padding: '20px 0', textAlign: 'center' }}>No projects yet</p>
         )}
       </div>
     </div>

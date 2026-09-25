@@ -38,9 +38,9 @@ interface SubInvoice {
 }
 
 const SF = 'var(--font-system)'
-const STATUS_COLOR: Record<SubInvoice['status'], string> = { received: '#52749a', approved: '#f59e0b', paid: '#22c55e', disputed: '#ef4444' }
+const STATUS_COLOR: Record<SubInvoice['status'], string> = { received: 'var(--t3)', approved: '#f59e0b', paid: '#22c55e', disputed: '#ef4444' }
 const STATUS_LABEL: Record<SubInvoice['status'], string> = { received: 'Received', approved: 'Approved', paid: 'Paid', disputed: 'Disputed' }
-const MATCH_COLOR: Record<string, string> = { matched: '#22c55e', pending_delivery: '#a78bfa', over_received: '#ef4444', over_order: '#ef4444', invalid: '#ef4444', unmatched: '#52749a' }
+const MATCH_COLOR: Record<string, string> = { matched: '#22c55e', pending_delivery: '#a78bfa', over_received: '#ef4444', over_order: '#ef4444', invalid: '#ef4444', unmatched: 'var(--t3)' }
 const MATCH_LABEL: Record<string, string> = { matched: '3-way matched', pending_delivery: 'Awaiting delivery', over_received: 'Invoice > received', over_order: 'Invoice > PO', invalid: 'Match invalid', unmatched: 'Not matched' }
 
 const CIS_RATE: Record<string, number> = { gross: 0, '20': 0.20, '30': 0.30 }
@@ -179,18 +179,18 @@ export default function SubInvoicesPage() {
   const filtered = filter === 'all' ? invoices : invoices.filter(i => i.status === filter)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Sub Invoices command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Sub invoices</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>{invoices.length} total · {pendingCount} pending</p>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Sub invoices</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{invoices.length} total · {pendingCount} pending</p>
           </div>
           <button onClick={() => setShowAdd(true)} disabled={subs.length === 0} aria-label="Record invoice" style={{ width: 36, height: 36, borderRadius: 10, background: subs.length === 0 ? 'rgba(245,158,11,0.3)' : '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: subs.length === 0 ? 'not-allowed' : 'pointer' }}>
             <IcPlus size={18} color="#fff" />
@@ -200,11 +200,11 @@ export default function SubInvoicesPage() {
         {(pendingPayable > 0 || pendingCisHeld > 0) && (
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
             <div style={{ background: 'rgba(245,158,11,0.08)', border: '0.5px solid rgba(245,158,11,0.3)', borderRadius: 10, padding: '8px 12px' }}>
-              <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Pending payable</div>
+              <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>Pending payable</div>
               <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, color: '#f59e0b', fontWeight: 700 }}>£{pendingPayable.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</div>
             </div>
             <div style={{ background: 'rgba(59,130,246,0.08)', border: '0.5px solid rgba(59,130,246,0.3)', borderRadius: 10, padding: '8px 12px' }}>
-              <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>CIS held</div>
+              <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5 }}>CIS held</div>
               <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, color: '#3b82f6', fontWeight: 700 }}>£{pendingCisHeld.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</div>
             </div>
           </div>
@@ -212,23 +212,23 @@ export default function SubInvoicesPage() {
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', paddingBottom: 2 }}>
           {(['all', 'received', 'approved', 'paid', 'disputed'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
           {invoices.length > 0 && (
-            <button onClick={exportCsv} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent', color: '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>CSV</button>
+            <button onClick={exportCsv} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>CSV</button>
           )}
         </div>
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcDoc size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcDoc size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{invoices.length === 0 ? 'No sub invoices' : 'Nothing in this filter'}</p>
           {invoices.length === 0 && subs.length === 0 && (
             <Link href="/subs" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#2563eb', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Add subcontractors first</Link>
@@ -237,13 +237,13 @@ export default function SubInvoicesPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {filtered.map(i => (
-            <button key={i.id} onClick={() => setActiveInv(i)} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
+            <button key={i.id} onClick={() => setActiveInv(i)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
-                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', fontWeight: 600 }}>{i.number}</span>
-                  <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa' }}>{i.subcontractor?.name || 'Unknown'}</span>
+                  <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 600 }}>{i.number}</span>
+                  <span style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{i.subcontractor?.name || 'Unknown'}</span>
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5', marginTop: 1 }}>
+                <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>
                   {new Date(i.invoiceDate).toLocaleDateString('en-GB')}
                   {i.subcontractor && <span> · CIS {i.subcontractor.cisStatus}</span>}
                   {i.project && <span> · {i.project.name}</span>}
@@ -252,10 +252,10 @@ export default function SubInvoicesPage() {
                 </div>
               </div>
               <div style={{ textAlign: 'right' }}>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: '#eef3fa', fontWeight: 700 }}>£{i.payableAmount.toFixed(2)}</div>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: 'var(--t1)', fontWeight: 700 }}>£{i.payableAmount.toFixed(2)}</div>
                 <span style={{ display: 'inline-block', marginTop: 2, padding: '1px 7px', borderRadius: 99, background: `${STATUS_COLOR[i.status]}22`, color: STATUS_COLOR[i.status], fontFamily: SF, fontSize: 9, fontWeight: 700, border: `1px solid ${STATUS_COLOR[i.status]}55`, textTransform: 'uppercase' }}>{STATUS_LABEL[i.status]}</span>
                 {i.purchaseOrderId && i.matchStatus && (
-                  <div style={{ marginTop: 3, fontFamily: SF, fontSize: 9, fontWeight: 700, color: MATCH_COLOR[i.matchStatus] || '#52749a' }}>{MATCH_LABEL[i.matchStatus] || i.matchStatus}</div>
+                  <div style={{ marginTop: 3, fontFamily: SF, fontSize: 9, fontWeight: 700, color: MATCH_COLOR[i.matchStatus] || 'var(--t3)' }}>{MATCH_LABEL[i.matchStatus] || i.matchStatus}</div>
                 )}
               </div>
             </button>
@@ -268,10 +268,10 @@ export default function SubInvoicesPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: SF }}>Record sub invoice</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Record sub invoice</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <div>
               <label style={labelStyle}>Subcontractor</label>
@@ -279,7 +279,7 @@ export default function SubInvoicesPage() {
                 {subs.map(s => <option key={s.id} value={s.id}>{s.name} — CIS {s.cisStatus}</option>)}
               </select>
               {selectedSub && (
-                <div style={{ marginTop: 4, fontFamily: SF, fontSize: 11, color: '#52749a' }}>
+                <div style={{ marginTop: 4, fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>
                   Auto-withhold: <span style={{ color: '#f59e0b', fontWeight: 700 }}>{(CIS_RATE[selectedSub.cisStatus] * 100).toFixed(0)}%</span> of net under CIS
                 </div>
               )}
@@ -317,7 +317,7 @@ export default function SubInvoicesPage() {
             </div>
 
             {totals.net > 0 && (
-              <div style={{ background: '#1a2f4e', borderRadius: 10, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+              <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '10px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
                 <Row label="Net" value={`£${totals.net.toFixed(2)}`} muted />
                 <Row label={`VAT (${form.vatRate}%)`} value={`£${totals.vat.toFixed(2)}`} muted />
                 <Row label="Gross" value={`£${totals.gross.toFixed(2)}`} muted />
@@ -336,24 +336,24 @@ export default function SubInvoicesPage() {
       {activeInv && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setActiveInv(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
-                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', fontWeight: 700 }}>{activeInv.number}</div>
-                <h2 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: SF, marginTop: 2 }}>{activeInv.subcontractor?.name}</h2>
-                <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
+                <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 700 }}>{activeInv.number}</div>
+                <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', fontFamily: SF, marginTop: 2 }}>{activeInv.subcontractor?.name}</h2>
+                <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>
                   {new Date(activeInv.invoiceDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'long', year: 'numeric' })}
                   {activeInv.subcontractor && <> · CIS {activeInv.subcontractor.cisStatus}</>}
                   {activeInv.purchaseOrder && <> · {activeInv.purchaseOrder.number}</>}
                   {activeInv.costCode && <> · {activeInv.costCode.code}</>}
                 </div>
               </div>
-              <button onClick={() => setActiveInv(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <button onClick={() => setActiveInv(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
-            {activeInv.description && <div style={{ background: '#1a2f4e', padding: '10px 12px', borderRadius: 10, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>{activeInv.description}</div>}
+            {activeInv.description && <div style={{ background: 'var(--bg3)', padding: '10px 12px', borderRadius: 10, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>{activeInv.description}</div>}
 
-            <div style={{ background: '#1a2f4e', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <Row label="Net" value={`£${activeInv.netAmount.toFixed(2)}`} muted />
               <Row label="VAT" value={`£${activeInv.vatAmount.toFixed(2)}`} muted />
               <Row label="Gross" value={`£${activeInv.grossAmount.toFixed(2)}`} muted />
@@ -362,10 +362,10 @@ export default function SubInvoicesPage() {
             </div>
 
             {activeInv.purchaseOrderId && activeInv.matchStatus && (
-              <div style={{ background: `${MATCH_COLOR[activeInv.matchStatus] || '#52749a'}16`, border: `0.5px solid ${MATCH_COLOR[activeInv.matchStatus] || '#52749a'}55`, borderRadius: 10, padding: '10px 12px', fontFamily: SF }}>
-                <div style={{ fontSize: 12, fontWeight: 800, color: MATCH_COLOR[activeInv.matchStatus] || '#52749a' }}>{MATCH_LABEL[activeInv.matchStatus] || activeInv.matchStatus}</div>
+              <div style={{ background: `${MATCH_COLOR[activeInv.matchStatus] || 'var(--t3)'}16`, border: `0.5px solid ${MATCH_COLOR[activeInv.matchStatus] || 'var(--t3)'}55`, borderRadius: 10, padding: '10px 12px', fontFamily: SF }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: MATCH_COLOR[activeInv.matchStatus] || 'var(--t3)' }}>{MATCH_LABEL[activeInv.matchStatus] || activeInv.matchStatus}</div>
                 {activeInv.matchDetails && (
-                  <div style={{ marginTop: 4, fontSize: 10, color: '#8ea8c5' }}>
+                  <div style={{ marginTop: 4, fontSize: 10, color: 'var(--t2)' }}>
                     PO £{Number(activeInv.matchDetails.orderedNet || 0).toFixed(2)} · received £{Number(activeInv.matchDetails.receivedNet || 0).toFixed(2)} · invoices £{Number(activeInv.matchDetails.cumulativeInvoiceNet || activeInv.netAmount).toFixed(2)}
                   </div>
                 )}
@@ -392,10 +392,10 @@ export default function SubInvoicesPage() {
                 <button onClick={() => changeStatus(activeInv, 'disputed')} style={statusBtn('#ef4444')}>Dispute</button>
               )}
               {activeInv.status === 'paid' && (
-                <button onClick={() => changeStatus(activeInv, 'approved')} style={statusBtn('#52749a')}>Unmark paid</button>
+                <button onClick={() => changeStatus(activeInv, 'approved')} style={statusBtn('var(--t3)')}>Unmark paid</button>
               )}
               {activeInv.status === 'disputed' && (
-                <button onClick={() => changeStatus(activeInv, 'received')} style={statusBtn('#52749a')}>Resolve</button>
+                <button onClick={() => changeStatus(activeInv, 'received')} style={statusBtn('var(--t3)')}>Resolve</button>
               )}
             </div>
 
@@ -411,7 +411,7 @@ export default function SubInvoicesPage() {
 
 function Row({ label, value, bold, muted, color }: { label: string; value: string; bold?: boolean; muted?: boolean; color?: string }) {
   return (
-    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: bold ? 15 : 13, color: color || (bold ? '#eef3fa' : muted ? '#8ea8c5' : '#eef3fa'), fontWeight: bold ? 700 : 400 }}>
+    <div style={{ display: 'flex', justifyContent: 'space-between', fontFamily: SF, fontSize: bold ? 15 : 13, color: color || (bold ? 'var(--t1)' : muted ? 'var(--t2)' : 'var(--t1)'), fontWeight: bold ? 700 : 400 }}>
       <span>{label}</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>{value}</span>
     </div>
   )
@@ -420,5 +420,5 @@ function Row({ label, value, bold, muted, color }: { label: string; value: strin
 const statusBtn = (color: string): React.CSSProperties => ({
   padding: '10px', borderRadius: 10, background: `${color}22`, border: `0.5px solid ${color}66`, color, fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
 })
-const labelStyle: React.CSSProperties = { fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }
-const inputStyle: React.CSSProperties = { width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box' }
+const labelStyle: React.CSSProperties = { fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }
+const inputStyle: React.CSSProperties = { width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box' }

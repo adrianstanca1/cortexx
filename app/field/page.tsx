@@ -87,39 +87,39 @@ const EVENT_LABEL: Record<string, string> = {
 }
 
 const START_SHIFT: Action[] = [
-  { label: 'Check in / out', sub: 'GPS-backed attendance', href: '/check-in?new=1', color: '#10b981', Icon: IcPin },
-  { label: 'RAMS', sub: 'Review method statements', href: '/rams', color: '#22c55e', Icon: IcHardhat },
-  { label: 'Permits', sub: 'Check permits before work', href: '/permits', color: '#f59e0b', Icon: IcAlert },
-  { label: 'Toolbox talk', sub: 'Brief team and record attendance', href: '/toolbox-talks', color: '#f59e0b', Icon: IcTeam },
+  { label: 'Check in / out', sub: 'GPS-backed attendance', href: '/check-in?new=1', color: '#45d18a', Icon: IcPin },
+  { label: 'RAMS', sub: 'Review method statements', href: '/rams', color: '#45d18a', Icon: IcHardhat },
+  { label: 'Permits', sub: 'Check permits before work', href: '/permits', color: 'var(--accent)', Icon: IcAlert },
+  { label: 'Toolbox talk', sub: 'Brief team and record attendance', href: '/toolbox-talks', color: 'var(--accent)', Icon: IcTeam },
 ]
 
 const WORK: Action[] = [
-  { label: 'Progress capture', sub: 'Photo + GPS evidence', href: '/capture?type=photo', color: '#2563eb', Icon: IcCamera },
-  { label: 'Tasks', sub: 'Today, assigned and urgent work', href: '/tasks', color: '#06b6d4', Icon: IcCheck },
-  { label: 'Drawings', sub: 'Latest revisions on site', href: '/drawings', color: '#8b5cf6', Icon: IcLayers },
-  { label: 'Voice RFI', sub: 'Raise an RFI hands-free', href: '/capture?type=voice', color: '#06b6d4', Icon: IcMic },
-  { label: 'Deliveries', sub: 'Expected, received and delivery evidence', href: '/field/deliveries', color: '#f59e0b', Icon: IcTruck },
-  { label: 'Productivity', sub: 'Planned vs installed by area/elevation', href: '/field/productivity', color: '#10b981', Icon: IcLayers },
-  { label: 'Materials', sub: 'Materials and site requirements', href: '/materials', color: '#f59e0b', Icon: IcTruck },
-  { label: 'Requisitions', sub: 'Request what the site needs', href: '/requisitions', color: '#8b5cf6', Icon: IcDoc },
+  { label: 'Progress capture', sub: 'Photo + GPS evidence', href: '/capture?type=photo', color: '#64a8ff', Icon: IcCamera },
+  { label: 'Tasks', sub: 'Today, assigned and urgent work', href: '/tasks', color: '#48d8ff', Icon: IcCheck },
+  { label: 'Drawings', sub: 'Latest revisions on site', href: '/drawings', color: '#a58bff', Icon: IcLayers },
+  { label: 'Voice RFI', sub: 'Raise an RFI hands-free', href: '/capture?type=voice', color: '#48d8ff', Icon: IcMic },
+  { label: 'Deliveries', sub: 'Expected, received and delivery evidence', href: '/field/deliveries', color: 'var(--accent)', Icon: IcTruck },
+  { label: 'Productivity', sub: 'Planned vs installed by area/elevation', href: '/field/productivity', color: '#45d18a', Icon: IcLayers },
+  { label: 'Materials', sub: 'Materials and site requirements', href: '/materials', color: 'var(--accent)', Icon: IcTruck },
+  { label: 'Requisitions', sub: 'Request what the site needs', href: '/requisitions', color: '#a58bff', Icon: IcDoc },
 ]
 
 const QA_SAFETY: Action[] = [
-  { label: 'Inspections', sub: 'Inspections, hold and witness points', href: '/inspections', color: '#10b981', Icon: IcCheck },
-  { label: 'Constraints', sub: 'Blockers, owners, dates and resolution', href: '/field/constraints', color: '#ef4444', Icon: IcAlert },
-  { label: 'Snags', sub: 'Defects with photo evidence', href: '/snags', color: '#ef4444', Icon: IcAlert },
-  { label: 'Observations', sub: 'Good practice and concerns', href: '/observations', color: '#22c55e', Icon: IcCheck },
-  { label: 'Equipment checks', sub: 'Pre-use and recurring checks', href: '/equipment-checks', color: '#f59e0b', Icon: IcWrench },
-  { label: 'Safety', sub: 'Incidents and investigations', href: '/safety', color: '#ef4444', Icon: IcHardhat },
-  { label: 'Live status', sub: 'See who is currently on site', href: '/live-status', color: '#06b6d4', Icon: IcTeam },
+  { label: 'Inspections', sub: 'Inspections, hold and witness points', href: '/inspections', color: '#45d18a', Icon: IcCheck },
+  { label: 'Constraints', sub: 'Blockers, owners, dates and resolution', href: '/field/constraints', color: '#ff6565', Icon: IcAlert },
+  { label: 'Snags', sub: 'Defects with photo evidence', href: '/snags', color: '#ff6565', Icon: IcAlert },
+  { label: 'Observations', sub: 'Good practice and concerns', href: '/observations', color: '#45d18a', Icon: IcCheck },
+  { label: 'Equipment checks', sub: 'Pre-use and recurring checks', href: '/equipment-checks', color: 'var(--accent)', Icon: IcWrench },
+  { label: 'Safety', sub: 'Incidents and investigations', href: '/safety', color: '#ff6565', Icon: IcHardhat },
+  { label: 'Live status', sub: 'See who is currently on site', href: '/live-status', color: '#48d8ff', Icon: IcTeam },
 ]
 
 const CLOSE_SHIFT: Action[] = [
-  { label: 'Shift handover', sub: 'Pass priorities, risks and open items', href: '/field/handover', color: '#f59e0b', Icon: IcTeam },
-  { label: 'Site diary', sub: 'Progress, delays and evidence', href: '/site-diary', color: '#10b981', Icon: IcDoc },
-  { label: 'Timesheet', sub: 'Check and submit hours', href: '/timesheets', color: '#8b5cf6', Icon: IcClock },
-  { label: 'Photos', sub: 'Review today’s evidence', href: '/photos', color: '#2563eb', Icon: IcCamera },
-  { label: 'Report incident', sub: 'Record before leaving site', href: '/safety?new=1', color: '#ef4444', Icon: IcAlert },
+  { label: 'Shift handover', sub: 'Pass priorities, risks and open items', href: '/field/handover', color: 'var(--accent)', Icon: IcTeam },
+  { label: 'Site diary', sub: 'Progress, delays and evidence', href: '/site-diary', color: '#45d18a', Icon: IcDoc },
+  { label: 'Timesheet', sub: 'Check and submit hours', href: '/timesheets', color: '#a58bff', Icon: IcClock },
+  { label: 'Photos', sub: 'Review today’s evidence', href: '/photos', color: '#64a8ff', Icon: IcCamera },
+  { label: 'Report incident', sub: 'Record before leaving site', href: '/safety?new=1', color: '#ff6565', Icon: IcAlert },
 ]
 
 export default function FieldOperationsPage() {
@@ -301,26 +301,52 @@ export default function FieldOperationsPage() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#06101e', paddingBottom: 100 }}>
-      <header style={{ padding: '18px 20px 14px', borderBottom: '0.5px solid rgba(255,255,255,0.07)', position: 'sticky', top: 0, zIndex: 40, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)' }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
+    <div style={{ minHeight: '100dvh', paddingBottom: 108 }}>
+      <header className="surface-glass" style={{
+        position: 'sticky', top: 0, zIndex: 40,
+        borderLeft: 0, borderRight: 0, borderTop: 0,
+      }}>
+        <div style={{
+          width: 'min(100%, 1180px)', margin: '0 auto',
+          padding: '17px clamp(16px, 3vw, 30px) 14px',
+          display: 'grid', gridTemplateColumns: 'minmax(0,1fr) minmax(180px,300px)',
+          gap: 16, alignItems: 'end',
+        }}>
           <div>
-            <p style={{ margin: 0, color: '#f59e0b', fontFamily: SF, fontSize: 11, fontWeight: 800, letterSpacing: '0.08em', textTransform: 'uppercase' }}>Field mode</p>
-            <h1 style={{ margin: '3px 0 0', color: '#eef3fa', fontFamily: SF, fontSize: 24, letterSpacing: '-0.03em' }}>Field operations</h1>
-            <p style={{ margin: '4px 0 0', color: '#8ea8c5', fontFamily: SF, fontSize: 12 }}>One screen for the working day on site.</p>
+            <div className="section-kicker">Live site command</div>
+            <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 5, flexWrap: 'wrap' }}>
+              <h1 className="display-title" style={{ margin: 0, color: 'var(--t1)', fontSize: 'clamp(27px,4vw,40px)' }}>Field operations</h1>
+              <div style={{
+                padding: '5px 9px', borderRadius: 999,
+                background: online ? 'rgba(69,209,138,.10)' : 'rgba(255,157,77,.10)',
+                border: `1px solid ${online ? 'rgba(69,209,138,.24)' : 'rgba(255,157,77,.24)'}`,
+                color: online ? 'var(--green)' : 'var(--orange)',
+                fontFamily: SF, fontWeight: 900, fontSize: 9.5, letterSpacing: '.08em',
+              }}>
+                {online ? '● LIVE' : '● OFFLINE'}
+              </div>
+            </div>
+            <p style={{ margin: '7px 0 0', color: 'var(--t2)', fontFamily: SF, fontSize: 12.5 }}>
+              Readiness, production, QA and site evidence organised around the working shift.
+            </p>
           </div>
-          <div style={{ padding: '6px 10px', borderRadius: 999, background: online ? 'rgba(16,185,129,.12)' : 'rgba(245,158,11,.12)', color: online ? '#10b981' : '#f59e0b', fontFamily: SF, fontWeight: 800, fontSize: 11 }}>
-            {online ? '● LIVE' : '● OFFLINE'}
-          </div>
-        </div>
 
-        <select value={projectId} onChange={e => setProjectId(e.target.value)} style={{ marginTop: 14, width: '100%', background: '#102039', color: '#eef3fa', border: '1px solid rgba(255,255,255,.09)', borderRadius: 12, padding: '12px 13px', fontFamily: SF, fontSize: 14 }}>
-          {(data?.projects || []).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
-          {!data?.projects?.length && <option value="">No active project</option>}
-        </select>
+          <label style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
+            <span style={{ color: 'var(--t3)', fontFamily: SF, fontSize: 9.5, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.1em' }}>Active worksite</span>
+            <select value={projectId} onChange={e => setProjectId(e.target.value)} style={{
+              width: '100%', background: 'var(--surface-raised)', color: 'var(--t1)',
+              border: '1px solid var(--hairMid)', borderRadius: 12,
+              padding: '11px 12px', fontFamily: SF, fontSize: 13, fontWeight: 750,
+              outline: 'none',
+            }}>
+              {(data?.projects || []).map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
+              {!data?.projects?.length && <option value="">No active project</option>}
+            </select>
+          </label>
+        </div>
       </header>
 
-      <main style={{ padding: '14px 16px 0' }}>
+      <main style={{ width: 'min(100%, 1180px)', margin: '0 auto', padding: '16px clamp(14px, 3vw, 30px) 0' }}>
         <section style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 14 }}>
           <Metric label="Open jobs" value={loading ? '—' : String(openTasks.length)} color="#f59e0b" />
           <Metric label="Urgent" value={loading ? '—' : String(urgentTasks.length)} color={urgentTasks.length ? '#ef4444' : '#10b981'} />
@@ -335,7 +361,7 @@ export default function FieldOperationsPage() {
 
         <section style={{ marginBottom: 18 }}>
           <SectionTitle title="Live readiness" />
-          <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 9 }}>
             <PulseCard href="/permits" label="Active permits" value={pulse.activePermits} alert={pulse.expiringPermits > 0} sub={pulse.expiringPermits ? `${pulse.expiringPermits} expiring soon` : 'No expiry alerts'} />
             <PulseCard href="/inspections" label="Open inspections" value={pulse.openInspections} alert={pulse.failedInspections > 0} sub={pulse.failedInspections ? `${pulse.failedInspections} failed` : 'No failed inspections'} />
             <PulseCard href="/snags" label="Open snags" value={pulse.openSnags} alert={pulse.openSnags > 0} sub="Outstanding defects" />
@@ -358,11 +384,11 @@ export default function FieldOperationsPage() {
             {tasks.map(task => {
               const done = task.status === 'done'
               return (
-                <button type="button" key={task.id} onClick={() => toggleTask(task)} disabled={taskBusy === task.id} style={{ width: '100%', textAlign: 'left', border: '1px solid rgba(255,255,255,.07)', borderRadius: 13, background: '#102039', padding: '13px 14px', display: 'flex', alignItems: 'center', gap: 12, opacity: taskBusy === task.id ? .6 : 1 }}>
-                  <span style={{ width: 24, height: 24, borderRadius: 7, border: `1.5px solid ${done ? '#10b981' : '#52749a'}`, background: done ? '#10b981' : 'transparent', color: '#06101e', display: 'grid', placeItems: 'center', flexShrink: 0, fontWeight: 900 }}>{done ? '✓' : ''}</span>
+                <button type="button" key={task.id} onClick={() => toggleTask(task)} disabled={taskBusy === task.id} style={{ width: '100%', textAlign: 'left', border: '1px solid rgba(255,255,255,.07)', borderRadius: 13, background: 'var(--surface-strong)', padding: '13px 14px', display: 'flex', alignItems: 'center', gap: 12, opacity: taskBusy === task.id ? .6 : 1 }}>
+                  <span style={{ width: 24, height: 24, borderRadius: 7, border: `1.5px solid ${done ? '#10b981' : 'var(--t3)'}`, background: done ? '#10b981' : 'transparent', color: 'var(--bg0)', display: 'grid', placeItems: 'center', flexShrink: 0, fontWeight: 900 }}>{done ? '✓' : ''}</span>
                   <span style={{ minWidth: 0, flex: 1 }}>
-                    <span style={{ display: 'block', color: done ? '#52749a' : '#eef3fa', fontFamily: SF, fontSize: 14, fontWeight: 700, textDecoration: done ? 'line-through' : 'none' }}>{task.title}</span>
-                    <span style={{ display: 'block', marginTop: 3, color: ['high', 'critical'].includes(String(task.priority || '').toLowerCase()) ? '#f59e0b' : '#8ea8c5', fontFamily: SF, fontSize: 11, textTransform: 'capitalize' }}>{task.priority || 'normal'}{task.assignee?.name ? ` · ${task.assignee.name}` : ''}</span>
+                    <span style={{ display: 'block', color: done ? 'var(--t3)' : 'var(--t1)', fontFamily: SF, fontSize: 14, fontWeight: 700, textDecoration: done ? 'line-through' : 'none' }}>{task.title}</span>
+                    <span style={{ display: 'block', marginTop: 3, color: ['high', 'critical'].includes(String(task.priority || '').toLowerCase()) ? '#f59e0b' : 'var(--t2)', fontFamily: SF, fontSize: 11, textTransform: 'capitalize' }}>{task.priority || 'normal'}{task.assignee?.name ? ` · ${task.assignee.name}` : ''}</span>
                   </span>
                 </button>
               )
@@ -372,7 +398,7 @@ export default function FieldOperationsPage() {
 
         <section style={{ marginBottom: 18 }}>
           <SectionTitle title="Log field event" />
-          <div style={{ borderRadius: 14, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 12 }}>
+          <div style={{ borderRadius: 14, background: 'linear-gradient(180deg, var(--surface-raised), var(--surface-strong))', border: '1px solid var(--hair)', padding: 12 }}>
             <div style={{ display: 'flex', gap: 7, overflowX: 'auto', paddingBottom: 8 }}>
               {EVENT_TYPES.map(type => (
                 <button
@@ -382,8 +408,8 @@ export default function FieldOperationsPage() {
                   style={{
                     flexShrink: 0, borderRadius: 999, padding: '7px 10px',
                     border: `1px solid ${eventType === type ? '#f59e0b' : 'rgba(255,255,255,.09)'}`,
-                    background: eventType === type ? 'rgba(245,158,11,.16)' : '#0b1a30',
-                    color: eventType === type ? '#fbbf24' : '#8ea8c5',
+                    background: eventType === type ? 'rgba(245,158,11,.16)' : 'var(--bg1)',
+                    color: eventType === type ? '#fbbf24' : 'var(--t2)',
                     fontFamily: SF, fontSize: 10.5, fontWeight: 800, cursor: 'pointer',
                   }}
                 >
@@ -404,8 +430,8 @@ export default function FieldOperationsPage() {
                   style={{
                     borderRadius: 9, padding: '8px 6px',
                     border: `1px solid ${eventSeverity === value ? color : 'rgba(255,255,255,.08)'}`,
-                    background: eventSeverity === value ? `${color}18` : '#0b1a30',
-                    color: eventSeverity === value ? color : '#8ea8c5',
+                    background: eventSeverity === value ? `${color}18` : 'var(--bg1)',
+                    color: eventSeverity === value ? color : 'var(--t2)',
                     fontFamily: SF, fontSize: 10.5, fontWeight: 800, cursor: 'pointer',
                   }}
                 >
@@ -419,17 +445,17 @@ export default function FieldOperationsPage() {
               placeholder="What happened? Add enough detail for the site record…"
               maxLength={500}
               rows={3}
-              style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: '1px solid rgba(255,255,255,.09)', borderRadius: 11, background: '#0b1a30', color: '#eef3fa', padding: 11, fontFamily: SF, fontSize: 13, lineHeight: 1.45 }}
+              style={{ width: '100%', resize: 'vertical', boxSizing: 'border-box', border: '1px solid rgba(255,255,255,.09)', borderRadius: 11, background: 'var(--bg1)', color: 'var(--t1)', padding: 11, fontFamily: SF, fontSize: 13, lineHeight: 1.45 }}
             />
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, marginTop: 9 }}>
-              <span style={{ color: noteStatus.includes('Could not') ? '#ef4444' : noteStatus ? '#10b981' : '#52749a', fontFamily: SF, fontSize: 10.5 }}>
+              <span style={{ color: noteStatus.includes('Could not') ? '#ef4444' : noteStatus ? '#10b981' : 'var(--t3)', fontFamily: SF, fontSize: 10.5 }}>
                 {noteStatus || `${note.length}/500`}
               </span>
               <button
                 type="button"
                 onClick={saveSiteNote}
                 disabled={!note.trim() || !projectId || noteSaving || !online}
-                style={{ border: 'none', borderRadius: 10, padding: '9px 12px', background: '#f59e0b', color: '#06101e', fontFamily: SF, fontSize: 11, fontWeight: 900, opacity: (!note.trim() || !projectId || noteSaving || !online) ? .45 : 1, cursor: 'pointer' }}
+                style={{ border: 'none', borderRadius: 10, padding: '9px 12px', background: '#f59e0b', color: 'var(--bg0)', fontFamily: SF, fontSize: 11, fontWeight: 900, opacity: (!note.trim() || !projectId || noteSaving || !online) ? .45 : 1, cursor: 'pointer' }}
               >
                 {noteSaving ? 'Saving…' : 'Log event'}
               </button>
@@ -442,10 +468,10 @@ export default function FieldOperationsPage() {
                 return (
                   <div key={event.id} style={{ borderRadius: 11, border: '1px solid rgba(255,255,255,.07)', background: '#0d1c31', padding: '10px 11px', borderLeft: `3px solid ${tone}` }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8 }}>
-                      <span style={{ color: '#eef3fa', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>{event.title}</span>
+                      <span style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>{event.title}</span>
                       <span style={{ color: tone, fontFamily: SF, fontSize: 9.5, fontWeight: 900, textTransform: 'uppercase', flexShrink: 0 }}>{EVENT_LABEL[event.type] || event.type}</span>
                     </div>
-                    <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 4 }}>
+                    <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, marginTop: 4 }}>
                       {event.actorName} · {new Date(event.occurredAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                     </div>
                   </div>
@@ -460,9 +486,9 @@ export default function FieldOperationsPage() {
 
         <section style={{ marginBottom: 18 }}>
           <SectionTitle title="Site pulse" href="/activity" />
-          <div style={{ borderRadius: 14, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 14 }}>
-            <div style={{ color: '#eef3fa', fontFamily: SF, fontSize: 14, fontWeight: 800 }}>{selected?.name || 'Select a project'}</div>
-            <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 12, marginTop: 5 }}>
+          <div style={{ borderRadius: 14, background: 'linear-gradient(180deg, var(--surface-raised), var(--surface-strong))', border: '1px solid var(--hair)', padding: 14 }}>
+            <div style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 14, fontWeight: 800 }}>{selected?.name || 'Select a project'}</div>
+            <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 12, marginTop: 5 }}>
               {(data?.activities || []).length} recent activity events · {(data?.stats?.hoursThisWeek || 0).toFixed(1)}h logged this week
             </div>
             {crew.length > 0 && (
@@ -472,7 +498,7 @@ export default function FieldOperationsPage() {
                     {checkin.member?.name || 'Team member'}
                   </span>
                 ))}
-                {crew.length > 8 && <span style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, alignSelf: 'center' }}>+{crew.length - 8} more</span>}
+                {crew.length > 8 && <span style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, alignSelf: 'center' }}>+{crew.length - 8} more</span>}
               </div>
             )}
             <div style={{ marginTop: 10, display: 'flex', gap: 8, flexWrap: 'wrap' }}>
@@ -494,14 +520,17 @@ function ActionSection({ title, actions }: { title: string; actions: Action[] })
   return (
     <section style={{ marginBottom: 18 }}>
       <SectionTitle title={title} />
-      <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }}>
-        {actions.map(action => (
-          <Link key={action.label} href={action.href} style={{ minHeight: 104, textDecoration: 'none', borderRadius: 14, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 13 }}>
-            <div style={{ width: 36, height: 36, borderRadius: 10, display: 'grid', placeItems: 'center', background: `${action.color}20`, marginBottom: 10 }}>
-              <action.Icon size={19} color={action.color} />
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 10 }}>
+        {actions.map((action, index) => (
+          <Link key={action.label} href={action.href} className="command-card" style={{ minHeight: 122, textDecoration: 'none', padding: 15 }}>
+            <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 10 }}>
+              <div style={{ width: 38, height: 38, borderRadius: 12, display: 'grid', placeItems: 'center', background: `${action.color}18`, border: `1px solid ${action.color}30` }}>
+                <action.Icon size={19} color={action.color} />
+              </div>
+              <span style={{ color: 'var(--t3)', fontFamily: 'ui-monospace, monospace', fontSize: 9, fontWeight: 800 }}>0{index + 1}</span>
             </div>
-            <div style={{ color: '#eef3fa', fontFamily: SF, fontSize: 14, fontWeight: 800 }}>{action.label}</div>
-            <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 3, lineHeight: 1.35 }}>{action.sub}</div>
+            <div style={{ marginTop: 14, color: 'var(--t1)', fontFamily: SF, fontSize: 14, fontWeight: 850 }}>{action.label}</div>
+            <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, marginTop: 4, lineHeight: 1.45 }}>{action.sub}</div>
           </Link>
         ))}
       </div>
@@ -512,38 +541,38 @@ function ActionSection({ title, actions }: { title: string; actions: Action[] })
 function SectionTitle({ title, href }: { title: string; href?: string }) {
   return (
     <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', margin: '0 3px 8px' }}>
-      <h2 style={{ margin: 0, color: '#8ea8c5', fontFamily: SF, fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase' }}>{title}</h2>
-      {href && <Link href={href} style={{ color: '#f59e0b', textDecoration: 'none', fontFamily: SF, fontSize: 11, fontWeight: 800 }}>Open</Link>}
+      <h2 style={{ margin: 0, color: 'var(--t2)', fontFamily: SF, fontSize: 11, letterSpacing: '.08em', textTransform: 'uppercase' }}>{title}</h2>
+      {href && <Link href={href} style={{ color: 'var(--accent)', textDecoration: 'none', fontFamily: SF, fontSize: 11, fontWeight: 800 }}>Open</Link>}
     </div>
   )
 }
 
 function Metric({ label, value, color }: { label: string; value: string; color: string }) {
   return (
-    <div style={{ background: '#102039', border: '1px solid rgba(255,255,255,.07)', borderRadius: 12, padding: '11px 10px' }}>
+    <div style={{ background: 'linear-gradient(180deg, var(--surface-raised), var(--surface-strong))', border: '1px solid var(--hair)', borderRadius: 12, padding: '11px 10px' }}>
       <div style={{ color, fontFamily: SF, fontSize: 20, fontWeight: 900 }}>{value}</div>
-      <div style={{ marginTop: 2, color: '#8ea8c5', fontFamily: SF, fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' }}>{label}</div>
+      <div style={{ marginTop: 2, color: 'var(--t2)', fontFamily: SF, fontSize: 9.5, fontWeight: 700, textTransform: 'uppercase' }}>{label}</div>
     </div>
   )
 }
 
 function Empty({ text }: { text: string }) {
-  return <div style={{ padding: '18px 14px', borderRadius: 12, background: '#102039', color: '#52749a', textAlign: 'center', fontFamily: SF, fontSize: 12 }}>{text}</div>
+  return <div style={{ padding: '18px 14px', borderRadius: 12, background: 'var(--surface-strong)', color: 'var(--t3)', textAlign: 'center', fontFamily: SF, fontSize: 12 }}>{text}</div>
 }
 
 function PulseCard({ href, label, value, sub, alert, suffix = '' }: { href: string; label: string; value: number; sub: string; alert?: boolean; suffix?: string }) {
   const color = alert ? '#f59e0b' : '#10b981'
   return (
-    <Link href={href} style={{ minHeight: 82, textDecoration: 'none', borderRadius: 12, background: '#102039', border: `1px solid ${alert ? 'rgba(245,158,11,.28)' : 'rgba(255,255,255,.07)'}`, padding: 11 }}>
+    <Link href={href} style={{ minHeight: 82, textDecoration: 'none', borderRadius: 12, background: 'var(--surface-strong)', border: `1px solid ${alert ? 'rgba(245,158,11,.28)' : 'rgba(255,255,255,.07)'}`, padding: 11 }}>
       <div style={{ display: 'flex', alignItems: 'baseline', justifyContent: 'space-between', gap: 8 }}>
-        <span style={{ color: '#eef3fa', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>{label}</span>
+        <span style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 12, fontWeight: 800 }}>{label}</span>
         <span style={{ color, fontFamily: SF, fontSize: 20, fontWeight: 900 }}>{value}{suffix}</span>
       </div>
-      <div style={{ color: alert ? '#fbbf24' : '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 7 }}>{sub}</div>
+      <div style={{ color: alert ? '#fbbf24' : 'var(--t2)', fontFamily: SF, fontSize: 10.5, marginTop: 7 }}>{sub}</div>
     </Link>
   )
 }
 
 function QuickLink({ href, label }: { href: string; label: string }) {
-  return <Link href={href} style={{ padding: '7px 10px', borderRadius: 9, background: '#152641', color: '#c8d7ea', textDecoration: 'none', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>{label}</Link>
+  return <Link href={href} style={{ padding: '7px 10px', borderRadius: 9, background: 'var(--surface-raised)', color: '#c8d7ea', textDecoration: 'none', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>{label}</Link>
 }

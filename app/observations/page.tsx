@@ -131,18 +131,18 @@ export default function ObservationsPage() {
     .filter(i => statusFilter === 'all' || i.status === statusFilter)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Observations command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
-            <h1 style={{ fontSize: 22, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.4, fontFamily: SF }}>Observations</h1>
-            <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Observations</h1>
+            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {items.length} total · {openCount} open
               {unsafeOpenCount > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {unsafeOpenCount} unsafe / near-miss open</span>}
             </p>
@@ -153,14 +153,14 @@ export default function ObservationsPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6 }}>
           {(['all', 'positive', 'improvement', 'unsafe', 'near_miss'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#22c55e' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#22c55e' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : TYPE_CFG[t].label}
             </button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {(['all', 'open', 'resolved'] as const).map(s => (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '3px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: statusFilter === s ? 'rgba(255,255,255,0.1)' : 'transparent', color: statusFilter === s ? '#eef3fa' : '#52749a', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer' }}>
+            <button key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '3px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: statusFilter === s ? 'rgba(255,255,255,0.1)' : 'transparent', color: statusFilter === s ? 'var(--t1)' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer' }}>
               {s === 'all' ? 'All' : s === 'open' ? 'Open' : 'Resolved'}
             </button>
           ))}
@@ -168,12 +168,12 @@ export default function ObservationsPage() {
       </div>
 
       {loading ? (
-        <div style={{ padding: 40, textAlign: 'center', color: '#52749a', fontFamily: SF, fontSize: 14 }}>Loading…</div>
+        <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>
       ) : error ? (
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : filtered.length === 0 ? (
-        <div style={{ padding: '60px 40px', textAlign: 'center', color: '#52749a', fontFamily: SF }}>
-          <IcAlert size={32} color="#52749a" />
+        <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
+          <IcAlert size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{items.length === 0 ? 'No observations logged yet' : 'Nothing in this filter'}</p>
           {items.length === 0 && projects.length > 0 && (
             <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#22c55e', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
@@ -186,18 +186,18 @@ export default function ObservationsPage() {
           {filtered.map(o => {
             const cfg = TYPE_CFG[o.type]
             return (
-              <div key={o.id} style={{ background: '#152641', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', opacity: o.status === 'resolved' ? 0.65 : 1 }}>
+              <div key={o.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', opacity: o.status === 'resolved' ? 0.65 : 1 }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginBottom: 4 }}>
                   <span style={{ fontSize: 14 }}>{cfg.emoji}</span>
                   <span style={{ padding: '2px 8px', borderRadius: 99, background: cfg.bg, color: cfg.color, fontFamily: SF, fontSize: 9, fontWeight: 800, border: `1px solid ${cfg.color}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>{cfg.label}</span>
-                  {o.project && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>· {o.project.name}</span>}
+                  {o.project && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>· {o.project.name}</span>}
                   <span style={{ marginLeft: 'auto', fontFamily: SF, fontSize: 10, color: o.status === 'resolved' ? '#10b981' : '#f59e0b', fontWeight: 700, textTransform: 'uppercase' }}>{o.status}</span>
                 </div>
-                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: '#eef3fa', textDecoration: o.status === 'resolved' ? 'line-through' : 'none' }}>{o.title}</div>
-                {o.description && <div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2, lineHeight: 1.35 }}>{o.description}</div>}
+                <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)', textDecoration: o.status === 'resolved' ? 'line-through' : 'none' }}>{o.title}</div>
+                {o.description && <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2, lineHeight: 1.35 }}>{o.description}</div>}
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
-                  {o.location && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>{o.location}</span>}
-                  {o.reportedBy && <span style={{ fontFamily: SF, fontSize: 11, color: '#52749a' }}>— {o.reportedBy}</span>}
+                  {o.location && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{o.location}</span>}
+                  {o.reportedBy && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>— {o.reportedBy}</span>}
                   <button onClick={() => toggleResolved(o)} style={{ marginLeft: 'auto', background: o.status === 'resolved' ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)', border: `0.5px solid ${o.status === 'resolved' ? 'rgba(245,158,11,0.4)' : 'rgba(16,185,129,0.4)'}`, color: o.status === 'resolved' ? '#f59e0b' : '#10b981', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
                     {o.status === 'resolved' ? 'Reopen' : 'Resolve'}
                   </button>
@@ -217,17 +217,17 @@ export default function ObservationsPage() {
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h2 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF }}>Log observation</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Log observation</h2>
+              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
               <label style={labelStyle}>Type</label>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
                 {(['positive', 'improvement', 'unsafe', 'near_miss'] as const).map(t => (
-                  <button key={t} onClick={() => setForm(p => ({ ...p, type: t }))} style={{ padding: '8px', borderRadius: 8, border: form.type === t ? `1px solid ${TYPE_CFG[t].color}` : '1px solid rgba(255,255,255,0.1)', background: form.type === t ? TYPE_CFG[t].bg : 'rgba(255,255,255,0.02)', color: form.type === t ? TYPE_CFG[t].color : '#8ea8c5', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button key={t} onClick={() => setForm(p => ({ ...p, type: t }))} style={{ padding: '8px', borderRadius: 8, border: form.type === t ? `1px solid ${TYPE_CFG[t].color}` : '1px solid rgba(255,255,255,0.1)', background: form.type === t ? TYPE_CFG[t].bg : 'rgba(255,255,255,0.02)', color: form.type === t ? TYPE_CFG[t].color : 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                     {TYPE_CFG[t].emoji} {TYPE_CFG[t].label}
                   </button>
                 ))}
@@ -256,8 +256,8 @@ export default function ObservationsPage() {
 }
 
 const labelStyle: React.CSSProperties = {
-  fontFamily: SF, fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
+  fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
 const inputStyle: React.CSSProperties = {
-  width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
+  width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

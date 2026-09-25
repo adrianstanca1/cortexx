@@ -11,7 +11,7 @@ interface SiteMapProps {
 }
 
 const statusColor: Record<string, string> = {
-  active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: '#52749a'
+  active: '#10b981', snagging: '#f59e0b', quoting: '#8b5cf6', complete: 'var(--t3)'
 }
 
 const SF = '-apple-system, "SF Pro Text", system-ui, sans-serif'
@@ -34,14 +34,14 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
       <div style={{ padding: '20px 20px 12px', display: 'flex', justifyContent: 'space-between', alignItems: 'flex-end' }}>
         <div>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <h2 style={{ fontSize: 26, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: SF }}>Sites</h2>
-            <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : '#52749a', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
+            <h2 style={{ fontSize: 26, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: SF }}>Sites</h2>
+            <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 8, height: 8, borderRadius: '50%', background: connected ? '#10b981' : 'var(--t3)', boxShadow: connected ? '0 0 8px #10b98166' : 'none', transition: 'all 0.3s' }} />
           </div>
-          <p style={{ fontSize: 12, color: '#52749a', marginTop: 2, fontFamily: SF }}>{projects.length} site{projects.length !== 1 ? 's' : ''} · {activeCount} active</p>
+          <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{projects.length} site{projects.length !== 1 ? 's' : ''} · {activeCount} active</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => router.push('/projects')} style={{ width: 36, height: 36, borderRadius: 10, background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-            <IcFilter size={16} color="#8ea8c5" />
+          <button onClick={() => router.push('/projects')} style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <IcFilter size={16} color="var(--t2)" />
           </button>
           <button onClick={() => router.push('/projects')} style={{ width: 36, height: 36, borderRadius: 10, background: accent, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={16} color="#fff" />
@@ -65,7 +65,7 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
             )}
             {projects.slice(0, 6).map((p, i) => {
               const pos = pinPositions[i]
-              const c = statusColor[p.status] || '#52749a'
+              const c = statusColor[p.status] || 'var(--t3)'
               const sz = 10
               return (
                 <g key={p.id} transform={`translate(${pos.x},${pos.y})`} style={{ cursor: 'pointer' }} onClick={() => router.push(`/projects/${p.id}`)}>
@@ -78,7 +78,7 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
                       <animate attributeName="opacity" values="1;0" dur="2s" repeatCount="indefinite" />
                     </circle>
                   )}
-                  <text x="0" y={-sz - 6} fontSize="10" fontFamily={SF} fontWeight="600" fill="#eef3fa" textAnchor="middle">{p.name.split(' ')[0]}</text>
+                  <text x="0" y={-sz - 6} fontSize="10" fontFamily={SF} fontWeight="600" fill="var(--t1)" textAnchor="middle">{p.name.split(' ')[0]}</text>
                   <text x="0" y={-sz - 17} fontSize="8" fontFamily={Mono} fill={c} textAnchor="middle">{p.progress}%</text>
                 </g>
               )
@@ -94,7 +94,7 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
             )}
           </svg>
           {/* Legend overlay */}
-          <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(6,16,30,0.8)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: '6px 10px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: Mono, fontSize: 10, color: '#8ea8c5', display: 'flex', flexDirection: 'column', gap: 3 }}>
+          <div style={{ position: 'absolute', top: 10, left: 10, background: 'rgba(6,16,30,0.8)', backdropFilter: 'blur(12px)', borderRadius: 8, padding: '6px 10px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: Mono, fontSize: 10, color: 'var(--t2)', display: 'flex', flexDirection: 'column', gap: 3 }}>
             <div><span style={{ color: '#10b981' }}>●</span> active</div>
             <div><span style={{ color: '#f59e0b' }}>●</span> snagging</div>
             <div><span style={{ color: '#8b5cf6' }}>●</span> quoting</div>
@@ -108,23 +108,23 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
       </div>
 
       <div style={{ padding: '0 20px 8px' }}>
-        <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: '#8ea8c5', textTransform: 'uppercase', letterSpacing: 0.6 }}>All sites</p>
+        <p style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: 'var(--t2)', textTransform: 'uppercase', letterSpacing: 0.6 }}>All sites</p>
       </div>
       <div style={{ padding: '0 20px', display: 'flex', flexDirection: 'column', gap: 6 }}>
         {projects.map((p) => {
-          const c = statusColor[p.status] || '#52749a'
+          const c = statusColor[p.status] || 'var(--t3)'
           return (
-            <div key={p.id} onClick={() => router.push(`/projects/${p.id}`)} style={{ background: '#152641', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+            <div key={p.id} onClick={() => router.push(`/projects/${p.id}`)} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
               <div style={{ width: 8, height: 8, borderRadius: 4, background: c, flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
-                <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: '#eef3fa' }}>{p.name}</div>
-                <div style={{ fontFamily: SF, fontSize: 11, color: '#8ea8c5' }}>{p.postcode}</div>
+                <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{p.name}</div>
+                <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>{p.postcode}</div>
               </div>
               <span style={{ fontSize: 10, fontWeight: 600, background: `${c}22`, color: c, padding: '3px 7px', borderRadius: 5 }}>{p.progress}%</span>
             </div>
           )
         })}
-        {projects.length === 0 && <p style={{ fontSize: 13, color: '#52749a', fontFamily: SF, textAlign: 'center', padding: '20px 0' }}>No sites found</p>}
+        {projects.length === 0 && <p style={{ fontSize: 13, color: 'var(--t3)', fontFamily: SF, textAlign: 'center', padding: '20px 0' }}>No sites found</p>}
       </div>
     </div>
   )

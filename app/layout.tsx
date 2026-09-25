@@ -55,13 +55,13 @@ export const viewport: Viewport = {
   maximumScale: 1,
   userScalable: false,
   viewportFit: 'cover',
-  themeColor: '#06101e',
+  themeColor: '#090b0d',
 }
 
 export default async function RootLayout({ children }: { children: React.ReactNode }) {
   const session = await auth()
   return (
-    <html lang="en" style={{ background: '#06101e' }}>
+    <html lang="en" style={{ background: '#090b0d' }}>
       <head>
         <meta name="mobile-web-app-capable" content="yes" />
         {/* iOS splash screens (one per device — Safari picks the matching media query) */}
@@ -72,18 +72,9 @@ export default async function RootLayout({ children }: { children: React.ReactNo
         <link rel="apple-touch-startup-image" href="/apple-splash-828-1792.png"  media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
         <link rel="apple-touch-startup-image" href="/apple-splash-750-1334.png"  media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
       </head>
-      <body style={{ background: '#06101e', minHeight: '100dvh', overflowX: 'hidden' }}>
+      <body style={{ background: '#090b0d', minHeight: '100dvh', overflowX: 'hidden' }}>
         <SessionProviderClient session={session}>
-          <div
-            id="app-root"
-            style={{
-              maxWidth: '480px',
-              margin: '0 auto',
-              minHeight: '100dvh',
-              position: 'relative',
-              background: '#06101e',
-            }}
-          >
+          <div id="app-root" className="app-shell">
             {children}
           </div>
           <AuthedShell />

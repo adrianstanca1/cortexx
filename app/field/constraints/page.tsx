@@ -125,9 +125,9 @@ export default function FieldConstraintsPage() {
   }
 
   return (
-    <div style={{ minHeight: '100dvh', background: '#06101e', paddingBottom: 100 }}>
+    <div className="module-page" style={{ minHeight: '100dvh', background: 'var(--bg0)', paddingBottom: 100 }}>
       <header style={headerStyle}>
-        <Link href="/field" style={backStyle}><IcChevL size={15} color="#8ea8c5" /> Field operations</Link>
+        <Link href="/field" style={backStyle}><IcChevL size={15} color="var(--t2)" /> Field operations</Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 10, marginTop: 10 }}>
           <div>
             <h1 style={h1Style}>Constraints</h1>
@@ -181,8 +181,8 @@ export default function FieldConstraintsPage() {
                         <Badge label={item.status.replace('_', ' ')} color={item.status === 'resolved' ? '#10b981' : '#06b6d4'} />
                         {isOverdue && <Badge label="overdue" color="#ef4444" />}
                       </div>
-                      <div style={{ color: '#eef3fa', fontFamily: SF, fontSize: 14, fontWeight: 900 }}>{item.title}</div>
-                      <div style={{ color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, marginTop: 4 }}>
+                      <div style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 14, fontWeight: 900 }}>{item.title}</div>
+                      <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, marginTop: 4 }}>
                         {item.location || 'No location'}{item.ownerName ? ` · Owner: ${item.ownerName}` : ''}{item.dueDate ? ` · Due ${new Date(item.dueDate).toLocaleDateString('en-GB')}` : ''}
                       </div>
                     </div>
@@ -194,7 +194,7 @@ export default function FieldConstraintsPage() {
                     {item.status === 'open' && <SmallButton label="Mitigating" onClick={() => transition(item, 'mitigating')} color="#06b6d4" />}
                     {item.status !== 'resolved' && <SmallButton label="Resolve" onClick={() => transition(item, 'resolved')} color="#10b981" icon />}
                     {item.status === 'resolved' && <SmallButton label="Reopen" onClick={() => transition(item, 'open')} color="#f59e0b" />}
-                    {item.status === 'mitigating' && <SmallButton label="Back to open" onClick={() => transition(item, 'open')} color="#52749a" />}
+                    {item.status === 'mitigating' && <SmallButton label="Back to open" onClick={() => transition(item, 'open')} color="var(--t3)" />}
                   </div>
                 </section>
               )
@@ -221,18 +221,18 @@ function TextField({ label, value, onChange, placeholder }: { label: string; val
 }
 
 const headerStyle: React.CSSProperties = { position: 'sticky', top: 0, zIndex: 30, padding: '16px 18px 13px', background: 'rgba(6,16,30,.96)', backdropFilter: 'blur(12px)', borderBottom: '1px solid rgba(255,255,255,.07)' }
-const backStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, color: '#8ea8c5', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
-const h1Style: React.CSSProperties = { margin: 0, color: '#eef3fa', fontFamily: SF, fontSize: 23, letterSpacing: '-.03em' }
-const subStyle: React.CSSProperties = { margin: '3px 0 0', color: '#8ea8c5', fontFamily: SF, fontSize: 11 }
-const selectStyle: React.CSSProperties = { marginTop: 13, width: '100%', boxSizing: 'border-box', borderRadius: 11, border: '1px solid rgba(255,255,255,.09)', background: '#102039', color: '#eef3fa', padding: '11px 12px', fontFamily: SF, fontSize: 13 }
+const backStyle: React.CSSProperties = { display: 'inline-flex', alignItems: 'center', gap: 4, color: 'var(--t2)', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
+const h1Style: React.CSSProperties = { margin: 0, color: 'var(--t1)', fontFamily: SF, fontSize: 23, letterSpacing: '-.03em' }
+const subStyle: React.CSSProperties = { margin: '3px 0 0', color: 'var(--t2)', fontFamily: SF, fontSize: 11 }
+const selectStyle: React.CSSProperties = { marginTop: 13, width: '100%', boxSizing: 'border-box', borderRadius: 11, border: '1px solid rgba(255,255,255,.09)', background: 'var(--surface-strong)', color: 'var(--t1)', padding: '11px 12px', fontFamily: SF, fontSize: 13 }
 const metricGrid: React.CSSProperties = { display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginBottom: 14 }
-const metricStyle: React.CSSProperties = { borderRadius: 11, background: '#102039', border: '1px solid rgba(255,255,255,.07)', padding: 10 }
-const metricLabel: React.CSSProperties = { color: '#8ea8c5', fontFamily: SF, fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', marginTop: 2 }
-const panelStyle: React.CSSProperties = { background: '#102039', border: '1px solid rgba(255,255,255,.07)', borderRadius: 13, padding: 13, marginBottom: 14 }
-const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 5, color: '#8ea8c5', fontFamily: SF, fontSize: 10.5, fontWeight: 800, marginBottom: 10 }
-const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', borderRadius: 9, border: '1px solid rgba(255,255,255,.09)', background: '#0b1a30', color: '#eef3fa', padding: '10px 11px', fontFamily: SF, fontSize: 12 }
+const metricStyle: React.CSSProperties = { borderRadius: 11, background: 'var(--surface-strong)', border: '1px solid rgba(255,255,255,.07)', padding: 10 }
+const metricLabel: React.CSSProperties = { color: 'var(--t2)', fontFamily: SF, fontSize: 9.5, fontWeight: 800, textTransform: 'uppercase', marginTop: 2 }
+const panelStyle: React.CSSProperties = { background: 'var(--surface-strong)', border: '1px solid rgba(255,255,255,.07)', borderRadius: 13, padding: 13, marginBottom: 14 }
+const labelStyle: React.CSSProperties = { display: 'flex', flexDirection: 'column', gap: 5, color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, fontWeight: 800, marginBottom: 10 }
+const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', borderRadius: 9, border: '1px solid rgba(255,255,255,.09)', background: '#0b1a30', color: 'var(--t1)', padding: '10px 11px', fontFamily: SF, fontSize: 12 }
 const twoCol: React.CSSProperties = { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 9 }
-const primaryBtn: React.CSSProperties = { border: 'none', borderRadius: 10, padding: '10px 12px', background: '#f59e0b', color: '#06101e', fontFamily: SF, fontSize: 11, fontWeight: 900, cursor: 'pointer' }
+const primaryBtn: React.CSSProperties = { border: 'none', borderRadius: 10, padding: '10px 12px', background: '#f59e0b', color: 'var(--bg0)', fontFamily: SF, fontSize: 11, fontWeight: 900, cursor: 'pointer' }
 const bodyStyle: React.CSSProperties = { margin: '8px 0 0', color: '#c8d7ea', fontFamily: SF, fontSize: 11, lineHeight: 1.5 }
 const errorStyle: React.CSSProperties = { marginBottom: 12, padding: 10, borderRadius: 10, background: 'rgba(239,68,68,.10)', color: '#ef4444', fontFamily: SF, fontSize: 11 }
-const emptyStyle: React.CSSProperties = { padding: '28px 16px', borderRadius: 12, background: '#102039', color: '#52749a', fontFamily: SF, fontSize: 12, textAlign: 'center' }
+const emptyStyle: React.CSSProperties = { padding: '28px 16px', borderRadius: 12, background: 'var(--surface-strong)', color: 'var(--t3)', fontFamily: SF, fontSize: 12, textAlign: 'center' }

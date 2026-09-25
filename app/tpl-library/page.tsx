@@ -27,7 +27,7 @@ const CATEGORY_COLOR: Record<string, string> = {
   invoice: '#10b981',
   email: '#06b6d4',
   letter: '#06b6d4',
-  default: '#8ea8c5',
+  default: 'var(--t2)',
 }
 
 export default function TplLibraryPage() {
@@ -51,18 +51,18 @@ export default function TplLibraryPage() {
   const filtered = filter === 'all' ? items : items.filter(i => i.category === filter)
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       <div style={{ padding: '16px 20px 12px', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>All apps</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>All apps</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 12 }}>
           <div>
-            <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
+            <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', margin: 0 }}>
               Template library
             </h1>
-            <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
+            <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
               Browse and reuse workspace templates.{' '}
               <Link href="/templates" style={{ color: '#f59e0b', textDecoration: 'none' }}>Create one →</Link>
             </p>
@@ -82,9 +82,9 @@ export default function TplLibraryPage() {
                   flexShrink: 0,
                   padding: '8px 12px',
                   borderRadius: 10,
-                  background: active ? '#152641' : 'transparent',
+                  background: active ? 'var(--surface-raised)' : 'transparent',
                   border: '0.5px solid ' + (active ? 'rgba(255,255,255,0.15)' : 'rgba(255,255,255,0.07)'),
-                  color: '#eef3fa',
+                  color: 'var(--t1)',
                   fontFamily: 'var(--font-system)',
                   fontSize: 12,
                   cursor: 'pointer',
@@ -100,10 +100,10 @@ export default function TplLibraryPage() {
 
       <div style={{ padding: '0 20px' }}>
         {loading ? (
-          <p style={{ color: '#52749a', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>Loading…</p>
+          <p style={{ color: 'var(--t3)', padding: 40, textAlign: 'center', fontFamily: 'var(--font-system)', fontSize: 13 }}>Loading…</p>
         ) : filtered.length === 0 ? (
-          <div style={{ color: '#52749a', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
-            <IcDoc size={32} color="#52749a" />
+          <div style={{ color: 'var(--t3)', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
+            <IcDoc size={32} color="var(--t3)" />
             <p style={{ marginTop: 12 }}>
               {filter === 'all'
                 ? <>No templates yet. <Link href="/templates" style={{ color: '#f59e0b', textDecoration: 'none' }}>Create the first one →</Link></>
@@ -115,17 +115,17 @@ export default function TplLibraryPage() {
             {filtered.map(t => {
               const color = (t.category && CATEGORY_COLOR[t.category]) || CATEGORY_COLOR.default
               return (
-                <li key={t.id} style={{ background: '#152641', borderRadius: 12, padding: 14, border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)' }}>
+                <li key={t.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: 14, border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)' }}>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 6 }}>
                     <IcDoc size={14} color={color} />
                     <span style={{ fontSize: 10, color, textTransform: 'uppercase', letterSpacing: '0.08em', fontWeight: 700 }}>
                       {t.category || 'general'}
                     </span>
-                    {t.version && <span style={{ fontSize: 10, color: '#52749a' }}>v{t.version}</span>}
+                    {t.version && <span style={{ fontSize: 10, color: 'var(--t3)' }}>v{t.version}</span>}
                   </div>
-                  <div style={{ fontSize: 14, color: '#eef3fa', fontWeight: 700, marginBottom: 4 }}>{t.name || 'Untitled'}</div>
+                  <div style={{ fontSize: 14, color: 'var(--t1)', fontWeight: 700, marginBottom: 4 }}>{t.name || 'Untitled'}</div>
                   {t.description && (
-                    <p style={{ fontSize: 12, color: '#8ea8c5', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.description}</p>
+                    <p style={{ fontSize: 12, color: 'var(--t2)', margin: 0, lineHeight: 1.4, display: '-webkit-box', WebkitLineClamp: 2, WebkitBoxOrient: 'vertical', overflow: 'hidden' }}>{t.description}</p>
                   )}
                 </li>
               )

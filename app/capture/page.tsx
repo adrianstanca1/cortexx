@@ -310,7 +310,7 @@ function CaptureContent() {
   }, [preselect, projects.length])
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {/* Hidden file input — drives photo + receipt actions */}
       <input
         ref={fileInputRef}
@@ -328,22 +328,22 @@ function CaptureContent() {
       {/* Header */}
       <div style={{ padding: '16px 20px 16px 60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div>
-          <h1 style={{ fontSize: 20, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)', letterSpacing: '-0.02em' }}>Capture</h1>
+          <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--font-system)', letterSpacing: '-0.02em' }}>Capture</h1>
           <button onClick={() => setShowProjectPicker(!showProjectPicker)} aria-label="Change project" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
-            <IcPin size={11} color="#52749a" />
-            <span style={{ fontSize: 12, color: activeProject ? '#8ea8c5' : '#52749a', fontFamily: 'var(--font-system)' }}>
+            <IcPin size={11} color="var(--t3)" />
+            <span style={{ fontSize: 12, color: activeProject ? 'var(--t2)' : 'var(--t3)', fontFamily: 'var(--font-system)' }}>
               {activeProject?.name || 'Select project'}
             </span>
           </button>
         </div>
         <button onClick={() => router.back()} aria-label="Close capture" style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-          <IcX size={18} color="#8ea8c5" />
+          <IcX size={18} color="var(--t2)" />
         </button>
       </div>
 
       {/* Project picker dropdown */}
       {showProjectPicker && projects.length > 0 && (
-        <div style={{ margin: '8px 20px 0', background: '#152641', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+        <div style={{ margin: '8px 20px 0', background: 'var(--surface-raised)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
           {projects.map(p => (
             <button
               key={p.id}
@@ -368,7 +368,7 @@ function CaptureContent() {
                 transition: 'background 0.15s',
               }}
             >
-              <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa' }}>{p.name}</span>
+              <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)' }}>{p.name}</span>
               {p.id === activeProject?.id && <IcCheck size={14} color="#f59e0b" />}
             </button>
           ))}
@@ -382,12 +382,12 @@ function CaptureContent() {
             <div style={{ width: 72, height: 72, borderRadius: '50%', background: 'rgba(16,185,129,0.15)', border: '2px solid #10b981', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               <IcCheck size={32} color="#10b981" />
             </div>
-            <p style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)' }}>{doneMsg}</p>
-            <p style={{ fontSize: 13, color: '#52749a', fontFamily: 'var(--font-system)' }}>Logged to {activeProject?.name || 'project'}…</p>
+            <p style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--font-system)' }}>{doneMsg}</p>
+            <p style={{ fontSize: 13, color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>Logged to {activeProject?.name || 'project'}…</p>
           </div>
         ) : (
           <>
-            <p style={{ fontSize: 14, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginBottom: 4 }}>What are you capturing?</p>
+            <p style={{ fontSize: 14, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginBottom: 4 }}>What are you capturing?</p>
             {errorMsg && (
               <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>
                 {errorMsg}
@@ -405,8 +405,8 @@ function CaptureContent() {
                     <action.Icon size={24} color={action.color} />
                   </div>
                   <div>
-                    <p style={{ fontSize: 16, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)', letterSpacing: '-0.01em' }}>{action.label}</p>
-                    <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginTop: 2 }}>{sub}</p>
+                    <p style={{ fontSize: 16, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--font-system)', letterSpacing: '-0.01em' }}>{action.label}</p>
+                    <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginTop: 2 }}>{sub}</p>
                   </div>
                   {isVoiceRecording ? (
                     <div style={{ marginLeft: 'auto', width: 14, height: 14, borderRadius: '50%', background: '#ef4444', animation: 'pulse 1s ease-in-out infinite' }} />
@@ -437,7 +437,7 @@ function CaptureContent() {
 
 export default function CapturePage() {
   return (
-    <Suspense fallback={<div style={{ background: '#06101e', minHeight: '100dvh' }} />}>
+    <Suspense fallback={<div style={{ background: 'var(--bg0)', minHeight: '100dvh' }} />}>
       <CaptureContent />
     </Suspense>
   )

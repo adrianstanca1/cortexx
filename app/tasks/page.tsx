@@ -17,7 +17,7 @@ const priorityColor: Record<string, string> = {
   critical: '#ef4444',
   high: '#f59e0b',
   medium: '#2563eb',
-  low: '#52749a',
+  low: 'var(--t3)',
 }
 
 const priorityBg: Record<string, string> = {
@@ -312,11 +312,11 @@ export default function TasksPage() {
 
   const selectStyle: React.CSSProperties = {
     width: '100%',
-    background: '#1a2f4e',
+    background: 'var(--bg3)',
     border: '1px solid rgba(255,255,255,0.1)',
     borderRadius: 10,
     padding: '11px 14px',
-    color: '#eef3fa',
+    color: 'var(--t1)',
     fontFamily: 'var(--font-system)',
     fontSize: 14,
     outline: 'none',
@@ -325,7 +325,7 @@ export default function TasksPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
       <MobileHeader
         title="Tasks"
@@ -334,7 +334,7 @@ export default function TasksPage() {
         rightSlot={
           <button
             onClick={() => { if (selectMode) exitSelectMode(); else setSelectMode(true) }}
-            style={{ background: selectMode ? '#f59e0b' : 'rgba(255,255,255,0.07)', color: selectMode ? '#fff' : '#8ea8c5', border: 'none', borderRadius: 10, padding: '7px 12px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+            style={{ background: selectMode ? '#f59e0b' : 'rgba(255,255,255,0.07)', color: selectMode ? '#fff' : 'var(--t2)', border: 'none', borderRadius: 10, padding: '7px 12px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
           >
             {selectMode ? 'Done' : 'Select'}
           </button>
@@ -342,11 +342,11 @@ export default function TasksPage() {
       />
 
       {/* Search bar */}
-      <div style={{ padding: '10px 16px 0', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
-        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '9px 14px' }}>
-          <IcSearch size={14} color="#52749a" />
-          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tasks, projects, people…" style={{ background: 'none', border: 'none', outline: 'none', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 13, flex: 1 }} />
-          {search && <button onClick={() => setSearch('')} aria-label="Clear search" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><IcX size={14} color="#52749a" /></button>}
+      <div className="module-filterbar" style={{ padding: '10px 16px 0', borderBottom: '0.5px solid rgba(255,255,255,0.05)' }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '9px 14px' }}>
+          <IcSearch size={14} color="var(--t3)" />
+          <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tasks, projects, people…" style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 13, flex: 1 }} />
+          {search && <button onClick={() => setSearch('')} aria-label="Clear search" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><IcX size={14} color="var(--t3)" /></button>}
         </div>
       </div>
 
@@ -386,7 +386,7 @@ export default function TasksPage() {
                 border: 'none',
                 fontSize: 12,
                 fontWeight: f.id === filter ? 700 : 500,
-                color: f.id === filter ? '#0c1a2e' : '#52749a',
+                color: f.id === filter ? 'var(--bg1)' : 'var(--t3)',
                 background: f.id === filter ? '#f59e0b' : 'rgba(255,255,255,0.06)',
                 cursor: 'pointer',
                 fontFamily: 'var(--font-system)',
@@ -406,7 +406,7 @@ export default function TasksPage() {
                     justifyContent: 'center',
                     fontSize: 9,
                     fontWeight: 700,
-                    color: f.id === filter ? '#0c1a2e' : '#8ea8c5',
+                    color: f.id === filter ? 'var(--bg1)' : 'var(--t2)',
                   }}
                 >
                   {count}
@@ -426,7 +426,7 @@ export default function TasksPage() {
         ) : error ? (
           <div style={{ textAlign: 'center', padding: '40px 20px', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14 }}>{error}</div>
         ) : filtered.length === 0 ? (
-          <div style={{ textAlign: 'center', padding: '40px 20px', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 14 }}>
+          <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 14 }}>
             No {filter === 'all' ? '' : filter} tasks
           </div>
         ) : (
@@ -473,7 +473,7 @@ export default function TasksPage() {
                     style={{
                       fontSize: 14,
                       fontWeight: 600,
-                      color: isDone ? '#52749a' : '#eef3fa',
+                      color: isDone ? 'var(--t3)' : 'var(--t1)',
                       fontFamily: 'var(--font-system)',
                       textDecoration: isDone ? 'line-through' : 'none',
                       letterSpacing: '-0.01em',
@@ -483,28 +483,28 @@ export default function TasksPage() {
                   </p>
 
                   {task.description && (
-                    <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: 'var(--font-system)', lineHeight: 1.4 }}>
+                    <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)', lineHeight: 1.4 }}>
                       {task.description}
                     </p>
                   )}
 
                   <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 4, flexWrap: 'wrap' }}>
                     {task.project && (
-                      <span style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)' }}>
+                      <span style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>
                         {task.project.name}
                       </span>
                     )}
                     {task.dueDate && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                        <IcClock size={11} color={isOverdue ? '#ef4444' : '#52749a'} />
-                        <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : '#52749a', fontFamily: 'var(--font-system)' }}>
+                        <IcClock size={11} color={isOverdue ? '#ef4444' : 'var(--t3)'} />
+                        <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : 'var(--t3)', fontFamily: 'var(--font-system)' }}>
                           {new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                           {task.dueTime && ` · ${task.dueTime}`}
                         </span>
                       </div>
                     )}
                     {(task._count?.comments ?? 0) > 0 && (
-                      <span aria-label={`${task._count?.comments} comments`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, color: '#8ea8c5', fontFamily: 'var(--font-system)' }}>
+                      <span aria-label={`${task._count?.comments} comments`} style={{ display: 'inline-flex', alignItems: 'center', gap: 3, fontSize: 11, color: 'var(--t2)', fontFamily: 'var(--font-system)' }}>
                         💬 {task._count?.comments}
                       </span>
                     )}
@@ -514,7 +514,7 @@ export default function TasksPage() {
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   <Pill label={task.priority} />
                   {task.category && (
-                    <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: '#8ea8c5', fontFamily: 'var(--font-system)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{task.category}</span>
+                    <span style={{ fontSize: 9, fontWeight: 700, padding: '2px 6px', borderRadius: 4, background: 'rgba(255,255,255,0.05)', color: 'var(--t2)', fontFamily: 'var(--font-system)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{task.category}</span>
                   )}
                   {task.assignee && (
                     <Avatar name={task.assignee.name} color={task.assignee.avatarColor} size={22} />
@@ -525,7 +525,7 @@ export default function TasksPage() {
                       aria-label="Edit task"
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, opacity: 0.4, display: 'flex' }}
                     >
-                      <IcEdit size={13} color="#8ea8c5" />
+                      <IcEdit size={13} color="var(--t2)" />
                     </button>
                     <button
                       onClick={(e) => deleteTask(e, task)}
@@ -545,9 +545,9 @@ export default function TasksPage() {
 
       {selectMode && selectedIds.size > 0 && (
         <div style={{ position: 'fixed', bottom: 76, left: '50%', transform: 'translateX(-50%)', maxWidth: 480, width: 'calc(100% - 24px)', background: 'rgba(12,26,46,0.98)', backdropFilter: 'blur(12px)', borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(245,158,11,0.3)', zIndex: 90, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
-          <span style={{ flex: 1, fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', fontWeight: 600 }}>{selectedIds.size} selected</span>
+          <span style={{ flex: 1, fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>{selectedIds.size} selected</span>
           <button onClick={() => bulk('complete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Done</button>
-          <button onClick={() => bulk('reopen')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Reopen</button>
+          <button onClick={() => bulk('reopen')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Reopen</button>
           <button onClick={() => bulk('delete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Delete</button>
         </div>
       )}
@@ -558,36 +558,36 @@ export default function TasksPage() {
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>New task</h3>
-              <button onClick={() => setShowModal(false)} aria-label="Close new task dialog" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>New task</h3>
+              <button onClick={() => setShowModal(false)} aria-label="Close new task dialog" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             {/* Title */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Task title *</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Task title *</label>
               <input
                 autoFocus
                 value={form.title}
                 onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
                 placeholder="e.g. Install kitchen units"
-                style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
+                style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }}
               />
             </div>
 
             {/* Notes */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Notes</label>
-              <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Notes</label>
+              <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             {/* Priority */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Priority</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Priority</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {PRIORITIES.map(p => (
-                  <button key={p} onClick={() => setForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: form.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${form.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: form.priority === p ? priorityColor[p] : '#8ea8c5', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
+                  <button key={p} onClick={() => setForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: form.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${form.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: form.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
                     {p}
                   </button>
                 ))}
@@ -597,28 +597,28 @@ export default function TasksPage() {
             {/* Due date & time */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <div>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
+                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
                 <input
                   type="date"
                   value={form.dueDate}
                   onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
-                  style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }}
+                  style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }}
                 />
               </div>
               <div>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
+                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
                 <input
                   type="time"
                   value={form.dueTime}
                   onChange={e => setForm(p => ({ ...p, dueTime: e.target.value }))}
-                  style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }}
+                  style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }}
                 />
               </div>
             </div>
 
             {/* Project */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project</label>
               <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={selectStyle}>
                 <option value="">No project</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -627,7 +627,7 @@ export default function TasksPage() {
 
             {/* Assignee */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</label>
               <select value={form.assigneeId} onChange={e => setForm(p => ({ ...p, assigneeId: e.target.value }))} style={selectStyle}>
                 <option value="">Unassigned</option>
                 {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -635,7 +635,7 @@ export default function TasksPage() {
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
               <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={selectStyle}>
                 {CATEGORIES.map(c => <option key={c || 'none'} value={c}>{c || 'None'}</option>)}
               </select>
@@ -652,27 +652,27 @@ export default function TasksPage() {
       {editTarget && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setEditTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Edit task</h3>
-              <button onClick={() => setEditTarget(null)} aria-label="Close edit task dialog" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Edit task</h3>
+              <button onClick={() => setEditTarget(null)} aria-label="Close edit task dialog" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Task title *</label>
-              <input autoFocus value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Task title *</label>
+              <input autoFocus value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Notes</label>
-              <input value={editForm.description} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Notes</label>
+              <input value={editForm.description} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Priority</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Priority</label>
               <div style={{ display: 'flex', gap: 8 }}>
                 {PRIORITIES.map(p => (
-                  <button key={p} onClick={() => setEditForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: editForm.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${editForm.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: editForm.priority === p ? priorityColor[p] : '#8ea8c5', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
+                  <button key={p} onClick={() => setEditForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: editForm.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${editForm.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: editForm.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
                     {p}
                   </button>
                 ))}
@@ -681,17 +681,17 @@ export default function TasksPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <div>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
-                <input type="date" value={editForm.dueDate} onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
+                <input type="date" value={editForm.dueDate} onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
               </div>
               <div>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
-                <input type="time" value={editForm.dueTime} onChange={e => setEditForm(p => ({ ...p, dueTime: e.target.value }))} style={{ width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: '#eef3fa', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
+                <input type="time" value={editForm.dueTime} onChange={e => setEditForm(p => ({ ...p, dueTime: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
               </div>
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project</label>
               <select value={editForm.projectId} onChange={e => setEditForm(p => ({ ...p, projectId: e.target.value }))} style={selectStyle}>
                 <option value="">No project</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -699,7 +699,7 @@ export default function TasksPage() {
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</label>
               <select value={editForm.assigneeId} onChange={e => setEditForm(p => ({ ...p, assigneeId: e.target.value }))} style={selectStyle}>
                 <option value="">Unassigned</option>
                 {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
@@ -707,7 +707,7 @@ export default function TasksPage() {
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
               <select value={editForm.category} onChange={e => setEditForm(p => ({ ...p, category: e.target.value }))} style={selectStyle}>
                 {CATEGORIES.map(c => <option key={c || 'none'} value={c}>{c || 'None'}</option>)}
               </select>

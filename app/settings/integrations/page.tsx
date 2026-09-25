@@ -122,7 +122,7 @@ function statusColors(status: string, hasSecret: boolean): { bg: string; fg: str
   const s = status.toLowerCase()
   if (s === 'active' || s === 'configured' || s === 'ok') return { bg: 'rgba(16,185,129,0.15)', fg: '#10b981', label: 'configured' }
   if (s === 'error') return { bg: 'rgba(239,68,68,0.15)', fg: '#ef4444', label: 'error' }
-  if (s === 'inactive') return { bg: 'rgba(255,255,255,0.06)', fg: '#8ea8c5', label: hasSecret ? 'inactive' : 'not configured' }
+  if (s === 'inactive') return { bg: 'rgba(255,255,255,0.06)', fg: 'var(--t2)', label: hasSecret ? 'inactive' : 'not configured' }
   return { bg: 'rgba(245,158,11,0.15)', fg: '#f59e0b', label: s || 'unknown' }
 }
 
@@ -272,19 +272,19 @@ export default function IntegrationsPage() {
   }, [connections])
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '20px 20px 100px 60px' }}>
       {/* Back to settings hub */}
       <Link href="/settings" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-        <IcChevL size={18} color="#52749a" />
-        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#52749a' }}>Settings</span>
+        <IcChevL size={18} color="var(--t3)" />
+        <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Settings</span>
       </Link>
 
       <div style={{ display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div>
-          <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
+          <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>
             Integrations
           </h1>
-          <p style={{ fontSize: 13, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginBottom: 16, lineHeight: 1.5, maxWidth: 560 }}>
+          <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginBottom: 16, lineHeight: 1.5, maxWidth: 560 }}>
             Central API registry — every external connection the platform uses. Secrets are encrypted at rest
             and only ever shown masked. Rotations take effect immediately, no restart needed.
           </p>
@@ -309,10 +309,10 @@ export default function IntegrationsPage() {
       <section style={{ ...sectionStyle, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12, flexWrap: 'wrap' }}>
         <div>
           <div style={labelStyle}>Active email provider</div>
-          <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, color: '#eef3fa', fontWeight: 700, marginTop: 6, textTransform: 'capitalize' }}>
+          <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, color: 'var(--t1)', fontWeight: 700, marginTop: 6, textTransform: 'capitalize' }}>
             {emailProvider || 'unknown'}
           </div>
-          <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: '#8ea8c5', marginTop: 2 }}>
+          <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>
             Transactional email (invites, magic links, digests) is sent through this provider.
           </div>
         </div>
@@ -326,9 +326,9 @@ export default function IntegrationsPage() {
               style={{
                 padding: '8px 16px', borderRadius: 10, fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600,
                 cursor: emailSwitching || emailProvider === p ? 'default' : 'pointer',
-                background: emailProvider === p ? '#2563eb' : '#1a2f4e',
+                background: emailProvider === p ? '#2563eb' : 'var(--bg3)',
                 border: emailProvider === p ? '1px solid #2563eb' : '1px solid rgba(255,255,255,0.1)',
-                color: emailProvider === p ? '#fff' : '#8ea8c5',
+                color: emailProvider === p ? '#fff' : 'var(--t2)',
                 opacity: emailSwitching ? 0.6 : 1,
                 textTransform: 'capitalize',
               }}
@@ -341,7 +341,7 @@ export default function IntegrationsPage() {
 
       {/* States: loading / error / empty / list */}
       {loading ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)', padding: '24px 0' }}>Loading connections…</div>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)', padding: '24px 0' }}>Loading connections…</div>
       ) : loadError ? (
         <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '12px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>
           {loadError}
@@ -350,14 +350,14 @@ export default function IntegrationsPage() {
           </button>
         </div>
       ) : connections.length === 0 ? (
-        <div style={{ color: '#52749a', fontSize: 13, fontFamily: 'var(--font-system)', padding: '24px 0' }}>
+        <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)', padding: '24px 0' }}>
           No connections registered yet. Use “Add connection” to paste your first API key.
         </div>
       ) : (
         grouped.map(group => (
           <section key={group.category} style={{ marginTop: 18 }}>
             <div style={{ ...labelStyle, marginBottom: 8 }}>{CATEGORY_LABELS[group.category] || group.category}</div>
-            <div style={{ background: '#152641', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
+            <div style={{ background: 'var(--surface-raised)', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
               {group.items.map((c, i) => {
                 const badge = statusColors(c.status, c.hasSecret)
                 const test = testResults[c.name]
@@ -365,13 +365,13 @@ export default function IntegrationsPage() {
                   <div key={c.name} style={{ padding: '12px 14px', borderTop: i === 0 ? 'none' : '0.5px solid rgba(255,255,255,0.05)' }}>
                     <div style={{ display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap' }}>
                       <div style={{ flex: 1, minWidth: 180 }}>
-                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#eef3fa', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
+                        <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 }}>
                           {c.hasSecret && (
                             <span title="Secret configured (encrypted at rest)" aria-label="Secret configured" style={{ fontSize: 11 }}>🔒</span>
                           )}
                           {c.label}
                         </div>
-                        <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: '#52749a', marginTop: 2 }}>
+                        <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>
                           {c.name} · {c.provider} · {maskedSecret(c)}
                         </div>
                       </div>
@@ -380,7 +380,7 @@ export default function IntegrationsPage() {
                         {badge.label}
                       </span>
 
-                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: '#52749a', whiteSpace: 'nowrap' }}>
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', whiteSpace: 'nowrap' }}>
                         tested {fmtTime(c.lastTestedAt)}
                       </div>
 
@@ -557,16 +557,16 @@ function ConnectionModal({ title, initialName, initialProvider, initialCategory,
     >
       <form onSubmit={save} style={{ background: '#0d1c33', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 20, width: '100%', maxWidth: 460, maxHeight: '85dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-          <h2 style={{ fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, color: '#eef3fa', margin: 0 }}>{title}</h2>
-          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: '#52749a', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>✕</button>
+          <h2 style={{ fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, color: 'var(--t1)', margin: 0 }}>{title}</h2>
+          <button type="button" onClick={onClose} aria-label="Close" style={{ background: 'transparent', border: 'none', color: 'var(--t3)', fontSize: 18, cursor: 'pointer', lineHeight: 1 }}>✕</button>
         </div>
 
         {nameLocked ? (
           <div>
             <div style={labelStyle}>Connection</div>
-            <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: '#eef3fa', marginTop: 6 }}>{name}</div>
+            <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 13, color: 'var(--t1)', marginTop: 6 }}>{name}</div>
             {currentMask && (
-              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#52749a', marginTop: 2 }}>
+              <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
                 current secret: {currentMask}
               </div>
             )}
@@ -636,7 +636,7 @@ function ConnectionModal({ title, initialName, initialProvider, initialCategory,
 // ── Shared styles (match app/settings/* siblings) ────────────────────────────
 
 const sectionStyle: React.CSSProperties = {
-  background: '#152641',
+  background: 'var(--surface-raised)',
   borderRadius: 14,
   padding: 16,
   marginBottom: 16,
@@ -645,18 +645,18 @@ const sectionStyle: React.CSSProperties = {
 const labelStyle: React.CSSProperties = {
   fontFamily: 'var(--font-system)',
   fontSize: 11,
-  color: '#52749a',
+  color: 'var(--t3)',
   fontWeight: 700,
   textTransform: 'uppercase',
   letterSpacing: 0.5,
 }
 const inputStyle: React.CSSProperties = {
   width: '100%',
-  background: '#1a2f4e',
+  background: 'var(--bg3)',
   border: '1px solid rgba(255,255,255,0.1)',
   borderRadius: 10,
   padding: '10px 12px',
-  color: '#eef3fa',
+  color: 'var(--t1)',
   fontFamily: 'var(--font-system)',
   fontSize: 13,
   outline: 'none',
@@ -676,7 +676,7 @@ const primaryBtn: React.CSSProperties = {
 }
 const secondaryBtn: React.CSSProperties = {
   ...primaryBtn,
-  background: '#1a2f4e',
+  background: 'var(--bg3)',
   border: '1px solid rgba(255,255,255,0.1)',
-  color: '#eef3fa',
+  color: 'var(--t1)',
 }

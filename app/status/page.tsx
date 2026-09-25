@@ -64,16 +64,16 @@ export default function StatusPage() {
   const overall = error ? 'unreachable' : health?.status || 'unknown'
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', padding: '20px 20px 100px', fontFamily: 'var(--font-system)' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', padding: '20px 20px 100px', fontFamily: 'var(--font-system)' }}>
       <Link href="/support" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 12 }}>
-        <IcChevL size={18} color="#52749a" />
-        <span style={{ fontSize: 13, color: '#52749a' }}>Support</span>
+        <IcChevL size={18} color="var(--t3)" />
+        <span style={{ fontSize: 13, color: 'var(--t3)' }}>Support</span>
       </Link>
 
-      <h1 style={{ fontSize: 24, fontWeight: 700, color: '#eef3fa', letterSpacing: '-0.03em', margin: 0 }}>
+      <h1 style={{ fontSize: 24, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', margin: 0 }}>
         System status
       </h1>
-      <p style={{ fontSize: 13, color: '#8ea8c5', margin: '4px 0 24px' }}>
+      <p style={{ fontSize: 13, color: 'var(--t2)', margin: '4px 0 24px' }}>
         Live health of Cortex AI, sync, and database — auto-refreshes every 30s.
         {lastFetched && <> Last checked {lastFetched.toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit', second: '2-digit' })}.</>}
       </p>
@@ -105,16 +105,16 @@ export default function StatusPage() {
             justifyContent: 'center',
           }}
         >
-          {overall === 'ok' ? <IcCheck size={24} color="#06101e" /> : <IcAlert size={24} color="#06101e" />}
+          {overall === 'ok' ? <IcCheck size={24} color="var(--bg0)" /> : <IcAlert size={24} color="var(--bg0)" />}
         </div>
         <div>
-          <div style={{ fontSize: 18, color: '#eef3fa', fontWeight: 700 }}>
+          <div style={{ fontSize: 18, color: 'var(--t1)', fontWeight: 700 }}>
             {overall === 'ok' && 'All systems operational'}
             {overall === 'degraded' && 'Degraded service'}
             {overall === 'unreachable' && 'Status endpoint unreachable'}
             {overall === 'unknown' && (loading ? 'Checking…' : 'Unknown')}
           </div>
-          <div style={{ fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>
+          <div style={{ fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>
             {error || (health && `${Object.values(health.checks).filter(c => c.ok).length} of ${Object.keys(health.checks).length} checks passing`)}
           </div>
         </div>
@@ -126,7 +126,7 @@ export default function StatusPage() {
             <li
               key={key}
               style={{
-                background: '#152641',
+                background: 'var(--surface-raised)',
                 borderRadius: 12,
                 padding: '14px 16px',
                 border: '0.5px solid rgba(255,255,255,0.07)',
@@ -146,10 +146,10 @@ export default function StatusPage() {
                 }}
               />
               <div style={{ flex: 1 }}>
-                <div style={{ fontSize: 14, color: '#eef3fa', fontWeight: 600 }}>
+                <div style={{ fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>
                   {CHECK_LABEL[key] || key}
                 </div>
-                <div style={{ fontSize: 11, color: '#8ea8c5', marginTop: 2 }}>
+                <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>
                   {c.ok ? 'Operational' : c.error || 'Failed'}
                   {typeof c.ms === 'number' && ` · ${c.ms}ms`}
                   {typeof c.free_gb === 'number' && ` · ${c.free_gb}GB free`}
@@ -161,7 +161,7 @@ export default function StatusPage() {
         </ul>
       )}
 
-      <p style={{ fontSize: 11, color: '#52749a', marginTop: 20, textAlign: 'center' }}>
+      <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 20, textAlign: 'center' }}>
         Subscribe to incident updates via your account&rsquo;s push notifications (enable in Settings).
       </p>
     </div>

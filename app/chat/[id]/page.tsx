@@ -214,21 +214,21 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
+    <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', flexDirection: 'column' }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
       {/* Header */}
       <div style={{ padding: '14px 16px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/chat" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 6 }}>
-          <IcChevL size={18} color="#52749a" />
-          <span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>All chats</span>
+          <IcChevL size={18} color="var(--t3)" />
+          <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>All chats</span>
         </Link>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
           <div style={{ minWidth: 0, flex: 1 }}>
-            <h1 style={{ fontSize: 18, fontWeight: 700, color: '#eef3fa', letterSpacing: -0.3, fontFamily: SF, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+            <h1 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
               {convo?.title || (error ? 'Conversation' : 'Loading…')}
             </h1>
-            <p style={{ fontSize: 11, color: '#52749a', marginTop: 2, fontFamily: SF }}>
+            <p style={{ fontSize: 11, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
               {convo?.project?.name && <>{convo.project.name} · </>}
               {messages.length} message{messages.length === 1 ? '' : 's'}
               {convo?.archivedAt && <span style={{ color: '#f59e0b', marginLeft: 6 }}>· Archived</span>}
@@ -236,7 +236,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             {convo && (
-              <button onClick={archive} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.1)', color: '#8ea8c5', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              <button onClick={archive} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                 {convo.archivedAt ? 'Restore' : 'Archive'}
               </button>
             )}
@@ -254,11 +254,11 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
         style={{ flex: 1, overflowY: 'auto', padding: '16px 16px 12px', display: 'flex', flexDirection: 'column', gap: 10 }}
       >
         {loading ? (
-          <div style={{ color: '#52749a', fontFamily: SF, fontSize: 13, textAlign: 'center', padding: 40 }}>Loading…</div>
+          <div style={{ color: 'var(--t3)', fontFamily: SF, fontSize: 13, textAlign: 'center', padding: 40 }}>Loading…</div>
         ) : error ? (
           <div style={{ color: '#ef4444', fontFamily: SF, fontSize: 13, textAlign: 'center', padding: 40 }}>{error}</div>
         ) : messages.length === 0 ? (
-          <div style={{ color: '#52749a', fontFamily: SF, fontSize: 13, textAlign: 'center', padding: '60px 20px' }}>
+          <div style={{ color: 'var(--t3)', fontFamily: SF, fontSize: 13, textAlign: 'center', padding: '60px 20px' }}>
             <div>No messages yet.</div>
             <div style={{ marginTop: 8, fontSize: 12 }}>Type below to send the first message.</div>
           </div>
@@ -274,8 +274,8 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
                 <div style={{ minWidth: 0, flex: 1 }}>
                   {!collapse && (
                     <div style={{ display: 'flex', alignItems: 'baseline', gap: 8, marginBottom: 2 }}>
-                      <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: '#eef3fa' }}>{m.authorName}</span>
-                      <span style={{ fontFamily: SF, fontSize: 10, color: '#52749a' }}>
+                      <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: 'var(--t1)' }}>{m.authorName}</span>
+                      <span style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)' }}>
                         {new Date(m.createdAt).toLocaleTimeString('en-GB', { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -303,11 +303,11 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             maxLength={4000}
             style={{
               flex: 1,
-              background: '#1a2f4e',
+              background: 'var(--bg3)',
               border: '1px solid rgba(255,255,255,0.1)',
               borderRadius: 12,
               padding: '10px 12px',
-              color: '#eef3fa',
+              color: 'var(--t1)',
               fontFamily: SF,
               fontSize: 14,
               outline: 'none',
@@ -337,7 +337,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
             <IcSend size={18} color="#fff" />
           </button>
         </div>
-        <div style={{ fontFamily: SF, fontSize: 10, color: '#52749a', marginTop: 4, textAlign: 'right' }}>
+        <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', marginTop: 4, textAlign: 'right' }}>
           {draft.length}/4000
         </div>
       </div>

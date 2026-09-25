@@ -48,12 +48,12 @@ export default function TeamPage() {
   useModalEffects(showHoursModal, () => setShowHoursModal(false))
 
   const inputStyle: React.CSSProperties = {
-    width: '100%', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.1)',
-    borderRadius: 10, padding: '11px 14px', color: '#eef3fa',
+    width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)',
+    borderRadius: 10, padding: '11px 14px', color: 'var(--t1)',
     fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box',
   }
   const labelStyle: React.CSSProperties = {
-    fontFamily: 'var(--font-system)', fontSize: 11, color: '#52749a', fontWeight: 700,
+    fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700,
     textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
   }
 
@@ -257,14 +257,14 @@ export default function TeamPage() {
   }
 
   return (
-    <div style={{ background: '#06101e', minHeight: '100dvh', paddingBottom: 100 }}>
+    <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
       <MobileHeader title="Team" subtitle={`${team.length} members · ${onSiteCount} on site`} notifCount={0} />
 
       {/* Tab switch */}
       <div style={{ display: 'flex', padding: '10px 16px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         {(['members', 'timesheets'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: '10px 4px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: t === tab ? 600 : 400, color: t === tab ? '#f59e0b' : '#52749a', cursor: 'pointer', fontFamily: 'var(--font-system)', borderBottom: t === tab ? '2px solid #f59e0b' : '2px solid transparent', marginBottom: -1, textTransform: 'capitalize' }}>
+          <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: '10px 4px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: t === tab ? 600 : 400, color: t === tab ? '#f59e0b' : 'var(--t3)', cursor: 'pointer', fontFamily: 'var(--font-system)', borderBottom: t === tab ? '2px solid #f59e0b' : '2px solid transparent', marginBottom: -1, textTransform: 'capitalize' }}>
             {t === 'timesheets' && pendingCount > 0 ? `Timesheets (${pendingCount})` : t}
           </button>
         ))}
@@ -278,7 +278,7 @@ export default function TeamPage() {
           ) : error ? (
             <div style={{ textAlign: 'center', padding: '40px 20px', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14 }}>{error}</div>
           ) : team.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 14 }}>No team members yet. Tap + to add one.</div>
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 14 }}>No team members yet. Tap + to add one.</div>
           ) : (
             team.map(member => (
               <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 16, background: member.onSite ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid ${member.onSite ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
@@ -287,21 +287,21 @@ export default function TeamPage() {
                   {member.onSite && <div style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: '50%', background: '#10b981', border: '2px solid #06101e' }} />}
                 </div>
                 <Link href={`/team/${member.id}`} style={{ flex: 1, textDecoration: 'none' }}>
-                  <p style={{ fontSize: 15, fontWeight: 700, color: '#eef3fa', fontFamily: 'var(--font-system)', letterSpacing: '-0.01em' }}>{member.name}</p>
-                  <p style={{ fontSize: 12, color: '#8ea8c5', fontFamily: 'var(--font-system)', marginTop: 1 }}>{member.role}</p>
+                  <p style={{ fontSize: 15, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--font-system)', letterSpacing: '-0.01em' }}>{member.name}</p>
+                  <p style={{ fontSize: 12, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginTop: 1 }}>{member.role}</p>
                   <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
-                    <IcClock size={11} color="#52749a" />
-                    <span style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)' }}>{member.hoursThisWeek || 0}h this week</span>
+                    <IcClock size={11} color="var(--t3)" />
+                    <span style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>{member.hoursThisWeek || 0}h this week</span>
                     {member.dailyRate > 0 && <>
-                      <span style={{ color: '#1a2f4e' }}>·</span>
-                      <span style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)' }}>£{member.dailyRate}/day</span>
+                      <span style={{ color: 'var(--bg3)' }}>·</span>
+                      <span style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--font-system)' }}>£{member.dailyRate}/day</span>
                     </>}
                   </div>
                 </Link>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   {member.onSite && <span style={{ fontSize: 9, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.15)', padding: '3px 8px', borderRadius: 99, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>On site</span>}
                   <button onClick={() => openEditModal(member)} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
-                    <IcEdit size={13} color="#8ea8c5" />
+                    <IcEdit size={13} color="var(--t2)" />
                   </button>
                 </div>
               </div>
@@ -349,14 +349,14 @@ export default function TeamPage() {
           {tsLoading ? (
             [1, 2, 3].map(i => <div key={i} style={{ height: 70, borderRadius: 14, background: 'rgba(255,255,255,0.04)' }} />)
           ) : timesheets.length === 0 ? (
-            <div style={{ textAlign: 'center', padding: '40px 20px', color: '#52749a', fontFamily: 'var(--font-system)', fontSize: 14 }}>No time entries this week</div>
+            <div style={{ textAlign: 'center', padding: '40px 20px', color: 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 14 }}>No time entries this week</div>
           ) : (
             timesheets.map(ts => (
               <div key={ts.member.id} style={{ display: 'flex', alignItems: 'center', gap: 12, padding: '12px 14px', borderRadius: 14, background: ts.approved ? 'rgba(16,185,129,0.04)' : 'rgba(255,255,255,0.04)', border: `1px solid ${ts.approved ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
                 <Avatar name={ts.member.name} color={ts.member.avatarColor} size={36} />
                 <div style={{ flex: 1 }}>
-                  <p style={{ fontSize: 13, fontWeight: 600, color: '#eef3fa', fontFamily: 'var(--font-system)' }}>{ts.member.name}</p>
-                  <p style={{ fontSize: 11, color: '#52749a', fontFamily: 'var(--font-system)', marginTop: 1 }}>
+                  <p style={{ fontSize: 13, fontWeight: 600, color: 'var(--t1)', fontFamily: 'var(--font-system)' }}>{ts.member.name}</p>
+                  <p style={{ fontSize: 11, color: 'var(--t3)', fontFamily: 'var(--font-system)', marginTop: 1 }}>
                     {ts.totalHours}h · {ts.entries.length} entr{ts.entries.length !== 1 ? 'ies' : 'y'}
                     {ts.entries[0]?.project && ` · ${ts.entries[0].project.name}`}
                   </p>
@@ -380,10 +380,10 @@ export default function TeamPage() {
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Add team member</h3>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Add team member</h3>
+              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {[
               { key: 'name', label: 'Full name *', placeholder: 'Tom Reilly' },
@@ -416,10 +416,10 @@ export default function TeamPage() {
       {showEditModal && editTarget && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowEditModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Edit {editTarget.name}</h3>
-              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Edit {editTarget.name}</h3>
+              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {[
               { key: 'name', label: 'Full name *', placeholder: 'Tom Reilly' },
@@ -446,7 +446,7 @@ export default function TeamPage() {
             </button>
             {confirmDelete ? (
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: '#8ea8c5', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
                 <button onClick={deleteMember} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm remove</button>
               </div>
             ) : (
@@ -462,10 +462,10 @@ export default function TeamPage() {
       {showHoursModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
           <div onClick={() => setShowHoursModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
-          <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+          <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
-              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: '#eef3fa' }}>Log hours</h3>
-              <button onClick={() => setShowHoursModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="#52749a" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Log hours</h3>
+              <button onClick={() => setShowHoursModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
               <label style={labelStyle}>Team member *</label>

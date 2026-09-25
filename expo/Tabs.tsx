@@ -24,12 +24,12 @@ import type { AuthUser } from './api';
 import type { AppRoute } from './routes';
 import { pendingWrites, onQueueChange, flushQueue, getToken } from './api';
 
-const MAIN_TABS: Array<{ key: AppRoute; label: string }> = [
-  { key: 'overview', label: 'Home' },
-  { key: 'projects', label: 'Jobs' },
-  { key: 'tasks', label: 'Tasks' },
-  { key: 'field', label: 'Field' },
-  { key: 'more', label: 'More' },
+const MAIN_TABS: Array<{ key: AppRoute; label: string; glyph: string }> = [
+  { key: 'overview', label: 'Home', glyph: 'HM' },
+  { key: 'projects', label: 'Projects', glyph: 'PJ' },
+  { key: 'tasks', label: 'Work', glyph: 'TK' },
+  { key: 'field', label: 'Field', glyph: 'FD' },
+  { key: 'more', label: 'More', glyph: '•••' },
 ];
 const FIELD_ROUTES = new Set<AppRoute>(['field', 'checkin', 'readiness', 'deliveries', 'controls', 'timesheets', 'diary', 'snags', 'safety']);
 const MORE_ROUTES = new Set<AppRoute>(['more', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile']);
@@ -135,6 +135,7 @@ export default function Tabs({ user, onLogout }: { user: AuthUser; onLogout: () 
       {MAIN_TABS.map(t => {
         const active = activeRoot === t.key;
         return <TouchableOpacity key={t.key} style={[styles.tabBtn, active && styles.tabBtnActive]} onPress={() => setTab(t.key)}>
+          <View style={[styles.glyphBox, active && styles.glyphBoxActive]}><Text style={[styles.glyph, active && styles.tabActive]}>{t.glyph}</Text></View>
           <Text style={[styles.tabLabel, active && styles.tabActive]}>{t.label}</Text>
         </TouchableOpacity>;
       })}
@@ -144,9 +145,20 @@ export default function Tabs({ user, onLogout }: { user: AuthUser; onLogout: () 
 }
 
 const styles = StyleSheet.create({
-  wrap: { flex: 1, backgroundColor: Colors.ink }, body: { flex: 1 },
-  tabBar: { flexDirection: 'row', backgroundColor: Colors.ink2, borderTopWidth: 1, borderTopColor: Colors.hair, paddingBottom: 6, paddingTop: 4 },
-  tabBtn: { flex: 1, alignItems: 'center', paddingVertical: 9, borderRadius: 10, marginHorizontal: 3 }, tabBtnActive: { backgroundColor: Colors.ink3 },
-  tabLabel: { color: Colors.t3, fontSize: 11, fontWeight: '700' }, tabActive: { color: Colors.amber },
-  syncBadge: { backgroundColor: Colors.amber, paddingVertical: 7, alignItems: 'center' }, syncText: { color: Colors.ink, fontSize: 12, fontWeight: '700' },
+  wrap: { flex: 1, backgroundColor: Colors.ink },
+  body: { flex: 1 },
+  tabBar: {
+    flexDirection: 'row', backgroundColor: 'rgba(15,19,22,0.98)',
+    borderTopWidth: 1, borderTopColor: Colors.hair,
+    paddingBottom: 8, paddingTop: 7, paddingHorizontal: 8,
+  },
+  tabBtn: { flex: 1, alignItems: 'center', justifyContent: 'center', gap: 3, paddingVertical: 5, borderRadius: 14, marginHorizontal: 2 },
+  tabBtnActive: { backgroundColor: Colors.amber + '14' },
+  glyphBox: { width: 25, height: 22, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: Colors.hair },
+  glyphBoxActive: { borderColor: Colors.amber + '66', backgroundColor: Colors.amber + '10' },
+  glyph: { color: Colors.t3, fontSize: 8.5, fontWeight: '900', letterSpacing: .4 },
+  tabLabel: { color: Colors.t3, fontSize: 9.5, fontWeight: '800' },
+  tabActive: { color: Colors.amber },
+  syncBadge: { backgroundColor: Colors.amber, paddingVertical: 7, alignItems: 'center' },
+  syncText: { color: Colors.ink, fontSize: 11, fontWeight: '900' },
 });

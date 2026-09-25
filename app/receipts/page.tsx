@@ -37,7 +37,7 @@ type EditForm = { vendor: string; receiptDate: string; subtotal: string; vatAmou
 const SF = 'var(--font-system)'
 const CATEGORIES = ['materials', 'plant', 'tools', 'fuel', 'travel', 'accommodation', 'subcontract', 'office', 'other']
 const STATUS_COLOR: Record<ReceiptStatus, string> = {
-  pending: '#52749a', extracted: '#3b82f6', needs_review: '#f59e0b', approved: '#10b981', reconciled: '#8b5cf6',
+  pending: 'var(--t3)', extracted: '#3b82f6', needs_review: '#f59e0b', approved: '#10b981', reconciled: '#8b5cf6',
 }
 
 function money(value: number | null | undefined) {
@@ -132,12 +132,12 @@ export default function ReceiptsPage() {
     } finally { setScanning(null) }
   }
 
-  return <div style={{ minHeight: '100dvh', background: '#06101e', paddingBottom: 96 }}>
+  return <div style={{ minHeight: '100dvh', background: 'var(--bg0)', paddingBottom: 96 }}>
     {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
     <div style={{ padding: '18px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
-      <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 9 }}><IcChevL size={18} color="#52749a" /><span style={{ fontFamily: SF, fontSize: 13, color: '#52749a' }}>Apps</span></Link>
+      <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 9 }}><IcChevL size={18} color="var(--t3)" /><span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span></Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
-        <div><h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 800, color: '#eef3fa' }}>Receipts</h1><p style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 2 }}>AI OCR · review · approve · reconcile</p></div>
+        <div><h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 800, color: 'var(--t1)' }}>Receipts</h1><p style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>AI OCR · review · approve · reconcile</p></div>
         <Link href="/capture?type=receipt" aria-label="Scan receipt" style={{ width: 38, height: 38, borderRadius: 11, background: '#10b981', display: 'grid', placeItems: 'center' }}><IcCamera size={18} color="#fff" /></Link>
       </div>
     </div>
@@ -150,22 +150,22 @@ export default function ReceiptsPage() {
     </div>
 
     <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '12px 16px 4px' }}>
-      {(['all', 'needs_review', 'approved', 'reconciled'] as const).map(s => <button key={s} type="button" onClick={() => setFilter(s)} style={{ flexShrink: 0, border: 0, borderRadius: 99, padding: '6px 11px', background: filter === s ? '#2563eb' : 'rgba(255,255,255,0.06)', color: filter === s ? '#fff' : '#8ea8c5', fontFamily: SF, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>{s === 'all' ? 'All' : s === 'needs_review' ? 'Review queue' : s[0].toUpperCase() + s.slice(1)}</button>)}
+      {(['all', 'needs_review', 'approved', 'reconciled'] as const).map(s => <button key={s} type="button" onClick={() => setFilter(s)} style={{ flexShrink: 0, border: 0, borderRadius: 99, padding: '6px 11px', background: filter === s ? '#2563eb' : 'rgba(255,255,255,0.06)', color: filter === s ? '#fff' : 'var(--t2)', fontFamily: SF, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>{s === 'all' ? 'All' : s === 'needs_review' ? 'Review queue' : s[0].toUpperCase() + s.slice(1)}</button>)}
     </div>
 
-    {loading ? <div style={{ padding: 40, textAlign: 'center', fontFamily: SF, color: '#52749a' }}>Loading receipts…</div> : filtered.length === 0 ? (
-      <div style={{ padding: '62px 28px', textAlign: 'center' }}><IcReceipt size={34} color="#52749a" /><div style={{ fontFamily: SF, fontSize: 15, fontWeight: 800, color: '#eef3fa', marginTop: 12 }}>No receipts in this view</div><div style={{ fontFamily: SF, fontSize: 12, color: '#8ea8c5', marginTop: 4 }}>Scan a site receipt to build the expense review queue.</div></div>
+    {loading ? <div style={{ padding: 40, textAlign: 'center', fontFamily: SF, color: 'var(--t3)' }}>Loading receipts…</div> : filtered.length === 0 ? (
+      <div style={{ padding: '62px 28px', textAlign: 'center' }}><IcReceipt size={34} color="var(--t3)" /><div style={{ fontFamily: SF, fontSize: 15, fontWeight: 800, color: 'var(--t1)', marginTop: 12 }}>No receipts in this view</div><div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 4 }}>Scan a site receipt to build the expense review queue.</div></div>
     ) : <div style={{ padding: '10px 16px', display: 'grid', gap: 10 }}>
       {filtered.map(r => {
         const confidence = r.confidence == null ? null : Math.round(r.confidence * 100)
         const gps = r.latitude != null && r.longitude != null
-        return <div key={r.id} style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 13 }}>
+        return <div key={r.id} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 14, padding: 13 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}>
             <div style={{ minWidth: 0 }}>
-              <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 800, color: '#eef3fa', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.vendor || 'Vendor not identified'}</div>
-              <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', marginTop: 2 }}>{r.project?.name || 'Unassigned'} · {r.receiptDate ? new Date(r.receiptDate).toLocaleDateString('en-GB') : 'date unclear'}</div>
+              <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 800, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{r.vendor || 'Vendor not identified'}</div>
+              <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', marginTop: 2 }}>{r.project?.name || 'Unassigned'} · {r.receiptDate ? new Date(r.receiptDate).toLocaleDateString('en-GB') : 'date unclear'}</div>
             </div>
-            <div style={{ textAlign: 'right', flexShrink: 0 }}><div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 800, color: '#eef3fa' }}>{r.totalAmount == null ? '—' : money(r.totalAmount)}</div><span style={{ display: 'inline-block', marginTop: 3, borderRadius: 99, padding: '2px 7px', background: STATUS_COLOR[r.status] + '20', color: STATUS_COLOR[r.status], fontFamily: SF, fontSize: 8, fontWeight: 900, textTransform: 'uppercase' }}>{r.status.replace('_', ' ')}</span></div>
+            <div style={{ textAlign: 'right', flexShrink: 0 }}><div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 16, fontWeight: 800, color: 'var(--t1)' }}>{r.totalAmount == null ? '—' : money(r.totalAmount)}</div><span style={{ display: 'inline-block', marginTop: 3, borderRadius: 99, padding: '2px 7px', background: STATUS_COLOR[r.status] + '20', color: STATUS_COLOR[r.status], fontFamily: SF, fontSize: 8, fontWeight: 900, textTransform: 'uppercase' }}>{r.status.replace('_', ' ')}</span></div>
           </div>
           <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 9 }}>
             <Chip text={r.category || 'uncategorised'} />
@@ -174,9 +174,9 @@ export default function ReceiptsPage() {
             <Chip text={gps ? `GPS ±${Math.round(r.accuracyM || 0)}m` : 'No GPS'} />
             {r.vatAmount != null && <Chip text={`VAT ${money(r.vatAmount)}`} />}
           </div>
-          {r.notes && <div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', lineHeight: 1.4, marginTop: 8 }}>{r.notes}</div>}
+          {r.notes && <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', lineHeight: 1.4, marginTop: 8 }}>{r.notes}</div>}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-            {r.document.url && <a href={r.document.url} target="_blank" rel="noreferrer" style={smallBtn('#8ea8c5')}>Image</a>}
+            {r.document.url && <a href={r.document.url} target="_blank" rel="noreferrer" style={smallBtn('var(--t2)')}>Image</a>}
             {r.status !== 'reconciled' && <button type="button" disabled={scanning === r.id} onClick={() => rescan(r)} style={smallBtn('#8b5cf6')}><IcSpark size={10} color="#8b5cf6" /> {scanning === r.id ? 'Scanning…' : 'Re-scan'}</button>}
             <button type="button" onClick={() => openEdit(r)} style={smallBtn(r.status === 'approved' ? '#10b981' : '#3b82f6')}>{r.status === 'approved' ? 'Reconcile' : r.status === 'reconciled' ? 'View' : 'Review'}</button>
           </div>
@@ -188,8 +188,8 @@ export default function ReceiptsPage() {
 
     {editing && <div style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
       <div onClick={() => setEditing(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
-      <div style={{ position: 'relative', background: '#152641', borderRadius: '20px 20px 0 0', padding: '22px 20px 34px', maxHeight: '92dvh', overflowY: 'auto', display: 'grid', gap: 11 }}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><h2 style={{ fontFamily: SF, fontSize: 19, color: '#eef3fa' }}>Review receipt</h2><div style={{ fontFamily: SF, fontSize: 10, color: '#8ea8c5', marginTop: 2 }}>{editing.project?.name || 'Unassigned'} · {editing.document.name}</div></div><button type="button" onClick={() => setEditing(null)} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="#8ea8c5" /></button></div>
+      <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 34px', maxHeight: '92dvh', overflowY: 'auto', display: 'grid', gap: 11 }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>Review receipt</h2><div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', marginTop: 2 }}>{editing.project?.name || 'Unassigned'} · {editing.document.name}</div></div><button type="button" onClick={() => setEditing(null)} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t2)" /></button></div>
         <Field label="Vendor"><input value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inputStyle} /></Field>
         <Field label="Receipt date"><input type="date" value={form.receiptDate} onChange={e => setForm(p => ({ ...p, receiptDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} /></Field>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,minmax(0,1fr))', gap: 7 }}>
@@ -210,9 +210,9 @@ export default function ReceiptsPage() {
   </div>
 }
 
-function Kpi({ label, value, color }: { label: string; value: string; color: string }) { return <div style={{ background: '#152641', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 11 }}><div style={{ fontFamily: SF, fontSize: 8, fontWeight: 900, color: '#52749a', textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div><div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15, fontWeight: 800, color, marginTop: 3 }}>{value}</div></div> }
-function Chip({ text }: { text: string }) { return <span style={{ fontFamily: SF, fontSize: 8, fontWeight: 800, color: '#8ea8c5', padding: '3px 6px', borderRadius: 99, background: 'rgba(255,255,255,0.05)' }}>{text}</span> }
-function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label style={{ display: 'grid', gap: 5 }}><span style={{ fontFamily: SF, fontSize: 9, fontWeight: 900, color: '#8ea8c5', textTransform: 'uppercase' }}>{label}</span>{children}</label> }
+function Kpi({ label, value, color }: { label: string; value: string; color: string }) { return <div style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 11 }}><div style={{ fontFamily: SF, fontSize: 8, fontWeight: 900, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: 0.4 }}>{label}</div><div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15, fontWeight: 800, color, marginTop: 3 }}>{value}</div></div> }
+function Chip({ text }: { text: string }) { return <span style={{ fontFamily: SF, fontSize: 8, fontWeight: 800, color: 'var(--t2)', padding: '3px 6px', borderRadius: 99, background: 'rgba(255,255,255,0.05)' }}>{text}</span> }
+function Field({ label, children }: { label: string; children: React.ReactNode }) { return <label style={{ display: 'grid', gap: 5 }}><span style={{ fontFamily: SF, fontSize: 9, fontWeight: 900, color: 'var(--t2)', textTransform: 'uppercase' }}>{label}</span>{children}</label> }
 function smallBtn(color: string): React.CSSProperties { return { display: 'inline-flex', gap: 4, alignItems: 'center', border: `1px solid ${color}44`, background: color + '12', color, borderRadius: 8, padding: '6px 8px', fontFamily: SF, fontSize: 9, fontWeight: 800, textDecoration: 'none', cursor: 'pointer' } }
 function actionBtn(color: string): React.CSSProperties { return { minHeight: 42, border: 0, borderRadius: 10, background: color, color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, fontFamily: SF, fontSize: 12, fontWeight: 800, cursor: 'pointer' } }
-const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: '#1a2f4e', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 9, color: '#eef3fa', padding: '9px 10px', fontFamily: SF, fontSize: 12, outline: 'none' }
+const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 9, color: 'var(--t1)', padding: '9px 10px', fontFamily: SF, fontSize: 12, outline: 'none' }
