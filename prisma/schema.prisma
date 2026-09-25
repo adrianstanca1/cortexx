@@ -942,37 +942,65 @@ model Material {
 }
 
 model PurchaseOrder {
-  id               String       @id @default(cuid())
-  number           String       @unique
-  projectId        String?
-  supplier         String
-  contactEmail     String?
-  contactPhone     String?
-  status           String       @default("draft") // draft, sent, received, closed, cancelled
-  lineItems        Json         @default("[]")
-  subtotal         Float        @default(0)
-  vatRate          Float        @default(20)
-  vatAmount        Float        @default(0)
-  total            Float        @default(0)
-  expectedDelivery DateTime?
-  receivedAt       DateTime?
-  sentAt           DateTime?
-  closedAt         DateTime?
-  notes            String?
-  createdAt        DateTime     @default(now())
-  updatedAt        DateTime     @updatedAt
-  project          Project?     @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  costCodeId       String?
-  costCode         CostCode?    @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
-  subInvoices      SubInvoice[]
+  id                  String         @id @default(cuid())
+  number              String
+  projectId           String?
+  supplier            String
+  contactEmail        String?
+  contactPhone        String?
+  status              String         @default("draft") // draft, pending_approval, rejected, approved, sent, part_received, received, closed, cancelled
+  lineItems           Json           @default("[]")
+  subtotal            Float          @default(0)
+  vatRate             Float          @default(20)
+  vatAmount           Float          @default(0)
+  total               Float          @default(0)
+  expectedDelivery    DateTime?
+  receivedAt          DateTime?
+  approvalRequestedAt DateTime?
+  approvedAt          DateTime?
+  approvedBy          String?
+  rejectedAt          DateTime?
+  rejectionReason     String?
+  sentAt              DateTime?
+  closedAt            DateTime?
+  notes               String?
+  createdAt           DateTime       @default(now())
+  updatedAt           DateTime       @updatedAt
+  project             Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  costCodeId          String?
+  costCode            CostCode?      @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
+  supplierId          String?
+  supplierRef         Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  subInvoices         SubInvoice[]
+  goodsReceipts       GoodsReceipt[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  @@unique([organizationId, number])
   @@index([projectId, status])
   @@index([status])
   @@index([costCodeId])
+  @@index([supplierId])
   @@index([expectedDelivery])
+  @@index([organizationId])
+}
+
+model GoodsReceipt {
+  id              String        @id @default(cuid())
+  purchaseOrderId String
+  purchaseOrder   PurchaseOrder @relation(fields: [purchaseOrderId], references: [id], onDelete: Cascade)
+  deliveryNote    String?
+  deliveredAt     DateTime      @default(now())
+  receivedBy      String?
+  lineItems       Json          @default("[]")
+  netReceived     Float         @default(0)
+  notes           String?
+  createdAt       DateTime      @default(now())
+  organizationId  String?
+  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([purchaseOrderId, deliveredAt])
   @@index([organizationId])
 }
 
@@ -991,6 +1019,9 @@ model SubInvoice {
   status           String         @default("received") // received, approved, paid, disputed
   paidAt           DateTime?
   bankReconciledAt DateTime?
+  matchStatus      String         @default("unmatched") // unmatched, pending_delivery, matched, over_received, over_order
+  matchDetails     Json           @default("{}")
+  matchedAt        DateTime?
   notes            String?
   createdAt        DateTime       @default(now())
   updatedAt        DateTime       @updatedAt
@@ -1008,6 +1039,7 @@ model SubInvoice {
   @@index([subcontractorId, status])
   @@index([status, invoiceDate])
   @@index([purchaseOrderId])
+  @@index([purchaseOrderId, matchStatus])
   @@index([costCodeId])
   @@index([organizationId])
 }
@@ -1284,20 +1316,21 @@ model MaintenanceSchedule {
 }
 
 model Supplier {
-  id            String    @id @default(cuid())
-  name          String
-  category      String    @default("materials") // materials, plant, services, other
-  contactName   String?
-  contactEmail  String?
-  contactPhone  String?
-  address       String?
-  postcode      String?
-  paymentTerms  String? // e.g. "Net 30"
-  accountNumber String?
-  notes         String?
-  archivedAt    DateTime?
-  createdAt     DateTime  @default(now())
-  updatedAt     DateTime  @updatedAt
+  id             String          @id @default(cuid())
+  name           String
+  category       String          @default("materials") // materials, plant, services, other
+  contactName    String?
+  contactEmail   String?
+  contactPhone   String?
+  address        String?
+  postcode       String?
+  paymentTerms   String? // e.g. "Net 30"
+  accountNumber  String?
+  notes          String?
+  archivedAt     DateTime?
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  purchaseOrders PurchaseOrder[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -1439,6 +1472,7 @@ model Organization {
   equipment               Equipment[]
   materials               Material[]
   purchaseOrders          PurchaseOrder[]
+  goodsReceipts           GoodsReceipt[]
   subInvoices             SubInvoice[]
   drawings                Drawing[]
   drawingRevisions        DrawingRevision[]

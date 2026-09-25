@@ -7,6 +7,7 @@ import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
 import costLedger from '@/lib/cost-ledger'
 import { postSourceCost } from '@/lib/cost-ledger-server'
+import { purchaseOrderMatch, throwThreeWayMismatch } from '@/lib/procurement-match-server'
 
 export const dynamic = 'force-dynamic'
 
@@ -121,13 +122,24 @@ export async function POST(req: NextRequest) {
     const status = ALLOWED_STATUS.has(body.status) ? String(body.status) : 'received'
     if (['approved', 'paid'].includes(status) && !projectId) return NextResponse.json({ error: 'Assign the invoice to a project before approval' }, { status: 409 })
 
+    let matchResult: Record<string, string | number | boolean | null> | null = null
     const invoice = await prisma.$transaction(async tx => {
+      if (purchaseOrderId) {
+        const match = await purchaseOrderMatch(tx, orgId, purchaseOrderId, netAmount)
+        matchResult = match as unknown as Record<string, string | number | boolean | null>
+        if (['approved', 'paid'].includes(status) && match.status !== 'matched' && body.overrideThreeWay !== true) {
+          throwThreeWayMismatch(match)
+        }
+      }
       const created = await tx.subInvoice.create({
         data: {
           number, subcontractorId, projectId, purchaseOrderId, costCodeId, invoiceDate,
           description: body.description?.toString().trim() || null,
           netAmount, vatAmount, cisAmount, grossAmount, payableAmount, status,
           paidAt: status === 'paid' ? new Date() : null,
+          matchStatus: purchaseOrderId && matchResult ? (matchResult as { status: string }).status : (purchaseOrderId ? 'unmatched' : 'unmatched'),
+          matchDetails: matchResult ? matchResult as object : {},
+          matchedAt: matchResult && (matchResult as { status: string }).status === 'matched' ? new Date() : null,
           notes: body.notes?.toString().trim() || null,
         },
         include: {
@@ -148,10 +160,27 @@ export async function POST(req: NextRequest) {
       }
       return created
     })
-    auditLog({ action: 'subInvoice.create', resourceType: 'SubInvoice', resourceId: invoice.id, metadata: { projectId, status, purchaseOrderId, costCodeId }, ...requestMeta(req) })
+    auditLog({
+      action: 'subInvoice.create',
+      resourceType: 'SubInvoice',
+      resourceId: invoice.id,
+      metadata: {
+        projectId, status, purchaseOrderId, costCodeId,
+        threeWayMatch: matchResult,
+        threeWayOverride: body.overrideThreeWay === true && matchResult !== null,
+      },
+      ...requestMeta(req),
+    })
     return NextResponse.json(invoice, { status: 201 })
   } catch (error) {
     if ((error as { code?: string })?.code === 'P2002') return NextResponse.json({ error: 'Duplicate invoice number for this subcontractor' }, { status: 409 })
+    if ((error as { code?: string })?.code === 'THREE_WAY_MATCH_FAILED') {
+      return NextResponse.json({
+        error: 'Invoice does not match the purchase order and received goods',
+        code: 'THREE_WAY_MATCH_FAILED',
+        match: (error as { match?: unknown }).match,
+      }, { status: 409 })
+    }
     reportError(error)
     return NextResponse.json({ error: 'Failed to create sub-invoice' }, { status: 500 })
   }

@@ -7,6 +7,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import costLedger from '@/lib/cost-ledger'
 import { postSourceCost, voidSourceCost } from '@/lib/cost-ledger-server'
+import { purchaseOrderMatch, throwThreeWayMismatch } from '@/lib/procurement-match-server'
 
 export const dynamic = 'force-dynamic'
 const ALLOWED_STATUS = new Set(['received', 'approved', 'paid', 'disputed'])
@@ -60,7 +61,25 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     const targetStatus = typeof data.status === 'string' ? data.status : existing.status
     if (['approved', 'paid'].includes(targetStatus) && !existing.projectId) return NextResponse.json({ error: 'Assign the invoice to a project before approval' }, { status: 409 })
 
+    const targetPurchaseOrderId = data.purchaseOrderId !== undefined
+      ? data.purchaseOrderId as string | null
+      : existing.purchaseOrderId
+    let matchResult: Record<string, string | number | boolean | null> | null = null
     const invoice = await prisma.$transaction(async tx => {
+      if (targetPurchaseOrderId) {
+        const match = await purchaseOrderMatch(tx, orgId, targetPurchaseOrderId, existing.netAmount, existing.id)
+        matchResult = match as unknown as Record<string, string | number | boolean | null>
+        if (['approved', 'paid'].includes(targetStatus) && match.status !== 'matched' && body.overrideThreeWay !== true) {
+          throwThreeWayMismatch(match)
+        }
+        data.matchStatus = match.status
+        data.matchDetails = match as object
+        data.matchedAt = match.status === 'matched' ? new Date() : null
+      } else {
+        data.matchStatus = 'unmatched'
+        data.matchDetails = {}
+        data.matchedAt = null
+      }
       const updated = await tx.subInvoice.update({
         where: { id: params.id }, data,
         include: {
@@ -83,9 +102,28 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       }
       return updated
     })
-    auditLog({ action: 'subInvoice.update', resourceType: 'SubInvoice', resourceId: invoice.id, metadata: { status: invoice.status, purchaseOrderId: invoice.purchaseOrderId, costCodeId: invoice.costCodeId }, ...requestMeta(req) })
+    auditLog({
+      action: 'subInvoice.update',
+      resourceType: 'SubInvoice',
+      resourceId: invoice.id,
+      metadata: {
+        status: invoice.status,
+        purchaseOrderId: invoice.purchaseOrderId,
+        costCodeId: invoice.costCodeId,
+        threeWayMatch: matchResult,
+        threeWayOverride: body.overrideThreeWay === true && matchResult !== null,
+      },
+      ...requestMeta(req),
+    })
     return NextResponse.json(invoice)
   } catch (error) {
+    if ((error as { code?: string })?.code === 'THREE_WAY_MATCH_FAILED') {
+      return NextResponse.json({
+        error: 'Invoice does not match the purchase order and received goods',
+        code: 'THREE_WAY_MATCH_FAILED',
+        match: (error as { match?: unknown }).match,
+      }, { status: 409 })
+    }
     reportError(error)
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
   }

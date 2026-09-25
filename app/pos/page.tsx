@@ -10,6 +10,8 @@ import { useModalEffects } from '@/lib/useModalEffects'
 interface Project { id: string; name: string }
 interface CostCode { id: string; code: string; name: string }
 interface LineItem { description: string; quantity: number; unit?: string; unitPrice: number; total: number }
+interface ReceiptLine { lineIndex: number; quantity: number }
+interface GoodsReceipt { id: string; deliveredAt: string; deliveryNote: string | null; netReceived: number; lineItems: ReceiptLine[] }
 interface PO {
   id: string
   number: string
@@ -17,7 +19,7 @@ interface PO {
   supplier: string
   contactEmail: string | null
   contactPhone: string | null
-  status: 'draft' | 'sent' | 'received' | 'closed' | 'cancelled'
+  status: 'draft' | 'pending_approval' | 'rejected' | 'approved' | 'sent' | 'part_received' | 'received' | 'closed' | 'cancelled'
   lineItems: LineItem[]
   subtotal: number
   vatRate: number
@@ -26,6 +28,11 @@ interface PO {
   expectedDelivery: string | null
   receivedAt: string | null
   sentAt: string | null
+  approvalRequestedAt?: string | null
+  approvedAt?: string | null
+  approvedBy?: string | null
+  rejectionReason?: string | null
+  goodsReceipts?: GoodsReceipt[]
   createdAt: string
   notes: string | null
   project?: Project | null
@@ -34,8 +41,8 @@ interface PO {
 }
 
 const SF = 'var(--font-system)'
-const STATUS_COLOR: Record<PO['status'], string> = { draft: '#52749a', sent: '#f59e0b', received: '#22c55e', closed: '#06b6d4', cancelled: '#ef4444' }
-const STATUS_LABEL: Record<PO['status'], string> = { draft: 'Draft', sent: 'Sent', received: 'Received', closed: 'Closed', cancelled: 'Cancelled' }
+const STATUS_COLOR: Record<PO['status'], string> = { draft: '#52749a', pending_approval: '#a78bfa', rejected: '#ef4444', approved: '#38bdf8', sent: '#f59e0b', part_received: '#84cc16', received: '#22c55e', closed: '#06b6d4', cancelled: '#ef4444' }
+const STATUS_LABEL: Record<PO['status'], string> = { draft: 'Draft', pending_approval: 'Approval', rejected: 'Rejected', approved: 'Approved', sent: 'Sent', part_received: 'Part received', received: 'Received', closed: 'Closed', cancelled: 'Cancelled' }
 const UNITS = ['item', 'hour', 'day', 'm', 'm²', 'm³', 'kg', 'tonne', 'l']
 const blankItem = (): LineItem => ({ description: '', quantity: 1, unit: 'item', unitPrice: 0, total: 0 })
 
@@ -159,11 +166,60 @@ export default function POsPage() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: next }),
       })
-      if (!res.ok) throw new Error('Failed')
+      if (!res.ok) {
+        const json = await res.json().catch(() => ({})) as { error?: string }
+        throw new Error(json.error || 'Status change failed')
+      }
       const updated = await res.json()
       if (activePo?.id === p.id) setActivePo(updated)
       load()
-    } catch { setToast({ msg: 'Status change failed', type: 'error' }) }
+      setToast({ msg: `PO ${STATUS_LABEL[next].toLowerCase()}` })
+    } catch (e) { setToast({ msg: e instanceof Error ? e.message : 'Status change failed', type: 'error' }) }
+  }
+
+  const recordDelivery = async (p: PO) => {
+    try {
+      const res = await fetch(`/api/pos/${p.id}/receipts`)
+      if (!res.ok) throw new Error('Could not load previous deliveries')
+      const payload = await res.json() as { receipts?: Array<{ lineItems?: Array<{ lineIndex?: number; quantity?: number }> }> }
+      const received = new Map<number, number>()
+      for (const receipt of payload.receipts || []) {
+        for (const line of receipt.lineItems || []) {
+          const index = Number(line.lineIndex)
+          const quantity = Number(line.quantity)
+          if (Number.isInteger(index) && Number.isFinite(quantity)) received.set(index, (received.get(index) || 0) + quantity)
+        }
+      }
+
+      const lineItems: Array<{ lineIndex: number; quantity: number }> = []
+      for (let i = 0; i < p.lineItems.length; i += 1) {
+        const line = p.lineItems[i]
+        const remaining = Math.max(0, Number(line.quantity) - (received.get(i) || 0))
+        if (remaining <= 0) continue
+        const answer = window.prompt(`Received quantity for ${line.description} (remaining ${remaining}${line.unit ? ` ${line.unit}` : ''})`, String(remaining))
+        if (answer === null) return
+        const quantity = Number(answer)
+        if (!Number.isFinite(quantity) || quantity < 0 || quantity > remaining) throw new Error(`Enter a quantity between 0 and ${remaining}`)
+        if (quantity > 0) lineItems.push({ lineIndex: i, quantity })
+      }
+      if (!lineItems.length) throw new Error('No received quantities entered')
+
+      const deliveryNote = window.prompt('Delivery note / reference (optional)', '') ?? ''
+      const posted = await fetch(`/api/pos/${p.id}/receipts`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ lineItems, deliveryNote }),
+      })
+      if (!posted.ok) {
+        const json = await posted.json().catch(() => ({})) as { error?: string }
+        throw new Error(json.error || 'Failed to record delivery')
+      }
+      setActivePo(null)
+      load()
+      setToast({ msg: 'Delivery recorded' })
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Failed to record delivery', type: 'error' })
+    }
   }
 
   const emailSupplier = (p: PO) => {
@@ -172,7 +228,7 @@ export default function POsPage() {
     const body = `Hi,\n\nPlease find purchase order ${p.number}.\n\nSupplier: ${p.supplier}\n${p.project ? `Project: ${p.project.name}\n` : ''}${p.expectedDelivery ? `Expected delivery: ${new Date(p.expectedDelivery).toLocaleDateString('en-GB')}\n` : ''}\nItems:\n${lines}\n\nSubtotal: £${p.subtotal.toFixed(2)}\nVAT (${p.vatRate}%): £${p.vatAmount.toFixed(2)}\nTotal: £${p.total.toFixed(2)}\n\nKind regards,\nCortexx`
     const to = p.contactEmail ? `to=${encodeURIComponent(p.contactEmail)}&` : ''
     window.open(`mailto:?${to}subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`, '_self')
-    if (p.status === 'draft') changeStatus(p, 'sent')
+    if (p.status === 'approved') changeStatus(p, 'sent')
   }
 
   const remove = async (id: string) => {
@@ -210,7 +266,7 @@ export default function POsPage() {
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-          {(['all', 'draft', 'sent', 'received', 'closed', 'cancelled'] as const).map(t => (
+          {(['all', 'draft', 'pending_approval', 'approved', 'sent', 'part_received', 'received', 'closed'] as const).map(t => (
             <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : '#52749a', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
@@ -410,9 +466,11 @@ export default function POsPage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
-              <button onClick={() => emailSupplier(activePo)} style={{ ...statusBtn('#f59e0b'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-                <IcSend size={12} color="#fff" /> Email supplier
-              </button>
+              {['approved', 'sent', 'part_received', 'received'].includes(activePo.status) && (
+                <button onClick={() => emailSupplier(activePo)} style={{ ...statusBtn('#f59e0b'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                  <IcSend size={12} color="#fff" /> Email supplier
+                </button>
+              )}
               <a
                 href={`/api/pos/${activePo.id}/pdf`}
                 target="_blank"
@@ -421,23 +479,37 @@ export default function POsPage() {
               >
                 <IcDoc size={12} color="#8b5cf6" /> Download PDF
               </a>
-              {activePo.status === 'sent' && (
-                <button onClick={() => changeStatus(activePo, 'received')} style={statusBtn('#22c55e')}>Mark received</button>
+              {activePo.status === 'draft' && (
+                <button onClick={() => changeStatus(activePo, 'pending_approval')} style={statusBtn('#a78bfa')}>Submit for approval</button>
+              )}
+              {activePo.status === 'rejected' && (
+                <button onClick={() => changeStatus(activePo, 'pending_approval')} style={statusBtn('#a78bfa')}>Resubmit approval</button>
+              )}
+              {activePo.status === 'pending_approval' && (
+                <button onClick={() => changeStatus(activePo, 'approved')} style={statusBtn('#38bdf8')}>Approve</button>
+              )}
+              {activePo.status === 'pending_approval' && (
+                <button onClick={() => changeStatus(activePo, 'rejected')} style={statusBtn('#ef4444')}>Reject</button>
+              )}
+              {activePo.status === 'approved' && (
+                <button onClick={() => changeStatus(activePo, 'sent')} style={statusBtn('#f59e0b')}>Mark sent</button>
+              )}
+              {(activePo.status === 'sent' || activePo.status === 'part_received') && (
+                <button onClick={() => recordDelivery(activePo)} style={statusBtn('#22c55e')}>Record delivery</button>
               )}
               {activePo.status === 'received' && (
                 <button onClick={() => changeStatus(activePo, 'closed')} style={statusBtn('#06b6d4')}>Close</button>
               )}
-              {(activePo.status === 'sent' || activePo.status === 'draft') && (
+              {['draft', 'pending_approval', 'rejected', 'approved', 'sent'].includes(activePo.status) && (
                 <button onClick={() => changeStatus(activePo, 'cancelled')} style={statusBtn('#ef4444')}>Cancel</button>
-              )}
-              {activePo.status !== 'draft' && activePo.status !== 'closed' && (
-                <button onClick={() => changeStatus(activePo, 'draft')} style={statusBtn('#52749a')}>Revert to draft</button>
               )}
             </div>
 
-            <button onClick={() => remove(activePo.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activePo.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activePo.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
-              <IcTrash size={12} color="#ef4444" /> {confirmDelete === activePo.id ? 'Sure?' : 'Delete PO'}
-            </button>
+            {(['draft', 'rejected'] as PO['status'][]).includes(activePo.status) && (
+              <button onClick={() => remove(activePo.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activePo.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activePo.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                <IcTrash size={12} color="#ef4444" /> {confirmDelete === activePo.id ? 'Sure?' : 'Delete PO'}
+              </button>
+            )}
           </div>
         </div>
       )}

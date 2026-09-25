@@ -32,11 +32,16 @@ interface SubInvoice {
   purchaseOrder?: { id: string; number: string; costCodeId?: string | null } | null
   costCodeId?: string | null
   costCode?: CostCode | null
+  matchStatus?: 'unmatched' | 'pending_delivery' | 'matched' | 'over_received' | 'over_order' | 'invalid'
+  matchDetails?: Record<string, string | number | boolean | null>
+  matchedAt?: string | null
 }
 
 const SF = 'var(--font-system)'
 const STATUS_COLOR: Record<SubInvoice['status'], string> = { received: '#52749a', approved: '#f59e0b', paid: '#22c55e', disputed: '#ef4444' }
 const STATUS_LABEL: Record<SubInvoice['status'], string> = { received: 'Received', approved: 'Approved', paid: 'Paid', disputed: 'Disputed' }
+const MATCH_COLOR: Record<string, string> = { matched: '#22c55e', pending_delivery: '#a78bfa', over_received: '#ef4444', over_order: '#ef4444', invalid: '#ef4444', unmatched: '#52749a' }
+const MATCH_LABEL: Record<string, string> = { matched: '3-way matched', pending_delivery: 'Awaiting delivery', over_received: 'Invoice > received', over_order: 'Invoice > PO', invalid: 'Match invalid', unmatched: 'Not matched' }
 
 const CIS_RATE: Record<string, number> = { gross: 0, '20': 0.20, '30': 0.30 }
 
@@ -123,11 +128,20 @@ export default function SubInvoicesPage() {
         method: 'PUT', headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: next }),
       })
-      if (!res.ok) throw new Error('Failed')
-      const updated = await res.json()
+      const json = await res.json().catch(() => ({})) as { error?: string; code?: string; match?: Record<string, number | string> }
+      if (!res.ok) {
+        if (json.code === 'THREE_WAY_MATCH_FAILED' && json.match) {
+          const received = Number(json.match.receivedNet || 0).toFixed(2)
+          const cumulative = Number(json.match.cumulativeInvoiceNet || 0).toFixed(2)
+          throw new Error(`${json.error || '3-way match failed'} · received £${received}, invoices £${cumulative}`)
+        }
+        throw new Error(json.error || 'Status change failed')
+      }
+      const updated = json as unknown as SubInvoice
       if (activeInv?.id === inv.id) setActiveInv(updated)
       load()
-    } catch { setToast({ msg: 'Status change failed', type: 'error' }) }
+      setToast({ msg: `Invoice ${STATUS_LABEL[next].toLowerCase()}` })
+    } catch (e) { setToast({ msg: e instanceof Error ? e.message : 'Status change failed', type: 'error' }) }
   }
 
   const remove = async (id: string) => {
@@ -240,6 +254,9 @@ export default function SubInvoicesPage() {
               <div style={{ textAlign: 'right' }}>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: '#eef3fa', fontWeight: 700 }}>£{i.payableAmount.toFixed(2)}</div>
                 <span style={{ display: 'inline-block', marginTop: 2, padding: '1px 7px', borderRadius: 99, background: `${STATUS_COLOR[i.status]}22`, color: STATUS_COLOR[i.status], fontFamily: SF, fontSize: 9, fontWeight: 700, border: `1px solid ${STATUS_COLOR[i.status]}55`, textTransform: 'uppercase' }}>{STATUS_LABEL[i.status]}</span>
+                {i.purchaseOrderId && i.matchStatus && (
+                  <div style={{ marginTop: 3, fontFamily: SF, fontSize: 9, fontWeight: 700, color: MATCH_COLOR[i.matchStatus] || '#52749a' }}>{MATCH_LABEL[i.matchStatus] || i.matchStatus}</div>
+                )}
               </div>
             </button>
           ))}
@@ -343,6 +360,17 @@ export default function SubInvoicesPage() {
               <Row label="CIS held" value={`−£${activeInv.cisAmount.toFixed(2)}`} color="#3b82f6" />
               <Row label="Payable" value={`£${activeInv.payableAmount.toFixed(2)}`} bold />
             </div>
+
+            {activeInv.purchaseOrderId && activeInv.matchStatus && (
+              <div style={{ background: `${MATCH_COLOR[activeInv.matchStatus] || '#52749a'}16`, border: `0.5px solid ${MATCH_COLOR[activeInv.matchStatus] || '#52749a'}55`, borderRadius: 10, padding: '10px 12px', fontFamily: SF }}>
+                <div style={{ fontSize: 12, fontWeight: 800, color: MATCH_COLOR[activeInv.matchStatus] || '#52749a' }}>{MATCH_LABEL[activeInv.matchStatus] || activeInv.matchStatus}</div>
+                {activeInv.matchDetails && (
+                  <div style={{ marginTop: 4, fontSize: 10, color: '#8ea8c5' }}>
+                    PO £{Number(activeInv.matchDetails.orderedNet || 0).toFixed(2)} · received £{Number(activeInv.matchDetails.receivedNet || 0).toFixed(2)} · invoices £{Number(activeInv.matchDetails.cumulativeInvoiceNet || activeInv.netAmount).toFixed(2)}
+                  </div>
+                )}
+              </div>
+            )}
 
             <a
               href={`/api/sub-invoices/${activeInv.id}/pdf`}

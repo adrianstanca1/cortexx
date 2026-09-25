@@ -43,3 +43,20 @@ test('uncoded actual cost is visible and coding percentage is explicit', () => {
   assert.equal(summary.uncodedNet, 75)
   assert.equal(summary.codedPct, 25)
 })
+
+
+test('cost summary excludes unapproved procurement from commitments', () => {
+  const summary = costControlSummary({
+    entries: [],
+    purchaseOrders: [
+      { id: 'draft', status: 'draft', subtotal: 1000 },
+      { id: 'pending', status: 'pending_approval', subtotal: 2000 },
+      { id: 'rejected', status: 'rejected', subtotal: 3000 },
+      { id: 'approved', status: 'approved', subtotal: 4000 },
+      { id: 'sent', status: 'sent', subtotal: 5000 },
+    ],
+    subInvoices: [],
+  })
+  assert.equal(summary.committedNet, 9000)
+  assert.equal(summary.openCommitments, 9000)
+})
