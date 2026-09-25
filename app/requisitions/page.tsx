@@ -348,7 +348,7 @@ function Empty({ text }: { text: string }) {
   return <div style={{ padding: 50, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 13 }}>{text}</div>
 }
 
-const headerStyle: React.CSSProperties = { padding: '20px 16px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.96)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }
+const headerStyle: React.CSSProperties = { padding: '20px 16px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(9,11,13,0.90)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }
 const backStyle: React.CSSProperties = { display: 'flex', gap: 4, alignItems: 'center', marginBottom: 9, color: 'var(--t3)', textDecoration: 'none', fontFamily: SF, fontSize: 12 }
 const titleStyle: React.CSSProperties = { margin: 0, display: 'flex', gap: 7, alignItems: 'center', color: 'var(--t1)', fontFamily: SF, fontSize: 21 }
 const subStyle: React.CSSProperties = { margin: '3px 0 0', color: 'var(--t3)', fontFamily: SF, fontSize: 11 }

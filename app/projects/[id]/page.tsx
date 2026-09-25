@@ -484,7 +484,7 @@ export default function ProjectDetailPage() {
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
       {/* Header */}
-      <div className="module-header" data-kicker="Project command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Project command" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(9,11,13,0.88)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/projects" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
           <IcChevL size={18} color="var(--t3)" />
           <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>Projects</span>
