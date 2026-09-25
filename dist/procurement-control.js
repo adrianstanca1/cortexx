@@ -17,7 +17,7 @@ const TRANSITIONS = {
 }
 
 function canTransitionPurchaseOrder(from, to, isManager) {
-  if (from === to) return true
+  if (from === to) return false
   if (!TRANSITIONS[from] || !TRANSITIONS[from].has(to)) return false
   if (MANAGER_STATUSES.has(to) && !isManager) return false
   return true
