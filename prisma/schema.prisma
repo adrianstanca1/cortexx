@@ -66,53 +66,54 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id                  String             @id @default(cuid())
-  name                String
-  address             String
-  postcode            String
-  status              String             @default("active") // active, snagging, quoting, complete
-  progress            Int                @default(0)
-  clientName          String             @default("")
-  shareToken          String?            @unique
-  shareTokenExpiresAt DateTime?
-  budget              Float              @default(0)
-  spent               Float              @default(0)
-  lat                 Float              @default(51.5)
-  lng                 Float              @default(-0.1)
-  startDate           DateTime?
-  endDate             DateTime?
-  onSiteCount         Int                @default(0)
-  archivedAt          DateTime?
-  createdAt           DateTime           @default(now())
-  updatedAt           DateTime           @updatedAt
-  tasks               Task[]
-  assignments         Assignment[]
-  invoices            Invoice[]
-  activities          Activity[]
-  timeEntries         TimeEntry[]
-  documents           Document[]
-  expenseReceipts     ExpenseReceipt[]
-  costEntries         ProjectCostEntry[]
-  comments            Comment[]
-  snags               Snag[]
-  rfis                Rfi[]
-  announcements       Announcement[]
-  observations        Observation[]
-  variations          Variation[]
-  siteCheckIns        SiteCheckIn[]
-  pos                 PurchaseOrder[]
-  subInvoices         SubInvoice[]
-  drawings            Drawing[]
-  milestones          Milestone[]
-  permits             Permit[]
-  rams                Rams[]
-  tenders             Tender[]
-  inspections         Inspection[]
-  meetings            Meeting[]
-  risks               Risk[]
-  toolboxTalks        ToolboxTalk[]
-  safetyIncidents     SafetyIncident[]
-  valuations          Valuation[]
+  id                      String                   @id @default(cuid())
+  name                    String
+  address                 String
+  postcode                String
+  status                  String                   @default("active") // active, snagging, quoting, complete
+  progress                Int                      @default(0)
+  clientName              String                   @default("")
+  shareToken              String?                  @unique
+  shareTokenExpiresAt     DateTime?
+  budget                  Float                    @default(0)
+  spent                   Float                    @default(0)
+  lat                     Float                    @default(51.5)
+  lng                     Float                    @default(-0.1)
+  startDate               DateTime?
+  endDate                 DateTime?
+  onSiteCount             Int                      @default(0)
+  archivedAt              DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  tasks                   Task[]
+  assignments             Assignment[]
+  invoices                Invoice[]
+  activities              Activity[]
+  timeEntries             TimeEntry[]
+  documents               Document[]
+  expenseReceipts         ExpenseReceipt[]
+  costEntries             ProjectCostEntry[]
+  comments                Comment[]
+  snags                   Snag[]
+  rfis                    Rfi[]
+  announcements           Announcement[]
+  observations            Observation[]
+  variations              Variation[]
+  siteCheckIns            SiteCheckIn[]
+  pos                     PurchaseOrder[]
+  procurementRequisitions ProcurementRequisition[]
+  subInvoices             SubInvoice[]
+  drawings                Drawing[]
+  milestones              Milestone[]
+  permits                 Permit[]
+  rams                    Rams[]
+  tenders                 Tender[]
+  inspections             Inspection[]
+  meetings                Meeting[]
+  risks                   Risk[]
+  toolboxTalks            ToolboxTalk[]
+  safetyIncidents         SafetyIncident[]
+  valuations              Valuation[]
 
   organizationId  String?
   organization    Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -755,20 +756,21 @@ model MileageEntry {
 }
 
 model CostCode {
-  id              String             @id @default(cuid())
-  code            String
-  name            String
-  category        String?
-  description     String?
-  archivedAt      DateTime?
-  createdAt       DateTime           @default(now())
-  updatedAt       DateTime           @updatedAt
-  costEntries     ProjectCostEntry[]
-  purchaseOrders  PurchaseOrder[]
-  expenseReceipts ExpenseReceipt[]
-  subInvoices     SubInvoice[]
-  organizationId  String?
-  organization    Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id                      String                   @id @default(cuid())
+  code                    String
+  name                    String
+  category                String?
+  description             String?
+  archivedAt              DateTime?
+  createdAt               DateTime                 @default(now())
+  updatedAt               DateTime                 @updatedAt
+  costEntries             ProjectCostEntry[]
+  purchaseOrders          PurchaseOrder[]
+  procurementRequisitions ProcurementRequisition[]
+  expenseReceipts         ExpenseReceipt[]
+  subInvoices             SubInvoice[]
+  organizationId          String?
+  organization            Organization?            @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([organizationId, code])
   @@index([category])
@@ -942,18 +944,18 @@ model Material {
 }
 
 model PurchaseOrder {
-  id                  String         @id @default(cuid())
+  id                  String                  @id @default(cuid())
   number              String
   projectId           String?
   supplier            String
   contactEmail        String?
   contactPhone        String?
-  status              String         @default("draft") // draft, pending_approval, rejected, approved, sent, part_received, received, closed, cancelled
-  lineItems           Json           @default("[]")
-  subtotal            Float          @default(0)
-  vatRate             Float          @default(20)
-  vatAmount           Float          @default(0)
-  total               Float          @default(0)
+  status              String                  @default("draft") // draft, pending_approval, rejected, approved, sent, part_received, received, closed, cancelled
+  lineItems           Json                    @default("[]")
+  subtotal            Float                   @default(0)
+  vatRate             Float                   @default(20)
+  vatAmount           Float                   @default(0)
+  total               Float                   @default(0)
   expectedDelivery    DateTime?
   receivedAt          DateTime?
   approvalRequestedAt DateTime?
@@ -964,13 +966,17 @@ model PurchaseOrder {
   sentAt              DateTime?
   closedAt            DateTime?
   notes               String?
-  createdAt           DateTime       @default(now())
-  updatedAt           DateTime       @updatedAt
-  project             Project?       @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  createdAt           DateTime                @default(now())
+  updatedAt           DateTime                @updatedAt
+  project             Project?                @relation(fields: [projectId], references: [id], onDelete: SetNull)
   costCodeId          String?
-  costCode            CostCode?      @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
+  costCode            CostCode?               @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
   supplierId          String?
-  supplierRef         Supplier?      @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  supplierRef         Supplier?               @relation(fields: [supplierId], references: [id], onDelete: SetNull)
+  requisitionId       String?                 @unique
+  requisition         ProcurementRequisition? @relation(fields: [requisitionId], references: [id], onDelete: SetNull)
+  supplierQuoteId     String?                 @unique
+  supplierQuote       SupplierQuote?          @relation(fields: [supplierQuoteId], references: [id], onDelete: SetNull)
   subInvoices         SubInvoice[]
   goodsReceipts       GoodsReceipt[]
 
@@ -982,6 +988,8 @@ model PurchaseOrder {
   @@index([status])
   @@index([costCodeId])
   @@index([supplierId])
+  @@index([requisitionId])
+  @@index([supplierQuoteId])
   @@index([expectedDelivery])
   @@index([organizationId])
 }
@@ -1001,6 +1009,90 @@ model GoodsReceipt {
   organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([purchaseOrderId, deliveredAt])
+  @@index([organizationId])
+}
+
+model ProcurementRequisition {
+  id              String           @id @default(cuid())
+  number          String
+  projectId       String
+  project         Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  costCodeId      String?
+  costCode        CostCode?        @relation(fields: [costCodeId], references: [id], onDelete: SetNull)
+  requestedBy     String?
+  neededBy        DateTime?
+  status          String           @default("draft") // draft, submitted, approved, rejected, rfq_open, converted, cancelled
+  lineItems       Json             @default("[]")
+  estimatedNet    Float            @default(0)
+  notes           String?
+  submittedAt     DateTime?
+  approvedAt      DateTime?
+  approvedBy      String?
+  rejectedAt      DateTime?
+  rejectionReason String?
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  rfqs            ProcurementRfq[]
+  purchaseOrder   PurchaseOrder?
+  organizationId  String?
+  organization    Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, number])
+  @@index([projectId, status])
+  @@index([costCodeId])
+  @@index([neededBy])
+  @@index([organizationId])
+}
+
+model ProcurementRfq {
+  id             String                 @id @default(cuid())
+  requisitionId  String
+  requisition    ProcurementRequisition @relation(fields: [requisitionId], references: [id], onDelete: Cascade)
+  reference      String
+  status         String                 @default("draft") // draft, sent, awarded, closed, cancelled
+  supplierIds    Json                   @default("[]")
+  dueAt          DateTime?
+  notes          String?
+  sentAt         DateTime?
+  closedAt       DateTime?
+  createdAt      DateTime               @default(now())
+  updatedAt      DateTime               @updatedAt
+  quotes         SupplierQuote[]
+  organizationId String?
+  organization   Organization?          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([organizationId, reference])
+  @@index([requisitionId, status])
+  @@index([dueAt])
+  @@index([organizationId])
+}
+
+model SupplierQuote {
+  id             String         @id @default(cuid())
+  rfqId          String
+  rfq            ProcurementRfq @relation(fields: [rfqId], references: [id], onDelete: Cascade)
+  supplierId     String
+  supplier       Supplier       @relation(fields: [supplierId], references: [id], onDelete: Restrict)
+  reference      String?
+  status         String         @default("received") // received, awarded, not_selected, withdrawn
+  lineItems      Json           @default("[]")
+  netAmount      Float          @default(0)
+  vatRate        Float          @default(20)
+  vatAmount      Float          @default(0)
+  totalAmount    Float          @default(0)
+  leadDays       Int?
+  validUntil     DateTime?
+  notes          String?
+  receivedAt     DateTime       @default(now())
+  awardedAt      DateTime?
+  createdAt      DateTime       @default(now())
+  updatedAt      DateTime       @updatedAt
+  purchaseOrder  PurchaseOrder?
+  organizationId String?
+  organization   Organization?  @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([rfqId, supplierId])
+  @@index([supplierId, status])
   @@index([organizationId])
 }
 
@@ -1331,6 +1423,7 @@ model Supplier {
   createdAt      DateTime        @default(now())
   updatedAt      DateTime        @updatedAt
   purchaseOrders PurchaseOrder[]
+  supplierQuotes SupplierQuote[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -1472,6 +1565,9 @@ model Organization {
   equipment               Equipment[]
   materials               Material[]
   purchaseOrders          PurchaseOrder[]
+  procurementRequisitions ProcurementRequisition[]
+  procurementRfqs         ProcurementRfq[]
+  supplierQuotes          SupplierQuote[]
   goodsReceipts           GoodsReceipt[]
   subInvoices             SubInvoice[]
   drawings                Drawing[]
