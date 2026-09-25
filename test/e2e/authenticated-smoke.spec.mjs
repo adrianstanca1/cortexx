@@ -17,6 +17,7 @@ const coreRoutes = [
   '/photos',
   '/drawings',
   '/settings',
+  '/settings/integrations/xero',
 ]
 
 async function enterCredentials(page, nextEmail, nextPassword) {

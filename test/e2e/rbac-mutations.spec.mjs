@@ -54,6 +54,8 @@ async function expectCompanyMutationDenied(page) {
     const result = await api(page, path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) })
     expect(result.status, path).toBe(403)
   }
+  const xero = await api(page, '/api/integrations/xero', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ salesAccountCode: '200' }) })
+  expect(xero.status, '/api/integrations/xero').toBe(403)
 }
 
 test('Company Admin retains company finance and team mutation boundary', async ({ page }) => {
@@ -64,6 +66,9 @@ test('Company Admin retains company finance and team mutation boundary', async (
   expect(invoiceValidation.status).toBe(400)
   const quoteValidation = await api(page, '/api/quotes', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' })
   expect(quoteValidation.status).toBe(400)
+  const xeroState = await api(page, '/api/integrations/xero')
+  expect(xeroState.status).toBe(200)
+  expect(typeof xeroState.body?.platformConfigured).toBe('boolean')
 
   const projects = await getProjects(page)
   expect(projects.some(p => p.name === 'E2E Admin Only Project')).toBe(true)
