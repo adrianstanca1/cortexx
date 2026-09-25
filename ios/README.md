@@ -31,8 +31,8 @@ You also need:
 > Xcode refuses to open `App.xcodeproj` in that state and the build fails with:
 > `Unable to open base configuration reference file '.../ios/App/Pods/Target Support Files/Pods-App/Pods-App.release.xcconfig'`.
 >
-> **Fix (already wired):** `ci_scripts/ci_post_clone.sh` runs automatically after clone and
-> before the first build — it runs `npm install` then `pod install --no-repo-update`
+> **Fix (already wired):** `App/ci_scripts/ci_post_clone.sh` sits beside `App.xcworkspace`, as required by Xcode Cloud, and runs automatically after clone and
+> before the first build — it runs locked `npm ci`, builds/syncs Capacitor, then runs `pod install --no-repo-update`
 > (using the committed `Podfile.lock`), which regenerates that xcconfig. For EAS-driven
 > builds, `eas.json` carries the same `prebuildCommand`. **Do not** commit `Pods/`; let the
 > CI script generate it. If you ever build locally without the script, run `pod install` in `ios/App` first.

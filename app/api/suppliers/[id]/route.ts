@@ -57,11 +57,12 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     await prisma.$transaction(async tx => {
       const s = await tx.supplier.findUnique({ where: { id: params.id, organizationId: auth.orgId } })
       if (!s) throw new Error('SUPPLIER_NOT_FOUND')
-      const [orders, quotes] = await Promise.all([
+      const [orders, quotes, invitations] = await Promise.all([
         tx.purchaseOrder.count({ where: { supplierId: params.id, organizationId: auth.orgId } }),
         tx.supplierQuote.count({ where: { supplierId: params.id, organizationId: auth.orgId } }),
+        tx.procurementRfq.count({ where: { organizationId: auth.orgId, supplierIds: { array_contains: [params.id] } } }),
       ])
-      if (orders || quotes) throw new Error('SUPPLIER_HAS_HISTORY')
+      if (orders || quotes || invitations) throw new Error('SUPPLIER_HAS_HISTORY')
       await tx.supplier.delete({ where: { id: params.id, organizationId: auth.orgId } })
     }, { isolationLevel: 'Serializable' })
     auditLog({

@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const vm = require('node:vm')
 const ts = require('typescript')
-function fixture(role, history = 0) {
+function fixture(role, history = 0, invitations = 0) {
   const calls = [], audits = []
   class Response { static json(body, options = {}) { return { body, status: options.status || 200 } } }
   const prisma = {
@@ -14,6 +14,7 @@ function fixture(role, history = 0) {
       delete: async args => { calls.push(['delete', args]); return { id: 's1' } },
     },
     purchaseOrder: { count: async () => history }, supplierQuote: { count: async () => 0 },
+    procurementRfq: { count: async args => { calls.push(['invitations', args]); return invitations } },
     $transaction: async (fn, opts) => { assert.equal(opts.isolationLevel, 'Serializable'); return fn(prisma) },
   }
   const mocks = {
@@ -59,4 +60,14 @@ test('admin can delete an unused supplier with an audit record', async () => {
   assert.equal((await f.DELETE(req, params)).status, 200)
   assert.equal(f.calls.find(c => c[0] === 'delete')[1].where.organizationId, 'org-a')
   assert.equal(f.audits[0].action, 'supplier.delete')
+})
+
+
+test('RFQ invitations preserve supplier history before any quote or order exists', async () => {
+  const f = fixture('owner', 0, 1)
+  assert.equal((await f.DELETE(req, params)).status, 409)
+  assert.equal(f.calls.some(c => c[0] === 'delete'), false)
+  const query = f.calls.find(c => c[0] === 'invitations')[1]
+  assert.equal(query.where.organizationId, 'org-a')
+  assert.equal(query.where.supplierIds.array_contains[0], 's1')
 })
