@@ -30,6 +30,9 @@ async function project(page) {
 }
 
 test('Company Admin commits immutable baseline and closes accepted delay', async ({ page }) => {
+  // Cold CI dev servers compile these new API routes lazily; the mobile shard
+  // is single-worker, so this one governance journey needs a larger budget.
+  test.setTimeout(120_000)
   await signIn(page, users.admin)
   const p = await project(page)
   const list = await api(page, `/api/projects/${p.id}/programme`)
