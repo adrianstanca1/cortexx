@@ -84,10 +84,17 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       }
       if (targetStatus === 'closed') data.closedAt = new Date()
     }
-    const updated = await prisma.programmeDelayEvent.update({ where: { id: delayId }, data })
+    const updated = await prisma.$transaction(async tx => {
+      const changed = await tx.programmeDelayEvent.updateMany({ where: { id: delayId, projectId: id, status: existing.status }, data })
+      if (changed.count === 0) throw new Error('DELAY_CHANGED')
+      const current = await tx.programmeDelayEvent.findFirst({ where: { id: delayId, projectId: id } })
+      if (!current) throw new Error('DELAY_CHANGED')
+      return current
+    })
     auditLog({ action: 'programme.delay.update', resourceType: 'ProgrammeDelayEvent', resourceId: delayId, metadata: { projectId: id, fromStatus: existing.status, toStatus: updated.status }, ...requestMeta(req) })
     return NextResponse.json(updated)
   } catch (error) {
+    if (error instanceof Error && error.message === 'DELAY_CHANGED') return NextResponse.json({ error: 'Delay event changed concurrently; reload and retry' }, { status: 409 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to update delay event' }, { status: 500 })
   }
@@ -106,7 +113,8 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     const existing = await prisma.programmeDelayEvent.findFirst({ where: { id: delayId, projectId: id } })
     if (!existing) return NextResponse.json({ error: 'Delay event not found' }, { status: 404 })
     if (existing.status !== 'open') return NextResponse.json({ error: 'Decided delay events are retained for audit and cannot be deleted' }, { status: 409 })
-    await prisma.programmeDelayEvent.delete({ where: { id: delayId } })
+    const deleted = await prisma.programmeDelayEvent.deleteMany({ where: { id: delayId, projectId: id, status: existing.status } })
+    if (deleted.count === 0) return NextResponse.json({ error: 'Delay event changed concurrently; reload and retry' }, { status: 409 })
     auditLog({ action: 'programme.delay.delete', resourceType: 'ProgrammeDelayEvent', resourceId: delayId, metadata: { projectId: id }, ...requestMeta(req) })
     return NextResponse.json({ success: true })
   } catch (error) {

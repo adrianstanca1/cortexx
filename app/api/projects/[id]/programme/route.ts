@@ -8,6 +8,7 @@ import { getCurrentOrg } from '@/lib/tenancy'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
 import programme from '@/lib/programme'
 import { syncProjectProgrammeProgress } from '@/lib/programme-server'
+import { lockProgrammeProject } from '@/lib/programme-change-control-server'
 
 export const dynamic = 'force-dynamic'
 const { programmeSummary } = programme
@@ -71,7 +72,6 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
   try {
     const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
-    const baselineLocked = await prisma.programmeBaselineRevision.count({ where: { projectId: id } }).then(count => count > 0)
     const body = await req.json()
     const title = String(body.title || '').trim().slice(0, 220)
     if (!title) return NextResponse.json({ error: 'Activity title is required' }, { status: 400 })
@@ -79,9 +79,8 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     const plannedEnd = parseDate(body.plannedEnd)
     if (!plannedStart || !plannedEnd) return NextResponse.json({ error: 'Valid planned start and end dates are required' }, { status: 400 })
     if (plannedEnd < plannedStart) return NextResponse.json({ error: 'Planned end must be on or after planned start' }, { status: 400 })
-    const baselineStart = baselineLocked ? plannedStart : (parseDate(body.baselineStart) || plannedStart)
-    const baselineEnd = baselineLocked ? plannedEnd : (parseDate(body.baselineEnd) || plannedEnd)
-    if (baselineEnd < baselineStart) return NextResponse.json({ error: 'Baseline end must be on or after baseline start' }, { status: 400 })
+    const requestedBaselineStart = parseDate(body.baselineStart)
+    const requestedBaselineEnd = parseDate(body.baselineEnd)
     const progress = Math.max(0, Math.min(100, Number(body.progress) || 0))
     const status = STATUSES.has(String(body.status)) ? String(body.status) : progress >= 100 ? 'complete' : progress > 0 ? 'in_progress' : 'not_started'
     const responsibleMemberId = body.responsibleMemberId ? String(body.responsibleMemberId) : null
@@ -92,6 +91,11 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     const orgId = getCurrentOrg()?.organizationId
     if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
     const activity = await prisma.$transaction(async tx => {
+      await lockProgrammeProject(tx, id)
+      const baselineLocked = await tx.programmeBaselineRevision.count({ where: { projectId: id } }).then(count => count > 0)
+      const baselineStart = baselineLocked ? plannedStart : (requestedBaselineStart || plannedStart)
+      const baselineEnd = baselineLocked ? plannedEnd : (requestedBaselineEnd || plannedEnd)
+      if (baselineEnd < baselineStart) throw new Error('BASELINE_RANGE_INVALID')
       const created = await tx.programmeActivity.create({ data: {
         projectId: id,
         code: String(body.code || '').trim().slice(0, 40) || null,
@@ -117,6 +121,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     prisma.activity.create({ data: { projectId: id, actorName: actorName(auth), actorType: 'human', action: `added programme activity: ${title}`, iconType: 'clock' } }).catch(() => {})
     return NextResponse.json(activity, { status: 201 })
   } catch (error) {
+    if (error instanceof Error && error.message === 'BASELINE_RANGE_INVALID') return NextResponse.json({ error: 'Baseline end must be on or after baseline start' }, { status: 400 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to create programme activity' }, { status: 500 })
   }

@@ -7,6 +7,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { canPlanProgramme, canUpdateProgrammeProgress, programmeProjectWhere } from '@/lib/programme-access'
 import { syncProjectProgrammeProgress } from '@/lib/programme-server'
+import { lockProgrammeProject } from '@/lib/programme-change-control-server'
 
 export const dynamic = 'force-dynamic'
 const STATUSES = new Set(['not_started', 'in_progress', 'complete', 'blocked'])
@@ -33,10 +34,6 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (!existing) return NextResponse.json({ error: 'Programme activity not found' }, { status: 404 })
     const body = await req.json()
     const planner = canPlanProgramme(auth)
-    if (planner && (body.baselineStart !== undefined || body.baselineEnd !== undefined)) {
-      const baselineLocked = await prisma.programmeBaselineRevision.count({ where: { projectId: id } }).then(count => count > 0)
-      if (baselineLocked) return NextResponse.json({ error: 'Baseline dates are revision-controlled. Update planned dates, then create a new programme baseline revision.' }, { status: 409 })
-    }
     if (!planner) {
       const forbidden = Object.keys(body).some(key => !FOREMAN_FIELDS.has(key))
       if (forbidden) return NextResponse.json({ error: 'Foreman can update field progress only; programme dates and dependencies require Project Manager or Company Admin' }, { status: 403 })
@@ -63,12 +60,6 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     for (const value of [plannedStart, plannedEnd, baselineStart, baselineEnd, actualStart, actualEnd]) {
       if (value === 'invalid') return NextResponse.json({ error: 'One or more dates are invalid' }, { status: 400 })
     }
-    const nextPlannedStart = plannedStart instanceof Date ? plannedStart : existing.plannedStart
-    const nextPlannedEnd = plannedEnd instanceof Date ? plannedEnd : existing.plannedEnd
-    const nextBaselineStart = baselineStart instanceof Date ? baselineStart : existing.baselineStart
-    const nextBaselineEnd = baselineEnd instanceof Date ? baselineEnd : existing.baselineEnd
-    if (nextPlannedEnd < nextPlannedStart) return NextResponse.json({ error: 'Planned end must be on or after planned start' }, { status: 400 })
-    if (nextBaselineEnd < nextBaselineStart) return NextResponse.json({ error: 'Baseline end must be on or after baseline start' }, { status: 400 })
     if (plannedStart !== undefined) data.plannedStart = plannedStart
     if (plannedEnd !== undefined) data.plannedEnd = plannedEnd
     if (baselineStart !== undefined) data.baselineStart = baselineStart
@@ -111,6 +102,19 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     const orgId = getCurrentOrg()?.organizationId
     if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
     const updated = await prisma.$transaction(async tx => {
+      await lockProgrammeProject(tx, id)
+      const lockedExisting = await tx.programmeActivity.findFirst({ where: { id: activityId, projectId: id } })
+      if (!lockedExisting) throw new Error('PROGRAMME_ACTIVITY_CHANGED')
+      if (planner && (body.baselineStart !== undefined || body.baselineEnd !== undefined)) {
+        const baselineLocked = await tx.programmeBaselineRevision.count({ where: { projectId: id } }).then(count => count > 0)
+        if (baselineLocked) throw new Error('BASELINE_LOCKED')
+      }
+      const lockedPlannedStart = plannedStart instanceof Date ? plannedStart : lockedExisting.plannedStart
+      const lockedPlannedEnd = plannedEnd instanceof Date ? plannedEnd : lockedExisting.plannedEnd
+      const lockedBaselineStart = baselineStart instanceof Date ? baselineStart : lockedExisting.baselineStart
+      const lockedBaselineEnd = baselineEnd instanceof Date ? baselineEnd : lockedExisting.baselineEnd
+      if (lockedPlannedEnd < lockedPlannedStart) throw new Error('PLANNED_RANGE_INVALID')
+      if (lockedBaselineEnd < lockedBaselineStart) throw new Error('BASELINE_RANGE_INVALID')
       const result = await tx.programmeActivity.update({ where: { id: activityId }, data })
       await syncProjectProgrammeProgress(tx, id, orgId)
       return result
@@ -118,6 +122,10 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     auditLog({ action: 'programme.activity.update', resourceType: 'ProgrammeActivity', resourceId: activityId, metadata: { projectId: id, progress: updated.progress, status: updated.status }, ...requestMeta(req) })
     return NextResponse.json(updated)
   } catch (error) {
+    if (error instanceof Error && error.message === 'BASELINE_LOCKED') return NextResponse.json({ error: 'Baseline dates are revision-controlled. Update planned dates, then create a new programme baseline revision.' }, { status: 409 })
+    if (error instanceof Error && error.message === 'PLANNED_RANGE_INVALID') return NextResponse.json({ error: 'Planned end must be on or after planned start' }, { status: 400 })
+    if (error instanceof Error && error.message === 'BASELINE_RANGE_INVALID') return NextResponse.json({ error: 'Baseline end must be on or after baseline start' }, { status: 400 })
+    if (error instanceof Error && error.message === 'PROGRAMME_ACTIVITY_CHANGED') return NextResponse.json({ error: 'Programme activity changed concurrently; reload and retry' }, { status: 409 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to update programme activity' }, { status: 500 })
   }
@@ -138,12 +146,15 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     const orgId = getCurrentOrg()?.organizationId
     if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
     await prisma.$transaction(async tx => {
-      await tx.programmeActivity.delete({ where: { id: activityId } })
+      await lockProgrammeProject(tx, id)
+      const deleted = await tx.programmeActivity.deleteMany({ where: { id: activityId, projectId: id } })
+      if (deleted.count === 0) throw new Error('PROGRAMME_ACTIVITY_CHANGED')
       await syncProjectProgrammeProgress(tx, id, orgId)
     })
     auditLog({ action: 'programme.activity.delete', resourceType: 'ProgrammeActivity', resourceId: activityId, metadata: { projectId: id }, ...requestMeta(req) })
     return NextResponse.json({ success: true })
   } catch (error) {
+    if (error instanceof Error && error.message === 'PROGRAMME_ACTIVITY_CHANGED') return NextResponse.json({ error: 'Programme activity changed concurrently; reload and retry' }, { status: 409 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete programme activity' }, { status: 500 })
   }
