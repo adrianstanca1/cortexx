@@ -106,7 +106,7 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
     data: { organizationId, email, role, personaRole, token, expiresAt, invitedById: userId },
   })
 
-  const acceptUrl = `${process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'}/invite/${token}`
+  const acceptUrl = `${process.env.NEXTAUTH_URL || 'https://cortexbuildpro.tech'}/invite/${token}`
   const tmpl = inviteTemplate({
     inviterName: actorName(session),
     organizationName: membership.organization.name,

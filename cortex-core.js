@@ -185,7 +185,7 @@ var CortexCore = (() => {
   }
 
   // packages/core/src/index.ts
-  var API_URL_FALLBACK = "https://cortexbuildpro.com";
+  var API_URL_FALLBACK = "https://cortexbuildpro.tech";
   var _memToken = null;
   function defaultTokenStorage() {
     try {

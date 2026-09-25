@@ -76,7 +76,7 @@ Everything you need to take the existing web app, wrap it as a native iOS binary
 | Publish the privacy policy & support pages at the URLs in `metadata.txt` | App Store Connect rejects submissions with 404 URLs. |
 | Capture the five PNG screenshots from `screenshots-generator.html` | Apple needs them on every submission. |
 | Decide on price (free vs. paid) | I assumed Free in `SUBMISSION.md` — change it in App Store Connect if you want a paid tier. |
-| Add a real Privacy Policy + Terms of Service URL | I scaffolded `https://cortexbuildpro.com/privacy` and `/support`. Make sure those pages exist. |
+| Add a real Privacy Policy + Terms of Service URL | I scaffolded `https://cortexbuildpro.tech/privacy` and `/support`. Make sure those pages exist. |
 | Set up TestFlight beta with at least 5 testers before public release | Catches the embarrassing crash on iPhone XS or iOS 14. |
 
 ## If something goes wrong

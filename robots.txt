@@ -8,4 +8,4 @@ Disallow: /lib/
 Disallow: /uploads/
 Disallow: /screenshots/
 
-Sitemap: https://cortexbuildpro.com/sitemap.xml
+Sitemap: https://cortexbuildpro.tech/sitemap.xml

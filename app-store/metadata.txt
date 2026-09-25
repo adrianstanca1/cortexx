@@ -71,17 +71,17 @@ Welcome to Cortexx 1.0 — the AI construction OS for UK SMB contractors.
 ----------------------------------------------------------------
 SUPPORT URL
 ----------------------------------------------------------------
-https://cortexbuildpro.com/support
+https://cortexbuildpro.tech/support
 
 ----------------------------------------------------------------
 MARKETING URL (optional)
 ----------------------------------------------------------------
-https://cortexbuildpro.com
+https://cortexbuildpro.tech
 
 ----------------------------------------------------------------
 PRIVACY POLICY URL (required)
 ----------------------------------------------------------------
-https://cortexbuildpro.com/privacy
+https://cortexbuildpro.tech/privacy
 
 ----------------------------------------------------------------
 COPYRIGHT

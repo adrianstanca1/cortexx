@@ -37,7 +37,7 @@ export async function POST(req: NextRequest) {
   const customerId = membership.organization.stripeCustomerId
   if (!customerId) return NextResponse.json({ error: 'No Stripe customer for this workspace yet' }, { status: 404 })
 
-  const appUrl = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'
+  const appUrl = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.tech'
   const portal = await stripe.billingPortal.sessions.create({
     customer: customerId,
     return_url: `${appUrl}/settings/organization`,

@@ -178,8 +178,8 @@ services:
       ADMIN_TENANT: "true"
       NEXTAUTH_URL: https://admin.cortexbuildpro.com
       NEXTAUTH_SECRET: ${ADMIN_NEXTAUTH_SECRET:-change-me-admin-nextauth-secret}
-      NEXT_PUBLIC_API_URL: https://cortexbuildpro.com
-      NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.com
+      NEXT_PUBLIC_API_URL: https://cortexbuildpro.tech
+      NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.tech
     expose:
       - "3000"
     labels:
@@ -218,7 +218,7 @@ services:
       PORT: 3010
       HOSTNAME: 0.0.0.0
       NODE_ENV: production
-      NEXTAUTH_URL: https://cortexbuildpro.com
+      NEXTAUTH_URL: https://cortexbuildpro.tech
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-nextauth-secret}
     expose:
       - "3010"

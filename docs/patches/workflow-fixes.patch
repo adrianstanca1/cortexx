@@ -80,7 +80,7 @@
 [31m-              cat > $APP_DIR/.env.production << ENV[m
 [31m-          DATABASE_URL=$DB_URL[m
 [31m-          NEXTAUTH_SECRET=$NEXTAUTH_SECRET[m
-[31m-          NEXTAUTH_URL=https://cortexbuildpro.com[m
+[31m-          NEXTAUTH_URL=https://cortexbuildpro.tech[m
 [31m-          NODE_ENV=production[m
 [31m-          PORT=$APP_PORT[m
 [31m-          ALLOW_SEED=true[m
@@ -126,13 +126,13 @@
            ssh -o StrictHostKeyChecking=no -i ~/.ssh/cortexx_deploy root@72.62.132.43 \[m
              'curl -s -o /dev/null -w "Local 3010: HTTP %{http_code}\n" http://localhost:3010/'[m
            echo "=== Public ==="[m
-[31m-          curl -s -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.com/[m
-[31m-          curl -s -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.com/api/health[m
-[31m-          curl -s -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.com/login[m
-[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.com/ || echo "HTTPS root: connection error (SSL may still be provisioning)"[m
-[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.com/api/health || echo "HTTPS health: connection error"[m
-[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.com/login || echo "HTTPS login: connection error"[m
+[31m-          curl -s -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.tech/[m
+[31m-          curl -s -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.tech/api/health[m
+[31m-          curl -s -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.tech/login[m
+[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS root → %{http_code}\n" https://cortexbuildpro.tech/ || echo "HTTPS root: connection error (SSL may still be provisioning)"[m
+[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS health → %{http_code}\n" https://cortexbuildpro.tech/api/health || echo "HTTPS health: connection error"[m
+[32m+[m[32m          curl -s --max-time 20 -o /dev/null -w "HTTPS login → %{http_code}\n" https://cortexbuildpro.tech/login || echo "HTTPS login: connection error"[m
            echo "=== Health body ==="[m
-[31m-          curl -s --max-time 10 https://cortexbuildpro.com/api/health[m
-[32m+[m[32m          curl -s --max-time 20 https://cortexbuildpro.com/api/health || echo "Health check via HTTPS failed — app is still running on port 3010"[m
+[31m-          curl -s --max-time 10 https://cortexbuildpro.tech/api/health[m
+[32m+[m[32m          curl -s --max-time 20 https://cortexbuildpro.tech/api/health || echo "Health check via HTTPS failed — app is still running on port 3010"[m
            echo ""[m

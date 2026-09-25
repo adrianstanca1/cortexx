@@ -81,7 +81,7 @@ function CloudSyncScreen({ accent }) {
           {/* API endpoint */}
           <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.6, margin: '6px 2px 8px' }}>API endpoint</div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <Field value={apiUrl} onChange={e => setApiUrl(e.target.value)} placeholder="https://cortexbuildpro.com" autoCapitalize="none" autoCorrect="off"/>
+            <Field value={apiUrl} onChange={e => setApiUrl(e.target.value)} placeholder="https://cortexbuildpro.tech" autoCapitalize="none" autoCorrect="off"/>
             <button onClick={saveApi} disabled={busy} style={{ background: accent, color: '#fff', border: 'none', borderRadius: 11, padding: '0 18px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer', flexShrink: 0 }}>{busy ? '…' : 'Test'}</button>
           </div>
           {reach !== null && <div style={{ fontFamily: SF, fontSize: 11, color: reach ? T.green : T.red, margin: '8px 2px 0' }}>{reach ? '✓ Reachable' : '✗ Could not reach /api/health'}</div>}

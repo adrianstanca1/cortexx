@@ -1,7 +1,7 @@
 # Cortexx v1.0 — Completion Plan
 
 **Target:** multi-tenant SaaS for UK construction contractors.
-**Status as of 24 May 2026:** single-tenant app live at `https://cortexbuildpro.com`, 24+ modules with full CRUD, Auth.js v5, 122 unit tests, push notifications wired into 3 events, vision + voice + LLM all working. See `ROADMAP.md` for what's shipped.
+**Status as of 24 May 2026:** single-tenant app live at `https://cortexbuildpro.tech`, 24+ modules with full CRUD, Auth.js v5, 122 unit tests, push notifications wired into 3 events, vision + voice + LLM all working. See `ROADMAP.md` for what's shipped.
 
 This plan covers the work to get from "live for one company" to "v1.0 SaaS others can sign up for."
 
@@ -313,7 +313,7 @@ Today: zero scheduled work. Need:
 Options:
 - **node-cron** in-process (lightweight, no extra infra; restart-vulnerable)
 - **BullMQ + Redis** (durable, retryable, but adds Redis dep)
-- **systemd timers** on the VPS (most ops-friendly, calls `curl https://cortexbuildpro.com/api/cron/<job>` with a shared secret)
+- **systemd timers** on the VPS (most ops-friendly, calls `curl https://cortexbuildpro.tech/api/cron/<job>` with a shared secret)
 
 **Recommended:** systemd timers + `/api/cron/[job]` endpoints gated by `CRON_SECRET` header. Simplest, observable via journalctl, survives pm2 restarts.
 
@@ -390,7 +390,7 @@ Once Redis is in place, switch pm2 from fork (single worker) to cluster mode (4 
 ### 6.1 Capacitor wrapper polish
 
 The `ios/` directory already has the Capacitor 6 scaffold + App Store submission pack. Remaining:
-- Verify `server.url` mode points at `https://cortexbuildpro.com` and refreshes correctly
+- Verify `server.url` mode points at `https://cortexbuildpro.tech` and refreshes correctly
 - iOS-native push via APNs (Capacitor `@capacitor/push-notifications`) — separate from web push; needs APNs cert in Apple Developer account
 - Safe-area-aware bottom nav (avoid the home-indicator overlap on notched devices)
 - iPad split-view layout pass

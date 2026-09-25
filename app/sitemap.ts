@@ -1,6 +1,6 @@
 import type { MetadataRoute } from 'next'
 
-const SITE_URL = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.com'
+const SITE_URL = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.tech'
 
 const HELP_SLUGS = ['getting-started', 'team-roles', 'ai-tools', 'billing', 'security']
 

@@ -36,7 +36,7 @@ function APIScreen({ accent }) {
           right={<button onClick={async () => { try { await navigator.clipboard.writeText('cxx_live_demo_key_3f42'); toast('Copied', 'success'); } catch { toast('Copy failed', 'error'); } }} style={{ background: T.bg3, color: T.t1, border: 'none', borderRadius: 8, padding: '4px 10px', fontFamily: SFMono, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>COPY</button>}/>
         <Row icon={Ic.swap} iconBg={T.purple} title="Webhooks" sub="3 endpoints configured"
           onClick={() => window.open('/docs/webhooks', '_blank')}/>
-        <Row icon={Ic.book} iconBg={T.cyan} title="API docs" sub="cortexbuildpro.com/docs" isLast
+        <Row icon={Ic.book} iconBg={T.cyan} title="API docs" sub="cortexbuildpro.tech/docs" isLast
           onClick={() => window.open('/docs', '_blank')}/>
       </GroupedList>
     </Section>
@@ -164,7 +164,7 @@ function RolesScreen({ accent }) {
   ];
   return <ScreenBg accent={accent}><div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
     <MobileHeader title="Roles & permissions" subtitle={`${ROLES.length} roles · ${ROLES.reduce((s, r) => s + r.members, 0)} seats`}
-      right={<HeaderBtn icon={Ic.plus} accent={accent} onClick={() => window.open('mailto:hello@cortexbuildpro.com?subject=Custom%20role%20request', '_blank')}/>}/>
+      right={<HeaderBtn icon={Ic.plus} accent={accent} onClick={() => window.open('mailto:hello@cortexbuildpro.tech?subject=Custom%20role%20request', '_blank')}/>}/>
     {ROLES.map((r, i) => (
       <Section key={i}><div style={{ background: T.bg2, borderRadius: 14, padding: 14, border: `0.5px solid ${T.hair}` }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>

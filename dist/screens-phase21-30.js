@@ -115,7 +115,7 @@ function APIScreen({
     icon: Ic.book,
     iconBg: T.cyan,
     title: "API docs",
-    sub: "cortexbuildpro.com/docs",
+    sub: "cortexbuildpro.tech/docs",
     isLast: true,
     onClick: () => window.open('/docs', '_blank')
   }))), React.createElement(Section, {
@@ -486,7 +486,7 @@ function RolesScreen({
     right: React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
-      onClick: () => window.open('mailto:hello@cortexbuildpro.com?subject=Custom%20role%20request', '_blank')
+      onClick: () => window.open('mailto:hello@cortexbuildpro.tech?subject=Custom%20role%20request', '_blank')
     })
   }), ROLES.map((r, i) => React.createElement(Section, {
     key: i

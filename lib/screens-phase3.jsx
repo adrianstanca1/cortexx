@@ -313,7 +313,7 @@ function SettingsScreen({ accent }) {
             <GroupedList>
               <Row icon={Ic.star} iconBg={T.amber} title="CortexBuild Pro · Pro plan" sub="£29/mo · 11–50 staff · advanced AI" onClick={async () => { await Backend.db.user.update({ plan: 'Pro · £29/mo' }); toast('Upgraded to Pro · 30-day free trial started', 'success'); }}/>
               <Row icon={Ic.layers} iconBg={T.purple} title="CortexBuild Pro · Enterprise" sub="Custom · 51+ staff · SSO + audit" isLast
-                onClick={() => window.open('mailto:sales@cortexbuildpro.com?subject=CortexBuild%20Pro%20Enterprise%20enquiry', '_blank')}/>
+                onClick={() => window.open('mailto:sales@cortexbuildpro.tech?subject=CortexBuild%20Pro%20Enterprise%20enquiry', '_blank')}/>
             </GroupedList>
           </Section>
         </>}
@@ -359,7 +359,7 @@ function SettingsScreen({ accent }) {
               <Row icon={Ic.cloudOff} iconBg={T.cyan} title="Backup status" sub="Synced 2 min ago" onClick={() => toast('Backup synced', 'success')}/>
               <Row icon={Ic.archive} iconBg={T.amber} title="Reset demo data" sub="Restore seed projects" onClick={() => { Backend.db.reset(); toast('Demo data restored', 'success'); }}/>
               <Row icon={Ic.trash} iconBg={T.red} title="Delete workspace" sub="GDPR — permanent" danger isLast
-                onClick={() => window.open('mailto:hello@cortexbuildpro.com?subject=GDPR%20deletion%20request&body=Please%20delete%20my%20CortexBuild%20Pro%20workspace%20and%20all%20personal%20data.', '_blank')}/>
+                onClick={() => window.open('mailto:hello@cortexbuildpro.tech?subject=GDPR%20deletion%20request&body=Please%20delete%20my%20CortexBuild%20Pro%20workspace%20and%20all%20personal%20data.', '_blank')}/>
             </GroupedList>
           </Section>
         )}
@@ -384,8 +384,8 @@ function SettingsScreen({ accent }) {
             <GroupedList>
               <Row icon={Ic.book} iconBg={T.blue} title="Help docs"
                 onClick={() => window.open('/help', '_blank')}/>
-              <Row icon={Ic.mail} iconBg={T.green} title="Contact support" sub="hello@cortexbuildpro.com"
-                onClick={() => window.open('mailto:hello@cortexbuildpro.com', '_blank')}/>
+              <Row icon={Ic.mail} iconBg={T.green} title="Contact support" sub="hello@cortexbuildpro.tech"
+                onClick={() => window.open('mailto:hello@cortexbuildpro.tech', '_blank')}/>
               <Row icon={Ic.share} iconBg={T.purple} title="Share CortexBuild Pro" isLast
                 onClick={async () => { try { await navigator.clipboard.writeText(location.href); toast('Link copied', 'success'); } catch(e) { toast('Copy failed', 'error'); } }}/>
             </GroupedList>
@@ -473,11 +473,11 @@ function HelpScreen({ accent }) {
 
         <Section title="Get in touch">
           <GroupedList>
-            <Row icon={Ic.mail} iconBg={T.blue} title="Email support" sub="hello@cortexbuildpro.com · ~2 hours"
-              onClick={() => window.open('mailto:hello@cortexbuildpro.com?subject=CortexBuild%20Pro%20support', '_blank')}/>
+            <Row icon={Ic.mail} iconBg={T.blue} title="Email support" sub="hello@cortexbuildpro.tech · ~2 hours"
+              onClick={() => window.open('mailto:hello@cortexbuildpro.tech?subject=CortexBuild%20Pro%20support', '_blank')}/>
             <Row icon={Ic.phone} iconBg={T.green} title="Call us" sub="0203 555 0123 · Mon–Fri 9–6"
               onClick={() => window.open('tel:02035550123', '_blank')}/>
-            <Row icon={Ic.book} iconBg={T.purple} title="Help centre" sub="cortexbuildpro.com/help" isLast
+            <Row icon={Ic.book} iconBg={T.purple} title="Help centre" sub="cortexbuildpro.tech/help" isLast
               onClick={() => window.open('/help', '_blank')}/>
           </GroupedList>
         </Section>

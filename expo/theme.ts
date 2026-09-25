@@ -173,4 +173,4 @@ export const Common = StyleSheet.create({
 });
 
 // API base URL (kept here so api.ts can import it)
-export const API_URL = 'https://cortexbuildpro.com';
+export const API_URL = 'https://cortexbuildpro.tech';

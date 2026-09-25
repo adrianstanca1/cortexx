@@ -9,7 +9,7 @@ const config: CapacitorConfig = {
   webDir: 'dist',
   server: {
     // For local dev against a live server, uncomment:
-    // url: 'https://cortexbuildpro.com',
+    // url: 'https://cortexbuildpro.tech',
     // cleartext: false,
     androidScheme: 'https',
     iosScheme: 'https',
