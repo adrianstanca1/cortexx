@@ -65,6 +65,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
   {
     title: 'Project & site',
     items: [
+      { href: '/field',              label: 'Field operations', Icon: IcHardhat, color: '#f59e0b' },
       { href: '/projects',           label: 'Timeline',   Icon: IcLayers,   color: '#2563eb' },
       { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4' },
       { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981' },
