@@ -13,6 +13,7 @@ declare const api: {
   productionMetrics(plannedQty: unknown, installedQty: unknown, labourHours: unknown): ProductionMetrics
   sanitizeOpenItems(raw: unknown): Array<{ id: string; title: string; owner: string | null; dueDate: string | null; status: string }>
   sanitizeEvidence(raw: unknown): { photoUrls: string[]; signatureUrl: string | null; signedBy: string | null; condition: string | null; storageLocation: string | null }
+  hasReleaseEvidence(raw: unknown): boolean
   initialReleaseStatus(pointType: string): string
   canCompletePoint(pointType: string, releaseStatus: string): boolean
   canTransitionConstraintStatus(from: string, to: string): boolean

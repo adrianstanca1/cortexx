@@ -29,6 +29,13 @@ test('delivery evidence only accepts same-origin upload URLs', () => {
   assert.equal(e.signedBy, 'Site manager')
 })
 
+test('QA release evidence requires a valid uploaded photo or signature', () => {
+  assert.equal(controls.hasReleaseEvidence({}), false)
+  assert.equal(controls.hasReleaseEvidence({ photoUrls: ['https://evil.example/x.jpg'] }), false)
+  assert.equal(controls.hasReleaseEvidence({ photoUrls: ['/api/uploads/qa.jpg'] }), true)
+  assert.equal(controls.hasReleaseEvidence({ signatureUrl: '/api/uploads/sign.png' }), true)
+})
+
 test('constraint lifecycle is governed but can be reopened', () => {
   assert.equal(controls.canTransitionConstraintStatus('open', 'mitigating'), true)
   assert.equal(controls.canTransitionConstraintStatus('mitigating', 'resolved'), true)

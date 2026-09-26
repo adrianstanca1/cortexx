@@ -3,8 +3,9 @@ import {
   ActivityIndicator, Alert, Modal, RefreshControl, ScrollView, StyleSheet,
   Text, TextInput, TouchableOpacity, View,
 } from 'react-native';
+import * as ImagePicker from 'expo-image-picker';
 import { Colors } from './theme';
-import { apiGet, apiPatch, getProjects, postCollection, putCollection } from './api';
+import { apiGet, apiPatch, getProjects, postCollection, putCollection, uploadNativeFile } from './api';
 
 type Project = { id: string; name: string };
 type Mode = 'constraints' | 'handover' | 'output' | 'qa';
@@ -24,6 +25,7 @@ type Production = {
 type Inspection = {
   id: string; title: string; pointType: 'inspection' | 'hold' | 'witness'; status: string; releaseStatus: string;
   location?: string | null; drawing?: { number?: string; title?: string } | null; drawingRevision?: { revision?: string } | null;
+  evidence?: { photoUrls?: string[]; signatureUrl?: string | null } | null;
 };
 
 const MODES: Array<{ key: Mode; label: string }> = [
@@ -45,6 +47,7 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
   const [loading, setLoading] = useState(true);
   const [modal, setModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [qaEvidenceBusy, setQaEvidenceBusy] = useState<string | null>(null);
 
   const [constraintForm, setConstraintForm] = useState({ title: '', category: 'access', priority: 'medium', location: '', detail: '' });
   const [handoverForm, setHandoverForm] = useState({ shiftType: 'day', incomingBy: '', summary: '', completedWork: '', nextShiftPlan: '', openItems: '' });
@@ -166,7 +169,49 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
     finally { setSaving(false); }
   };
 
+  const hasQaEvidence = (item: Inspection) => Boolean(item.evidence?.photoUrls?.length || item.evidence?.signatureUrl);
+
+  const captureQaEvidence = async (item: Inspection) => {
+    if ((item.evidence?.photoUrls?.length || 0) >= 6) {
+      Alert.alert('Evidence limit', 'This QA point already has 6 evidence photos.');
+      return;
+    }
+    const permission = await ImagePicker.requestCameraPermissionsAsync();
+    if (permission.status !== 'granted') {
+      Alert.alert('Camera', 'Camera permission is required to attach QA release evidence.');
+      return;
+    }
+    const result = await ImagePicker.launchCameraAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.65,
+    });
+    if (result.canceled || !result.assets[0]) return;
+
+    setQaEvidenceBusy(item.id);
+    try {
+      const asset = result.assets[0];
+      const uploaded = await uploadNativeFile({
+        uri: asset.uri,
+        name: asset.fileName || `qa-${item.id}.jpg`,
+        mimeType: asset.mimeType || 'image/jpeg',
+      });
+      const photoUrls = [...(item.evidence?.photoUrls || []), uploaded.url].slice(-6);
+      await apiPatch(`/api/inspections/${item.id}`, {
+        evidence: { ...(item.evidence || {}), photoUrls },
+      });
+      await load(projectId);
+    } catch (e: any) {
+      Alert.alert('Evidence upload failed', e?.message || 'A live connection is required to attach QA evidence.');
+    } finally {
+      setQaEvidenceBusy(null);
+    }
+  };
+
   const releaseQa = async (item: Inspection) => {
+    if (!hasQaEvidence(item)) {
+      Alert.alert('Evidence required', 'Take an evidence photo before releasing this hold or witness point.');
+      return;
+    }
     try {
       await apiPatch(`/api/inspections/${item.id}`, { releaseStatus: 'released' });
       await load(projectId);
@@ -269,15 +314,33 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
         {mode === 'qa' && (
           <View>
             <SectionHeader title="Hold / witness points" />
-            {qa.length === 0 ? <Empty text="No hold or witness points." /> : qa.map(item => (
-              <View key={item.id} style={[s.card, { borderLeftColor: item.releaseStatus === 'released' ? Colors.green : Colors.red }]}>
-                <View style={s.between}><Text style={s.title}>{item.title}</Text><Text style={[s.status, { color: item.releaseStatus === 'released' ? Colors.green : Colors.red }]}>{item.releaseStatus.toUpperCase()}</Text></View>
-                <Text style={s.meta}>{item.pointType.toUpperCase()}{item.location ? ` · ${item.location}` : ''}</Text>
-                {item.drawing ? <Text style={s.body}>Drawing {item.drawing.number}{item.drawingRevision?.revision ? ` · Rev ${item.drawingRevision.revision}` : ''} · {item.drawing.title}</Text> : null}
-                {item.releaseStatus !== 'released' ? <TouchableOpacity style={s.release} onPress={() => releaseQa(item)}><Text style={s.releaseText}>{item.pointType === 'witness' ? 'Witness / release' : 'Release hold point'}</Text></TouchableOpacity> : null}
-              </View>
-            ))}
-            <Text style={s.notice}>QA release is online-only because it changes whether work may proceed.</Text>
+            {qa.length === 0 ? <Empty text="No hold or witness points." /> : qa.map(item => {
+              const evidenceReady = hasQaEvidence(item);
+              const busy = qaEvidenceBusy === item.id;
+              return (
+                <View key={item.id} style={[s.card, { borderLeftColor: item.releaseStatus === 'released' ? Colors.green : Colors.red }]}>
+                  <View style={s.between}><Text style={s.title}>{item.title}</Text><Text style={[s.status, { color: item.releaseStatus === 'released' ? Colors.green : Colors.red }]}>{item.releaseStatus.toUpperCase()}</Text></View>
+                  <Text style={s.meta}>{item.pointType.toUpperCase()}{item.location ? ` · ${item.location}` : ''}</Text>
+                  {item.drawing ? <Text style={s.body}>Drawing {item.drawing.number}{item.drawingRevision?.revision ? ` · Rev ${item.drawingRevision.revision}` : ''} · {item.drawing.title}</Text> : null}
+                  {item.releaseStatus !== 'released' ? (
+                    <>
+                      <Text style={[s.evidenceState, { color: evidenceReady ? Colors.green : Colors.orange }]}>
+                        {evidenceReady ? `✓ Release evidence attached · ${item.evidence?.photoUrls?.length || 1} item${(item.evidence?.photoUrls?.length || 1) === 1 ? '' : 's'}` : 'Evidence required before release'}
+                      </Text>
+                      <View style={s.qaActions}>
+                        <TouchableOpacity disabled={busy} style={[s.evidence, busy && { opacity: .5 }]} onPress={() => void captureQaEvidence(item)}>
+                          <Text style={s.evidenceText}>{busy ? 'Uploading…' : evidenceReady ? '+ Add evidence' : 'Take evidence photo'}</Text>
+                        </TouchableOpacity>
+                        <TouchableOpacity disabled={!evidenceReady || busy} style={[s.release, (!evidenceReady || busy) && { opacity: .4 }]} onPress={() => releaseQa(item)}>
+                          <Text style={s.releaseText}>{item.pointType === 'witness' ? 'Witness / release' : 'Release hold point'}</Text>
+                        </TouchableOpacity>
+                      </View>
+                    </>
+                  ) : null}
+                </View>
+              );
+            })}
+            <Text style={s.notice}>QA release is online-only and requires photo or signed evidence because it changes whether work may proceed.</Text>
           </View>
         )}
       </ScrollView>
@@ -370,7 +433,9 @@ const s=StyleSheet.create({
   title:{color:Colors.t1,fontSize:12.5,fontWeight:'800',flex:1},status:{fontSize:9,fontWeight:'900'},meta:{color:Colors.t2,fontSize:10,marginTop:4},body:{color:Colors.t2,fontSize:10.5,lineHeight:15,marginTop:7},
   actions:{flexDirection:'row',gap:7,marginTop:9},small:{borderWidth:1,borderRadius:8,paddingHorizontal:9,paddingVertical:7},smallText:{fontSize:10,fontWeight:'900'},
   accept:{backgroundColor:Colors.green,borderRadius:9,padding:9,alignItems:'center',marginTop:10},acceptText:{color:Colors.ink,fontSize:10.5,fontWeight:'900'},
-  release:{backgroundColor:Colors.purple,borderRadius:9,padding:9,alignItems:'center',marginTop:10},releaseText:{color:'#fff',fontSize:10.5,fontWeight:'900'},
+  qaActions:{flexDirection:'row',gap:7,marginTop:9},evidenceState:{fontSize:10,fontWeight:'800',marginTop:8},
+  evidence:{flex:1,backgroundColor:Colors.ink2,borderWidth:1,borderColor:Colors.green+'55',borderRadius:9,padding:9,alignItems:'center'},evidenceText:{color:Colors.green,fontSize:10.5,fontWeight:'900'},
+  release:{flex:1,backgroundColor:Colors.purple,borderRadius:9,padding:9,alignItems:'center'},releaseText:{color:'#fff',fontSize:10.5,fontWeight:'900'},
   notice:{color:Colors.t3,fontSize:10,lineHeight:15,marginTop:8},empty:{color:Colors.t3,textAlign:'center',paddingVertical:30},
   backdrop:{flex:1,backgroundColor:'rgba(2,8,18,.78)',justifyContent:'flex-end'},sheet:{backgroundColor:Colors.ink2,borderTopLeftRadius:20,borderTopRightRadius:20,padding:18,maxHeight:'92%'},
   sheetTitle:{color:Colors.t1,fontSize:18,fontWeight:'900'},close:{color:Colors.t2,fontSize:28},label:{color:Colors.t2,fontSize:10,fontWeight:'800',marginBottom:5},

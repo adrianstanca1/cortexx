@@ -55,7 +55,10 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       data.scheduledAt = d ?? null
     }
     if (typeof body.location === 'string') data.location = controls.cleanText(body.location, 160) || null
-    if (body.evidence && typeof body.evidence === 'object') data.evidence = controls.sanitizeEvidence(body.evidence) as unknown as object
+    const releaseEvidence = body.evidence && typeof body.evidence === 'object'
+      ? controls.sanitizeEvidence(body.evidence)
+      : controls.sanitizeEvidence(existing.evidence)
+    if (body.evidence && typeof body.evidence === 'object') data.evidence = releaseEvidence as unknown as object
 
     let finalReleaseStatus = existing.releaseStatus
     if (typeof body.releaseStatus === 'string' && RELEASE_STATUS.has(body.releaseStatus)) {
@@ -65,6 +68,9 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       finalReleaseStatus = body.releaseStatus
       data.releaseStatus = body.releaseStatus
       if (body.releaseStatus === 'released') {
+        if ((existing.pointType === 'hold' || existing.pointType === 'witness') && !controls.hasReleaseEvidence(releaseEvidence)) {
+          return NextResponse.json({ error: 'Evidence photo or signed evidence is required before releasing this QA point' }, { status: 409 })
+        }
         if (existing.pointType === 'witness') {
           data.witnessedBy = controls.cleanText(body.releasedBy, 120) || actorName(auth)
           data.witnessedAt = existing.witnessedAt || new Date()

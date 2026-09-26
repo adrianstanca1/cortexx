@@ -28,6 +28,7 @@ interface Inspection {
   releasedAt: string | null
   witnessedBy: string | null
   witnessedAt: string | null
+  evidence?: { photoUrls?: string[]; signatureUrl?: string | null; signedBy?: string | null } | null
   notes: string | null
   createdAt: string
   updatedAt: string
@@ -72,6 +73,7 @@ export default function InspectionsPage() {
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [expanded, setExpanded] = useState<string | null>(null)
+  const [evidenceBusy, setEvidenceBusy] = useState<string | null>(null)
 
   const [form, setForm] = useState({
     projectId: '', title: '', type: 'general' as Inspection['type'], pointType: 'inspection' as Inspection['pointType'],
@@ -169,6 +171,42 @@ export default function InspectionsPage() {
     }
   }
 
+  const hasReleaseEvidence = (i: Inspection) => Boolean(i.evidence?.photoUrls?.length || i.evidence?.signatureUrl)
+
+  const uploadReleaseEvidence = async (i: Inspection, file: File) => {
+    if (!file.type.startsWith('image/')) {
+      setToast({ msg: 'Release evidence must be an image', type: 'error' })
+      return
+    }
+    if (file.size > 10 * 1024 * 1024) {
+      setToast({ msg: 'Evidence image must be smaller than 10 MB', type: 'error' })
+      return
+    }
+    setEvidenceBusy(i.id)
+    try {
+      const formData = new FormData()
+      formData.append('file', file)
+      const upload = await fetch('/api/uploads', { method: 'POST', body: formData })
+      const uploaded = await upload.json().catch(() => ({}))
+      if (!upload.ok || !uploaded?.url) throw new Error(uploaded?.error || 'Evidence upload failed')
+
+      const photoUrls = [...(i.evidence?.photoUrls || []), uploaded.url].slice(-6)
+      const response = await fetch(`/api/inspections/${i.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ evidence: { ...(i.evidence || {}), photoUrls } }),
+      })
+      const data = await response.json().catch(() => ({}))
+      if (!response.ok) throw new Error(data?.error || 'Could not attach evidence')
+      setToast({ msg: 'QA evidence attached', type: 'success' })
+      await load()
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Evidence upload failed', type: 'error' })
+    } finally {
+      setEvidenceBusy(null)
+    }
+  }
+
   const remove = async (id: string) => {
     try {
       const res = await fetch(`/api/inspections/${id}`, { method: 'DELETE' })
@@ -223,6 +261,7 @@ export default function InspectionsPage() {
           const total = i.checklistItems.length
           const done = i.checklistItems.filter(it => it.result).length
           const failed = i.checklistItems.filter(it => it.result === 'fail').length
+          const evidenceReady = hasReleaseEvidence(i)
           return (
             <div key={i.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${i.status === 'failed' ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
               <div onClick={() => setExpanded(isOpen ? null : i.id)} style={{ cursor: 'pointer' }}>
@@ -254,9 +293,15 @@ export default function InspectionsPage() {
                       </div>
                     ))}
                   </div>
-                  <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
+                  <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
                     {i.pointType !== 'inspection' && i.releaseStatus !== 'released' && (
-                      <button onClick={() => releasePoint(i, 'released')} style={pillBtn('#8b5cf6')}>
+                      <label style={{ ...pillBtn(evidenceReady ? '#064e3b' : '#1d4ed8', evidenceReady ? '#86efac' : '#bfdbfe'), cursor: evidenceBusy === i.id ? 'wait' : 'pointer' }}>
+                        {evidenceBusy === i.id ? 'Uploading evidence…' : evidenceReady ? `✓ Evidence attached (${i.evidence?.photoUrls?.length || 1})` : 'Add release evidence'}
+                        <input type="file" accept="image/*" disabled={evidenceBusy === i.id} onChange={e => { const file = e.target.files?.[0]; if (file) void uploadReleaseEvidence(i, file); e.currentTarget.value = '' }} style={{ display: 'none' }} />
+                      </label>
+                    )}
+                    {i.pointType !== 'inspection' && i.releaseStatus !== 'released' && (
+                      <button disabled={!evidenceReady || evidenceBusy === i.id} onClick={() => releasePoint(i, 'released')} title={!evidenceReady ? 'Attach an evidence image before release' : undefined} style={{ ...pillBtn('#8b5cf6'), opacity: evidenceReady && evidenceBusy !== i.id ? 1 : .45 }}>
                         <IcCheck size={11} color="#fff" /> {i.pointType === 'witness' ? 'Witness / release' : 'Release hold'}
                       </button>
                     )}
