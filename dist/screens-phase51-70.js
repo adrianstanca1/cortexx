@@ -108,8 +108,10 @@ function BankScreen({
       color: accent,
       cursor: 'pointer'
     },
-    onClick: () => toast('Manual upload coming soon', 'info')
-  }, "upload statements manually"))) : React.createElement(React.Fragment, null, React.createElement("div", {
+    onClick: () => {
+      window.location.href = '/bank';
+    }
+  }, "upload a CSV statement"))) : React.createElement(React.Fragment, null, React.createElement("div", {
     style: {
       padding: '4px 16px 14px'
     }

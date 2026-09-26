@@ -9,6 +9,7 @@ const PRIMARY: Array<{ route: AppRoute; title: string; sub: string; tone: string
   { route: 'controls', title: 'Site controls', sub: 'Constraints, handover, output and QA release', tone: Colors.purple, code: 'CTRL' },
   { route: 'checkin', title: 'Check in / out', sub: 'GPS-backed site attendance', tone: Colors.green, code: 'GPS' },
   { route: 'tasks', title: 'Today’s work', sub: 'Assigned work and urgent priorities', tone: Colors.amber, code: 'WORK' },
+  { route: 'closeout', title: 'Close shift', sub: 'Validate handover, QA, output and records', tone: Colors.green, code: 'CLOSE' },
 ];
 
 const SECONDARY: Array<{ route: AppRoute; title: string; sub: string; tone: string }> = [

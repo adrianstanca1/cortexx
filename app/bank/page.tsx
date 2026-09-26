@@ -1,11 +1,12 @@
 'use client'
 
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
 import { IcChevL, IcPlus, IcX, IcCheck } from '@/components/ui/Icons'
 import { useModalEffects } from '@/lib/useModalEffects'
+import { parseBankCsv } from '@/lib/bank-csv'
 
 type Allocation = { id: string; targetType: string; targetId: string; targetLabel?: string; amount: number }
 type Reconciliation = { total: number; allocated: number; remaining: number; status: 'unmatched' | 'partial' | 'reconciled' }
@@ -43,6 +44,8 @@ export default function BankPage() {
   const [saving, setSaving] = useState(false)
   const [importing, setImporting] = useState(false)
   const [connecting, setConnecting] = useState(false)
+  const [csvImporting, setCsvImporting] = useState(false)
+  const csvInputRef = useRef<HTMLInputElement>(null)
   const [bankingConfigured, setBankingConfigured] = useState<boolean | null>(null)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [form, setForm] = useState({ accountName: '', occurredAt: new Date().toISOString().slice(0, 10), amount: '', description: '', reference: '' })
@@ -117,6 +120,32 @@ export default function BankPage() {
     finally { setImporting(false) }
   }
 
+  const importCsvStatement = async (file: File) => {
+    setCsvImporting(true)
+    try {
+      if (file.size > 5 * 1024 * 1024) throw new Error('CSV file must be smaller than 5 MB')
+      const text = await file.text()
+      const parsed = parseBankCsv(text)
+      if (!parsed.transactions.length) throw new Error('No valid bank transactions found in this CSV')
+
+      const res = await fetch('/api/bank/import', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ source: 'csv', transactions: parsed.transactions }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json?.error || 'Failed to import CSV statement')
+      const skipped = Number(json.skipped || 0) + parsed.skipped
+      setToast({ msg: `CSV imported · ${json.created || 0} new · ${json.updated || 0} refreshed${skipped ? ` · ${skipped} skipped` : ''}` })
+      await load()
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'CSV import failed', type: 'error' })
+    } finally {
+      setCsvImporting(false)
+      if (csvInputRef.current) csvInputRef.current.value = ''
+    }
+  }
+
   const matchCandidate = async (candidate: Candidate) => {
     if (!selected) return
     setSaving(true)
@@ -166,6 +195,18 @@ export default function BankPage() {
       <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
         <button type="button" onClick={connectBank} disabled={connecting} style={pillBtn(bankingConfigured ? '#2563eb' : 'var(--t3)')}>{connecting ? 'Connecting…' : bankingConfigured ? 'Connect bank' : 'Bank feed not configured'}</button>
         <button type="button" onClick={importBankFeed} disabled={importing || bankingConfigured === false} style={pillBtn('#10b981')}>{importing ? 'Syncing…' : 'Sync bank feed'}</button>
+        <button type="button" onClick={() => csvInputRef.current?.click()} disabled={csvImporting} style={pillBtn('#8b5cf6')}>{csvImporting ? 'Importing CSV…' : 'Import CSV statement'}</button>
+        <input
+          ref={csvInputRef}
+          type="file"
+          accept=".csv,text/csv"
+          aria-label="Import bank statement CSV"
+          style={{ display: 'none' }}
+          onChange={event => {
+            const file = event.target.files?.[0]
+            if (file) void importCsvStatement(file)
+          }}
+        />
       </div>
     </header>
 

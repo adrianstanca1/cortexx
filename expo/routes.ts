@@ -8,6 +8,7 @@ export type AppRoute =
   | 'readiness'
   | 'deliveries'
   | 'controls'
+  | 'closeout'
   | 'timesheets'
   | 'diary'
   | 'snags'

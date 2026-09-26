@@ -60,6 +60,8 @@ export default function TasksPage() {
   const [selectMode, setSelectMode] = useState(false)
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set())
   const [bulkSaving, setBulkSaving] = useState(false)
+  const [activePersona, setActivePersona] = useState('')
+  const requiresProject = ['project_manager', 'foreman', 'operative'].includes(activePersona)
 
   const toggleSelected = (id: string) => {
     setSelectedIds(prev => {
@@ -121,6 +123,22 @@ export default function TasksPage() {
 
   useEffect(() => { loadTasks() }, [])
 
+  useEffect(() => {
+    fetch('/api/orgs')
+      .then(r => r.ok ? r.json() : null)
+      .then(data => {
+        const active = data?.organizations?.find((org: { active?: boolean }) => org.active) || data?.organizations?.[0]
+        setActivePersona(String(active?.personaRole || ''))
+      })
+      .catch(() => setActivePersona(''))
+  }, [])
+
+  useEffect(() => {
+    if (requiresProject && !form.projectId && projects.length > 0) {
+      setForm(current => ({ ...current, projectId: projects[0].id }))
+    }
+  }, [requiresProject, projects, form.projectId])
+
   // Cross-tab sync — refetch when another tab broadcasts a tasks change.
   useEffect(() => {
     return subscribe(msg => {
@@ -135,7 +153,11 @@ export default function TasksPage() {
     if (projects.length === 0) {
       fetch('/api/projects').then(r => r.json()).then(d => {
         const ps = d.projects || d
-        setProjects(ps.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name })))
+        const mapped = ps.map((p: { id: string; name: string }) => ({ id: p.id, name: p.name }))
+        setProjects(mapped)
+        if (requiresProject && mapped.length > 0) {
+          setForm(current => current.projectId ? current : { ...current, projectId: mapped[0].id })
+        }
       }).catch(() => {})
     }
     if (team.length === 0) {
@@ -154,6 +176,10 @@ export default function TasksPage() {
 
   const createTask = async () => {
     if (!form.title.trim()) return
+    if (requiresProject && !form.projectId) {
+      setToast({ msg: 'Select one of your assigned projects before creating this task', type: 'error' })
+      return
+    }
     setSaving(true)
     try {
       const res = await fetch('/api/tasks', {
@@ -166,20 +192,21 @@ export default function TasksPage() {
           dueDate: form.dueDate || null,
           dueTime: form.dueTime || null,
           projectId: form.projectId || null,
-          assigneeId: form.assigneeId || null,
+          assigneeId: activePersona === 'operative' ? null : (form.assigneeId || null),
           category: form.category || null,
           status: 'todo',
         }),
       })
-      if (!res.ok) throw new Error('Failed')
-      const newTask = await res.json()
+      const payload = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(payload?.error || 'Failed to create task')
+      const newTask = payload
       setTasks(prev => [newTask, ...prev])
       setShowModal(false)
       setForm({ title: '', description: '', priority: 'medium', dueDate: '', dueTime: '', projectId: '', assigneeId: '', category: '' })
       setToast({ msg: 'Task created' })
       broadcastInvalidate('tasks')
-    } catch {
-      setToast({ msg: 'Failed to create task', type: 'error' })
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Failed to create task', type: 'error' })
     } finally {
       setSaving(false)
     }
@@ -618,20 +645,26 @@ export default function TasksPage() {
 
             {/* Project */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project</label>
+              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project{requiresProject ? ' *' : ''}</label>
               <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={selectStyle}>
-                <option value="">No project</option>
+                {!requiresProject && <option value="">No project</option>}
+                {requiresProject && projects.length === 0 && <option value="">No assigned projects</option>}
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
+              {requiresProject && <div style={{ marginTop: 5, fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)' }}>Field roles can create tasks only inside projects assigned to them.</div>}
             </div>
 
             {/* Assignee */}
             <div>
               <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</label>
-              <select value={form.assigneeId} onChange={e => setForm(p => ({ ...p, assigneeId: e.target.value }))} style={selectStyle}>
-                <option value="">Unassigned</option>
-                {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
-              </select>
+              {activePersona === 'operative' ? (
+                <div style={{ ...selectStyle, color: 'var(--t2)' }}>Assigned to you automatically</div>
+              ) : (
+                <select value={form.assigneeId} onChange={e => setForm(p => ({ ...p, assigneeId: e.target.value }))} style={selectStyle}>
+                  <option value="">Unassigned</option>
+                  {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
+                </select>
+              )}
             </div>
 
             <div>
@@ -641,7 +674,7 @@ export default function TasksPage() {
               </select>
             </div>
 
-            <button onClick={createTask} disabled={saving || !form.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1 }}>
+            <button onClick={createTask} disabled={saving || !form.title.trim() || (requiresProject && !form.projectId)} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || (requiresProject && !form.projectId) ? 0.5 : 1 }}>
               {saving ? 'Creating…' : 'Create task'}
             </button>
           </div>

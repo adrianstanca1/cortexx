@@ -251,7 +251,7 @@ export default function POsPage() {
     <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
 
-      <div className="module-header" data-kicker="Procurement control" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(6,16,30,0.95)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
+      <div className="module-header" data-kicker="Procurement control" style={{ padding: '20px 20px 12px 60px', position: 'sticky', top: 0, zIndex: 50, background: 'rgba(9,11,13,0.88)', backdropFilter: 'blur(12px)', borderBottom: '0.5px solid rgba(255,255,255,0.07)' }}>
         <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 10 }}>
           <IcChevL size={18} color="var(--t3)" />
           <span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span>
@@ -425,7 +425,7 @@ export default function POsPage() {
               <button onClick={() => setForm(p => ({ ...p, items: [...p.items, blankItem()] }))} style={{ background: 'rgba(245,158,11,0.12)', border: '0.5px dashed rgba(245,158,11,0.4)', color: '#f59e0b', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', width: '100%' }}>+ Add line</button>
             </div>
 
-            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               <div>
                 <label style={labelStyle}>VAT %</label>
                 <input type="number" step="1" value={form.vatRate} onChange={e => setForm(p => ({ ...p, vatRate: e.target.value }))} style={inputStyle} />
