@@ -51,10 +51,12 @@ type FieldEvent = {
 
 type FieldPulse = {
   activePermits: number
+  expiredPermits: number
   expiringPermits: number
   openInspections: number
   failedInspections: number
   openSnags: number
+  highSnags: number
   overdueChecks: number
   openRfis: number
   overdueRfis: number
@@ -65,10 +67,32 @@ type FieldPulse = {
   planHit: number | null
 }
 
+type ReadinessAlert = {
+  id: string
+  tone: 'critical' | 'warning' | 'info'
+  title: string
+  detail: string
+  href: string
+}
+
+type FieldReadiness = {
+  score: number
+  status: 'ready' | 'attention' | 'action_required'
+  hardStops: number
+  alerts: ReadinessAlert[]
+}
+
 const EMPTY_PULSE: FieldPulse = {
-  activePermits: 0, expiringPermits: 0, openInspections: 0, failedInspections: 0,
-  openSnags: 0, overdueChecks: 0, openRfis: 0, overdueRfis: 0,
+  activePermits: 0, expiredPermits: 0, expiringPermits: 0, openInspections: 0, failedInspections: 0,
+  openSnags: 0, highSnags: 0, overdueChecks: 0, openRfis: 0, overdueRfis: 0,
   openConstraints: 0, criticalConstraints: 0, pendingQaPoints: 0, pendingHandovers: 0, planHit: null,
+}
+
+const EMPTY_READINESS: FieldReadiness = {
+  score: 100,
+  status: 'ready',
+  hardStops: 0,
+  alerts: [],
 }
 
 type Action = {
@@ -130,6 +154,7 @@ export default function FieldOperationsPage() {
   const [loading, setLoading] = useState(true)
   const [taskBusy, setTaskBusy] = useState<string | null>(null)
   const [pulse, setPulse] = useState<FieldPulse>(EMPTY_PULSE)
+  const [readiness, setReadiness] = useState<FieldReadiness>(EMPTY_READINESS)
   const [note, setNote] = useState('')
   const [eventType, setEventType] = useState<(typeof EVENT_TYPES)[number]>('progress')
   const [eventSeverity, setEventSeverity] = useState('info')
@@ -167,77 +192,39 @@ export default function FieldOperationsPage() {
   useEffect(() => {
     if (!projectId || !online) {
       setPulse(EMPTY_PULSE)
-      return
-    }
-    let cancelled = false
-    const read = async <T,>(url: string): Promise<T> => {
-      const response = await fetch(url, { cache: 'no-store' })
-      return (response.ok ? await response.json() : {}) as T
-    }
-    Promise.all([
-      read<{ activeCount?: number; expiringSoon?: number }>(`/api/permits?projectId=${encodeURIComponent(projectId)}`),
-      read<{ openCount?: number; failedCount?: number; inspections?: Array<{ pointType?: string; releaseStatus?: string }> }>(`/api/inspections?projectId=${encodeURIComponent(projectId)}`),
-      read<{ openCount?: number }>(`/api/snags?projectId=${encodeURIComponent(projectId)}&take=1`),
-      read<{ checks?: Array<{ project?: { id?: string } | null }> }>('/api/equipment-checks/overdue'),
-      read<{ openCount?: number; overdueCount?: number }>(`/api/rfis?projectId=${encodeURIComponent(projectId)}&take=1`),
-      read<{ openCount?: number; criticalCount?: number }>(`/api/field-constraints?projectId=${encodeURIComponent(projectId)}`),
-      read<{ pendingAcceptance?: number }>(`/api/field-handovers?projectId=${encodeURIComponent(projectId)}&take=20`),
-      read<{ summary?: { completionPct?: number | null } }>(`/api/field-production?projectId=${encodeURIComponent(projectId)}`),
-    ]).then(([permits, inspections, snags, equipment, rfis, constraints, handovers, production]) => {
-      if (cancelled) return
-      const overdueChecks = Array.isArray(equipment?.checks)
-        ? equipment.checks.filter((c: { project?: { id?: string } | null }) => c.project?.id === projectId).length
-        : 0
-      setPulse({
-        activePermits: Number(permits?.activeCount || 0),
-        expiringPermits: Number(permits?.expiringSoon || 0),
-        openInspections: Number(inspections?.openCount || 0),
-        failedInspections: Number(inspections?.failedCount || 0),
-        openSnags: Number(snags?.openCount || 0),
-        overdueChecks,
-        openRfis: Number(rfis?.openCount || 0),
-        overdueRfis: Number(rfis?.overdueCount || 0),
-        openConstraints: Number(constraints?.openCount || 0),
-        criticalConstraints: Number(constraints?.criticalCount || 0),
-        pendingQaPoints: Array.isArray(inspections?.inspections)
-          ? inspections.inspections.filter(point => ['hold', 'witness'].includes(String(point.pointType)) && point.releaseStatus !== 'released').length
-          : 0,
-        pendingHandovers: Number(handovers?.pendingAcceptance || 0),
-        planHit: typeof production?.summary?.completionPct === 'number' ? production.summary.completionPct : null,
-      })
-    }).catch(() => {
-      if (!cancelled) setPulse(EMPTY_PULSE)
-    })
-    return () => { cancelled = true }
-  }, [projectId, online])
-
-  useEffect(() => {
-    if (!projectId || !online) {
+      setReadiness(EMPTY_READINESS)
       setCrew([])
-      return
-    }
-    let cancelled = false
-    fetch('/api/live-status', { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : { byProject: [] })
-      .then(payload => {
-        if (cancelled) return
-        const group = (payload?.byProject || []).find((entry: { project?: { id?: string }; checkins?: LiveCheckin[] }) => entry.project?.id === projectId)
-        setCrew(group?.checkins || [])
-      })
-      .catch(() => { if (!cancelled) setCrew([]) })
-    return () => { cancelled = true }
-  }, [projectId, online])
-
-  useEffect(() => {
-    if (!projectId || !online) {
       setFieldEvents([])
       return
     }
+
     let cancelled = false
-    fetch(`/api/field-events?projectId=${encodeURIComponent(projectId)}&take=6`, { cache: 'no-store' })
-      .then(r => r.ok ? r.json() : { events: [] })
-      .then(payload => { if (!cancelled) setFieldEvents(payload?.events || []) })
-      .catch(() => { if (!cancelled) setFieldEvents([]) })
+    fetch(`/api/field-command?projectId=${encodeURIComponent(projectId)}`, { cache: 'no-store' })
+      .then(async response => {
+        const payload = await response.json().catch(() => ({}))
+        if (!response.ok) throw new Error(payload?.error || 'Failed to load field command brief')
+        return payload
+      })
+      .then(payload => {
+        if (cancelled) return
+        setPulse({ ...EMPTY_PULSE, ...(payload?.pulse || {}) })
+        setReadiness({ ...EMPTY_READINESS, ...(payload?.readiness || {}) })
+        setCrew(Array.isArray(payload?.crew) ? payload.crew : [])
+        setFieldEvents(Array.isArray(payload?.events) ? payload.events : [])
+      })
+      .catch(() => {
+        if (cancelled) return
+        setPulse(EMPTY_PULSE)
+        setReadiness({
+          ...EMPTY_READINESS,
+          status: 'attention',
+          score: 0,
+          alerts: [{ id: 'brief-unavailable', tone: 'warning', title: 'Command brief unavailable', detail: 'Live readiness data could not be refreshed. Existing field tools remain available.', href: '/field' }],
+        })
+        setCrew([])
+        setFieldEvents([])
+      })
+
     return () => { cancelled = true }
   }, [projectId, online])
 
@@ -249,6 +236,8 @@ export default function FieldOperationsPage() {
   const openTasks = tasks.filter(t => t.status !== 'done')
   const urgentTasks = openTasks.filter(t => ['high', 'critical'].includes(String(t.priority || '').toLowerCase()))
   const peopleOnSite = crew.length
+  const readinessColor = readiness.status === 'action_required' ? '#ef4444' : readiness.status === 'attention' ? '#f59e0b' : '#10b981'
+  const readinessLabel = readiness.status === 'action_required' ? 'Action required' : readiness.status === 'attention' ? 'Attention' : 'Ready'
 
   const saveSiteNote = async () => {
     const detail = note.trim()
@@ -361,17 +350,60 @@ export default function FieldOperationsPage() {
         )}
 
         <section style={{ marginBottom: 18 }}>
+          <SectionTitle title="Field command brief" />
+          <div style={{ borderRadius: 16, border: `1px solid ${readinessColor}44`, background: `linear-gradient(135deg, ${readinessColor}12, var(--surface-strong))`, padding: 14, marginBottom: 10 }}>
+            <div style={{ display: 'grid', gridTemplateColumns: 'auto minmax(0,1fr)', gap: 13, alignItems: 'center' }}>
+              <div style={{ width: 58, height: 58, borderRadius: 16, display: 'grid', placeItems: 'center', background: `${readinessColor}16`, border: `1px solid ${readinessColor}55` }}>
+                <div style={{ textAlign: 'center', fontFamily: SF }}>
+                  <div style={{ color: readinessColor, fontSize: 21, lineHeight: 1, fontWeight: 950 }}>{readiness.score}</div>
+                  <div style={{ color: 'var(--t3)', fontSize: 8, fontWeight: 900, letterSpacing: '.08em', marginTop: 3 }}>SCORE</div>
+                </div>
+              </div>
+              <div>
+                <div style={{ display: 'flex', gap: 7, alignItems: 'center', flexWrap: 'wrap' }}>
+                  <strong style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 15 }}>{readinessLabel}</strong>
+                  <span style={{ padding: '4px 7px', borderRadius: 999, background: `${readinessColor}14`, border: `1px solid ${readinessColor}44`, color: readinessColor, fontFamily: SF, fontSize: 9, fontWeight: 900, textTransform: 'uppercase', letterSpacing: '.06em' }}>
+                    {readiness.hardStops > 0 ? `${readiness.hardStops} critical exception${readiness.hardStops === 1 ? '' : 's'}` : 'No critical exceptions'}
+                  </span>
+                </div>
+                <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 11, lineHeight: 1.45, marginTop: 4 }}>
+                  {readiness.status === 'action_required'
+                    ? 'Resolve the affected permit, QA, inspection or constraint items before the related work proceeds.'
+                    : readiness.status === 'attention'
+                      ? 'Work can continue with active warnings that need ownership during the shift.'
+                      : 'Current readiness signals show no immediate exception for the selected worksite.'}
+                </div>
+              </div>
+            </div>
+            {readiness.alerts.length > 0 && (
+              <div style={{ display: 'grid', gap: 6, marginTop: 11 }}>
+                {readiness.alerts.slice(0, 4).map(alert => {
+                  const tone = alert.tone === 'critical' ? '#ef4444' : alert.tone === 'warning' ? '#f59e0b' : '#10b981'
+                  return (
+                    <Link key={alert.id} href={alert.href} style={{ textDecoration: 'none', borderRadius: 10, padding: '9px 10px', border: '1px solid rgba(255,255,255,.07)', background: 'rgba(255,255,255,.025)', display: 'flex', gap: 9, alignItems: 'flex-start' }}>
+                      <span style={{ width: 8, height: 8, marginTop: 4, borderRadius: 999, background: tone, boxShadow: `0 0 0 3px ${tone}18`, flexShrink: 0 }} />
+                      <span style={{ minWidth: 0 }}>
+                        <span style={{ display: 'block', color: 'var(--t1)', fontFamily: SF, fontSize: 11.5, fontWeight: 850 }}>{alert.title}</span>
+                        <span style={{ display: 'block', color: 'var(--t2)', fontFamily: SF, fontSize: 10.5, lineHeight: 1.4, marginTop: 2 }}>{alert.detail}</span>
+                      </span>
+                    </Link>
+                  )
+                })}
+              </div>
+            )}
+          </div>
+
           <SectionTitle title="Live readiness" />
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(190px, 1fr))', gap: 9 }}>
-            <PulseCard href="/permits" label="Active permits" value={pulse.activePermits} alert={pulse.expiringPermits > 0} sub={pulse.expiringPermits ? `${pulse.expiringPermits} expiring soon` : 'No expiry alerts'} />
+            <PulseCard href="/permits" label="Active permits" value={pulse.activePermits} alert={pulse.expiredPermits > 0 || pulse.expiringPermits > 0} sub={pulse.expiredPermits ? `${pulse.expiredPermits} past validity` : pulse.expiringPermits ? `${pulse.expiringPermits} expiring soon` : 'No expiry alerts'} />
             <PulseCard href="/inspections" label="Open inspections" value={pulse.openInspections} alert={pulse.failedInspections > 0} sub={pulse.failedInspections ? `${pulse.failedInspections} failed` : 'No failed inspections'} />
-            <PulseCard href="/snags" label="Open snags" value={pulse.openSnags} alert={pulse.openSnags > 0} sub="Outstanding defects" />
+            <PulseCard href="/snags" label="Open snags" value={pulse.openSnags} alert={pulse.highSnags > 0} sub={pulse.highSnags ? `${pulse.highSnags} high / critical` : 'No high-priority defects'} />
             <PulseCard href="/equipment-checks?status=overdue" label="Checks overdue" value={pulse.overdueChecks} alert={pulse.overdueChecks > 0} sub="Equipment / plant" />
             <PulseCard href="/rfis" label="Open RFIs" value={pulse.openRfis} alert={pulse.overdueRfis > 0} sub={pulse.overdueRfis ? `${pulse.overdueRfis} overdue` : 'No overdue RFIs'} />
             <PulseCard href="/field/constraints" label="Open constraints" value={pulse.openConstraints} alert={pulse.criticalConstraints > 0} sub={pulse.criticalConstraints ? `${pulse.criticalConstraints} critical` : 'No critical blockers'} />
             <PulseCard href="/inspections" label="QA release waiting" value={pulse.pendingQaPoints} alert={pulse.pendingQaPoints > 0} sub="Hold / witness points" />
             <PulseCard href="/field/handover" label="Handover waiting" value={pulse.pendingHandovers} alert={pulse.pendingHandovers > 0} sub="Awaiting incoming acceptance" />
-            <PulseCard href="/field/productivity" label="Plan achieved" value={pulse.planHit == null ? 0 : Math.round(pulse.planHit)} alert={pulse.planHit != null && pulse.planHit < 80} sub={pulse.planHit == null ? 'No production logged' : `${pulse.planHit.toFixed(1)}% of plan`} suffix={pulse.planHit == null ? '' : '%'} />
+            <PulseCard href="/field/productivity" label="7-day plan" value={pulse.planHit == null ? 0 : Math.round(pulse.planHit)} alert={pulse.planHit != null && pulse.planHit < 80} sub={pulse.planHit == null ? 'No production logged' : `${pulse.planHit.toFixed(1)}% of planned quantity`} suffix={pulse.planHit == null ? '' : '%'} />
           </div>
         </section>
 
