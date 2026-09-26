@@ -26,9 +26,9 @@ are deliberately separate indicators. Logs are under `$HOME/logs`.
 
 Restore drills use a disposable PostgreSQL container without external networking
 or published ports. They verify checksums, restore with exit-on-error, check
-that tables exist, extract uploads and remove the disposable container and its
+that the canonical User/Organization/Project/Task/Document and migration tables are readable, extract uploads and remove the disposable container and its
 volume. No production database is dropped or replaced. Review the weekly log;
-this setup does not yet provide external failure notifications.
+the GitHub Backup Verify workflow now checks the current VPS daily and opens or updates a recovery issue on failure. Its first hosted run still needs verification after merge.
 
 For disaster recovery, restore into an isolated replacement stack first, verify
 organisation/project/evidence access and migrations, then switch traffic during
@@ -44,6 +44,12 @@ drill script intentionally cannot overwrite production.
 - No off-site remote is configured. Set `BACKUP_REMOTE` to an existing rclone
   destination in the scheduled environment after configuring credentials; the
   script copies and verifies objects before marking off-site success.
+
+The scheduled local verifier rejects missing backups, backups older than 36 hours,
+future timestamps and paths outside the managed directory. The restore was repeated
+with table smoke queries: 2 users, 2 organisations, 1 project, 2 tasks, 1 document
+and 57 completed migrations; 109 tables restored in 6 seconds. These are aggregate
+counts only. Five local regression tests cover the freshness guard.
 
 ## Remaining limits
 

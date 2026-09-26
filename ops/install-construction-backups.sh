@@ -4,8 +4,10 @@ set -euo pipefail
 umask 077
 source_dir=$(cd "$(dirname "$0")" && pwd)
 mkdir -p "$HOME/bin" "$HOME/logs" "$HOME/backups/construction"
-for script in construction-backup.sh construction-restore-drill.sh; do
-  install -m 700 "$source_dir/$script" "$HOME/bin/$script"
+for script in construction-backup.sh construction-restore-drill.sh construction-verify-latest.sh; do
+  if [[ "$source_dir/$script" != "$HOME/bin/$script" ]]; then
+    install -m 700 "$source_dir/$script" "$HOME/bin/$script"
+  fi
 done
 # Preserve all unrelated jobs and keep a private copy of the previous crontab.
 previous=$(mktemp)
@@ -15,6 +17,6 @@ cp "$previous" "$HOME/backups/construction/crontab-before-$(date -u +%Y%m%dT%H%M
 {
   sed '/# cortexx-construction-backup$/d; /# cortexx-construction-restore-drill$/d' "$previous"
   printf '15 2 * * * "%s/bin/construction-backup.sh" >> "%s/logs/construction-backup.log" 2>&1 # cortexx-construction-backup\n' "$HOME" "$HOME"
-  printf '45 2 * * 0 "%s/bin/construction-restore-drill.sh" "$(cat "%s/backups/construction/.last-local-success")" >> "%s/logs/construction-restore-drill.log" 2>&1 # cortexx-construction-restore-drill\n' "$HOME" "$HOME" "$HOME"
+  printf '45 2 * * 0 "%s/bin/construction-verify-latest.sh" >> "%s/logs/construction-restore-drill.log" 2>&1 # cortexx-construction-restore-drill\n' "$HOME" "$HOME"
 } | crontab -
 echo 'Installed daily backups and weekly isolated restore checks (server timezone).'

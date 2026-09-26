@@ -21,6 +21,14 @@ docker exec "$name" createdb -U postgres restore_drill
 docker exec -i "$name" pg_restore -U postgres -d restore_drill --no-owner --no-acl --exit-on-error < "$backup/database.dump"
 tables=$(docker exec "$name" psql -U postgres -d restore_drill -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")
 [[ "$tables" =~ ^[0-9]+$ && "$tables" -gt 0 ]]
+# Query the canonical Prisma tables: unrelated schemas must fail; zero rows are valid.
+docker exec "$name" psql -U postgres -d restore_drill -v ON_ERROR_STOP=1 -Atc '
+SELECT '"'"'users'"'"', count(*) FROM "User";
+SELECT '"'"'organizations'"'"', count(*) FROM "Organization";
+SELECT '"'"'projects'"'"', count(*) FROM "Project";
+SELECT '"'"'tasks'"'"', count(*) FROM "Task";
+SELECT '"'"'documents'"'"', count(*) FROM "Document";
+SELECT '"'"'migrations'"'"', count(*) FROM "_prisma_migrations" WHERE finished_at IS NOT NULL;'
 # Extract into the disposable container to prove the evidence archive is usable.
 docker exec "$name" mkdir /tmp/restored-uploads
 docker exec -i "$name" tar -xzf - -C /tmp/restored-uploads < "$backup/uploads.tar.gz"
