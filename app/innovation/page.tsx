@@ -27,6 +27,8 @@ type Improvement = {
   resultValue?: number | null
   startedAt?: string | null
   completedAt?: string | null
+  standardProcessId?: string | null
+  standardProcess?: { id: string; title?: string | null; version?: string | null; publishedAt?: string | null } | null
   createdAt: string
 }
 type Constraint = {
@@ -58,6 +60,8 @@ type Summary = {
   proven: number
   measurementGaps: number
   measuredProven: number
+  standardized: number
+  avgMeasuredImprovementPct: number | null
   openConstraints: number
   criticalConstraints: number
   blockedActivities: number
@@ -75,17 +79,18 @@ type Summary = {
 type InnovationData = {
   generatedAt: string
   scope: { projectId: string | null; projectCount: number }
-  permissions: { write: boolean }
+  permissions: { write: boolean; standardise: boolean }
   projects: Project[]
   improvements: Improvement[]
   constraints: Constraint[]
   productionLogs: ProductionLog[]
   signals: Signal[]
+  learningByArea: Array<{ area: string; ideas: number; proven: number; standardized: number }>
   summary: Summary
 }
 
 const emptySummary: Summary = {
-  ideas: 0, pilots: 0, proven: 0, measurementGaps: 0, measuredProven: 0, openConstraints: 0, criticalConstraints: 0,
+  ideas: 0, pilots: 0, proven: 0, measurementGaps: 0, measuredProven: 0, standardized: 0, avgMeasuredImprovementPct: null, openConstraints: 0, criticalConstraints: 0,
   blockedActivities: 0, overdueActivities: 0, openRequisitions: 0, procurementAtRisk: 0,
   openSafety: 0, highSafety: 0, plannedQty: 0, installedQty: 0, labourHours: 0,
   achievementPct: null, qtyPerLabourHour: null,
@@ -274,6 +279,21 @@ export default function InnovationPage() {
     }
   }
 
+  const standardizeIdea = async (idea: Improvement) => {
+    if (saving || idea.standardProcessId) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/improve-hub/' + idea.id + '/standardize', { method: 'POST' })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || 'Failed to standardise improvement')
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to standardise improvement')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const createConstraint = async (event: FormEvent) => {
     event.preventDefault()
     if (!projectId || !constraintTitle.trim() || saving) return
@@ -426,12 +446,36 @@ export default function InnovationPage() {
                             {!['proven','complete','completed'].includes(status) && (
                               <button type="button" onClick={() => advanceIdea(idea)} disabled={saving} style={miniButton}>{status === 'idea' ? 'Pilot' : 'Prove'}</button>
                             )}
+                            {data?.permissions.standardise && ['proven','complete','completed'].includes(status) && !idea.standardProcessId && (
+                              <button type="button" onClick={() => standardizeIdea(idea)} disabled={saving} style={standardButton}>Standardise</button>
+                            )}
+                            {idea.standardProcessId && (
+                              <Link href="/process-library" style={standardLink}>Standard {idea.standardProcess?.version || '1.0'}</Link>
+                            )}
                           </div>
                         )}
                       </div>
                     )
                   })}
                   {rankedIdeas.length === 0 && <Empty text="No improvement ideas yet." />}
+                </div>
+
+                <div style={{ marginTop: 14, borderTop: '1px solid var(--hair)', paddingTop: 12 }}>
+                  <div style={{ color: 'var(--t2)', fontSize: 10, fontWeight: 800, textTransform: 'uppercase', letterSpacing: '.08em' }}>Knowledge flywheel</div>
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3,1fr)', gap: 8, marginTop: 8 }}>
+                    <MiniMetric label="Measured proven" value={String(summary.measuredProven)} />
+                    <MiniMetric label="Standards published" value={String(summary.standardized)} />
+                    <MiniMetric label="Avg measured gain" value={summary.avgMeasuredImprovementPct === null ? '—' : (summary.avgMeasuredImprovementPct >= 0 ? '+' : '') + summary.avgMeasuredImprovementPct + '%'} />
+                  </div>
+                  {(data?.learningByArea || []).length > 0 && (
+                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 9 }}>
+                      {(data?.learningByArea || []).map(item => (
+                        <span key={item.area} style={learningPill}>
+                          {item.area}: {item.proven} proven · {item.standardized} standard
+                        </span>
+                      ))}
+                    </div>
+                  )}
                 </div>
               </div>
             </section>
@@ -625,6 +669,9 @@ const primaryButton: CSSProperties = { border: 0, borderRadius: 9, background: '
 const secondaryButton: CSSProperties = { border: '1px solid var(--hair)', borderRadius: 9, background: 'rgba(255,255,255,.035)', color: 'var(--t2)', padding: '9px 13px', fontSize: 10, fontWeight: 800, cursor: 'pointer' }
 const miniButton: CSSProperties = { border: '1px solid rgba(72,216,255,.22)', borderRadius: 8, background: 'rgba(72,216,255,.08)', color: '#67e8f9', padding: '6px 9px', fontSize: 9, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }
 const measureButton: CSSProperties = { border: '1px solid rgba(167,139,250,.24)', borderRadius: 8, background: 'rgba(139,92,246,.09)', color: '#c4b5fd', padding: '6px 9px', fontSize: 9, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }
+const standardButton: CSSProperties = { border: '1px solid rgba(34,197,94,.25)', borderRadius: 8, background: 'rgba(34,197,94,.09)', color: '#86efac', padding: '6px 9px', fontSize: 9, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }
+const standardLink: CSSProperties = { border: '1px solid rgba(34,197,94,.25)', borderRadius: 8, background: 'rgba(34,197,94,.09)', color: '#86efac', padding: '6px 9px', fontSize: 9, fontWeight: 800, textDecoration: 'none', flexShrink: 0 }
+const learningPill: CSSProperties = { border: '1px solid rgba(72,216,255,.14)', borderRadius: 999, background: 'rgba(72,216,255,.05)', color: 'var(--t2)', padding: '4px 7px', fontSize: 8, fontWeight: 700, textTransform: 'capitalize' }
 const modalOverlay: CSSProperties = { position: 'fixed', inset: 0, zIndex: 260, display: 'grid', placeItems: 'center', padding: 16, background: 'rgba(2,6,23,.76)', backdropFilter: 'blur(10px)' }
 const modalCard: CSSProperties = { width: 'min(680px,100%)', maxHeight: '88dvh', overflowY: 'auto', borderRadius: 16, border: '1px solid rgba(255,255,255,.1)', background: '#091421', padding: 18, boxShadow: '0 24px 80px rgba(0,0,0,.45)' }
 const fieldLabel: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 5, color: 'var(--t3)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }

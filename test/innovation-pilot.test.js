@@ -56,7 +56,7 @@ test('innovation overview exposes measurement gaps and measured proven improveme
   assert.match(innovationRoute, /measurementGaps/)
   assert.match(innovationRoute, /measuredProven/)
   assert.match(innovationRoute, /Pilots need a measurement plan/)
-  assert.match(innovationRoute, /include: \{ project: \{ select: \{ id: true, name: true \} \} \}/)
+  assert.match(innovationRoute, /project: \{ select: \{ id: true, name: true \} \}/)
 })
 
 test('innovation UI requires measurement evidence before proving a pilot', () => {
