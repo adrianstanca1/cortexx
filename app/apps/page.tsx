@@ -15,7 +15,6 @@ interface ModuleItem {
   Icon: React.ComponentType<{ size?: number; color?: string }>
   color: string
   ai?: boolean
-  comingSoon?: boolean
   badgeKey?: 'inbox' | 'rfis' | 'snags' | 'observations' | 'variations' | 'pos' | 'subinvoices' | 'materials' | 'timesheets' | 'training' | 'leads' | 'messages' | 'permits' | 'rams' | 'tenders' | 'inspections' | 'meetings' | 'risks' | 'toolboxTalks' | 'maintenance' | 'safety'
 }
 
@@ -313,13 +312,12 @@ export default function AppsPage() {
             }}>
               {section.items.map(m => {
                 const badge = m.badgeKey ? badges[m.badgeKey] : undefined
-                const soon = m.comingSoon === true
-                const showBadge = badge !== undefined && badge > 0 && !soon
+                const showBadge = badge !== undefined && badge > 0
                 return (
                   <Link
                     key={m.href}
                     href={m.href}
-                    aria-label={soon ? `${m.label} (coming soon)` : m.label}
+                    aria-label={m.label}
                     style={{
                       position: 'relative',
                       background: 'var(--bg1)', borderRadius: 12,
@@ -328,7 +326,6 @@ export default function AppsPage() {
                       textDecoration: 'none', color: 'var(--t1)',
                       border: '0.5px solid rgba(255,255,255,0.05)',
                       minHeight: 76,
-                      opacity: soon ? 0.55 : 1,
                     }}
                   >
                     {showBadge && (
@@ -339,19 +336,11 @@ export default function AppsPage() {
                         padding: '1px 5px', borderRadius: 99, minWidth: 16, textAlign: 'center',
                       }}>{badge}</span>
                     )}
-                    {m.ai && !soon && (
+                    {m.ai && (
                       <span style={{
                         position: 'absolute', top: 6, right: 6,
                         fontSize: 9, fontWeight: 700, color: '#8b5cf6', fontFamily: 'var(--font-system)',
                       }}>AI</span>
-                    )}
-                    {soon && (
-                      <span style={{
-                        position: 'absolute', top: 6, right: 6,
-                        fontSize: 8, fontWeight: 700, color: '#f59e0b',
-                        fontFamily: 'var(--font-system)', letterSpacing: '0.06em',
-                        background: 'rgba(245,158,11,0.12)', padding: '1px 5px', borderRadius: 4,
-                      }}>SOON</span>
                     )}
                     <div style={{
                       width: 36, height: 36, borderRadius: 10,

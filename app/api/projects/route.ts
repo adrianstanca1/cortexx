@@ -60,9 +60,6 @@ async function POST_impl(req: NextRequest, userId: string, role: string | null, 
     if (!body.name?.trim()) {
       return NextResponse.json({ error: 'Project name is required' }, { status: 400 })
     }
-    if (!body.postcode?.trim()) {
-      return NextResponse.json({ error: 'Postcode is required' }, { status: 400 })
-    }
     if (body.startDate && body.endDate && new Date(body.endDate) < new Date(body.startDate)) {
       return NextResponse.json({ error: 'End date must be on or after start date' }, { status: 400 })
     }

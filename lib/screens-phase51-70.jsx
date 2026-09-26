@@ -47,7 +47,7 @@ function BankScreen({ accent }) {
           Connect Bank Account
         </button>
         <div style={{ marginTop: 16, fontFamily: SF, fontSize: 13, color: T.t3 }}>
-          Or <span style={{ color: accent, cursor: 'pointer' }} onClick={() => toast('Manual upload coming soon', 'info')}>upload statements manually</span>
+          Or <span style={{ color: accent, cursor: 'pointer' }} onClick={() => { window.location.href = '/bank'; }}>upload a CSV statement</span>
         </div>
       </div>
     ) : (
