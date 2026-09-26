@@ -245,9 +245,14 @@ export default function TimesheetsPage() {
               {pendingMembers > 0 && <span style={{ color: '#f59e0b', marginLeft: 6 }}>· {pendingMembers} pending</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Add entry" disabled={team.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: team.length === 0 ? 'rgba(139,92,246,0.3)' : '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: team.length === 0 ? 'not-allowed' : 'pointer' }}>
-            <IcPlus size={18} color="#fff" />
-          </button>
+          <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
+            <Link href="/timesheets/reconcile" style={{ padding: '9px 11px', borderRadius: 9, border: '0.5px solid rgba(16,185,129,0.35)', background: 'rgba(16,185,129,0.10)', color: '#34d399', fontFamily: SF, fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>
+              Reconcile
+            </Link>
+            <button onClick={() => setShowAdd(true)} aria-label="Add entry" disabled={team.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: team.length === 0 ? 'rgba(139,92,246,0.3)' : '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: team.length === 0 ? 'not-allowed' : 'pointer' }}>
+              <IcPlus size={18} color="#fff" />
+            </button>
+          </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
