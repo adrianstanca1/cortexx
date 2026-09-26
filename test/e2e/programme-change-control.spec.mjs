@@ -1,4 +1,5 @@
 import { test, expect } from '@playwright/test'
+import { signIn as signInWithPassword } from './helpers/auth.mjs'
 
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
 const users = {
@@ -8,11 +9,7 @@ const users = {
   operative: process.env.E2E_OPERATIVE_EMAIL || 'operative@cortexbuildpro.com',
 }
 async function signIn(page, email) {
-  await page.goto('/login')
-  await page.getByLabel('Email').fill(email)
-  await page.getByLabel('Password').fill(password)
-  await page.getByRole('button', { name: /^sign in$/i }).click()
-  await page.waitForURL(url => !url.pathname.includes('/login'), { timeout: 30_000 })
+  return signInWithPassword(page, email, password)
 }
 async function api(page, path, init = {}) {
   return page.evaluate(async ({ path, init }) => {

@@ -28,7 +28,11 @@ Compared remote branch patch history with main and checked current feature histo
 
 ## Validation
 
-After PR #241 merged to main, the review branch was rebuilt cleanly on that base. Clean install reports 0 vulnerabilities; 489 unit tests pass; targeted Xero tests pass including the four-timezone regression; repository-wide lint, Prisma generation and the full Next.js production build pass. Application integrity and schema-drift commands completed; the app audit reports non-blocking review findings and must not be represented as a clean accessibility audit. Browser CI and deployment remain the final gates.
+After PR #241 merged to main, the review branch was rebuilt cleanly on that base. Clean install reports 0 vulnerabilities; 491 unit tests pass; targeted Xero tests pass including the four-timezone regression; repository-wide lint, Prisma generation and the full Next.js production build pass. Application integrity and schema-drift commands completed; the app audit reports non-blocking review findings and must not be represented as a clean accessibility audit.
+
+The original browser failures were traced beyond cold compilation to a fresh-session service-worker race: `public/sw.js` claims first-time clients on activation while `SWRegister` previously reloaded on every `controllerchange`. That could abort the first authenticated navigation even when authentication had succeeded. The registrar now reloads only after the user explicitly accepts a waiting update. Browser setup also authenticates through Auth.js directly for non-login journeys, while the invalid-credential/UI-login path still exercises the real form. CI now launches the supported standalone Next runtime with the same static/public layout used by the production container.
+
+A disposable PostgreSQL database reproduced the formerly failing browser area after the fix: desktop 22 passed / 1 expected skip and mobile 19 passed / 4 expected skips, with zero failures and zero retries. GitHub CI and deployment remain the final gates.
 
 Production checkout had unrelated dependency edits in progress. This review uses a separate worktree and does not overwrite or commit those edits.
 
