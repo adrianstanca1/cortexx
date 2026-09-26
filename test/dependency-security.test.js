@@ -1,0 +1,28 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+
+const root = path.resolve(__dirname, '..')
+const readJson = file => JSON.parse(fs.readFileSync(path.join(root, file), 'utf8'))
+
+test('security overrides pin patched uuid in root and iOS tooling', () => {
+  const rootPkg = readJson('package.json')
+  const rootLock = readJson('package-lock.json')
+  const iosPkg = readJson('ios/package.json')
+  const iosLock = readJson('ios/package-lock.json')
+
+  assert.equal(rootPkg.overrides?.uuid, '11.1.1')
+  assert.equal(iosPkg.overrides?.uuid, '11.1.1')
+  assert.equal(rootLock.packages?.['node_modules/uuid']?.version, '11.1.1')
+  assert.equal(iosLock.packages?.['node_modules/uuid']?.version, '11.1.1')
+})
+
+test('Expo Metro resolves patched image-size without changing Metro version', () => {
+  const expoPkg = readJson('expo/package.json')
+  const expoLock = readJson('expo/package-lock.json')
+
+  assert.equal(expoPkg.overrides?.['image-size'], '2.0.3')
+  assert.equal(expoLock.packages?.['node_modules/image-size']?.version, '2.0.3')
+  assert.equal(expoLock.packages?.['node_modules/metro']?.version, '0.84.4')
+})
