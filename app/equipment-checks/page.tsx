@@ -268,7 +268,7 @@ export default function EquipmentChecksPage() {
               <span>{checks.length} checks · {checks.filter(c => c.status === 'failed').length} failed</span>
               {(() => {
                 const overdueCount = checks.filter(
-                  c => c.nextDueAt && c.status !== 'passed' && new Date(c.nextDueAt) < new Date()
+                  c => c.nextDueAt && new Date(c.nextDueAt) < new Date()
                 ).length
                 if (overdueCount === 0) return null
                 return (
@@ -360,7 +360,7 @@ export default function EquipmentChecksPage() {
           const total = c.checklistItems.length
           const done = c.checklistItems.filter(it => it.result).length
           const failed = c.checklistItems.filter(it => it.result === 'fail').length
-          const overdue = c.nextDueAt && c.status !== 'passed' && new Date(c.nextDueAt) < new Date()
+          const overdue = Boolean(c.nextDueAt && new Date(c.nextDueAt) < new Date())
           const dueLabel = c.nextDueAt
             ? `Due ${new Date(c.nextDueAt).toLocaleDateString()}${c.frequency && c.frequency !== 'none' ? ` (${c.frequency})` : ''}`
             : c.frequency && c.frequency !== 'none'

@@ -1,9 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { canWrite } from '@/lib/rbac'
+import { programmeProjectWhere } from '@/lib/programme-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,6 +22,21 @@ const ALLOWED_TYPE = new Set([
 const ALLOWED_STATUS = new Set(['draft', 'in_progress', 'passed', 'failed'])
 export const ALLOWED_FREQUENCY = new Set(['none', 'daily', 'weekly', 'monthly'])
 const ITEM_RESULT = new Set(['pass', 'fail', 'na'])
+
+type EquipmentCheckActor = Parameters<typeof programmeProjectWhere>[1]
+
+export function equipmentCheckScope(auth: EquipmentCheckActor): Prisma.EquipmentCheckWhereInput {
+  const role = auth.user?.role || ''
+  if (!['project_manager', 'foreman', 'operative'].includes(role)) return {}
+  const email = auth.user?.email?.trim() || ''
+  return email
+    ? { project: { assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } } }
+    : { id: '__no_equipment_check_access__' }
+}
+
+function isFieldRole(auth: EquipmentCheckActor) {
+  return ['project_manager', 'foreman', 'operative'].includes(auth.user?.role || '')
+}
 
 export function computeNextDueAt(from: Date | string | number | null | undefined, frequency: string): Date | null {
   if (!from || frequency === 'none' || !ALLOWED_FREQUENCY.has(frequency)) return null
@@ -71,7 +89,7 @@ function parseDate(v: unknown): Date | null | undefined {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   try {
     const { searchParams } = new URL(req.url)
@@ -80,7 +98,8 @@ export async function GET(req: NextRequest) {
     const type = searchParams.get('type')
     const status = searchParams.get('status')
 
-    const where = {
+    const where: Prisma.EquipmentCheckWhereInput = {
+      ...equipmentCheckScope(auth.session),
       ...(projectId && { projectId }),
       ...(equipmentId && { equipmentId }),
       ...(type && ALLOWED_TYPE.has(type) && { type }),
@@ -107,9 +126,10 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!canWrite(auth.role || '')) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
+  const __limited = await enforceRateLimit(req, 'write', auth.userId || '')
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -124,10 +144,16 @@ export async function POST(req: NextRequest) {
       if (checklistItems.length === 0) return NextResponse.json({ error: 'Checklist cannot be empty' }, { status: 400 })
     }
 
-    const projectId = body.projectId || null
+    const projectId = body.projectId ? String(body.projectId).trim() : null
+    if (!projectId && isFieldRole(auth.session)) {
+      return NextResponse.json({ error: 'Project is required for field roles' }, { status: 400 })
+    }
     if (projectId) {
-      const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } })
-      if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
+      const project = await prisma.project.findFirst({
+        where: programmeProjectWhere(projectId, auth.session),
+        select: { id: true },
+      })
+      if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
     }
     const equipmentId = body.equipmentId || null
     if (equipmentId) {
@@ -138,7 +164,7 @@ export async function POST(req: NextRequest) {
     const frequency = typeof body.frequency === 'string' && ALLOWED_FREQUENCY.has(body.frequency) ? body.frequency : 'none'
     const now = new Date()
     const isTerminal = status === 'passed' || status === 'failed'
-    const nextDueAt = computeNextDueAt(isTerminal ? now : now, frequency)
+    const nextDueAt = computeNextDueAt(now, frequency)
 
     const check = await prisma.equipmentCheck.create({
       data: {
@@ -147,7 +173,7 @@ export async function POST(req: NextRequest) {
         status,
         checklistItems: checklistItems as unknown as object,
         overallResult: isTerminal ? (status === 'passed' ? 'pass' : 'fail') : null,
-        conductedBy: body.conductedBy ? String(body.conductedBy).slice(0, 120) : actorName(auth),
+        conductedBy: body.conductedBy ? String(body.conductedBy).slice(0, 120) : actorName(auth.session),
         completedAt: isTerminal ? now : null,
         lastCompletedAt: isTerminal ? now : null,
         frequency,
@@ -166,7 +192,7 @@ export async function POST(req: NextRequest) {
       prisma.activity.create({
         data: {
           projectId,
-          actorName: actorName(auth),
+          actorName: actorName(auth.session),
           actorType: 'human',
           action: `created ${type.replace(/_/g, ' ')} equipment check: ${check.title}`,
           iconType: 'check',

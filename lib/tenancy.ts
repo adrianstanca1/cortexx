@@ -77,9 +77,10 @@ export function getCurrentOrg(): OrgRequestContext | null {
 }
 
 // ─── Owned-model registry ────────────────────────────────────────────
-// Mirror of the models that have an organizationId column. Kept here
-// instead of introspecting Prisma metadata so it's deterministic and
-// reviewable.
+// Business models with an organizationId column that must be automatically
+// tenant-scoped. Tenant-management/audit models (UserOrganization,
+// OrganizationInvite, AuditEvent) are intentionally handled explicitly by
+// their routes because they establish or inspect organization context.
 const OWNED_MODELS = new Set<string>([
   'Project', 'Task', 'TeamMember', 'Assignment', 'Invoice', 'TimeEntry',
   'Activity', 'Comment', 'Document', 'ExpenseReceipt', 'Snag', 'Certification', 'Valuation', 'ValuationCertificate', 'ValuationPayment', 'ValuationVariation', 'Rfi',
@@ -87,7 +88,7 @@ const OWNED_MODELS = new Set<string>([
   'SiteCheckIn', 'MileageEntry', 'CostCode', 'ProjectCostEntry', 'CostItem', 'Subcontractor', 'Equipment',
   'Material', 'PurchaseOrder', 'GoodsReceipt', 'ProcurementRequisition', 'ProcurementRfq', 'SupplierQuote', 'SubInvoice', 'Drawing', 'DrawingRevision', 'DrawingDistribution', 'DrawingDistributionRecipient',
   'ProgrammeActivity', 'ProgrammeResourceAllocation', 'ProgrammeDependency', 'ProgrammeBaselineRevision', 'ProgrammeDelayEvent', 'Milestone', 'Permit', 'Rams', 'Tender', 'Inspection', 'FieldConstraint', 'FieldHandover', 'FieldProductionLog', 'Meeting', 'Risk',
-  'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident', 'SafetyCorrectiveAction', 'TrainingCourse',
+  'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident', 'SafetyCorrectiveAction', 'TrainingCourse', 'EquipmentCheck',
   // ── Legacy-parity v1.1 modules
   'PayrollRun', 'LeaveRequest', 'BankTransaction', 'BankAllocation', 'CarbonEntry',
   'WasteEntry', 'Appraisal', 'DocumentTemplate', 'FormDefinition',
