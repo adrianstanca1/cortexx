@@ -8,11 +8,12 @@ const resources = require('../lib/programme-resources')
 class NextResponse { static json(body, options = {}) { return { body, status: options.status || 200 } } }
 
 function loadRoute({ role = 'project_manager', prisma }) {
-  const auth = { user: { id: 'u1', email: 'pm@example.com', role } }
+  const session = { user: { id: 'u1', email: 'pm@example.com', role } }
+  const auth = { session, userId: 'u1', orgId: 'org-a', role: 'owner' }
   const mocks = {
     'next/server': { NextResponse },
     '@/lib/db': { prisma },
-    '@/lib/requireAuth': { requireAuth: async () => auth, actorName: () => 'Planner' },
+    '@/lib/requireAuth': { requireOrg: async () => auth, actorName: () => 'Planner' },
     '@/lib/errors': { reportError: () => {} },
     '@/lib/rateLimit': { enforceRateLimit: async () => null },
     '@/lib/audit': { auditLog: () => {}, requestMeta: () => ({}) },
@@ -27,7 +28,7 @@ function loadRoute({ role = 'project_manager', prisma }) {
 }
 
 function fixture() {
-  const state = { created: null }
+  const state = { created: null, equipmentWhere: null, materialWhere: null, allocationWhere: null, assignmentWhere: null }
   const prisma = {
     project: { findFirst: async () => ({ id: 'p1', name: 'Project' }) },
     programmeActivity: {
@@ -36,13 +37,13 @@ function fixture() {
     },
     programmeResourceAllocation: {
       findFirst: async () => null,
-      findMany: async () => [],
+      findMany: async args => { state.allocationWhere = args.where; return [] },
       create: async args => { state.created = args.data; return { id: 'r1', ...args.data, activity: { id: 'a1', title: 'Cladding', plannedStart: new Date(), plannedEnd: new Date() }, teamMember: args.data.teamMemberId ? { id: args.data.teamMemberId, name: 'Alex' } : null, equipment: null, material: null } },
     },
     teamMember: { findFirst: async args => args.where.id === 'm1' ? { id: 'm1', name: 'Alex' } : null },
-    equipment: { findFirst: async () => null, findMany: async () => [] },
-    material: { findFirst: async () => null, findMany: async () => [] },
-    assignment: { findMany: async () => [] },
+    equipment: { findFirst: async () => null, findMany: async args => { state.equipmentWhere = args.where; return [] } },
+    material: { findFirst: async () => null, findMany: async args => { state.materialWhere = args.where; return [] } },
+    assignment: { findMany: async args => { state.assignmentWhere = args.where; return [] } },
     activity: { create: async () => ({ id: 'log1' }) },
   }
   return { prisma, state }
@@ -76,6 +77,7 @@ test('named labour allocation is normalized to one person and project activity',
   assert.equal(state.created.hoursPerDay, 7.5)
   assert.equal(state.created.unit, 'people')
   assert.equal(state.created.projectId, 'p1')
+  assert.equal(state.created.organizationId, 'org-a')
 })
 
 test('generic resource demand requires a human-readable label', async () => {
@@ -84,4 +86,34 @@ test('generic resource demand requires a human-readable label', async () => {
   const res = await POST(request({ activityId: 'a1', resourceType: 'equipment', quantity: 2 }), params)
   assert.equal(res.status, 400)
   assert.match(res.body.error, /needs a label/)
+})
+
+
+test('resource catalogue and allocation ledger are explicitly tenant scoped', async () => {
+  const { prisma, state } = fixture()
+  const { GET } = loadRoute({ prisma })
+  const res = await GET(request({}), params)
+  assert.equal(res.status, 200)
+  assert.equal(state.allocationWhere.organizationId, 'org-a')
+  assert.equal(state.assignmentWhere.organizationId, 'org-a')
+  assert.equal(state.equipmentWhere.organizationId, 'org-a')
+  assert.equal(state.materialWhere.organizationId, 'org-a')
+})
+
+test('named equipment lookup is explicitly restricted to active organization', async () => {
+  const { prisma } = fixture()
+  let lookupWhere
+  prisma.equipment.findFirst = async args => { lookupWhere = args.where; return null }
+  const { POST } = loadRoute({ prisma })
+  const res = await POST(request({ activityId: 'a1', resourceType: 'equipment', equipmentId: 'foreign-equipment', quantity: 1 }), params)
+  assert.equal(res.status, 400)
+  assert.equal(lookupWhere.organizationId, 'org-a')
+})
+
+test('resource mutation routes require organization context and explicit organization filters', () => {
+  const source = fs.readFileSync('app/api/projects/[id]/programme/resources/[resourceId]/route.ts', 'utf8')
+  assert.match(source, /requireOrg/)
+  assert.match(source, /organizationId: auth\.orgId/)
+  assert.match(source, /programmeResourceAllocation\.update\(\{ where: \{ id: resourceId, organizationId: auth\.orgId \}/)
+  assert.match(source, /deleteMany\(\{ where: \{ id: resourceId, projectId: id, organizationId: auth\.orgId \}/)
 })
