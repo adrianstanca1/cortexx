@@ -19,10 +19,20 @@ test('Xcode Cloud uses the iOS-local locked Capacitor toolchain', () => {
   assert.doesNotMatch(script, /node_modules\/\.bin\/cap/)
 })
 
-test('Xcode Cloud installs Pods only after syncing the ios project', () => {
+test('Xcode Cloud bootstraps Node and CocoaPods before Capacitor sync', () => {
+  const npmGuardAt = script.indexOf('command -v npm')
+  const podGuardAt = script.indexOf('command -v pod')
+  const syncAt = script.indexOf('npx cap sync ios')
+  assert.ok(npmGuardAt > -1 && npmGuardAt < syncAt)
+  assert.ok(podGuardAt > -1 && podGuardAt < syncAt)
+  assert.match(script, /brew install node/)
+  assert.match(script, /brew install cocoapods/)
+})
+
+test('Xcode Cloud runs the final Pod install after syncing the ios project', () => {
   const syncAt = script.indexOf('npx cap sync ios')
   const appAt = script.indexOf('cd "$APP_DIR"')
-  const podAt = script.indexOf('pod install --no-repo-update')
+  const podAt = script.lastIndexOf('pod install --no-repo-update')
   assert.ok(syncAt > -1 && appAt > syncAt && podAt > appAt)
 })
 
