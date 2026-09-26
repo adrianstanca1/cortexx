@@ -27,6 +27,7 @@ model User {
   organizations          UserOrganization[]
   notificationPreference NotificationPreference?
   projectBookmarks       ProjectBookmark[]
+  aiHistory              AiHistory[]
 }
 
 model Account {
@@ -1056,7 +1057,7 @@ model ProcurementRequisition {
   @@index([costCodeId])
   @@index([neededBy])
   @@index([organizationId])
-  @@index([organizationId, projectId, status, neededBy])
+  @@index([organizationId, projectId, status, neededBy], map: "idx_innov_requisition_scope")
 }
 
 model ProcurementRfq {
@@ -1271,7 +1272,7 @@ model ProgrammeActivity {
   @@index([responsibleMemberId, plannedStart])
   @@index([status, plannedEnd])
   @@index([organizationId])
-  @@index([organizationId, projectId, status, plannedEnd])
+  @@index([organizationId, projectId, status, plannedEnd], map: "idx_innov_programme_scope")
 }
 
 model ProgrammeResourceAllocation {
@@ -1544,7 +1545,7 @@ model FieldConstraint {
   @@index([priority, status])
   @@index([dueDate])
   @@index([organizationId])
-  @@index([organizationId, projectId, status, priority, dueDate])
+  @@index([organizationId, projectId, status, priority, dueDate], map: "idx_innov_constraint_scope")
 }
 
 model FieldHandover {
@@ -1958,6 +1959,7 @@ model Organization {
   improvements                 Improvement[]
   kaizenCards                  KaizenCard[]
   processDocs                  ProcessDoc[]
+  aiHistory                    AiHistory[]
   siteReviews                  SiteReview[]
   apprenticeships              Apprenticeship[]
   insuranceClaims              InsuranceClaim[]
@@ -2595,25 +2597,17 @@ model ProcessedStripeEvent {
   createdAt DateTime @default(now())
 }
 
-/// Root tenant entity. The raw-SQL `workspaces` table is the source of truth
-/// for the Express API; this Prisma model gives the Next.js admin a typed
-/// client for the same table. See docs/DATA_MODEL_DRIFT.md.
-model Workspace {
-  id        String   @id @default(uuid()) @db.Uuid
-  name      String
-  company   String?
-  plan      String   @default("free")
-  createdAt DateTime @default(now())
-}
-
-/// AI conversation history. The raw-SQL `ai_history` table is the source of
-/// truth; this Prisma model gives the Next.js admin typed access.
+/// Per-user AI conversation history in the active organization.
 model AiHistory {
-  id          String   @id @default(uuid()) @db.Uuid
-  workspaceId String?  @db.Uuid
-  userMsg     String?
-  aiReply     String?
-  createdAt   DateTime @default(now())
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  userId         String
+  user           User         @relation(fields: [userId], references: [id], onDelete: Cascade)
+  userMsg        String?
+  aiReply        String?
+  createdAt      DateTime     @default(now())
 
-  @@index([workspaceId, createdAt])
+  @@index([organizationId, userId, createdAt])
+  @@index([userId, createdAt])
 }

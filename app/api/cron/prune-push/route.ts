@@ -1,17 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { requireCronAuth } from '@/lib/cron'
-import { legacyPool } from '@/lib/legacyDb'
+import { prisma } from '@/lib/db'
+import { bypassTenancy } from '@/lib/tenancy'
+import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
-/**
- * Hourly job: drop push subscriptions older than 90 days.
- *
- * The legacy push_subscriptions table has no last_used column, so we use
- * created_at as the staleness signal. Live delivery already prunes stale
- * 410/404 endpoints when sendPush runs; this is a safety net for endpoints
- * that simply went quiet without an error response.
- */
 export async function POST(req: NextRequest) {
   const denied = requireCronAuth(req)
   if (denied) return denied
@@ -19,12 +13,17 @@ export async function POST(req: NextRequest) {
   const cutoff = new Date()
   cutoff.setDate(cutoff.getDate() - 90)
 
-  const result = await legacyPool.query(
-    'DELETE FROM push_subscriptions WHERE created_at < $1',
-    [cutoff],
-  )
-
-  return NextResponse.json({ pruned: result.rowCount ?? 0, cutoff: cutoff.toISOString() })
+  try {
+    const result = await bypassTenancy(() =>
+      prisma.pushSubscription.deleteMany({
+        where: { lastUsed: { lt: cutoff } },
+      }),
+    )
+    return NextResponse.json({ pruned: result.count, cutoff: cutoff.toISOString() })
+  } catch (error) {
+    reportError(error, { context: 'cron.prune-push' })
+    return NextResponse.json({ error: 'Push subscription prune failed' }, { status: 500 })
+  }
 }
 
 export async function GET() {

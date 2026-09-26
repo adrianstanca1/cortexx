@@ -47,15 +47,15 @@ test('process library list excludes long document bodies and loads detail on dem
 
 test('hot innovation paths have tenant-aware composite indexes', () => {
   for (const index of [
-    '@@index([organizationId, projectId, createdAt])',
-    '@@index([organizationId, publishedAt, createdAt])',
-    '@@index([organizationId, projectId, status, priority, dueDate])',
-    '@@index([organizationId, projectId, date, createdAt])',
-    '@@index([organizationId, projectId, status, plannedEnd])',
-    '@@index([organizationId, projectId, status, neededBy])',
-    '@@index([organizationId, projectId, status, severity])',
+    /@@index\(\[organizationId, projectId, createdAt\]\)/,
+    /@@index\(\[organizationId, publishedAt, createdAt\]\)/,
+    /@@index\(\[organizationId, projectId, status, priority, dueDate\](?:, map: "[^"]+")?\)/,
+    /@@index\(\[organizationId, projectId, date, createdAt\]\)/,
+    /@@index\(\[organizationId, projectId, status, plannedEnd\](?:, map: "[^"]+")?\)/,
+    /@@index\(\[organizationId, projectId, status, neededBy\](?:, map: "[^"]+")?\)/,
+    /@@index\(\[organizationId, projectId, status, severity\]\)/,
   ]) {
-    assert.ok(schema.includes(index), 'missing index: ' + index)
+    assert.match(schema, index)
   }
 })
 

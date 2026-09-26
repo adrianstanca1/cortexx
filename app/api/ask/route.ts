@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { rateLimit } from '@/lib/rateLimit'
 import {
@@ -22,7 +22,7 @@ const RATE_LIMIT_MAX = 20
 const RATE_LIMIT_WINDOW_MS = 60_000
 
 export async function GET() {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   return NextResponse.json({
     model: LLM_CONFIG.model,
@@ -31,12 +31,14 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!auth.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!auth.orgId) return NextResponse.json({ error: 'No organization', code: 'NO_ORG' }, { status: 403 })
+  const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
 
-  const userId = (auth.user as { id?: string } | undefined)?.id || auth.user?.email || 'anon'
+  const userId = auth.userId
   const rl = await rateLimit(`ask:${userId}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)
   if (!rl.ok) {
     return NextResponse.json(
@@ -120,6 +122,18 @@ export async function POST(req: NextRequest) {
     ]
 
     const response = await chat(messages)
+
+    await prisma.aiHistory.create({
+      data: {
+        organizationId: auth.orgId,
+        userId: auth.userId,
+        userMsg: message,
+        aiReply: response.content,
+      },
+    }).catch(err => {
+      console.error('[ask] aiHistory.create failed:', err)
+    })
+
     return NextResponse.json({
       content: response.content,
       model: response.model,
