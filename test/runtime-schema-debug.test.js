@@ -1,0 +1,70 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+
+const root = path.resolve(__dirname, '..')
+const read = p => fs.readFileSync(path.join(root, p), 'utf8')
+
+const schema = read('prisma/schema.prisma')
+const ask = read('app/api/ask/route.ts')
+const history = read('app/api/ai/history/route.ts')
+const overdue = read('app/api/cron/overdue-invoices/route.ts')
+const prune = read('app/api/cron/prune-push/route.ts')
+const tenancy = read('lib/tenancy.ts')
+const migration = read('prisma/migrations/20260926093000_repair_modern_runtime_schema/migration.sql')
+
+test('AI history is a modern organization + user scoped model', () => {
+  const model = schema.match(/model AiHistory \{[\s\S]*?\n\}/)?.[0] || ''
+  assert.match(model, /organizationId\s+String/)
+  assert.match(model, /userId\s+String/)
+  assert.match(model, /Organization\s+@relation/)
+  assert.match(model, /User\s+@relation/)
+  assert.match(model, /@@index\(\[organizationId, userId, createdAt\]\)/)
+  assert.doesNotMatch(schema, /model Workspace \{/)
+  assert.match(tenancy, /'AiHistory'/)
+})
+
+test('Ask Cortex persists successful replies and AI history API is tenant authenticated', () => {
+  assert.match(ask, /requireOrg/)
+  assert.match(ask, /prisma\.aiHistory\.create/)
+  assert.match(ask, /organizationId: auth\.orgId/)
+  assert.match(ask, /userId: auth\.userId/)
+  assert.match(history, /requireOrg/)
+  assert.match(history, /prisma\.aiHistory\.findMany/)
+  assert.match(history, /prisma\.aiHistory\.deleteMany/)
+  assert.match(history, /where: \{ userId: auth\.userId \}/)
+  assert.match(history, /user_msg: row\.userMsg/)
+  assert.match(history, /ai_reply: row\.aiReply/)
+})
+
+test('cron jobs no longer query the retired legacy workspace schema', () => {
+  assert.doesNotMatch(overdue, /legacyPool|FROM invoices|FROM users|workspaces|push_subscriptions/)
+  assert.doesNotMatch(prune, /legacyPool|push_subscriptions|created_at/)
+  assert.match(overdue, /prisma\.invoice\.updateMany/)
+  assert.match(overdue, /prisma\.invoice\.findMany/)
+  assert.match(overdue, /prisma\.userOrganization\.findMany/)
+  assert.match(overdue, /sendPush\(/)
+  assert.match(overdue, /category: 'invoices'/)
+  assert.match(overdue, /status: \{ in: \['sent', 'due'\] \}/)
+  assert.match(prune, /prisma\.pushSubscription\.deleteMany/)
+  assert.match(prune, /lastUsed: \{ lt: cutoff \}/)
+  assert.equal(fs.existsSync(path.join(root, 'lib/legacyDb.ts')), false)
+})
+
+test('repair migration is additive and fixes the known Prisma drift', () => {
+  assert.match(migration, /CREATE TABLE "AiHistory"/)
+  assert.match(migration, /ALTER COLUMN "reconciled" SET DEFAULT false/)
+  assert.match(migration, /CREATE INDEX "Permit_type_idx"/)
+  assert.match(migration, /TrainingCourse_organizationId_fkey/)
+  assert.match(migration, /RENAME TO "idx_innov_constraint_scope"/)
+  assert.match(migration, /RENAME TO "idx_innov_programme_scope"/)
+  assert.match(migration, /RENAME TO "idx_innov_requisition_scope"/)
+  assert.doesNotMatch(migration, /DROP TABLE|DROP COLUMN|TRUNCATE|DELETE FROM/)
+})
+
+test('long innovation indexes have stable explicit Prisma map names', () => {
+  assert.match(schema, /@@index\(\[organizationId, projectId, status, priority, dueDate\], map: "idx_innov_constraint_scope"\)/)
+  assert.match(schema, /@@index\(\[organizationId, projectId, status, plannedEnd\], map: "idx_innov_programme_scope"\)/)
+  assert.match(schema, /@@index\(\[organizationId, projectId, status, neededBy\], map: "idx_innov_requisition_scope"\)/)
+})
