@@ -29,6 +29,8 @@ interface Inspection {
   witnessedBy: string | null
   witnessedAt: string | null
   evidence?: { photoUrls?: string[]; signatureUrl?: string | null; signedBy?: string | null } | null
+  closeoutVerifiedBy: string | null
+  closeoutVerifiedAt: string | null
   notes: string | null
   createdAt: string
   updatedAt: string
@@ -271,6 +273,7 @@ export default function InspectionsPage() {
                   {i.pointType !== 'inspection' && <span style={{ background: (i.releaseStatus === 'released' ? '#10b981' : i.releaseStatus === 'rejected' ? '#ef4444' : '#f59e0b') + '22', color: i.releaseStatus === 'released' ? '#10b981' : i.releaseStatus === 'rejected' ? '#ef4444' : '#f59e0b', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{i.releaseStatus}</span>}
                   <span style={{ background: STATUS_COLOR[i.status] + '33', color: STATUS_COLOR[i.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{STATUS_LABEL[i.status]}</span>
                   {failed > 0 && i.status !== 'passed' && <span style={{ color: '#ef4444', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{failed} FAIL</span>}
+                  {i.closeoutVerifiedAt && <span style={{ color: '#10b981', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>CLOSEOUT VERIFIED</span>}
                 </div>
                 <div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>{i.title}</div>
                 <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>
@@ -294,9 +297,13 @@ export default function InspectionsPage() {
                     ))}
                   </div>
                   <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap', alignItems: 'center' }}>
-                    {i.pointType !== 'inspection' && i.releaseStatus !== 'released' && (
+                    {(i.status === 'failed' || (i.pointType !== 'inspection' && i.releaseStatus !== 'released')) && (
                       <label style={{ ...pillBtn(evidenceReady ? '#064e3b' : '#1d4ed8', evidenceReady ? '#86efac' : '#bfdbfe'), cursor: evidenceBusy === i.id ? 'wait' : 'pointer' }}>
-                        {evidenceBusy === i.id ? 'Uploading evidence…' : evidenceReady ? `✓ Evidence attached (${i.evidence?.photoUrls?.length || 1})` : 'Add release evidence'}
+                        {evidenceBusy === i.id
+                          ? 'Uploading evidence…'
+                          : evidenceReady
+                            ? `✓ ${i.status === 'failed' ? 'Verification' : 'Release'} evidence (${i.evidence?.photoUrls?.length || 1})`
+                            : i.status === 'failed' ? 'Add verification evidence' : 'Add release evidence'}
                         <input type="file" accept="image/*" disabled={evidenceBusy === i.id} onChange={e => { const file = e.target.files?.[0]; if (file) void uploadReleaseEvidence(i, file); e.currentTarget.value = '' }} style={{ display: 'none' }} />
                       </label>
                     )}
@@ -321,10 +328,17 @@ export default function InspectionsPage() {
                     {(i.status === 'passed' || i.status === 'failed') && (
                       <button type="button" onClick={() => setStatus(i, 'in_progress')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Reopen</button>
                     )}
-                    <button type="button" onClick={() => setConfirmDelete(i.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
-                      <IcTrash size={11} color="#fca5a5" /> Delete
-                    </button>
+                    {i.status !== 'passed' && i.status !== 'failed' && (
+                      <button type="button" onClick={() => setConfirmDelete(i.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
+                        <IcTrash size={11} color="#fca5a5" /> Delete
+                      </button>
+                    )}
                   </div>
+                  {i.closeoutVerifiedAt && (
+                    <div style={{ marginTop: 8, fontFamily: SF, fontSize: 10.5, color: '#86efac' }}>
+                      Failed-item closeout verified by {i.closeoutVerifiedBy || 'authorised user'} · {new Date(i.closeoutVerifiedAt).toLocaleString('en-GB')}
+                    </div>
+                  )}
                 </>
               )}
 
