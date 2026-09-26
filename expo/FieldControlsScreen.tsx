@@ -8,6 +8,7 @@ import { Colors } from './theme';
 import { apiGet, apiPatch, getProjects, postCollection, putCollection, uploadNativeFile } from './api';
 
 type Project = { id: string; name: string };
+type ProgrammeActivity = { id: string; code?: string | null; title: string; status: string; progress: number; location?: string | null };
 type Mode = 'constraints' | 'handover' | 'output' | 'qa';
 type Constraint = {
   id: string; title: string; category: string; priority: string; status: string;
@@ -21,6 +22,7 @@ type Handover = {
 type Production = {
   id: string; date: string; area: string; elevation?: string | null; activity: string; unit: string;
   plannedQty: number; installedQty: number; crewSize: number; labourHours: number; notes?: string | null;
+  programmeActivityId?: string | null; programmeActivity?: ProgrammeActivity | null;
 };
 type Inspection = {
   id: string; title: string; pointType: 'inspection' | 'hold' | 'witness'; status: string; releaseStatus: string;
@@ -42,6 +44,7 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
   const [constraints, setConstraints] = useState<Constraint[]>([]);
   const [handovers, setHandovers] = useState<Handover[]>([]);
   const [production, setProduction] = useState<Production[]>([]);
+  const [programmeActivities, setProgrammeActivities] = useState<ProgrammeActivity[]>([]);
   const [qa, setQa] = useState<Inspection[]>([]);
   const [summary, setSummary] = useState<any>(null);
   const [loading, setLoading] = useState(true);
@@ -51,7 +54,7 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
 
   const [constraintForm, setConstraintForm] = useState({ title: '', category: 'access', priority: 'medium', location: '', detail: '' });
   const [handoverForm, setHandoverForm] = useState({ shiftType: 'day', incomingBy: '', summary: '', completedWork: '', nextShiftPlan: '', openItems: '' });
-  const [outputForm, setOutputForm] = useState({ area: '', elevation: '', activity: 'Cladding installation', unit: 'm2', plannedQty: '', installedQty: '', crewSize: '', labourHours: '', notes: '' });
+  const [outputForm, setOutputForm] = useState({ area: '', elevation: '', activity: 'Cladding installation', programmeActivityId: '', unit: 'm2', plannedQty: '', installedQty: '', crewSize: '', labourHours: '', notes: '' });
 
   const load = async (preferredProject?: string) => {
     setLoading(true);
@@ -62,15 +65,17 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
       setProjectId(nextProject);
       if (!nextProject) return;
       const q = encodeURIComponent(nextProject);
-      const [c, h, p, i] = await Promise.all([
+      const [c, h, p, i, programme] = await Promise.all([
         apiGet(`/api/field-constraints?projectId=${q}`),
         apiGet(`/api/field-handovers?projectId=${q}&take=30`),
         apiGet(`/api/field-production?projectId=${q}`),
         apiGet(`/api/inspections?projectId=${q}`),
+        apiGet(`/api/projects/${q}/programme`).catch(() => ({ activities: [] })),
       ]);
       setConstraints(c?.constraints || []);
       setHandovers(h?.handovers || []);
       setProduction(p?.logs || []);
+      setProgrammeActivities(programme?.activities || []);
       setSummary(p?.summary || null);
       setQa((i?.inspections || []).filter((row: Inspection) => row.pointType === 'hold' || row.pointType === 'witness'));
     } catch (e: any) {
@@ -154,6 +159,7 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
         area: outputForm.area.trim(),
         elevation: outputForm.elevation.trim() || null,
         activity: outputForm.activity.trim(),
+        programmeActivityId: outputForm.programmeActivityId || null,
         unit: outputForm.unit,
         plannedQty: Number(outputForm.plannedQty || 0),
         installedQty: Number(outputForm.installedQty || 0),
@@ -162,7 +168,7 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
         notes: outputForm.notes.trim() || null,
       });
       setModal(false);
-      setOutputForm({ area: '', elevation: '', activity: 'Cladding installation', unit: 'm2', plannedQty: '', installedQty: '', crewSize: '', labourHours: '', notes: '' });
+      setOutputForm({ area: '', elevation: '', activity: 'Cladding installation', programmeActivityId: '', unit: 'm2', plannedQty: '', installedQty: '', crewSize: '', labourHours: '', notes: '' });
       if (r?._queued) Alert.alert('Queued offline', 'Production log will sync automatically.');
       else await load(projectId);
     } catch (e: any) { Alert.alert('Save failed', e?.message || 'Please retry.'); }
@@ -304,6 +310,7 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
               const tone = pct == null ? Colors.t2 : pct >= 100 ? Colors.green : pct >= 80 ? Colors.amber : Colors.red;
               return <View key={row.id} style={[s.card, { borderLeftColor: tone }]}>
                 <View style={s.between}><Text style={s.title}>{row.activity}</Text><Text style={[s.status, { color: tone }]}>{pct == null ? '—' : `${pct}%`}</Text></View>
+                {row.programmeActivity ? <Text style={s.programmeMeta}>Programme {row.programmeActivity.code ? `${row.programmeActivity.code} · ` : ''}{row.programmeActivity.title} · {row.programmeActivity.progress}%</Text> : null}
                 <Text style={s.meta}>{row.area}{row.elevation ? ` · ${row.elevation}` : ''} · {new Date(row.date).toLocaleDateString('en-GB')}</Text>
                 <Text style={s.body}>{row.installedQty} {row.unit} installed / {row.plannedQty} planned · crew {row.crewSize} · {row.labourHours} labour h</Text>
               </View>;
@@ -374,6 +381,30 @@ export default function FieldControlsScreen({ onLogout }: { onLogout: () => void
                 <>
                   <Label text="Area *"><TextInput style={s.input} value={outputForm.area} onChangeText={v => setOutputForm({ ...outputForm, area: v })} placeholder="Block A" placeholderTextColor={Colors.t3} /></Label>
                   <Label text="Elevation / zone"><TextInput style={s.input} value={outputForm.elevation} onChangeText={v => setOutputForm({ ...outputForm, elevation: v })} placeholder="East / Level 5" placeholderTextColor={Colors.t3} /></Label>
+                  <Label text="Programme activity / work package">
+                    <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={s.programmeChoices}>
+                      <TouchableOpacity onPress={() => setOutputForm({ ...outputForm, programmeActivityId: '' })} style={[s.choice, !outputForm.programmeActivityId && s.choiceOn]}>
+                        <Text style={[s.choiceText, !outputForm.programmeActivityId && s.choiceTextOn]}>Not linked</Text>
+                      </TouchableOpacity>
+                      {programmeActivities.map(activity => {
+                        const selected = outputForm.programmeActivityId === activity.id;
+                        return <TouchableOpacity
+                          key={activity.id}
+                          onPress={() => setOutputForm(current => ({
+                            ...current,
+                            programmeActivityId: activity.id,
+                            activity: activity.title,
+                            area: current.area || activity.location || '',
+                          }))}
+                          style={[s.programmeChoice, selected && s.choiceOn]}
+                        >
+                          <Text numberOfLines={2} style={[s.programmeChoiceText, selected && s.choiceTextOn]}>
+                            {activity.code ? `${activity.code} · ` : ''}{activity.title} · {activity.progress}%
+                          </Text>
+                        </TouchableOpacity>;
+                      })}
+                    </ScrollView>
+                  </Label>
                   <Label text="Activity *"><TextInput style={s.input} value={outputForm.activity} onChangeText={v => setOutputForm({ ...outputForm, activity: v })} placeholder="Cladding installation" placeholderTextColor={Colors.t3} /></Label>
                   <Label text="Unit"><ChipRow values={['m2','m','lm','panels','items','hours']} selected={outputForm.unit} set={v => setOutputForm({ ...outputForm, unit: v })} /></Label>
                   <View style={s.two}>
@@ -430,7 +461,7 @@ const s=StyleSheet.create({
   modeOn:{borderColor:Colors.amber,backgroundColor:Colors.amber+'18'},modeText:{color:Colors.t2,fontSize:10,fontWeight:'800'},modeTextOn:{color:Colors.amber},
   sectionHeader:{flexDirection:'row',alignItems:'center',justifyContent:'space-between',marginBottom:8},sectionTitle:{color:Colors.t2,fontSize:10.5,fontWeight:'900',textTransform:'uppercase',letterSpacing:.7},add:{color:Colors.amber,fontSize:11,fontWeight:'900'},
   card:{backgroundColor:Colors.ink3,borderWidth:1,borderColor:Colors.hair,borderLeftWidth:3,borderRadius:12,padding:12,marginBottom:8},between:{flexDirection:'row',justifyContent:'space-between',gap:10},
-  title:{color:Colors.t1,fontSize:12.5,fontWeight:'800',flex:1},status:{fontSize:9,fontWeight:'900'},meta:{color:Colors.t2,fontSize:10,marginTop:4},body:{color:Colors.t2,fontSize:10.5,lineHeight:15,marginTop:7},
+  title:{color:Colors.t1,fontSize:12.5,fontWeight:'800',flex:1},status:{fontSize:9,fontWeight:'900'},meta:{color:Colors.t2,fontSize:10,marginTop:4},programmeMeta:{color:Colors.purple,fontSize:9.5,fontWeight:'800',marginTop:4},body:{color:Colors.t2,fontSize:10.5,lineHeight:15,marginTop:7},
   actions:{flexDirection:'row',gap:7,marginTop:9},small:{borderWidth:1,borderRadius:8,paddingHorizontal:9,paddingVertical:7},smallText:{fontSize:10,fontWeight:'900'},
   accept:{backgroundColor:Colors.green,borderRadius:9,padding:9,alignItems:'center',marginTop:10},acceptText:{color:Colors.ink,fontSize:10.5,fontWeight:'900'},
   qaActions:{flexDirection:'row',gap:7,marginTop:9},evidenceState:{fontSize:10,fontWeight:'800',marginTop:8},
@@ -441,6 +472,6 @@ const s=StyleSheet.create({
   sheetTitle:{color:Colors.t1,fontSize:18,fontWeight:'900'},close:{color:Colors.t2,fontSize:28},label:{color:Colors.t2,fontSize:10,fontWeight:'800',marginBottom:5},
   input:{backgroundColor:Colors.ink3,borderWidth:1,borderColor:Colors.hair,borderRadius:9,color:Colors.t1,padding:10,fontSize:12},multi:{minHeight:68,textAlignVertical:'top'},
   choice:{borderWidth:1,borderColor:Colors.hair,borderRadius:15,paddingHorizontal:9,paddingVertical:7},choiceOn:{borderColor:Colors.amber,backgroundColor:Colors.amber+'18'},
-  choiceText:{color:Colors.t2,fontSize:10,fontWeight:'800',textTransform:'capitalize'},choiceTextOn:{color:Colors.amber},chipWrap:{flexDirection:'row',flexWrap:'wrap',gap:6},
+  choiceText:{color:Colors.t2,fontSize:10,fontWeight:'800',textTransform:'capitalize'},choiceTextOn:{color:Colors.amber},chipWrap:{flexDirection:'row',flexWrap:'wrap',gap:6},programmeChoices:{gap:6,paddingRight:8},programmeChoice:{maxWidth:210,borderWidth:1,borderColor:Colors.hair,borderRadius:12,paddingHorizontal:9,paddingVertical:7},programmeChoiceText:{color:Colors.t2,fontSize:9.5,fontWeight:'800'},
   two:{flexDirection:'row',gap:8},save:{backgroundColor:Colors.green,borderRadius:11,padding:13,alignItems:'center',marginTop:14},saveText:{color:Colors.ink,fontWeight:'900',fontSize:12},
 });

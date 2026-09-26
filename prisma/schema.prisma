@@ -1258,6 +1258,7 @@ model ProgrammeActivity {
   successors          ProgrammeDependency[]         @relation("ProgrammePredecessor")
   delayEvents         ProgrammeDelayEvent[]
   resources           ProgrammeResourceAllocation[]
+  productionLogs      FieldProductionLog[]
   createdAt           DateTime                      @default(now())
   updatedAt           DateTime                      @updatedAt
   organizationId      String?
@@ -1571,28 +1572,31 @@ model FieldHandover {
 }
 
 model FieldProductionLog {
-  id             String        @id @default(cuid())
-  projectId      String
-  date           DateTime      @default(now())
-  area           String
-  elevation      String?
-  activity       String
-  unit           String        @default("m2")
-  plannedQty     Float         @default(0)
-  installedQty   Float         @default(0)
-  crewSize       Int           @default(0)
-  labourHours    Float         @default(0)
-  notes          String?
-  createdBy      String?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
-  project        Project       @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  id                  String             @id @default(cuid())
+  projectId           String
+  date                DateTime           @default(now())
+  area                String
+  elevation           String?
+  activity            String
+  unit                String             @default("m2")
+  plannedQty          Float              @default(0)
+  installedQty        Float              @default(0)
+  crewSize            Int                @default(0)
+  labourHours         Float              @default(0)
+  notes               String?
+  createdBy           String?
+  programmeActivityId String?
+  programmeActivity   ProgrammeActivity? @relation(fields: [programmeActivityId], references: [id], onDelete: SetNull)
+  createdAt           DateTime           @default(now())
+  updatedAt           DateTime           @updatedAt
+  project             Project            @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  organizationId      String?
+  organization        Organization?      @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([projectId, date])
   @@index([projectId, area])
   @@index([activity])
+  @@index([programmeActivityId, date])
   @@index([organizationId])
 }
 
