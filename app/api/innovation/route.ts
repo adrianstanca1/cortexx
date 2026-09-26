@@ -12,8 +12,6 @@ type ProjectSummary = {
   name: string
   status: string
   progress: number
-  address: string
-  postcode: string
 }
 
 function accessibleProjectWhere(auth: Awaited<ReturnType<typeof requireOrg>>): Prisma.ProjectWhereInput {
@@ -54,7 +52,7 @@ export async function GET(req: NextRequest) {
 
     const projects = await prisma.project.findMany({
       where: projectWhere,
-      select: { id: true, name: true, status: true, progress: true, address: true, postcode: true },
+      select: { id: true, name: true, status: true, progress: true },
       orderBy: { updatedAt: 'desc' },
       take: 100,
     }) as ProjectSummary[]
@@ -74,108 +72,151 @@ export async function GET(req: NextRequest) {
     const horizon = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
     const productionFrom = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
 
+    const projectIdFilter = { in: projectIds.length ? projectIds : ['__no_project__'] }
+    const activeRequisitionStatuses = { notIn: ['converted', 'cancelled', 'rejected'] }
+
     const [
       improvements,
-      kaizenCards,
+      improvementStats,
       constraints,
+      constraintPriorityGroups,
       productionLogs,
+      productionAggregate,
       blockedActivities,
       overdueActivities,
-      requisitions,
-      safetyIncidents,
+      openRequisitions,
+      procurementAtRisk,
+      safetySeverityGroups,
     ] = await Promise.all([
       prisma.improvement.findMany({
         where: improvementWhere,
-        include: {
+        select: {
+          id: true,
+          projectId: true,
+          title: true,
+          raisedBy: true,
+          ownerName: true,
+          area: true,
+          status: true,
+          impact: true,
+          effort: true,
+          metricName: true,
+          metricUnit: true,
+          metricDirection: true,
+          baselineValue: true,
+          targetValue: true,
+          resultValue: true,
+          startedAt: true,
+          completedAt: true,
+          standardProcessId: true,
+          createdAt: true,
           project: { select: { id: true, name: true } },
           standardProcess: { select: { id: true, title: true, version: true, publishedAt: true } },
         },
         orderBy: { createdAt: 'desc' },
-        take: 60,
+        take: 24,
       }),
-      prisma.kaizenCard.findMany({ orderBy: { createdAt: 'desc' }, take: 60 }),
-      projectIds.length
-        ? prisma.fieldConstraint.findMany({
-            where: { projectId: { in: projectIds }, status: { not: 'resolved' } },
-            include: { project: { select: { id: true, name: true } } },
-            orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
-            take: 120,
-          })
-        : Promise.resolve([]),
-      projectIds.length
-        ? prisma.fieldProductionLog.findMany({
-            where: { projectId: { in: projectIds }, date: { gte: productionFrom } },
-            include: {
-              project: { select: { id: true, name: true } },
-              programmeActivity: { select: { id: true, code: true, title: true, status: true, progress: true } },
-            },
-            orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
-            take: 300,
-          })
-        : Promise.resolve([]),
-      projectIds.length
-        ? prisma.programmeActivity.findMany({
-            where: { projectId: { in: projectIds }, status: 'blocked' },
-            select: { id: true, projectId: true, code: true, title: true, plannedEnd: true, progress: true, status: true },
-            orderBy: { plannedEnd: 'asc' },
-            take: 100,
-          })
-        : Promise.resolve([]),
-      projectIds.length
-        ? prisma.programmeActivity.findMany({
-            where: { projectId: { in: projectIds }, plannedEnd: { lt: now }, status: { not: 'complete' } },
-            select: { id: true, projectId: true, code: true, title: true, plannedEnd: true, progress: true, status: true },
-            orderBy: { plannedEnd: 'asc' },
-            take: 100,
-          })
-        : Promise.resolve([]),
-      projectIds.length
-        ? prisma.procurementRequisition.findMany({
-            where: {
-              projectId: { in: projectIds },
-              status: { notIn: ['converted', 'cancelled', 'rejected'] },
-            },
-            select: { id: true, projectId: true, number: true, status: true, neededBy: true, estimatedNet: true },
-            orderBy: [{ neededBy: 'asc' }, { createdAt: 'desc' }],
-            take: 120,
-          })
-        : Promise.resolve([]),
-      projectIds.length
-        ? prisma.safetyIncident.findMany({
-            where: { projectId: { in: projectIds }, status: { not: 'closed' } },
-            select: { id: true, projectId: true, title: true, severity: true, status: true, occurredAt: true },
-            orderBy: { occurredAt: 'desc' },
-            take: 100,
-          })
-        : Promise.resolve([]),
+      prisma.improvement.findMany({
+        where: improvementWhere,
+        select: {
+          status: true,
+          area: true,
+          metricName: true,
+          metricDirection: true,
+          baselineValue: true,
+          targetValue: true,
+          resultValue: true,
+          standardProcessId: true,
+        },
+      }),
+      prisma.fieldConstraint.findMany({
+        where: { projectId: projectIdFilter, status: { not: 'resolved' } },
+        select: {
+          id: true,
+          title: true,
+          ownerName: true,
+          priority: true,
+          status: true,
+          category: true,
+          dueDate: true,
+          project: { select: { id: true, name: true } },
+        },
+        orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
+        take: 20,
+      }),
+      prisma.fieldConstraint.groupBy({
+        by: ['priority'],
+        where: { projectId: projectIdFilter, status: { not: 'resolved' } },
+        _count: { _all: true },
+      }),
+      prisma.fieldProductionLog.findMany({
+        where: { projectId: projectIdFilter, date: { gte: productionFrom } },
+        select: {
+          id: true,
+          date: true,
+          area: true,
+          activity: true,
+          unit: true,
+          plannedQty: true,
+          installedQty: true,
+          labourHours: true,
+          crewSize: true,
+          project: { select: { id: true, name: true } },
+        },
+        orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
+        take: 8,
+      }),
+      prisma.fieldProductionLog.aggregate({
+        where: { projectId: projectIdFilter, date: { gte: productionFrom } },
+        _sum: { plannedQty: true, installedQty: true, labourHours: true, crewSize: true },
+      }),
+      prisma.programmeActivity.count({
+        where: { projectId: projectIdFilter, status: 'blocked' },
+      }),
+      prisma.programmeActivity.count({
+        where: { projectId: projectIdFilter, plannedEnd: { lt: now }, status: { not: 'complete' } },
+      }),
+      prisma.procurementRequisition.count({
+        where: { projectId: projectIdFilter, status: activeRequisitionStatuses },
+      }),
+      prisma.procurementRequisition.count({
+        where: {
+          projectId: projectIdFilter,
+          status: activeRequisitionStatuses,
+          neededBy: { lte: horizon },
+        },
+      }),
+      prisma.safetyIncident.groupBy({
+        by: ['severity'],
+        where: { projectId: projectIdFilter, status: { not: 'closed' } },
+        _count: { _all: true },
+      }),
     ])
 
-    const production = productionLogs.reduce(
-      (acc, row) => {
-        acc.plannedQty += row.plannedQty
-        acc.installedQty += row.installedQty
-        acc.labourHours += row.labourHours
-        acc.crewDays += row.crewSize
-        return acc
-      },
-      { plannedQty: 0, installedQty: 0, labourHours: 0, crewDays: 0 },
-    )
+    const production = {
+      plannedQty: productionAggregate._sum.plannedQty || 0,
+      installedQty: productionAggregate._sum.installedQty || 0,
+      labourHours: productionAggregate._sum.labourHours || 0,
+    }
 
-    const criticalConstraints = constraints.filter(row => row.priority === 'critical').length
-    const highConstraints = constraints.filter(row => row.priority === 'high').length
-    const procurementAtRisk = requisitions.filter(row => row.neededBy && row.neededBy <= horizon).length
-    const highSafety = safetyIncidents.filter(row => ['high', 'critical'].includes(String(row.severity).toLowerCase())).length
-    const ideaCounts = countByStatus(improvements)
-    const pilotRows = improvements.filter(row => ['pilot', 'testing'].includes(String(row.status || '').toLowerCase()))
+    const openConstraints = constraintPriorityGroups.reduce((sum, row) => sum + row._count._all, 0)
+    const criticalConstraints = constraintPriorityGroups.find(row => row.priority === 'critical')?._count._all || 0
+    const highConstraints = constraintPriorityGroups.find(row => row.priority === 'high')?._count._all || 0
+    const openSafety = safetySeverityGroups.reduce((sum, row) => sum + row._count._all, 0)
+    const highSafety = safetySeverityGroups
+      .filter(row => ['high', 'critical'].includes(String(row.severity).toLowerCase()))
+      .reduce((sum, row) => sum + row._count._all, 0)
+    const ideaCounts = countByStatus(improvementStats)
+    const pilotRows = improvementStats.filter(row => ['pilot', 'testing'].includes(String(row.status || '').toLowerCase()))
     const measurementGaps = pilotRows.filter(row => !row.metricName || row.baselineValue === null || row.targetValue === null).length
-    const measuredRows = improvements.filter(row =>
+    const measuredRows = improvementStats.filter(row =>
       ['proven', 'complete', 'completed'].includes(String(row.status || '').toLowerCase()) &&
       Boolean(row.metricName) &&
       row.baselineValue !== null &&
       row.resultValue !== null
     )
     const measuredProven = measuredRows.length
-    const standardized = improvements.filter(row => Boolean(row.standardProcessId)).length
+    const standardized = improvementStats.filter(row => Boolean(row.standardProcessId)).length
     const measuredChanges = measuredRows
       .filter(row => row.baselineValue !== 0)
       .map(row => {
@@ -189,7 +230,7 @@ export async function GET(req: NextRequest) {
       ? Math.round((measuredChanges.reduce((sum, value) => sum + value, 0) / measuredChanges.length) * 10) / 10
       : null
 
-    const learningByArea = Array.from(improvements.reduce((map, row) => {
+    const learningByArea = Array.from(improvementStats.reduce((map, row) => {
       const area = row.area || 'other'
       const current = map.get(area) || { area, ideas: 0, proven: 0, standardized: 0 }
       current.ideas += 1
@@ -205,8 +246,8 @@ export async function GET(req: NextRequest) {
     if (criticalConstraints > 0) {
       signals.push({ id: 'constraints', level: 'high', title: 'Critical field constraints need ownership', detail: criticalConstraints + ' critical blocker' + (criticalConstraints === 1 ? '' : 's') + ' remain open.', href: '/field/constraints' })
     }
-    if (blockedActivities.length > 0 || overdueActivities.length > 0) {
-      signals.push({ id: 'programme', level: blockedActivities.length > 0 ? 'high' : 'medium', title: 'Programme pressure detected', detail: blockedActivities.length + ' blocked and ' + overdueActivities.length + ' overdue activities.', href: projectId ? '/projects/' + projectId + '/programme' : '/projects' })
+    if (blockedActivities > 0 || overdueActivities > 0) {
+      signals.push({ id: 'programme', level: blockedActivities > 0 ? 'high' : 'medium', title: 'Programme pressure detected', detail: blockedActivities + ' blocked and ' + overdueActivities + ' overdue activities.', href: projectId ? '/projects/' + projectId + '/programme' : '/projects' })
     }
     if (procurementAtRisk > 0) {
       signals.push({ id: 'procurement', level: 'medium', title: 'Materials may constrain delivery', detail: procurementAtRisk + ' active requisition' + (procurementAtRisk === 1 ? '' : 's') + ' needed within seven days.', href: '/requisitions' })
@@ -238,31 +279,26 @@ export async function GET(req: NextRequest) {
       },
       projects,
       improvements,
-      kaizenCards,
       constraints,
-      productionLogs: productionLogs.slice(0, 40),
-      blockedActivities,
-      overdueActivities,
-      requisitions,
-      safetyIncidents,
+      productionLogs,
       signals,
       learningByArea,
       summary: {
-        ideas: improvements.length,
+        ideas: improvementStats.length,
         pilots: ideaCounts.pilot || ideaCounts.testing || 0,
         proven: ideaCounts.proven || ideaCounts.complete || ideaCounts.completed || 0,
         measurementGaps,
         measuredProven,
         standardized,
         avgMeasuredImprovementPct,
-        openConstraints: constraints.length,
+        openConstraints,
         criticalConstraints,
         highConstraints,
-        blockedActivities: blockedActivities.length,
-        overdueActivities: overdueActivities.length,
-        openRequisitions: requisitions.length,
+        blockedActivities,
+        overdueActivities,
+        openRequisitions,
         procurementAtRisk,
-        openSafety: safetyIncidents.length,
+        openSafety,
         highSafety,
         plannedQty: production.plannedQty,
         installedQty: production.installedQty,
