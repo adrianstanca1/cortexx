@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { canWrite } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,7 +21,7 @@ function serviceBucket(d: Date | null): 'ok' | 'soon' | 'overdue' | 'none' {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   try {
     const { searchParams } = new URL(req.url)
@@ -55,10 +56,11 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
+  if (!canWrite(auth.role || '')) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId || '')
+  if (limited) return limited
   try {
     const body = await req.json()
     const name = String(body.name || '').trim()
