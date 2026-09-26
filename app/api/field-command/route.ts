@@ -132,7 +132,7 @@ export async function GET(req: NextRequest) {
         where: { projectId, status: { not: 'closed' }, priority: { in: ['high', 'critical'] } },
       }),
       prisma.equipmentCheck.count({
-        where: { projectId, nextDueAt: { lt: now }, status: { not: 'passed' } },
+        where: { projectId, nextDueAt: { lt: now } },
       }),
       prisma.rfi.count({ where: { projectId, status: { not: 'closed' } } }),
       prisma.rfi.count({ where: { projectId, status: { not: 'closed' }, dueDate: { lt: now } } }),

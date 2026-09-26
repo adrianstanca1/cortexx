@@ -1,21 +1,22 @@
 import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
+import { equipmentCheckScope } from '../route'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET() {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
 
   try {
     const now = new Date()
     const checks = await prisma.equipmentCheck.findMany({
       where: {
+        ...equipmentCheckScope(auth.session),
         nextDueAt: { lt: now },
-        status: { not: 'passed' },
       },
       include: {
         project: { select: { id: true, name: true } },
