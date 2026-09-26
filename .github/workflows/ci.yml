@@ -220,6 +220,8 @@ jobs:
         run: npx tsx scripts/seed-e2e.ts
       - name: Install Playwright and Chromium
         run: npm run e2e:install
+      - name: Build production app for browser journeys
+        run: npm run build
       - name: Run browser journeys — ${{ matrix.name }}
         shell: bash
         env:

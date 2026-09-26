@@ -80,7 +80,8 @@ export default defineConfig({
     timeout: 30_000,
     env: { ...process.env, PORT: new URL(pwaBaseURL).port },
   }, {
-    command: 'npm run dev',
+    // CI exercises prebuilt production routes, avoiding lazy-compilation timeouts.
+    command: process.env.CI ? 'npm run start' : 'npm run dev',
     // Poll /login, not /: proxy.ts rewrites unauthenticated / to
     // /legacy/Cortexx-standalone.html, which lives only on the VPS (never
     // committed), so / is a permanent 404 in CI and the readiness check

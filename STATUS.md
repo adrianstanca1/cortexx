@@ -1,25 +1,23 @@
 # CortexBuild Pro — current status
 
-Reviewed 25 September 2026. Canonical repository: `adrianstanca1/cortexx`; release branch: `main`; product line: v1.5.x.
+Reviewed 26 September 2026. Canonical repository: `adrianstanca1/cortexx`; production branch: `main`; release line: v1.5.x.
 
-The current workflow roadmap is [Canonical Product Audit & Roadmap](docs/CANONICAL_PRODUCT_AUDIT_2026-09-24.md). Older June/July feature inventories are historical and must not be used as deployment or launch evidence.
+## Integration review
 
-## Implemented in main
+The complete PR inventory at review start contained 237 PRs: 174 merged, 63 closed without merge, and zero open. Four closed PRs contain feature/security work; their replacements are accounted for in [the PR review](docs/reviews/2026-09-26-pr-integration.md). The other 59 are dependency updates; closed historical upgrade proposals must not be applied over the current lockfiles.
 
-- Governed procurement: requisitions, approvals, RFQs, quote comparison, manual award, linked purchase orders, goods receipts and invoice three-way matching (PRs #203–204).
-- Supplier performance: recorded delivery reliability, overdue issued orders, net values, receipt commitments and evidence links (PR #205). Missing dates remain unassessed.
-- Consolidated construction web, PWA, native field client and shared APIs. Role journeys cover Company Admin, Project Manager, Foreman and Operative; only Company Admin creates projects.
-- The detailed audit tracks the existing commercial ledger, bank reconciliation, field capture, safety closeout, tenant scope and offline workflow work.
+Main includes procurement/requisitions/RFQs/receipts/matching, commercial and bank reconciliation, read-only Xero integration, role-aware field operations and closeout, drawing distribution, programme baselines/delays/resources, construction innovation pilots/standards, field command briefs and equipment permission fixes through #239.
 
-## Current review changes
+## Verification and release
 
-Supplier mutations now require an active company and explicit write/admin permissions. Creation and updates are audited. Deletion requires Company Admin access and rejects suppliers with procurement history in a serializable transaction; archive remains available. UI actions follow server-returned permissions. These changes are release candidates until their PR passes CI and merges.
+At review start the production checkout was at `384b86f`, and the public health endpoint reported healthy app/database/disk/memory. That proves service health, not every authenticated workflow or exact running-image provenance.
 
-## Release evidence and remaining work
+Main CI run 36259923225 passed unit/build, shared/native typechecks, integration tests and five browser shards. The mobile-chromium-1 shard failed; deployment run 36260194472 was therefore skipped. iOS run 36258931579 failed because its workflow selected Node 20 while Capacitor requires Node 22.
 
-- As checked on 25 September, deployment run `36099971646` succeeded for main `843380b` (requisition/RFQ release).
-- The deployment for scorecard main `4b23b0e` was skipped by the CI gate. Merged code must not be described as deployed until its main CI and deployment succeed.
-- Xcode Cloud project-layout fixes are in PR #206. Linux checks do not establish a successful Apple archive or TestFlight upload.
-- External accounting adapters, supplier quality/defect evidence, programme/drawing workflow depth, governed agent tools, device/accessibility/load verification, and backup/restore/rollback drills remain tracked in the canonical roadmap.
+The review patch normalizes offset-free Xero dates independently of server timezone, aligns the remaining iOS workflow to Node 22, and makes CI browser journeys run a prebuilt production app instead of compiling routes lazily during timed tests. Its unit suite passed 487/487; date regression covers UTC, London, Los Angeles and Auckland. Final CI/deployment evidence must be checked on the merged commit.
 
-A successful build or a page existing does not establish complete launch readiness. Use current CI, integration/browser results and deployment logs for each release.
+## Remaining completion gates
+
+The [canonical roadmap](docs/CANONICAL_PRODUCT_AUDIT_2026-09-24.md) remains the workflow scope. Outstanding areas include governed accounting write-back, richer supplier quality evidence, persisted drawing markup/transmittals, comprehensive field offline conflict coverage, governed agent tools/marketplace, physical-device/accessibility/load verification and backup/restore/rollback drills.
+
+Live Xero activation requires a configured authorised organisation. Native store delivery requires successful Apple build/signing/upload evidence. Merged PRs and passing unit tests do not establish complete launch readiness.
