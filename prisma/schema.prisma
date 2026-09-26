@@ -1146,19 +1146,20 @@ model SubInvoice {
 }
 
 model Drawing {
-  id          String            @id @default(cuid())
-  projectId   String
-  number      String
-  title       String
-  discipline  String? // architectural, structural, electrical, mechanical, plumbing, civil
-  status      String            @default("draft") // draft, approved, superseded, archived
-  notes       String?
-  archivedAt  DateTime?
-  createdAt   DateTime          @default(now())
-  updatedAt   DateTime          @updatedAt
-  project     Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  revisions   DrawingRevision[]
-  inspections Inspection[]
+  id            String                @id @default(cuid())
+  projectId     String
+  number        String
+  title         String
+  discipline    String? // architectural, structural, electrical, mechanical, plumbing, civil
+  status        String                @default("draft") // draft, approved, superseded, archived
+  notes         String?
+  archivedAt    DateTime?
+  createdAt     DateTime              @default(now())
+  updatedAt     DateTime              @updatedAt
+  project       Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  revisions     DrawingRevision[]
+  inspections   Inspection[]
+  distributions DrawingDistribution[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -1170,23 +1171,62 @@ model Drawing {
 }
 
 model DrawingRevision {
-  id          String       @id @default(cuid())
-  drawingId   String
-  revision    String // e.g. "A", "B", "P01", "T01"
-  fileUrl     String?
-  fileName    String?
-  fileSize    Int?
-  mimeType    String?
-  notes       String?
-  uploadedAt  DateTime     @default(now())
-  drawing     Drawing      @relation(fields: [drawingId], references: [id], onDelete: Cascade)
-  inspections Inspection[]
+  id                   String                @id @default(cuid())
+  drawingId            String
+  revision             String // e.g. "A", "B", "P01", "T01"
+  fileUrl              String?
+  fileName             String?
+  fileSize             Int?
+  mimeType             String?
+  notes                String?
+  uploadedAt           DateTime              @default(now())
+  drawing              Drawing               @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  inspections          Inspection[]
+  drawingDistributions DrawingDistribution[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([drawingId, revision])
   @@index([drawingId, uploadedAt])
+  @@index([organizationId])
+}
+
+model DrawingDistribution {
+  id             String                         @id @default(cuid())
+  drawingId      String
+  revisionId     String
+  purpose        String                         @default("For information")
+  message        String?
+  issuedByUserId String?
+  issuedAt       DateTime                       @default(now())
+  drawing        Drawing                        @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  revision       DrawingRevision                @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+  recipients     DrawingDistributionRecipient[]
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([drawingId, issuedAt])
+  @@index([revisionId, issuedAt])
+  @@index([organizationId])
+}
+
+model DrawingDistributionRecipient {
+  id             String              @id @default(cuid())
+  distributionId String
+  email          String
+  name           String?
+  sentAt         DateTime            @default(now())
+  acknowledgedAt DateTime?
+  acknowledgedBy String?
+  distribution   DrawingDistribution @relation(fields: [distributionId], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@unique([distributionId, email])
+  @@index([email, acknowledgedAt])
   @@index([organizationId])
 }
 
@@ -1774,82 +1814,84 @@ model AccountingOAuthState {
 }
 
 model Organization {
-  id                      String                      @id @default(cuid())
-  slug                    String                      @unique
-  name                    String
-  plan                    String                      @default("trial") // trial / starter / pro / enterprise
-  subscriptionStatus      String                      @default("active") // active / past_due / cancelled
-  trialEndsAt             DateTime?
-  stripeCustomerId        String?                     @unique
-  stripeSubscriptionId    String?                     @unique
-  brandingLogoUrl         String?
-  brandingAccent          String?
-  createdAt               DateTime                    @default(now())
-  updatedAt               DateTime                    @updatedAt
-  members                 UserOrganization[]
-  invites                 OrganizationInvite[]
-  auditEvents             AuditEvent[]
-  accountingConnections   AccountingConnection[]
-  accountingOAuthStates   AccountingOAuthState[]
-  projects                Project[]
-  tasks                   Task[]
-  teamMembers             TeamMember[]
-  assignments             Assignment[]
-  invoices                Invoice[]
-  timeEntries             TimeEntry[]
-  activities              Activity[]
-  comments                Comment[]
-  documents               Document[]
-  expenseReceipts         ExpenseReceipt[]
-  snags                   Snag[]
-  certifications          Certification[]
-  trainingCourses         TrainingCourse[]
-  rfis                    Rfi[]
-  announcements           Announcement[]
-  observations            Observation[]
-  variations              Variation[]
-  leads                   Lead[]
-  customers               Customer[]
-  quotes                  Quote[]
-  siteCheckIns            SiteCheckIn[]
-  mileageEntries          MileageEntry[]
-  costCodes               CostCode[]
-  projectCostEntries      ProjectCostEntry[]
-  costItems               CostItem[]
-  subcontractors          Subcontractor[]
-  equipment               Equipment[]
-  materials               Material[]
-  purchaseOrders          PurchaseOrder[]
-  procurementRequisitions ProcurementRequisition[]
-  procurementRfqs         ProcurementRfq[]
-  supplierQuotes          SupplierQuote[]
-  goodsReceipts           GoodsReceipt[]
-  subInvoices             SubInvoice[]
-  drawings                Drawing[]
-  drawingRevisions        DrawingRevision[]
-  milestones              Milestone[]
-  programmeActivities     ProgrammeActivity[]
-  programmeDependencies   ProgrammeDependency[]
-  programmeBaselines      ProgrammeBaselineRevision[]
-  programmeDelayEvents    ProgrammeDelayEvent[]
-  permits                 Permit[]
-  rams                    Rams[]
-  tenders                 Tender[]
-  inspections             Inspection[]
-  fieldConstraints        FieldConstraint[]
-  fieldHandovers          FieldHandover[]
-  fieldProductionLogs     FieldProductionLog[]
-  meetings                Meeting[]
-  risks                   Risk[]
-  toolboxTalks            ToolboxTalk[]
-  maintenanceSchedules    MaintenanceSchedule[]
-  suppliers               Supplier[]
-  safetyIncidents         SafetyIncident[]
-  safetyCorrectiveActions SafetyCorrectiveAction[]
-  valuations              Valuation[]
-  valuationCertificates   ValuationCertificate[]
-  valuationPayments       ValuationPayment[]
-  valuationVariations     ValuationVariation[]
+  id                            String                         @id @default(cuid())
+  slug                          String                         @unique
+  name                          String
+  plan                          String                         @default("trial") // trial / starter / pro / enterprise
+  subscriptionStatus            String                         @default("active") // active / past_due / cancelled
+  trialEndsAt                   DateTime?
+  stripeCustomerId              String?                        @unique
+  stripeSubscriptionId          String?                        @unique
+  brandingLogoUrl               String?
+  brandingAccent                String?
+  createdAt                     DateTime                       @default(now())
+  updatedAt                     DateTime                       @updatedAt
+  members                       UserOrganization[]
+  invites                       OrganizationInvite[]
+  auditEvents                   AuditEvent[]
+  accountingConnections         AccountingConnection[]
+  accountingOAuthStates         AccountingOAuthState[]
+  projects                      Project[]
+  tasks                         Task[]
+  teamMembers                   TeamMember[]
+  assignments                   Assignment[]
+  invoices                      Invoice[]
+  timeEntries                   TimeEntry[]
+  activities                    Activity[]
+  comments                      Comment[]
+  documents                     Document[]
+  expenseReceipts               ExpenseReceipt[]
+  snags                         Snag[]
+  certifications                Certification[]
+  trainingCourses               TrainingCourse[]
+  rfis                          Rfi[]
+  announcements                 Announcement[]
+  observations                  Observation[]
+  variations                    Variation[]
+  leads                         Lead[]
+  customers                     Customer[]
+  quotes                        Quote[]
+  siteCheckIns                  SiteCheckIn[]
+  mileageEntries                MileageEntry[]
+  costCodes                     CostCode[]
+  projectCostEntries            ProjectCostEntry[]
+  costItems                     CostItem[]
+  subcontractors                Subcontractor[]
+  equipment                     Equipment[]
+  materials                     Material[]
+  purchaseOrders                PurchaseOrder[]
+  procurementRequisitions       ProcurementRequisition[]
+  procurementRfqs               ProcurementRfq[]
+  supplierQuotes                SupplierQuote[]
+  goodsReceipts                 GoodsReceipt[]
+  subInvoices                   SubInvoice[]
+  drawings                      Drawing[]
+  drawingRevisions              DrawingRevision[]
+  drawingDistributions          DrawingDistribution[]
+  drawingDistributionRecipients DrawingDistributionRecipient[]
+  milestones                    Milestone[]
+  programmeActivities           ProgrammeActivity[]
+  programmeDependencies         ProgrammeDependency[]
+  programmeBaselines            ProgrammeBaselineRevision[]
+  programmeDelayEvents          ProgrammeDelayEvent[]
+  permits                       Permit[]
+  rams                          Rams[]
+  tenders                       Tender[]
+  inspections                   Inspection[]
+  fieldConstraints              FieldConstraint[]
+  fieldHandovers                FieldHandover[]
+  fieldProductionLogs           FieldProductionLog[]
+  meetings                      Meeting[]
+  risks                         Risk[]
+  toolboxTalks                  ToolboxTalk[]
+  maintenanceSchedules          MaintenanceSchedule[]
+  suppliers                     Supplier[]
+  safetyIncidents               SafetyIncident[]
+  safetyCorrectiveActions       SafetyCorrectiveAction[]
+  valuations                    Valuation[]
+  valuationCertificates         ValuationCertificate[]
+  valuationPayments             ValuationPayment[]
+  valuationVariations           ValuationVariation[]
 
   // ── Legacy-parity v1.1 modules
   payrollRuns         PayrollRun[]

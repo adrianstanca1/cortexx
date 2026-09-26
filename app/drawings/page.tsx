@@ -19,6 +19,9 @@ interface Revision {
   notes: string | null
   uploadedAt: string
 }
+interface DistributionRecipient { id: string; email: string; name: string | null; sentAt: string; acknowledgedAt: string | null }
+interface DrawingDistribution { id: string; purpose: string; message: string | null; issuedAt: string; revision: Pick<Revision, 'id' | 'revision' | 'fileUrl' | 'fileName'>; recipients: DistributionRecipient[] }
+
 interface Drawing {
   id: string
   projectId: string
@@ -52,6 +55,12 @@ export default function DrawingsPage() {
   const [activeDwg, setActiveDwg] = useState<Drawing | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploadingRev, setUploadingRev] = useState(false)
+  const [distributions, setDistributions] = useState<DrawingDistribution[]>([])
+  const [distributionRevisionId, setDistributionRevisionId] = useState('')
+  const [distributionPurpose, setDistributionPurpose] = useState('For construction')
+  const [distributionRecipients, setDistributionRecipients] = useState('')
+  const [distributionMessage, setDistributionMessage] = useState('')
+  const [issuingDistribution, setIssuingDistribution] = useState(false)
 
   // AI revision compare state — scoped to the active drawing's detail sheet.
   const [compareSelection, setCompareSelection] = useState<string[]>([])
@@ -211,10 +220,42 @@ export default function DrawingsPage() {
     } catch { setToast({ msg: 'Delete failed', type: 'error' }) }
   }
 
+  const loadDistributions = async (drawingId: string) => {
+    const data = await fetch(`/api/drawings/${drawingId}/distributions`).then(r => r.ok ? r.json() : null).catch(() => null)
+    setDistributions(data?.distributions || [])
+  }
+
   const openDetail = async (d: Drawing) => {
     setActiveDwg(d)
-    const fresh = await fetch(`/api/drawings/${d.id}`).then(r => r.json()).catch(() => null)
-    if (fresh?.drawing) setActiveDwg(fresh.drawing)
+    const [fresh] = await Promise.all([fetch(`/api/drawings/${d.id}`).then(r => r.json()).catch(() => null), loadDistributions(d.id)])
+    if (fresh?.drawing) {
+      setActiveDwg(fresh.drawing)
+      setDistributionRevisionId(fresh.drawing.revisions?.[0]?.id || '')
+    }
+  }
+
+  const issueDistribution = async () => {
+    if (!activeDwg || !distributionRevisionId) return
+    const recipients = distributionRecipients.split(/[\n,;]+/).map(email => ({ email: email.trim() })).filter(r => r.email)
+    if (!recipients.length) { setToast({ msg: 'Add at least one recipient email', type: 'error' }); return }
+    setIssuingDistribution(true)
+    try {
+      const res = await fetch(`/api/drawings/${activeDwg.id}/distributions`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ revisionId: distributionRevisionId, purpose: distributionPurpose, message: distributionMessage, recipients }) })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to issue revision')
+      setDistributionRecipients(''); setDistributionMessage(''); await loadDistributions(activeDwg.id)
+      setToast({ msg: `Rev ${data.revision?.revision || ''} issued to ${data.recipients?.length || recipients.length} recipient(s)` })
+    } catch (e) { setToast({ msg: e instanceof Error ? e.message : 'Failed to issue revision', type: 'error' }) }
+    finally { setIssuingDistribution(false) }
+  }
+
+  const acknowledgeDistribution = async (distributionId: string, recipientId: string) => {
+    if (!activeDwg) return
+    const res = await fetch(`/api/drawing-distributions/${distributionId}/recipients/${recipientId}/acknowledge`, { method: 'POST' })
+    const data = await res.json().catch(() => ({}))
+    if (!res.ok) { setToast({ msg: data.error || 'Acknowledgement failed', type: 'error' }); return }
+    await loadDistributions(activeDwg.id)
+    setToast({ msg: 'Drawing revision acknowledged' })
   }
 
   // Group by project for the list
@@ -460,6 +501,31 @@ export default function DrawingsPage() {
               {revCompareError && (
                 <div style={{ marginTop: 10, padding: '10px 12px', background: 'rgba(239,68,68,0.08)', borderRadius: 10, fontFamily: SF, fontSize: 12, color: '#ef4444' }}>{revCompareError}</div>
               )}
+            </div>
+
+
+            <div style={{ background: 'var(--bg3)', borderRadius: 10, padding: '12px', display: 'flex', flexDirection: 'column', gap: 8 }}>
+              <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 }}>Issue & acknowledgement</div>
+              {activeDwg.revisions.length === 0 ? <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t3)' }}>Upload a revision before issuing it.</div> : <>
+                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 6 }}>
+                  <select aria-label="Revision to issue" value={distributionRevisionId} onChange={e => setDistributionRevisionId(e.target.value)} style={{ ...inputStyle, padding: '8px 10px', fontSize: 12 }}>
+                    {activeDwg.revisions.map(r => <option key={r.id} value={r.id}>Rev {r.revision}</option>)}
+                  </select>
+                  <select aria-label="Distribution purpose" value={distributionPurpose} onChange={e => setDistributionPurpose(e.target.value)} style={{ ...inputStyle, padding: '8px 10px', fontSize: 12 }}>
+                    {['For construction', 'For information', 'For approval', 'For review', 'As built'].map(v => <option key={v}>{v}</option>)}
+                  </select>
+                </div>
+                <textarea value={distributionRecipients} onChange={e => setDistributionRecipients(e.target.value)} placeholder="Recipient emails — comma or new line separated" rows={2} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF, fontSize: 12 }} />
+                <input value={distributionMessage} onChange={e => setDistributionMessage(e.target.value)} placeholder="Issue note (optional)" style={{ ...inputStyle, padding: '8px 10px', fontSize: 12 }} />
+                <button onClick={issueDistribution} disabled={issuingDistribution || !distributionRevisionId || !distributionRecipients.trim()} style={{ padding: '9px 12px', borderRadius: 8, border: 'none', background: '#0ea5e9', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: issuingDistribution ? 'wait' : 'pointer', opacity: !distributionRecipients.trim() ? 0.5 : 1 }}>{issuingDistribution ? 'Issuing…' : 'Issue revision'}</button>
+              </>}
+              {distributions.length > 0 && <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 4 }}>
+                {distributions.map(dist => { const ack = dist.recipients.filter(r => r.acknowledgedAt).length; return <div key={dist.id} style={{ border: '0.5px solid rgba(255,255,255,0.08)', borderRadius: 8, padding: '8px 10px' }}>
+                  <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, fontFamily: SF, fontSize: 11 }}><strong style={{ color: 'var(--t1)' }}>Rev {dist.revision.revision} · {dist.purpose}</strong><span style={{ color: ack === dist.recipients.length ? '#22c55e' : '#f59e0b' }}>{ack}/{dist.recipients.length} acknowledged</span></div>
+                  <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', marginTop: 2 }}>{new Date(dist.issuedAt).toLocaleString('en-GB')}</div>
+                  {dist.recipients.map(rec => <div key={rec.id} style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8, marginTop: 5, fontFamily: SF, fontSize: 11 }}><span style={{ color: 'var(--t2)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{rec.email}</span>{rec.acknowledgedAt ? <span style={{ color: '#22c55e', flexShrink: 0 }}>✓ {new Date(rec.acknowledgedAt).toLocaleDateString('en-GB')}</span> : <button onClick={() => acknowledgeDistribution(dist.id, rec.id)} style={{ border: '0.5px solid rgba(14,165,233,0.5)', background: 'rgba(14,165,233,0.12)', color: '#38bdf8', borderRadius: 6, padding: '3px 7px', fontFamily: SF, fontSize: 10, cursor: 'pointer' }}>Acknowledge</button>}</div>)}
+                </div> })}
+              </div>}
             </div>
 
             <button onClick={() => remove(activeDwg.id)} style={{ marginTop: 4, padding: '10px', borderRadius: 10, background: confirmDelete === activeDwg.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeDwg.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
