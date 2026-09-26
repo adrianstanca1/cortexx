@@ -149,6 +149,13 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
                     <option value="true">true</option>
                     <option value="false">false</option>
                   </select>
+                ) : t === 'string' && key === 'body' ? (
+                  <textarea
+                    value={current}
+                    onChange={e => setEdits(p => ({ ...p, [key]: e.target.value }))}
+                    rows={12}
+                    style={{ ...inputStyle, resize: 'vertical', lineHeight: 1.5, minHeight: 180 }}
+                  />
                 ) : (
                   <input
                     type={t === 'number' ? 'number' : t === 'date' ? 'date' : 'text'}

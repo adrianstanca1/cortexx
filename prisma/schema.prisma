@@ -2260,32 +2260,35 @@ model Goal {
 }
 
 model Improvement {
-  id              String        @id @default(cuid())
-  organizationId  String?
-  organization    Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  projectId       String?
-  project         Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
-  title           String?
-  description     String?
-  raisedBy        String?
-  ownerName       String?
-  area            String?
-  status          String?
-  impact          String?
-  effort          String?
-  metricName      String?
-  metricUnit      String?
-  metricDirection String?
-  baselineValue   Float?
-  targetValue     Float?
-  resultValue     Float?
-  startedAt       DateTime?
-  completedAt     DateTime?
-  createdAt       DateTime      @default(now())
-  updatedAt       DateTime      @updatedAt
+  id                String        @id @default(cuid())
+  organizationId    String?
+  organization      Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  projectId         String?
+  project           Project?      @relation(fields: [projectId], references: [id], onDelete: SetNull)
+  title             String?
+  description       String?
+  raisedBy          String?
+  ownerName         String?
+  area              String?
+  status            String?
+  impact            String?
+  effort            String?
+  metricName        String?
+  metricUnit        String?
+  metricDirection   String?
+  baselineValue     Float?
+  targetValue       Float?
+  resultValue       Float?
+  startedAt         DateTime?
+  completedAt       DateTime?
+  standardProcessId String?
+  standardProcess   ProcessDoc?   @relation("ImprovementStandardProcess", fields: [standardProcessId], references: [id], onDelete: SetNull)
+  createdAt         DateTime      @default(now())
+  updatedAt         DateTime      @updatedAt
 
   @@index([organizationId])
   @@index([projectId, status])
+  @@index([standardProcessId])
 }
 
 model KaizenCard {
@@ -2305,17 +2308,18 @@ model KaizenCard {
 }
 
 model ProcessDoc {
-  id             String        @id @default(cuid())
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  title          String?
-  category       String?
-  body           String?
-  owner          String?
-  version        String?
-  publishedAt    DateTime?
-  createdAt      DateTime      @default(now())
-  updatedAt      DateTime      @updatedAt
+  id                       String        @id @default(cuid())
+  organizationId           String?
+  organization             Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  title                    String?
+  category                 String?
+  body                     String?
+  owner                    String?
+  version                  String?
+  publishedAt              DateTime?
+  standardizedImprovements Improvement[] @relation("ImprovementStandardProcess")
+  createdAt                DateTime      @default(now())
+  updatedAt                DateTime      @updatedAt
 
   @@index([organizationId])
 }

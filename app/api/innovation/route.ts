@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { requireOrg } from '@/lib/requireAuth'
-import { canWrite } from '@/lib/rbac'
+import { canManage, canWrite } from '@/lib/rbac'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
@@ -86,7 +86,10 @@ export async function GET(req: NextRequest) {
     ] = await Promise.all([
       prisma.improvement.findMany({
         where: improvementWhere,
-        include: { project: { select: { id: true, name: true } } },
+        include: {
+          project: { select: { id: true, name: true } },
+          standardProcess: { select: { id: true, title: true, version: true, publishedAt: true } },
+        },
         orderBy: { createdAt: 'desc' },
         take: 60,
       }),
@@ -165,12 +168,38 @@ export async function GET(req: NextRequest) {
     const ideaCounts = countByStatus(improvements)
     const pilotRows = improvements.filter(row => ['pilot', 'testing'].includes(String(row.status || '').toLowerCase()))
     const measurementGaps = pilotRows.filter(row => !row.metricName || row.baselineValue === null || row.targetValue === null).length
-    const measuredProven = improvements.filter(row =>
+    const measuredRows = improvements.filter(row =>
       ['proven', 'complete', 'completed'].includes(String(row.status || '').toLowerCase()) &&
       Boolean(row.metricName) &&
       row.baselineValue !== null &&
       row.resultValue !== null
-    ).length
+    )
+    const measuredProven = measuredRows.length
+    const standardized = improvements.filter(row => Boolean(row.standardProcessId)).length
+    const measuredChanges = measuredRows
+      .filter(row => row.baselineValue !== 0)
+      .map(row => {
+        const baseline = Number(row.baselineValue)
+        const result = Number(row.resultValue)
+        const delta = row.metricDirection === 'decrease' ? baseline - result : result - baseline
+        return Math.round((delta / Math.abs(baseline)) * 1000) / 10
+      })
+      .filter(value => Number.isFinite(value))
+    const avgMeasuredImprovementPct = measuredChanges.length
+      ? Math.round((measuredChanges.reduce((sum, value) => sum + value, 0) / measuredChanges.length) * 10) / 10
+      : null
+
+    const learningByArea = Array.from(improvements.reduce((map, row) => {
+      const area = row.area || 'other'
+      const current = map.get(area) || { area, ideas: 0, proven: 0, standardized: 0 }
+      current.ideas += 1
+      if (['proven', 'complete', 'completed'].includes(String(row.status || '').toLowerCase())) current.proven += 1
+      if (row.standardProcessId) current.standardized += 1
+      map.set(area, current)
+      return map
+    }, new Map<string, { area: string; ideas: number; proven: number; standardized: number }>()).values())
+      .sort((a, b) => b.proven - a.proven || b.ideas - a.ideas)
+      .slice(0, 5)
 
     const signals: Array<{ id: string; level: 'high' | 'medium' | 'good'; title: string; detail: string; href: string }> = []
     if (criticalConstraints > 0) {
@@ -192,6 +221,10 @@ export async function GET(req: NextRequest) {
     if (measurementGaps > 0) {
       signals.push({ id: 'measurement', level: 'medium', title: 'Pilots need a measurement plan', detail: measurementGaps + ' active pilot' + (measurementGaps === 1 ? '' : 's') + ' lack a metric, baseline or target.', href: '/innovation' })
     }
+    if (measuredProven > standardized) {
+      const waiting = measuredProven - standardized
+      signals.push({ id: 'standardize', level: 'good', title: 'Proven learning is ready to standardise', detail: waiting + ' measured improvement' + (waiting === 1 ? '' : 's') + ' can become reusable company process.', href: '/innovation' })
+    }
     if (signals.length === 0) {
       signals.push({ id: 'stable', level: 'good', title: 'No major innovation trigger detected', detail: 'Use the idea backlog to target the next measurable improvement.', href: '/improve-hub' })
     }
@@ -199,7 +232,10 @@ export async function GET(req: NextRequest) {
     return NextResponse.json({
       generatedAt: new Date().toISOString(),
       scope: { projectId, projectCount: scopedProjects.length },
-      permissions: { write: canWrite(auth.role || '') },
+      permissions: {
+        write: canWrite(auth.role || ''),
+        standardise: canManage(auth.role || '') || auth.personaRole === 'project_manager',
+      },
       projects,
       improvements,
       kaizenCards,
@@ -210,12 +246,15 @@ export async function GET(req: NextRequest) {
       requisitions,
       safetyIncidents,
       signals,
+      learningByArea,
       summary: {
         ideas: improvements.length,
         pilots: ideaCounts.pilot || ideaCounts.testing || 0,
         proven: ideaCounts.proven || ideaCounts.complete || ideaCounts.completed || 0,
         measurementGaps,
         measuredProven,
+        standardized,
+        avgMeasuredImprovementPct,
         openConstraints: constraints.length,
         criticalConstraints,
         highConstraints,

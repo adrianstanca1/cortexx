@@ -43,8 +43,8 @@ export default function ProcessDocPage() {
   return (
     <ModuleShell
       title="Process library"
-      tagline="How-we-do-things knowledge base"
-      action={{ label: 'New', onClick: create }}
+      tagline="Reusable company standards and proven construction methods"
+      action={{ label: 'New process', onClick: create }}
     >
       {loading ? (
         <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
@@ -52,22 +52,41 @@ export default function ProcessDocPage() {
         <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
       ) : rows.length === 0 ? (
         <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)', padding: 32, textAlign: 'center' }}>
-          No records yet. Click <strong style={{ color: '#f59e0b' }}>New</strong> to add the first one.
+          No company standards yet. Click <strong style={{ color: '#f59e0b' }}>New process</strong> to add one, or standardise a proven Innovation OS pilot.
         </div>
       ) : (
         <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>
-          {rows.map(r => (
-            <li
-              key={r.id}
-              onClick={() => setSelected(r)}
-              style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', cursor: 'pointer' }}
-            >
-              <div>{[r.title, r.category, r.body].filter(Boolean).join(' · ') || r.id}</div>
-              <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4 }}>
-                {new Date(r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
-              </div>
-            </li>
-          ))}
+          {rows.map(r => {
+            const title = typeof r.title === 'string' && r.title.trim() ? r.title : 'Untitled process'
+            const category = typeof r.category === 'string' ? r.category : null
+            const owner = typeof r.owner === 'string' ? r.owner : null
+            const version = typeof r.version === 'string' ? r.version : null
+            const body = typeof r.body === 'string' ? r.body.replace(/[#*_]/g, '').replace(/\s+/g, ' ').trim() : ''
+            const publishedAt = typeof r.publishedAt === 'string' ? r.publishedAt : null
+            return (
+              <li
+                key={r.id}
+                onClick={() => setSelected(r)}
+                style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '13px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', color: 'var(--t1)', cursor: 'pointer' }}
+              >
+                <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
+                  <div style={{ minWidth: 0 }}>
+                    <div style={{ fontSize: 13, fontWeight: 800 }}>{title}</div>
+                    <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>
+                      {[category, owner ? 'owner ' + owner : null, version ? 'v' + version : null].filter(Boolean).join(' · ') || 'Process standard'}
+                    </div>
+                  </div>
+                  <span style={{ flexShrink: 0, borderRadius: 999, padding: '3px 7px', fontSize: 9, fontWeight: 800, color: publishedAt ? '#86efac' : '#fde68a', background: publishedAt ? 'rgba(34,197,94,.1)' : 'rgba(245,158,11,.1)' }}>
+                    {publishedAt ? 'Published' : 'Draft'}
+                  </span>
+                </div>
+                {body && <div style={{ color: 'var(--t2)', fontSize: 11, lineHeight: 1.5, marginTop: 9 }}>{body.length > 180 ? body.slice(0, 180) + '…' : body}</div>}
+                <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 8 }}>
+                  {new Date(publishedAt || r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
+                </div>
+              </li>
+            )
+          })}
         </ul>
       )}
 
