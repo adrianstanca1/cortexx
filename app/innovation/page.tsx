@@ -9,12 +9,24 @@ import {
 type Project = { id: string; name: string; status: string; progress: number }
 type Improvement = {
   id: string
+  projectId?: string | null
+  project?: { id: string; name: string } | null
   title?: string | null
   description?: string | null
   raisedBy?: string | null
+  ownerName?: string | null
+  area?: string | null
   status?: string | null
   impact?: string | null
   effort?: string | null
+  metricName?: string | null
+  metricUnit?: string | null
+  metricDirection?: string | null
+  baselineValue?: number | null
+  targetValue?: number | null
+  resultValue?: number | null
+  startedAt?: string | null
+  completedAt?: string | null
   createdAt: string
 }
 type Constraint = {
@@ -44,6 +56,8 @@ type Summary = {
   ideas: number
   pilots: number
   proven: number
+  measurementGaps: number
+  measuredProven: number
   openConstraints: number
   criticalConstraints: number
   blockedActivities: number
@@ -71,7 +85,7 @@ type InnovationData = {
 }
 
 const emptySummary: Summary = {
-  ideas: 0, pilots: 0, proven: 0, openConstraints: 0, criticalConstraints: 0,
+  ideas: 0, pilots: 0, proven: 0, measurementGaps: 0, measuredProven: 0, openConstraints: 0, criticalConstraints: 0,
   blockedActivities: 0, overdueActivities: 0, openRequisitions: 0, procurementAtRisk: 0,
   openSafety: 0, highSafety: 0, plannedQty: 0, installedQty: 0, labourHours: 0,
   achievementPct: null, qtyPerLabourHour: null,
@@ -89,6 +103,14 @@ function asScore(value: string | null | undefined, fallback = 3) {
 
 function ideaScore(row: Improvement) {
   return asScore(row.impact, 3) * 2 + (6 - asScore(row.effort, 3))
+}
+
+function outcomePct(row: Improvement) {
+  if (row.baselineValue === null || row.baselineValue === undefined || row.resultValue === null || row.resultValue === undefined || row.baselineValue === 0) return null
+  const delta = row.metricDirection === 'decrease'
+    ? row.baselineValue - row.resultValue
+    : row.resultValue - row.baselineValue
+  return Math.round((delta / Math.abs(row.baselineValue)) * 1000) / 10
 }
 
 function fmt(value: number | null | undefined, digits = 0) {
@@ -110,8 +132,18 @@ export default function InnovationPage() {
   const [saving, setSaving] = useState(false)
 
   const [ideaTitle, setIdeaTitle] = useState('')
+  const [ideaArea, setIdeaArea] = useState('productivity')
   const [impact, setImpact] = useState(4)
   const [effort, setEffort] = useState(2)
+
+  const [measureIdea, setMeasureIdea] = useState<Improvement | null>(null)
+  const [pilotOwner, setPilotOwner] = useState('')
+  const [metricName, setMetricName] = useState('')
+  const [metricUnit, setMetricUnit] = useState('')
+  const [metricDirection, setMetricDirection] = useState('increase')
+  const [baselineValue, setBaselineValue] = useState('')
+  const [targetValue, setTargetValue] = useState('')
+  const [resultValue, setResultValue] = useState('')
 
   const [constraintTitle, setConstraintTitle] = useState('')
   const [constraintOwner, setConstraintOwner] = useState('Site')
@@ -152,6 +184,8 @@ export default function InnovationPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           title,
+          projectId: projectId || null,
+          area: ideaArea,
           status: 'idea',
           impact: String(impact),
           effort: String(effort),
@@ -169,10 +203,59 @@ export default function InnovationPage() {
     }
   }
 
+  const openMeasurement = (idea: Improvement) => {
+    setMeasureIdea(idea)
+    setPilotOwner(idea.ownerName || '')
+    setMetricName(idea.metricName || '')
+    setMetricUnit(idea.metricUnit || '')
+    setMetricDirection(idea.metricDirection || 'increase')
+    setBaselineValue(idea.baselineValue === null || idea.baselineValue === undefined ? '' : String(idea.baselineValue))
+    setTargetValue(idea.targetValue === null || idea.targetValue === undefined ? '' : String(idea.targetValue))
+    setResultValue(idea.resultValue === null || idea.resultValue === undefined ? '' : String(idea.resultValue))
+  }
+
+  const saveMeasurement = async (event: FormEvent) => {
+    event.preventDefault()
+    if (!measureIdea || saving) return
+    setSaving(true)
+    try {
+      const res = await fetch('/api/improve-hub/' + measureIdea.id, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ownerName: pilotOwner.trim() || null,
+          metricName: metricName.trim() || null,
+          metricUnit: metricUnit.trim() || null,
+          metricDirection,
+          baselineValue: baselineValue === '' ? null : Number(baselineValue),
+          targetValue: targetValue === '' ? null : Number(targetValue),
+          resultValue: resultValue === '' ? null : Number(resultValue),
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || 'Failed to save measurement plan')
+      setMeasureIdea(null)
+      await load()
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to save measurement plan')
+    } finally {
+      setSaving(false)
+    }
+  }
+
   const advanceIdea = async (idea: Improvement) => {
     const status = String(idea.status || 'idea').toLowerCase()
     const next = status === 'idea' ? 'pilot' : status === 'pilot' || status === 'testing' ? 'proven' : null
     if (!next || saving) return
+
+    if (
+      next === 'proven' &&
+      (!idea.metricName || idea.baselineValue === null || idea.baselineValue === undefined || idea.targetValue === null || idea.targetValue === undefined || idea.resultValue === null || idea.resultValue === undefined)
+    ) {
+      openMeasurement(idea)
+      return
+    }
+
     setSaving(true)
     try {
       const res = await fetch('/api/improve-hub/' + idea.id, {
@@ -182,6 +265,7 @@ export default function InnovationPage() {
       })
       const json = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(json.error || 'Failed to update idea')
+      if (next === 'pilot' && json.item) openMeasurement(json.item)
       await load()
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to update idea')
@@ -274,7 +358,7 @@ export default function InnovationPage() {
               <Metric label="Programme pressure" value={String(summary.blockedActivities + summary.overdueActivities)} sub={summary.blockedActivities + ' blocked · ' + summary.overdueActivities + ' overdue'} tone="#60a5fa" />
               <Metric label="Procurement at risk" value={String(summary.procurementAtRisk)} sub={summary.openRequisitions + ' open requisitions'} tone="#f59e0b" />
               <Metric label="Safety signals" value={String(summary.openSafety)} sub={summary.highSafety + ' high / critical'} tone={summary.highSafety ? '#ef4444' : '#45d18a'} />
-              <Metric label="Improvement pipeline" value={String(summary.ideas)} sub={summary.pilots + ' pilots · ' + summary.proven + ' proven'} tone="#8b5cf6" />
+              <Metric label="Improvement pipeline" value={String(summary.ideas)} sub={summary.pilots + ' pilots · ' + summary.measurementGaps + ' need measures'} tone="#8b5cf6" />
             </section>
 
             <section className="innovation-columns">
@@ -299,8 +383,11 @@ export default function InnovationPage() {
               <div style={panel}>
                 <SectionTitle icon={<IcSpark size={16} color="#a78bfa" />} title="Improvement backlog" sub="Idea → pilot → proven standard" />
                 {data?.permissions.write && (
-                  <form onSubmit={createIdea} style={{ display: 'grid', gridTemplateColumns: '1fr 92px 92px auto', gap: 8, marginTop: 14 }}>
+                  <form onSubmit={createIdea} className="idea-form">
                     <input value={ideaTitle} onChange={e => setIdeaTitle(e.target.value)} placeholder="Capture an improvement…" style={input} />
+                    <select value={ideaArea} onChange={e => setIdeaArea(e.target.value)} style={selectSmall}>
+                      <option value="productivity">Productivity</option><option value="safety">Safety</option><option value="quality">Quality</option><option value="logistics">Logistics</option><option value="procurement">Procurement</option><option value="carbon">Carbon</option><option value="digital">Digital</option><option value="programme">Programme</option><option value="commercial">Commercial</option><option value="other">Other</option>
+                    </select>
                     <select value={impact} onChange={e => setImpact(Number(e.target.value))} style={selectSmall}>{[5,4,3,2,1].map(n => <option key={n} value={n}>Impact {n}</option>)}</select>
                     <select value={effort} onChange={e => setEffort(Number(e.target.value))} style={selectSmall}>{[1,2,3,4,5].map(n => <option key={n} value={n}>Effort {n}</option>)}</select>
                     <button disabled={saving} style={primaryButton}>Add</button>
@@ -309,18 +396,37 @@ export default function InnovationPage() {
                 <div style={{ display: 'grid', gap: 8, marginTop: 14 }}>
                   {rankedIdeas.slice(0, 8).map(idea => {
                     const status = String(idea.status || 'idea').toLowerCase()
+                    const outcome = outcomePct(idea)
+                    const isMeasuredStage = ['pilot', 'testing', 'proven', 'complete', 'completed'].includes(status)
                     return (
-                      <div key={idea.id} style={ideaCard}>
+                      <div key={idea.id} style={{ ...ideaCard, alignItems: 'flex-start' }}>
                         <div style={{ flex: 1, minWidth: 0 }}>
                           <div style={{ display: 'flex', gap: 7, alignItems: 'center', flexWrap: 'wrap' }}>
                             <b style={{ color: 'var(--t1)', fontSize: 12 }}>{idea.title || 'Untitled improvement'}</b>
                             <span style={statusPill(status)}>{status}</span>
                             <span style={scorePill}>Score {ideaScore(idea)}/15</span>
                           </div>
-                          <div style={{ color: 'var(--t3)', fontSize: 10, marginTop: 5 }}>Impact {asScore(idea.impact)} · Effort {asScore(idea.effort)} · {new Date(idea.createdAt).toLocaleDateString('en-GB')}</div>
+                          <div style={{ color: 'var(--t3)', fontSize: 10, marginTop: 5 }}>
+                            Impact {asScore(idea.impact)} · Effort {asScore(idea.effort)} · {idea.area || 'other'} · {idea.project?.name || 'Company-wide'} · {new Date(idea.createdAt).toLocaleDateString('en-GB')}
+                          </div>
+                          {idea.metricName && (
+                            <div style={{ marginTop: 7, padding: '7px 8px', borderRadius: 8, background: 'rgba(72,216,255,.055)', color: 'var(--t2)', fontSize: 9, lineHeight: 1.5 }}>
+                              <b style={{ color: '#67e8f9' }}>{idea.metricName}</b>
+                              {' · baseline ' + fmt(idea.baselineValue, 2)}
+                              {' · target ' + fmt(idea.targetValue, 2)}
+                              {idea.resultValue !== null && idea.resultValue !== undefined ? ' · result ' + fmt(idea.resultValue, 2) : ''}
+                              {idea.metricUnit ? ' ' + idea.metricUnit : ''}
+                              {outcome !== null && <span style={{ marginLeft: 6, color: outcome >= 0 ? '#86efac' : '#fca5a5', fontWeight: 900 }}>{outcome >= 0 ? '+' : ''}{outcome}%</span>}
+                            </div>
+                          )}
                         </div>
-                        {data?.permissions.write && !['proven','complete','completed'].includes(status) && (
-                          <button onClick={() => advanceIdea(idea)} disabled={saving} style={miniButton}>{status === 'idea' ? 'Pilot' : 'Prove'}</button>
+                        {data?.permissions.write && (
+                          <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', justifyContent: 'flex-end' }}>
+                            {isMeasuredStage && <button type="button" onClick={() => openMeasurement(idea)} disabled={saving} style={measureButton}>Measure</button>}
+                            {!['proven','complete','completed'].includes(status) && (
+                              <button type="button" onClick={() => advanceIdea(idea)} disabled={saving} style={miniButton}>{status === 'idea' ? 'Pilot' : 'Prove'}</button>
+                            )}
+                          </div>
                         )}
                       </div>
                     )
@@ -402,14 +508,82 @@ export default function InnovationPage() {
         )}
       </div>
 
+      {measureIdea && (
+        <div
+          role="dialog"
+          aria-modal="true"
+          aria-label="Pilot measurement plan"
+          onMouseDown={event => { if (event.target === event.currentTarget && !saving) setMeasureIdea(null) }}
+          style={modalOverlay}
+        >
+          <form onSubmit={saveMeasurement} style={modalCard}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 14, alignItems: 'flex-start' }}>
+              <div>
+                <div style={{ ...eyebrow, color: '#a78bfa' }}>Pilot measurement</div>
+                <h2 style={{ margin: '6px 0 0', color: 'var(--t1)', fontSize: 18, letterSpacing: '-0.02em' }}>{measureIdea.title || 'Improvement pilot'}</h2>
+                <div style={{ color: 'var(--t3)', fontSize: 10, marginTop: 5 }}>
+                  {measureIdea.project?.name || selectedProject?.name || 'Company-wide'} · {measureIdea.area || 'other'}
+                </div>
+              </div>
+              <button type="button" onClick={() => setMeasureIdea(null)} disabled={saving} style={closeButton} aria-label="Close measurement plan">×</button>
+            </div>
+
+            <div style={{ marginTop: 12, borderRadius: 10, padding: '9px 10px', background: 'rgba(245,158,11,.08)', border: '1px solid rgba(245,158,11,.18)', color: '#fde68a', fontSize: 10, lineHeight: 1.55 }}>
+              A pilot can start with a baseline and target. To mark it <b>Proven</b>, add the observed result as evidence.
+            </div>
+
+            <div className="measure-grid">
+              <label style={fieldLabel}>Pilot owner
+                <input value={pilotOwner} onChange={e => setPilotOwner(e.target.value)} placeholder="Responsible person" style={input} />
+              </label>
+              <label style={fieldLabel}>Metric
+                <input value={metricName} onChange={e => setMetricName(e.target.value)} placeholder="e.g. Panels installed / hour" style={input} />
+              </label>
+              <label style={fieldLabel}>Unit
+                <input value={metricUnit} onChange={e => setMetricUnit(e.target.value)} placeholder="panels/hr, %, min…" style={input} />
+              </label>
+              <label style={fieldLabel}>Desired direction
+                <select value={metricDirection} onChange={e => setMetricDirection(e.target.value)} style={{ ...selectSmall, width: '100%' }}>
+                  <option value="increase">Increase is better</option>
+                  <option value="decrease">Decrease is better</option>
+                </select>
+              </label>
+              <label style={fieldLabel}>Baseline
+                <input type="number" step="any" value={baselineValue} onChange={e => setBaselineValue(e.target.value)} placeholder="Before pilot" style={input} />
+              </label>
+              <label style={fieldLabel}>Target
+                <input type="number" step="any" value={targetValue} onChange={e => setTargetValue(e.target.value)} placeholder="Expected result" style={input} />
+              </label>
+              <label style={{ ...fieldLabel, gridColumn: '1 / -1' }}>Observed result
+                <input type="number" step="any" value={resultValue} onChange={e => setResultValue(e.target.value)} placeholder="Leave blank until the pilot has evidence" style={input} />
+              </label>
+            </div>
+
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'center', marginTop: 14, flexWrap: 'wrap' }}>
+              <div style={{ color: 'var(--t3)', fontSize: 9 }}>
+                {baselineValue && resultValue
+                  ? 'Calculated improvement: ' + (outcomePct({ ...measureIdea, baselineValue: Number(baselineValue), resultValue: Number(resultValue), metricDirection }) ?? '—') + '%'
+                  : 'Record the result after the trial to quantify the improvement.'}
+              </div>
+              <div style={{ display: 'flex', gap: 8 }}>
+                <button type="button" onClick={() => setMeasureIdea(null)} disabled={saving} style={secondaryButton}>Cancel</button>
+                <button type="submit" disabled={saving} style={primaryButton}>{saving ? 'Saving…' : 'Save measurement'}</button>
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
       <style>{`
         .innovation-metrics{display:grid;grid-template-columns:repeat(6,minmax(0,1fr));gap:10px;margin-top:14px}
         .innovation-columns{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-top:14px}
+        .idea-form{display:grid;grid-template-columns:minmax(180px,1fr) 110px 92px 92px auto;gap:8px;margin-top:14px}
         .constraint-form{display:grid;grid-template-columns:1.4fr .7fr 100px 100px auto;gap:8px;margin-top:14px}
+        .measure-grid{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:14px}
         .loop-grid{display:grid;grid-template-columns:repeat(4,1fr);gap:10px;margin-top:14px}
-        @media(max-width:1050px){.innovation-metrics{grid-template-columns:repeat(3,1fr)}.constraint-form{grid-template-columns:1fr 1fr 110px 110px}}
-        @media(max-width:780px){.innovation-columns{grid-template-columns:1fr}.loop-grid{grid-template-columns:1fr 1fr}.constraint-form{grid-template-columns:1fr 1fr}.innovation-metrics{grid-template-columns:1fr 1fr}}
-        @media(max-width:520px){.innovation-metrics{grid-template-columns:1fr 1fr}.loop-grid{grid-template-columns:1fr}.constraint-form{grid-template-columns:1fr}.innovation-columns form{grid-template-columns:1fr!important}}
+        @media(max-width:1050px){.innovation-metrics{grid-template-columns:repeat(3,1fr)}.idea-form{grid-template-columns:1fr 110px 92px 92px}.constraint-form{grid-template-columns:1fr 1fr 110px 110px}}
+        @media(max-width:780px){.innovation-columns{grid-template-columns:1fr}.loop-grid{grid-template-columns:1fr 1fr}.constraint-form{grid-template-columns:1fr 1fr}.idea-form{grid-template-columns:1fr 1fr}.innovation-metrics{grid-template-columns:1fr 1fr}}
+        @media(max-width:520px){.innovation-metrics{grid-template-columns:1fr 1fr}.loop-grid{grid-template-columns:1fr}.constraint-form{grid-template-columns:1fr}.idea-form{grid-template-columns:1fr}.measure-grid{grid-template-columns:1fr}}
       `}</style>
     </main>
   )
@@ -448,7 +622,13 @@ const select: CSSProperties = { width: '100%', background: '#0b1725', color: '#d
 const selectSmall: CSSProperties = { background: 'var(--surface-raised)', color: 'var(--t1)', border: '1px solid var(--hair)', borderRadius: 9, padding: '9px 8px', fontSize: 10, minWidth: 0 }
 const input: CSSProperties = { width: '100%', minWidth: 0, background: 'var(--surface-raised)', color: 'var(--t1)', border: '1px solid var(--hair)', borderRadius: 9, padding: '9px 10px', fontSize: 11, outline: 'none' }
 const primaryButton: CSSProperties = { border: 0, borderRadius: 9, background: 'linear-gradient(135deg,#2563eb,#7c3aed)', color: '#fff', padding: '9px 13px', fontSize: 10, fontWeight: 800, cursor: 'pointer' }
+const secondaryButton: CSSProperties = { border: '1px solid var(--hair)', borderRadius: 9, background: 'rgba(255,255,255,.035)', color: 'var(--t2)', padding: '9px 13px', fontSize: 10, fontWeight: 800, cursor: 'pointer' }
 const miniButton: CSSProperties = { border: '1px solid rgba(72,216,255,.22)', borderRadius: 8, background: 'rgba(72,216,255,.08)', color: '#67e8f9', padding: '6px 9px', fontSize: 9, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }
+const measureButton: CSSProperties = { border: '1px solid rgba(167,139,250,.24)', borderRadius: 8, background: 'rgba(139,92,246,.09)', color: '#c4b5fd', padding: '6px 9px', fontSize: 9, fontWeight: 800, cursor: 'pointer', flexShrink: 0 }
+const modalOverlay: CSSProperties = { position: 'fixed', inset: 0, zIndex: 260, display: 'grid', placeItems: 'center', padding: 16, background: 'rgba(2,6,23,.76)', backdropFilter: 'blur(10px)' }
+const modalCard: CSSProperties = { width: 'min(680px,100%)', maxHeight: '88dvh', overflowY: 'auto', borderRadius: 16, border: '1px solid rgba(255,255,255,.1)', background: '#091421', padding: 18, boxShadow: '0 24px 80px rgba(0,0,0,.45)' }
+const fieldLabel: CSSProperties = { display: 'flex', flexDirection: 'column', gap: 5, color: 'var(--t3)', fontSize: 9, fontWeight: 700, textTransform: 'uppercase', letterSpacing: '.05em' }
+const closeButton: CSSProperties = { border: '1px solid var(--hair)', width: 30, height: 30, borderRadius: 9, background: 'rgba(255,255,255,.04)', color: 'var(--t2)', fontSize: 18, cursor: 'pointer', lineHeight: 1 }
 const ideaCard: CSSProperties = { display: 'flex', alignItems: 'center', gap: 9, padding: 10, borderRadius: 10, border: '1px solid var(--hair)', background: 'rgba(255,255,255,.025)' }
 const productionRow: CSSProperties = { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 10px', borderRadius: 9, background: 'rgba(255,255,255,.025)', border: '1px solid var(--hair)' }
 const signalCard: CSSProperties = { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 10, border: '1px solid', borderRadius: 11, padding: 11, textDecoration: 'none' }
