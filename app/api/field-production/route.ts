@@ -35,6 +35,9 @@ export async function GET(req: NextRequest) {
         ...(area ? { area } : {}),
         ...((from || to) ? { date: { ...(from ? { gte: from } : {}), ...(to ? { lte: to } : {}) } } : {}),
       },
+      include: {
+        programmeActivity: { select: { id: true, code: true, title: true, status: true, progress: true, location: true } },
+      },
       orderBy: [{ date: 'desc' }, { createdAt: 'desc' }],
       take: 300,
     })
@@ -72,6 +75,17 @@ export async function POST(req: NextRequest) {
     const project = await prisma.project.findFirst({ where: programmeProjectWhere(projectId, auth.session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
 
+    const programmeActivityId = controls.cleanText(body.programmeActivityId, 100) || null
+    const programmeActivity = programmeActivityId
+      ? await prisma.programmeActivity.findFirst({
+          where: { id: programmeActivityId, projectId },
+          select: { id: true, code: true, title: true, location: true },
+        })
+      : null
+    if (programmeActivityId && !programmeActivity) {
+      return NextResponse.json({ error: 'Programme activity must belong to the selected project' }, { status: 400 })
+    }
+
     const date = body.date ? parseDate(body.date) : new Date()
     if (!date) return NextResponse.json({ error: 'Invalid date' }, { status: 400 })
     const plannedQty = controls.normalizeNonNegative(body.plannedQty)
@@ -96,6 +110,10 @@ export async function POST(req: NextRequest) {
         labourHours: labourHours || 0,
         notes: controls.cleanText(body.notes, 2000) || null,
         createdBy: actorName(auth.session),
+        programmeActivityId,
+      },
+      include: {
+        programmeActivity: { select: { id: true, code: true, title: true, status: true, progress: true, location: true } },
       },
     })
     const metrics = controls.productionMetrics(log.plannedQty, log.installedQty, log.labourHours)
@@ -106,7 +124,7 @@ export async function POST(req: NextRequest) {
         actorName: actorName(auth.session),
         actorType: 'human',
         action: `production logged: ${activity} · ${area}`,
-        detail: `${log.installedQty} ${log.unit} installed vs ${log.plannedQty} planned`,
+        detail: `${log.installedQty} ${log.unit} installed vs ${log.plannedQty} planned${programmeActivity ? ` · programme: ${programmeActivity.code ? programmeActivity.code + ' · ' : ''}${programmeActivity.title}` : ''}`,
         iconType: metrics.varianceQty < 0 ? 'alert' : 'check',
       },
     }).catch(() => {})

@@ -6,6 +6,7 @@ import TabBar from '@/components/ui/TabBar'
 import { IcChevL, IcClock, IcLayers, IcTeam } from '@/components/ui/Icons'
 
 type Project = { id: string; name: string }
+type ProgrammeActivity = { id: string; code?: string | null; title: string; status: string; progress: number; location?: string | null }
 type Log = {
   id: string
   date: string
@@ -19,6 +20,8 @@ type Log = {
   labourHours: number
   notes?: string | null
   createdBy?: string | null
+  programmeActivityId?: string | null
+  programmeActivity?: ProgrammeActivity | null
 }
 type Summary = {
   plannedQty: number
@@ -34,18 +37,27 @@ type Summary = {
 const SF = 'var(--font-system)'
 const UNITS = ['m2', 'm', 'lm', 'panels', 'items', 'hours', 'tonnes', 'kg']
 
+function localDateValue() {
+  const now = new Date()
+  const yyyy = now.getFullYear()
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
+
 export default function FieldProductivityPage() {
   const [projects, setProjects] = useState<Project[]>([])
   const [projectId, setProjectId] = useState('')
   const [logs, setLogs] = useState<Log[]>([])
+  const [programmeActivities, setProgrammeActivities] = useState<ProgrammeActivity[]>([])
   const [summary, setSummary] = useState<Summary | null>(null)
   const [loading, setLoading] = useState(true)
   const [saving, setSaving] = useState(false)
   const [showForm, setShowForm] = useState(false)
   const [message, setMessage] = useState('')
   const [form, setForm] = useState({
-    date: new Date().toISOString().slice(0,10),
-    area: '', elevation: '', activity: 'Cladding installation', unit: 'm2',
+    date: localDateValue(),
+    area: '', elevation: '', activity: 'Cladding installation', programmeActivityId: '', unit: 'm2',
     plannedQty: '', installedQty: '', crewSize: '', labourHours: '', notes: '',
   })
 
@@ -61,11 +73,20 @@ export default function FieldProductivityPage() {
     if (!projectId) { setLogs([]); setSummary(null); setLoading(false); return }
     setLoading(true)
     try {
-      const res = await fetch(`/api/field-production?projectId=${encodeURIComponent(projectId)}`, { cache: 'no-store' })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data?.error || 'Failed to load production')
+      const [productionRes, programmeRes] = await Promise.all([
+        fetch(`/api/field-production?projectId=${encodeURIComponent(projectId)}`, { cache: 'no-store' }),
+        fetch(`/api/projects/${encodeURIComponent(projectId)}/programme`, { cache: 'no-store' }),
+      ])
+      const data = await productionRes.json().catch(() => ({}))
+      if (!productionRes.ok) throw new Error(data?.error || 'Failed to load production')
+      const programmeData = programmeRes.ok ? await programmeRes.json().catch(() => ({})) : {}
+      const activities: ProgrammeActivity[] = programmeData.activities || []
       setLogs(data.logs || [])
       setSummary(data.summary || null)
+      setProgrammeActivities(activities)
+      setForm(current => activities.some(activity => activity.id === current.programmeActivityId)
+        ? current
+        : { ...current, programmeActivityId: '' })
       setMessage('')
     } catch (e) {
       setMessage(e instanceof Error ? e.message : 'Failed to load production')
@@ -91,6 +112,7 @@ export default function FieldProductivityPage() {
           area: form.area.trim(),
           elevation: form.elevation.trim() || null,
           activity: form.activity.trim(),
+          programmeActivityId: form.programmeActivityId || null,
           unit: form.unit,
           plannedQty: Number(form.plannedQty || 0),
           installedQty: Number(form.installedQty || 0),
@@ -102,8 +124,8 @@ export default function FieldProductivityPage() {
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error || 'Failed to create production log')
       setForm({
-        date: new Date().toISOString().slice(0,10), area: '', elevation: '',
-        activity: 'Cladding installation', unit: 'm2', plannedQty: '', installedQty: '',
+        date: localDateValue(), area: '', elevation: '',
+        activity: 'Cladding installation', programmeActivityId: '', unit: 'm2', plannedQty: '', installedQty: '',
         crewSize: '', labourHours: '', notes: '',
       })
       setShowForm(false)
@@ -168,6 +190,30 @@ export default function FieldProductivityPage() {
               <TextField label="Area *" value={form.area} onChange={v => setForm(f => ({ ...f, area: v }))} placeholder="e.g. Block A" />
               <TextField label="Elevation / zone" value={form.elevation} onChange={v => setForm(f => ({ ...f, elevation: v }))} placeholder="East elevation / Level 5" />
             </div>
+            <label style={labelStyle}>
+              Programme activity / work package
+              <select
+                value={form.programmeActivityId}
+                onChange={e => {
+                  const id = e.target.value
+                  const linked = programmeActivities.find(activity => activity.id === id)
+                  setForm(current => ({
+                    ...current,
+                    programmeActivityId: id,
+                    activity: linked?.title || current.activity,
+                    area: current.area || linked?.location || '',
+                  }))
+                }}
+                style={inputStyle}
+              >
+                <option value="">Not linked</option>
+                {programmeActivities.map(activity => (
+                  <option key={activity.id} value={activity.id}>
+                    {activity.code ? `${activity.code} · ` : ''}{activity.title} · {activity.progress}%
+                  </option>
+                ))}
+              </select>
+            </label>
             <TextField label="Activity *" value={form.activity} onChange={v => setForm(f => ({ ...f, activity: v }))} placeholder="Cladding installation" />
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 8 }}>
               <Num label="Planned" value={form.plannedQty} onChange={v => setForm(f => ({ ...f, plannedQty: v }))} />
@@ -220,6 +266,9 @@ export default function FieldProductivityPage() {
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10 }}>
                       <div>
                         <div style={{ color: 'var(--t1)', fontFamily: SF, fontSize: 11.5, fontWeight: 900 }}>{row.activity}</div>
+                        {row.programmeActivity && <div style={{ color: '#8b5cf6', fontFamily: SF, fontSize: 9.5, fontWeight: 850, marginTop: 3 }}>
+                          Programme {row.programmeActivity.code ? `${row.programmeActivity.code} · ` : ''}{row.programmeActivity.title} · {row.programmeActivity.progress}%
+                        </div>}
                         <div style={{ color: 'var(--t2)', fontFamily: SF, fontSize: 9.8, marginTop: 3 }}>{row.area}{row.elevation ? ` · ${row.elevation}` : ''} · {new Date(row.date).toLocaleDateString('en-GB')}</div>
                       </div>
                       <div style={{ color: tone, fontFamily: SF, fontSize: 12, fontWeight: 900 }}>{pct == null ? '—' : `${pct}%`}</div>
