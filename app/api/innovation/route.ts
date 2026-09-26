@@ -65,6 +65,11 @@ export async function GET(req: NextRequest) {
 
     const scopedProjects = projectId ? projects.filter(project => project.id === projectId) : projects
     const projectIds = scopedProjects.map(project => project.id)
+    const improvementWhere: Prisma.ImprovementWhereInput = projectId
+      ? { OR: [{ projectId }, { projectId: null }] }
+      : projectIds.length
+        ? { OR: [{ projectId: { in: projectIds } }, { projectId: null }] }
+        : { projectId: null }
     const now = new Date()
     const horizon = new Date(now.getTime() + 7 * 24 * 60 * 60 * 1000)
     const productionFrom = new Date(now.getTime() - 14 * 24 * 60 * 60 * 1000)
@@ -79,7 +84,12 @@ export async function GET(req: NextRequest) {
       requisitions,
       safetyIncidents,
     ] = await Promise.all([
-      prisma.improvement.findMany({ orderBy: { createdAt: 'desc' }, take: 60 }),
+      prisma.improvement.findMany({
+        where: improvementWhere,
+        include: { project: { select: { id: true, name: true } } },
+        orderBy: { createdAt: 'desc' },
+        take: 60,
+      }),
       prisma.kaizenCard.findMany({ orderBy: { createdAt: 'desc' }, take: 60 }),
       projectIds.length
         ? prisma.fieldConstraint.findMany({
@@ -153,6 +163,14 @@ export async function GET(req: NextRequest) {
     const procurementAtRisk = requisitions.filter(row => row.neededBy && row.neededBy <= horizon).length
     const highSafety = safetyIncidents.filter(row => ['high', 'critical'].includes(String(row.severity).toLowerCase())).length
     const ideaCounts = countByStatus(improvements)
+    const pilotRows = improvements.filter(row => ['pilot', 'testing'].includes(String(row.status || '').toLowerCase()))
+    const measurementGaps = pilotRows.filter(row => !row.metricName || row.baselineValue === null || row.targetValue === null).length
+    const measuredProven = improvements.filter(row =>
+      ['proven', 'complete', 'completed'].includes(String(row.status || '').toLowerCase()) &&
+      Boolean(row.metricName) &&
+      row.baselineValue !== null &&
+      row.resultValue !== null
+    ).length
 
     const signals: Array<{ id: string; level: 'high' | 'medium' | 'good'; title: string; detail: string; href: string }> = []
     if (criticalConstraints > 0) {
@@ -170,6 +188,9 @@ export async function GET(req: NextRequest) {
     const achievement = pct(production.installedQty, production.plannedQty)
     if (achievement !== null && achievement < 90) {
       signals.push({ id: 'production', level: 'medium', title: 'Production is below recent plan', detail: '14-day installed output is ' + achievement + '% of planned quantity.', href: '/field' })
+    }
+    if (measurementGaps > 0) {
+      signals.push({ id: 'measurement', level: 'medium', title: 'Pilots need a measurement plan', detail: measurementGaps + ' active pilot' + (measurementGaps === 1 ? '' : 's') + ' lack a metric, baseline or target.', href: '/innovation' })
     }
     if (signals.length === 0) {
       signals.push({ id: 'stable', level: 'good', title: 'No major innovation trigger detected', detail: 'Use the idea backlog to target the next measurable improvement.', href: '/improve-hub' })
@@ -193,6 +214,8 @@ export async function GET(req: NextRequest) {
         ideas: improvements.length,
         pilots: ideaCounts.pilot || ideaCounts.testing || 0,
         proven: ideaCounts.proven || ideaCounts.complete || ideaCounts.completed || 0,
+        measurementGaps,
+        measuredProven,
         openConstraints: constraints.length,
         criticalConstraints,
         highConstraints,
