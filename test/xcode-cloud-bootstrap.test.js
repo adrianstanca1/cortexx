@@ -5,6 +5,7 @@ const path = require('node:path')
 
 const scriptPath = path.join(__dirname, '..', 'ios', 'App', 'ci_scripts', 'ci_post_clone.sh')
 const schemePath = path.join(__dirname, '..', 'ios', 'App', 'App.xcodeproj', 'xcshareddata', 'xcschemes', 'App.xcscheme')
+const podfilePath = path.join(__dirname, '..', 'ios', 'App', 'Podfile')
 const script = fs.readFileSync(scriptPath, 'utf8')
 const preBuildPath = path.join(__dirname, '..', 'ios', 'App', 'ci_scripts', 'ci_pre_xcodebuild.sh')
 const preBuild = fs.readFileSync(preBuildPath, 'utf8')
@@ -70,4 +71,12 @@ test('native project deployment target matches the Podfile floor', () => {
   const project = fs.readFileSync(path.join(__dirname, '..', 'ios', 'App', 'App.xcodeproj', 'project.pbxproj'), 'utf8')
   assert.doesNotMatch(project, /IPHONEOS_DEPLOYMENT_TARGET = 13\.0/)
   assert.match(project, /IPHONEOS_DEPLOYMENT_TARGET = 15\.0/)
+})
+
+test('Pod install raises legacy Capacitor pod targets to the iOS 15 floor', () => {
+  const podfile = fs.readFileSync(podfilePath, 'utf8')
+  assert.match(podfile, /post_install do \|installer\|/)
+  assert.match(podfile, /IPHONEOS_DEPLOYMENT_TARGET/)
+  assert.match(podfile, /current\.to_f < 15\.0/)
+  assert.match(podfile, /config\.build_settings\['IPHONEOS_DEPLOYMENT_TARGET'\] = '15\.0'/)
 })

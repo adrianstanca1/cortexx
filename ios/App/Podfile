@@ -28,3 +28,19 @@ target 'App' do
   capacitor_pods
   # Add your Pods here
 end
+
+
+# Xcode Cloud currently requires iOS 15+. Some Capacitor 6 plugin podspecs
+# still declare iOS 13, which causes archive validation to fail even though
+# the app target and Podfile are already on 15. Raise only lower Pod targets.
+post_install do |installer|
+  assertDeploymentTarget(installer)
+  installer.pods_project.targets.each do |target|
+    target.build_configurations.each do |config|
+      current = config.build_settings['IPHONEOS_DEPLOYMENT_TARGET']
+      if current && current.to_f < 15.0
+        config.build_settings['IPHONEOS_DEPLOYMENT_TARGET'] = '15.0'
+      end
+    end
+  end
+end
