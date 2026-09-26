@@ -1056,6 +1056,7 @@ model ProcurementRequisition {
   @@index([costCodeId])
   @@index([neededBy])
   @@index([organizationId])
+  @@index([organizationId, projectId, status, neededBy])
 }
 
 model ProcurementRfq {
@@ -1270,6 +1271,7 @@ model ProgrammeActivity {
   @@index([responsibleMemberId, plannedStart])
   @@index([status, plannedEnd])
   @@index([organizationId])
+  @@index([organizationId, projectId, status, plannedEnd])
 }
 
 model ProgrammeResourceAllocation {
@@ -1542,6 +1544,7 @@ model FieldConstraint {
   @@index([priority, status])
   @@index([dueDate])
   @@index([organizationId])
+  @@index([organizationId, projectId, status, priority, dueDate])
 }
 
 model FieldHandover {
@@ -1599,6 +1602,7 @@ model FieldProductionLog {
   @@index([activity])
   @@index([programmeActivityId, date])
   @@index([organizationId])
+  @@index([organizationId, projectId, date, createdAt])
 }
 
 model Meeting {
@@ -1770,6 +1774,7 @@ model SafetyIncident {
   @@index([status, occurredAt])
   @@index([severity])
   @@index([organizationId])
+  @@index([organizationId, projectId, status, severity])
 }
 
 model SafetyCorrectiveAction {
@@ -2289,6 +2294,7 @@ model Improvement {
   @@index([organizationId])
   @@index([projectId, status])
   @@index([standardProcessId])
+  @@index([organizationId, projectId, createdAt])
 }
 
 model KaizenCard {
@@ -2322,6 +2328,7 @@ model ProcessDoc {
   updatedAt                DateTime      @updatedAt
 
   @@index([organizationId])
+  @@index([organizationId, publishedAt, createdAt])
 }
 
 model SiteReview {

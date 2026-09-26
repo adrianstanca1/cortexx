@@ -11,6 +11,7 @@ export default function ProcessDocPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<Row | null>(null)
+  const [openingId, setOpeningId] = useState<string | null>(null)
 
   useEffect(() => {
     fetch('/api/process-library')
@@ -19,6 +20,22 @@ export default function ProcessDocPage() {
       .catch(e => setError(e instanceof Error ? e.message : 'Failed'))
       .finally(() => setLoading(false))
   }, [])
+
+  const openRecord = async (id: string) => {
+    if (openingId) return
+    setOpeningId(id)
+    setError(null)
+    try {
+      const res = await fetch('/api/process-library/' + id)
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || 'Failed to open process')
+      setSelected(json.item)
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Failed to open process')
+    } finally {
+      setOpeningId(null)
+    }
+  }
 
   const create = async () => {
     const value = window.prompt('New process library — short label')
@@ -61,12 +78,11 @@ export default function ProcessDocPage() {
             const category = typeof r.category === 'string' ? r.category : null
             const owner = typeof r.owner === 'string' ? r.owner : null
             const version = typeof r.version === 'string' ? r.version : null
-            const body = typeof r.body === 'string' ? r.body.replace(/[#*_]/g, '').replace(/\s+/g, ' ').trim() : ''
             const publishedAt = typeof r.publishedAt === 'string' ? r.publishedAt : null
             return (
               <li
                 key={r.id}
-                onClick={() => setSelected(r)}
+                onClick={() => void openRecord(r.id)}
                 style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '13px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', color: 'var(--t1)', cursor: 'pointer' }}
               >
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
@@ -80,7 +96,7 @@ export default function ProcessDocPage() {
                     {publishedAt ? 'Published' : 'Draft'}
                   </span>
                 </div>
-                {body && <div style={{ color: 'var(--t2)', fontSize: 11, lineHeight: 1.5, marginTop: 9 }}>{body.length > 180 ? body.slice(0, 180) + '…' : body}</div>}
+                {openingId === r.id && <div style={{ color: '#67e8f9', fontSize: 10, marginTop: 8 }}>Opening full standard…</div>}
                 <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 8 }}>
                   {new Date(publishedAt || r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </div>

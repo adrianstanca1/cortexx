@@ -28,6 +28,16 @@ export async function GET(req: NextRequest) {
     const skip = Math.max(0, parseInt(sp.get('skip') || '0') || 0)
     const [items, total] = await Promise.all([
       prisma.processDoc.findMany({
+        select: {
+          id: true,
+          title: true,
+          category: true,
+          owner: true,
+          version: true,
+          publishedAt: true,
+          createdAt: true,
+          updatedAt: true,
+        },
         orderBy: [{ publishedAt: 'desc' }, { createdAt: 'desc' }],
         take,
         skip,
