@@ -33,7 +33,7 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
   const [qty, setQty] = useState<Record<number, string>>({});
   const [deliveryNote, setDeliveryNote] = useState('');
   const [notes, setNotes] = useState('');
-  const [deliveryPhoto, setDeliveryPhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
+  const [deliveryPhotos, setDeliveryPhotos] = useState<ImagePicker.ImagePickerAsset[]>([]);
   const [signedNotePhoto, setSignedNotePhoto] = useState<ImagePicker.ImagePickerAsset | null>(null);
   const [signedBy, setSignedBy] = useState('');
   const [condition, setCondition] = useState('Good');
@@ -88,7 +88,7 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
     setQty(next);
     setDeliveryNote('');
     setNotes('');
-    setDeliveryPhoto(null);
+    setDeliveryPhotos([]);
     setSignedNotePhoto(null);
     setSignedBy('');
     setCondition('Good');
@@ -97,6 +97,10 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
   };
 
   const takeEvidencePhoto = async (kind: 'delivery' | 'signature') => {
+    if (kind === 'delivery' && deliveryPhotos.length >= 6) {
+      Alert.alert('Evidence limit', 'You can attach up to 6 delivery photos.');
+      return;
+    }
     const permission = await ImagePicker.requestCameraPermissionsAsync();
     if (permission.status !== 'granted') {
       Alert.alert('Camera', 'Camera permission is required.');
@@ -107,8 +111,40 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
       quality: 0.65,
     });
     if (result.canceled || !result.assets[0]) return;
-    if (kind === 'delivery') setDeliveryPhoto(result.assets[0]);
-    else setSignedNotePhoto(result.assets[0]);
+    if (kind === 'delivery') {
+      setDeliveryPhotos(current => [...current, result.assets[0]].slice(0, 6));
+    } else {
+      setSignedNotePhoto(result.assets[0]);
+    }
+  };
+
+  const chooseEvidencePhotos = async () => {
+    const remaining = 6 - deliveryPhotos.length;
+    if (remaining <= 0) {
+      Alert.alert('Evidence limit', 'You can attach up to 6 delivery photos.');
+      return;
+    }
+    const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
+    if (permission.status !== 'granted') {
+      Alert.alert('Photos', 'Photo library permission is required.');
+      return;
+    }
+    const result = await ImagePicker.launchImageLibraryAsync({
+      mediaTypes: ImagePicker.MediaTypeOptions.Images,
+      quality: 0.65,
+      allowsMultipleSelection: true,
+      selectionLimit: remaining,
+    });
+    if (result.canceled || !result.assets.length) return;
+    setDeliveryPhotos(current => {
+      const seen = new Set(current.map(asset => asset.uri));
+      const additions = result.assets.filter(asset => !seen.has(asset.uri));
+      return [...current, ...additions].slice(0, 6);
+    });
+  };
+
+  const removeEvidencePhoto = (index: number) => {
+    setDeliveryPhotos(current => current.filter((_, itemIndex) => itemIndex !== index));
   };
 
   const uploadEvidence = async (asset: ImagePicker.ImagePickerAsset | null, prefix: string) => {
@@ -142,8 +178,8 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
 
     setSaving(true);
     try {
-      const [deliveryPhotoUrl, signatureUrl] = await Promise.all([
-        uploadEvidence(deliveryPhoto, 'delivery'),
+      const [deliveryPhotoUrls, signatureUrl] = await Promise.all([
+        Promise.all(deliveryPhotos.map((asset, index) => uploadEvidence(asset, `delivery-${index + 1}`))),
         uploadEvidence(signedNotePhoto, 'signed-note'),
       ]);
       await apiPost(`/api/pos/${receiving.id}/receipts`, {
@@ -152,7 +188,7 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
         notes: notes.trim() || null,
         deliveredAt: new Date().toISOString(),
         evidence: {
-          photoUrls: deliveryPhotoUrl ? [deliveryPhotoUrl] : [],
+          photoUrls: deliveryPhotoUrls.filter((url): url is string => Boolean(url)),
           signatureUrl,
           signedBy: signedBy.trim() || null,
           condition: condition.trim() || null,
@@ -289,15 +325,40 @@ export default function DeliveriesScreen({ onLogout }: { onLogout: () => void })
                 </View>
               </View>
 
-              <Text style={styles.label}>Delivery evidence</Text>
+              <Text style={styles.label}>Delivery evidence · {deliveryPhotos.length}/6 photos</Text>
               <View style={styles.evidenceRow}>
-                <TouchableOpacity style={[styles.evidenceBtn, deliveryPhoto && styles.evidenceReady]} onPress={() => takeEvidencePhoto('delivery')}>
-                  <Text style={[styles.evidenceText, deliveryPhoto && { color: Colors.green }]}>{deliveryPhoto ? '✓ Delivery photo' : 'Take delivery photo'}</Text>
+                <TouchableOpacity
+                  disabled={deliveryPhotos.length >= 6}
+                  style={[styles.evidenceBtn, deliveryPhotos.length > 0 && styles.evidenceReady, deliveryPhotos.length >= 6 && styles.disabledEvidence]}
+                  onPress={() => takeEvidencePhoto('delivery')}
+                >
+                  <Text style={[styles.evidenceText, deliveryPhotos.length > 0 && { color: Colors.green }]}>
+                    {deliveryPhotos.length ? '+ Take another photo' : 'Take delivery photo'}
+                  </Text>
                 </TouchableOpacity>
-                <TouchableOpacity style={[styles.evidenceBtn, signedNotePhoto && styles.evidenceReady]} onPress={() => takeEvidencePhoto('signature')}>
-                  <Text style={[styles.evidenceText, signedNotePhoto && { color: Colors.green }]}>{signedNotePhoto ? '✓ Signed note photo' : 'Photograph signed note'}</Text>
+                <TouchableOpacity
+                  disabled={deliveryPhotos.length >= 6}
+                  style={[styles.evidenceBtn, deliveryPhotos.length > 0 && styles.evidenceReady, deliveryPhotos.length >= 6 && styles.disabledEvidence]}
+                  onPress={() => void chooseEvidencePhotos()}
+                >
+                  <Text style={[styles.evidenceText, deliveryPhotos.length > 0 && { color: Colors.green }]}>Choose photos</Text>
                 </TouchableOpacity>
               </View>
+              {deliveryPhotos.length > 0 ? (
+                <View style={styles.evidenceList}>
+                  {deliveryPhotos.map((photo, index) => (
+                    <View key={photo.uri} style={styles.evidenceChip}>
+                      <Text style={styles.evidenceChipText}>Photo {index + 1}</Text>
+                      <TouchableOpacity accessibilityLabel={`Remove delivery photo ${index + 1}`} onPress={() => removeEvidencePhoto(index)}>
+                        <Text style={styles.evidenceRemove}>×</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </View>
+              ) : null}
+              <TouchableOpacity style={[styles.signatureBtn, signedNotePhoto && styles.evidenceReady]} onPress={() => takeEvidencePhoto('signature')}>
+                <Text style={[styles.evidenceText, signedNotePhoto && { color: Colors.green }]}>{signedNotePhoto ? '✓ Signed note photo attached · retake' : 'Photograph signed note'}</Text>
+              </TouchableOpacity>
 
               <Text style={styles.label}>Signed / checked by</Text>
               <TextInput value={signedBy} onChangeText={setSignedBy} maxLength={120} placeholder="Name receiving the delivery" placeholderTextColor={Colors.t3} style={styles.input} />
@@ -360,8 +421,14 @@ const styles = StyleSheet.create({
   twoCol: { flexDirection: 'row', gap: 8 },
   evidenceRow: { flexDirection: 'row', gap: 8 },
   evidenceBtn: { flex: 1, minHeight: 50, backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 9, alignItems: 'center', justifyContent: 'center', padding: 8 },
+  signatureBtn: { minHeight: 44, marginTop: 8, backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 9, alignItems: 'center', justifyContent: 'center', padding: 8 },
   evidenceReady: { borderColor: Colors.green },
+  disabledEvidence: { opacity: 0.4 },
   evidenceText: { color: Colors.t2, fontSize: 10.5, fontWeight: '800', textAlign: 'center' },
+  evidenceList: { flexDirection: 'row', flexWrap: 'wrap', gap: 6, marginTop: 8 },
+  evidenceChip: { flexDirection: 'row', alignItems: 'center', gap: 6, borderWidth: 1, borderColor: Colors.green + '55', backgroundColor: Colors.green + '12', borderRadius: 99, paddingLeft: 9, paddingRight: 5, paddingVertical: 5 },
+  evidenceChipText: { color: Colors.green, fontSize: 9.5, fontWeight: '800' },
+  evidenceRemove: { color: Colors.t2, fontSize: 17, lineHeight: 17, paddingHorizontal: 3 },
   confirm: { backgroundColor: Colors.green, borderRadius: 11, padding: 13, alignItems: 'center', marginTop: 14 },
   confirmText: { color: Colors.ink, fontWeight: '900', fontSize: 12 },
 });
