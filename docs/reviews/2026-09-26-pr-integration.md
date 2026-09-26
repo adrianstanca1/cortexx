@@ -28,6 +28,10 @@ Compared remote branch patch history with main and checked current feature histo
 
 ## Validation
 
-487 unit tests passed in the isolated review worktree. Targeted Xero tests passed including four-timezone regression. Application integrity and schema-drift commands completed; the app audit reports non-blocking review findings and must not be represented as a clean accessibility audit. Clean install, lint/typecheck/build, browser CI and deployment are additional gates.
+After PR #241 merged to main, the review branch was rebuilt cleanly on that base. Clean install reports 0 vulnerabilities; 489 unit tests pass; targeted Xero tests pass including the four-timezone regression; repository-wide lint, Prisma generation and the full Next.js production build pass. Application integrity and schema-drift commands completed; the app audit reports non-blocking review findings and must not be represented as a clean accessibility audit. Browser CI and deployment remain the final gates.
 
 Production checkout had unrelated dependency edits in progress. This review uses a separate worktree and does not overwrite or commit those edits.
+
+## Concurrent security patch
+
+PR #241 was merged independently before this review branch was finalized. PR #240 was then rebuilt on the resulting `main`, so the mobile dependency patch is inherited from the base and is not duplicated in this PR.

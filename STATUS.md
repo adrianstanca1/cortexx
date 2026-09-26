@@ -6,7 +6,7 @@ Reviewed 26 September 2026. Canonical repository: `adrianstanca1/cortexx`; produ
 
 The complete PR inventory at review start contained 237 PRs: 174 merged, 63 closed without merge, and zero open. Four closed PRs contain feature/security work; their replacements are accounted for in [the PR review](docs/reviews/2026-09-26-pr-integration.md). The other 59 are dependency updates; closed historical upgrade proposals must not be applied over the current lockfiles.
 
-Main includes procurement/requisitions/RFQs/receipts/matching, commercial and bank reconciliation, read-only Xero integration, role-aware field operations and closeout, drawing distribution, programme baselines/delays/resources, construction innovation pilots/standards, field command briefs and equipment permission fixes through #239.
+Main includes procurement/requisitions/RFQs/receipts/matching, commercial and bank reconciliation, read-only Xero integration, role-aware field operations and closeout, drawing distribution, programme baselines/delays/resources, construction innovation pilots/standards, field command briefs and equipment permission fixes through #239, plus the mobile dependency security patch in #241.
 
 ## Verification and release
 
@@ -14,7 +14,7 @@ At review start the production checkout was at `384b86f`, and the public health 
 
 Main CI run 36259923225 passed unit/build, shared/native typechecks, integration tests and five browser shards. The mobile-chromium-1 shard failed; deployment run 36260194472 was therefore skipped. iOS run 36258931579 failed because its workflow selected Node 20 while Capacitor requires Node 22.
 
-The review patch normalizes offset-free Xero dates independently of server timezone, aligns the remaining iOS workflow to Node 22, and makes CI browser journeys run a prebuilt production app instead of compiling routes lazily during timed tests. Its unit suite passed 487/487; date regression covers UTC, London, Los Angeles and Auckland. Final CI/deployment evidence must be checked on the merged commit.
+The review patch normalizes offset-free Xero dates independently of server timezone, aligns the remaining iOS workflow to Node 22, and makes CI browser journeys run a prebuilt production app instead of compiling routes lazily during timed tests. Rebased onto merged PR #241, its clean install reports 0 vulnerabilities and local validation passes 489/489 unit tests, repository-wide lint, Prisma generation and the full Next.js production build; the date regression covers UTC, London, Los Angeles and Auckland. Final CI/deployment evidence must still be checked on the merged commit.
 
 ## Remaining completion gates
 
