@@ -10,9 +10,9 @@ function loadModule(file) {
   const code = ts.transpileModule(source, {
     compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
   }).outputText
-  const module = { exports: {} }
-  vm.runInNewContext(code, { module, exports: module.exports, require, console, Date, Number, String, Error })
-  return module.exports
+  const loaded = { exports: {} }
+  vm.runInNewContext(code, { module: loaded, exports: loaded.exports, require, console, Date, Number, String, Error })
+  return loaded.exports
 }
 
 const { parseBankCsv } = loadModule('lib/bank-csv.ts')
