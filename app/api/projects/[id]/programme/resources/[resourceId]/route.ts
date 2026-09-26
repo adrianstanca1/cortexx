@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
@@ -15,15 +15,16 @@ function positiveNumber(value: unknown, max = 100000) {
 
 export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string; resourceId: string }> }) {
   const { id, resourceId } = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  if (!canPlanProgramme(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id || '')
+  const session = auth.session
+  if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId || '')
   if (limited) return limited
   try {
-    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
-    const existing = await prisma.programmeResourceAllocation.findFirst({ where: { id: resourceId, projectId: id } })
+    const existing = await prisma.programmeResourceAllocation.findFirst({ where: { id: resourceId, projectId: id, organizationId: auth.orgId } })
     if (!existing) return NextResponse.json({ error: 'Resource allocation not found' }, { status: 404 })
     const body = await req.json()
     const data: Record<string, unknown> = {}
@@ -54,7 +55,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       data.label = label
     }
     if (body.notes !== undefined) data.notes = String(body.notes || '').trim().slice(0, 1000) || null
-    const updated = await prisma.programmeResourceAllocation.update({ where: { id: resourceId }, data, include: { teamMember: true, equipment: true, material: true, activity: { select: { id: true, title: true, plannedStart: true, plannedEnd: true } } } })
+    const updated = await prisma.programmeResourceAllocation.update({ where: { id: resourceId, organizationId: auth.orgId }, data, include: { teamMember: true, equipment: true, material: true, activity: { select: { id: true, title: true, plannedStart: true, plannedEnd: true } } } })
     auditLog({ action: 'programme.resource.update', resourceType: 'ProgrammeResourceAllocation', resourceId, metadata: { projectId: id, activityId: existing.activityId, fields: Object.keys(data) }, ...requestMeta(req) })
     return NextResponse.json(updated)
   } catch (error) {
@@ -65,15 +66,16 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string; resourceId: string }> }) {
   const { id, resourceId } = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  if (!canPlanProgramme(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id || '')
+  const session = auth.session
+  if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId || '')
   if (limited) return limited
   try {
-    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
-    const deleted = await prisma.programmeResourceAllocation.deleteMany({ where: { id: resourceId, projectId: id } })
+    const deleted = await prisma.programmeResourceAllocation.deleteMany({ where: { id: resourceId, projectId: id, organizationId: auth.orgId } })
     if (!deleted.count) return NextResponse.json({ error: 'Resource allocation not found' }, { status: 404 })
     auditLog({ action: 'programme.resource.delete', resourceType: 'ProgrammeResourceAllocation', resourceId, metadata: { projectId: id }, ...requestMeta(req) })
     return NextResponse.json({ success: true })
