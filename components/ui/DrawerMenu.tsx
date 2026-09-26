@@ -16,6 +16,7 @@ interface MenuItem {
 const PRIMARY: MenuItem[] = [
   { href: '/dashboard', label: 'Command centre', Icon: IcDashboard, color: 'var(--accent)' },
   { href: '/apps', label: 'All modules', Icon: IcSpark, color: '#a58bff' },
+  { href: '/innovation', label: 'Innovation OS', Icon: IcSpark, color: '#48d8ff' },
   { href: '/projects', label: 'Projects', Icon: IcProjects, color: '#64a8ff' },
   { href: '/tasks', label: 'Work', Icon: IcTasks, color: '#45d18a' },
   { href: '/team', label: 'People', Icon: IcTeam, color: '#a58bff' },
