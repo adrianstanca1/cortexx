@@ -79,6 +79,26 @@ test('Project Manager operates tasks but cannot create projects', async ({ page 
   expect(created.body?.projectId).toBe(project.id)
   await page.goto('/tasks')
   await expect(page.locator('body')).toContainText('E2E PM coordination task')
+
+  const resourceView = await api(page, `/api/projects/${project.id}/programme/resources`)
+  expect(resourceView.status).toBe(200)
+  expect(resourceView.body?.activities?.length).toBeGreaterThan(0)
+  const activityId = resourceView.body.activities[0].id
+  const resourceLabel = `E2E PM crew ${Date.now()}`
+  const allocation = await api(page, `/api/projects/${project.id}/programme/resources`, {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ activityId, resourceType: 'labour', label: resourceLabel, quantity: 3, hoursPerDay: 8 }),
+  })
+  expect(allocation.status).toBe(201)
+  expect(allocation.body?.quantity).toBe(3)
+
+  const resourcePage = await page.goto(`/projects/${project.id}/programme/resources`, { waitUntil: 'domcontentloaded' })
+  expect(resourcePage?.status() || 0).toBeLessThan(500)
+  await expect(page.locator('body')).toContainText(resourceLabel)
+  await expect(page).not.toHaveURL(/\/login(?:\?|$)/)
+
+  const removed = await api(page, `/api/projects/${project.id}/programme/resources/${allocation.body.id}`, { method: 'DELETE' })
+  expect(removed.status).toBe(200)
 })
 
 test('Foreman can execute site workflow but cannot create projects', async ({ page }) => {

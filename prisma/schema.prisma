@@ -66,25 +66,25 @@ model VerificationToken {
 // ─── Domain models ─────────────────────────────────────────────────────────
 
 model Project {
-  id                      String                      @id @default(cuid())
+  id                      String                        @id @default(cuid())
   name                    String
   address                 String
   postcode                String
-  status                  String                      @default("active") // active, snagging, quoting, complete
-  progress                Int                         @default(0)
-  clientName              String                      @default("")
-  shareToken              String?                     @unique
+  status                  String                        @default("active") // active, snagging, quoting, complete
+  progress                Int                           @default(0)
+  clientName              String                        @default("")
+  shareToken              String?                       @unique
   shareTokenExpiresAt     DateTime?
-  budget                  Float                       @default(0)
-  spent                   Float                       @default(0)
-  lat                     Float                       @default(51.5)
-  lng                     Float                       @default(-0.1)
+  budget                  Float                         @default(0)
+  spent                   Float                         @default(0)
+  lat                     Float                         @default(51.5)
+  lng                     Float                         @default(-0.1)
   startDate               DateTime?
   endDate                 DateTime?
-  onSiteCount             Int                         @default(0)
+  onSiteCount             Int                           @default(0)
   archivedAt              DateTime?
-  createdAt               DateTime                    @default(now())
-  updatedAt               DateTime                    @updatedAt
+  createdAt               DateTime                      @default(now())
+  updatedAt               DateTime                      @updatedAt
   tasks                   Task[]
   assignments             Assignment[]
   invoices                Invoice[]
@@ -109,6 +109,7 @@ model Project {
   programmeDependencies   ProgrammeDependency[]
   programmeBaselines      ProgrammeBaselineRevision[]
   programmeDelayEvents    ProgrammeDelayEvent[]
+  programmeResources      ProgrammeResourceAllocation[]
   permits                 Permit[]
   rams                    Rams[]
   tenders                 Tender[]
@@ -272,15 +273,15 @@ model Task {
 }
 
 model TeamMember {
-  id                  String              @id @default(cuid())
+  id                  String                        @id @default(cuid())
   name                String
   role                String
   email               String?
   phone               String?
-  avatarColor         String              @default("#2563eb")
-  dailyRate           Float               @default(0)
-  onSite              Boolean             @default(false)
-  createdAt           DateTime            @default(now())
+  avatarColor         String                        @default("#2563eb")
+  dailyRate           Float                         @default(0)
+  onSite              Boolean                       @default(false)
+  createdAt           DateTime                      @default(now())
   tasks               Task[]
   assignments         Assignment[]
   timeEntries         TimeEntry[]
@@ -288,6 +289,7 @@ model TeamMember {
   siteCheckIns        SiteCheckIn[]
   mileageEntries      MileageEntry[]
   programmeActivities ProgrammeActivity[]
+  programmeResources  ProgrammeResourceAllocation[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -885,9 +887,10 @@ model Equipment {
   updatedAt      DateTime              @updatedAt
   maintenances   MaintenanceSchedule[]
 
-  organizationId  String?
-  organization    Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  equipmentChecks EquipmentCheck[]
+  organizationId     String?
+  organization       Organization?                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  equipmentChecks    EquipmentCheck[]
+  programmeResources ProgrammeResourceAllocation[]
 
   @@index([status])
   @@index([nextServiceAt])
@@ -942,8 +945,9 @@ model Material {
   createdAt    DateTime  @default(now())
   updatedAt    DateTime  @updatedAt
 
-  organizationId String?
-  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organizationId     String?
+  organization       Organization?                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  programmeResources ProgrammeResourceAllocation[]
 
   @@index([category])
   @@index([code])
@@ -1231,9 +1235,9 @@ model DrawingDistributionRecipient {
 }
 
 model ProgrammeActivity {
-  id                  String                @id @default(cuid())
+  id                  String                        @id @default(cuid())
   projectId           String
-  project             Project               @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  project             Project                       @relation(fields: [projectId], references: [id], onDelete: Cascade)
   code                String?
   title               String
   description         String?
@@ -1243,25 +1247,59 @@ model ProgrammeActivity {
   plannedEnd          DateTime
   actualStart         DateTime?
   actualEnd           DateTime?
-  progress            Int                   @default(0)
-  status              String                @default("not_started") // not_started, in_progress, complete, blocked
+  progress            Int                           @default(0)
+  status              String                        @default("not_started") // not_started, in_progress, complete, blocked
   responsibleMemberId String?
-  responsibleMember   TeamMember?           @relation(fields: [responsibleMemberId], references: [id], onDelete: SetNull)
+  responsibleMember   TeamMember?                   @relation(fields: [responsibleMemberId], references: [id], onDelete: SetNull)
   location            String?
   notes               String?
-  sortOrder           Int                   @default(0)
-  predecessors        ProgrammeDependency[] @relation("ProgrammeSuccessor")
-  successors          ProgrammeDependency[] @relation("ProgrammePredecessor")
+  sortOrder           Int                           @default(0)
+  predecessors        ProgrammeDependency[]         @relation("ProgrammeSuccessor")
+  successors          ProgrammeDependency[]         @relation("ProgrammePredecessor")
   delayEvents         ProgrammeDelayEvent[]
-  createdAt           DateTime              @default(now())
-  updatedAt           DateTime              @updatedAt
+  resources           ProgrammeResourceAllocation[]
+  createdAt           DateTime                      @default(now())
+  updatedAt           DateTime                      @updatedAt
   organizationId      String?
-  organization        Organization?         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  organization        Organization?                 @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@index([projectId, plannedStart])
   @@index([projectId, plannedEnd])
   @@index([responsibleMemberId, plannedStart])
   @@index([status, plannedEnd])
+  @@index([organizationId])
+}
+
+model ProgrammeResourceAllocation {
+  id             String            @id @default(cuid())
+  projectId      String
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activityId     String
+  activity       ProgrammeActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  resourceType   String // labour, equipment, material
+  teamMemberId   String?
+  teamMember     TeamMember?       @relation(fields: [teamMemberId], references: [id], onDelete: SetNull)
+  equipmentId    String?
+  equipment      Equipment?        @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  materialId     String?
+  material       Material?         @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  label          String?
+  quantity       Float             @default(1)
+  unit           String            @default("unit")
+  hoursPerDay    Float             @default(0)
+  needBy         DateTime?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  organizationId String?
+  organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, resourceType])
+  @@index([activityId])
+  @@index([teamMemberId])
+  @@index([equipmentId])
+  @@index([materialId])
+  @@index([needBy])
   @@index([organizationId])
 }
 
@@ -1894,38 +1932,39 @@ model Organization {
   valuationVariations           ValuationVariation[]
 
   // ── Legacy-parity v1.1 modules
-  payrollRuns         PayrollRun[]
-  leaveRequests       LeaveRequest[]
-  bankTransactions    BankTransaction[]
-  bankAllocations     BankAllocation[]
-  carbonEntries       CarbonEntry[]
-  wasteEntries        WasteEntry[]
-  appraisals          Appraisal[]
-  documentTemplates   DocumentTemplate[]
-  formDefinitions     FormDefinition[]
-  reminders           Reminder[]
-  savedViews          SavedView[]
-  tags                Tag[]
-  goals               Goal[]
-  improvements        Improvement[]
-  kaizenCards         KaizenCard[]
-  processDocs         ProcessDoc[]
-  siteReviews         SiteReview[]
-  apprenticeships     Apprenticeship[]
-  insuranceClaims     InsuranceClaim[]
-  currencyRates       CurrencyRate[]
-  personas            Persona[]
-  serviceCatalogItems ServiceCatalogItem[]
-  subPortalSessions   SubPortalSession[]
-  apiKeys             ApiKey[]
-  infraSnapshots      InfraSnapshot[]
-  projectBookmarks    ProjectBookmark[]
-  actionPlans         ActionPlan[]
-  conflicts           Conflict[]
-  cis300Returns       Cis300Return[]
-  conversations       Conversation[]
-  chatMessages        ChatMessage[]
-  equipmentChecks     EquipmentCheck[]
+  payrollRuns                  PayrollRun[]
+  leaveRequests                LeaveRequest[]
+  bankTransactions             BankTransaction[]
+  bankAllocations              BankAllocation[]
+  carbonEntries                CarbonEntry[]
+  wasteEntries                 WasteEntry[]
+  appraisals                   Appraisal[]
+  documentTemplates            DocumentTemplate[]
+  formDefinitions              FormDefinition[]
+  reminders                    Reminder[]
+  savedViews                   SavedView[]
+  tags                         Tag[]
+  goals                        Goal[]
+  improvements                 Improvement[]
+  kaizenCards                  KaizenCard[]
+  processDocs                  ProcessDoc[]
+  siteReviews                  SiteReview[]
+  apprenticeships              Apprenticeship[]
+  insuranceClaims              InsuranceClaim[]
+  currencyRates                CurrencyRate[]
+  personas                     Persona[]
+  serviceCatalogItems          ServiceCatalogItem[]
+  subPortalSessions            SubPortalSession[]
+  apiKeys                      ApiKey[]
+  infraSnapshots               InfraSnapshot[]
+  projectBookmarks             ProjectBookmark[]
+  actionPlans                  ActionPlan[]
+  conflicts                    Conflict[]
+  cis300Returns                Cis300Return[]
+  conversations                Conversation[]
+  chatMessages                 ChatMessage[]
+  equipmentChecks              EquipmentCheck[]
+  programmeResourceAllocations ProgrammeResourceAllocation[]
 }
 
 model UserOrganization {

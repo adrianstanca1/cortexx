@@ -192,7 +192,10 @@ export default function ProgrammePage() {
           <div style={eyebrow}>PROJECT PROGRAMME</div>
           <h1 style={{ margin: 0, color: 'var(--t1)', fontSize: 20, fontFamily: 'var(--font-system)', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{data.project.name}</h1>
         </div>
-        {data.permissions.plan && <button onClick={openCreate} style={primaryButton}><IcPlus size={14} color="#fff" /> Activity</button>}
+        <div style={{ display: 'flex', alignItems: 'center', gap: 7 }}>
+          <Link href={`/projects/${id}/programme/resources`} style={{ ...secondaryButton, textDecoration: 'none' }}>Resources</Link>
+          {data.permissions.plan && <button onClick={openCreate} style={primaryButton}><IcPlus size={14} color="#fff" /> Activity</button>}
+        </div>
       </header>
 
       <main style={{ padding: '14px 16px 96px', maxWidth: 1100, margin: '0 auto' }}>
