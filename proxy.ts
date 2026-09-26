@@ -123,6 +123,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/auth/',
   '/api/mobile/auth/login',
   '/api/health',
+  '/api/metrics',    // public Web Vitals sink; route-level rate limit validates payload
   '/api/webhooks/',  // Stripe et al; signature-verified inside the handlers
   '/api/cron/',      // CRON_SECRET bearer header verified inside the handlers
 ]
