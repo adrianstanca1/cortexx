@@ -10,6 +10,7 @@ const coreRoutes = [
   '/documents',
   '/team',
   '/timesheets',
+  '/timesheets/reconcile',
   '/invoices',
   '/quotes',
   '/site-diary',
