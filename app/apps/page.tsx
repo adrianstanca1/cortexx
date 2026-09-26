@@ -65,6 +65,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
     title: 'Project & site',
     items: [
       { href: '/field',              label: 'Field operations', Icon: IcHardhat, color: '#f59e0b' },
+      { href: '/innovation',         label: 'Innovation OS', Icon: IcSpark, color: '#48d8ff' },
       { href: '/projects',           label: 'Timeline',   Icon: IcLayers,   color: '#2563eb' },
       { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4' },
       { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981' },
@@ -138,7 +139,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/safety',      label: 'Safety',      Icon: IcHardhat, color: '#ef4444', badgeKey: 'safety' },
       { href: '/reviews',     label: 'Site reviews', Icon: IcCheck, color: '#8b5cf6' },
       { href: '/goals',       label: 'Goals (OKRs)', Icon: IcSpark, color: '#f59e0b' },
-      { href: '/improve-hub', label: 'Improvement hub', Icon: IcSpark, color: '#06b6d4' },
+      { href: '/improve-hub', label: 'Improvement backlog', Icon: IcSpark, color: '#06b6d4' },
       { href: '/kaizen-board', label: 'Kaizen board', Icon: IcLayers, color: '#22c55e' },
     ],
   },
