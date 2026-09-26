@@ -149,6 +149,10 @@ export interface Snag {
   priority: 'low' | 'medium' | 'high' | 'critical'
   photoUrl: string | null
   dueDate: string | null
+  resolution: string | null
+  closeoutEvidence: { photoUrls?: string[]; signatureUrl?: string | null; signedBy?: string | null }
+  closedBy: string | null
+  closeoutVerifiedAt: string | null
   closedAt: string | null
   createdAt: string
   updatedAt: string
@@ -166,6 +170,8 @@ export interface Inspection {
   conductedBy: string | null
   scheduledAt: string | null
   completedAt: string | null
+  closeoutVerifiedBy: string | null
+  closeoutVerifiedAt: string | null
   notes: string | null
   createdAt: string
   updatedAt: string

@@ -16,6 +16,8 @@ const SEVERITY_COLOR: Record<Defect['severity'], string> = {
   safety: '#ef4444',
 }
 
+interface CloseoutEvidence { photoUrls?: string[]; signatureUrl?: string | null }
+
 interface Snag {
   id: string
   title: string
@@ -25,6 +27,10 @@ interface Snag {
   priority: 'low' | 'medium' | 'high' | 'critical'
   photoUrl: string | null
   dueDate: string | null
+  resolution: string | null
+  closeoutEvidence: CloseoutEvidence
+  closedBy: string | null
+  closeoutVerifiedAt: string | null
   closedAt: string | null
   createdAt: string
   projectId: string
@@ -68,6 +74,12 @@ export default function SnagsPage() {
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
   const [analyses, setAnalyses] = useState<Record<string, Analysis>>({})
   const photoInputRef = useRef<HTMLInputElement>(null)
+  const closeoutInputRef = useRef<HTMLInputElement>(null)
+  const [closeoutSnag, setCloseoutSnag] = useState<Snag | null>(null)
+  const [closeoutResolution, setCloseoutResolution] = useState('')
+  const [closeoutPhotoUrl, setCloseoutPhotoUrl] = useState('')
+  const [closeoutUploading, setCloseoutUploading] = useState(false)
+  const [closeoutSaving, setCloseoutSaving] = useState(false)
 
   const analyze = async (snagId: string) => {
     setAnalyses(prev => ({ ...prev, [snagId]: { ...(prev[snagId] || { defects: [], summary: '' }), loading: true, error: undefined } }))
@@ -99,6 +111,7 @@ export default function SnagsPage() {
   const [photoUploading, setPhotoUploading] = useState(false)
 
   useModalEffects(showModal, () => setShowModal(false))
+  useModalEffects(Boolean(closeoutSnag), () => setCloseoutSnag(null))
 
   useEffect(() => {
     if (new URLSearchParams(window.location.search).get('new') === '1') setShowModal(true)
@@ -141,6 +154,26 @@ export default function SnagsPage() {
     }
   }, [])
 
+  const uploadCloseoutPhoto = useCallback(async (file: File) => {
+    if (file.size > 25 * 1024 * 1024) {
+      setToast({ msg: `Photo too large (max 25 MB). This is ${Math.round(file.size / 1024 / 1024)} MB.`, type: 'error' })
+      return
+    }
+    setCloseoutUploading(true)
+    try {
+      const fd = new FormData()
+      fd.append('file', file, file.name)
+      const res = await fetch('/api/uploads', { method: 'POST', body: fd })
+      if (!res.ok) throw new Error((await res.json().catch(() => ({})) as { error?: string }).error || 'Upload failed')
+      const data = await res.json() as { url: string }
+      setCloseoutPhotoUrl(data.url)
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Closeout photo upload failed', type: 'error' })
+    } finally {
+      setCloseoutUploading(false)
+    }
+  }, [])
+
   const create = async () => {
     if (!form.title.trim() || !form.projectId) return
     setSaving(true)
@@ -173,19 +206,56 @@ export default function SnagsPage() {
 
   const cycleStatus = async (s: Snag) => {
     const next = NEXT_STATUS[s.status]
-    setSnags(prev => prev.map(x => x.id === s.id ? { ...x, status: next, closedAt: next === 'closed' ? new Date().toISOString() : null } : x))
+    if (next === 'closed') {
+      setCloseoutSnag(s)
+      setCloseoutResolution(s.resolution || '')
+      setCloseoutPhotoUrl(s.closeoutEvidence?.photoUrls?.[0] || '')
+      return
+    }
+    setSnags(prev => prev.map(x => x.id === s.id ? { ...x, status: next, closedAt: null, closedBy: null, closeoutVerifiedAt: null } : x))
     try {
       const res = await fetch(`/api/snags/${s.id}`, {
         method: 'PUT',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: next }),
       })
-      if (!res.ok) throw new Error('Failed')
-    } catch {
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || 'Failed')
+      setSnags(prev => prev.map(x => x.id === s.id ? json : x))
+      if (s.status === 'closed') setToast({ msg: 'Snag reopened; closeout evidence retained' })
+    } catch (e) {
       setSnags(prev => prev.map(x => x.id === s.id ? s : x))
-      setToast({ msg: 'Failed to update status', type: 'error' })
+      setToast({ msg: e instanceof Error ? e.message : 'Failed to update status', type: 'error' })
     }
   }
+
+  const closeSnag = async () => {
+    if (!closeoutSnag || !closeoutResolution.trim() || !closeoutPhotoUrl) return
+    setCloseoutSaving(true)
+    try {
+      const res = await fetch(`/api/snags/${closeoutSnag.id}`, {
+        method: 'PUT',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          status: 'closed',
+          resolution: closeoutResolution.trim(),
+          closeoutEvidence: { photoUrls: [closeoutPhotoUrl] },
+        }),
+      })
+      const json = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(json.error || 'Failed to close snag')
+      setSnags(prev => prev.map(x => x.id === closeoutSnag.id ? json : x))
+      setCloseoutSnag(null)
+      setCloseoutResolution('')
+      setCloseoutPhotoUrl('')
+      setToast({ msg: 'Snag closed with evidence' })
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Closeout failed', type: 'error' })
+    } finally {
+      setCloseoutSaving(false)
+    }
+  }
+
 
   const remove = async (id: string) => {
     if (confirmDelete !== id) {
@@ -306,6 +376,19 @@ export default function SnagsPage() {
                 </button>
               </div>
               </div>
+              {s.status === 'closed' && (s.resolution || s.closeoutEvidence?.photoUrls?.length) && (
+                <div style={{ padding: '10px 12px', background: 'rgba(16,185,129,0.07)', borderRadius: 10, borderLeft: '3px solid #10b981' }}>
+                  <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 800, color: '#10b981', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 5 }}>Verified closeout</div>
+                  {s.resolution && <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t1)', lineHeight: 1.4 }}>{s.resolution}</div>}
+                  {s.closedBy && <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', marginTop: 4 }}>Closed by {s.closedBy}{s.closeoutVerifiedAt ? ` · ${new Date(s.closeoutVerifiedAt).toLocaleDateString('en-GB')}` : ''}</div>}
+                  {s.closeoutEvidence?.photoUrls?.[0] && (
+                    <a href={s.closeoutEvidence.photoUrls[0]} target="_blank" rel="noopener noreferrer" style={{ display: 'inline-block', marginTop: 8 }}>
+                      {/* eslint-disable-next-line @next/next/no-img-element */}
+                      <img src={s.closeoutEvidence.photoUrls[0]} alt="Snag closeout evidence" width={96} height={72} style={{ width: 96, height: 72, objectFit: 'cover', borderRadius: 8, display: 'block' }} />
+                    </a>
+                  )}
+                </div>
+              )}
               {analyses[s.id] && !analyses[s.id].loading && (analyses[s.id].defects.length > 0 || analyses[s.id].error || analyses[s.id].summary) && (
                 <div style={{ padding: '10px 12px', background: 'rgba(139,92,246,0.06)', borderRadius: 10, borderLeft: '3px solid #a78bfa' }}>
                   {analyses[s.id].error ? (
@@ -340,6 +423,44 @@ export default function SnagsPage() {
       )}
 
       <TabBar />
+
+      {closeoutSnag && (
+        <div style={{ position: 'fixed', inset: 0, zIndex: 210, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
+          <div onClick={() => setCloseoutSnag(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }} />
+          <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+              <div>
+                <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Close snag</h2>
+                <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 3, fontFamily: SF }}>{closeoutSnag.title}</p>
+              </div>
+              <button onClick={() => setCloseoutSnag(null)} aria-label="Cancel closeout" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+            </div>
+            <div>
+              <label style={labelStyle}>Rectification / resolution *</label>
+              <textarea value={closeoutResolution} onChange={e => setCloseoutResolution(e.target.value)} rows={4} placeholder="What was corrected, replaced or verified?" style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
+            </div>
+            <div>
+              <label style={labelStyle}>Closeout evidence photo *</label>
+              <input ref={closeoutInputRef} type="file" accept="image/*" capture="environment" onChange={e => { const f = e.target.files?.[0]; if (f) void uploadCloseoutPhoto(f); e.target.value = '' }} style={{ display: 'none' }} />
+              {closeoutPhotoUrl ? (
+                <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img src={closeoutPhotoUrl} alt="Closeout evidence preview" width={96} height={72} style={{ width: 96, height: 72, objectFit: 'cover', borderRadius: 10 }} />
+                  <button onClick={() => closeoutInputRef.current?.click()} disabled={closeoutUploading} style={{ ...secondaryButtonStyle }}>Replace photo</button>
+                </div>
+              ) : (
+                <button onClick={() => closeoutInputRef.current?.click()} disabled={closeoutUploading} style={{ ...secondaryButtonStyle, display: 'flex', gap: 7, alignItems: 'center', justifyContent: 'center' }}>
+                  <IcCamera size={16} color="var(--t2)" /> {closeoutUploading ? 'Uploading…' : 'Take / choose closeout photo'}
+                </button>
+              )}
+            </div>
+            <button onClick={closeSnag} disabled={closeoutSaving || closeoutUploading || !closeoutResolution.trim() || !closeoutPhotoUrl} style={{ padding: '13px 16px', borderRadius: 11, border: 'none', background: !closeoutResolution.trim() || !closeoutPhotoUrl ? 'rgba(16,185,129,0.3)' : '#10b981', color: '#fff', fontFamily: SF, fontWeight: 800, cursor: closeoutSaving ? 'wait' : 'pointer' }}>
+              {closeoutSaving ? 'Closing…' : 'Verify & close snag'}
+            </button>
+            <p style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', lineHeight: 1.45 }}>Closeout stores the resolution, evidence, closer and verification time for audit. Reopening does not delete that history.</p>
+          </div>
+        </div>
+      )}
 
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
@@ -407,6 +528,8 @@ export default function SnagsPage() {
 const labelStyle: React.CSSProperties = {
   fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6,
 }
+const secondaryButtonStyle: React.CSSProperties = { padding: '10px 14px', borderRadius: 9, border: '1px solid rgba(255,255,255,0.12)', background: 'rgba(255,255,255,0.05)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }
+
 const inputStyle: React.CSSProperties = {
   width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', boxSizing: 'border-box',
 }

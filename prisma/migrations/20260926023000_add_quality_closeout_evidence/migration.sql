@@ -1,0 +1,9 @@
+ALTER TABLE "Snag"
+  ADD COLUMN IF NOT EXISTS "resolution" TEXT,
+  ADD COLUMN IF NOT EXISTS "closeoutEvidence" JSONB NOT NULL DEFAULT '{}'::jsonb,
+  ADD COLUMN IF NOT EXISTS "closedBy" TEXT,
+  ADD COLUMN IF NOT EXISTS "closeoutVerifiedAt" TIMESTAMP(3);
+
+ALTER TABLE "Inspection"
+  ADD COLUMN IF NOT EXISTS "closeoutVerifiedBy" TEXT,
+  ADD COLUMN IF NOT EXISTS "closeoutVerifiedAt" TIMESTAMP(3);
