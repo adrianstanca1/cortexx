@@ -109,6 +109,7 @@ model Project {
   programmeDependencies   ProgrammeDependency[]
   programmeBaselines      ProgrammeBaselineRevision[]
   programmeDelayEvents    ProgrammeDelayEvent[]
+  programmeResources      ProgrammeResourceAllocation[]
   permits                 Permit[]
   rams                    Rams[]
   tenders                 Tender[]
@@ -288,6 +289,7 @@ model TeamMember {
   siteCheckIns        SiteCheckIn[]
   mileageEntries      MileageEntry[]
   programmeActivities ProgrammeActivity[]
+  programmeResources  ProgrammeResourceAllocation[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -888,6 +890,7 @@ model Equipment {
   organizationId  String?
   organization    Organization?    @relation(fields: [organizationId], references: [id], onDelete: Cascade)
   equipmentChecks EquipmentCheck[]
+  programmeResources ProgrammeResourceAllocation[]
 
   @@index([status])
   @@index([nextServiceAt])
@@ -944,6 +947,7 @@ model Material {
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  programmeResources ProgrammeResourceAllocation[]
 
   @@index([category])
   @@index([code])
@@ -1253,6 +1257,7 @@ model ProgrammeActivity {
   predecessors        ProgrammeDependency[] @relation("ProgrammeSuccessor")
   successors          ProgrammeDependency[] @relation("ProgrammePredecessor")
   delayEvents         ProgrammeDelayEvent[]
+  resources           ProgrammeResourceAllocation[]
   createdAt           DateTime              @default(now())
   updatedAt           DateTime              @updatedAt
   organizationId      String?
@@ -1262,6 +1267,39 @@ model ProgrammeActivity {
   @@index([projectId, plannedEnd])
   @@index([responsibleMemberId, plannedStart])
   @@index([status, plannedEnd])
+  @@index([organizationId])
+}
+
+model ProgrammeResourceAllocation {
+  id             String            @id @default(cuid())
+  projectId      String
+  project        Project           @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  activityId     String
+  activity       ProgrammeActivity @relation(fields: [activityId], references: [id], onDelete: Cascade)
+  resourceType   String // labour, equipment, material
+  teamMemberId   String?
+  teamMember     TeamMember?       @relation(fields: [teamMemberId], references: [id], onDelete: SetNull)
+  equipmentId    String?
+  equipment      Equipment?        @relation(fields: [equipmentId], references: [id], onDelete: SetNull)
+  materialId     String?
+  material       Material?         @relation(fields: [materialId], references: [id], onDelete: SetNull)
+  label          String?
+  quantity       Float             @default(1)
+  unit           String            @default("unit")
+  hoursPerDay    Float             @default(0)
+  needBy         DateTime?
+  notes          String?
+  createdAt      DateTime          @default(now())
+  updatedAt      DateTime          @updatedAt
+  organizationId String?
+  organization   Organization?     @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([projectId, resourceType])
+  @@index([activityId])
+  @@index([teamMemberId])
+  @@index([equipmentId])
+  @@index([materialId])
+  @@index([needBy])
   @@index([organizationId])
 }
 
@@ -1926,6 +1964,7 @@ model Organization {
   conversations       Conversation[]
   chatMessages        ChatMessage[]
   equipmentChecks     EquipmentCheck[]
+  programmeResourceAllocations ProgrammeResourceAllocation[]
 }
 
 model UserOrganization {
