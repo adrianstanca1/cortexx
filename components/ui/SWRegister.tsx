@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 
 /**
  * Registers the service worker in production only.
@@ -14,6 +14,7 @@ import { useEffect, useState } from 'react'
  */
 export default function SWRegister() {
   const [waiting, setWaiting] = useState<ServiceWorker | null>(null)
+  const reloadRequested = useRef(false)
 
   useEffect(() => {
     if (typeof window === 'undefined') return
@@ -52,10 +53,12 @@ export default function SWRegister() {
       /* registration failures are non-critical */
     })
 
-    // When the new SW takes over, reload once so the user gets fresh code
+    // A first-time install calls clients.claim(), which also emits
+    // controllerchange. Reload only after the user explicitly accepts a waiting
+    // update; otherwise a fresh visitor can have their first navigation aborted.
     let didReload = false
     const onController = () => {
-      if (didReload) return
+      if (!reloadRequested.current || didReload) return
       didReload = true
       window.location.reload()
     }
@@ -71,8 +74,9 @@ export default function SWRegister() {
   if (!waiting) return null
 
   const apply = () => {
+    reloadRequested.current = true
     waiting.postMessage({ type: 'SKIP_WAITING' })
-    // controllerchange handler will reload
+    // controllerchange handler will reload only for this explicit update.
   }
 
   return (

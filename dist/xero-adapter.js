@@ -48,7 +48,9 @@ function parseXeroDate(value) {
     const date = new Date(Number(legacy[1]))
     return Number.isNaN(date.getTime()) ? null : date
   }
-  const date = new Date(raw)
+  // Xero date strings without an offset must not depend on the server timezone.
+  const normalized = /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?$/.test(raw) ? `${raw}Z` : raw
+  const date = new Date(normalized)
   return Number.isNaN(date.getTime()) ? null : date
 }
 

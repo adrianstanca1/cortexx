@@ -53,3 +53,23 @@ test('Xero bank response ignores malformed rows instead of inventing ledger entr
   ] })
   assert.deepEqual(rows.map(row => row.externalId), ['valid'])
 })
+
+
+test('Xero offset-free bank dates are stable across server timezones', () => {
+  const { execFileSync } = require('node:child_process')
+  const adapter = require.resolve('../lib/xero-adapter')
+  const script = `const { parseXeroDate } = require(${JSON.stringify(adapter)});
+    console.log(JSON.stringify([
+      parseXeroDate('2026-09-20T00:00:00').toISOString(),
+      parseXeroDate('2026-09-20T00:00:00.123').toISOString(),
+      parseXeroDate('2026-09-20').toISOString(),
+      parseXeroDate('2026-09-20T00:00:00+02:00').toISOString()
+    ]))`
+  for (const TZ of ['UTC', 'Europe/London', 'America/Los_Angeles', 'Pacific/Auckland']) {
+    const result = JSON.parse(execFileSync(process.execPath, ['-e', script], { env: { ...process.env, TZ }, encoding: 'utf8' }))
+    assert.deepEqual(result, [
+      '2026-09-20T00:00:00.000Z', '2026-09-20T00:00:00.123Z',
+      '2026-09-20T00:00:00.000Z', '2026-09-19T22:00:00.000Z',
+    ], TZ)
+  }
+})
