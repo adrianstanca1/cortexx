@@ -83,6 +83,10 @@ async function summary(projectId: string, start: Date, end: Date) {
   if (production.length === 0) warnings.push('No production output recorded today')
   if (diaryNotes === 0) warnings.push('No site diary note recorded today')
   if (timeEntries.length === 0) warnings.push('No time entries recorded for this project today')
+  else {
+    const unapprovedTimeEntries = timeEntries.filter(item => !item.approved).length
+    if (unapprovedTimeEntries > 0) warnings.push(`${unapprovedTimeEntries} time entr${unapprovedTimeEntries === 1 ? 'y is' : 'ies are'} awaiting approval`)
+  }
 
   return {
     blocking,

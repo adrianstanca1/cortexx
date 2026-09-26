@@ -80,6 +80,7 @@ test('field close-out GET aggregates operational evidence and exposes close perm
   assert.equal(response.body.metrics.openUrgentTasks, 2)
   assert.ok(response.body.blocking.some(x => x.includes('critical constraint')))
   assert.ok(response.body.blocking.some(x => x.includes('hold/witness')))
+  assert.ok(response.body.warnings.some(x => x.includes('awaiting approval')))
 })
 
 test('field close-out POST requires acknowledgement when blockers or warnings remain', async () => {
@@ -118,4 +119,30 @@ test('operative can review close-out but cannot formally close the shift', async
   assert.equal(get.body.canClose, false)
   const post = await POST({ json: async () => ({ projectId: 'p1', date: '2026-09-26' }) })
   assert.equal(post.status, 403)
+})
+
+test('field close-out duplicate detection is keyed to shift date, not activity creation time', async () => {
+  const prisma = prismaFixture()
+  let where
+  prisma.activity.findFirst = async args => {
+    where = args.where
+    return {
+      id: 'existing-close',
+      actorName: 'Night PM',
+      createdAt: new Date('2026-09-27T00:20:00Z'),
+      detail: '{}',
+    }
+  }
+  let writes = 0
+  const { POST } = handler(prisma, undefined, async () => { writes++; return { id: 'new' } })
+  const response = await POST({ json: async () => ({
+    projectId: 'p1',
+    date: '2026-09-26',
+    acknowledgeOpenItems: true,
+  }) })
+  assert.equal(response.status, 409)
+  assert.equal(response.body.code, 'SHIFT_ALREADY_CLOSED')
+  assert.equal(writes, 0)
+  assert.equal(where.action, 'field shift closed: 2026-09-26')
+  assert.equal(where.createdAt, undefined)
 })

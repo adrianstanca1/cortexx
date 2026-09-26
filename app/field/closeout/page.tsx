@@ -37,7 +37,13 @@ type Closeout = {
 }
 
 const SF = 'var(--font-system)'
-const today = () => new Date().toISOString().slice(0, 10)
+const today = () => {
+  const now = new Date()
+  const yyyy = now.getFullYear()
+  const mm = String(now.getMonth() + 1).padStart(2, '0')
+  const dd = String(now.getDate()).padStart(2, '0')
+  return `${yyyy}-${mm}-${dd}`
+}
 
 export default function FieldCloseoutPage() {
   const [projects, setProjects] = useState<Project[]>([])

@@ -24,7 +24,13 @@ export default function FieldCloseoutScreen({ onLogout }: { onLogout: () => void
   const [ack, setAck] = useState(false);
   const [notes, setNotes] = useState('');
   const [message, setMessage] = useState('');
-  const date = useMemo(() => new Date().toISOString().slice(0, 10), []);
+  const date = useMemo(() => {
+    const now = new Date();
+    const yyyy = now.getFullYear();
+    const mm = String(now.getMonth() + 1).padStart(2, '0');
+    const dd = String(now.getDate()).padStart(2, '0');
+    return `${yyyy}-${mm}-${dd}`;
+  }, []);
 
   const loadReport = async (id = projectId) => {
     if (!id) { setReport(null); setLoading(false); return; }
