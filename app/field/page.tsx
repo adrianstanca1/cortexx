@@ -115,6 +115,7 @@ const QA_SAFETY: Action[] = [
 ]
 
 const CLOSE_SHIFT: Action[] = [
+  { label: 'Close shift', sub: 'Run close-out checks and create evidence', href: '/field/closeout', color: 'var(--accent)', Icon: IcCheck },
   { label: 'Shift handover', sub: 'Pass priorities, risks and open items', href: '/field/handover', color: 'var(--accent)', Icon: IcTeam },
   { label: 'Site diary', sub: 'Progress, delays and evidence', href: '/site-diary', color: '#45d18a', Icon: IcDoc },
   { label: 'Timesheet', sub: 'Check and submit hours', href: '/timesheets', color: '#a58bff', Icon: IcClock },
