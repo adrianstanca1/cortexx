@@ -33,4 +33,16 @@ Baseline main CI run 36329368915 and deployment run 36329648553 succeeded on fa8
 
 ## Limits and remaining work
 
-No destructive branch/repository cleanup and no production database mutations were performed. Historical experimental/uncommitted code is preserved. This review does not establish that every feature is defect-free. Outstanding product gates remain in the canonical roadmap. A follow-up should verify direct upload-file authorization against project assignment (drawing metadata routes already enforce assignment, while the shared download endpoint currently verifies organization-level references).
+No destructive branch/repository cleanup and no production database mutations were performed. Historical experimental/uncommitted code is preserved. This review does not establish that every feature is defect-free. Outstanding product gates remain in the canonical roadmap. The follow-up below closes the confirmed direct-download project-assignment gap.
+
+## Follow-up: file permissions and PR feedback
+
+- Direct upload reads now check project assignment on document, snag, observation, drawing revision and safety-incident references before reading local bytes or issuing an S3 redirect.
+- Document lists, detail, expiring lists and AI tagging use the same scope. Company-wide documents remain available to internal members. Internal files are denied to client personas.
+- Document writes check membership write permission and the existing record scope. Creating/reassigning a document also verifies access to the destination project. Read-only users cannot upload bytes, update or delete documents.
+- Authenticated file responses and storage redirects are no-store so role switches do not reuse a cached application response. Already issued S3 links remain usable until their existing expiry.
+- Archived drawing queries accept either legacy status=archived or a non-null archivedAt, keeping the archive/restore path available. Explicit take=0 clamps to one.
+
+Validation: full quality gate passed with 516 unit tests. Updated targeted tests passed, production build passed, and the desktop/mobile file-access journeys passed against a disposable Postgres database (no retries). Hosted checks must pass on the latest PR head before merge.
+
+This is a project-access and write-permission fix, not an immutable upload provenance registry. Existing APIs associate uploads through document/evidence URLs. Additional hardening should bind upload ownership and attachment changes to a persistent upload record so manually copied URLs cannot be republished through new records; that broader data-model migration remains separate. Archived browser-gateway source remains preserved and undeployed.

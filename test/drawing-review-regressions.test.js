@@ -60,9 +60,12 @@ test('drawing list excludes archived rows by default and for active filters', as
 test('drawing archive filter remains available and take stays positive and bounded', async () => {
   const { route, queries } = drawingsFixture()
   await route.GET({ url: 'https://app.test/api/drawings?status=archived&take=-5' })
-  assert.equal(queries[0].where.status, 'archived')
+  assert.equal(queries[0].where.OR[0].status, 'archived')
+  assert.equal(queries[0].where.OR[1].archivedAt.not, null)
   assert.equal('archivedAt' in queries[0].where, false)
   assert.equal(queries[0].take, 1)
   await route.GET({ url: 'https://app.test/api/drawings?take=5000' })
   assert.equal(queries[2].take, 200)
+  await route.GET({ url: 'https://app.test/api/drawings?take=0' })
+  assert.equal(queries[4].take, 1)
 })

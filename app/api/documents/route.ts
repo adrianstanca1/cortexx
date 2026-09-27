@@ -6,21 +6,25 @@ import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 
+import { fileProjectScope } from '@/lib/file-access'
+import { programmeProjectWhere, type ProgrammeActor } from '@/lib/programme-access'
 import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 const MAX_TAKE = 100
 
-async function GET_impl(req: NextRequest) {
+async function GET_impl(req: NextRequest, session: ProgrammeActor) {
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
     const type = searchParams.get('type')
-    const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
+    const parsedTake = Number.parseInt(searchParams.get('take') || '50', 10)
+    const take = Math.max(1, Math.min(Number.isNaN(parsedTake) ? 50 : parsedTake, MAX_TAKE))
     const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
 
     const where = {
+      ...fileProjectScope(session),
       ...(projectId && { projectId }),
       ...(type && { type }),
     }
@@ -41,7 +45,7 @@ async function GET_impl(req: NextRequest) {
   }
 }
 
-async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null } }) {
+async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null; role?: string } }) {
   const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
@@ -81,6 +85,10 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
       metadata = body.metadata as Prisma.InputJsonValue
     }
 
+    if (session.user?.role === 'client') return NextResponse.json({ error: 'Document write permission required' }, { status: 403 })
+    if (body.projectId && !await prisma.project.findFirst({ where: programmeProjectWhere(body.projectId, session), select: { id: true } })) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
     const document = await prisma.document.create({
       data: {
         name: body.name.trim(),
@@ -117,5 +125,5 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
   }
 }
 
-export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
+export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
 export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })

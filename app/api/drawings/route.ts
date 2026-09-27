@@ -20,14 +20,16 @@ export async function GET(req: NextRequest) {
     const projectId = searchParams.get('projectId')
     const discipline = searchParams.get('discipline')
     const status = searchParams.get('status')
-    const take = Math.max(1, Math.min(parseInt(searchParams.get('take') || '100', 10) || 100, MAX_TAKE))
+    const parsedTake = Number.parseInt(searchParams.get('take') || '100', 10)
+    const take = Math.max(1, Math.min(Number.isNaN(parsedTake) ? 100 : parsedTake, MAX_TAKE))
 
     const where: Prisma.DrawingWhereInput = {
       ...(projectId && { projectId }),
       project: { is: programmeProjectScope(auth.session) },
       ...(discipline && { discipline }),
-      ...(status && ALLOWED_STATUS.has(status) && { status }),
-      ...(status !== 'archived' && { archivedAt: null }),
+      ...(status === 'archived'
+        ? { OR: [{ status: 'archived' }, { archivedAt: { not: null } }] }
+        : { archivedAt: null, status: status && ALLOWED_STATUS.has(status) ? status : { not: 'archived' } }),
     }
     const drawings = await prisma.drawing.findMany({
       where,

@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
+import { canWrite } from '@/lib/rbac'
+import { fileProjectScope } from '@/lib/file-access'
+import { programmeProjectWhere } from '@/lib/programme-access'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 
@@ -9,11 +12,11 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   try {
-    const document = await prisma.document.findUnique({
-      where: { id: params.id },
+    const document = await prisma.document.findFirst({
+      where: { id: params.id, ...fileProjectScope(auth.session) },
       include: { project: true },
     })
     if (!document) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -26,10 +29,16 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 
 export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!canWrite(auth.role || '') || auth.personaRole === 'client') return NextResponse.json({ error: 'Document write permission required' }, { status: 403 })
   try {
+    const existing = await prisma.document.findFirst({ where: { id: params.id, ...fileProjectScope(auth.session) }, select: { id: true } })
+    if (!existing) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     const body = await req.json()
+    if (body.projectId && !await prisma.project.findFirst({ where: programmeProjectWhere(body.projectId, auth.session), select: { id: true } })) {
+      return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
     if (body.name !== undefined && !String(body.name).trim()) {
       return NextResponse.json({ error: 'Name cannot be empty' }, { status: 400 })
     }
@@ -41,7 +50,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       : undefined
     const newVersion = body.newVersion === true && typeof body.url === 'string' && body.url
     const document = await prisma.document.update({
-      where: { id: params.id },
+      where: { id: params.id, ...fileProjectScope(auth.session) },
       data: {
         ...(body.name !== undefined && { name: String(body.name).trim() }),
         ...(body.type !== undefined && { type: String(body.type).trim() }),
@@ -66,10 +75,11 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!canWrite(auth.role || '') || auth.personaRole === 'client') return NextResponse.json({ error: 'Document write permission required' }, { status: 403 })
   try {
-    const doc = await prisma.document.findUnique({ where: { id: params.id }, select: { name: true, projectId: true } })
+    const doc = await prisma.document.findFirst({ where: { id: params.id, ...fileProjectScope(auth.session) }, select: { name: true, projectId: true } })
     if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
     await prisma.document.delete({ where: { id: params.id } })
     auditLog({
@@ -81,7 +91,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     prisma.activity.create({
       data: {
         projectId: doc.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(auth.session),
         actorType: 'human',
         action: `deleted document: ${doc.name}`,
         iconType: 'trash',
