@@ -29,6 +29,9 @@ export function parseMarkupStatus(value: unknown): DrawingMarkupStatus {
 }
 
 export function parseNormalized(value: unknown, field: string) {
+  if ((typeof value !== 'number' && typeof value !== 'string') || (typeof value === 'string' && !value.trim())) {
+    throw new DrawingMarkupValidationError(field + ' must be between 0 and 1')
+  }
   const number = Number(value)
   if (!Number.isFinite(number) || number < 0 || number > 1) {
     throw new DrawingMarkupValidationError(field + ' must be between 0 and 1')
@@ -42,8 +45,9 @@ export function parseOptionalNormalized(value: unknown, field: string) {
 }
 
 export function parseMarkupPage(value: unknown) {
-  const page = Number.parseInt(String(value ?? '1'), 10)
-  if (!Number.isFinite(page) || page < 1 || page > 9999) {
+  const raw = value === undefined ? 1 : value
+  const page = typeof raw === 'number' || (typeof raw === 'string' && /^[0-9]+$/.test(raw.trim())) ? Number(raw) : NaN
+  if (!Number.isInteger(page) || page < 1 || page > 9999) {
     throw new DrawingMarkupValidationError('Page must be between 1 and 9999')
   }
   return page
