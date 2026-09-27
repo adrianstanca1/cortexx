@@ -1,21 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
+import { programmeProjectScope } from '@/lib/programme-access'
+import { canWrite } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!canWrite(auth.role || '') || !['company_admin', 'project_manager'].includes(auth.personaRole || '')) {
+    return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
+  }
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
   try {
     const body = await req.json()
     const revision = String(body.revision || '').trim()
     if (!revision) return NextResponse.json({ error: 'Revision label is required (e.g. A, B, P01)' }, { status: 400 })
     if (revision.length > 10) return NextResponse.json({ error: 'Revision label too long' }, { status: 400 })
 
-    const drawing = await prisma.drawing.findUnique({ where: { id: params.id }, select: { id: true, projectId: true, number: true, title: true } })
+    const drawing = await prisma.drawing.findFirst({ where: { id: params.id, project: { is: programmeProjectScope(auth.session) } }, select: { id: true, projectId: true, number: true, title: true } })
     if (!drawing) return NextResponse.json({ error: 'Drawing not found' }, { status: 404 })
 
     const fileUrl = typeof body.fileUrl === 'string' && body.fileUrl ? body.fileUrl : null
@@ -38,7 +45,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     prisma.activity.create({
       data: {
         projectId: drawing.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(auth.session),
         actorType: 'human',
         action: `${drawing.number} rev ${revision} uploaded: ${drawing.title}`,
         iconType: 'doc',

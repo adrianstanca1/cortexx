@@ -3,7 +3,8 @@ import { readFile } from 'node:fs/promises'
 import { downloadToTemp } from '@/lib/storage'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
+import { programmeProjectScope } from '@/lib/programme-access'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 
 export const dynamic = 'force-dynamic'
@@ -110,9 +111,9 @@ async function loadRevImage(rev: { fileUrl: string | null; mimeType: string | nu
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  const limited = await enforceRateLimit(req, 'vision', auth.userId)
   if (limited) return limited
 
   let body: { aRev?: unknown; bRev?: unknown }
@@ -122,8 +123,8 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
   if (!aRev || !bRev) return NextResponse.json({ error: 'aRev and bRev are required revision ids' }, { status: 400 })
   if (aRev === bRev) return NextResponse.json({ error: 'aRev and bRev must be different revisions' }, { status: 400 })
 
-  const drawing = await prisma.drawing.findUnique({
-    where: { id: params.id },
+  const drawing = await prisma.drawing.findFirst({
+    where: { id: params.id, project: { is: programmeProjectScope(auth.session) } },
     include: { project: { select: { id: true, name: true } }, revisions: true },
   })
   if (!drawing) return NextResponse.json({ error: 'Drawing not found' }, { status: 404 })
@@ -175,7 +176,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     prisma.activity.create({
       data: {
         projectId: drawing.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(auth.session),
         actorType: 'ai',
         action: `compared drawing revisions: ${drawing.number} ${earlier.revision} → ${later.revision}`,
         detail: `${result.changes.length} change${result.changes.length === 1 ? '' : 's'} · ${result.designIntent}${result.reviewRecommended ? ' · review recommended' : ''}`,

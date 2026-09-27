@@ -4,16 +4,19 @@ import { getCurrentOrg } from './tenancy'
 
 export type ProgrammeActor = { user?: { email?: string | null; role?: string } }
 
-export function programmeProjectWhere(projectId: string, auth: ProgrammeActor): Prisma.ProjectWhereInput {
+export function programmeProjectScope(auth: ProgrammeActor): Prisma.ProjectWhereInput {
   const role = auth.user?.role || ''
   const email = auth.user?.email?.trim() || ''
   if (role === 'client') return { id: '__no_assigned_project__' }
-  if (!['project_manager', 'foreman', 'operative'].includes(role)) return { id: projectId }
+  if (!['project_manager', 'foreman', 'operative'].includes(role)) return {}
   if (!email) return { id: '__no_assigned_project__' }
   return {
-    id: projectId,
     assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } },
   }
+}
+
+export function programmeProjectWhere(projectId: string, auth: ProgrammeActor): Prisma.ProjectWhereInput {
+  return { id: projectId, ...programmeProjectScope(auth) }
 }
 
 export function canPlanProgramme(auth: ProgrammeActor): boolean {

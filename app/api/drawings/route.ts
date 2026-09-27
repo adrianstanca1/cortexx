@@ -1,6 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
+import { programmeProjectScope, programmeProjectWhere } from '@/lib/programme-access'
+import { canWrite } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 
@@ -10,7 +13,7 @@ const MAX_TAKE = 200
 const ALLOWED_STATUS = new Set(['draft', 'approved', 'superseded', 'archived'])
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   try {
     const { searchParams } = new URL(req.url)
@@ -19,8 +22,9 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const take = Math.min(parseInt(searchParams.get('take') || '100') || 100, MAX_TAKE)
 
-    const where = {
+    const where: Prisma.DrawingWhereInput = {
       ...(projectId && { projectId }),
+      project: { is: programmeProjectScope(auth.session) },
       ...(discipline && { discipline }),
       ...(status && ALLOWED_STATUS.has(status) && { status }),
       ...(status === undefined && { archivedAt: null }),
@@ -29,14 +33,14 @@ export async function GET(req: NextRequest) {
       where,
       include: {
         project: { select: { id: true, name: true } },
-        revisions: { orderBy: { uploadedAt: 'desc' }, take: 1 },
+        revisions: { orderBy: { uploadedAt: 'desc' }, take: 1, include: { _count: { select: { markups: true } } } },
         _count: { select: { revisions: true } },
       },
       orderBy: [{ status: 'asc' }, { number: 'asc' }],
       take,
     })
     const disciplines = await prisma.drawing.findMany({
-      where: { archivedAt: null, discipline: { not: null } },
+      where: { archivedAt: null, discipline: { not: null }, project: { is: programmeProjectScope(auth.session) } },
       distinct: ['discipline'],
       select: { discipline: true },
     })
@@ -51,9 +55,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!canWrite(auth.role || '') || !['company_admin', 'project_manager'].includes(auth.personaRole || '')) {
+    return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
+  }
+  const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -62,7 +69,7 @@ export async function POST(req: NextRequest) {
     const projectId = String(body.projectId || '').trim()
     if (!projectId) return NextResponse.json({ error: 'Project is required' }, { status: 400 })
 
-    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(projectId, auth.session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
 
     // Sequential DWG-NNN per project, unless body.number supplied
@@ -91,7 +98,7 @@ export async function POST(req: NextRequest) {
       },
       include: {
         project: { select: { id: true, name: true } },
-        revisions: { orderBy: { uploadedAt: 'desc' }, take: 1 },
+        revisions: { orderBy: { uploadedAt: 'desc' }, take: 1, include: { _count: { select: { markups: true } } } },
         _count: { select: { revisions: true } },
       },
     })
@@ -99,7 +106,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId,
-        actorName: actorName(auth),
+        actorName: actorName(auth.session),
         actorType: 'human',
         action: `added drawing ${drawing.number}: ${drawing.title}`,
         iconType: 'doc',
