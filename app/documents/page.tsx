@@ -9,6 +9,7 @@ import Modal from '@/components/ui/Modal'
 import FormField from '@/components/ui/FormField'
 import Button from '@/components/ui/Button'
 import SegmentedControl from '@/components/ui/SegmentedControl'
+import { uploadFileWithProgress } from '@/lib/client-upload'
 import {
   IcChevL,
   IcDoc,
@@ -168,11 +169,9 @@ export default function DocumentsPage() {
     setUploading(true)
     setUploadProgress(0)
     try {
-      const fd = new FormData()
-      fd.append('file', file)
-      const res = await fetch('/api/uploads', { method: 'POST', body: fd })
-      const data = await res.json().catch(() => ({}))
-      if (!res.ok) throw new Error(data.error || 'Upload failed')
+      const data = await uploadFileWithProgress(file, file.name, {
+        onProgress: setUploadProgress,
+      })
       applyUploadResult({
         url: data.url,
         size: data.size,
@@ -441,7 +440,7 @@ export default function DocumentsPage() {
         size="md"
         footer={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', paddingTop: 18 }}>
-            <div>{uploading && <span style={{ fontFamily: SF, fontSize: 12, color: '#f59e0b' }}>Uploading…</span>}</div>
+            <div>{uploading && <span style={{ fontFamily: SF, fontSize: 12, color: '#f59e0b' }}>Uploading {uploadProgress || 1}%</span>}</div>
             <div style={{ display: 'flex', gap: 12 }}>
               <Button variant="ghost" onClick={() => { setShowModal(false); resetForm() }} disabled={saving || uploading}>Cancel</Button>
               <Button variant="primary" loading={saving} onClick={save} disabled={uploading}>{editingId ? 'Save changes' : 'Add document'}</Button>
@@ -491,8 +490,13 @@ export default function DocumentsPage() {
               }}
             >
               <IcUpload size={24} color="#f59e0b" />
-              <span>{uploading ? 'Uploading…' : 'Click to upload PDF, photo or receipt'}</span>
+              <span>{uploading ? `Uploading ${uploadProgress || 1}%…` : 'Click to upload PDF, photo or receipt'}</span>
               <span style={{ fontSize: 12, color: 'var(--t3)' }}>Max 25 MB · PDF, JPG, PNG, HEIC</span>
+              {uploading && (
+                <span aria-hidden="true" style={{ width: '100%', height: 4, borderRadius: 99, overflow: 'hidden', background: 'rgba(255,255,255,0.08)', marginTop: 2 }}>
+                  <span style={{ display: 'block', width: `${Math.max(2, uploadProgress)}%`, height: '100%', background: '#f59e0b', transition: 'width 120ms linear' }} />
+                </span>
+              )}
             </button>
 
             {form.url && (

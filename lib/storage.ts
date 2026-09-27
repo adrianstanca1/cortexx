@@ -182,23 +182,44 @@ export async function putObject(
  * valid for S3_URL_EXPIRY_SECS seconds. Local-disk fallback returns
  * the in-app `/api/uploads/<key>` URL.
  */
-export async function getObjectUrl(key: string): Promise<string | null> {
+export async function getObjectUrl(key: string, options?: { downloadName?: string }): Promise<string | null> {
   if (!safeKey(key)) return null
 
   if (isS3Configured()) {
-    if (S3_PUBLIC_READ) {
+    if (S3_PUBLIC_READ && !options?.downloadName) {
       return `${S3_ENDPOINT}/${S3_BUCKET}/${encodeURIComponent(key)}`
     }
-    const cmd = new GetObjectCommand({ Bucket: S3_BUCKET, Key: key })
+    const disposition = options?.downloadName
+      ? `attachment; filename*=UTF-8''${encodeURIComponent(options.downloadName)}`
+      : undefined
+    const cmd = new GetObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      ...(disposition ? { ResponseContentDisposition: disposition } : {}),
+    })
     return getSignedUrl(getS3(), cmd, { expiresIn: S3_URL_EXPIRY_SECS })
   }
 
   return `/api/uploads/${encodeURIComponent(key)}`
 }
 
-/** Streams the object body. Used by the local-disk read route; S3 reads
- *  should redirect to getObjectUrl() instead. */
-export async function getObjectStream(key: string): Promise<{
+export type ObjectByteRange = { start: number; end: number }
+
+export async function getObjectMetadata(key: string): Promise<{ size: number; mimeType: string } | null> {
+  if (!safeKey(key)) return null
+  if (isS3Configured()) {
+    const head = await getS3().send(new HeadObjectCommand({ Bucket: S3_BUCKET, Key: key })).catch(() => null)
+    if (!head) return null
+    return { size: head.ContentLength || 0, mimeType: head.ContentType || 'application/octet-stream' }
+  }
+  const fullPath = join(/* turbopackIgnore: true */ LOCAL_UPLOAD_DIR, key)
+  const info = await stat(/* turbopackIgnore: true */ fullPath).catch(() => null)
+  if (!info || !info.isFile()) return null
+  return { size: info.size, mimeType: 'application/octet-stream' }
+}
+
+/** Streams the object body, optionally restricted to one byte range. */
+export async function getObjectStream(key: string, range?: ObjectByteRange): Promise<{
   body: ReadableStream<Uint8Array>
   size: number
   mimeType: string
@@ -209,11 +230,15 @@ export async function getObjectStream(key: string): Promise<{
     const head = await getS3().send(new HeadObjectCommand({ Bucket: S3_BUCKET, Key: key }))
       .catch(() => null)
     if (!head) return null
-    const obj = await getS3().send(new GetObjectCommand({ Bucket: S3_BUCKET, Key: key }))
+    const obj = await getS3().send(new GetObjectCommand({
+      Bucket: S3_BUCKET,
+      Key: key,
+      ...(range ? { Range: `bytes=${range.start}-${range.end}` } : {}),
+    }))
     if (!obj.Body) return null
     return {
       body: obj.Body.transformToWebStream() as ReadableStream<Uint8Array>,
-      size: head.ContentLength || 0,
+      size: range ? range.end - range.start + 1 : (head.ContentLength || 0),
       mimeType: head.ContentType || 'application/octet-stream',
     }
   }
@@ -223,8 +248,11 @@ export async function getObjectStream(key: string): Promise<{
   const info = await stat(/* turbopackIgnore: true */ fullPath).catch(() => null)
   if (!info || !info.isFile()) return null
   return {
-    body: Readable.toWeb(createReadStream(/* turbopackIgnore: true */ fullPath)) as ReadableStream<Uint8Array>,
-    size: info.size,
+    body: Readable.toWeb(createReadStream(
+      /* turbopackIgnore: true */ fullPath,
+      range ? { start: range.start, end: range.end } : undefined,
+    )) as ReadableStream<Uint8Array>,
+    size: range ? range.end - range.start + 1 : info.size,
     mimeType: 'application/octet-stream',  // caller maps from extension
   }
 }

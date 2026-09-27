@@ -3,7 +3,7 @@ import { extname } from 'node:path'
 
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
-import { getObjectStream, getObjectUrl, isS3Configured, safeKey } from '@/lib/storage'
+import { getObjectMetadata, getObjectStream, getObjectUrl, isS3Configured, safeKey, type ObjectByteRange } from '@/lib/storage'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -23,7 +23,28 @@ const EXT_TO_MIME: Record<string, string> = {
   '.wav': 'audio/wav',
 }
 
-export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ name: string }> }) {
+function parseByteRange(header: string | null, size: number): ObjectByteRange | 'invalid' | null {
+  if (!header) return null
+  const match = /^bytes=(\d*)-(\d*)$/.exec(header.trim())
+  if (!match || size <= 0) return 'invalid'
+
+  const startRaw = match[1]
+  const endRaw = match[2]
+  if (!startRaw && !endRaw) return 'invalid'
+
+  if (!startRaw) {
+    const suffix = Number(endRaw)
+    if (!Number.isInteger(suffix) || suffix <= 0) return 'invalid'
+    return { start: Math.max(0, size - suffix), end: size - 1 }
+  }
+
+  const start = Number(startRaw)
+  const requestedEnd = endRaw ? Number(endRaw) : size - 1
+  if (!Number.isInteger(start) || !Number.isInteger(requestedEnd) || start < 0 || start >= size || requestedEnd < start) return 'invalid'
+  return { start, end: Math.min(requestedEnd, size - 1) }
+}
+
+export async function GET(req: NextRequest, { params: paramsP }: { params: Promise<{ name: string }> }) {
   const params = await paramsP
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
@@ -38,7 +59,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   // could fetch any other org's upload just by guessing the 16-hex key.
   const url = `/api/uploads/${params.name}`
   const owned = await Promise.all([
-    prisma.document.findFirst({ where: { url }, select: { id: true } }),
+    prisma.document.findFirst({ where: { url }, select: { id: true, name: true } }),
     prisma.snag.findFirst({ where: { photoUrl: url }, select: { id: true } }),
     prisma.observation.findFirst({ where: { photoUrl: url }, select: { id: true } }),
     prisma.drawingRevision.findFirst({ where: { fileUrl: url }, select: { id: true } }),
@@ -48,26 +69,51 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
   }
 
+  const downloadName = req.nextUrl.searchParams.get('download') === '1'
+    ? (owned[0]?.name || params.name)
+    : null
+  const contentDisposition = downloadName
+    ? `attachment; filename*=UTF-8''${encodeURIComponent(downloadName)}`
+    : null
+
   // When S3 is in use, redirect to a short-lived presigned URL so the
   // browser fetches bytes directly from object storage — no Node process
   // streaming overhead, no app bandwidth bill. The browser caches the
   // redirect target normally.
   if (isS3Configured()) {
-    const url = await getObjectUrl(key)
+    const url = await getObjectUrl(key, downloadName ? { downloadName } : undefined)
     if (!url) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.redirect(url, 302)
   }
 
-  // Local disk: stream straight from FS like before.
-  const obj = await getObjectStream(key)
+  // Local disk: support byte ranges so image/PDF/audio clients can seek
+  // without downloading the full object again.
+  const metadata = await getObjectMetadata(key)
+  if (!metadata) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
+  const range = parseByteRange(req.headers.get('range'), metadata.size)
+  if (range === 'invalid') {
+    return new Response(null, {
+      status: 416,
+      headers: {
+        'Accept-Ranges': 'bytes',
+        'Content-Range': `bytes */${metadata.size}`,
+      },
+    })
+  }
+
+  const obj = await getObjectStream(key, range || undefined)
   if (!obj) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-  const mime = EXT_TO_MIME[extname(params.name).toLowerCase()] || 'application/octet-stream'
+  const mime = EXT_TO_MIME[extname(params.name).toLowerCase()] || metadata.mimeType || 'application/octet-stream'
   return new Response(obj.body, {
-    status: 200,
+    status: range ? 206 : 200,
     headers: {
       'Content-Type': mime,
       'Content-Length': String(obj.size),
+      'Accept-Ranges': 'bytes',
+      ...(range ? { 'Content-Range': `bytes ${range.start}-${range.end}/${metadata.size}` } : {}),
+      ...(contentDisposition ? { 'Content-Disposition': contentDisposition } : {}),
       'Cache-Control': 'private, max-age=300',
     },
   })
