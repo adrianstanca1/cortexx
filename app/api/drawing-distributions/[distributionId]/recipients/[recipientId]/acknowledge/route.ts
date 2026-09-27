@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { requireOrg } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { programmeProjectWhere } from '@/lib/programme-access'
+import { canWrite } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,6 +12,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
   const { distributionId, recipientId } = await paramsP
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!canWrite(auth.role || '')) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
   const email = String(auth.session.user?.email || '').trim().toLowerCase()
   try {
     const recipient = await prisma.drawingDistributionRecipient.findFirst({
@@ -17,6 +20,8 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
       include: { distribution: { include: { revision: { include: { drawing: { select: { id: true, projectId: true, number: true } } } } } } },
     })
     if (!recipient) return NextResponse.json({ error: 'Distribution recipient not found' }, { status: 404 })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(recipient.distribution.revision.drawing.projectId, auth.session), select: { id: true } })
+    if (!project) return NextResponse.json({ error: 'Distribution recipient not found' }, { status: 404 })
     const canAcknowledgeForOthers = ['company_admin', 'project_manager'].includes(auth.personaRole || '')
     if (recipient.email.toLowerCase() !== email && !canAcknowledgeForOthers) return NextResponse.json({ error: 'You can only acknowledge revisions issued to you' }, { status: 403 })
     if (recipient.acknowledgedAt) return NextResponse.json(recipient)
