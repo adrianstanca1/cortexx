@@ -1,9 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { downloadToTemp } from '@/lib/storage'
+import { canWrite } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { fileProjectScope } from '@/lib/file-access'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 
 export const dynamic = 'force-dynamic'
@@ -64,13 +66,14 @@ function parseTagResponse(raw: string): TagResult {
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  if (!canWrite(auth.role || '') || auth.personaRole === 'client') return NextResponse.json({ error: 'Document write permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'vision', auth.userId)
   if (limited) return limited
 
-  const doc = await prisma.document.findUnique({
-    where: { id: params.id },
+  const doc = await prisma.document.findFirst({
+    where: { id: params.id, ...fileProjectScope(auth.session) },
     include: { project: { select: { id: true, name: true } } },
   })
   if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
@@ -132,7 +135,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     prisma.activity.create({
       data: {
         projectId: doc.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(auth.session),
         actorType: 'ai',
         action: `tagged photo: ${doc.name}`,
         detail: `${tagged.category} · ${tagged.tags.slice(0, 3).join(', ')}`,

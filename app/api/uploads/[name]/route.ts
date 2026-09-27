@@ -2,7 +2,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { extname } from 'node:path'
 
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { programmeProjectScope } from '@/lib/programme-access'
+import { fileProjectScope } from '@/lib/file-access'
+import { requireOrg } from '@/lib/requireAuth'
 import { getObjectMetadata, getObjectStream, getObjectUrl, isS3Configured, safeKey, type ObjectByteRange } from '@/lib/storage'
 
 export const dynamic = 'force-dynamic'
@@ -46,24 +48,26 @@ function parseByteRange(header: string | null, size: number): ObjectByteRange | 
 
 export async function GET(req: NextRequest, { params: paramsP }: { params: Promise<{ name: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
 
   const key = safeKey(params.name)
   if (!key) return NextResponse.json({ error: 'Invalid name' }, { status: 400 })
 
-  // Tenant-scope check: an upload is only readable if it's referenced by
+  // Project assignment and tenant-scope check: an upload is only readable if it's referenced by
   // a row that belongs to the user's active organization. Each lookup
   // below auto-scopes via the Prisma tenancy extension, so a row from
   // another org never matches. Without this gate, any signed-in user
   // could fetch any other org's upload just by guessing the 16-hex key.
+  const project = { is: programmeProjectScope(auth.session) }
+  const optionalProject = fileProjectScope(auth.session)
   const url = `/api/uploads/${params.name}`
   const owned = await Promise.all([
-    prisma.document.findFirst({ where: { url }, select: { id: true, name: true } }),
-    prisma.snag.findFirst({ where: { photoUrl: url }, select: { id: true } }),
-    prisma.observation.findFirst({ where: { photoUrl: url }, select: { id: true } }),
-    prisma.drawingRevision.findFirst({ where: { fileUrl: url }, select: { id: true } }),
-    prisma.safetyIncident.findFirst({ where: { photoUrl: url }, select: { id: true } }),
+    prisma.document.findFirst({ where: { url, ...optionalProject }, select: { id: true, name: true } }),
+    prisma.snag.findFirst({ where: { photoUrl: url, project }, select: { id: true } }),
+    prisma.observation.findFirst({ where: { photoUrl: url, project }, select: { id: true } }),
+    prisma.drawingRevision.findFirst({ where: { fileUrl: url, drawing: { is: { project } } }, select: { id: true } }),
+    prisma.safetyIncident.findFirst({ where: { photoUrl: url, ...optionalProject }, select: { id: true } }),
   ])
   if (!owned.some(row => row !== null)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -83,7 +87,9 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
   if (isS3Configured()) {
     const url = await getObjectUrl(key, downloadName ? { downloadName } : undefined)
     if (!url) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    return NextResponse.redirect(url, 302)
+    const response = NextResponse.redirect(url, 302)
+    response.headers.set('Cache-Control', 'private, no-store')
+    return response
   }
 
   // Local disk: support byte ranges so image/PDF/audio clients can seek
@@ -114,7 +120,7 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
       'Accept-Ranges': 'bytes',
       ...(range ? { 'Content-Range': `bytes ${range.start}-${range.end}/${metadata.size}` } : {}),
       ...(contentDisposition ? { 'Content-Disposition': contentDisposition } : {}),
-      'Cache-Control': 'private, max-age=300',
+      'Cache-Control': 'private, no-store',
     },
   })
 }

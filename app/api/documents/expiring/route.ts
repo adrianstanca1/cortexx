@@ -1,12 +1,13 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { fileProjectScope } from '@/lib/file-access'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   try {
     const { searchParams } = new URL(req.url)
@@ -17,6 +18,7 @@ export async function GET(req: NextRequest) {
 
     const documents = await prisma.document.findMany({
       where: {
+        ...fileProjectScope(auth.session),
         expiresAt: { gte: now, lte: horizon },
       },
       include: { project: true },
