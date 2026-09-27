@@ -24,6 +24,13 @@ test('internal file scope preserves company-wide files and restricts project fil
   assert.equal(client.OR[0].project.is.id, '__no_internal_file__')
 })
 
+test('only company admin may manage company-wide file scope', () => {
+  assert.equal(scope.canManageCompanywideFiles({ user: { role: 'company_admin' } }), true)
+  for (const role of ['project_manager', 'foreman', 'operative', 'client', '']) {
+    assert.equal(scope.canManageCompanywideFiles({ user: { role } }), false)
+  }
+})
+
 function fixture(role, personaRole = 'foreman') {
   let dbCalls = 0
   const auth = { role, personaRole, userId: 'u', session: { user: { role: personaRole } } }

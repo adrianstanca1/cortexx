@@ -3,7 +3,7 @@ import { readFile } from 'node:fs/promises'
 import { downloadToTemp } from '@/lib/storage'
 import { canWrite } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
-import { fileProjectScope } from '@/lib/file-access'
+import { canManageCompanywideFiles, fileProjectScope } from '@/lib/file-access'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
@@ -69,20 +69,24 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   if (!canWrite(auth.role || '') || auth.personaRole === 'client') return NextResponse.json({ error: 'Document write permission required' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'vision', auth.userId)
-  if (limited) return limited
 
   const doc = await prisma.document.findFirst({
     where: { id: params.id, ...fileProjectScope(auth.session) },
     include: { project: { select: { id: true, name: true } } },
   })
   if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+  if (doc.projectId === null && !canManageCompanywideFiles(auth.session)) {
+    return NextResponse.json({ error: 'Company Admin permission required for company-wide documents' }, { status: 403 })
+  }
   if (!doc.url || !doc.mimeType?.startsWith('image/')) {
     return NextResponse.json({ error: 'Document is not an image.', code: 'NOT_IMAGE' }, { status: 400 })
   }
   if (!/^\/api\/uploads\/[A-Za-z0-9._-]+$/.test(doc.url)) {
     return NextResponse.json({ error: 'Invalid document URL', code: 'INVALID_URL' }, { status: 400 })
   }
+
+  const limited = await enforceRateLimit(req, 'vision', auth.userId)
+  if (limited) return limited
 
   // downloadToTemp() handles both local-disk and S3-backed storage —
   // the prior direct join(uploadDir, filename) read silently 404'd

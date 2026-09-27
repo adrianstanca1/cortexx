@@ -1,4 +1,4 @@
-import { expect } from '@playwright/test'
+import { expect, request as playwrightRequest } from '@playwright/test'
 
 export async function openLogin(page) {
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
@@ -26,31 +26,44 @@ export async function submitLogin(page) {
 }
 
 export async function signIn(page, email, password, { dashboard = false } = {}) {
-  // Role-switch journeys must not inherit the previous Auth.js session.
-  // Clearing the context also removes the active-org cookie so the new
-  // account resolves its own deterministic tenant membership.
+  // Persona switches use a fresh API cookie jar, then copy only the resulting
+  // Auth.js cookies into the browser context. This prevents stale session
+  // cookies from a previous user contaminating RBAC journeys on mobile.
   await page.context().clearCookies()
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
   const origin = new URL(page.url()).origin
-  const request = page.context().request
-  const csrfResponse = await request.get(`${origin}/api/auth/csrf`)
-  expect(csrfResponse.ok()).toBeTruthy()
-  const { csrfToken } = await csrfResponse.json()
-  expect(csrfToken).toBeTruthy()
+  const authRequest = await playwrightRequest.newContext({ baseURL: origin })
+  try {
+    const csrfResponse = await authRequest.get('/api/auth/csrf')
+    expect(csrfResponse.ok()).toBeTruthy()
+    const { csrfToken } = await csrfResponse.json()
+    expect(csrfToken).toBeTruthy()
 
-  const callbackUrl = `${origin}/dashboard`
-  const response = await request.post(`${origin}/api/auth/callback/credentials`, {
-    headers: { 'X-Auth-Return-Redirect': '1' },
-    form: { csrfToken, email, password, callbackUrl },
-  })
-  expect(response.ok()).toBeTruthy()
-  const payload = await response.json()
-  expect(new URL(payload.url).searchParams.get('error')).toBeNull()
+    const callbackUrl = origin + '/dashboard'
+    const response = await authRequest.post('/api/auth/callback/credentials', {
+      headers: { 'X-Auth-Return-Redirect': '1' },
+      form: { csrfToken, email, password, callbackUrl },
+    })
+    expect(response.ok()).toBeTruthy()
+    const payload = await response.json()
+    expect(new URL(payload.url).searchParams.get('error')).toBeNull()
 
-  const sessionResponse = await request.get(origin + '/api/auth/session')
-  expect(sessionResponse.ok()).toBeTruthy()
-  const session = await sessionResponse.json()
-  expect(session.user?.email?.toLowerCase()).toBe(email.toLowerCase())
+    const isolatedSession = await authRequest.get('/api/auth/session')
+    expect(isolatedSession.ok()).toBeTruthy()
+    const isolated = await isolatedSession.json()
+    expect(isolated.user?.email?.toLowerCase()).toBe(email.toLowerCase())
+
+    const state = await authRequest.storageState()
+    await page.context().clearCookies()
+    await page.context().addCookies(state.cookies)
+
+    const browserSession = await page.context().request.get(origin + '/api/auth/session')
+    expect(browserSession.ok()).toBeTruthy()
+    const session = await browserSession.json()
+    expect(session.user?.email?.toLowerCase()).toBe(email.toLowerCase())
+  } finally {
+    await authRequest.dispose()
+  }
 
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' })
   if (dashboard) await expect(page).toHaveURL(/\/dashboard/)

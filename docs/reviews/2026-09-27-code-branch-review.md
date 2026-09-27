@@ -46,3 +46,15 @@ No destructive branch/repository cleanup and no production database mutations we
 Validation: full quality gate passed with 516 unit tests. Updated targeted tests passed, production build passed, and the desktop/mobile file-access journeys passed against a disposable Postgres database (no retries). Hosted checks must pass on the latest PR head before merge.
 
 This is a project-access and write-permission fix, not an immutable upload provenance registry. Existing APIs associate uploads through document/evidence URLs. Additional hardening should bind upload ownership and attachment changes to a persistent upload record so manually copied URLs cannot be republished through new records; that broader data-model migration remains separate. Archived browser-gateway source remains preserved and undeployed.
+
+## Second follow-up: company-wide document mutation boundary
+
+Further review found that internal project-scoped roles could read company-wide documents by design, but the same read scope was also being reused for mutations. A Foreman or Operative could therefore create a document without a project, clear an assigned document's project, or edit/delete/AI-tag an existing company-wide document.
+
+The mutation boundary is now explicit: company-wide documents remain readable to internal members, while only the Company Admin persona may create, move into, edit, delete or AI-tag company-wide documents. Project-scoped roles remain limited to project files they can access.
+
+The photo-tag route now performs record access and mutation authorization before consuming the expensive vision rate-limit quota. Denied/not-found requests therefore return their real 403/404 status and do not burn AI quota.
+
+The shared Playwright persona-switch helper now authenticates each identity in a fresh isolated request cookie jar and copies only the resulting cookies into the browser context. This removes stale Admin/Foreman session crossover observed intermittently in mobile Chromium.
+
+Verification on the final patch: TypeScript passed; focused file/drawing regression tests passed; production build passed; drawing markup, drawing transmittal and file-access E2E journeys passed on both desktop and mobile Chromium with retries disabled against a disposable PostgreSQL database.
