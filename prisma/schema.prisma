@@ -105,6 +105,7 @@ model Project {
   procurementRequisitions ProcurementRequisition[]
   subInvoices             SubInvoice[]
   drawings                Drawing[]
+  drawingMarkups          DrawingMarkup[]
   milestones              Milestone[]
   programmeActivities     ProgrammeActivity[]
   programmeDependencies   ProgrammeDependency[]
@@ -1167,6 +1168,7 @@ model Drawing {
   revisions     DrawingRevision[]
   inspections   Inspection[]
   distributions DrawingDistribution[]
+  markups       DrawingMarkup[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -1190,12 +1192,46 @@ model DrawingRevision {
   drawing              Drawing               @relation(fields: [drawingId], references: [id], onDelete: Cascade)
   inspections          Inspection[]
   drawingDistributions DrawingDistribution[]
+  markups              DrawingMarkup[]
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
   @@unique([drawingId, revision])
   @@index([drawingId, uploadedAt])
+  @@index([organizationId])
+}
+
+model DrawingMarkup {
+  id              String          @id @default(cuid())
+  projectId       String
+  drawingId       String
+  revisionId      String
+  page            Int             @default(1)
+  kind            String          @default("pin") // pin, note, box
+  x               Float
+  y               Float
+  width           Float?
+  height          Float?
+  text            String
+  color           String          @default("#f59e0b")
+  status          String          @default("open") // open, resolved
+  createdByUserId String?
+  createdBy       String?
+  resolvedAt      DateTime?
+  resolvedBy      String?
+  createdAt       DateTime        @default(now())
+  updatedAt       DateTime        @updatedAt
+  project         Project         @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  drawing         Drawing         @relation(fields: [drawingId], references: [id], onDelete: Cascade)
+  revision        DrawingRevision @relation(fields: [revisionId], references: [id], onDelete: Cascade)
+
+  organizationId String?
+  organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+
+  @@index([revisionId, page, status])
+  @@index([projectId, status])
+  @@index([drawingId, createdAt])
   @@index([organizationId])
 }
 
@@ -1918,6 +1954,7 @@ model Organization {
   drawingRevisions              DrawingRevision[]
   drawingDistributions          DrawingDistribution[]
   drawingDistributionRecipients DrawingDistributionRecipient[]
+  drawingMarkups                DrawingMarkup[]
   milestones                    Milestone[]
   programmeActivities           ProgrammeActivity[]
   programmeDependencies         ProgrammeDependency[]

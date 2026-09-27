@@ -26,6 +26,10 @@ export async function submitLogin(page) {
 }
 
 export async function signIn(page, email, password, { dashboard = false } = {}) {
+  // Role-switch journeys must not inherit the previous Auth.js session.
+  // Clearing the context also removes the active-org cookie so the new
+  // account resolves its own deterministic tenant membership.
+  await page.context().clearCookies()
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
   const origin = new URL(page.url()).origin
   const request = page.context().request
@@ -42,6 +46,11 @@ export async function signIn(page, email, password, { dashboard = false } = {}) 
   expect(response.ok()).toBeTruthy()
   const payload = await response.json()
   expect(new URL(payload.url).searchParams.get('error')).toBeNull()
+
+  const sessionResponse = await request.get(origin + '/api/auth/session')
+  expect(sessionResponse.ok()).toBeTruthy()
+  const session = await sessionResponse.json()
+  expect(session.user?.email?.toLowerCase()).toBe(email.toLowerCase())
 
   await page.goto('/dashboard', { waitUntil: 'domcontentloaded' })
   if (dashboard) await expect(page).toHaveURL(/\/dashboard/)

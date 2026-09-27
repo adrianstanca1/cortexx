@@ -3,6 +3,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import DrawingDistributionPanel from '@/components/drawings/DrawingDistributionPanel'
+import DrawingMarkupPanel from '@/components/drawings/DrawingMarkupPanel'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
 import { IcLayers, IcChevL, IcPlus, IcX, IcCheck, IcTrash, IcDoc } from '@/components/ui/Icons'
@@ -19,6 +20,7 @@ interface Revision {
   mimeType: string | null
   notes: string | null
   uploadedAt: string
+  _count?: { markups: number }
 }
 
 interface Drawing {
@@ -52,6 +54,7 @@ export default function DrawingsPage() {
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [showAdd, setShowAdd] = useState(false)
   const [activeDwg, setActiveDwg] = useState<Drawing | null>(null)
+  const [markupRevision, setMarkupRevision] = useState<Revision | null>(null)
   const [saving, setSaving] = useState(false)
   const [uploadingRev, setUploadingRev] = useState(false)
 
@@ -105,7 +108,10 @@ export default function DrawingsPage() {
   const [revLabel, setRevLabel] = useState('A')
   const [revNotes, setRevNotes] = useState('')
 
-  useModalEffects(showAdd || activeDwg !== null, () => { setShowAdd(false); setActiveDwg(null); setCompareSelection([]); setRevCompareResult(null); setRevCompareError(null) })
+  useModalEffects(showAdd || activeDwg !== null || markupRevision !== null, () => {
+    if (markupRevision) { setMarkupRevision(null); return }
+    setShowAdd(false); setActiveDwg(null); setCompareSelection([]); setRevCompareResult(null); setRevCompareError(null)
+  })
 
   const load = useCallback(() => {
     const params = new URLSearchParams()
@@ -425,6 +431,15 @@ export default function DrawingsPage() {
                           </button>
                         )}
                         {r.fileUrl && (
+                          <button
+                            type="button"
+                            onClick={() => setMarkupRevision(r)}
+                            style={{ background: 'rgba(245,158,11,0.16)', border: '0.5px solid rgba(245,158,11,0.38)', color: '#f59e0b', borderRadius: 6, padding: '4px 9px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
+                          >
+                            Markup {r._count?.markups || 0}
+                          </button>
+                        )}
+                        {r.fileUrl && (
                           <a href={r.fileUrl} target="_blank" rel="noopener noreferrer" style={{ background: 'rgba(37,99,235,0.2)', border: '0.5px solid rgba(37,99,235,0.4)', color: '#60a5fa', borderRadius: 6, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textDecoration: 'none' }}>Open</a>
                         )}
                       </div>
@@ -480,6 +495,16 @@ export default function DrawingsPage() {
             </button>
           </div>
         </div>
+      )}
+
+      {markupRevision && activeDwg && (
+        <DrawingMarkupPanel
+          drawingNumber={activeDwg.number}
+          drawingTitle={activeDwg.title}
+          revision={markupRevision}
+          onClose={() => setMarkupRevision(null)}
+          onChanged={() => { void openDetail(activeDwg); load() }}
+        />
       )}
     </div>
   )
