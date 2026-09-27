@@ -122,6 +122,7 @@ jobs:
               DBPASS="$(openssl rand -hex 24)"
               AUTHSECRET="$(openssl rand -hex 32)"
               JWTSECRET="$(openssl rand -hex 32)"
+              CRONSECRET="$(openssl rand -hex 32)"
               ADMINPASS="$(openssl rand -hex 24)"
               printf '%s\n' \
                 "POSTGRES_PASSWORD=$DBPASS" \
@@ -130,6 +131,7 @@ jobs:
                 "NEXTAUTH_SECRET=$AUTHSECRET" \
                 "AUTH_SECRET=$AUTHSECRET" \
                 "JWT_SECRET=$JWTSECRET" \
+                "CRON_SECRET=$CRONSECRET" \
                 "NEXTAUTH_URL=https://cortexbuildpro.tech" \
                 "AUTH_URL=https://cortexbuildpro.tech" \
                 "APP_URL=https://cortexbuildpro.tech" \
@@ -144,6 +146,10 @@ jobs:
               printf '%s\n' "URL=https://cortexbuildpro.tech" "EMAIL=admin@cortexbuildpro.tech" "PASSWORD=$ADMINPASS" > .owner-credentials
               chmod 600 .env.construction .owner-credentials
             fi
+            if ! grep -q '^CRON_SECRET=' .env.construction; then
+              printf 'CRON_SECRET=%s\n' "$(openssl rand -hex 32)" >> .env.construction
+            fi
+            chmod 600 .env.construction
 
             docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools
             docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama
@@ -163,6 +169,8 @@ jobs:
               docker compose --env-file .env.construction -f docker-compose.construction.yml logs --tail=180 app
               exit 1
             fi
+
+            bash ops/install-construction-app-crons.sh
 
             INGRESS=/home/administrator/video-lab/Caddyfile.viral-shorts
             if [ ! -f "$INGRESS" ]; then
