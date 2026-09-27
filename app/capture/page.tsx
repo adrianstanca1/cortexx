@@ -3,6 +3,7 @@
 import { Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { IcCamera, IcMic, IcReceipt, IcAlert, IcCheck, IcX, IcPin } from '@/components/ui/Icons'
+import { uploadFileWithProgress } from '@/lib/client-upload'
 import type { Project } from '@/lib/types'
 
 const actions = [
@@ -29,6 +30,7 @@ function CaptureContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const preselect = searchParams.get('type')
+  const preselectProjectId = searchParams.get('projectId')
 
   const [selected, setSelected] = useState<string | null>(preselect)
   const [done, setDone] = useState(false)
@@ -39,6 +41,7 @@ function CaptureContent() {
   const [showProjectPicker, setShowProjectPicker] = useState(false)
   const [recentSelect, setRecentSelect] = useState<string | null>(null)
   const [recording, setRecording] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const fileInputRef = useRef<HTMLInputElement>(null)
   const fileTypeRef = useRef<'photo' | 'receipt' | null>(null)
   const mediaRecorderRef = useRef<MediaRecorder | null>(null)
@@ -50,11 +53,12 @@ function CaptureContent() {
       .then(d => {
         const ps: Project[] = d.projects || d
         setProjects(ps)
-        const active = ps.find(p => p.status === 'active') || ps[0] || null
+        const requested = preselectProjectId ? ps.find(p => p.id === preselectProjectId) : null
+        const active = requested || ps.find(p => p.status === 'active') || ps[0] || null
         setActiveProject(active)
       })
       .catch(() => {})
-  }, [])
+  }, [preselectProjectId])
 
   const logActivity = useCallback(async (action: string, iconType: string, detail?: string | null) => {
     try {
@@ -79,17 +83,14 @@ function CaptureContent() {
   }, [])
 
   const uploadFile = useCallback(async (file: File | Blob, filename: string) => {
-    if (file.size > 25 * 1024 * 1024) {
-      throw new Error(`File too large (max 25 MB). This is ${Math.round(file.size / 1024 / 1024)} MB.`)
+    setUploadProgress(0)
+    try {
+      return await uploadFileWithProgress(file, filename, {
+        onProgress: setUploadProgress,
+      })
+    } finally {
+      setUploadProgress(0)
     }
-    const fd = new FormData()
-    fd.append('file', file, filename)
-    const res = await fetch('/api/uploads', { method: 'POST', body: fd })
-    if (!res.ok) {
-      const err = (await res.json().catch(() => ({}))) as { error?: string }
-      throw new Error(err.error || 'Upload failed')
-    }
-    return res.json() as Promise<{ url: string; name: string; size: number; mimeType: string }>
   }, [])
 
   const onFileSelected = useCallback(async (file: File) => {
@@ -396,9 +397,14 @@ function CaptureContent() {
             {actions.map(action => {
               const isVoiceRecording = action.id === 'voice' && recording
               const isSelected = selected === action.id
+              const isUploadingCapture = isSelected && uploadProgress > 0
               // While recording voice, keep the button tappable so the user can stop.
               const disabled = isSelected && !isVoiceRecording
-              const sub = isVoiceRecording ? 'Recording… tap to stop' : action.sub
+              const sub = isVoiceRecording
+                ? 'Recording… tap to stop'
+                : isUploadingCapture
+                  ? `Uploading… ${uploadProgress}%`
+                  : action.sub
               return (
                 <button key={action.id} onClick={() => handleAction(action.id)} disabled={disabled} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 18px', borderRadius: 18, background: isSelected ? `${action.color}22` : 'rgba(255,255,255,0.04)', border: `1.5px solid ${isSelected ? action.color : 'rgba(255,255,255,0.08)'}`, cursor: disabled ? 'default' : 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', transform: isSelected ? 'scale(0.98)' : 'scale(1)' }}>
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: `${action.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>

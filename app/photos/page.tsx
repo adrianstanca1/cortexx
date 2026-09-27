@@ -4,6 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
+import { uploadFileWithProgress } from '@/lib/client-upload'
 import { IcCamera, IcChevL, IcPlus, IcSpark } from '@/components/ui/Icons'
 
 interface PhotoTags { tags: string[]; category: string; summary: string; loading?: boolean; error?: string }
@@ -30,6 +31,7 @@ export default function PhotosPage() {
   const [error, setError] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [uploading, setUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
   const [photoTags, setPhotoTags] = useState<Record<string, PhotoTags>>({})
   const [activePhoto, setActivePhoto] = useState<PhotoDoc | null>(null)
   const [compareMode, setCompareMode] = useState(false)
@@ -112,19 +114,12 @@ export default function PhotosPage() {
   useEffect(() => { load() }, [load])
 
   const handleFile = useCallback(async (file: File) => {
-    // Pre-flight size check — without it, the browser would upload a
-    // multi-GB file in full before the server's 413 response fires.
-    if (file.size > 25 * 1024 * 1024) {
-      setToast({ msg: `File too large (max 25 MB). This file is ${Math.round(file.size / 1024 / 1024)} MB.`, type: 'error' })
-      return
-    }
     setUploading(true)
+    setUploadProgress(0)
     try {
-      const fd = new FormData()
-      fd.append('file', file, file.name)
-      const up = await fetch('/api/uploads', { method: 'POST', body: fd })
-      if (!up.ok) throw new Error((await up.json().catch(() => ({})) as { error?: string }).error || 'Upload failed')
-      const uploaded = await up.json() as { url: string; size: number; mimeType: string }
+      const uploaded = await uploadFileWithProgress(file, file.name, {
+        onProgress: setUploadProgress,
+      })
       const projectId = filter !== 'all' ? filter : null
       const docRes = await fetch('/api/documents', {
         method: 'POST',
@@ -146,6 +141,7 @@ export default function PhotosPage() {
       setToast({ msg: e instanceof Error ? e.message : 'Upload failed', type: 'error' })
     } finally {
       setUploading(false)
+      setUploadProgress(0)
     }
   }, [filter])
 
@@ -172,8 +168,8 @@ export default function PhotosPage() {
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 10 }}>
           <div>
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Photos</h1>
-            <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>
-              {photos.length} total{filter !== 'all' ? ` · ${filtered.length} in filter` : ''}{compareMode ? ` · ${compareSelected.length}/2 selected` : ''}
+            <p style={{ fontSize: 12, color: uploading ? '#a78bfa' : 'var(--t3)', marginTop: 2, fontFamily: SF }}>
+              {uploading ? `Uploading photo · ${uploadProgress || 1}%` : <>{photos.length} total{filter !== 'all' ? ` · ${filtered.length} in filter` : ''}{compareMode ? ` · ${compareSelected.length}/2 selected` : ''}</>}
             </p>
           </div>
           <div style={{ display: 'flex', gap: 6 }}>
