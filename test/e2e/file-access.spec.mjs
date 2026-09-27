@@ -15,6 +15,7 @@ test('project files and document mutations enforce assignment permissions', asyn
   expect(assigned).toBeTruthy()
   expect(privateProject).toBeTruthy()
   const docs = []
+  let companyDoc
   let drawing
   try {
     for (const project of [assigned, privateProject]) {
@@ -31,6 +32,18 @@ test('project files and document mutations enforce assignment permissions', asyn
       expect(response.status()).toBe(201)
       docs.push(await response.json())
     }
+    const companyUploadResponse = await request.post('/api/uploads', { multipart: {
+      file: { name: 'company-wide.pdf', mimeType: 'application/pdf', buffer: Buffer.from('%PDF-1.4\ncompany-wide permission regression\n%%EOF') },
+    } })
+    expect(companyUploadResponse.status()).toBe(201)
+    const companyUpload = await companyUploadResponse.json()
+    const companyResponse = await request.post('/api/documents', { data: {
+      name: 'Company-wide file ' + Date.now(), type: 'report',
+      url: companyUpload.url, size: companyUpload.size, mimeType: companyUpload.mimeType,
+    } })
+    expect(companyResponse.status()).toBe(201)
+    companyDoc = await companyResponse.json()
+
     const drawingResponse = await request.post('/api/drawings', { data: { projectId: privateProject.id, number: 'FILE-' + Date.now(), title: 'Private file access' } })
     expect(drawingResponse.status()).toBe(201)
     drawing = await drawingResponse.json()
@@ -48,6 +61,7 @@ test('project files and document mutations enforce assignment permissions', asyn
     request = page.context().request
     expect((await request.get(docs[0].url)).status()).toBe(200)
     expect((await request.get(docs[1].url)).status()).toBe(404)
+    expect((await request.get(companyDoc.url)).status()).toBe(200)
     expect((await request.get(docs[1].url + '?download=1', { headers: { Range: 'bytes=0-3' } })).status()).toBe(404)
     expect((await request.get('/api/documents/' + docs[1].id)).status()).toBe(404)
     expect((await request.post('/api/documents/' + docs[1].id + '/tag')).status()).toBe(404)
@@ -60,7 +74,12 @@ test('project files and document mutations enforce assignment permissions', asyn
     expect((await request.put('/api/documents/' + docs[1].id, { data: { name: 'Forbidden' } })).status()).toBe(404)
     expect((await request.delete('/api/documents/' + docs[1].id)).status()).toBe(404)
     expect((await request.put('/api/documents/' + docs[0].id, { data: { projectId: privateProject.id } })).status()).toBe(404)
+    expect((await request.put('/api/documents/' + docs[0].id, { data: { projectId: null } })).status()).toBe(403)
     expect((await request.post('/api/documents', { data: { name: 'Forbidden', type: 'report', projectId: privateProject.id } })).status()).toBe(404)
+    expect((await request.post('/api/documents', { data: { name: 'Forbidden company-wide', type: 'report' } })).status()).toBe(403)
+    expect((await request.put('/api/documents/' + companyDoc.id, { data: { name: 'Forbidden company edit' } })).status()).toBe(403)
+    expect((await request.delete('/api/documents/' + companyDoc.id)).status()).toBe(403)
+    expect((await request.post('/api/documents/' + companyDoc.id + '/tag')).status()).toBe(403)
     expect((await request.put('/api/documents/' + docs[0].id, { data: { name: 'Allowed update' } })).status()).toBe(200)
     const ranged = await request.get(docs[0].url, { headers: { Range: 'bytes=0-3' } })
     expect(ranged.status()).toBe(206)
@@ -70,6 +89,7 @@ test('project files and document mutations enforce assignment permissions', asyn
     await signIn(page, admin, password)
     request = page.context().request
     if (drawing) await request.delete('/api/drawings/' + drawing.id)
+    if (companyDoc) await request.delete('/api/documents/' + companyDoc.id)
     for (const doc of docs) await request.delete('/api/documents/' + doc.id)
   }
 })

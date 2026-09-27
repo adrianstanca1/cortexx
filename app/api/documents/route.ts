@@ -6,7 +6,7 @@ import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 
-import { fileProjectScope } from '@/lib/file-access'
+import { canManageCompanywideFiles, fileProjectScope } from '@/lib/file-access'
 import { programmeProjectWhere, type ProgrammeActor } from '@/lib/programme-access'
 import { withRoute } from '@/lib/withRoute'
 
@@ -86,6 +86,9 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
     }
 
     if (session.user?.role === 'client') return NextResponse.json({ error: 'Document write permission required' }, { status: 403 })
+    if (!body.projectId && !canManageCompanywideFiles(session)) {
+      return NextResponse.json({ error: 'Company Admin permission required for company-wide documents' }, { status: 403 })
+    }
     if (body.projectId && !await prisma.project.findFirst({ where: programmeProjectWhere(body.projectId, session), select: { id: true } })) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }

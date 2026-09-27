@@ -7,3 +7,7 @@ export function fileProjectScope(session: ProgrammeActor): { OR: Array<{ project
   if (session.user?.role === 'client') return { OR: [{ project: { is: { id: '__no_internal_file__' } } }] }
   return { OR: [{ projectId: null }, { project: { is: programmeProjectScope(session) } }] }
 }
+
+export function canManageCompanywideFiles(session: ProgrammeActor): boolean {
+  return session.user?.role === 'company_admin'
+}

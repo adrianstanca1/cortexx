@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
 import { canWrite } from '@/lib/rbac'
-import { fileProjectScope } from '@/lib/file-access'
+import { canManageCompanywideFiles, fileProjectScope } from '@/lib/file-access'
 import { programmeProjectWhere } from '@/lib/programme-access'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
@@ -33,9 +33,15 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   if (auth instanceof NextResponse) return auth
   if (!canWrite(auth.role || '') || auth.personaRole === 'client') return NextResponse.json({ error: 'Document write permission required' }, { status: 403 })
   try {
-    const existing = await prisma.document.findFirst({ where: { id: params.id, ...fileProjectScope(auth.session) }, select: { id: true } })
+    const existing = await prisma.document.findFirst({ where: { id: params.id, ...fileProjectScope(auth.session) }, select: { id: true, projectId: true } })
     if (!existing) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+    if (existing.projectId === null && !canManageCompanywideFiles(auth.session)) {
+      return NextResponse.json({ error: 'Company Admin permission required for company-wide documents' }, { status: 403 })
+    }
     const body = await req.json()
+    if (body.projectId !== undefined && !body.projectId && !canManageCompanywideFiles(auth.session)) {
+      return NextResponse.json({ error: 'Company Admin permission required for company-wide documents' }, { status: 403 })
+    }
     if (body.projectId && !await prisma.project.findFirst({ where: programmeProjectWhere(body.projectId, auth.session), select: { id: true } })) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
@@ -81,6 +87,9 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
   try {
     const doc = await prisma.document.findFirst({ where: { id: params.id, ...fileProjectScope(auth.session) }, select: { name: true, projectId: true } })
     if (!doc) return NextResponse.json({ error: 'Document not found' }, { status: 404 })
+    if (doc.projectId === null && !canManageCompanywideFiles(auth.session)) {
+      return NextResponse.json({ error: 'Company Admin permission required for company-wide documents' }, { status: 403 })
+    }
     await prisma.document.delete({ where: { id: params.id } })
     auditLog({
       action: 'document.delete',
