@@ -22,6 +22,10 @@ const nextConfig = {
   // (not nested under the project dir name) so the Dockerfile COPY is clean.
   output: 'standalone',
   outputFileTracingRoot: __dirname,
+  // PDFKit reads built-in font metrics relative to its installed package.
+  // Bundling rewrites that location; keep it external and ship the font data.
+  serverExternalPackages: ['pdfkit'],
+  outputFileTracingIncludes: { '/api/**/*': ['./node_modules/pdfkit/js/data/**/*'] },
   experimental: {
     optimizePackageImports: ['@prisma/client'],
   },
