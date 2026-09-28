@@ -96,6 +96,17 @@
         encodeURIComponent(claims.ws) + ':' + encodeURIComponent(claims.uid);
     } catch (e) { return null; }
   }
+  // Never reuse the legacy global cursor: its owner cannot be established.
+  // A fresh scoped pull is safer than skipping records on a shared device.
+  function pullKey() {
+    const key = queueKey();
+    return key ? LS.lastPull + key.slice(LS.queue.length) : null;
+  }
+  function lastPull() {
+    const key = pullKey();
+    return key ? localStorage.getItem(key) : null;
+  }
+  let pullRequest = 0;
   const readQueue = (key = queueKey()) => {
     try {
       const q = key ? JSON.parse(localStorage.getItem(key) || '[]') : [];
@@ -127,6 +138,7 @@
   let flushing = null;
   let writeRevision = 0;
   function activateCache() {
+    pullRequest++; // Invalidate in-flight pulls, including sign-out/sign-in to the same account.
     if (window.Backend && window.Backend.activateScope) window.Backend.activateScope(queueKey());
   }
   activateCache();
@@ -185,7 +197,7 @@
       live: localStorage.getItem(LS.live) === '1' && !!es,
       apiUrl: API,
       queued: readQueue().length,
-      lastPull: localStorage.getItem(LS.lastPull) || null,
+      lastPull: lastPull() || null,
     };
   }
 
@@ -265,15 +277,17 @@
     async pull() {
       const token = TOKEN;
       const base = API;
-      if (!token) return null;
+      const key = pullKey();
+      if (!token || !key) return null;
+      const request = ++pullRequest;
       if (flushing) await flushing;
-      if (TOKEN !== token || API !== base) return null;
+      if (TOKEN !== token || API !== base || request !== pullRequest) return null;
       const revision = writeRevision;
-      const since = localStorage.getItem(LS.lastPull) || '';
+      const since = localStorage.getItem(key) || '';
       const r = await api('GET', '/api/sync/pull?since=' + encodeURIComponent(since));
-      if (TOKEN === token && API === base && revision === writeRevision && r && r.collections) {
+      if (TOKEN === token && API === base && request === pullRequest && revision === writeRevision && r && r.collections) {
         if (window.Backend && window.Backend.mergeRemote) window.Backend.mergeRemote(r.collections, { fullSnapshot: r.fullSnapshot === true, pending: readQueue() });
-        if (r.at) localStorage.setItem(LS.lastPull, r.at);
+        if (r.at) localStorage.setItem(key, r.at);
         emit(status);
         return r.collections;
       }
