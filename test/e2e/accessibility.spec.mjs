@@ -30,10 +30,11 @@ function formatViolations(route, violations) {
   })
 }
 
-async function analyze(page, route) {
+async function analyze(page, route, ready) {
   const response = await page.goto(route, { waitUntil: 'domcontentloaded' })
   assertRouteHealth(response, route, page.url())
   await expect(page.locator('body')).toBeVisible()
+  if (ready) await expect(page.getByText(ready, { exact: true })).toBeVisible()
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
     .analyze()
@@ -86,10 +87,10 @@ test('critical creation dialogs have no WCAG A/AA violations', async ({ page }) 
 test('core dynamic project workspaces have no WCAG A/AA violations', async ({ page }) => {
   test.setTimeout(180_000)
   await signIn(page, email, password, { dashboard: true })
-  const response = await page.context().request.get('/api/projects')
+  const response = await page.context().request.get('/api/projects?take=100')
   expect(response.ok()).toBeTruthy()
   const payload = await response.json()
-  const project = payload.projects?.[0] || payload[0]
+  const project = (payload.projects || payload).find(item => item.name === 'E2E Verification Project')
   expect(project?.id).toBeTruthy()
 
   const routes = [
@@ -99,7 +100,20 @@ test('core dynamic project workspaces have no WCAG A/AA violations', async ({ pa
     '/projects/' + project.id + '/programme',
     '/projects/' + project.id + '/programme/resources',
   ]
-  const findings = []
-  for (const route of routes) findings.push(...await analyze(page, route))
-  expect(findings, findings.join('\n')).toEqual([])
+  // Cover populated change control without depending on another test's writes.
+  const delayResponse = await page.context().request.post('/api/projects/' + project.id + '/programme/delays', {
+    data: { title: 'Accessibility delay ' + Date.now(), category: 'design', startDate: '2026-10-16', delayDays: 1 },
+  })
+  expect(delayResponse.status()).toBe(201)
+  const delay = await delayResponse.json()
+  try {
+    const findings = []
+    for (const route of routes) {
+      findings.push(...await analyze(page, route, route.endsWith('/programme') ? 'MASTER PROGRAMME' : undefined))
+    }
+    expect(findings, findings.join('\n')).toEqual([])
+  } finally {
+    const cleanup = await page.context().request.delete('/api/projects/' + project.id + '/programme/delays/' + delay.id)
+    expect(cleanup.ok()).toBeTruthy()
+  }
 })
