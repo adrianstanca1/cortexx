@@ -5,7 +5,9 @@ import { canWrite } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import {
   extensionFor,
+  generateIdempotentStoredName,
   generateStoredName,
+  getObjectMetadata,
   isAllowedMime,
   MAX_UPLOAD_BYTES,
   putObject,
@@ -28,6 +30,8 @@ export async function POST(req: NextRequest) {
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   if (!canWrite(auth.role || '') || auth.personaRole === 'client') return NextResponse.json({ error: 'Upload permission required' }, { status: 403 })
+  const orgId = auth.orgId
+  if (!orgId) return NextResponse.json({ error: 'Organization required' }, { status: 400 })
   const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
 
@@ -70,12 +74,35 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Could not determine file extension' }, { status: 400 })
   }
 
-  const stored = generateStoredName(ext)
+  const uploadId = req.headers.get('x-upload-id')?.trim() || ''
+  const stored = uploadId
+    ? generateIdempotentStoredName(ext, orgId, uploadId)
+    : generateStoredName(ext)
+  if (!stored) {
+    return NextResponse.json({ error: 'Invalid upload id' }, { status: 400 })
+  }
   if (!safeKey(stored)) {
     return NextResponse.json({ error: 'Internal storage error' }, { status: 500 })
   }
 
   try {
+    if (uploadId) {
+      const existing = await getObjectMetadata(stored)
+      if (existing) {
+        if (existing.size !== file.size) {
+          return NextResponse.json({ error: 'Upload id already used for a different file' }, { status: 409 })
+        }
+        return NextResponse.json({
+          url: `/api/uploads/${stored}`,
+          name: stored,
+          size: file.size,
+          mimeType: file.type,
+          originalName: file.name || null,
+          backend: storageBackend(),
+          reused: true,
+        }, { status: 200 })
+      }
+    }
     const buffer = Buffer.from(await file.arrayBuffer())
     await putObject(stored, buffer, file.type)
   } catch (err) {
