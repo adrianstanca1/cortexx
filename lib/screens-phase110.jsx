@@ -27,12 +27,12 @@
       style: { position: 'fixed', inset: 0, background: T.bg1, zIndex: 1100, overflowY: 'auto', paddingBottom: 100 },
     },
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', padding: '20px 20px 0', gap: 12 } },
-        React.createElement('button', {
+        React.createElement('button', { type: 'button',
           onClick: onClose,
           style: { width: 36, height: 36, borderRadius: 18, background: T.bg2, border: 'none', color: T.t1, fontSize: 20, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
         }, '←'),
         React.createElement('h2', { style: { color: T.t1, fontSize: 18, fontWeight: 800, margin: 0, flex: 1 } }, title),
-        onSave && React.createElement('button', {
+        onSave && React.createElement('button', { type: 'button',
           onClick: onSave, disabled: saving,
           style: { padding: '8px 18px', borderRadius: 10, background: T.blue, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }
         }, saving ? 'Saving…' : 'Save')
@@ -481,7 +481,7 @@
           fmt(usage.used) + ' of ~' + fmt(usage.total) + ' used. Export a data backup to free space.'
         )
       ),
-      React.createElement('button', {
+      React.createElement('button', { type: 'button',
         onClick: () => { window.cortexxNav && window.cortexxNav('database'); },
         style: { padding: '6px 12px', borderRadius: 8, background: T.bg2, border: '1px solid '+T.hair, color: T.t1, fontSize: 12, fontWeight: 700, cursor: 'pointer' }
       }, 'Export')

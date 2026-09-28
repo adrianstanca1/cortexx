@@ -183,7 +183,7 @@ export default function CertificationDialog({
       />
 
       <div>
-        <label id="cert-category-label" style={labelStyle}>Category</label>
+        <div id="cert-category-label" style={labelStyle}>Category</div>
         <SegmentedControl
           ariaLabelledBy="cert-category-label"
           value={category}
@@ -204,7 +204,7 @@ export default function CertificationDialog({
       />
 
       <div>
-        <label id="cert-type-label" style={labelStyle}>Type</label>
+        <div id="cert-type-label" style={labelStyle}>Type</div>
         <SegmentedControl
           ariaLabelledBy="cert-type-label"
           value={typeMode}

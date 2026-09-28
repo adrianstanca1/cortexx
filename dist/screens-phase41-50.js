@@ -184,6 +184,7 @@ function PersonasScreen({
       overflowX: 'auto'
     }
   }, Object.entries(personas).map(([k, p]) => React.createElement("button", {
+    type: "button",
     key: k,
     onClick: () => {
       setActive(k);
@@ -288,6 +289,7 @@ function PersonasScreen({
       outline: 'none'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: ask,
     disabled: loading || !q.trim(),
     style: {

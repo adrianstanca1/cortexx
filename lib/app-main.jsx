@@ -22,7 +22,7 @@ function InteractiveTabBar({ tab, setTab, onCapture, accent }) {
         if (t.k === '_fab') {
           return (
             <div key="_fab" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-              <button onClick={onCapture} style={{
+              <button type="button" onClick={onCapture} style={{
                 width: 52, height: 52, borderRadius: 26,
                 background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
                 border: 'none',
@@ -35,7 +35,7 @@ function InteractiveTabBar({ tab, setTab, onCapture, accent }) {
         }
         const isActive = tab === t.k;
         return (
-          <button key={t.k} onClick={() => setTab(t.k)} style={{
+          <button type="button" key={t.k} onClick={() => setTab(t.k)} style={{
             flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
             background: 'none', border: 'none', cursor: 'pointer',
             color: isActive ? accent : T.t3, padding: '4px 0',
@@ -479,7 +479,7 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
 
       {/* Floating AI button — visible everywhere including dashboard */}
       {true && (
-        <button onClick={() => setSheet('ai')} style={{
+        <button type="button" onClick={() => setSheet('ai')} style={{
           position: 'absolute', right: 16, bottom: 96, zIndex: 9,
           width: 50, height: 50, borderRadius: 25,
           background: `linear-gradient(135deg, ${T.purple}, ${accent})`,
@@ -492,7 +492,7 @@ function CortexxApp({ dashboardId = 'v1', accent = T.blue, openAI, onChangeDashb
       {/* Dashboard picker — small chip bottom-right above tab bar */}
       {tab === 'dashboard' && <CmdKHint accent={accent}/>}
       {tab === 'dashboard' && onChangeDashboard && (
-        <button onClick={() => setSheet('dashpick')} style={{
+        <button type="button" onClick={() => setSheet('dashpick')} style={{
           position: 'absolute', right: 12, bottom: 158, zIndex: 9,
           background: 'rgba(6,16,30,0.75)',
           backdropFilter: 'blur(20px) saturate(180%)',
@@ -753,7 +753,7 @@ function SheetWrap({ title, onClose, accent, children }) {
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
         background: T.bg0, position: 'relative', zIndex: 5,
       }}>
-        <button onClick={() => { if (window.cortexxSheetBack) window.cortexxSheetBack(); else onClose(); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={() => { if (window.cortexxSheetBack) window.cortexxSheetBack(); else onClose(); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>{title}</div>

@@ -169,7 +169,7 @@ function AddInspectionSheet({ onClose, accent, preset }) {
             { k: 'tomorrow', l: 'Tomorrow', d: new Date(Date.now() + 86400000).toISOString().slice(0, 10) },
             { k: 'later', l: 'Pick date', d: form.date },
           ].map(o => (
-            <button key={o.k} onClick={() => setForm(f => ({ ...f, schedule: o.k, date: o.d }))} style={{
+            <button type="button" key={o.k} onClick={() => setForm(f => ({ ...f, schedule: o.k, date: o.d }))} style={{
               flex: 1, padding: '9px 8px', borderRadius: 10,
               background: form.schedule === o.k ? accent : T.bg2,
               border: `0.5px solid ${form.schedule === o.k ? accent : T.hair}`,
@@ -202,7 +202,7 @@ function AddInspectionSheet({ onClose, accent, preset }) {
           <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 600, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.4 }}>
             Checklist {form.items.length > 0 && <span style={{ color: T.t2 }}>· {form.items.length}</span>}
           </div>
-          <button onClick={suggestItems} disabled={suggesting} style={{
+          <button type="button" onClick={suggestItems} disabled={suggesting} style={{
             background: 'transparent', color: T.purple,
             border: `0.5px solid ${T.purple}66`,
             borderRadius: 8, padding: '4px 10px',
@@ -229,7 +229,7 @@ function AddInspectionSheet({ onClose, accent, preset }) {
               }}>
                 <span style={{ color: T.t3, fontFamily: SFMono, fontSize: 10, width: 16 }}>{i + 1}</span>
                 <span style={{ flex: 1, fontFamily: SF, fontSize: 13, color: T.t1, lineHeight: 1.35 }}>{it.q}</span>
-                <button onClick={() => removeItem(i)} style={{
+                <button type="button" onClick={() => removeItem(i)} style={{
                   background: 'none', border: 'none', color: T.t3,
                   cursor: 'pointer', padding: 4, lineHeight: 0,
                   fontFamily: SF, fontSize: 16,
@@ -252,7 +252,7 @@ function AddInspectionSheet({ onClose, accent, preset }) {
               outline: 'none', boxSizing: 'border-box',
             }}
           />
-          <button onClick={addItem} disabled={!newItem.trim()} style={{
+          <button type="button" onClick={addItem} disabled={!newItem.trim()} style={{
             background: newItem.trim() ? accent : T.bg2,
             color: newItem.trim() ? '#fff' : T.t3,
             border: `0.5px solid ${newItem.trim() ? accent : T.hair}`,

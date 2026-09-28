@@ -81,6 +81,7 @@ function FloatingUploadPill({
   bottom = 100
 }) {
   return React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxUniversalUpload(),
     style: {
       position: 'absolute',

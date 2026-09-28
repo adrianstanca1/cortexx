@@ -61,7 +61,7 @@ function DataExportScreen({ accent }) {
           </div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {sources.map(s => (
-              <button key={s.k} onClick={() => toggle(s.k)} style={{
+              <button type="button" key={s.k} onClick={() => toggle(s.k)} style={{
                 background: T.bg2, border: `0.5px solid ${scope[s.k] ? s.c : T.hair}`, borderRadius: 12,
                 padding: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
               }}>
@@ -77,11 +77,11 @@ function DataExportScreen({ accent }) {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 10, marginTop: 18 }}>
-            <button onClick={() => doExport('json')} disabled={busy || !count} style={{
+            <button type="button" onClick={() => doExport('json')} disabled={busy || !count} style={{
               flex: 1, background: count ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '14px',
               fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: count ? 'pointer' : 'default', opacity: count ? 1 : 0.5,
             }}>{busy ? 'Exporting…' : `Export JSON (${count})`}</button>
-            <button onClick={() => doExport('csv')} disabled={busy} style={{
+            <button type="button" onClick={() => doExport('csv')} disabled={busy} style={{
               background: T.bg2, color: T.t1, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 18px',
               fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
             }}>CSV</button>
@@ -142,13 +142,13 @@ function OnboardWizard({ accent, onClose }) {
 
         <div style={{ flex: 1 }}>
           {step === 0 && (
-            <input autoFocus value={data.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Meridian Build Ltd"
+            <input value={data.name} onChange={e => set('name', e.target.value)} placeholder="e.g. Meridian Build Ltd"
               style={{ width: '100%', background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '15px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none', boxSizing: 'border-box' }}/>
           )}
           {step === 1 && (
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               {trades.map(t => (
-                <button key={t} onClick={() => set('trade', t)} style={{
+                <button type="button" key={t} onClick={() => set('trade', t)} style={{
                   background: data.trade === t ? `${accent}14` : T.bg2, border: `0.5px solid ${data.trade === t ? accent : T.hair}`,
                   borderRadius: 12, padding: '16px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 14, fontWeight: 600,
                   color: data.trade === t ? accent : T.t1,
@@ -159,7 +159,7 @@ function OnboardWizard({ accent, onClose }) {
           {step === 2 && (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
               {sizes.map(s => (
-                <button key={s} onClick={() => set('size', s)} style={{
+                <button type="button" key={s} onClick={() => set('size', s)} style={{
                   background: data.size === s ? `${accent}14` : T.bg2, border: `0.5px solid ${data.size === s ? accent : T.hair}`,
                   borderRadius: 12, padding: '16px', cursor: 'pointer', fontFamily: SF, fontSize: 15, fontWeight: 600,
                   color: data.size === s ? accent : T.t1, display: 'flex', justifyContent: 'space-between', alignItems: 'center',
@@ -171,7 +171,7 @@ function OnboardWizard({ accent, onClose }) {
             <div>
               <div style={{ display: 'flex', gap: 12, flexWrap: 'wrap', justifyContent: 'center', marginBottom: 24 }}>
                 {colors.map(c => (
-                  <button key={c} onClick={() => set('color', c)} style={{
+                  <button type="button" key={c} onClick={() => set('color', c)} style={{
                     width: 52, height: 52, borderRadius: 26, background: c, border: data.color === c ? '3px solid #fff' : '3px solid transparent',
                     boxShadow: data.color === c ? `0 0 0 2px ${c}` : 'none', cursor: 'pointer',
                   }}/>
@@ -190,9 +190,9 @@ function OnboardWizard({ accent, onClose }) {
 
         <div style={{ display: 'flex', gap: 10, marginTop: 20 }}>
           {step > 0 && (
-            <button onClick={() => setStep(step - 1)} style={{ background: T.bg2, color: T.t1, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '15px 22px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Back</button>
+            <button type="button" onClick={() => setStep(step - 1)} style={{ background: T.bg2, color: T.t1, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '15px 22px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>Back</button>
           )}
-          <button onClick={() => step < steps.length - 1 ? setStep(step + 1) : finish()} disabled={!canNext} style={{
+          <button type="button" onClick={() => step < steps.length - 1 ? setStep(step + 1) : finish()} disabled={!canNext} style={{
             flex: 1, background: canNext ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '15px',
             fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: canNext ? 'pointer' : 'default', opacity: canNext ? 1 : 0.5,
           }}>{step < steps.length - 1 ? 'Continue' : 'Create workspace'}</button>

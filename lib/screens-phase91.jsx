@@ -50,7 +50,7 @@ function DigestScreen({ accent }) {
   const DAYS = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
 
   const Switch = ({ on, onClick }) => (
-    <button onClick={onClick} style={{ width: 44, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', flexShrink: 0, background: on ? accent : T.bg3, position: 'relative', transition: 'background 0.2s' }}>
+    <button type="button" onClick={onClick} style={{ width: 44, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', flexShrink: 0, background: on ? accent : T.bg3, position: 'relative', transition: 'background 0.2s' }}>
       <span style={{ position: 'absolute', top: 3, left: on ? 21 : 3, width: 20, height: 20, borderRadius: 10, background: '#fff', transition: 'left 0.2s', boxShadow: '0 1px 3px rgba(0,0,0,0.3)' }}/>
     </button>
   );
@@ -85,7 +85,7 @@ function DigestScreen({ accent }) {
             <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Frequency</div>
             <div style={{ display: 'flex', gap: 6 }}>
               {FREQ.map(f => (
-                <button key={f.k} onClick={() => save({ ...cfg, freq: f.k })} style={{
+                <button type="button" key={f.k} onClick={() => save({ ...cfg, freq: f.k })} style={{
                   flex: 1, background: cfg.freq === f.k ? accent : T.bg3, color: cfg.freq === f.k ? '#fff' : T.t2,
                   border: 'none', borderRadius: 9, padding: '10px', cursor: 'pointer', fontFamily: SF, fontSize: 13, fontWeight: 700,
                 }}>{f.l}</button>
@@ -169,7 +169,7 @@ function DigestScreen({ accent }) {
         </Section>
 
         <div style={{ padding: '4px 16px 0' }}>
-          <button onClick={sendTest} disabled={total === 0} style={{
+          <button type="button" onClick={sendTest} disabled={total === 0} style={{
             width: '100%', background: total ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '14px',
             fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: total ? 'pointer' : 'default', opacity: total ? 1 : 0.5,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

@@ -348,6 +348,7 @@ function TemplatesScreen({
     title: "Job templates",
     subtitle: "Reusable project blueprints",
     right: React.createElement("button", {
+      type: "button",
       onClick: async () => {
         await Backend.db.jobTemplates.create({
           name: 'Untitled template',
@@ -409,6 +410,7 @@ function TemplatesScreen({
       marginTop: 4
     }
   }, t.stages, " stages \xB7 ~", t.typical_weeks, " wks \xB7 ~\xA3", (t.typical_value / 1000).toFixed(0), "k")), React.createElement("button", {
+    type: "button",
     onClick: async () => {
       await Backend.db.projects.create({
         name: `New ${t.name}`,

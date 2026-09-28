@@ -95,6 +95,7 @@ function LLMSettingsScreen({
     }
   };
   const tierPill = (label, k) => React.createElement("button", {
+    type: "button",
     onClick: () => setMode(k),
     style: {
       flex: 1,
@@ -257,6 +258,7 @@ function LLMSettingsScreen({
       letterSpacing: 0.6
     }
   }, "SERVER LLM"), React.createElement("button", {
+    type: "button",
     onClick: probeHealth,
     disabled: probing,
     style: {
@@ -434,6 +436,7 @@ function LLMSettingsScreen({
       fontFamily: SFMono
     }
   }, wllmProgress), React.createElement("button", {
+    type: "button",
     onClick: enableWebLLM,
     disabled: wllmBusy || aSt.webllm || !aSt.webgpu,
     style: {
@@ -450,6 +453,7 @@ function LLMSettingsScreen({
       opacity: wllmBusy || aSt.webllm || !aSt.webgpu ? 0.7 : 1
     }
   }, aSt.webllm ? '✓ Loaded' : !aSt.webgpu ? 'WebGPU unavailable' : wllmBusy ? 'Loading…' : 'Download model'))), React.createElement("button", {
+    type: "button",
     onClick: testPrompt,
     style: {
       marginTop: 18,

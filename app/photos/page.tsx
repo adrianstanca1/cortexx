@@ -175,21 +175,21 @@ export default function PhotosPage() {
           <div style={{ display: 'flex', gap: 6 }}>
             {compareMode ? (
               <>
-                <button onClick={exitCompareMode} aria-label="Exit compare mode" style={{ height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: '0 12px' }}>
+                <button type="button" onClick={exitCompareMode} aria-label="Exit compare mode" style={{ height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', padding: '0 12px' }}>
                   Cancel
                 </button>
-                <button onClick={runCompare} disabled={compareSelected.length !== 2 || comparing} style={{ height: 36, borderRadius: 10, background: compareSelected.length === 2 ? '#8b5cf6' : 'rgba(139,92,246,0.3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: compareSelected.length === 2 && !comparing ? 'pointer' : 'not-allowed', padding: '0 14px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <button type="button" onClick={runCompare} disabled={compareSelected.length !== 2 || comparing} style={{ height: 36, borderRadius: 10, background: compareSelected.length === 2 ? '#8b5cf6' : 'rgba(139,92,246,0.3)', border: 'none', color: '#090b0d', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: compareSelected.length === 2 && !comparing ? 'pointer' : 'not-allowed', padding: '0 14px', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <IcSpark size={12} color="#fff" />
                   {comparing ? 'Comparing…' : 'Compare'}
                 </button>
               </>
             ) : (
               <>
-                <button onClick={() => { setCompareMode(true); setCompareSelected([]); setCompareResult(null) }} aria-label="Compare photos" disabled={photos.length < 2} style={{ height: 36, borderRadius: 10, background: 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: '#a78bfa', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: photos.length < 2 ? 'not-allowed' : 'pointer', opacity: photos.length < 2 ? 0.5 : 1, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <button type="button" onClick={() => { setCompareMode(true); setCompareSelected([]); setCompareResult(null) }} aria-label="Compare photos" disabled={photos.length < 2} style={{ height: 36, borderRadius: 10, background: 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: '#a78bfa', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: photos.length < 2 ? 'not-allowed' : 'pointer', opacity: photos.length < 2 ? 0.5 : 1, padding: '0 12px', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <IcSpark size={12} color="#a78bfa" />
                   Compare
                 </button>
-                <button onClick={() => inputRef.current?.click()} disabled={uploading} aria-label="Upload photo" style={{ width: 36, height: 36, borderRadius: 10, background: '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
+                <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} aria-label="Upload photo" style={{ width: 36, height: 36, borderRadius: 10, background: '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: uploading ? 'wait' : 'pointer', opacity: uploading ? 0.6 : 1 }}>
                   <IcPlus size={18} color="#fff" />
                 </button>
               </>
@@ -197,11 +197,11 @@ export default function PhotosPage() {
           </div>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-          <button onClick={() => setFilter('all')} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === 'all' ? '#8b5cf6' : 'rgba(255,255,255,0.06)', color: filter === 'all' ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === 'all' ? 700 : 400, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setFilter('all')} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === 'all' ? '#8b5cf6' : 'rgba(255,255,255,0.06)', color: filter === 'all' ? '#090b0d' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === 'all' ? 700 : 400, cursor: 'pointer' }}>
             All
           </button>
           {projects.map(p => (
-            <button key={p.id} onClick={() => setFilter(p.id)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === p.id ? '#8b5cf6' : 'rgba(255,255,255,0.06)', color: filter === p.id ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === p.id ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <button type="button" key={p.id} onClick={() => setFilter(p.id)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === p.id ? '#7c3aed' : 'rgba(255,255,255,0.06)', color: filter === p.id ? '#090b0d' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === p.id ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               {p.name}
             </button>
           ))}
@@ -217,7 +217,7 @@ export default function PhotosPage() {
           <IcCamera size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{photos.length === 0 ? 'No photos yet' : 'Nothing in this filter'}</p>
           {photos.length === 0 && (
-            <button onClick={() => inputRef.current?.click()} disabled={uploading} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#8b5cf6', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => inputRef.current?.click()} disabled={uploading} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#8b5cf6', border: 'none', color: '#090b0d', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Upload your first photo
             </button>
           )}
@@ -230,7 +230,7 @@ export default function PhotosPage() {
             const isSelected = selectIndex !== -1
             return (
               <div key={p.id} style={{ position: 'relative', aspectRatio: '1 / 1', borderRadius: 10, overflow: 'hidden', background: 'var(--bg1)', outline: compareMode && isSelected ? `3px solid #8b5cf6` : 'none', outlineOffset: -3 }}>
-                <button
+                <button type="button"
                   onClick={() => compareMode ? toggleCompareSelection(p.id) : setActivePhoto(p)}
                   aria-label={compareMode ? (isSelected ? `Deselect ${p.name}` : `Select ${p.name} to compare`) : `Open photo ${p.name}`}
                   style={{ position: 'absolute', inset: 0, padding: 0, border: 'none', background: 'transparent', cursor: 'pointer' }}
@@ -239,12 +239,12 @@ export default function PhotosPage() {
                   <img src={p.url!} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
                 </button>
                 {compareMode && isSelected && (
-                  <span style={{ position: 'absolute', top: 4, left: 4, width: 24, height: 24, borderRadius: 12, background: '#8b5cf6', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                  <span style={{ position: 'absolute', top: 4, left: 4, width: 24, height: 24, borderRadius: 12, background: '#7c3aed', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                     {selectIndex + 1}
                   </span>
                 )}
                 {!compareMode && (
-                  <button
+                  <button type="button"
                     onClick={(e) => { e.stopPropagation(); tagPhoto(p.id) }}
                     disabled={tags?.loading}
                     aria-label="Tag with AI"
@@ -271,7 +271,7 @@ export default function PhotosPage() {
       {/* Compare results modal */}
       {compareResult && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(6,16,30,0.95)', display: 'flex', flexDirection: 'column', overflow: 'auto' }}>
-          <button onClick={() => setCompareResult(null)} aria-label="Close" style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#fff', fontFamily: SF, fontSize: 18, cursor: 'pointer', zIndex: 1 }}>×</button>
+          <button type="button" onClick={() => setCompareResult(null)} aria-label="Close" style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#fff', fontFamily: SF, fontSize: 18, cursor: 'pointer', zIndex: 1 }}>×</button>
           <div style={{ padding: '20px 16px 16px', maxWidth: 800, margin: '0 auto', width: '100%' }}>
             <div style={{ fontFamily: SF, fontSize: 11, color: '#a78bfa', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 4 }}>Photo comparison</div>
             <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)', marginBottom: 14 }}>
@@ -316,7 +316,7 @@ export default function PhotosPage() {
       {/* Photo lightbox + tags */}
       {activePhoto && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(6,16,30,0.95)', display: 'flex', flexDirection: 'column' }}>
-          <button onClick={() => setActivePhoto(null)} aria-label="Close" style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#fff', fontFamily: SF, fontSize: 18, cursor: 'pointer', zIndex: 1 }}>×</button>
+          <button type="button" onClick={() => setActivePhoto(null)} aria-label="Close" style={{ position: 'absolute', top: 16, right: 16, width: 36, height: 36, borderRadius: 18, background: 'rgba(0,0,0,0.5)', border: '0.5px solid rgba(255,255,255,0.15)', color: '#fff', fontFamily: SF, fontSize: 18, cursor: 'pointer', zIndex: 1 }}>×</button>
           <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16, minHeight: 0 }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={activePhoto.url!} alt={activePhoto.name} style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }} />
@@ -329,7 +329,7 @@ export default function PhotosPage() {
                   {activePhoto.project?.name || 'No project'} · {new Date(activePhoto.createdAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })}
                 </div>
               </div>
-              <button
+              <button type="button"
                 onClick={() => tagPhoto(activePhoto.id)}
                 disabled={photoTags[activePhoto.id]?.loading}
                 style={{ background: 'rgba(139,92,246,0.20)', color: '#a78bfa', border: '0.5px solid rgba(139,92,246,0.5)', borderRadius: 10, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: photoTags[activePhoto.id]?.loading ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}

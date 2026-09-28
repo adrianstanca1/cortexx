@@ -400,6 +400,7 @@ function InspectionsScreen({
       icon: Ic.filter,
       onClick: () => setShowFilter(!showFilter)
     }), React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('addinspection'),
       style: {
         width: 36,
@@ -444,6 +445,7 @@ function InspectionsScreen({
       gap: 5
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setProjectFilter('all'),
     style: {
       background: projectFilter === 'all' ? accent : T.bg3,
@@ -457,6 +459,7 @@ function InspectionsScreen({
       cursor: 'pointer'
     }
   }, "All projects"), projects.map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setProjectFilter(p.id),
     style: {
@@ -493,6 +496,7 @@ function InspectionsScreen({
       paddingBottom: 4
     }
   }, INSP_TEMPLATES.map(t => React.createElement("button", {
+    type: "button",
     key: t.k,
     onClick: () => {
       toast(`New ${t.l} inspection`, 'success');
@@ -558,6 +562,14 @@ function InspectionsScreen({
     const proj = projects.find(p => p.id === insp.projectId);
     const passed = insp.items.filter(it => it.ok).length;
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: insp.id,
       onClick: () => onOpen && onOpen(insp),
       style: {
@@ -660,6 +672,7 @@ function InspectionDetailSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -677,6 +690,7 @@ function InspectionDetailSheet({
       color: T.t1
     }
   }, "Inspection"), React.createElement("button", {
+    type: "button",
     onClick: sign,
     style: {
       background: 'none',
@@ -735,6 +749,14 @@ function InspectionDetailSheet({
   }, passed, "/", items.length))), React.createElement(Section, {
     title: "Checklist"
   }, React.createElement(GroupedList, null, items.map((it, i) => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: i,
     onClick: () => toggleItem(i),
     style: {
@@ -813,6 +835,7 @@ function CustomersScreen({
     title: "Customers",
     subtitle: `${customers.length} contacts · £${(totalValue / 1000).toFixed(0)}k lifetime`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('addcustomer'),
       style: {
         width: 36,
@@ -870,6 +893,14 @@ function CustomersScreen({
       gap: 8
     }
   }, filtered.map(c => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: c.id,
     onClick: () => onOpen && onOpen(c),
     style: {
@@ -941,6 +972,7 @@ function CustomerDetailSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -958,6 +990,7 @@ function CustomerDetailSheet({
       color: T.t1
     }
   }, "Customer"), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('editfield', {
       label: 'Customer',
       current: customer.name,
@@ -1103,6 +1136,7 @@ function LeadsScreen({
     title: "Lead pipeline",
     subtitle: `${leads.filter(l => l.stage !== 'lost').length} active · £${(totalValue / 1000).toFixed(0)}k pipeline`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('addlead'),
       style: {
         width: 36,
@@ -1129,6 +1163,7 @@ function LeadsScreen({
   }, STAGES.map(s => {
     const n = leads.filter(l => l.stage === s.k).length;
     return React.createElement("button", {
+      type: "button",
       key: s.k,
       onClick: () => setActiveStage(s.k),
       style: {
@@ -1235,6 +1270,7 @@ function LeadsScreen({
         marginTop: 12
       }
     }, React.createElement("button", {
+      type: "button",
       onClick: () => advance(l),
       style: {
         flex: 1,
@@ -1249,6 +1285,7 @@ function LeadsScreen({
         cursor: 'pointer'
       }
     }, "Advance \u2192"), l.stage === 'qualified' && React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('estimator'),
       style: {
         background: 'transparent',
@@ -1267,6 +1304,7 @@ function LeadsScreen({
     }, React.cloneElement(Ic.spark, {
       size: 12
     }), " Quote"), React.createElement("button", {
+      type: "button",
       onClick: () => Backend.db.leads.update(l.id, {
         stage: 'lost'
       }),
@@ -1304,6 +1342,7 @@ function PhotosScreen({
     title: "Photos",
     subtitle: `${grid} of ${totalPhotos} site photos`,
     right: React.createElement("button", {
+      type: "button",
       onClick: async () => {
         await Backend.db.activity.create({
           who: 'You',
@@ -1338,6 +1377,7 @@ function PhotosScreen({
       overflowX: 'auto'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setActiveProject(null),
     style: {
       background: !activeProject ? T.bg3 : 'transparent',
@@ -1352,6 +1392,7 @@ function PhotosScreen({
       whiteSpace: 'nowrap'
     }
   }, "All"), projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setActiveProject(p.id),
     style: {
@@ -1382,6 +1423,14 @@ function PhotosScreen({
     const palette = ['#1a3a5c', '#2c4a3e', '#3a2c5c', '#5c3a2c', '#2c3a5c', '#3a5c2c', '#4a3a5c', '#5c4a2c'];
     const tag = i < 3 ? 'NEW' : null;
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: i,
       onClick: () => toast(`Photo ${i + 1} opened`, 'info'),
       style: {
@@ -1478,6 +1527,7 @@ function MileageScreen({
     title: "Mileage",
     subtitle: `${trips.length} trips logged this week`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('starttrip'),
       style: {
         width: 36,

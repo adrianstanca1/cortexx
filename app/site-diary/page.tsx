@@ -127,23 +127,23 @@ export default function SiteDiaryPage() {
             <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{niceDate}</p>
           </div>
           {data && (
-            <button onClick={shareReport} aria-label="Share report" style={{ width: 36, height: 36, borderRadius: 10, background: '#10b981', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+            <button type="button" onClick={shareReport} aria-label="Share report" style={{ width: 36, height: 36, borderRadius: 10, background: '#10b981', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
               <IcSend size={16} color="#fff" />
             </button>
           )}
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
-          <select value={projectId} onChange={e => setProjectId(e.target.value)} style={{ ...inputStyle, appearance: 'none' }}>
+          <select aria-label="Project" value={projectId} onChange={e => setProjectId(e.target.value)} style={{ ...inputStyle, appearance: 'none' }}>
             {projects.length === 0 && <option value="">— No projects —</option>}
             {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
           </select>
           <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button onClick={() => shiftDay(-1)} aria-label="Previous day" style={navBtn}><IcChevL size={16} color="var(--t2)" /></button>
-            <input type="date" value={date} onChange={e => setDate(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', flex: 1, textAlign: 'center' }} />
-            <button onClick={() => shiftDay(1)} aria-label="Next day" style={navBtn}><IcChevR size={16} color="var(--t2)" /></button>
+            <button type="button" onClick={() => shiftDay(-1)} aria-label="Previous day" style={navBtn}><IcChevL size={16} color="var(--t2)" /></button>
+            <input aria-label="Diary date" type="date" value={date} onChange={e => setDate(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', flex: 1, textAlign: 'center' }} />
+            <button type="button" onClick={() => shiftDay(1)} aria-label="Next day" style={navBtn}><IcChevR size={16} color="var(--t2)" /></button>
             {!isToday && (
-              <button onClick={jumpToToday} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(16,185,129,0.15)', border: '0.5px solid rgba(16,185,129,0.35)', color: '#10b981', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Today</button>
+              <button type="button" onClick={jumpToToday} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(16,185,129,0.15)', border: '0.5px solid rgba(16,185,129,0.35)', color: '#10b981', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Today</button>
             )}
           </div>
         </div>
@@ -153,7 +153,7 @@ export default function SiteDiaryPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcDoc size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>Create a project first to start logging site diaries.</p>
-          <Link href="/projects" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#10b981', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Go to projects</Link>
+          <Link href="/projects" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#047857', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Go to projects</Link>
         </div>
       ) : loading ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>

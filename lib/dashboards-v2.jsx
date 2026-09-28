@@ -265,7 +265,7 @@ function DashV9_Stories({ accent = T.purple }) {
               </div>
               <span style={{ fontFamily: SF, fontSize: 11, color: T.t2 }}>4 on site now</span>
               <div style={{ flex: 1 }}/>
-              <button onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
+              <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
                 background: '#fff', color: T.bg0, border: 'none',
                 borderRadius: 10, padding: '7px 14px',
                 fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',

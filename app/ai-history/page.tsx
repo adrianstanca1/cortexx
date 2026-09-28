@@ -77,12 +77,12 @@ export default function AiHistoryPage() {
               AI history
             </h1>
             <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
-              Your prompts to <Link href="/ask" style={{ color: '#8b5cf6', textDecoration: 'none' }}>Ask Cortex</Link>.
+              Your prompts to <Link href="/ask" style={{ color: '#8b5cf6', textDecoration: 'underline', textUnderlineOffset: 2 }}>Ask Cortex</Link>.
               {!loading && entries.length > 0 && ` ${entries.length} conversation${entries.length === 1 ? '' : 's'} saved.`}
             </p>
           </div>
           {entries.length > 0 && (
-            <button
+            <button type="button"
               onClick={clearHistory}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, color: '#ef4444', opacity: 0.7 }}
               title="Clear all history"
@@ -101,7 +101,7 @@ export default function AiHistoryPage() {
         ) : entries.length === 0 ? (
           <div style={{ color: 'var(--t3)', fontSize: 13, padding: 60, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
             <IcSpark size={32} color="#8b5cf6" />
-            <p style={{ marginTop: 12 }}>No prompts yet.<br /><Link href="/ask" style={{ color: '#f59e0b', textDecoration: 'none' }}>Ask Cortex something →</Link></p>
+            <p style={{ marginTop: 12 }}>No prompts yet.<br /><Link href="/ask" style={{ color: '#f59e0b', textDecoration: 'underline', textUnderlineOffset: 2 }}>Ask Cortex something →</Link></p>
           </div>
         ) : (
           <ul style={{ listStyle: 'none', padding: 0, margin: 0, display: 'flex', flexDirection: 'column', gap: 8 }}>

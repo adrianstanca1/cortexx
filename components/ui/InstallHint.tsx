@@ -95,14 +95,14 @@ export default function InstallHint() {
         </div>
       </div>
       {hint === 'native' && (
-        <button
+        <button type="button"
           onClick={install}
-          style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          style={{ background: '#b45309', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
         >
           Install
         </button>
       )}
-      <button
+      <button type="button"
         onClick={dismiss}
         aria-label="Dismiss install hint"
         style={{ background: 'rgba(255,255,255,0.06)', color: 'var(--t2)', border: 'none', borderRadius: 8, width: 28, height: 28, cursor: 'pointer', fontSize: 16, lineHeight: 1, fontFamily: 'var(--font-system)' }}

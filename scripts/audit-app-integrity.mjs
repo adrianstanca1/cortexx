@@ -109,6 +109,13 @@ for (const file of files) {
     if (/\bdisabled\s*=\s*{?false}?/.test(attrs)) warnings.push(`${relative}: button contains redundant disabled={false}`);
   }
 
+  for (const match of content.matchAll(/React\.createElement\(\s*['"]button['"]\s*,\s*\{/g)) {
+    const declaration = content.slice(match.index, match.index + 180);
+    if (!/\btype\s*:/.test(declaration)) {
+      warnings.push(`${relative}: React.createElement button without an explicit type property`);
+    }
+  }
+
   for (const match of content.matchAll(/<a\b([^>]*)>/g)) {
     const attrs = match[1];
     if (/target\s*=\s*["']_blank["']/.test(attrs) && !/rel\s*=\s*["'][^"']*noopener/.test(attrs)) {
@@ -132,7 +139,11 @@ if (warnings.length) {
 if (failures.length) {
   console.error(`\nIntegrity failures (${failures.length}):`);
   for (const failure of failures) console.error(`- ${failure}`);
+}
+
+if (warnings.length || failures.length) {
+  console.error('\nApplication route, link, and UI integrity audit failed. Resolve every finding before release.');
   process.exit(1);
 }
 
-console.log('\nApplication route, link, and UI integrity audit passed.');
+console.log('\nApplication route, link, and UI integrity audit passed with zero findings.');

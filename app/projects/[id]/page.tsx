@@ -506,8 +506,8 @@ export default function ProjectDetailPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Link href={`/projects/${id}/board`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', border: '0.5px solid rgba(245,158,11,0.2)', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Board</Link>
             <Link href={`/projects/${id}/programme`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: '0.5px solid rgba(16,185,129,0.2)', color: '#10b981', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Programme</Link>
-            <Link href={`/projects/${id}/gallery`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(37,99,235,0.1)', border: '0.5px solid rgba(37,99,235,0.2)', color: '#2563eb', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Gallery</Link>
-            <button onClick={() => { setEditForm({ status: project.status, progress: project.progress.toString(), budget: project.budget.toString(), name: project.name, clientName: project.clientName, startDate: project.startDate?.split('T')[0] || '', endDate: project.endDate?.split('T')[0] || '' }); setConfirmDeleteProject(false); setShowEditModal(true) }} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer' }}>Edit</button>
+            <Link href={`/projects/${id}/gallery`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(37,99,235,0.1)', border: '0.5px solid rgba(37,99,235,0.2)', color: '#60a5fa', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Gallery</Link>
+            <button type="button" onClick={() => { setEditForm({ status: project.status, progress: project.progress.toString(), budget: project.budget.toString(), name: project.name, clientName: project.clientName, startDate: project.startDate?.split('T')[0] || '', endDate: project.endDate?.split('T')[0] || '' }); setConfirmDeleteProject(false); setShowEditModal(true) }} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer' }}>Edit</button>
             <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 28, fontWeight: 700, color: sc }}>{project.progress}<span style={{ fontSize: 14, color: 'var(--t3)' }}>%</span></div>
           </div>
         </div>
@@ -516,7 +516,7 @@ export default function ProjectDetailPage() {
         </div>
         <div style={{ display: 'flex', gap: 0, marginTop: 12, overflowX: 'auto' }}>
           {tabs.map(t => (
-            <button key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: tab === t.id ? 700 : 400, color: tab === t.id ? '#f59e0b' : 'var(--t3)', borderBottom: `2px solid ${tab === t.id ? '#f59e0b' : 'transparent'}`, whiteSpace: 'nowrap' }}>{t.label}</button>
+            <button type="button" key={t.id} onClick={() => setTab(t.id)} style={{ flex: 1, padding: '8px 4px', border: 'none', background: 'none', cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: tab === t.id ? 700 : 400, color: tab === t.id ? '#f59e0b' : 'var(--t3)', borderBottom: `2px solid ${tab === t.id ? '#f59e0b' : 'transparent'}`, whiteSpace: 'nowrap' }}>{t.label}</button>
           ))}
         </div>
       </div>
@@ -543,7 +543,7 @@ export default function ProjectDetailPage() {
             <div style={{ marginTop: 16 }}>
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
                 <p style={{ ...labelStyle, marginBottom: 0 }}>Documents</p>
-                <button onClick={() => setShowDocModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', padding: 0 }}>
+                <button type="button" onClick={() => setShowDocModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 4, background: 'none', border: 'none', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', padding: 0 }}>
                   <IcPlus size={12} color="#f59e0b" /> Add
                 </button>
               </div>
@@ -559,7 +559,7 @@ export default function ProjectDetailPage() {
                           {doc.expiresAt && <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: expiring ? '#ef4444' : 'var(--t3)', marginTop: 1 }}>Expires {new Date(doc.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}{expiring ? ' ⚠' : ''}</div>}
                         </div>
                         <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: 'var(--t3)', background: 'rgba(255,255,255,0.05)', padding: '2px 6px', borderRadius: 4, textTransform: 'capitalize' }}>{doc.type}</span>
-                        <button onClick={() => deleteDocument(doc.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, opacity: 0.5 }}>
+                        <button type="button" onClick={() => deleteDocument(doc.id)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, opacity: 0.5 }}>
                           <IcX size={12} color="#ef4444" />
                         </button>
                       </div>
@@ -617,7 +617,7 @@ export default function ProjectDetailPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>{openTasks.length} open · {doneTasks.length} done</span>
-              <button onClick={() => setShowTaskModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={() => setShowTaskModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={14} color="#fff" /> Add task
               </button>
             </div>
@@ -629,7 +629,7 @@ export default function ProjectDetailPage() {
                 <p style={{ ...labelStyle, marginBottom: 8 }}>Open · {openTasks.length}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
                   {openTasks.map(task => (
-                    <div key={task.id} onClick={() => toggleTask(task)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${task.priority === 'critical' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
+                    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={task.id} onClick={() => toggleTask(task)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${task.priority === 'critical' ? 'rgba(239,68,68,0.2)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', alignItems: 'flex-start', gap: 10, cursor: 'pointer' }}>
                       <div style={{ width: 22, height: 22, borderRadius: 7, background: `${priorityColor[task.priority] || 'var(--t3)'}22`, border: `1.5px solid ${priorityColor[task.priority] || 'var(--t3)'}`, flexShrink: 0, marginTop: 1 }} />
                       <div style={{ flex: 1 }}>
                         <div style={{ fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{task.title}</div>
@@ -650,7 +650,7 @@ export default function ProjectDetailPage() {
                 <p style={{ ...labelStyle, marginBottom: 8 }}>Done · {doneTasks.length}</p>
                 <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                   {doneTasks.map(task => (
-                    <div key={task.id} onClick={() => toggleTask(task)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '10px 14px', border: '0.5px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 10, opacity: 0.5, cursor: 'pointer' }}>
+                    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={task.id} onClick={() => toggleTask(task)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '10px 14px', border: '0.5px solid rgba(255,255,255,0.04)', display: 'flex', alignItems: 'center', gap: 10, opacity: 0.5, cursor: 'pointer' }}>
                       <IcCheck size={14} color="#10b981" />
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t2)', textDecoration: 'line-through' }}>{task.title}</div>
                     </div>
@@ -666,7 +666,7 @@ export default function ProjectDetailPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>{project.assignments?.length || 0} assigned</span>
-              <button onClick={openAssignModal} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={openAssignModal} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={14} color="#fff" /> Add member
               </button>
             </div>
@@ -682,10 +682,10 @@ export default function ProjectDetailPage() {
                     <div style={{ fontFamily: 'var(--font-system)', fontSize: 15, fontWeight: 600, color: 'var(--t1)' }}>{a.member?.name}</div>
                     <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', marginTop: 1 }}>{a.role || a.member?.role}</div>
                   </div>
-                  <button onClick={() => toggleAssignmentOnSite(a.id, a.onSite)} style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: a.onSite ? '#10b981' : 'var(--t3)', background: a.onSite ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${a.onSite ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}`, padding: '4px 8px', borderRadius: 6, cursor: 'pointer' }}>
+                  <button type="button" onClick={() => toggleAssignmentOnSite(a.id, a.onSite)} style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: a.onSite ? '#10b981' : 'var(--t3)', background: a.onSite ? 'rgba(16,185,129,0.1)' : 'rgba(255,255,255,0.05)', border: `1px solid ${a.onSite ? 'rgba(16,185,129,0.3)' : 'rgba(255,255,255,0.1)'}`, padding: '4px 8px', borderRadius: 6, cursor: 'pointer' }}>
                     {a.onSite ? '● ON SITE' : 'OFF SITE'}
                   </button>
-                  <button onClick={() => removeAssignment(a.id, a.member?.name || 'member')} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <button type="button" onClick={() => removeAssignment(a.id, a.member?.name || 'member')} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <IcX size={12} color="#ef4444" />
                   </button>
                 </div>
@@ -773,11 +773,11 @@ export default function ProjectDetailPage() {
 
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
               <p style={{ ...labelStyle, marginBottom: 0 }}>Invoices</p>
-              <button onClick={() => {
+              <button type="button" onClick={() => {
                 const nextNum = (project.invoices?.length || 0) + 1
                 setInvoiceForm({ number: `INV-${String(nextNum).padStart(3, '0')}`, clientName: project.clientName, amount: '', dueDate: '', status: 'draft' })
                 setShowInvoiceModal(true)
-              }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={12} color="#fff" /> Add invoice
               </button>
             </div>
@@ -791,22 +791,22 @@ export default function ProjectDetailPage() {
                 const ic = invoiceStatusColor[inv.status] || 'var(--t3)'
                 return (
                   <div key={inv.id} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12 }}>
-                    <div onClick={() => cycleInvoiceStatus(inv)} style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: ic, flexShrink: 0, cursor: 'pointer' }} />
-                    <div onClick={() => cycleInvoiceStatus(inv)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
+                    <div aria-label="Change status" role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => cycleInvoiceStatus(inv)} style={{ width: 4, alignSelf: 'stretch', borderRadius: 2, background: ic, flexShrink: 0, cursor: 'pointer' }} />
+                    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => cycleInvoiceStatus(inv)} style={{ flex: 1, minWidth: 0, cursor: 'pointer' }}>
                       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t2)' }}>{inv.number}</div>
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', fontWeight: 500, marginTop: 1 }}>{inv.clientName}</div>
                     </div>
-                    <div onClick={() => cycleInvoiceStatus(inv)} style={{ textAlign: 'right', cursor: 'pointer' }}>
+                    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => cycleInvoiceStatus(inv)} style={{ textAlign: 'right', cursor: 'pointer' }}>
                       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 14, color: ic, fontWeight: 700 }}>£{inv.amount.toLocaleString()}</div>
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 10, color: ic, marginTop: 1, textTransform: 'capitalize', fontWeight: 600 }}>{inv.status} →</div>
                     </div>
                     <a href={`/api/invoices/${inv.id}/pdf`} target="_blank" rel="noopener" aria-label="Download invoice PDF" style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(37,99,235,0.1)', border: '1px solid rgba(37,99,235,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0, textDecoration: 'none', fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, color: '#2563eb' }}>
                       PDF
                     </a>
-                    <button onClick={() => openEditInvoice(inv)} style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                    <button type="button" onClick={() => openEditInvoice(inv)} style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                       <IcEdit size={12} color="#f59e0b" />
                     </button>
-                    <button onClick={() => deleteInvoice(inv)} style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
+                    <button type="button" onClick={() => deleteInvoice(inv)} style={{ width: 28, height: 28, borderRadius: 7, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.15)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer', flexShrink: 0 }}>
                       <IcTrash size={12} color="#ef4444" />
                     </button>
                   </div>
@@ -825,40 +825,40 @@ export default function ProjectDetailPage() {
       {/* ── ADD TASK MODAL ── */}
       {showTaskModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowTaskModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowTaskModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Add task</h3>
-              <button onClick={() => setShowTaskModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowTaskModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
-              <label style={labelStyle}>Title *</label>
-              <input autoFocus value={taskForm.title} onChange={e => setTaskForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Install kitchen units" style={inputStyle} />
+              <label htmlFor="field-835" style={labelStyle}>Title *</label>
+              <input id="field-835" value={taskForm.title} onChange={e => setTaskForm(p => ({ ...p, title: e.target.value }))} placeholder="e.g. Install kitchen units" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Notes</label>
-              <input value={taskForm.description} onChange={e => setTaskForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={inputStyle} />
+              <label htmlFor="field-839" style={labelStyle}>Notes</label>
+              <input id="field-839" value={taskForm.description} onChange={e => setTaskForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Priority</label>
+              <div style={labelStyle}>Priority</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {PRIORITIES.map(p => (
-                  <button key={p} onClick={() => setTaskForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: taskForm.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${taskForm.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: taskForm.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{p}</button>
+                  <button type="button" key={p} onClick={() => setTaskForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: taskForm.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${taskForm.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: taskForm.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{p}</button>
                 ))}
               </div>
             </div>
             <div>
-              <label style={labelStyle}>Due date</label>
-              <input type="date" value={taskForm.dueDate} onChange={e => setTaskForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-851" style={labelStyle}>Due date</label>
+              <input id="field-851" type="date" value={taskForm.dueDate} onChange={e => setTaskForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
             <div>
-              <label style={labelStyle}>Assignee</label>
-              <select value={taskForm.assigneeId} onChange={e => setTaskForm(p => ({ ...p, assigneeId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-855" style={labelStyle}>Assignee</label>
+              <select id="field-855" value={taskForm.assigneeId} onChange={e => setTaskForm(p => ({ ...p, assigneeId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 <option value="">Unassigned</option>
                 {project.assignments?.map(a => a.member && <option key={a.member.id} value={a.member.id}>{a.member.name}</option>)}
               </select>
             </div>
-            <button onClick={createTask} disabled={savingTask || !taskForm.title.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingTask || !taskForm.title.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={createTask} disabled={savingTask || !taskForm.title.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingTask || !taskForm.title.trim() ? 0.5 : 1 }}>
               {savingTask ? 'Adding…' : 'Add task'}
             </button>
           </div>
@@ -868,11 +868,11 @@ export default function ProjectDetailPage() {
       {/* ── ADD INVOICE MODAL ── */}
       {showInvoiceModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowInvoiceModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowInvoiceModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>New invoice</h3>
-              <button onClick={() => setShowInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {[
               { key: 'number', label: 'Invoice number *', placeholder: 'INV-001' },
@@ -880,23 +880,23 @@ export default function ProjectDetailPage() {
               { key: 'amount', label: 'Amount (£) *', placeholder: '5000', type: 'number', min: '0' },
             ].map(f => (
               <div key={f.key}>
-                <label style={labelStyle}>{f.label}</label>
-                <input value={invoiceForm[f.key as keyof typeof invoiceForm]} onChange={e => setInvoiceForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={(f as { type?: string }).type || 'text'} min={(f as { min?: string }).min} style={inputStyle} />
+                <label htmlFor="field-883" style={labelStyle}>{f.label}</label>
+                <input id="field-883" value={invoiceForm[f.key as keyof typeof invoiceForm]} onChange={e => setInvoiceForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={(f as { type?: string }).type || 'text'} min={(f as { min?: string }).min} style={inputStyle} />
               </div>
             ))}
             <div>
-              <label style={labelStyle}>Due date *</label>
-              <input type="date" value={invoiceForm.dueDate} onChange={e => setInvoiceForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-888" style={labelStyle}>Due date *</label>
+              <input id="field-888" type="date" value={invoiceForm.dueDate} onChange={e => setInvoiceForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
             <div>
-              <label style={labelStyle}>Status</label>
+              <div style={labelStyle}>Status</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['draft', 'sent', 'paid'] as const).map(s => (
-                  <button key={s} onClick={() => setInvoiceForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: invoiceForm.status === s ? `${invoiceStatusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${invoiceForm.status === s ? invoiceStatusColor[s] : 'rgba(255,255,255,0.1)'}`, color: invoiceForm.status === s ? invoiceStatusColor[s] : 'var(--t2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{s}</button>
+                  <button type="button" key={s} onClick={() => setInvoiceForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: invoiceForm.status === s ? `${invoiceStatusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${invoiceForm.status === s ? invoiceStatusColor[s] : 'rgba(255,255,255,0.1)'}`, color: invoiceForm.status === s ? invoiceStatusColor[s] : 'var(--t2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{s}</button>
                 ))}
               </div>
             </div>
-            <button onClick={createInvoice} disabled={savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate ? 0.5 : 1 }}>
+            <button type="button" onClick={createInvoice} disabled={savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate ? 0.5 : 1 }}>
               {savingInvoice ? 'Creating…' : 'Create invoice'}
             </button>
           </div>
@@ -906,65 +906,65 @@ export default function ProjectDetailPage() {
       {/* ── EDIT PROJECT MODAL ── */}
       {showEditModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowEditModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowEditModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Edit project</h3>
-              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
-              <label style={labelStyle}>Project name</label>
-              <input value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} />
+              <label htmlFor="field-916" style={labelStyle}>Project name</label>
+              <input id="field-916" value={editForm.name} onChange={e => setEditForm(p => ({ ...p, name: e.target.value }))} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Client name</label>
-              <input value={editForm.clientName} onChange={e => setEditForm(p => ({ ...p, clientName: e.target.value }))} style={inputStyle} />
+              <label htmlFor="field-920" style={labelStyle}>Client name</label>
+              <input id="field-920" value={editForm.clientName} onChange={e => setEditForm(p => ({ ...p, clientName: e.target.value }))} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Status</label>
+              <div style={labelStyle}>Status</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {STATUSES.map(s => (
-                  <button key={s} onClick={() => setEditForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: editForm.status === s ? `${statusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${editForm.status === s ? statusColor[s] : 'rgba(255,255,255,0.1)'}`, color: editForm.status === s ? statusColor[s] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{statusLabel[s]}</button>
+                  <button type="button" key={s} onClick={() => setEditForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: editForm.status === s ? `${statusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${editForm.status === s ? statusColor[s] : 'rgba(255,255,255,0.1)'}`, color: editForm.status === s ? statusColor[s] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{statusLabel[s]}</button>
                 ))}
               </div>
             </div>
             <div>
-              <label style={labelStyle}>Progress (%)</label>
-              <input type="number" min="0" max="100" value={editForm.progress} onChange={e => setEditForm(p => ({ ...p, progress: e.target.value }))} placeholder="0–100" style={inputStyle} />
+              <label htmlFor="field-932" style={labelStyle}>Progress (%)</label>
+              <input id="field-932" type="number" min="0" max="100" value={editForm.progress} onChange={e => setEditForm(p => ({ ...p, progress: e.target.value }))} placeholder="0–100" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Budget (£)</label>
-              <input type="number" min="0" value={editForm.budget} onChange={e => setEditForm(p => ({ ...p, budget: e.target.value }))} placeholder="85000" style={inputStyle} />
+              <label htmlFor="field-936" style={labelStyle}>Budget (£)</label>
+              <input id="field-936" type="number" min="0" value={editForm.budget} onChange={e => setEditForm(p => ({ ...p, budget: e.target.value }))} placeholder="85000" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Start date</label>
-              <input type="date" value={editForm.startDate} onChange={e => setEditForm(p => ({ ...p, startDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-940" style={labelStyle}>Start date</label>
+              <input id="field-940" type="date" value={editForm.startDate} onChange={e => setEditForm(p => ({ ...p, startDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
             <div>
-              <label style={labelStyle}>End date</label>
-              <input type="date" value={editForm.endDate} onChange={e => setEditForm(p => ({ ...p, endDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-944" style={labelStyle}>End date</label>
+              <input id="field-944" type="date" value={editForm.endDate} onChange={e => setEditForm(p => ({ ...p, endDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
-            <button onClick={saveEdit} disabled={savingEdit} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit ? 0.5 : 1 }}>
+            <button type="button" onClick={saveEdit} disabled={savingEdit} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit ? 0.5 : 1 }}>
               {savingEdit ? 'Saving…' : 'Save changes'}
             </button>
 
             {project.archivedAt ? (
-              <button onClick={unarchiveProject} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button type="button" onClick={unarchiveProject} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(245,158,11,0.1)', border: '1px solid rgba(245,158,11,0.3)', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Restore from archive
               </button>
             ) : (
-              <button onClick={archiveProject} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(82,116,154,0.1)', border: '1px solid rgba(82,116,154,0.3)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button type="button" onClick={archiveProject} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(82,116,154,0.1)', border: '1px solid rgba(82,116,154,0.3)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Archive project (recoverable)
               </button>
             )}
 
             {confirmDeleteProject ? (
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setConfirmDeleteProject(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                <button onClick={deleteProject} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Delete forever</button>
+                <button type="button" onClick={() => setConfirmDeleteProject(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={deleteProject} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#dc2626', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Delete forever</button>
               </div>
             ) : (
-              <button onClick={() => setConfirmDeleteProject(true)} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button type="button" onClick={() => setConfirmDeleteProject(true)} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Delete permanently
               </button>
             )}
@@ -975,28 +975,28 @@ export default function ProjectDetailPage() {
       {/* ── ASSIGN TEAM MEMBER MODAL ── */}
       {showAssignModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAssignModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAssignModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Assign team member</h3>
-              <button onClick={() => setShowAssignModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowAssignModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {availableTeam.length === 0 ? (
               <p style={{ fontFamily: 'var(--font-system)', fontSize: 14, color: 'var(--t3)', textAlign: 'center', padding: '20px 0' }}>All team members are already assigned to this project.</p>
             ) : (
               <>
                 <div>
-                  <label style={labelStyle}>Team member *</label>
-                  <select value={assignForm.memberId} onChange={e => setAssignForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+                  <label htmlFor="field-989" style={labelStyle}>Team member *</label>
+                  <select id="field-989" value={assignForm.memberId} onChange={e => setAssignForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                     <option value="">Select a member</option>
                     {availableTeam.map(m => <option key={m.id} value={m.id}>{m.name} — {m.role}</option>)}
                   </select>
                 </div>
                 <div>
-                  <label style={labelStyle}>Role on this project (optional)</label>
-                  <input value={assignForm.role} onChange={e => setAssignForm(p => ({ ...p, role: e.target.value }))} placeholder={availableTeam.find(m => m.id === assignForm.memberId)?.role || 'e.g. Lead Electrician'} style={inputStyle} />
+                  <label htmlFor="field-996" style={labelStyle}>Role on this project (optional)</label>
+                  <input id="field-996" value={assignForm.role} onChange={e => setAssignForm(p => ({ ...p, role: e.target.value }))} placeholder={availableTeam.find(m => m.id === assignForm.memberId)?.role || 'e.g. Lead Electrician'} style={inputStyle} />
                 </div>
-                <button onClick={assignMember} disabled={savingAssign || !assignForm.memberId} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingAssign || !assignForm.memberId ? 0.5 : 1 }}>
+                <button type="button" onClick={assignMember} disabled={savingAssign || !assignForm.memberId} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingAssign || !assignForm.memberId ? 0.5 : 1 }}>
                   {savingAssign ? 'Assigning…' : 'Assign to project'}
                 </button>
               </>
@@ -1007,29 +1007,29 @@ export default function ProjectDetailPage() {
 
       {showEditInvoiceModal && editInvoice && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowEditInvoiceModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowEditInvoiceModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Edit {editInvoice.number}</h3>
-              <button onClick={() => setShowEditInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowEditInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
-              <label style={labelStyle}>Amount (£) *</label>
-              <input type="number" min="0" value={editInvoiceForm.amount} onChange={e => setEditInvoiceForm(p => ({ ...p, amount: e.target.value }))} placeholder="5000" style={inputStyle} />
+              <label htmlFor="field-1017" style={labelStyle}>Amount (£) *</label>
+              <input id="field-1017" type="number" min="0" value={editInvoiceForm.amount} onChange={e => setEditInvoiceForm(p => ({ ...p, amount: e.target.value }))} placeholder="5000" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Client name</label>
-              <input value={editInvoiceForm.clientName} onChange={e => setEditInvoiceForm(p => ({ ...p, clientName: e.target.value }))} style={inputStyle} />
+              <label htmlFor="field-1021" style={labelStyle}>Client name</label>
+              <input id="field-1021" value={editInvoiceForm.clientName} onChange={e => setEditInvoiceForm(p => ({ ...p, clientName: e.target.value }))} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Due date</label>
-              <input type="date" value={editInvoiceForm.dueDate} onChange={e => setEditInvoiceForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-1025" style={labelStyle}>Due date</label>
+              <input id="field-1025" type="date" value={editInvoiceForm.dueDate} onChange={e => setEditInvoiceForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
             <div>
-              <label style={labelStyle}>Notes</label>
-              <input value={editInvoiceForm.notes} onChange={e => setEditInvoiceForm(p => ({ ...p, notes: e.target.value }))} placeholder="Optional" style={inputStyle} />
+              <label htmlFor="field-1029" style={labelStyle}>Notes</label>
+              <input id="field-1029" value={editInvoiceForm.notes} onChange={e => setEditInvoiceForm(p => ({ ...p, notes: e.target.value }))} placeholder="Optional" style={inputStyle} />
             </div>
-            <button onClick={saveEditInvoice} disabled={savingEditInvoice || !editInvoiceForm.amount} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEditInvoice || !editInvoiceForm.amount ? 0.5 : 1 }}>
+            <button type="button" onClick={saveEditInvoice} disabled={savingEditInvoice || !editInvoiceForm.amount} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEditInvoice || !editInvoiceForm.amount ? 0.5 : 1 }}>
               {savingEditInvoice ? 'Saving…' : 'Save changes'}
             </button>
           </div>
@@ -1039,31 +1039,31 @@ export default function ProjectDetailPage() {
       {/* ── ADD DOCUMENT MODAL ── */}
       {showDocModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowDocModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowDocModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '85dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Add document</h3>
-              <button onClick={() => setShowDocModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowDocModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
-              <label style={labelStyle}>Document name *</label>
-              <input autoFocus value={docForm.name} onChange={e => setDocForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. RAMS — Electrical Works" style={inputStyle} />
+              <label htmlFor="field-1049" style={labelStyle}>Document name *</label>
+              <input id="field-1049" value={docForm.name} onChange={e => setDocForm(p => ({ ...p, name: e.target.value }))} placeholder="e.g. RAMS — Electrical Works" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Type</label>
+              <div style={labelStyle}>Type</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['rams', 'report', 'photo', 'other'] as const).map(t => (
-                  <button key={t} onClick={() => setDocForm(p => ({ ...p, type: t }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: docForm.type === t ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${docForm.type === t ? '#f59e0b' : 'rgba(255,255,255,0.1)'}`, color: docForm.type === t ? '#f59e0b' : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
+                  <button type="button" key={t} onClick={() => setDocForm(p => ({ ...p, type: t }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: docForm.type === t ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.05)', border: `1px solid ${docForm.type === t ? '#f59e0b' : 'rgba(255,255,255,0.1)'}`, color: docForm.type === t ? '#f59e0b' : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
                     {t}
                   </button>
                 ))}
               </div>
             </div>
             <div>
-              <label style={labelStyle}>Expiry date</label>
-              <input type="date" value={docForm.expiresAt} onChange={e => setDocForm(p => ({ ...p, expiresAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-1063" style={labelStyle}>Expiry date</label>
+              <input id="field-1063" type="date" value={docForm.expiresAt} onChange={e => setDocForm(p => ({ ...p, expiresAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
-            <button onClick={createDocument} disabled={savingDoc || !docForm.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingDoc || !docForm.name.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={createDocument} disabled={savingDoc || !docForm.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingDoc || !docForm.name.trim() ? 0.5 : 1 }}>
               {savingDoc ? 'Adding…' : 'Add document'}
             </button>
           </div>

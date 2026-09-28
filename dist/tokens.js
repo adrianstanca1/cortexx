@@ -872,6 +872,7 @@ const WorkspaceChip = ({
     color: accent
   };
   return React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('switchworkspace'),
     title: "Switch workspace",
     style: {
@@ -945,6 +946,7 @@ const HeaderBtn = ({
   onClick,
   accent = T.blue
 }) => React.createElement("button", {
+  type: "button",
   onClick: onClick,
   style: {
     width: 36,
@@ -1045,6 +1047,7 @@ function TabBar({
           justifyContent: 'center'
         }
       }, React.createElement("button", {
+        type: "button",
         onClick: onCapture,
         style: {
           width: 52,
@@ -1066,6 +1069,7 @@ function TabBar({
     }
     const isActive = active === t.k;
     return React.createElement("button", {
+      type: "button",
       key: t.k,
       style: {
         flex: 1,

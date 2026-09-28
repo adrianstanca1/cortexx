@@ -135,6 +135,7 @@ function DashV15_SiteNotice({
       flex: 1
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: () => setNav('switchworkspace'),
     title: "Switch workspace",
     style: {
@@ -161,6 +162,7 @@ function DashV15_SiteNotice({
     label: "Action Required",
     extra: `${high.length} ITEM${high.length === 1 ? '' : 'S'}`
   }), focus ? React.createElement("button", {
+    type: "button",
     onClick: () => setNav('tab', 'tasks'),
     style: {
       display: 'block',
@@ -273,6 +275,7 @@ function DashV15_SiteNotice({
     label: "Today's Jobs",
     extra: `${active.length}`
   }), active.slice(0, 4).map((p, i) => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setNav('project', p),
     style: {
@@ -593,6 +596,7 @@ function Bar15({
   onClick
 }) {
   return React.createElement("button", {
+    type: "button",
     onClick: onClick,
     style: {
       display: 'block',
@@ -667,6 +671,7 @@ function DeskBtn15({
   bottomRow
 }) {
   return React.createElement("button", {
+    type: "button",
     onClick: onClick,
     style: {
       background: 'transparent',

@@ -7,11 +7,8 @@ function PhotoAnnotateSheet({
   const [adding, setAdding] = React.useState(false);
   const [activePin, setActivePin] = React.useState(null);
   const [pinNote, setPinNote] = React.useState('');
-  const handleClick = e => {
+  const addPinAt = (x, y) => {
     if (!adding) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width * 100;
-    const y = (e.clientY - rect.top) / rect.height * 100;
     const newPin = {
       id: pins.length + 1,
       x,
@@ -22,6 +19,12 @@ function PhotoAnnotateSheet({
     setActivePin(newPin.id);
     setPinNote('');
     setAdding(false);
+  };
+  const handleClick = e => {
+    if (!adding) return;
+    if (e.detail === 0) return addPinAt(50, 50);
+    const rect = e.currentTarget.getBoundingClientRect();
+    addPinAt((e.clientX - rect.left) / rect.width * 100, (e.clientY - rect.top) / rect.height * 100);
   };
   const savePin = () => {
     setPins(pins.map(p => p.id === activePin ? {
@@ -49,6 +52,7 @@ function PhotoAnnotateSheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -81,6 +85,7 @@ function PhotoAnnotateSheet({
       marginTop: 1
     }
   }, pins.length, " annotation", pins.length !== 1 ? 's' : '')), React.createElement("button", {
+    type: "button",
     onClick: () => toast('Photo shared', 'success'),
     style: {
       background: 'none',
@@ -98,7 +103,6 @@ function PhotoAnnotateSheet({
       overflow: 'hidden'
     }
   }, React.createElement("div", {
-    onClick: handleClick,
     style: {
       width: '100%',
       height: '100%',
@@ -163,14 +167,34 @@ function PhotoAnnotateSheet({
     fontSize: "9",
     fill: "rgba(255,255,255,0.3)",
     fontFamily: SFMono
-  }, "SITE PHOTO \xB7 CAMDEN \xB7 ", new Date().toLocaleDateString('en-GB'))), pins.map((p, i) => React.createElement("div", {
-    key: p.id,
+  }, "SITE PHOTO \xB7 CAMDEN \xB7 ", new Date().toLocaleDateString('en-GB'))), React.createElement("button", {
+    type: "button",
+    "aria-label": "Place annotation on photo",
+    onClick: handleClick,
+    disabled: !adding,
     style: {
       position: 'absolute',
+      inset: 0,
+      zIndex: 1,
+      border: 'none',
+      background: 'transparent',
+      padding: 0,
+      cursor: adding ? 'crosshair' : 'default'
+    }
+  }), pins.map((p, i) => React.createElement("button", {
+    type: "button",
+    key: p.id,
+    "aria-label": `Annotation ${i + 1}: ${p.note}`,
+    style: {
+      position: 'absolute',
+      zIndex: 2,
       left: `${p.x}%`,
       top: `${p.y}%`,
       transform: 'translate(-50%, -100%)',
-      cursor: 'pointer'
+      cursor: 'pointer',
+      border: 'none',
+      background: 'transparent',
+      padding: 0
     },
     onClick: e => {
       e.stopPropagation();
@@ -248,6 +272,7 @@ function PhotoAnnotateSheet({
       flex: 1
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: () => deletePin(activePin),
     style: {
       background: 'none',
@@ -261,7 +286,6 @@ function PhotoAnnotateSheet({
   }, "Remove")), React.createElement("input", {
     value: pinNote,
     onChange: e => setPinNote(e.target.value),
-    autoFocus: true,
     placeholder: "Note (e.g. 'Touch up paint here')",
     style: {
       width: '100%',
@@ -282,6 +306,7 @@ function PhotoAnnotateSheet({
       marginTop: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: savePin,
     style: {
       flex: 1,
@@ -296,6 +321,7 @@ function PhotoAnnotateSheet({
       cursor: 'pointer'
     }
   }, "Save"), React.createElement("button", {
+    type: "button",
     onClick: () => setActivePin(null),
     style: {
       background: 'transparent',
@@ -333,6 +359,7 @@ function PhotoAnnotateSheet({
       background: T.bg0
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setAdding(!adding),
     style: {
       flex: 1,
@@ -353,6 +380,7 @@ function PhotoAnnotateSheet({
   }, React.cloneElement(Ic.pin, {
     size: 14
   }), " ", adding ? 'Cancel' : 'Add pin'), React.createElement("button", {
+    type: "button",
     onClick: () => {
       setPins([]);
       toast('Cleared', 'info');
@@ -369,6 +397,7 @@ function PhotoAnnotateSheet({
       cursor: 'pointer'
     }
   }, "Clear"), React.createElement("button", {
+    type: "button",
     onClick: async () => {
       await Backend.db.activity.create({
         who: 'You',

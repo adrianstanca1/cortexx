@@ -135,14 +135,14 @@ export default function TrainingPage() {
               {counts.expiring > 0 && <span style={{ color: '#f59e0b', marginLeft: 6 }}>· {counts.expiring} expiring soon</span>}
             </p>
           </div>
-          <button onClick={openCreate} aria-label="Add certification" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={openCreate} aria-label="Add certification" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
           {(['valid', 'expiring', 'expired'] as const).map(b => (
-            <button key={b} onClick={() => setStatusFilter(statusFilter === b ? 'all' : b)} style={{ background: statusFilter === b ? `${STATUS_COLOR[b]}28` : 'rgba(255,255,255,0.04)', border: `0.5px solid ${statusFilter === b ? STATUS_COLOR[b] : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer', textAlign: 'left' }}>
+            <button type="button" key={b} onClick={() => setStatusFilter(statusFilter === b ? 'all' : b)} style={{ background: statusFilter === b ? `${STATUS_COLOR[b]}28` : 'rgba(255,255,255,0.04)', border: `0.5px solid ${statusFilter === b ? STATUS_COLOR[b] : 'rgba(255,255,255,0.07)'}`, borderRadius: 10, padding: '10px 12px', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 22, fontWeight: 700, color: STATUS_COLOR[b] }}>{counts[b]}</div>
               <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: 0.5, marginTop: 2 }}>{STATUS_LABEL[b]}</div>
             </button>
@@ -167,7 +167,7 @@ export default function TrainingPage() {
           <IcHardhat size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{certs.length === 0 ? 'No certifications recorded yet' : 'Nothing in this filter'}</p>
           {certs.length === 0 && (
-            <button onClick={openCreate} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={openCreate} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Add first certification
             </button>
           )}
@@ -190,10 +190,10 @@ export default function TrainingPage() {
               <span style={{ flexShrink: 0, padding: '3px 9px', borderRadius: 99, background: `${STATUS_COLOR[c.statusBucket || 'no_expiry']}22`, color: STATUS_COLOR[c.statusBucket || 'no_expiry'], fontFamily: SF, fontSize: 10, fontWeight: 700, border: `1px solid ${STATUS_COLOR[c.statusBucket || 'no_expiry']}55`, textTransform: 'uppercase', letterSpacing: 0.5 }}>
                 {STATUS_LABEL[c.statusBucket || 'no_expiry']}
               </span>
-              <button onClick={() => openEdit(c)} aria-label="Edit" style={{ flexShrink: 0, background: 'none', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer' }}>
+              <button type="button" onClick={() => openEdit(c)} aria-label="Edit" style={{ flexShrink: 0, background: 'none', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer' }}>
                 <IcEdit size={14} color="var(--t2)" />
               </button>
-              <button onClick={() => remove(c.id)} aria-label={confirmDelete === c.id ? 'Confirm delete' : 'Delete'} style={{ flexShrink: 0, background: confirmDelete === c.id ? 'rgba(239,68,68,0.2)' : 'none', border: 'none', borderRadius: 4, padding: confirmDelete === c.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button type="button" onClick={() => remove(c.id)} aria-label={confirmDelete === c.id ? 'Confirm delete' : 'Delete'} style={{ flexShrink: 0, background: confirmDelete === c.id ? 'rgba(239,68,68,0.2)' : 'none', border: 'none', borderRadius: 4, padding: confirmDelete === c.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <IcTrash size={13} color="#ef4444" />
                 {confirmDelete === c.id && <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444', fontFamily: SF }}>Sure?</span>}
               </button>

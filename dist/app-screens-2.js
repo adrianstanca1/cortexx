@@ -154,6 +154,14 @@ function MoneyScreen({
     const isOverdue = iv.status === 'overdue';
     const c = isOverdue ? T.red : T.amber;
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: iv.id,
       onClick: () => onChase && onChase(iv),
       style: {
@@ -354,6 +362,7 @@ function SafetyScreen({
     c: T.green,
     sub: 'New starter'
   }].map((a, i) => React.createElement("button", {
+    type: "button",
     key: i,
     style: {
       background: T.bg2,
@@ -639,6 +648,7 @@ const Toggle = ({
   onChange,
   accent
 }) => React.createElement("button", {
+  type: "button",
   onClick: onChange,
   style: {
     width: 44,
@@ -754,6 +764,7 @@ function AddTaskSheet({
       color: T.t3
     }
   }, parsing ? 'Cortex parsing…' : parsed ? 'Parsed below' : 'Try natural language'), React.createElement("button", {
+    type: "button",
     onClick: () => parse(input),
     disabled: !input.trim() || parsing,
     style: {
@@ -787,6 +798,7 @@ function AddTaskSheet({
       marginBottom: 6
     }
   }, "Examples"), examples.map((ex, i) => React.createElement("button", {
+    type: "button",
     key: i,
     onClick: () => setInput(ex),
     style: {
@@ -847,6 +859,7 @@ function AddTaskSheet({
       marginTop: 14
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: save,
     style: {
       flex: 1,
@@ -861,6 +874,7 @@ function AddTaskSheet({
       cursor: 'pointer'
     }
   }, "Save task"), React.createElement("button", {
+    type: "button",
     onClick: () => setParsed(null),
     style: {
       background: 'transparent',
@@ -1009,7 +1023,9 @@ function ReceiptScanSheet({
   }, React.createElement("video", {
     ref: videoRef,
     autoPlay: true,
+    muted: true,
     playsInline: true,
+    "aria-label": "Live receipt camera preview",
     style: {
       position: 'absolute',
       inset: 0,
@@ -1066,6 +1082,7 @@ function ReceiptScanSheet({
       color: T.t2
     }
   }, error)), React.createElement("button", {
+    type: "button",
     onClick: scan,
     style: {
       width: '100%',
@@ -1081,6 +1098,7 @@ function ReceiptScanSheet({
       cursor: 'pointer'
     }
   }, "Capture & Scan"), React.createElement("button", {
+    type: "button",
     onClick: goManual,
     style: {
       width: '100%',
@@ -1238,6 +1256,7 @@ function ReceiptScanSheet({
       marginTop: 14
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: save,
     disabled: !receipt.vendor || !receipt.amount,
     style: {
@@ -1254,6 +1273,7 @@ function ReceiptScanSheet({
       opacity: !receipt.vendor || !receipt.amount ? 0.5 : 1
     }
   }, "Save & file"), React.createElement("button", {
+    type: "button",
     onClick: () => setStage('manual'),
     style: {
       background: 'transparent',
@@ -1349,6 +1369,7 @@ function ReceiptScanSheet({
       color: T.t1
     }
   }))), React.createElement("button", {
+    type: "button",
     onClick: async () => {
       if (!receipt?.vendor || !receipt?.amount) {
         toast('Please fill in vendor and amount', 'error');
@@ -1401,6 +1422,7 @@ function ChaseSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -1509,6 +1531,7 @@ function ChaseSheet({
       marginTop: 14
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: send,
     disabled: loading || sent,
     style: {
@@ -1530,6 +1553,7 @@ function ChaseSheet({
   }, sent ? React.createElement(React.Fragment, null, Ic.check, " Sent") : React.cloneElement(Ic.send, {
     size: 15
   }), " ", !sent && 'Send email'), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxInvoicePDF && window.cortexxInvoicePDF(invoice),
     title: "Export PDF",
     style: {

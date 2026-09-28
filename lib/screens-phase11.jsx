@@ -150,7 +150,7 @@ function CheckInScreen({ accent }) {
             <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Where to?</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
               {projects.filter(p => ['active','snagging'].includes(p.status)).map(p => (
-                <button key={p.id} onClick={() => setSelectedProject(p.id)} style={{
+                <button type="button" key={p.id} onClick={() => setSelectedProject(p.id)} style={{
                   background: selectedProject === p.id ? `${accent}22` : T.bg2,
                   border: `0.5px solid ${selectedProject === p.id ? accent + '66' : T.hair}`,
                   borderRadius: 12, padding: '12px 14px', cursor: 'pointer',
@@ -175,7 +175,7 @@ function CheckInScreen({ accent }) {
         {/* Action buttons */}
         <div style={{ padding: '0 16px 14px' }}>
           {!isOnSite ? (
-            <button onClick={() => clock('in')} style={{
+            <button type="button" onClick={() => clock('in')} style={{
               width: '100%', background: `linear-gradient(135deg, ${T.green}, ${T.green}cc)`,
               border: 'none', borderRadius: 18, padding: '20px',
               color: '#fff', cursor: 'pointer', fontFamily: SF, fontSize: 17, fontWeight: 700,
@@ -183,7 +183,7 @@ function CheckInScreen({ accent }) {
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
             }}>{React.cloneElement(Ic.pin, { size: 22 })} Check in</button>
           ) : latest.action === 'break-out' ? (
-            <button onClick={() => clock('break-in')} style={{
+            <button type="button" onClick={() => clock('break-in')} style={{
               width: '100%', background: `linear-gradient(135deg, ${T.amber}, ${T.amber}cc)`,
               border: 'none', borderRadius: 18, padding: '20px',
               color: '#0a1830', cursor: 'pointer', fontFamily: SF, fontSize: 17, fontWeight: 700,
@@ -192,12 +192,12 @@ function CheckInScreen({ accent }) {
             }}>{React.cloneElement(Ic.clock, { size: 22 })} Back to work</button>
           ) : (
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => clock('break-out')} style={{
+              <button type="button" onClick={() => clock('break-out')} style={{
                 flex: 1, background: T.amber, color: '#0a1830', border: 'none', borderRadius: 14,
                 padding: '14px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
               }}>{React.cloneElement(Ic.clock, { size: 16 })} Lunch</button>
-              <button onClick={() => clock('out')} style={{
+              <button type="button" onClick={() => clock('out')} style={{
                 flex: 1, background: T.red, color: '#fff', border: 'none', borderRadius: 14,
                 padding: '14px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,

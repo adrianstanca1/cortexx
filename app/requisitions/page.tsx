@@ -199,14 +199,14 @@ export default function RequisitionsPage() {
             <h1 style={titleStyle}><IcDoc size={20} color="#f59e0b" /> Requisitions</h1>
             <p style={subStyle}>{requisitions.length} total · request → approval → RFQ</p>
           </div>
-          <button className="module-primary" onClick={() => setShowAdd(true)} style={primaryIconBtn} aria-label="New requisition"><IcPlus size={18} color="#fff" /></button>
+          <button type="button" className="module-primary" onClick={() => setShowAdd(true)} style={primaryIconBtn} aria-label="New requisition"><IcPlus size={18} color="#fff" /></button>
         </div>
         <ProcurementNav active="requisitions" />
       </header>
 
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'draft', 'submitted', 'approved', 'rfq_open', 'converted', 'rejected'] as const).map(value => (
-          <button key={value} onClick={() => setFilter(value)} style={filterButton(filter === value)}>
+          <button type="button" key={value} onClick={() => setFilter(value)} style={filterButton(filter === value)}>
             {value === 'all' ? 'All' : STATUS[value].label}
           </button>
         ))}
@@ -234,11 +234,11 @@ export default function RequisitionsPage() {
                 </div>
 
                 <div style={{ marginTop: 10, paddingTop: 9, borderTop: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                  {row.status === 'draft' && <button onClick={() => changeStatus(row, 'submitted')} style={actionBtn('#a78bfa')}>Submit</button>}
-                  {row.status === 'rejected' && <button onClick={() => changeStatus(row, 'submitted')} style={actionBtn('#a78bfa')}>Resubmit</button>}
-                  {row.status === 'submitted' && <button onClick={() => changeStatus(row, 'approved')} style={actionBtn('#38bdf8')}>Approve</button>}
-                  {row.status === 'submitted' && <button onClick={() => changeStatus(row, 'rejected')} style={actionBtn('#ef4444')}>Reject</button>}
-                  {row.status === 'approved' && <button onClick={() => openRfq(row)} style={actionBtn('#f59e0b')}>Create RFQ</button>}
+                  {row.status === 'draft' && <button type="button" onClick={() => changeStatus(row, 'submitted')} style={actionBtn('#a78bfa')}>Submit</button>}
+                  {row.status === 'rejected' && <button type="button" onClick={() => changeStatus(row, 'submitted')} style={actionBtn('#a78bfa')}>Resubmit</button>}
+                  {row.status === 'submitted' && <button type="button" onClick={() => changeStatus(row, 'approved')} style={actionBtn('#38bdf8')}>Approve</button>}
+                  {row.status === 'submitted' && <button type="button" onClick={() => changeStatus(row, 'rejected')} style={actionBtn('#ef4444')}>Reject</button>}
+                  {row.status === 'approved' && <button type="button" onClick={() => openRfq(row)} style={actionBtn('#f59e0b')}>Create RFQ</button>}
                   {row.rfqs?.length ? <Link href="/rfqs" style={{ ...actionBtn('#8b5cf6'), textDecoration: 'none' }}>RFQs {row.rfqs.length}</Link> : null}
                   {row.purchaseOrder && <Link href="/pos" style={{ ...actionBtn('#22c55e'), textDecoration: 'none' }}>{row.purchaseOrder.number}</Link>}
                 </div>
@@ -252,22 +252,22 @@ export default function RequisitionsPage() {
 
       {showAdd && (
         <Modal title="New requisition" close={() => setShowAdd(false)}>
-          <label style={labelStyle}>Project *</label>
-          <select value={form.projectId} onChange={e => setForm(v => ({ ...v, projectId: e.target.value }))} style={inputStyle}>
+          <label htmlFor="field-255" style={labelStyle}>Project *</label>
+          <select id="field-255" value={form.projectId} onChange={e => setForm(v => ({ ...v, projectId: e.target.value }))} style={inputStyle}>
             <option value="">Select project</option>
             {projects.map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
           </select>
-          <label style={labelStyle}>Cost code</label>
-          <select value={form.costCodeId} onChange={e => setForm(v => ({ ...v, costCodeId: e.target.value }))} style={inputStyle}>
+          <label htmlFor="field-260" style={labelStyle}>Cost code</label>
+          <select id="field-260" value={form.costCodeId} onChange={e => setForm(v => ({ ...v, costCodeId: e.target.value }))} style={inputStyle}>
             <option value="">Uncoded</option>
             {costCodes.map(code => <option key={code.id} value={code.id}>{code.code} · {code.name}</option>)}
           </select>
-          <label style={labelStyle}>Needed by</label>
-          <input type="date" value={form.neededBy} onChange={e => setForm(v => ({ ...v, neededBy: e.target.value }))} style={inputStyle} />
+          <label htmlFor="field-265" style={labelStyle}>Needed by</label>
+          <input id="field-265" type="date" value={form.neededBy} onChange={e => setForm(v => ({ ...v, neededBy: e.target.value }))} style={inputStyle} />
 
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 4 }}>
-            <label style={{ ...labelStyle, margin: 0 }}>Items</label>
-            <button onClick={() => setForm(v => ({ ...v, items: [...v.items, blankItem()] }))} style={smallBtn}>+ Item</button>
+            <div style={{ ...labelStyle, margin: 0 }}>Items</div>
+            <button type="button" onClick={() => setForm(v => ({ ...v, items: [...v.items, blankItem()] }))} style={smallBtn}>+ Item</button>
           </div>
           {form.items.map((item, index) => (
             <div key={index} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: 10, display: 'grid', gap: 7 }}>
@@ -279,12 +279,12 @@ export default function RequisitionsPage() {
                 </select>
                 <input type="number" min="0" step="0.01" value={item.unitPrice} onChange={e => updateItem(index, { unitPrice: Number(e.target.value) })} placeholder="Est. £" style={inputStyle} />
               </div>
-              {form.items.length > 1 && <button onClick={() => setForm(v => ({ ...v, items: v.items.filter((_, i) => i !== index) }))} style={dangerTextBtn}>Remove</button>}
+              {form.items.length > 1 && <button type="button" onClick={() => setForm(v => ({ ...v, items: v.items.filter((_, i) => i !== index) }))} style={dangerTextBtn}>Remove</button>}
             </div>
           ))}
-          <label style={labelStyle}>Notes</label>
-          <textarea value={form.notes} onChange={e => setForm(v => ({ ...v, notes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
-          <button onClick={create} disabled={saving} style={primaryBtn}>{saving ? 'Saving…' : 'Create requisition'}</button>
+          <label htmlFor="field-285" style={labelStyle}>Notes</label>
+          <textarea id="field-285" value={form.notes} onChange={e => setForm(v => ({ ...v, notes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+          <button type="button" onClick={create} disabled={saving} style={primaryBtn}>{saving ? 'Saving…' : 'Create requisition'}</button>
         </Modal>
       )}
 
@@ -300,11 +300,11 @@ export default function RequisitionsPage() {
               </label>
             ))}
           </div>
-          <label style={labelStyle}>Quote due</label>
-          <input type="date" value={rfqForm.dueAt} onChange={e => setRfqForm(v => ({ ...v, dueAt: e.target.value }))} style={inputStyle} />
-          <label style={labelStyle}>RFQ notes</label>
-          <textarea value={rfqForm.notes} onChange={e => setRfqForm(v => ({ ...v, notes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
-          <button onClick={issueRfq} disabled={saving} style={primaryBtn}>{saving ? 'Issuing…' : `Issue to ${rfqForm.supplierIds.length} supplier${rfqForm.supplierIds.length === 1 ? '' : 's'}`}</button>
+          <label htmlFor="field-303" style={labelStyle}>Quote due</label>
+          <input id="field-303" type="date" value={rfqForm.dueAt} onChange={e => setRfqForm(v => ({ ...v, dueAt: e.target.value }))} style={inputStyle} />
+          <label htmlFor="field-305" style={labelStyle}>RFQ notes</label>
+          <textarea id="field-305" value={rfqForm.notes} onChange={e => setRfqForm(v => ({ ...v, notes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' }} />
+          <button type="button" onClick={issueRfq} disabled={saving} style={primaryBtn}>{saving ? 'Issuing…' : `Issue to ${rfqForm.supplierIds.length} supplier${rfqForm.supplierIds.length === 1 ? '' : 's'}`}</button>
         </Modal>
       )}
     </div>
@@ -322,7 +322,7 @@ function ProcurementNav({ active }: { active: 'requisitions' | 'rfqs' | 'pos' })
         <Link key={key} href={href} style={{
           flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px',
           fontFamily: SF, fontSize: 11, fontWeight: 700,
-          background: active === key ? '#f59e0b' : 'var(--surface-raised)',
+          background: active === key ? '#b45309' : 'var(--surface-raised)',
           color: active === key ? '#fff' : 'var(--t2)',
         }}>{label}</Link>
       ))}
@@ -332,11 +332,11 @@ function ProcurementNav({ active }: { active: 'requisitions' | 'rfqs' | 'pos' })
 
 function Modal({ title, close, children }: { title: string; close: () => void; children: React.ReactNode }) {
   return (
-    <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.58)', display: 'flex', alignItems: 'flex-end' }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#0a1426', borderRadius: '20px 20px 0 0', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,0.58)', display: 'flex', alignItems: 'flex-end' }}>
+      <div role="presentation" onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#0a1426', borderRadius: '20px 20px 0 0', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, color: 'var(--t1)', fontFamily: SF, fontSize: 18 }}>{title}</h2>
-          <button onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t3)" /></button>
+          <button type="button" onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t3)" /></button>
         </div>
         {children}
       </div>
@@ -356,10 +356,10 @@ const cardStyle: React.CSSProperties = { background: 'var(--surface-raised)', bo
 const monoSmall: React.CSSProperties = { fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'var(--t2)', fontWeight: 700 }
 const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 9, padding: '9px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 12, outline: 'none' }
 const labelStyle: React.CSSProperties = { marginTop: 3, fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 700 }
-const primaryBtn: React.CSSProperties = { background: '#f59e0b', border: 0, borderRadius: 10, padding: 11, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }
+const primaryBtn: React.CSSProperties = { background: '#b45309', border: 0, borderRadius: 10, padding: 11, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }
 const primaryIconBtn: React.CSSProperties = { width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
 const smallBtn: React.CSSProperties = { background: 'var(--bg3)', border: '0.5px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '5px 9px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }
 const dangerTextBtn: React.CSSProperties = { justifySelf: 'start', background: 'transparent', border: 0, color: '#fca5a5', fontFamily: SF, fontSize: 10, cursor: 'pointer' }
 const actionBtn = (color: string): React.CSSProperties => ({ background: color + '20', color, border: `0.5px solid ${color}66`, borderRadius: 8, padding: '6px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
 const statusPill = (color: string): React.CSSProperties => ({ background: color + '22', color, border: `0.5px solid ${color}55`, borderRadius: 99, padding: '2px 7px', fontFamily: SF, fontSize: 9, fontWeight: 800, textTransform: 'uppercase' })
-const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#f59e0b' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
+const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#b45309' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })

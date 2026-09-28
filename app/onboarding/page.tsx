@@ -82,9 +82,9 @@ export default function OnboardingPage() {
           This is what your team and clients will see. You can change it later in settings.
         </p>
 
-        <label style={labelStyle}>Workspace name</label>
-        <input
-          autoFocus
+        <label htmlFor="field-85" style={labelStyle}>Workspace name</label>
+        <input id="field-85"
+
           maxLength={100}
           required
           placeholder="e.g. Patterson Construction"
@@ -102,7 +102,7 @@ export default function OnboardingPage() {
         <button
           type="submit"
           disabled={busy || !name.trim()}
-          style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: busy || !name.trim() ? 0.5 : 1 }}
+          style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: busy || !name.trim() ? 0.5 : 1 }}
         >
           {busy ? 'Creating workspace…' : 'Create workspace'}
         </button>

@@ -134,9 +134,9 @@ function NfcCheckinConfirm({
       display: 'flex',
       alignItems: 'flex-end',
       justifyContent: 'center'
-    },
-    onClick: onDone
+    }
   }, React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
       width: '100%',
@@ -209,6 +209,7 @@ function NfcCheckinConfirm({
       marginBottom: 14
     }
   }, onSite ? "You're currently on site." : 'Ready to start your shift?'), React.createElement("button", {
+    type: "button",
     onClick: confirm,
     disabled: busy,
     style: {
@@ -225,6 +226,7 @@ function NfcCheckinConfirm({
       opacity: busy ? 0.7 : 1
     }
   }, busy ? 'Logging…' : nextAction === 'in' ? 'Check in now' : 'Check out now'), React.createElement("button", {
+    type: "button",
     onClick: onDone,
     style: {
       marginTop: 8,

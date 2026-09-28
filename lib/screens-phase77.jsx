@@ -161,7 +161,7 @@ function VoiceMemoSheetReal({ onClose, accent }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Voice memo</div>
         <div style={{ width: 50 }}/>
       </div>
@@ -187,7 +187,7 @@ function VoiceMemoSheetReal({ onClose, accent }) {
         }}>
           {stage === 'idle' && (
             <>
-              <button onClick={start} disabled={!hasSpeech && !hasMedia} style={{
+              <button type="button" onClick={start} disabled={!hasSpeech && !hasMedia} style={{
                 width: 110, height: 110, borderRadius: 55,
                 background: `linear-gradient(135deg, ${T.red}, ${T.red}cc)`,
                 border: 'none', color: '#fff', cursor: 'pointer',
@@ -204,7 +204,7 @@ function VoiceMemoSheetReal({ onClose, accent }) {
           {stage === 'recording' && (
             <>
               <div style={{ fontFamily: SFMono, fontSize: 40, fontWeight: 700, color: T.red, letterSpacing: -1, marginBottom: 18 }}>{mmss}</div>
-              <button onClick={stop} style={{
+              <button type="button" onClick={stop} style={{
                 width: 110, height: 110, borderRadius: 14,
                 background: `linear-gradient(135deg, ${T.red}, ${T.red}cc)`,
                 border: 'none', color: '#fff', cursor: 'pointer',
@@ -240,7 +240,15 @@ function VoiceMemoSheetReal({ onClose, accent }) {
         {audioUrl && stage === 'done' && (
           <div style={{ marginTop: 14 }}>
             <div style={{ fontFamily: SF, fontSize: 10.5, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 6 }}>Audio</div>
-            <audio src={audioUrl} controls style={{ width: '100%' }}/>
+            <audio src={audioUrl} controls style={{ width: '100%' }}>
+              <track
+                kind="captions"
+                srcLang="en"
+                label="Transcript"
+                default
+                src={'data:text/vtt;charset=utf-8,' + encodeURIComponent('WEBVTT\n\n00:00.000 --> 23:59:59.000\n' + (transcript || 'Audio recording'))}
+              />
+            </audio>
           </div>
         )}
 
@@ -263,7 +271,7 @@ function VoiceMemoSheetReal({ onClose, accent }) {
             <div style={{ marginTop: 18, fontFamily: SF, fontSize: 10.5, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 8 }}>Project</div>
             <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
               {projects.map(p => (
-                <button key={p.id} onClick={() => setProjectId(p.id)} style={{
+                <button type="button" key={p.id} onClick={() => setProjectId(p.id)} style={{
                   padding: '7px 12px', borderRadius: 14, flexShrink: 0,
                   border: `0.5px solid ${projectId === p.id ? accent : T.hair}`,
                   background: projectId === p.id ? `${accent}22` : T.bg2,
@@ -274,14 +282,14 @@ function VoiceMemoSheetReal({ onClose, accent }) {
               ))}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 16 }}>
-              <button onClick={save} style={{
+              <button type="button" onClick={save} style={{
                 flex: 1, padding: '12px',
                 background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
                 color: '#fff', border: 'none', borderRadius: 12,
                 fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
                 boxShadow: `0 6px 18px ${accent}44`,
               }}>Save memo</button>
-              <button onClick={() => { setStage('idle'); setTranscript(''); setAudioBlob(null); if (audioUrl) URL.revokeObjectURL(audioUrl); setAudioUrl(null); setSummary(null); setDuration(0); }} style={{
+              <button type="button" onClick={() => { setStage('idle'); setTranscript(''); setAudioBlob(null); if (audioUrl) URL.revokeObjectURL(audioUrl); setAudioUrl(null); setSummary(null); setDuration(0); }} style={{
                 background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                 borderRadius: 12, padding: '12px 18px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}>Re-record</button>
@@ -386,7 +394,7 @@ function ReceiptScanSheetReal({ onClose, accent }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Scan receipt</div>
         <div style={{ width: 50 }}/>
       </div>
@@ -394,7 +402,7 @@ function ReceiptScanSheetReal({ onClose, accent }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 24px' }}>
         {stage === 'pick' && (
           <>
-            <button onClick={pick} style={{
+            <button type="button" onClick={pick} style={{
               width: '100%', aspectRatio: '3 / 4', maxHeight: 400,
               background: T.bg2, border: `1.5px dashed ${T.hairStrong}`,
               borderRadius: 14, color: T.t1, cursor: 'pointer',
@@ -417,7 +425,7 @@ function ReceiptScanSheetReal({ onClose, accent }) {
         {stage === 'scanning' && previewUrl && (
           <>
             <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 16, maxHeight: 280, background: '#000' }}>
-              <img src={previewUrl} style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block', opacity: 0.6 }}/>
+              <img src={previewUrl} alt="Receipt preview while scanning" style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block', opacity: 0.6 }}/>
               <div style={{
                 position: 'absolute', inset: 0,
                 display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10,
@@ -440,7 +448,7 @@ function ReceiptScanSheetReal({ onClose, accent }) {
           <>
             {previewUrl && (
               <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 14, maxHeight: 180, background: '#000' }}>
-                <img src={previewUrl} style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block' }}/>
+                <img src={previewUrl} alt="Receipt preview" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block' }}/>
               </div>
             )}
 
@@ -486,7 +494,7 @@ function ReceiptScanSheetReal({ onClose, accent }) {
                 <span style={{ fontFamily: SF, fontSize: 12, color: T.t2, width: 60 }}>Project</span>
                 <div style={{ display: 'flex', gap: 5, overflowX: 'auto' }}>
                   {projects.filter(p => p.status !== 'completed').map(p => (
-                    <button key={p.id} onClick={() => setProjectId(p.id)} style={{
+                    <button type="button" key={p.id} onClick={() => setProjectId(p.id)} style={{
                       padding: '4px 10px', borderRadius: 12, flexShrink: 0,
                       border: `0.5px solid ${projectId === p.id ? T.cyan : T.hair}`,
                       background: projectId === p.id ? `${T.cyan}22` : T.bg2,
@@ -504,14 +512,14 @@ function ReceiptScanSheetReal({ onClose, accent }) {
             )}
 
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={save} style={{
+              <button type="button" onClick={save} style={{
                 flex: 1, padding: '12px',
                 background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
                 color: '#fff', border: 'none', borderRadius: 12,
                 fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
                 boxShadow: `0 6px 18px ${accent}44`,
               }}>Save & file</button>
-              <button onClick={pick} style={{
+              <button type="button" onClick={pick} style={{
                 background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                 borderRadius: 12, padding: '12px 18px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}>Re-scan</button>
@@ -619,7 +627,7 @@ function GlobalSearchSheet({ onClose, accent }) {
             flex: 1, background: 'transparent', border: 'none', outline: 'none',
             color: T.t1, fontFamily: SF, fontSize: 16,
           }}/>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer' }}>Cancel</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '8px 0' }}>
         {!norm && (
@@ -637,7 +645,7 @@ function GlobalSearchSheet({ onClose, accent }) {
           <div key={group} style={{ marginBottom: 6 }}>
             <div style={{ padding: '10px 16px 4px', fontFamily: SF, fontSize: 10.5, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7 }}>{group} · {items.length}</div>
             {items.map((r, i) => (
-              <div key={i} onClick={() => { r.action(); onClose(); }} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={i} onClick={() => { r.action(); onClose(); }} style={{
                 padding: '11px 16px', display: 'flex', alignItems: 'center', gap: 11,
                 cursor: 'pointer', borderBottom: `0.5px solid ${T.hair}`,
               }}>

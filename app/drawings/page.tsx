@@ -255,21 +255,21 @@ export default function DrawingsPage() {
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Drawings</h1>
             <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{drawings.length} drawings</p>
           </div>
-          <button onClick={() => setShowAdd(true)} disabled={projects.length === 0} aria-label="Add drawing" style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(37,99,235,0.3)' : '#2563eb', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} disabled={projects.length === 0} aria-label="Add drawing" style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(37,99,235,0.3)' : '#2563eb', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-          <button onClick={() => setFilterProj(null)} style={chip(!filterProj, '#2563eb')}>All projects</button>
+          <button type="button" onClick={() => setFilterProj(null)} style={chip(!filterProj, '#2563eb')}>All projects</button>
           {projects.map(p => (
-            <button key={p.id} onClick={() => setFilterProj(p.id)} style={chip(filterProj === p.id, '#2563eb')}>{p.name}</button>
+            <button type="button" key={p.id} onClick={() => setFilterProj(p.id)} style={chip(filterProj === p.id, '#2563eb')}>{p.name}</button>
           ))}
         </div>
         {disciplines.length > 0 && (
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', marginTop: 4 }}>
-            <button onClick={() => setFilterDisc(null)} style={chip(!filterDisc, '#06b6d4', true)}>All disciplines</button>
+            <button type="button" onClick={() => setFilterDisc(null)} style={chip(!filterDisc, '#06b6d4', true)}>All disciplines</button>
             {disciplines.map(d => (
-              <button key={d} onClick={() => setFilterDisc(d)} style={chip(filterDisc === d, '#06b6d4', true)}>{d}</button>
+              <button type="button" key={d} onClick={() => setFilterDisc(d)} style={chip(filterDisc === d, '#06b6d4', true)}>{d}</button>
             ))}
           </div>
         )}
@@ -284,7 +284,7 @@ export default function DrawingsPage() {
           <IcLayers size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No drawings</p>
           {projects.length > 0 && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add first drawing</button>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add first drawing</button>
           )}
         </div>
       ) : (
@@ -296,7 +296,7 @@ export default function DrawingsPage() {
                 {g.items.map((d, i) => {
                   const currentRev = d.revisions[0]
                   return (
-                    <button key={d.id} onClick={() => openDetail(d)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', background: 'transparent', border: 'none', borderBottom: i < g.items.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none', textAlign: 'left', cursor: 'pointer' }}>
+                    <button type="button" key={d.id} onClick={() => openDetail(d)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '11px 14px', background: 'transparent', border: 'none', borderBottom: i < g.items.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none', textAlign: 'left', cursor: 'pointer' }}>
                       <div style={{ flexShrink: 0, width: 32, height: 32, borderRadius: 8, background: '#2563eb22', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700 }}>
                         {currentRev?.revision || '—'}
                       </div>
@@ -323,15 +323,15 @@ export default function DrawingsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add drawing</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <div>
-              <label style={labelStyle}>Project</label>
-              <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-333" style={labelStyle}>Project</label>
+              <select id="field-333" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
@@ -340,13 +340,13 @@ export default function DrawingsPage() {
               <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Drawing title" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Discipline</label>
-              <select value={form.discipline} onChange={e => setForm(p => ({ ...p, discipline: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-343" style={labelStyle}>Discipline</label>
+              <select id="field-343" value={form.discipline} onChange={e => setForm(p => ({ ...p, discipline: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 {DISCIPLINES.map(d => <option key={d} value={d}>{d}</option>)}
               </select>
             </div>
             <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Notes (optional)" rows={2} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
-            <button onClick={create} disabled={saving || !form.title.trim() || !form.projectId} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.title.trim() || !form.projectId} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add</>}
             </button>
           </div>
@@ -355,7 +355,7 @@ export default function DrawingsPage() {
 
       {activeDwg && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveDwg(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveDwg(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
@@ -363,12 +363,12 @@ export default function DrawingsPage() {
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', fontFamily: SF, marginTop: 2 }}>{activeDwg.title}</h2>
                 <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>{activeDwg.discipline || 'Unset'}{activeDwg.project ? ` · ${activeDwg.project.name}` : ''}</div>
               </div>
-              <button onClick={() => setActiveDwg(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveDwg(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'flex', gap: 4, flexWrap: 'wrap' }}>
               {(['draft', 'approved', 'superseded', 'archived'] as const).map(s => (
-                <button key={s} onClick={() => setStatus(activeDwg, s)} disabled={activeDwg.status === s} style={{ padding: '4px 10px', borderRadius: 99, border: `0.5px solid ${activeDwg.status === s ? STATUS_COLOR[s] : 'rgba(255,255,255,0.1)'}`, background: activeDwg.status === s ? `${STATUS_COLOR[s]}22` : 'rgba(255,255,255,0.04)', color: activeDwg.status === s ? STATUS_COLOR[s] : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: activeDwg.status === s ? 'default' : 'pointer' }}>
+                <button type="button" key={s} onClick={() => setStatus(activeDwg, s)} disabled={activeDwg.status === s} style={{ padding: '4px 10px', borderRadius: 99, border: `0.5px solid ${activeDwg.status === s ? STATUS_COLOR[s] : 'rgba(255,255,255,0.1)'}`, background: activeDwg.status === s ? `${STATUS_COLOR[s]}22` : 'rgba(255,255,255,0.04)', color: activeDwg.status === s ? STATUS_COLOR[s] : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: activeDwg.status === s ? 'default' : 'pointer' }}>
                   {STATUS_LABEL[s]}
                 </button>
               ))}
@@ -381,7 +381,7 @@ export default function DrawingsPage() {
                 <input value={revLabel} onChange={e => setRevLabel(e.target.value.toUpperCase())} placeholder="Rev" maxLength={10} style={{ ...inputStyle, padding: '8px 10px', fontSize: 13, textAlign: 'center', fontFamily: 'ui-monospace, monospace' }} />
                 <input value={revNotes} onChange={e => setRevNotes(e.target.value)} placeholder="Revision notes (optional)" style={{ ...inputStyle, padding: '8px 10px', fontSize: 12 }} />
               </div>
-              <button onClick={() => revFileInput.current?.click()} disabled={uploadingRev || !revLabel.trim()} style={{ padding: '8px 12px', borderRadius: 8, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: uploadingRev ? 'wait' : 'pointer', opacity: !revLabel.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <button type="button" onClick={() => revFileInput.current?.click()} disabled={uploadingRev || !revLabel.trim()} style={{ padding: '8px 12px', borderRadius: 8, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: uploadingRev ? 'wait' : 'pointer', opacity: !revLabel.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 {uploadingRev ? 'Uploading…' : <><IcDoc size={12} color="#fff" /> Upload PDF / image</>}
               </button>
             </div>
@@ -390,9 +390,9 @@ export default function DrawingsPage() {
               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 6 }}>
                 <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1 }}>Revisions ({activeDwg.revisions.length})</div>
                 {activeDwg.revisions.length >= 2 && (
-                  <button
+                  <button type="button"
                     onClick={() => setCompareSelection(prev => prev.length === 0 && activeDwg.revisions.length >= 2 ? [activeDwg.revisions[1].id, activeDwg.revisions[0].id] : [])}
-                    style={{ background: compareSelection.length > 0 ? '#8b5cf6' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: compareSelection.length > 0 ? '#fff' : '#a78bfa', borderRadius: 8, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                    style={{ background: compareSelection.length > 0 ? '#7c3aed' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: compareSelection.length > 0 ? '#fff' : '#a78bfa', borderRadius: 8, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                   >
                     {compareSelection.length > 0 ? `Comparing ${compareSelection.length}/2` : '✨ Compare revs'}
                   </button>
@@ -417,7 +417,7 @@ export default function DrawingsPage() {
                           </div>
                         </div>
                         {compareSelection.length > 0 && r.fileUrl && (
-                          <button
+                          <button type="button"
                             onClick={() => {
                               setCompareSelection(prev => {
                                 if (prev.includes(r.id)) return prev.filter(x => x !== r.id)
@@ -425,7 +425,7 @@ export default function DrawingsPage() {
                                 return [...prev, r.id]
                               })
                             }}
-                            style={{ background: isSel ? '#8b5cf6' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: isSel ? '#fff' : '#a78bfa', borderRadius: 6, padding: '4px 8px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', minWidth: 28 }}
+                            style={{ background: isSel ? '#7c3aed' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: isSel ? '#fff' : '#a78bfa', borderRadius: 6, padding: '4px 8px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', minWidth: 28 }}
                           >
                             {isSel ? selIdx + 1 : '+'}
                           </button>
@@ -448,10 +448,10 @@ export default function DrawingsPage() {
                 </div>
               )}
               {compareSelection.length === 2 && (
-                <button
+                <button type="button"
                   onClick={() => runRevCompare(activeDwg.id)}
                   disabled={comparing}
-                  style={{ marginTop: 8, width: '100%', background: '#8b5cf6', border: 'none', color: '#fff', borderRadius: 10, padding: '10px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: comparing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  style={{ marginTop: 8, width: '100%', background: '#7c3aed', border: 'none', color: '#fff', borderRadius: 10, padding: '10px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: comparing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 >
                   ✨ {comparing ? 'Comparing revisions… (30–90s)' : 'Run AI compare'}
                 </button>
@@ -490,7 +490,7 @@ export default function DrawingsPage() {
 
             <DrawingDistributionPanel key={activeDwg.id} drawingId={activeDwg.id} revisions={activeDwg.revisions} />
 
-            <button onClick={() => remove(activeDwg.id)} style={{ marginTop: 4, padding: '10px', borderRadius: 10, background: confirmDelete === activeDwg.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeDwg.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <button type="button" onClick={() => remove(activeDwg.id)} style={{ marginTop: 4, padding: '10px', borderRadius: 10, background: confirmDelete === activeDwg.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeDwg.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <IcTrash size={12} color="#ef4444" /> {confirmDelete === activeDwg.id ? 'Sure?' : 'Delete drawing'}
             </button>
           </div>

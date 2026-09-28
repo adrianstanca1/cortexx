@@ -185,7 +185,7 @@ export default function FieldDeliveriesPage() {
             <p style={{ margin: '3px 0 0', color: 'var(--t2)', fontFamily: SF, fontSize: 11 }}>Expected materials, shortages and goods received.</p>
           </div>
         </div>
-        <select value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
+        <select aria-label="Project" value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
           {!projects.length && <option value="">No active project</option>}
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
@@ -295,13 +295,13 @@ export default function FieldDeliveriesPage() {
               const remaining = Math.max(0, Number(line.quantity || 0) - already)
               if (remaining <= 0) return null
               return (
-                <label key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 92px', gap: 10, alignItems: 'center', marginBottom: 9 }}>
+                <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 92px', gap: 10, alignItems: 'center', marginBottom: 9 }}>
                   <span>
                     <span style={{ display: 'block', color: 'var(--t1)', fontFamily: SF, fontSize: 12, fontWeight: 700 }}>{line.description}</span>
                     <span style={{ display: 'block', color: 'var(--t3)', fontFamily: SF, fontSize: 10, marginTop: 2 }}>{remaining} {line.unit || ''} outstanding</span>
                   </span>
-                  <input type="number" min="0" max={remaining} step="any" value={qty[index] || ''} onChange={e => setQty(current => ({ ...current, [index]: e.target.value }))} style={inputStyle} />
-                </label>
+                  <input type="number" aria-label={`Received quantity for ${line.description}`} min="0" max={remaining} step="any" value={qty[index] || ''} onChange={e => setQty(current => ({ ...current, [index]: e.target.value }))} style={inputStyle} />
+                </div>
               )
             })}
 

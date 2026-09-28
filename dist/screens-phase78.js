@@ -148,6 +148,7 @@ Note to parse: """${text}"""`;
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -200,7 +201,6 @@ Note to parse: """${text}"""`;
     },
     placeholder: "Paste email, brief, or voice transcript\u2026",
     rows: 6,
-    autoFocus: true,
     style: {
       width: '100%',
       boxSizing: 'border-box',
@@ -236,6 +236,7 @@ Note to parse: """${text}"""`;
       gap: 5
     }
   }, examples.map((ex, i) => React.createElement("button", {
+    type: "button",
     key: i,
     onClick: () => {
       setText(ex);
@@ -254,6 +255,7 @@ Note to parse: """${text}"""`;
       lineHeight: 1.4
     }
   }, ex)))), React.createElement("button", {
+    type: "button",
     onClick: parse,
     disabled: !text.trim() || busy,
     style: {
@@ -338,6 +340,7 @@ Note to parse: """${text}"""`;
       letterSpacing: 0.7
     }
   }, result.records.length, " record", result.records.length !== 1 ? 's' : '', " found"), result.records.some(r => !r._saved) && React.createElement("button", {
+    type: "button",
     onClick: saveAll,
     style: {
       background: T.bg2,
@@ -483,6 +486,7 @@ function ParsedRecord({
       lineHeight: 1.35
     }
   }, rec.reason))), !rec._saved ? React.createElement("button", {
+    type: "button",
     onClick: onSave,
     style: {
       marginTop: 8,
@@ -696,6 +700,7 @@ function TaskBulkActionBar() {
     icon: Ic.trash,
     onClick: del
   }, "Del"), React.createElement("button", {
+    type: "button",
     onClick: sel.clear,
     style: {
       marginLeft: 'auto',
@@ -715,6 +720,7 @@ function BulkBtn({
   onClick
 }) {
   return React.createElement("button", {
+    type: "button",
     onClick: onClick,
     title: children,
     style: {

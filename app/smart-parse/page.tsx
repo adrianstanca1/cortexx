@@ -241,7 +241,7 @@ export default function SmartParsePage() {
           type="button"
           onClick={parse}
           disabled={busy || text.trim().length < 10}
-          style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#8b5cf6', color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: busy || text.trim().length < 10 ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
+          style={{ padding: '12px 16px', borderRadius: 12, border: 'none', background: '#7c3aed', color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: busy || text.trim().length < 10 ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 7 }}
         >
           <IcSpark size={16} color="#fff" /> {busy ? 'Parsing...' : 'Extract records'}
         </button>
@@ -274,7 +274,7 @@ export default function SmartParsePage() {
                     type="button"
                     onClick={() => saveRecord(index).catch(() => {})}
                     disabled={rec.saved}
-                    style={{ flexShrink: 0, height: 34, padding: '0 11px', borderRadius: 9, background: rec.saved ? 'rgba(16,185,129,0.15)' : '#2563eb', border: 'none', color: rec.saved ? '#10b981' : '#fff', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: rec.saved ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
+                    style={{ flexShrink: 0, height: 34, padding: '0 11px', borderRadius: 9, background: rec.saved ? 'rgba(16,185,129,0.15)' : '#2563eb', border: 'none', color: rec.saved ? '#34d399' : '#fff', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: rec.saved ? 'default' : 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
                   >
                     {rec.saved && <IcCheck size={12} color="#10b981" />}
                     {rec.saved ? 'Saved' : 'Save'}

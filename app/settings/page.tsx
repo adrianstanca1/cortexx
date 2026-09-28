@@ -282,7 +282,7 @@ export default function SettingsPage() {
         <button
           type="submit"
           disabled={saving || !current || next.length < 8 || next !== confirmPw}
-          style={{ padding: '12px 0', borderRadius: 12, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving || !current || next.length < 8 || next !== confirmPw ? 0.5 : 1 }}
+          style={{ padding: '12px 0', borderRadius: 12, background: '#f59e0b', border: 'none', color: '#090b0d', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer', opacity: saving || !current || next.length < 8 || next !== confirmPw ? 0.5 : 1 }}
         >
           {saving ? 'Saving…' : 'Update password'}
         </button>
@@ -370,7 +370,7 @@ export default function SettingsPage() {
         )}
 
         {pushSupported && pushPermission === 'denied' && (
-          <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#ef4444', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '8px 12px' }}>
+          <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: '#fca5a5', background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', borderRadius: 10, padding: '8px 12px' }}>
             Notification permission is blocked. Re-enable it in your browser&apos;s site settings.
           </div>
         )}
@@ -439,6 +439,7 @@ export default function SettingsPage() {
                 <input
                   key={`p-${pushKey}`}
                   type="checkbox"
+                  aria-label={`${label} push notifications`}
                   checked={prefs[pushKey]}
                   onChange={e => togglePref(pushKey, e.target.checked)}
                   style={{ justifySelf: 'center', cursor: 'pointer', accentColor: '#2563eb', width: 18, height: 18 }}
@@ -446,6 +447,7 @@ export default function SettingsPage() {
                 <input
                   key={`e-${emailKey}`}
                   type="checkbox"
+                  aria-label={`${label} email notifications`}
                   checked={prefs[emailKey]}
                   onChange={e => togglePref(emailKey, e.target.checked)}
                   style={{ justifySelf: 'center', cursor: 'pointer', accentColor: '#2563eb', width: 18, height: 18 }}
@@ -457,6 +459,7 @@ export default function SettingsPage() {
               <span>Weekly digest email</span>
               <input
                 type="checkbox"
+                aria-label="Weekly digest email"
                 checked={prefs.weeklyDigest}
                 onChange={e => togglePref('weeklyDigest', e.target.checked)}
                 style={{ cursor: 'pointer', accentColor: '#2563eb', width: 18, height: 18 }}
@@ -467,7 +470,7 @@ export default function SettingsPage() {
       )}
 
       <section style={{ marginTop: 24 }}>
-        <button
+        <button type="button"
           onClick={() => { if (window.confirm('Sign out?')) signOut({ callbackUrl: '/login' }) }}
           style={{ width: '100%', padding: '12px 0', borderRadius: 12, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}
         >

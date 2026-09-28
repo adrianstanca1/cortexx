@@ -58,7 +58,7 @@
     const Header = () => React.createElement('div', { style: { padding: '4px 0 12px' } },
       React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 14 } },
         [['timeline', 'Timeline'], ['heatmap', 'Capacity'], ['clashes', 'Clashes' + (clashes.length ? ' (' + clashes.length + ')' : '')]].map(([k, l]) =>
-          React.createElement('button', {
+          React.createElement('button', { type: 'button',
             key: k, onClick: () => setTab(k),
             style: { flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 13, fontWeight: 700,
               background: tab === k ? acc : T.bg2, color: tab === k ? '#fff' : T.t2 }
@@ -144,7 +144,7 @@
               React.createElement('span', { style: { fontSize: 13, color: T.t1, fontWeight: 600 } }, projName(it.projectId)),
               React.createElement('span', { style: { fontSize: 12, color: T.t2 } }, fmtShort(it.start) + ' → ' + fmtShort(it.end))
             )),
-            React.createElement('button', {
+            React.createElement('button', { type: 'button',
               onClick: () => window.cortexxToast && window.cortexxToast('Open the timeline to re-assign one booking', 'info'),
               style: { marginTop: 10, width: '100%', padding: 10, borderRadius: 9, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontWeight: 700, fontSize: 13, cursor: 'pointer' }
             }, 'Resolve →')
@@ -166,7 +166,7 @@
       tab === 'timeline' && React.createElement(Timeline),
       tab === 'heatmap' && React.createElement(Heatmap),
       tab === 'clashes' && React.createElement(Clashes),
-      React.createElement('button', {
+      React.createElement('button', { type: 'button',
         onClick: () => window.cortexxNav && window.cortexxNav('addallocation'),
         style: { marginTop: 16, width: '100%', padding: 14, borderRadius: 12, background: acc, color: '#fff', border: 'none', fontWeight: 700, fontSize: 15, cursor: 'pointer' }
       }, '+ Allocate crew or plant')
@@ -203,9 +203,9 @@
 
     return React.createElement('div', { style: { position: 'fixed', inset: 0, background: T.bg1, zIndex: 1100, overflowY: 'auto', paddingBottom: 100 } },
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '20px 20px 0' } },
-        React.createElement('button', { onClick: onClose, style: { width: 36, height: 36, borderRadius: 18, background: T.bg2, border: 'none', color: T.t1, fontSize: 20, cursor: 'pointer' } }, '←'),
+        React.createElement('button', { type: 'button', onClick: onClose, style: { width: 36, height: 36, borderRadius: 18, background: T.bg2, border: 'none', color: T.t1, fontSize: 20, cursor: 'pointer' } }, '←'),
         React.createElement('h2', { style: { color: T.t1, fontSize: 18, fontWeight: 800, margin: 0, flex: 1 } }, 'Allocate Resource'),
-        React.createElement('button', { onClick: save, disabled: saving, style: { padding: '8px 18px', borderRadius: 10, background: accent || T.blue, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.6 : 1 } }, saving ? 'Saving…' : 'Save')
+        React.createElement('button', { type: 'button', onClick: save, disabled: saving, style: { padding: '8px 18px', borderRadius: 10, background: accent || T.blue, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.6 : 1 } }, saving ? 'Saving…' : 'Save')
       ),
       React.createElement('div', { style: { padding: '20px 20px 0' } },
         React.createElement(Field, { label: 'Type' },

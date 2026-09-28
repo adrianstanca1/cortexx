@@ -55,7 +55,7 @@
 // Floating upload pill — pairs with the AI pill
 function FloatingUploadPill({ accent, bottom = 100 }) {
   return (
-    <button onClick={() => window.cortexxUniversalUpload()} style={{
+    <button type="button" onClick={() => window.cortexxUniversalUpload()} style={{
       position: 'absolute', left: 14, bottom,
       zIndex: 8,
       width: 'auto', height: 38, borderRadius: 19,

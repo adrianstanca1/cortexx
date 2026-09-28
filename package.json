@@ -15,9 +15,10 @@
     "build": "next build && npm run precompile",
     "start": "next start",
     "lint": "eslint . --max-warnings 100",
+    "lint:a11y": "eslint app components lib --config eslint.a11y.config.mjs --max-warnings 0",
     "lint:smells": "node scripts/ban-smell-words.mjs",
     "audit:app": "node scripts/audit-app-integrity.mjs",
-    "quality": "npm run audit:app && npm run lint && npx tsc --noEmit && npm test",
+    "quality": "npm run audit:app && npm run lint && npm run lint:a11y && npx tsc --noEmit && npm test",
     "db:generate": "prisma generate",
     "db:migrate": "prisma migrate deploy",
     "db:push": "prisma db push",
@@ -46,7 +47,8 @@
     "monorepo:lint": "turbo run lint",
     "spa:build": "node build-dist.js",
     "expo:typecheck": "cd expo && npx tsc --noEmit",
-    "expo:doctor": "cd expo && npx expo-doctor"
+    "expo:doctor": "cd expo && npx expo-doctor",
+    "e2e:a11y-full": "FULL_A11Y_SWEEP=1 npx playwright test test/e2e/accessibility-sweep.spec.mjs --project=desktop-chromium --project=mobile-chromium --workers=1 --retries=0"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
@@ -76,6 +78,7 @@
     "web-vitals": "^6.0.1"
   },
   "devDependencies": {
+    "@axe-core/playwright": "^4.13.0",
     "@babel/cli": "^7.24.0",
     "@babel/core": "^7.29.7",
     "@babel/preset-react": "^7.29.7",
@@ -93,6 +96,7 @@
     "autoprefixer": "^10.6.1",
     "eslint": "^9.0.0",
     "eslint-config-next": "^16.3.5",
+    "eslint-plugin-jsx-a11y": "^6.10.2",
     "eslint-plugin-react-hooks": "^7.1.1",
     "express": "^4.22.2",
     "postcss": "^8.5.17",

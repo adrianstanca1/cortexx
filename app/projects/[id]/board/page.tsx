@@ -93,7 +93,7 @@ export default function ProjectBoardPage() {
         <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>Drag tasks between columns or tap to advance</p>
       </div>
 
-      <div style={{ padding: '12px 12px 16px', display: 'flex', gap: 8, overflowX: 'auto' }}>
+      <div role="region" aria-label="Project task board" tabIndex={0} style={{ padding: '12px 12px 16px', display: 'flex', gap: 8, overflowX: 'auto' }}>
         {COLUMNS.map(col => {
           const colTasks = tasks.filter(t => t.status === col.id)
           return (
@@ -114,7 +114,7 @@ export default function ProjectBoardPage() {
                 colTasks.map(t => {
                   const next = col.id === 'todo' ? 'in_progress' : col.id === 'in_progress' ? 'done' : 'todo'
                   return (
-                    <div
+                    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
                       key={t.id}
                       draggable
                       onDragStart={e => onDragStart(e, t.id)}

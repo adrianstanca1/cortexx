@@ -24,7 +24,7 @@ export default function AuthedShell() {
   if (pathname === '/login' || pathname === '/register') return null
   return (
     <>
-      <button
+      <button type="button"
         onClick={() => setDrawerOpen(true)}
         aria-label="Open menu"
         aria-expanded={drawerOpen}

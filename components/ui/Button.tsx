@@ -20,7 +20,7 @@ export default function Button({
   ...rest
 }: ButtonProps) {
   const palette = {
-    primary: { bg: 'var(--amber)', color: '#fff', active: '#d97706' },
+    primary: { bg: 'var(--amber)', color: '#090b0d', active: '#d97706' },
     secondary: { bg: 'var(--bg2)', color: 'var(--t2)', active: 'var(--bg3)' },
     danger: { bg: 'rgba(239,68,68,0.15)', color: 'var(--red)', active: 'rgba(239,68,68,0.25)' },
     ghost: { bg: 'transparent', color: 'var(--t3)', active: 'rgba(255,255,255,0.06)' },
@@ -31,7 +31,7 @@ export default function Button({
   const radius = size === 'sm' ? 8 : 12
 
   return (
-    <button
+    <button type="button"
       disabled={disabled || loading}
       style={{
         padding,

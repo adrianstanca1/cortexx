@@ -65,7 +65,7 @@ export default function RolesPage() {
           Roles
         </h1>
         <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
-          Who can do what in this workspace. <Link href="/settings/organization" style={{ color: '#f59e0b', textDecoration: 'none' }}>Change roles →</Link>
+          Who can do what in this workspace. <Link href="/settings/organization" style={{ color: '#f59e0b', textDecoration: 'underline', textUnderlineOffset: 2 }}>Change roles →</Link>
         </p>
       </div>
 

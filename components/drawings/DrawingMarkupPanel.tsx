@@ -97,17 +97,26 @@ export default function DrawingMarkupPanel({ drawingNumber, drawingTitle, revisi
   )
   useEffect(() => { setEditText(selected?.text || '') }, [selected])
 
-  const place = (event: React.MouseEvent<HTMLDivElement>) => {
+  const setDraftAt = (x: number, y: number) => {
     if (!canAnnotate || saving || !revision.fileUrl) return
-    const rect = viewerRef.current?.getBoundingClientRect()
-    if (!rect) return
-    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
-    const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
     setDraft(tool === 'box'
       ? { x: Math.min(x, 0.82), y: Math.min(y, 0.88), width: 0.18, height: 0.12 }
       : { x, y })
     setDraftText('')
     setSelectedId(null)
+  }
+
+  const place = (event: React.MouseEvent<HTMLButtonElement>) => {
+    if (!canAnnotate || saving || !revision.fileUrl) return
+    if (event.detail === 0) {
+      setDraftAt(0.5, 0.5)
+      return
+    }
+    const rect = viewerRef.current?.getBoundingClientRect()
+    if (!rect) return
+    const x = Math.max(0, Math.min(1, (event.clientX - rect.left) / rect.width))
+    const y = Math.max(0, Math.min(1, (event.clientY - rect.top) / rect.height))
+    setDraftAt(x, y)
   }
   const createMarkup = async () => {
     if (!draft || !draftText.trim()) return
@@ -219,8 +228,6 @@ export default function DrawingMarkupPanel({ drawingNumber, drawingTitle, revisi
         {error && <div role="alert" style={{ padding: '8px 10px', borderRadius: 8, background: 'rgba(239,68,68,0.1)', color: '#f87171', fontFamily: SF, fontSize: 12 }}>{error}</div>}
         <div
           ref={viewerRef}
-          data-testid="drawing-markup-surface"
-          onClick={place}
           style={{ position: 'relative', width: '100%', minHeight: 380, height: 'min(62dvh, 760px)', background: '#111827', borderRadius: 12, overflow: 'hidden', border: '0.5px solid rgba(255,255,255,0.1)', cursor: canAnnotate ? 'crosshair' : 'default' }}
         >
           {!revision.fileUrl ? (
@@ -237,11 +244,20 @@ export default function DrawingMarkupPanel({ drawingNumber, drawingTitle, revisi
             </div>
           )}
 
+          <button
+            type="button"
+            data-testid="drawing-markup-surface"
+            aria-label="Place annotation on drawing"
+            onClick={place}
+            disabled={!canAnnotate || saving || !revision.fileUrl}
+            style={{ position: 'absolute', inset: 0, zIndex: 1, border: 'none', background: 'transparent', cursor: canAnnotate ? 'crosshair' : 'default', padding: 0 }}
+          />
+
           {markups.map((markup, index) => (
             markup.kind === 'box' ? (
-              <button key={markup.id} type="button" onClick={event => { event.stopPropagation(); setSelectedId(markup.id) }} title={markup.text} style={{ position: 'absolute', left: (markup.x * 100) + '%', top: (markup.y * 100) + '%', width: ((markup.width || 0.18) * 100) + '%', height: ((markup.height || 0.12) * 100) + '%', border: '2px solid ' + markup.color, background: markup.status === 'resolved' ? 'transparent' : markup.color + '22', opacity: markup.status === 'resolved' ? 0.45 : 1, borderRadius: 5, cursor: 'pointer' }} />
+              <button key={markup.id} type="button" onClick={event => { event.stopPropagation(); setSelectedId(markup.id) }} title={markup.text} style={{ position: 'absolute', left: (markup.x * 100) + '%', top: (markup.y * 100) + '%', width: ((markup.width || 0.18) * 100) + '%', height: ((markup.height || 0.12) * 100) + '%', border: '2px solid ' + markup.color, background: markup.status === 'resolved' ? 'transparent' : markup.color + '22', opacity: markup.status === 'resolved' ? 0.45 : 1, borderRadius: 5, cursor: 'pointer', zIndex: 2 }} />
             ) : (
-              <button key={markup.id} type="button" onClick={event => { event.stopPropagation(); setSelectedId(markup.id) }} title={markup.text} style={{ position: 'absolute', left: (markup.x * 100) + '%', top: (markup.y * 100) + '%', transform: 'translate(-50%,-50%)', width: 28, height: 28, borderRadius: 14, border: '2px solid rgba(255,255,255,0.9)', background: markup.color, color: '#fff', fontFamily: SF, fontWeight: 800, fontSize: 11, opacity: markup.status === 'resolved' ? 0.5 : 1, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.45)' }}>{index + 1}</button>
+              <button key={markup.id} type="button" onClick={event => { event.stopPropagation(); setSelectedId(markup.id) }} title={markup.text} style={{ position: 'absolute', left: (markup.x * 100) + '%', top: (markup.y * 100) + '%', transform: 'translate(-50%,-50%)', width: 28, height: 28, borderRadius: 14, border: '2px solid rgba(255,255,255,0.9)', background: markup.color, color: '#fff', fontFamily: SF, fontWeight: 800, fontSize: 11, opacity: markup.status === 'resolved' ? 0.5 : 1, cursor: 'pointer', boxShadow: '0 2px 8px rgba(0,0,0,0.45)', zIndex: 2 }}>{index + 1}</button>
             )
           ))}
 
@@ -254,7 +270,7 @@ export default function DrawingMarkupPanel({ drawingNumber, drawingTitle, revisi
         {draft && (
           <div style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: 10, display: 'flex', flexDirection: 'column', gap: 8 }}>
             <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700 }}>New {tool} annotation · page {page}</div>
-            <textarea value={draftText} onChange={e => setDraftText(e.target.value)} rows={3} maxLength={1000} autoFocus placeholder="Describe the issue, instruction, dimension, or coordination note…" style={{ ...inputStyle, resize: 'vertical' }} />
+            <textarea value={draftText} onChange={e => setDraftText(e.target.value)} rows={3} maxLength={1000} placeholder="Describe the issue, instruction, dimension, or coordination note…" style={{ ...inputStyle, resize: 'vertical' }} />
             <div style={{ display: 'flex', gap: 7 }}>
               <button type="button" onClick={() => { setDraft(null); setDraftText('') }} style={{ flex: 1, border: 'none', borderRadius: 8, padding: '8px 10px', background: 'rgba(255,255,255,0.06)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Cancel</button>
               <button type="button" onClick={createMarkup} disabled={saving || !draftText.trim()} style={{ flex: 1, border: 'none', borderRadius: 8, padding: '8px 10px', background: '#2563eb', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: saving ? 'wait' : 'pointer', opacity: !draftText.trim() ? 0.5 : 1 }}>Save annotation</button>

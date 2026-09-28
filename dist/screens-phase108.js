@@ -153,6 +153,7 @@ function SubscriptionScreen({
         letterSpacing: 0.4
       }
     }, "CURRENT") : React.createElement("button", {
+      type: "button",
       onClick: () => buy(p.id),
       disabled: busy === p.id,
       style: {
@@ -186,6 +187,7 @@ function SubscriptionScreen({
       marginTop: 18
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: restore,
     disabled: busy === 'restore',
     style: {
@@ -200,6 +202,7 @@ function SubscriptionScreen({
       fontWeight: 600
     }
   }, busy === 'restore' ? 'Restoring…' : 'Restore purchases'), stat.entitled && React.createElement("button", {
+    type: "button",
     onClick: () => IAP.cancel(),
     style: {
       flex: 1,

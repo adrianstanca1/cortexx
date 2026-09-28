@@ -226,19 +226,19 @@ function VeraScreen({ accent }) {
         {/* Quick actions */}
         <Section title="◆ Run Vera">
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-            <button onClick={runBriefing} disabled={loading.briefing} style={veraBtn(T.blue)}>
+            <button type="button" onClick={runBriefing} disabled={loading.briefing} style={veraBtn(T.blue)}>
               {React.cloneElement(Ic.sun, { size: 16 })} {loading.briefing ? 'Reading…' : 'Daily briefing'}
             </button>
-            <button onClick={runDecisions} disabled={loading.decisions} style={veraBtn(T.amber)}>
+            <button type="button" onClick={runDecisions} disabled={loading.decisions} style={veraBtn(T.amber)}>
               {React.cloneElement(Ic.alert, { size: 16 })} {loading.decisions ? 'Thinking…' : 'Decisions'}
             </button>
-            <button onClick={runStrategy} disabled={loading.strategy} style={veraBtn(T.green)}>
+            <button type="button" onClick={runStrategy} disabled={loading.strategy} style={veraBtn(T.green)}>
               {React.cloneElement(Ic.flag, { size: 16 })} {loading.strategy ? 'Drafting…' : '30-day strategy'}
             </button>
-            <button onClick={runLead} disabled={loading.lead} style={veraBtn(T.purple)}>
+            <button type="button" onClick={runLead} disabled={loading.lead} style={veraBtn(T.purple)}>
               {React.cloneElement(Ic.trend, { size: 16 })} {loading.lead ? 'Hunting…' : 'Find a lead'}
             </button>
-            <button onClick={runEstimate} disabled={loading.estimate} style={{ ...veraBtn(T.cyan), gridColumn: '1 / -1' }}>
+            <button type="button" onClick={runEstimate} disabled={loading.estimate} style={{ ...veraBtn(T.cyan), gridColumn: '1 / -1' }}>
               {React.cloneElement(Ic.calc || Ic.spark, { size: 16 })} {loading.estimate ? 'Estimating…' : 'Auto-quote new leads'}
             </button>
           </div>
@@ -270,7 +270,7 @@ function VeraScreen({ accent }) {
                 </div>
                 <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
                   {(d.options || ['Yes', 'No', 'Later']).map((opt, j) => (
-                    <button key={j} onClick={() => toast(`"${opt}" recorded`, 'success')} style={{
+                    <button type="button" key={j} onClick={() => toast(`"${opt}" recorded`, 'success')} style={{
                       flex: 1, background: j === 0 ? accent : 'transparent',
                       color: j === 0 ? '#fff' : T.t1,
                       border: j === 0 ? 'none' : `0.5px solid ${T.hairMid}`,

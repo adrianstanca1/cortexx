@@ -290,7 +290,7 @@ export default function ValuationsPage() {
       </div>
 
       <div style={{ padding: '14px 16px 0', display: 'grid', gridTemplateColumns: 'repeat(2, minmax(0,1fr))', gap: 8 }}>
-        <Kpi label="Outstanding" value={money(totals.outstanding)} color="#3b82f6" />
+        <Kpi label="Outstanding" value={money(totals.outstanding)} color="#60a5fa" />
         <Kpi label="Certified" value={money(totals.certified)} color="#f59e0b" />
         <Kpi label="Paid" value={money(totals.paid)} color="#10b981" />
         <Kpi label="Retention held" value={money(totals.retention)} color="#f59e0b" />
@@ -375,7 +375,7 @@ export default function ValuationsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 36px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>New valuation</h2>
@@ -417,7 +417,7 @@ export default function ValuationsPage() {
             <div style={{ padding: 10, borderRadius: 10, background: 'rgba(16,185,129,0.08)', fontFamily: SF, fontSize: 11, color: 'var(--t2)', lineHeight: 1.45 }}>
               Previous certified value is calculated from certified/paid applications only. Drafts do not affect later applications.
             </div>
-            <button type="button" onClick={create} disabled={saving || !form.projectId || !form.grossToDate} style={{ padding: 13, borderRadius: 12, border: 0, background: '#10b981', color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.5 : 1 }}>
+            <button type="button" onClick={create} disabled={saving || !form.projectId || !form.grossToDate} style={{ padding: 13, borderRadius: 12, border: 0, background: '#047857', color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.5 : 1 }}>
               {saving ? 'Creating...' : 'Create draft application'}
             </button>
           </div>
@@ -426,7 +426,7 @@ export default function ValuationsPage() {
 
       {paymentTarget && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setPaymentTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setPaymentTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 36px', display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div><h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>Record payment</h2><div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 3 }}>{currentCertificate(paymentTarget)?.certificateNumber}</div></div>
@@ -436,14 +436,14 @@ export default function ValuationsPage() {
             <Field label="Payment date"><input type="date" value={paymentForm.paidAt} onChange={e => setPaymentForm(p => ({ ...p, paidAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} /></Field>
             <Field label="Reference"><input value={paymentForm.reference} onChange={e => setPaymentForm(p => ({ ...p, reference: e.target.value }))} style={inputStyle} placeholder="Bank reference / remittance" /></Field>
             <Field label="Method"><input value={paymentForm.method} onChange={e => setPaymentForm(p => ({ ...p, method: e.target.value }))} style={inputStyle} /></Field>
-            <button type="button" onClick={recordPayment} disabled={saving || !paymentForm.amount} style={{ padding: 13, borderRadius: 12, border: 0, background: '#10b981', color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.5 : 1 }}>{saving ? 'Saving...' : 'Record payment'}</button>
+            <button type="button" onClick={recordPayment} disabled={saving || !paymentForm.amount} style={{ padding: 13, borderRadius: 12, border: 0, background: '#047857', color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.5 : 1 }}>{saving ? 'Saving...' : 'Record payment'}</button>
           </div>
         </div>
       )}
 
       {revisionTarget && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setRevisionTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setRevisionTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 36px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div><h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>Revise certificate</h2><div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 3 }}>{currentCertificate(revisionTarget)?.certificateNumber} · creates next revision</div></div>
@@ -454,7 +454,7 @@ export default function ValuationsPage() {
             <Field label="Retention release (£)"><input type="number" min="0" step="0.01" value={revisionForm.retentionRelease} onChange={e => setRevisionForm(p => ({ ...p, retentionRelease: e.target.value }))} style={inputStyle} /></Field>
             <Field label="Due date"><input type="date" value={revisionForm.dueDate} onChange={e => setRevisionForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} /></Field>
             <Field label="Revision notes"><textarea rows={3} value={revisionForm.notes} onChange={e => setRevisionForm(p => ({ ...p, notes: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} /></Field>
-            <button type="button" onClick={reviseCertificate} disabled={saving || !revisionForm.certifiedGrossToDate} style={{ padding: 13, borderRadius: 12, border: 0, background: '#f59e0b', color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.5 : 1 }}>{saving ? 'Issuing...' : 'Issue revised certificate'}</button>
+            <button type="button" onClick={reviseCertificate} disabled={saving || !revisionForm.certifiedGrossToDate} style={{ padding: 13, borderRadius: 12, border: 0, background: '#b45309', color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 800, cursor: 'pointer', opacity: saving ? 0.5 : 1 }}>{saving ? 'Issuing...' : 'Issue revised certificate'}</button>
           </div>
         </div>
       )}

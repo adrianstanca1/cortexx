@@ -236,11 +236,11 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
           </div>
           <div style={{ display: 'flex', gap: 6, flexShrink: 0 }}>
             {convo && (
-              <button onClick={archive} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={archive} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                 {convo.archivedAt ? 'Restore' : 'Archive'}
               </button>
             )}
-            <button onClick={remove} aria-label={confirmDelete ? 'Confirm delete' : 'Delete conversation'} style={{ padding: '6px 10px', borderRadius: 8, background: confirmDelete ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.1)', color: '#ef4444', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button type="button" onClick={remove} aria-label={confirmDelete ? 'Confirm delete' : 'Delete conversation'} style={{ padding: '6px 10px', borderRadius: 8, background: confirmDelete ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.1)', color: '#ef4444', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
               <IcTrash size={13} color="#ef4444" />
               {confirmDelete && <span>Sure?</span>}
             </button>
@@ -316,7 +316,7 @@ export default function ChatDetailPage({ params }: { params: Promise<{ id: strin
               opacity: convo?.archivedAt ? 0.5 : 1,
             }}
           />
-          <button
+          <button type="button"
             onClick={send}
             disabled={!draft.trim() || sending || !!convo?.archivedAt}
             aria-label="Send"

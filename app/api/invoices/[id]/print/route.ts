@@ -71,7 +71,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 </style>
 </head>
 <body>
-  <button class="print-button" onclick="window.print()">Print / Save as PDF</button>
+  <button type="button" class="print-button" onclick="window.print()">Print / Save as PDF</button>
   <header>
     <div>
       <div class="logo">Cortex<span>x</span></div>

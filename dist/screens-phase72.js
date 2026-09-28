@@ -626,6 +626,14 @@ function ImproveHubScreen({
       gap: 8
     }
   }, live.slice(0, 3).map(w => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: w.id,
     onClick: () => window.cortexxNav('improvement', w),
     style: {
@@ -735,6 +743,7 @@ function ImproveHubScreen({
       fontFamily: SFMono
     }
   }, "\xA38.4k"), " faster cash."), React.createElement("button", {
+    type: "button",
     onClick: () => toast('Promoted to backlog', 'success'),
     style: {
       marginTop: 8,
@@ -807,6 +816,7 @@ function ServiceCatalogScreen({
       gap: 6
     }
   }, tabs.map(t => React.createElement("button", {
+    type: "button",
     key: t.k,
     onClick: () => setSortBy(t.k),
     style: {
@@ -834,6 +844,14 @@ function ServiceCatalogScreen({
     const cycleGap = svc.cycleDays - svc.cycleTarget;
     const onCycle = cycleGap <= 0;
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: svc.id,
       onClick: () => toast(`Open ${svc.name}`, 'info'),
       style: {
@@ -1004,6 +1022,7 @@ function ProcessLibraryScreen({
       overflowX: 'auto'
     }
   }, areas.map(a => React.createElement("button", {
+    type: "button",
     key: a,
     onClick: () => setArea(a),
     style: {
@@ -1030,6 +1049,14 @@ function ProcessLibraryScreen({
     const slipPct = Math.round((p.cycleHrs - p.cycleTarget) / p.cycleTarget * 100);
     const passColor = p.passRate >= 90 ? T.green : p.passRate >= 75 ? accent : T.amber;
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: p.id,
       onClick: () => toast(`Open ${p.name}`, 'info'),
       style: {
@@ -1171,6 +1198,7 @@ function KaizenBoardScreen({
     const n = improvements.filter(i => i.lane === L.k).length;
     const active = activeLane === L.k;
     return React.createElement("button", {
+      type: "button",
       key: L.k,
       onClick: () => setActiveLane(L.k),
       style: {
@@ -1216,6 +1244,14 @@ function KaizenBoardScreen({
     const laneColor = lanes.find(l => l.k === it.lane).c;
     const positive = it.delta != null && (it.metric === 'pass rate' || it.metric === 'response') ? it.delta > 0 : it.delta != null ? it.delta < 0 : null;
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: it.id,
       onClick: () => window.cortexxNav('improvement', it),
       style: {

@@ -31,7 +31,7 @@ function LanguageSettingsScreen({ accent }) {
       <div style={{ padding: '0 18px 110px', fontFamily: SF }}>
         <div style={{ marginTop: 14, fontSize: 11, fontWeight: 700, color: T.t2, letterSpacing: 0.6 }}>CHOOSE LANGUAGE</div>
         {locales.map(L => (
-          <button key={L.code} onClick={() => setLoc(L.code)}
+          <button type="button" key={L.code} onClick={() => setLoc(L.code)}
             style={{ width: '100%', marginTop: 8, padding: 14, borderRadius: 12,
               border: '1px solid ' + (current === L.code ? accent : T.hair),
               background: current === L.code ? accent + '20' : T.bg2,
@@ -208,7 +208,7 @@ function RIDDORScreen({ accent, incidentId }) {
           </div>
         )}
 
-        <button onClick={generate}
+        <button type="button" onClick={generate}
           style={{ marginTop: 18, width: '100%', padding: 14, borderRadius: 12, border: 'none', background: accent, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 700 }}>
           Generate report
         </button>
@@ -217,9 +217,9 @@ function RIDDORScreen({ accent, incidentId }) {
           <div style={{ marginTop: 14, padding: 14, borderRadius: 14, background: T.bg2, border: '1px solid ' + T.hair }}>
             <div style={{ fontSize: 12, fontWeight: 700, color: T.green, marginBottom: 8 }}>✓ Report ready · {report.form}</div>
             <div style={{ display: 'flex', gap: 8 }}>
-              <button onClick={() => R.openPrintable(report)}
+              <button type="button" onClick={() => R.openPrintable(report)}
                 style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontFamily: SF, fontSize: 12, fontWeight: 600 }}>Print / PDF</button>
-              <button onClick={() => R.downloadJSON(report)}
+              <button type="button" onClick={() => R.downloadJSON(report)}
                 style={{ flex: 1, padding: 10, borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontFamily: SF, fontSize: 12, fontWeight: 600 }}>JSON</button>
             </div>
             <a href={R.HSE_URL} target="_blank" rel="noopener noreferrer"

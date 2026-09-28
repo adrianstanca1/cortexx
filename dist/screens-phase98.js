@@ -169,6 +169,7 @@ function LabelPrinterScreen({
       marginBottom: 16
     }
   }, TYPES.map(t => React.createElement("button", {
+    type: "button",
     key: t.k,
     onClick: () => setType(t.k),
     style: {
@@ -345,6 +346,7 @@ function LabelPrinterScreen({
       marginTop: 4
     }
   }, type === 'delivery' ? proj?.addr || '' : type === 'asset' ? fields.note || 'Equipment' : fields.note || 'Site induction & CSCS required.'))), React.createElement("button", {
+    type: "button",
     onClick: print,
     style: {
       width: '100%',
@@ -366,6 +368,7 @@ function LabelPrinterScreen({
   }, React.cloneElement(Ic.print || Ic.download, {
     size: 16
   }), " Print label"), btSupported && React.createElement("button", {
+    type: "button",
     onClick: connectBluetooth,
     style: {
       width: '100%',

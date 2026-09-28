@@ -124,6 +124,7 @@ function DataExportScreen({
       gap: 8
     }
   }, sources.map(s => React.createElement("button", {
+    type: "button",
     key: s.k,
     onClick: () => toggle(s.k),
     style: {
@@ -193,6 +194,7 @@ function DataExportScreen({
       marginTop: 18
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => doExport('json'),
     disabled: busy || !count,
     style: {
@@ -209,6 +211,7 @@ function DataExportScreen({
       opacity: count ? 1 : 0.5
     }
   }, busy ? 'Exporting…' : `Export JSON (${count})`), React.createElement("button", {
+    type: "button",
     onClick: () => doExport('csv'),
     disabled: busy,
     style: {
@@ -336,7 +339,6 @@ function OnboardWizard({
       flex: 1
     }
   }, step === 0 && React.createElement("input", {
-    autoFocus: true,
     value: data.name,
     onChange: e => set('name', e.target.value),
     placeholder: "e.g. Meridian Build Ltd",
@@ -359,6 +361,7 @@ function OnboardWizard({
       gap: 10
     }
   }, trades.map(t => React.createElement("button", {
+    type: "button",
     key: t,
     onClick: () => set('trade', t),
     style: {
@@ -379,6 +382,7 @@ function OnboardWizard({
       gap: 10
     }
   }, sizes.map(s => React.createElement("button", {
+    type: "button",
     key: s,
     onClick: () => set('size', s),
     style: {
@@ -411,6 +415,7 @@ function OnboardWizard({
       marginBottom: 24
     }
   }, colors.map(c => React.createElement("button", {
+    type: "button",
     key: c,
     onClick: () => set('color', c),
     style: {
@@ -455,6 +460,7 @@ function OnboardWizard({
       marginTop: 20
     }
   }, step > 0 && React.createElement("button", {
+    type: "button",
     onClick: () => setStep(step - 1),
     style: {
       background: T.bg2,
@@ -468,6 +474,7 @@ function OnboardWizard({
       cursor: 'pointer'
     }
   }, "Back"), React.createElement("button", {
+    type: "button",
     onClick: () => step < steps.length - 1 ? setStep(step + 1) : finish(),
     disabled: !canNext,
     style: {

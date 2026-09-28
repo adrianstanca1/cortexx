@@ -56,6 +56,7 @@ function LanguageSettingsScreen({
       letterSpacing: 0.6
     }
   }, "CHOOSE LANGUAGE"), locales.map(L => React.createElement("button", {
+    type: "button",
     key: L.code,
     onClick: () => setLoc(L.code),
     style: {
@@ -505,6 +506,7 @@ function RIDDORScreen({
       color: T.t2
     }
   }, "\xB7 ", e.replace('Missing: ', '')))), React.createElement("button", {
+    type: "button",
     onClick: generate,
     style: {
       marginTop: 18,
@@ -539,6 +541,7 @@ function RIDDORScreen({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => R.openPrintable(report),
     style: {
       flex: 1,
@@ -552,6 +555,7 @@ function RIDDORScreen({
       fontWeight: 600
     }
   }, "Print / PDF"), React.createElement("button", {
+    type: "button",
     onClick: () => R.downloadJSON(report),
     style: {
       flex: 1,

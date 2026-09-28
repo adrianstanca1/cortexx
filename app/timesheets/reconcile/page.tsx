@@ -135,9 +135,9 @@ export default function AttendanceReconciliationPage() {
           Compare site check-in evidence with payable hours. Corrections stay unapproved until a manager approves the timesheet.
         </p>
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, marginTop: 12 }}>
-          <button onClick={() => shiftWeek(-1)} aria-label="Previous week" style={navBtn}><IcChevL size={16} color="var(--t2)" /></button>
+          <button type="button" onClick={() => shiftWeek(-1)} aria-label="Previous week" style={navBtn}><IcChevL size={16} color="var(--t2)" /></button>
           <div style={{ flex: 1, textAlign: 'center', fontFamily: SF, fontSize: 13, color: 'var(--t1)', fontWeight: 650 }}>Wk {week} · {fmtWeekRange(monday)}</div>
-          <button onClick={() => shiftWeek(1)} aria-label="Next week" style={navBtn}><IcChevR size={16} color="var(--t2)" /></button>
+          <button type="button" onClick={() => shiftWeek(1)} aria-label="Next week" style={navBtn}><IcChevR size={16} color="var(--t2)" /></button>
         </div>
       </div>
 
@@ -193,7 +193,7 @@ export default function AttendanceReconciliationPage() {
                 </div>
 
                 {row.canApplyAttendance ? (
-                  <button onClick={() => applyAttendance(row)} disabled={applying === row.key} style={{ width: '100%', marginTop: 12, padding: '11px 12px', borderRadius: 10, border: '1px solid rgba(16,185,129,.34)', background: 'rgba(16,185,129,.13)', color: '#34d399', fontFamily: SF, fontSize: 12, fontWeight: 750, cursor: 'pointer' }}>
+                  <button type="button" onClick={() => applyAttendance(row)} disabled={applying === row.key} style={{ width: '100%', marginTop: 12, padding: '11px 12px', borderRadius: 10, border: '1px solid rgba(16,185,129,.34)', background: 'rgba(16,185,129,.13)', color: '#34d399', fontFamily: SF, fontSize: 12, fontWeight: 750, cursor: 'pointer' }}>
                     {applying === row.key ? 'Applying…' : `Use attendance · ${row.observedHours.toFixed(2)}h`}
                   </button>
                 ) : (

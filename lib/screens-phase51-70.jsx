@@ -43,11 +43,11 @@ function BankScreen({ accent }) {
         <div style={{ fontFamily: SF, fontSize: 15, color: T.t2, marginBottom: 20 }}>
           Connect your business bank account via TrueLayer Open Banking to automatically import transactions.
         </div>
-        <button onClick={connectBank} style={{ background: accent, color: '#fff', border: 'none', borderRadius: 14, padding: '14px 24px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
+        <button type="button" onClick={connectBank} style={{ background: accent, color: '#fff', border: 'none', borderRadius: 14, padding: '14px 24px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
           Connect Bank Account
         </button>
         <div style={{ marginTop: 16, fontFamily: SF, fontSize: 13, color: T.t3 }}>
-          Or <span style={{ color: accent, cursor: 'pointer' }} onClick={() => { window.location.href = '/bank'; }}>upload a CSV statement</span>
+          Or <button type="button" style={{ color: accent, cursor: 'pointer', border: 0, background: 'transparent', padding: 0, font: 'inherit' }} onClick={() => { window.location.href = '/bank'; }}>upload a CSV statement</button>
         </div>
       </div>
     ) : (

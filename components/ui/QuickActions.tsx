@@ -55,7 +55,7 @@ export default function QuickActions({ accent = 'var(--accent)' }: QuickActionsP
   return (
     <>
       {/* FAB sits inside the TabBar visually, but it's a separate fixed-position button */}
-      <button
+      <button type="button"
         onClick={() => setOpen(true)}
         aria-label="Quick actions"
         aria-expanded={open}
@@ -87,7 +87,7 @@ export default function QuickActions({ accent = 'var(--accent)' }: QuickActionsP
           aria-modal="true"
           style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}
         >
-          <div
+          <button type="button" aria-label="Close dialog"
             onClick={() => setOpen(false)}
             style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(6px)' }}
           />
@@ -109,7 +109,7 @@ export default function QuickActions({ accent = 'var(--accent)' }: QuickActionsP
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: 'var(--font-system)' }}>Quick actions</h2>
                 <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>Create or capture from anywhere</p>
               </div>
-              <button
+              <button type="button"
                 onClick={() => setOpen(false)}
                 aria-label="Close"
                 style={{ background: 'rgba(255,255,255,0.07)', border: 'none', borderRadius: 10, width: 36, height: 36, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -120,7 +120,7 @@ export default function QuickActions({ accent = 'var(--accent)' }: QuickActionsP
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: 8 }}>
               {actions.map(a => (
-                <button
+                <button type="button"
                   key={a.id}
                   onClick={() => go(a.href)}
                   style={{

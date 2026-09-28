@@ -186,7 +186,7 @@ function ImproveHubScreen({ accent }) {
           <SectionLabel>Recent wins</SectionLabel>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {live.slice(0, 3).map(w => (
-              <div key={w.id} onClick={() => window.cortexxNav('improvement', w)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={w.id} onClick={() => window.cortexxNav('improvement', w)} style={{
                 background: T.bg2, border: `0.5px solid ${T.green}33`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
@@ -219,7 +219,7 @@ function ImproveHubScreen({ accent }) {
             <div style={{ fontFamily: SF, fontSize: 13, color: T.t1, lineHeight: 1.4 }}>
               Variation orders are your slowest process at 48h vs 24h target. In-app signature would close <span style={{ color: T.green, fontFamily: SFMono }}>~24h</span> per job and unlock <span style={{ color: T.green, fontFamily: SFMono }}>£8.4k</span> faster cash.
             </div>
-            <button onClick={() => toast('Promoted to backlog', 'success')} style={{
+            <button type="button" onClick={() => toast('Promoted to backlog', 'success')} style={{
               marginTop: 8, background: 'transparent', border: `0.5px solid ${T.purple}66`,
               color: T.purple, fontFamily: SF, fontSize: 12, fontWeight: 600,
               padding: '6px 12px', borderRadius: 16, cursor: 'pointer',
@@ -269,7 +269,7 @@ function ServiceCatalogScreen({ accent }) {
         {/* Sort tabs */}
         <div style={{ padding: '0 16px 14px', display: 'flex', gap: 6 }}>
           {tabs.map(t => (
-            <button key={t.k} onClick={() => setSortBy(t.k)} style={{
+            <button type="button" key={t.k} onClick={() => setSortBy(t.k)} style={{
               flex: 1, padding: '7px 0', borderRadius: 10,
               border: `0.5px solid ${sortBy === t.k ? accent : T.hair}`,
               background: sortBy === t.k ? `${accent}22` : T.bg2,
@@ -286,7 +286,7 @@ function ServiceCatalogScreen({ accent }) {
             const cycleGap = svc.cycleDays - svc.cycleTarget;
             const onCycle = cycleGap <= 0;
             return (
-              <div key={svc.id} onClick={() => toast(`Open ${svc.name}`, 'info')} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={svc.id} onClick={() => toast(`Open ${svc.name}`, 'info')} style={{
                 background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 14, padding: 14, cursor: 'pointer',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10, marginBottom: 10 }}>
@@ -375,7 +375,7 @@ function ProcessLibraryScreen({ accent }) {
         {/* Area chips */}
         <div style={{ padding: '0 16px 14px', display: 'flex', gap: 6, overflowX: 'auto' }}>
           {areas.map(a => (
-            <button key={a} onClick={() => setArea(a)} style={{
+            <button type="button" key={a} onClick={() => setArea(a)} style={{
               padding: '6px 12px', borderRadius: 14, flexShrink: 0,
               border: `0.5px solid ${area === a ? accent : T.hair}`,
               background: area === a ? `${accent}22` : T.bg2,
@@ -391,7 +391,7 @@ function ProcessLibraryScreen({ accent }) {
             const slipPct = Math.round(((p.cycleHrs - p.cycleTarget) / p.cycleTarget) * 100);
             const passColor = p.passRate >= 90 ? T.green : p.passRate >= 75 ? accent : T.amber;
             return (
-              <div key={p.id} onClick={() => toast(`Open ${p.name}`, 'info')} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={p.id} onClick={() => toast(`Open ${p.name}`, 'info')} style={{
                 background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 12, padding: '12px 14px', cursor: 'pointer',
               }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', gap: 10 }}>
@@ -454,7 +454,7 @@ function KaizenBoardScreen({ accent }) {
             const n = improvements.filter(i => i.lane === L.k).length;
             const active = activeLane === L.k;
             return (
-              <button key={L.k} onClick={() => setActiveLane(L.k)} style={{
+              <button type="button" key={L.k} onClick={() => setActiveLane(L.k)} style={{
                 flex: 1, padding: '8px 0', borderRadius: 10, position: 'relative',
                 border: `0.5px solid ${active ? L.c : T.hair}`,
                 background: active ? `${L.c}22` : T.bg2,
@@ -479,7 +479,7 @@ function KaizenBoardScreen({ accent }) {
             const laneColor = lanes.find(l => l.k === it.lane).c;
             const positive = it.delta != null && (it.metric === 'pass rate' || it.metric === 'response') ? it.delta > 0 : it.delta != null ? it.delta < 0 : null;
             return (
-              <div key={it.id} onClick={() => window.cortexxNav('improvement', it)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={it.id} onClick={() => window.cortexxNav('improvement', it)} style={{
                 background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 12, padding: '12px 14px',
                 borderLeft: `3px solid ${laneColor}`, cursor: 'pointer',
               }}>

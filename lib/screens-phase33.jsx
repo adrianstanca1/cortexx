@@ -4,7 +4,7 @@ function CmdKHint({ accent }) {
   const [dismissed, setDismissed] = React.useState(localStorage.getItem('cortexx_cmdk_hint_dismissed') === '1');
   if (dismissed) return null;
   return (
-    <button onClick={() => { setDismissed(true); localStorage.setItem('cortexx_cmdk_hint_dismissed', '1'); window.cortexxNav('cmdk'); }} style={{
+    <button type="button" onClick={() => { setDismissed(true); localStorage.setItem('cortexx_cmdk_hint_dismissed', '1'); window.cortexxNav('cmdk'); }} style={{
       position: 'absolute', top: 58, left: '50%', transform: 'translateX(-50%)',
       zIndex: 9,
       background: 'rgba(6,16,30,0.85)',

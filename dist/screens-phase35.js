@@ -103,6 +103,7 @@ function AIHistoryScreen({
       marginTop: 6
     }
   }, "Ask Cortex anything \u2014 chats appear here"), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('ai'),
     style: {
       marginTop: 20,

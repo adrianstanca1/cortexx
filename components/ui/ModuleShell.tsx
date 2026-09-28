@@ -35,7 +35,7 @@ export default function ModuleShell({ title, tagline, action, children }: Props)
           </p>
         </div>
         {action && (
-          <button
+          <button type="button"
             onClick={action.onClick}
             style={{ flexShrink: 0, padding: '8px 16px', borderRadius: 10, background: '#f59e0b', border: 'none', color: 'var(--bg0)', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
           >

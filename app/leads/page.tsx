@@ -167,7 +167,7 @@ export default function LeadsPage() {
               {openCount} in pipeline · <span style={{ fontFamily: 'ui-monospace, monospace', color: '#22c55e' }}>£{pipelineValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</span> potential
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Add lead" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Add lead" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -181,7 +181,7 @@ export default function LeadsPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcArrowRight size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No leads yet</p>
-          <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Add first lead
           </button>
         </div>
@@ -210,26 +210,26 @@ export default function LeadsPage() {
                       </div>
                       <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
                         {nextStage && (
-                          <button onClick={() => moveStage(l, nextStage)} style={{ background: `${STAGE_COLOR[nextStage]}22`, border: `0.5px solid ${STAGE_COLOR[nextStage]}55`, color: STAGE_COLOR[nextStage], borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          <button type="button" onClick={() => moveStage(l, nextStage)} style={{ background: `${STAGE_COLOR[nextStage]}22`, border: `0.5px solid ${STAGE_COLOR[nextStage]}55`, color: STAGE_COLOR[nextStage], borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                             → {STAGE_LABEL[nextStage]}
                           </button>
                         )}
                         {l.status !== 'won' && l.status !== 'lost' && (
                           <>
-                            <button onClick={() => convert(l)} disabled={converting === l.id} style={{ background: 'rgba(34,197,94,0.2)', border: '0.5px solid rgba(34,197,94,0.5)', color: '#22c55e', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                            <button type="button" onClick={() => convert(l)} disabled={converting === l.id} style={{ background: 'rgba(34,197,94,0.2)', border: '0.5px solid rgba(34,197,94,0.5)', color: '#22c55e', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                               <IcCheck size={11} color="#22c55e" /> {converting === l.id ? 'Converting…' : 'Won — convert'}
                             </button>
-                            <button onClick={() => moveStage(l, 'lost')} style={{ background: 'rgba(239,68,68,0.12)', border: '0.5px solid rgba(239,68,68,0.35)', color: '#ef4444', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                            <button type="button" onClick={() => moveStage(l, 'lost')} style={{ background: 'rgba(239,68,68,0.12)', border: '0.5px solid rgba(239,68,68,0.35)', color: '#ef4444', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                               Lost
                             </button>
                           </>
                         )}
                         {(l.status === 'won' || l.status === 'lost') && (
-                          <button onClick={() => moveStage(l, 'new')} style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                          <button type="button" onClick={() => moveStage(l, 'new')} style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                             Reopen
                           </button>
                         )}
-                        <button onClick={() => remove(l.id)} aria-label={confirmDelete === l.id ? 'Confirm delete' : 'Delete'} style={{ marginLeft: 'auto', background: confirmDelete === l.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === l.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <button type="button" onClick={() => remove(l.id)} aria-label={confirmDelete === l.id ? 'Confirm delete' : 'Delete'} style={{ marginLeft: 'auto', background: confirmDelete === l.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === l.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                           <IcTrash size={11} color="#ef4444" />
                           {confirmDelete === l.id && <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#ef4444' }}>Sure?</span>}
                         </button>
@@ -247,13 +247,13 @@ export default function LeadsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add lead</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
-            <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Company / project name" style={inputStyle} />
+            <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Company / project name" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <input value={form.contactName} onChange={e => setForm(p => ({ ...p, contactName: e.target.value }))} placeholder="Contact name" style={inputStyle} />
               <input value={form.contactPhone} onChange={e => setForm(p => ({ ...p, contactPhone: e.target.value }))} placeholder="Phone" style={inputStyle} />
@@ -261,18 +261,18 @@ export default function LeadsPage() {
             <input type="email" value={form.contactEmail} onChange={e => setForm(p => ({ ...p, contactEmail: e.target.value }))} placeholder="Email" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Source</label>
-                <select value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-264" style={labelStyle}>Source</label>
+                <select id="field-264" value={form.source} onChange={e => setForm(p => ({ ...p, source: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                   {SOURCES.map(s => <option key={s} value={s}>{s}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Est. value (£)</label>
-                <input type="number" step="100" value={form.value} onChange={e => setForm(p => ({ ...p, value: e.target.value }))} placeholder="0" style={inputStyle} />
+                <label htmlFor="field-270" style={labelStyle}>Est. value (£)</label>
+                <input id="field-270" type="number" step="100" value={form.value} onChange={e => setForm(p => ({ ...p, value: e.target.value }))} placeholder="0" style={inputStyle} />
               </div>
             </div>
             <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Notes (optional)" rows={2} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
-            <button onClick={create} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add lead</>}
             </button>
           </div>

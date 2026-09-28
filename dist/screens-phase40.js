@@ -211,6 +211,7 @@ function VeraActionsScreen({
       lineHeight: 1.5
     }
   }, "Vera runs these autonomously. Tap to trigger now, or schedule recurring runs."), React.createElement("button", {
+    type: "button",
     onClick: () => run('all', 'full sweep'),
     disabled: running,
     style: {
@@ -261,6 +262,7 @@ function VeraActionsScreen({
     title: a.l,
     sub: a.d,
     right: React.createElement("button", {
+      type: "button",
       onClick: e => {
         e.stopPropagation();
         run(a.k, a.l);

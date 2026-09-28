@@ -41,7 +41,6 @@ export default function Modal({
   onConfirm,
   danger = false,
 }: ModalProps) {
-  const overlayRef = useRef<HTMLDivElement>(null)
   const panelRef = useRef<HTMLDivElement>(null)
   const [active, setActive] = useState(open)
 
@@ -83,12 +82,6 @@ export default function Modal({
     }
   }, [open])
 
-  const handleOverlayClick = (e: React.MouseEvent) => {
-    if (e.target === overlayRef.current) {
-      if (!loading) onClose()
-    }
-  }
-
   const defaultFooter = onConfirm ? (
     <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 18 }} key="footer">
       <Button variant="ghost" onClick={onClose} disabled={loading}>Cancel</Button>
@@ -102,8 +95,6 @@ export default function Modal({
 
   return (
     <div
-      ref={overlayRef}
-      onClick={handleOverlayClick}
       style={{
         position: 'fixed',
         inset: 0,
@@ -112,17 +103,34 @@ export default function Modal({
         alignItems: 'center',
         justifyContent: 'center',
         padding: 24,
-        background: 'rgba(0,0,0,0.55)',
         opacity: open ? 1 : 0,
         transition: 'opacity 200ms ease',
       }}
     >
+      <button
+        type="button"
+        aria-label="Close dialog"
+        disabled={loading}
+        onClick={onClose}
+        style={{
+          position: 'absolute',
+          inset: 0,
+          width: '100%',
+          height: '100%',
+          padding: 0,
+          border: 0,
+          background: 'rgba(0,0,0,0.55)',
+          cursor: loading ? 'default' : 'pointer',
+        }}
+      />
       <div
         ref={panelRef}
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
         style={{
+          position: 'relative',
+          zIndex: 1,
           width: '100%',
           maxWidth: widths[size],
           background: 'var(--bg1)',

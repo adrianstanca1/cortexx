@@ -177,11 +177,11 @@ function SiteProgressPhotoSheet({ onClose, accent }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Site photo</div>
-        <button onClick={save} disabled={!blob || saving} style={{
+        <button type="button" onClick={save} disabled={!blob || saving} style={{
           background: 'none', border: 'none', color: blob && !saving ? accent : T.t3,
           fontFamily: SF, fontSize: 15, fontWeight: 600, cursor: blob && !saving ? 'pointer' : 'default',
         }}>{saving ? '…' : 'Save'}</button>
@@ -190,7 +190,7 @@ function SiteProgressPhotoSheet({ onClose, accent }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 24px' }}>
         {/* Preview / picker */}
         {!previewUrl ? (
-          <button onClick={trigger} style={{
+          <button type="button" onClick={trigger} style={{
             width: '100%', aspectRatio: '4 / 3',
             background: T.bg2, border: `1.5px dashed ${T.hairStrong}`,
             borderRadius: 14, color: T.t1, cursor: 'pointer',
@@ -206,8 +206,8 @@ function SiteProgressPhotoSheet({ onClose, accent }) {
           </button>
         ) : (
           <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', background: '#000' }}>
-            <img src={previewUrl} style={{ width: '100%', display: 'block', maxHeight: 340, objectFit: 'cover' }}/>
-            <button onClick={trigger} style={{
+            <img src={previewUrl} alt="Selected site preview" style={{ width: '100%', display: 'block', maxHeight: 340, objectFit: 'cover' }}/>
+            <button type="button" onClick={trigger} style={{
               position: 'absolute', right: 10, top: 10,
               background: 'rgba(0,0,0,0.7)', color: '#fff', border: 'none',
               borderRadius: 8, padding: '6px 10px', cursor: 'pointer',
@@ -233,7 +233,7 @@ function SiteProgressPhotoSheet({ onClose, accent }) {
             <SectionLabel75>Project</SectionLabel75>
             <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
               {projects.filter(p => p.status !== 'completed').map(p => (
-                <button key={p.id} onClick={() => setProjectId(p.id)} style={{
+                <button type="button" key={p.id} onClick={() => setProjectId(p.id)} style={{
                   padding: '7px 12px', borderRadius: 14, flexShrink: 0,
                   border: `0.5px solid ${projectId === p.id ? accent : T.hair}`,
                   background: projectId === p.id ? `${accent}22` : T.bg2,
@@ -278,7 +278,7 @@ function SiteProgressPhotoSheet({ onClose, accent }) {
         )}
 
         {previewUrl && (
-          <button onClick={save} disabled={saving} style={{
+          <button type="button" onClick={save} disabled={saving} style={{
             marginTop: 18, width: '100%',
             background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
             color: '#fff', border: 'none', borderRadius: 12,
@@ -424,9 +424,9 @@ function IncidentReportSheet({ onClose, accent }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Cancel</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Cancel</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Incident report</div>
-        <button onClick={save} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Submit</button>
+        <button type="button" onClick={save} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, fontWeight: 600, cursor: 'pointer' }}>Submit</button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 24px' }}>
@@ -436,7 +436,7 @@ function IncidentReportSheet({ onClose, accent }) {
           {INCIDENT_SEV.map(s => {
             const active = severity === s.v;
             return (
-              <button key={s.v} onClick={() => setSeverity(s.v)} style={{
+              <button type="button" key={s.v} onClick={() => setSeverity(s.v)} style={{
                 padding: '10px 12px', borderRadius: 10, textAlign: 'left',
                 border: `0.5px solid ${active ? s.c : T.hair}`,
                 background: active ? `${s.c}22` : T.bg2,
@@ -464,7 +464,7 @@ function IncidentReportSheet({ onClose, accent }) {
         <SectionLabel75>What happened</SectionLabel75>
         <textarea value={what} onChange={(e) => setWhat(e.target.value)}
           placeholder="Be specific: who, what, where, when, immediate action taken."
-          rows={4} autoFocus
+          rows={4}
           style={{
             width: '100%', boxSizing: 'border-box',
             background: T.bg2, border: `0.5px solid ${T.hair}`,
@@ -477,7 +477,7 @@ function IncidentReportSheet({ onClose, accent }) {
         <SectionLabel75>Project</SectionLabel75>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4, marginBottom: 14 }}>
           {projects.map(p => (
-            <button key={p.id} onClick={() => setProjectId(p.id)} style={{
+            <button type="button" key={p.id} onClick={() => setProjectId(p.id)} style={{
               padding: '7px 12px', borderRadius: 14, flexShrink: 0,
               border: `0.5px solid ${projectId === p.id ? accent : T.hair}`,
               background: projectId === p.id ? `${accent}22` : T.bg2,
@@ -501,7 +501,7 @@ function IncidentReportSheet({ onClose, accent }) {
         {/* Photo + vision */}
         <SectionLabel75>Photo (optional, AI hazard scan)</SectionLabel75>
         {!previewUrl ? (
-          <button onClick={trigger} style={{
+          <button type="button" onClick={trigger} style={{
             width: '100%', padding: '14px',
             background: T.bg2, border: `1.5px dashed ${T.hairStrong}`,
             borderRadius: 10, color: T.t1, cursor: 'pointer',
@@ -513,8 +513,8 @@ function IncidentReportSheet({ onClose, accent }) {
         ) : (
           <>
             <div style={{ position: 'relative', borderRadius: 10, overflow: 'hidden', background: '#000', marginBottom: 10 }}>
-              <img src={previewUrl} style={{ width: '100%', display: 'block', maxHeight: 220, objectFit: 'cover' }}/>
-              <button onClick={trigger} style={{
+              <img src={previewUrl} alt="Attached scene" style={{ width: '100%', display: 'block', maxHeight: 220, objectFit: 'cover' }}/>
+              <button type="button" onClick={trigger} style={{
                 position: 'absolute', right: 8, top: 8,
                 background: 'rgba(0,0,0,0.7)', color: '#fff', border: 'none',
                 borderRadius: 8, padding: '5px 9px', cursor: 'pointer',
@@ -587,13 +587,13 @@ function PhotoVisionAction({ blob, accent }) {
     <div style={{ padding: 16, color: '#fff' }}>
       {!result && !busy && (
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <button onClick={analyse} style={{
+          <button type="button" onClick={analyse} style={{
             background: `${T.purple}33`, border: `0.5px solid ${T.purple}66`,
             color: '#fff', borderRadius: 10, padding: '10px',
             fontFamily: SF, fontSize: 12.5, fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           }}>{React.cloneElement(Ic.spark, { size: 13 })} Analyse</button>
-          <button onClick={findSnags} style={{
+          <button type="button" onClick={findSnags} style={{
             background: `${T.amber}33`, border: `0.5px solid ${T.amber}66`,
             color: '#fff', borderRadius: 10, padding: '10px',
             fontFamily: SF, fontSize: 12.5, fontWeight: 600, cursor: 'pointer',

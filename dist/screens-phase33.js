@@ -4,6 +4,7 @@ function CmdKHint({
   const [dismissed, setDismissed] = React.useState(localStorage.getItem('cortexx_cmdk_hint_dismissed') === '1');
   if (dismissed) return null;
   return React.createElement("button", {
+    type: "button",
     onClick: () => {
       setDismissed(true);
       localStorage.setItem('cortexx_cmdk_hint_dismissed', '1');

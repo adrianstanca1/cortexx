@@ -171,7 +171,7 @@ function LedgerExportScreen({ accent }) {
   };
 
   const Chip = ({ active, onClick, children }) => (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} style={{
       padding: '8px 14px', borderRadius: 10, cursor: 'pointer', whiteSpace: 'nowrap',
       background: active ? accent : T.bg2, color: active ? '#fff' : T.t2,
       border: `0.5px solid ${active ? accent : T.hairMid}`, fontFamily: SF, fontSize: 13, fontWeight: 600,
@@ -188,7 +188,7 @@ function LedgerExportScreen({ accent }) {
           <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.6, margin: '6px 2px 8px' }}>Accounting package</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {FORMATS.map(f => (
-              <button key={f.k} onClick={() => setFormat(f.k)} style={{
+              <button type="button" key={f.k} onClick={() => setFormat(f.k)} style={{
                 background: T.bg2, border: `0.5px solid ${format === f.k ? accent : T.hair}`, borderRadius: 12,
                 padding: 13, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
               }}>
@@ -207,7 +207,7 @@ function LedgerExportScreen({ accent }) {
           <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.6, margin: '18px 2px 8px' }}>Include</div>
           <div style={{ display: 'flex', gap: 8 }}>
             {[{ k: 'sales', on: sales, set: setSales, l: 'Sales invoices', c: sum.salesCount }, { k: 'purch', on: purchases, set: setPurchases, l: 'Purchase receipts', c: sum.purchCount }].map(x => (
-              <button key={x.k} onClick={() => x.set(v => !v)} style={{
+              <button type="button" key={x.k} onClick={() => x.set(v => !v)} style={{
                 flex: 1, background: x.on ? `${accent}1a` : T.bg2, border: `0.5px solid ${x.on ? accent : T.hair}`, borderRadius: 12,
                 padding: '12px 10px', cursor: 'pointer', textAlign: 'left',
               }}>
@@ -256,7 +256,7 @@ function LedgerExportScreen({ accent }) {
             </div>
           </div>
 
-          <button onClick={doExport} disabled={busy} style={{
+          <button type="button" onClick={doExport} disabled={busy} style={{
             width: '100%', marginTop: 16, background: accent, color: '#fff', border: 'none', borderRadius: 13, padding: '15px',
             fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.6 : 1,
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

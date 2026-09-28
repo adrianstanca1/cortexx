@@ -112,7 +112,7 @@ export default function SiteNotice({ data }: SiteNoticeProps) {
               {focus.assignee ? ` · ${focus.assignee.name}` : ''}
               {focus.priority === 'critical' ? ' · CRITICAL' : focus.priority === 'high' ? ' · HIGH PRIORITY' : ''}
             </div>
-            <button
+            <button type="button"
               onClick={() => focus.projectId && router.push(`/projects/${focus.projectId}`)}
               style={{
                 background: V15.hi, color: V15.ink, border: 'none',
@@ -168,7 +168,7 @@ export default function SiteNotice({ data }: SiteNoticeProps) {
 
 function SiteRow({ label, rightLabel, value, pct, onClick }: { label: string; rightLabel: string; value: string; pct: number; onClick: () => void }) {
   return (
-    <div
+    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
       onClick={onClick}
       style={{
         borderBottom: `1px solid ${V15.rule}`,

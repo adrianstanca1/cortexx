@@ -115,8 +115,8 @@ export default function Broadsheet({ data }: BroadsheetProps) {
               &ldquo;Built on dirt and detail since 2021&rdquo;
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
-              <button onClick={() => router.push('/search')} style={chipBtn()}>SEARCH</button>
-              <button onClick={() => router.push('/inbox')} style={chipBtn()}>WIRE</button>
+              <button type="button" onClick={() => router.push('/search')} style={chipBtn()}>SEARCH</button>
+              <button type="button" onClick={() => router.push('/inbox')} style={chipBtn()}>WIRE</button>
             </div>
           </div>
         </div>
@@ -151,7 +151,7 @@ export default function Broadsheet({ data }: BroadsheetProps) {
               )}
             </div>
             {focus && (
-              <button
+              <button type="button"
                 onClick={() => router.push('/tasks')}
                 style={{
                   marginTop: 10, fontFamily: DATA, fontSize: 10, fontWeight: 700, letterSpacing: 1.4,
@@ -171,7 +171,7 @@ export default function Broadsheet({ data }: BroadsheetProps) {
           {active.slice(0, 3).map(p => {
             const margin = p.budget > 0 ? Math.round(((p.budget - p.spent) / p.budget) * 100) : 0
             return (
-              <article
+              <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
                 key={p.id}
                 onClick={() => router.push(`/projects/${p.id}`)}
                 style={{ marginBottom: 12, cursor: 'pointer' }}
@@ -185,7 +185,7 @@ export default function Broadsheet({ data }: BroadsheetProps) {
                 <div style={{ fontFamily: BODY, fontSize: 12.5, color: V14.ink2, lineHeight: 1.4 }}>
                   Progress at <strong>{p.progress}%</strong> · margin <strong style={{ color: margin < 10 ? V14.red : margin > 25 ? V14.green : V14.gold }}>{margin}%</strong> · {p.onSiteCount || 0} on site today.
                 </div>
-              </article>
+              </div>
             )
           })}
 

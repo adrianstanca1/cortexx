@@ -53,9 +53,9 @@ export default class ErrorBoundary extends React.Component<Props, State> {
           <div style={{ color: 'var(--t3)', fontSize: 12, marginBottom: 16 }}>
             {this.state.error?.message || 'Unexpected error'}
           </div>
-          <button
+          <button type="button"
             onClick={this.reset}
-            style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
+            style={{ background: '#b45309', color: '#fff', border: 'none', borderRadius: 8, padding: '8px 16px', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer' }}
           >
             Try again
           </button>

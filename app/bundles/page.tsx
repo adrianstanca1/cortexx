@@ -99,7 +99,7 @@ export default function BundlesPage() {
                   )
                 })}
                 {b.pages.length > 5 && (
-                  <span style={{ padding: '4px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: 'var(--t3)', fontFamily: SF, fontSize: 11 }}>+{b.pages.length - 5} more</span>
+                  <span style={{ padding: '4px 8px', borderRadius: 6, background: 'rgba(255,255,255,0.05)', color: 'var(--t2)', fontFamily: SF, fontSize: 11 }}>+{b.pages.length - 5} more</span>
                 )}
               </div>
             </Link>

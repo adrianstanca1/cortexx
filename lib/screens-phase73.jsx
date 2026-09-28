@@ -196,7 +196,7 @@ function DocGenSheet({ docKind, onClose, accent }) {
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
         background: T.bg0, position: 'relative', zIndex: 5,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1, textAlign: 'center', minWidth: 0, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{meta.l}</div>
@@ -242,7 +242,7 @@ function DocGenSheet({ docKind, onClose, accent }) {
                     fontFamily: SF, fontSize: 13.5, resize: 'none',
                     outline: 'none',
                   }}
-                  autoFocus
+
                 />
               </>
             )}
@@ -252,7 +252,7 @@ function DocGenSheet({ docKind, onClose, accent }) {
                 <SectionLabel73 style={{ marginTop: 14 }}>Attach to project (optional)</SectionLabel73>
                 <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
                   {projects.filter(p => p.status !== 'completed').slice(0, 8).map(p => (
-                    <button
+                    <button type="button"
                       key={p.id}
                       onClick={() => setPickedProject(pickedProject?.id === p.id ? null : p)}
                       style={{
@@ -273,7 +273,7 @@ function DocGenSheet({ docKind, onClose, accent }) {
               <div style={{ marginTop: 12, padding: 10, background: `${T.red}22`, border: `0.5px solid ${T.red}55`, borderRadius: 10, color: T.red, fontFamily: SF, fontSize: 12 }}>{err}</div>
             )}
 
-            <button
+            <button type="button"
               onClick={run}
               disabled={meta.needsContext && !ctx.trim()}
               style={{
@@ -397,7 +397,7 @@ function SectionLabel73({ children, style }) {
 
 function ActionBtn73({ icon, label, onClick, color }) {
   return (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} style={{
       background: T.bg2, border: `0.5px solid ${color}55`,
       borderRadius: 12, padding: '12px',
       color: T.t1, fontFamily: SF, fontSize: 13, fontWeight: 600,
@@ -476,7 +476,7 @@ function DocGenLauncher({ accent }) {
       {Object.entries(window.DOC_KINDS).map(([k, m]) => {
         const cnt = allRecent.filter(r => r.kind === k).length;
         return (
-          <button
+          <button type="button"
             key={k}
             onClick={() => window.cortexxNav('docgen', k)}
             style={{

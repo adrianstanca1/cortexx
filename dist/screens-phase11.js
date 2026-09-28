@@ -350,6 +350,7 @@ function CheckInScreen({
       gap: 6
     }
   }, projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setSelectedProject(p.id),
     style: {
@@ -404,6 +405,7 @@ function CheckInScreen({
       padding: '0 16px 14px'
     }
   }, !isOnSite ? React.createElement("button", {
+    type: "button",
     onClick: () => clock('in'),
     style: {
       width: '100%',
@@ -425,6 +427,7 @@ function CheckInScreen({
   }, React.cloneElement(Ic.pin, {
     size: 22
   }), " Check in") : latest.action === 'break-out' ? React.createElement("button", {
+    type: "button",
     onClick: () => clock('break-in'),
     style: {
       width: '100%',
@@ -451,6 +454,7 @@ function CheckInScreen({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => clock('break-out'),
     style: {
       flex: 1,
@@ -471,6 +475,7 @@ function CheckInScreen({
   }, React.cloneElement(Ic.clock, {
     size: 16
   }), " Lunch"), React.createElement("button", {
+    type: "button",
     onClick: () => clock('out'),
     style: {
       flex: 1,

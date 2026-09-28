@@ -119,7 +119,7 @@ export default function SearchPage() {
         {results && results.projects.length > 0 && (
           <Section title="Projects" count={results.projects.length}>
             {results.projects.map(p => (
-              <button key={p.id} onClick={() => router.push(`/projects/${p.id}`)} style={cardStyle}>
+              <button type="button" key={p.id} onClick={() => router.push(`/projects/${p.id}`)} style={cardStyle}>
                 <span style={{ width: 8, height: 8, borderRadius: 4, background: statusColor[p.status] || 'var(--t3)' }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{p.name}</div>
@@ -134,7 +134,7 @@ export default function SearchPage() {
         {results && results.tasks.length > 0 && (
           <Section title="Tasks" count={results.tasks.length}>
             {results.tasks.map(t => (
-              <button key={t.id} onClick={() => router.push('/tasks')} style={cardStyle}>
+              <button type="button" key={t.id} onClick={() => router.push('/tasks')} style={cardStyle}>
                 <IcCheck size={14} color={priorityColor[t.priority] || 'var(--t3)'} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ ...titleStyle, textDecoration: t.status === 'done' ? 'line-through' : 'none', opacity: t.status === 'done' ? 0.5 : 1 }}>{t.title}</div>
@@ -148,7 +148,7 @@ export default function SearchPage() {
         {results && results.team.length > 0 && (
           <Section title="Team" count={results.team.length}>
             {results.team.map(m => (
-              <button key={m.id} onClick={() => router.push('/team')} style={cardStyle}>
+              <button type="button" key={m.id} onClick={() => router.push('/team')} style={cardStyle}>
                 <Avatar name={m.name} color={m.avatarColor} size={32} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{m.name}</div>
@@ -163,7 +163,7 @@ export default function SearchPage() {
         {results && results.invoices.length > 0 && (
           <Section title="Invoices" count={results.invoices.length}>
             {results.invoices.map(i => (
-              <button key={i.id} onClick={() => router.push(i.projectId ? `/projects/${i.projectId}` : '/projects')} style={cardStyle}>
+              <button type="button" key={i.id} onClick={() => router.push(i.projectId ? `/projects/${i.projectId}` : '/projects')} style={cardStyle}>
                 <IcReceipt size={14} color={invStatusColor[i.status] || 'var(--t3)'} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{i.number}</div>
@@ -178,7 +178,7 @@ export default function SearchPage() {
         {results && results.snags.length > 0 && (
           <Section title="Snags" count={results.snags.length}>
             {results.snags.map(s => (
-              <button key={s.id} onClick={() => router.push('/snags')} style={cardStyle}>
+              <button type="button" key={s.id} onClick={() => router.push('/snags')} style={cardStyle}>
                 <IcAlert size={14} color={priorityColor[s.priority] || '#ef4444'} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{s.title}</div>
@@ -192,7 +192,7 @@ export default function SearchPage() {
         {results && results.rfis.length > 0 && (
           <Section title="RFIs" count={results.rfis.length}>
             {results.rfis.map(r => (
-              <button key={r.id} onClick={() => router.push('/rfis')} style={cardStyle}>
+              <button type="button" key={r.id} onClick={() => router.push('/rfis')} style={cardStyle}>
                 <IcAlert size={14} color={priorityColor[r.priority] || '#f59e0b'} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{r.number} — {r.subject}</div>
@@ -206,7 +206,7 @@ export default function SearchPage() {
         {results && results.documents.length > 0 && (
           <Section title="Documents" count={results.documents.length}>
             {results.documents.map(d => (
-              <button key={d.id} onClick={() => router.push('/documents')} style={cardStyle}>
+              <button type="button" key={d.id} onClick={() => router.push('/documents')} style={cardStyle}>
                 <IcDoc size={14} color="#06b6d4" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{d.name}</div>
@@ -220,7 +220,7 @@ export default function SearchPage() {
         {results && results.customers.length > 0 && (
           <Section title="Customers" count={results.customers.length}>
             {results.customers.map(c => (
-              <button key={c.id} onClick={() => router.push('/customers')} style={cardStyle}>
+              <button type="button" key={c.id} onClick={() => router.push('/customers')} style={cardStyle}>
                 <IcTeam size={14} color="#2563eb" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{c.name}</div>
@@ -234,7 +234,7 @@ export default function SearchPage() {
         {results && results.subcontractors.length > 0 && (
           <Section title="Subcontractors" count={results.subcontractors.length}>
             {results.subcontractors.map(s => (
-              <button key={s.id} onClick={() => router.push('/subs')} style={cardStyle}>
+              <button type="button" key={s.id} onClick={() => router.push('/subs')} style={cardStyle}>
                 <IcHardhat size={14} color="#8b5cf6" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{s.name}</div>
@@ -248,7 +248,7 @@ export default function SearchPage() {
         {results && results.tags.length > 0 && (
           <Section title="Tags" count={results.tags.length}>
             {results.tags.map(t => (
-              <button key={t.id} onClick={() => router.push('/tags')} style={cardStyle}>
+              <button type="button" key={t.id} onClick={() => router.push('/tags')} style={cardStyle}>
                 <IcLayers size={14} color={t.color || 'var(--t2)'} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{t.name || '(unnamed)'}</div>
@@ -261,7 +261,7 @@ export default function SearchPage() {
         {results && results.processDocs.length > 0 && (
           <Section title="Process docs" count={results.processDocs.length}>
             {results.processDocs.map(p => (
-              <button key={p.id} onClick={() => router.push('/process-library')} style={cardStyle}>
+              <button type="button" key={p.id} onClick={() => router.push('/process-library')} style={cardStyle}>
                 <IcDoc size={14} color="#06b6d4" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{p.title || '(untitled)'}</div>
@@ -275,7 +275,7 @@ export default function SearchPage() {
         {results && results.reminders.length > 0 && (
           <Section title="Reminders" count={results.reminders.length}>
             {results.reminders.map(r => (
-              <button key={r.id} onClick={() => router.push('/reminders')} style={cardStyle}>
+              <button type="button" key={r.id} onClick={() => router.push('/reminders')} style={cardStyle}>
                 <IcBell size={14} color={r.done ? 'var(--t3)' : '#f59e0b'} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ ...titleStyle, textDecoration: r.done ? 'line-through' : 'none', opacity: r.done ? 0.5 : 1 }}>
@@ -293,7 +293,7 @@ export default function SearchPage() {
         {results && results.goals.length > 0 && (
           <Section title="Goals (OKRs)" count={results.goals.length}>
             {results.goals.map(g => (
-              <button key={g.id} onClick={() => router.push('/goals')} style={cardStyle}>
+              <button type="button" key={g.id} onClick={() => router.push('/goals')} style={cardStyle}>
                 <IcSpark size={14} color="#06b6d4" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{g.title || '(untitled)'}</div>
@@ -310,7 +310,7 @@ export default function SearchPage() {
         {results && results.improvements.length > 0 && (
           <Section title="Improvements" count={results.improvements.length}>
             {results.improvements.map(i => (
-              <button key={i.id} onClick={() => router.push('/improve-hub')} style={cardStyle}>
+              <button type="button" key={i.id} onClick={() => router.push('/improve-hub')} style={cardStyle}>
                 <IcSpark size={14} color="#10b981" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{i.title || '(untitled)'}</div>
@@ -324,7 +324,7 @@ export default function SearchPage() {
         {results && results.kaizenCards.length > 0 && (
           <Section title="Kaizen cards" count={results.kaizenCards.length}>
             {results.kaizenCards.map(k => (
-              <button key={k.id} onClick={() => router.push('/kaizen-board')} style={cardStyle}>
+              <button type="button" key={k.id} onClick={() => router.push('/kaizen-board')} style={cardStyle}>
                 <IcLayers size={14} color="#f59e0b" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{k.title || '(untitled)'}</div>
@@ -338,7 +338,7 @@ export default function SearchPage() {
         {results && results.claims.length > 0 && (
           <Section title="Insurance claims" count={results.claims.length}>
             {results.claims.map(c => (
-              <button key={c.id} onClick={() => router.push('/claims')} style={cardStyle}>
+              <button type="button" key={c.id} onClick={() => router.push('/claims')} style={cardStyle}>
                 <IcAlert size={14} color="#ef4444" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{c.policy || c.description || '(unidentified)'}</div>
@@ -352,7 +352,7 @@ export default function SearchPage() {
         {results && results.siteReviews.length > 0 && (
           <Section title="Site reviews" count={results.siteReviews.length}>
             {results.siteReviews.map(sr => (
-              <button key={sr.id} onClick={() => router.push('/reviews')} style={cardStyle}>
+              <button type="button" key={sr.id} onClick={() => router.push('/reviews')} style={cardStyle}>
                 <IcCheck size={14} color="#10b981" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{[sr.kind, sr.reviewer].filter(Boolean).join(' · ') || '(unscored)'}</div>
@@ -366,7 +366,7 @@ export default function SearchPage() {
         {results && results.personas.length > 0 && (
           <Section title="Personas" count={results.personas.length}>
             {results.personas.map(p => (
-              <button key={p.id} onClick={() => router.push('/personas')} style={cardStyle}>
+              <button type="button" key={p.id} onClick={() => router.push('/personas')} style={cardStyle}>
                 <IcTeam size={14} color="#8b5cf6" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{p.name || '(unnamed)'}</div>
@@ -380,7 +380,7 @@ export default function SearchPage() {
         {results && results.serviceCatalogItems.length > 0 && (
           <Section title="Service catalog" count={results.serviceCatalogItems.length}>
             {results.serviceCatalogItems.map(s => (
-              <button key={s.id} onClick={() => router.push('/service-catalog')} style={cardStyle}>
+              <button type="button" key={s.id} onClick={() => router.push('/service-catalog')} style={cardStyle}>
                 <IcLayers size={14} color="#06b6d4" />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={titleStyle}>{s.name || '(unnamed)'}</div>

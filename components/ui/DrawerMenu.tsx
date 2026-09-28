@@ -56,7 +56,7 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
 
   return (
     <div role="dialog" aria-modal="true" style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex' }}>
-      <div onClick={onClose} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+      <button type="button" aria-label="Close dialog" onClick={onClose} style={{ position: 'absolute', inset: 0, border: 'none', padding: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
       <aside
         style={{
           position: 'relative',
@@ -88,7 +88,7 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
               )}
             </div>
           </div>
-          <button
+          <button type="button"
             onClick={onClose}
             aria-label="Close menu"
             style={{ background: 'rgba(255,255,255,0.05)', border: 'none', borderRadius: 10, width: 32, height: 32, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
@@ -130,7 +130,7 @@ export default function DrawerMenu({ open, onClose }: { open: boolean; onClose: 
 
         <div style={{ marginTop: 'auto', display: 'flex', flexDirection: 'column', gap: 2 }}>
           <DrawerLink item={{ href: '/settings', label: 'Settings', Icon: IcSettings, color: 'var(--t2)' }} onClick={onClose} active={isActive('/settings')} />
-          <button
+          <button type="button"
             onClick={() => { onClose(); signOut({ callbackUrl: '/login' }) }}
             style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '10px 12px', background: 'none', border: 'none', borderRadius: 10, cursor: 'pointer', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, textAlign: 'left', width: '100%' }}
           >
@@ -177,7 +177,7 @@ function DrawerLink({ item, onClick, badge, active }: { item: MenuItem; onClick:
       </span>
       <span style={{ flex: 1 }}>{item.label}</span>
       {badge && (
-        <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 18, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
+        <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 18, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
           {badge}
         </span>
       )}

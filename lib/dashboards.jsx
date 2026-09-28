@@ -36,10 +36,10 @@ function DashV1_ActionFirst({ accent = T.blue }) {
               <div style={{ fontFamily: SF, fontSize: 24, fontWeight: 700, color: '#fff', letterSpacing: -0.5, marginBottom: 4 }}>Camden Mews — first fix sign-off</div>
               <div style={{ fontFamily: SF, fontSize: 13, color: 'rgba(255,255,255,0.85)' }}>12 Camden Mews NW1 · Tom + 3 on site</div>
               <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                <button onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{ flex: 1, background: '#fff', color: accent, border: 'none', borderRadius: 11, padding: '11px 12px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{ flex: 1, background: '#fff', color: accent, border: 'none', borderRadius: 11, padding: '11px 12px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   {React.cloneElement(Ic.pin, { size: 15 })} Check in
                 </button>
-                <button onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', border: '0.5px solid rgba(255,255,255,0.35)', borderRadius: 11, padding: '11px 14px', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Route</button>
+                <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{ background: 'rgba(255,255,255,0.18)', color: '#fff', border: '0.5px solid rgba(255,255,255,0.35)', borderRadius: 11, padding: '11px 14px', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Route</button>
               </div>
             </div>
           </div>
@@ -445,7 +445,7 @@ function DashV5_AIForward({ accent = T.purple }) {
             </div>
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap', marginTop: 12, position: 'relative' }}>
               {['Show me', 'Read out loud', 'Skip today'].map((s, i) => (
-                <button key={i} style={{
+                <button type="button" key={i} style={{
                   background: i === 0 ? accent : 'transparent',
                   color: i === 0 ? '#fff' : T.blueL,
                   border: i === 0 ? 'none' : `0.5px solid ${T.hairMid}`,
@@ -489,12 +489,12 @@ function DashV5_AIForward({ accent = T.purple }) {
               <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: T.t1, lineHeight: 1.3 }}>{x.q}</div>
               <div style={{ fontFamily: SF, fontSize: 11, color: T.t2, marginTop: 4, lineHeight: 1.4 }}>{x.ctx}</div>
               <div style={{ display: 'flex', gap: 6, marginTop: 10 }}>
-                <button onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
+                <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
                   flex: 1, background: x.c, color: '#fff', border: 'none',
                   borderRadius: 8, padding: '8px 12px',
                   fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                 }}>{x.a}</button>
-                <button onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
+                <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
                   background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                   borderRadius: 8, padding: '8px 14px',
                   fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
@@ -549,7 +549,7 @@ function DashV6_Field({ accent = T.amber }) {
 
         {/* Big primary action */}
         <div style={{ padding: '0 16px 12px' }}>
-          <button onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
+          <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
             width: '100%', background: `linear-gradient(135deg, ${accent}, ${accent}dd)`,
             border: 'none', borderRadius: 18, padding: '20px 18px',
             color: '#0a1830', cursor: 'pointer',
@@ -576,7 +576,7 @@ function DashV6_Field({ accent = T.amber }) {
             { l: 'Voice RFI', s: 'Speak it', c: T.cyan, i: Ic.mic, route: 'voice' },
             { l: 'Incident', s: 'Report now', c: T.red, i: Ic.alert, route: 'incident' },
           ].map((x, i) => (
-            <button key={i} onClick={() => window.cortexxNav && window.cortexxNav(x.route)} style={{
+            <button type="button" key={i} onClick={() => window.cortexxNav && window.cortexxNav(x.route)} style={{
               background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 16,
               padding: '16px 14px', cursor: 'pointer',
               display: 'flex', flexDirection: 'column', alignItems: 'flex-start', gap: 8,
@@ -605,7 +605,7 @@ function DashV6_Field({ accent = T.amber }) {
             { t: 'First-fix electrics — kitchen', d: 'Aisha · in progress', done: false, c: accent },
             { t: 'Skip swap', d: '14:00 today', done: false, c: T.t3 },
           ].map((x, i) => (
-            <button key={i} onClick={() => window.cortexxNav && window.cortexxNav('tab', 'tasks')} style={{
+            <button type="button" key={i} onClick={() => window.cortexxNav && window.cortexxNav('tab', 'tasks')} style={{
               background: T.bg2, borderRadius: 14, padding: '14px 14px',
               border: `0.5px solid ${T.hair}`, cursor: 'pointer',
               display: 'flex', alignItems: 'center', gap: 14, width: '100%', textAlign: 'left',

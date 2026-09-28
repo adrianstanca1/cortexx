@@ -82,9 +82,9 @@ function SignatureSheet({ subject, signerName, onSigned, onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Signature</div>
-        <button onClick={sign} style={{ background: 'none', border: 'none', color: hasSignature ? accent : T.t3, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: hasSignature ? 'pointer' : 'default' }}>Sign</button>
+        <button type="button" onClick={sign} style={{ background: 'none', border: 'none', color: hasSignature ? accent : T.t3, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: hasSignature ? 'pointer' : 'default' }}>Sign</button>
       </div>
       <div style={{ flex: 1, padding: '0 16px 24px' }}>
         <div style={{ fontFamily: SF, fontSize: 12, color: T.t2, marginBottom: 6 }}>You're signing:</div>
@@ -118,11 +118,11 @@ function SignatureSheet({ subject, signerName, onSigned, onClose, accent }) {
         </div>
 
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={clear} style={{
+          <button type="button" onClick={clear} style={{
             flex: 1, background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
             borderRadius: 12, padding: '12px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
           }}>Clear</button>
-          <button onClick={sign} disabled={!hasSignature} style={{
+          <button type="button" onClick={sign} disabled={!hasSignature} style={{
             flex: 2, background: hasSignature ? T.green : T.bg3, color: '#fff', border: 'none',
             borderRadius: 12, padding: '12px', fontFamily: SF, fontSize: 14, fontWeight: 700,
             cursor: hasSignature ? 'pointer' : 'default',
@@ -164,9 +164,9 @@ function ApprovalSheet({ item, onClose, onApproved, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Approval chain</div>
-        <button onClick={() => { onApproved && onApproved(allApproved); onClose(); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Done</button>
+        <button type="button" onClick={() => { onApproved && onApproved(allApproved); onClose(); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Done</button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 24px' }}>
@@ -225,11 +225,11 @@ function ApprovalSheet({ item, onClose, onApproved, accent }) {
                   </div>
                   {a.status === 'pending' && !blocked && (
                     <div style={{ display: 'flex', gap: 5 }}>
-                      <button onClick={() => approve(i)} style={{
+                      <button type="button" onClick={() => approve(i)} style={{
                         background: T.green, color: '#fff', border: 'none', borderRadius: 8,
                         padding: '6px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 700,
                       }}>✓</button>
-                      <button onClick={() => reject(i)} style={{
+                      <button type="button" onClick={() => reject(i)} style={{
                         background: 'transparent', color: T.red, border: `0.5px solid ${T.red}66`,
                         borderRadius: 8, padding: '6px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 700,
                       }}>✗</button>

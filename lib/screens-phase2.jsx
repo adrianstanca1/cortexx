@@ -137,7 +137,7 @@ function RFIsScreen({ accent, onOpen }) {
         <MobileHeader
           title="RFIs"
           subtitle={`${rfis.filter(r => r.status === 'open').length} open · ${rfis.length} total`}
-          right={<button onClick={() => window.cortexxNav('addrfi')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={() => window.cortexxNav('addrfi')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
@@ -152,7 +152,7 @@ function RFIsScreen({ accent, onOpen }) {
           {filtered.map(r => {
             const proj = projects.find(p => p.id == r.projectId);
             return (
-              <div key={r.id} onClick={() => onOpen && onOpen(r)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={r.id} onClick={() => onOpen && onOpen(r)} style={{
                 background: T.bg2, borderRadius: 12, padding: 12,
                 border: `0.5px solid ${T.hair}`, cursor: 'pointer',
               }}>
@@ -211,7 +211,7 @@ function RFIDetailSheet({ rfi, onClose, accent }) {
   return (
     <Sheet onClose={onClose} fullscreen>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}` }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ flex: 1, textAlign: 'center' }}>
@@ -259,7 +259,7 @@ function RFIDetailSheet({ rfi, onClose, accent }) {
       <div style={{ padding: '8px 12px 30px', borderTop: `0.5px solid ${T.hair}`, background: T.bg0 }}>
         <div style={{ display: 'flex', gap: 8, alignItems: 'flex-end' }}>
           <div style={{ flex: 1, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 18, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 8 }}>
-            <button onClick={aiSuggest} disabled={suggesting} style={{
+            <button type="button" onClick={aiSuggest} disabled={suggesting} style={{
               background: 'transparent', border: 'none', color: T.purple,
               cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 2,
             }} title="AI suggest reply">{React.cloneElement(Ic.spark, { size: 16 })}</button>
@@ -270,7 +270,7 @@ function RFIDetailSheet({ rfi, onClose, accent }) {
                 color: T.t1, fontFamily: SF, fontSize: 14, outline: 'none',
               }}/>
           </div>
-          <button onClick={send} disabled={!reply.trim()} style={{
+          <button type="button" onClick={send} disabled={!reply.trim()} style={{
             width: 36, height: 36, borderRadius: 18,
             background: reply.trim() ? accent : T.bg3, border: 'none', color: '#fff',
             cursor: reply.trim() ? 'pointer' : 'default',
@@ -293,7 +293,7 @@ function MessagesScreen({ accent, onOpen }) {
         <MobileHeader
           title="Messages"
           subtitle={`${msgs.length} threads · ${msgs.reduce((s, m) => s + (m.unread || 0), 0)} unread`}
-          right={<button onClick={async () => { await Backend.db.messages.create({ kind: 'team', name: 'New thread', members: [], lastMsg: 'You started a new thread', lastWho: 'You', when: new Date().toISOString().slice(0,16), unread: 0, thread: [{ who: 'You', t: 'New thread started', when: new Date().toISOString().slice(0,16) }] }); toast('Thread created', 'success'); }} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={async () => { await Backend.db.messages.create({ kind: 'team', name: 'New thread', members: [], lastMsg: 'You started a new thread', lastWho: 'You', when: new Date().toISOString().slice(0,16), unread: 0, thread: [{ who: 'You', t: 'New thread started', when: new Date().toISOString().slice(0,16) }] }); toast('Thread created', 'success'); }} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
@@ -301,7 +301,7 @@ function MessagesScreen({ accent, onOpen }) {
           {msgs.map(m => {
             const c = m.kind === 'team' ? T.blue : m.kind === 'client' ? T.green : T.purple;
             return (
-              <div key={m.id} onClick={() => onOpen && onOpen(m)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={m.id} onClick={() => onOpen && onOpen(m)} style={{
                 background: T.bg2, borderRadius: 12, padding: '12px 14px',
                 border: `0.5px solid ${T.hair}`, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 12, position: 'relative',
@@ -350,7 +350,7 @@ function MessageThreadSheet({ thread, onClose, accent }) {
   return (
     <Sheet onClose={onClose} fullscreen>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}` }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ flex: 1, textAlign: 'center' }}>
@@ -388,7 +388,7 @@ function MessageThreadSheet({ thread, onClose, accent }) {
             flex: 1, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 18,
             padding: '10px 14px', color: T.t1, fontFamily: SF, fontSize: 14, outline: 'none',
           }}/>
-        <button onClick={send} disabled={!input.trim()} style={{
+        <button type="button" onClick={send} disabled={!input.trim()} style={{
           width: 36, height: 36, borderRadius: 18,
           background: input.trim() ? accent : T.bg3, border: 'none', color: '#fff',
           cursor: input.trim() ? 'pointer' : 'default',
@@ -432,7 +432,7 @@ function ReportsScreen({ accent }) {
         <MobileHeader
           title="Reports"
           subtitle="AI-narrated business reports"
-          right={<button onClick={() => {
+          right={<button type="button" onClick={() => {
             const rep = reports.find(r => r.k === picked) || {};
             if (window.cortexxReportPDF) {
               window.cortexxReportPDF({
@@ -483,7 +483,7 @@ function ReportsScreen({ accent }) {
         </Section>
 
         <div style={{ padding: '0 16px 14px' }}>
-          <button onClick={generate} disabled={loading} style={{
+          <button type="button" onClick={generate} disabled={loading} style={{
             width: '100%', padding: '12px',
             background: loading ? T.bg3 : `linear-gradient(135deg, ${T.purple}, ${accent})`,
             color: '#fff', border: 'none', borderRadius: 12,
@@ -505,13 +505,13 @@ function ReportsScreen({ accent }) {
               </div>
               <div style={{ fontFamily: SF, fontSize: 14, color: T.t1, lineHeight: 1.6, whiteSpace: 'pre-wrap' }}>{narrative}</div>
               <div style={{ display: 'flex', gap: 6, marginTop: 14 }}>
-                <button onClick={() => window.print()} style={{
+                <button type="button" onClick={() => window.print()} style={{
                   flex: 1, background: 'transparent', border: `0.5px solid ${T.hairMid}`,
                   color: T.t1, borderRadius: 10, padding: '8px',
                   fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                 }}>{React.cloneElement(Ic.print, { size: 13 })} Export PDF</button>
-                <button onClick={async () => { try { await navigator.share({ title: 'CortexBuild Pro Report', text: narrative }); toast('Shared', 'success'); } catch (e) { try { await navigator.clipboard.writeText(narrative); toast('Copied to clipboard', 'success'); } catch { toast('Report ready to share', 'info'); } } }} style={{
+                <button type="button" onClick={async () => { try { await navigator.share({ title: 'CortexBuild Pro Report', text: narrative }); toast('Shared', 'success'); } catch (e) { try { await navigator.clipboard.writeText(narrative); toast('Copied to clipboard', 'success'); } catch { toast('Report ready to share', 'info'); } } }} style={{
                   flex: 1, background: 'transparent', border: `0.5px solid ${T.hairMid}`,
                   color: T.t1, borderRadius: 10, padding: '8px',
                   fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',

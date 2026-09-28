@@ -137,7 +137,7 @@ export default function SubsPage() {
               {alerts > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {alerts} alerts</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Add subcontractor" style={{ width: 36, height: 36, borderRadius: 10, background: '#2563eb', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Add subcontractor" style={{ width: 36, height: 36, borderRadius: 10, background: '#2563eb', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -145,7 +145,7 @@ export default function SubsPage() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name / trade / contact…" style={{ ...inputStyle, paddingLeft: 32, fontSize: 13 }} />
           <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="var(--t3)" /></div>
         </div>
-        <button onClick={() => setShowArchived(s => !s)} style={{ background: showArchived ? 'rgba(255,255,255,0.1)' : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', color: showArchived ? 'var(--t1)' : 'var(--t3)', borderRadius: 99, padding: '3px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+        <button type="button" onClick={() => setShowArchived(s => !s)} style={{ background: showArchived ? 'rgba(255,255,255,0.1)' : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', color: showArchived ? 'var(--t1)' : 'var(--t3)', borderRadius: 99, padding: '3px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
           {showArchived ? '← Active' : 'Show archived'}
         </button>
       </div>
@@ -159,7 +159,7 @@ export default function SubsPage() {
           <IcTeam size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No subcontractors</p>
           {!showArchived && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Add first sub
             </button>
           )}
@@ -167,7 +167,7 @@ export default function SubsPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {subs.map(s => (
-            <button key={s.id} onClick={() => setActiveSub(s)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', textAlign: 'left', opacity: s.archivedAt ? 0.55 : 1 }}>
+            <button type="button" key={s.id} onClick={() => setActiveSub(s)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', textAlign: 'left', opacity: s.archivedAt ? 0.55 : 1 }}>
               <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: '#2563eb22', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>
                 {s.name.slice(0, 2).toUpperCase()}
               </div>
@@ -192,13 +192,13 @@ export default function SubsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add subcontractor</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
-            <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Company name" style={inputStyle} />
+            <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Company name" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <input value={form.trade} onChange={e => setForm(p => ({ ...p, trade: e.target.value }))} placeholder="Trade" list="sub-trades" style={inputStyle} />
               <datalist id="sub-trades">{COMMON_TRADES.map(t => <option key={t} value={t} />)}</datalist>
@@ -216,15 +216,15 @@ export default function SubsPage() {
             <input value={form.utrNumber} onChange={e => setForm(p => ({ ...p, utrNumber: e.target.value }))} placeholder="UTR number (10 digits)" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Insurance expiry</label>
-                <input type="date" value={form.insuranceExpiry} onChange={e => setForm(p => ({ ...p, insuranceExpiry: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <label htmlFor="field-219" style={labelStyle}>Insurance expiry</label>
+                <input id="field-219" type="date" value={form.insuranceExpiry} onChange={e => setForm(p => ({ ...p, insuranceExpiry: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
               <div>
-                <label style={labelStyle}>Quals expiry</label>
-                <input type="date" value={form.qualificationsExpiry} onChange={e => setForm(p => ({ ...p, qualificationsExpiry: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <label htmlFor="field-223" style={labelStyle}>Quals expiry</label>
+                <input id="field-223" type="date" value={form.qualificationsExpiry} onChange={e => setForm(p => ({ ...p, qualificationsExpiry: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
             </div>
-            <button onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add</>}
             </button>
           </div>
@@ -233,14 +233,14 @@ export default function SubsPage() {
 
       {activeSub && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveSub(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveSub(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{activeSub.name}</h2>
                 <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>{activeSub.trade || 'Trade not set'} · CIS {activeSub.cisStatus}</div>
               </div>
-              <button onClick={() => setActiveSub(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveSub(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -256,10 +256,10 @@ export default function SubsPage() {
             </div>
 
             <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-              <button onClick={() => toggleArchive(activeSub)} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={() => toggleArchive(activeSub)} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 {activeSub.archivedAt ? 'Unarchive' : 'Archive'}
               </button>
-              <button onClick={() => remove(activeSub.id)} style={{ padding: '10px 14px', borderRadius: 10, background: confirmDelete === activeSub.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeSub.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <button type="button" onClick={() => remove(activeSub.id)} style={{ padding: '10px 14px', borderRadius: 10, background: confirmDelete === activeSub.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeSub.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                 <IcTrash size={12} color="#ef4444" />
                 {confirmDelete === activeSub.id ? 'Sure?' : ''}
               </button>

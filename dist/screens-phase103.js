@@ -135,6 +135,7 @@ function PushSettingsScreen({
       fontSize: 12
     }
   }, st.vapidLoaded ? 'Loaded' : 'Server must set'))), !st.subscribed && st.supported && React.createElement("button", {
+    type: "button",
     onClick: subscribe,
     disabled: busy,
     style: {
@@ -151,6 +152,7 @@ function PushSettingsScreen({
       opacity: busy ? 0.7 : 1
     }
   }, busy ? 'Subscribing…' : 'Enable notifications'), st.subscribed && React.createElement("button", {
+    type: "button",
     onClick: unsub,
     disabled: busy,
     style: {
@@ -310,6 +312,7 @@ function E2EEScreen({
       boxSizing: 'border-box'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: enable,
     disabled: busy || pass.length < 8,
     style: {
@@ -325,6 +328,7 @@ function E2EEScreen({
       opacity: busy || pass.length < 8 ? 0.5 : 1
     }
   }, busy ? 'Deriving…' : enabled ? 'Unlock' : 'Enable E2EE')), unlocked && React.createElement("button", {
+    type: "button",
     onClick: lock,
     style: {
       marginTop: 14,
@@ -338,6 +342,7 @@ function E2EEScreen({
       fontWeight: 700
     }
   }, "Lock now"), enabled && React.createElement("button", {
+    type: "button",
     onClick: forgetAll,
     style: {
       marginTop: 8,
@@ -695,6 +700,7 @@ function CIS300Screen({
       marginTop: 18
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: downloadCsv,
     style: {
       flex: 1,
@@ -707,6 +713,7 @@ function CIS300Screen({
       fontWeight: 700
     }
   }, "CSV (accountant)"), React.createElement("button", {
+    type: "button",
     onClick: downloadXml,
     disabled: !ret.subs.length,
     style: {
@@ -721,6 +728,7 @@ function CIS300Screen({
       opacity: ret.subs.length ? 1 : 0.5
     }
   }, "CIS300 XML (HMRC)")), hmrcCfg && hmrcCfg.configured && React.createElement("button", {
+    type: "button",
     onClick: submitToHMRC,
     disabled: submitting || !ret.subs.length || !empRefs.utr,
     style: {

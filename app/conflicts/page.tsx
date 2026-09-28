@@ -120,7 +120,7 @@ export default function ConflictsPage() {
           const count = f.id === 'all' ? rows.length : rows.filter(r => r.status === f.id).length
           const active = f.id === filter
           return (
-            <button
+            <button type="button"
               key={f.id}
               onClick={() => setFilter(f.id)}
               style={{
@@ -176,7 +176,6 @@ export default function ConflictsPage() {
             return (
               <li
                 key={r.id}
-                onClick={() => setSelected(r)}
                 style={{
                   background: 'var(--surface-raised)',
                   borderRadius: 10,
@@ -194,7 +193,7 @@ export default function ConflictsPage() {
                   gap: 12,
                 }}
               >
-                <div style={{ minWidth: 0, flex: 1 }}>
+                <button type="button" onClick={() => setSelected(r)} style={{ minWidth: 0, flex: 1, background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: 'inherit', outlineOffset: 4 }}>
                   <div
                     style={{
                       display: 'flex',
@@ -242,9 +241,9 @@ export default function ConflictsPage() {
                     {r.owner && <span>Owner: {r.owner}</span>}
                     <span>Raised {relativeTime(raised as string)}</span>
                   </div>
-                </div>
+                </button>
                 {!isResolved && (
-                  <button
+                  <button type="button"
                     onClick={e => markResolved(r, e)}
                     style={{
                       flexShrink: 0,

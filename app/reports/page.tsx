@@ -56,7 +56,7 @@ export default function ReportsPage() {
               <Stat label="Total budget" value={`£${r.finance.totalBudget.toLocaleString()}`} />
               <Stat label="Total spent" value={`£${r.finance.totalSpent.toLocaleString()}`} accent={r.finance.totalSpent > r.finance.totalBudget ? '#ef4444' : '#10b981'} />
               <Stat label="Margin" value={`${r.finance.marginPct}%`} accent={r.finance.marginPct < 10 ? '#ef4444' : r.finance.marginPct < 20 ? '#f59e0b' : '#10b981'} />
-              <Stat label="Collected" value={`${r.finance.collectedPct}%`} accent="#2563eb" />
+              <Stat label="Collected" value={`${r.finance.collectedPct}%`} accent="#60a5fa" />
               <Stat label="Paid invoices" value={`£${r.finance.paid.toLocaleString()}`} />
               <Stat label="Outstanding" value={`£${r.finance.owed.toLocaleString()}`} accent={r.finance.owed > 0 ? '#f59e0b' : '#10b981'} />
               {r.finance.overdue > 0 && (
@@ -102,7 +102,7 @@ export default function ReportsPage() {
             <SectionHeader>Tasks ({r.tasks.total})</SectionHeader>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 6 }}>
               {Object.entries(r.tasks.byStatus).map(([s, c]) => (
-                <PillStat key={s} label={s} value={c} color="#2563eb" />
+                <PillStat key={s} label={s} value={c} color="#60a5fa" />
               ))}
             </div>
             <div style={{ marginTop: 8, display: 'grid', gridTemplateColumns: '1fr 1fr 1fr 1fr', gap: 6 }}>

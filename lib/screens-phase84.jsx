@@ -147,7 +147,7 @@ function BillingScreen({ accent }) {
                   {p.features.map(f => <span key={f} style={{ fontFamily: SF, fontSize: 10, color: T.t2, background: T.bg3, padding: '3px 7px', borderRadius: 5 }}>{f}</span>)}
                 </div>
                 {!p.current && (
-                  <button onClick={() => p.name === 'Enterprise' ? toast('Sales will be in touch shortly', 'success') : (window.cortexxNav && window.cortexxNav('checkout', { plan: p.name, price: p.price }))} style={{ width: '100%', marginTop: 10, background: accent, color: '#fff', border: 'none', borderRadius: 10, padding: '10px', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={() => p.name === 'Enterprise' ? toast('Sales will be in touch shortly', 'success') : (window.cortexxNav && window.cortexxNav('checkout', { plan: p.name, price: p.price }))} style={{ width: '100%', marginTop: 10, background: accent, color: '#fff', border: 'none', borderRadius: 10, padding: '10px', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                     {p.name === 'Enterprise' ? 'Contact sales' : `Upgrade to ${p.name}`}
                   </button>
                 )}

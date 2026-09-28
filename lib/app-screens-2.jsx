@@ -69,7 +69,7 @@ function MoneyScreen({ accent, onChase }) {
             const isOverdue = iv.status === 'overdue';
             const c = isOverdue ? T.red : T.amber;
             return (
-              <div key={iv.id} onClick={() => onChase && onChase(iv)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={iv.id} onClick={() => onChase && onChase(iv)} style={{
                 background: T.bg2, borderRadius: 12, padding: '12px 14px',
                 border: `0.5px solid ${T.hair}`, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 12,
@@ -154,7 +154,7 @@ function SafetyScreen({ accent }) {
               { l: 'Toolbox talk', i: Ic.team, c: T.amber, sub: 'Today\'s topic' },
               { l: 'Site induction', i: Ic.hardhat, c: T.green, sub: 'New starter' },
             ].map((a, i) => (
-              <button key={i} style={{
+              <button type="button" key={i} style={{
                 background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 12,
                 padding: '12px', cursor: 'pointer', textAlign: 'left',
                 display: 'flex', alignItems: 'flex-start', gap: 10,
@@ -281,7 +281,7 @@ function ProfileScreen({ accent, onSignOut }) {
 }
 
 const Toggle = ({ on, onChange, accent }) => (
-  <button onClick={onChange} style={{
+  <button type="button" onClick={onChange} style={{
     width: 44, height: 26, borderRadius: 13, padding: 2,
     background: on ? accent : T.bg3, border: 'none',
     cursor: 'pointer', position: 'relative', flexShrink: 0,
@@ -357,7 +357,7 @@ function AddTaskSheet({ onClose, accent }) {
             <span style={{ fontFamily: SF, fontSize: 11, color: T.t3 }}>
               {parsing ? 'Cortex parsing…' : parsed ? 'Parsed below' : 'Try natural language'}
             </span>
-            <button onClick={() => parse(input)} disabled={!input.trim() || parsing} style={{
+            <button type="button" onClick={() => parse(input)} disabled={!input.trim() || parsing} style={{
               background: input.trim() && !parsing ? T.purple : T.bg3,
               color: '#fff', border: 'none', borderRadius: 8, padding: '6px 14px',
               fontFamily: SF, fontSize: 12, fontWeight: 600,
@@ -374,7 +374,7 @@ function AddTaskSheet({ onClose, accent }) {
           <div style={{ marginBottom: 4 }}>
             <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Examples</div>
             {examples.map((ex, i) => (
-              <button key={i} onClick={() => setInput(ex)} style={{
+              <button type="button" key={i} onClick={() => setInput(ex)} style={{
                 display: 'block', width: '100%', textAlign: 'left',
                 background: 'transparent', border: 'none',
                 color: T.blueL, fontFamily: SF, fontSize: 13,
@@ -400,11 +400,11 @@ function AddTaskSheet({ onClose, accent }) {
               {parsed.due && <Pill c={T.amber}>{formatTaskWhen(parsed.due)}</Pill>}
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-              <button onClick={save} style={{
+              <button type="button" onClick={save} style={{
                 flex: 1, background: accent, color: '#fff', border: 'none',
                 borderRadius: 10, padding: '10px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
               }}>Save task</button>
-              <button onClick={() => setParsed(null)} style={{
+              <button type="button" onClick={() => setParsed(null)} style={{
                 background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                 borderRadius: 10, padding: '10px 14px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}>Edit</button>
@@ -514,7 +514,7 @@ function ReceiptScanSheet({ onClose, accent }) {
               display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center',
               position: 'relative', overflow: 'hidden',
             }}>
-              <video ref={videoRef} autoPlay playsInline style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
+              <video ref={videoRef} autoPlay muted playsInline aria-label="Live receipt camera preview" style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', objectFit: 'cover' }} />
               <canvas ref={canvasRef} style={{ display: 'none' }} />
               <svg width="100%" height="100%" style={{ position: 'absolute', inset: 0, pointerEvents: 'none' }}>
                 <rect x="20" y="40" width="80%" height="140" fill="none" stroke={accent} strokeWidth="2" strokeDasharray="8 6" opacity="0.6"/>
@@ -522,11 +522,11 @@ function ReceiptScanSheet({ onClose, accent }) {
               {!error && <div style={{ position: 'absolute', bottom: 12, fontFamily: SF, fontSize: 11, color: T.t2, background: 'rgba(0,0,0,0.5)', padding: '4px 10px', borderRadius: 8 }}>Point camera at receipt</div>}
               {error && <div style={{ position: 'absolute', inset: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', background: 'rgba(0,0,0,0.7)', padding: 20, textAlign: 'center', fontFamily: SF, fontSize: 13, color: T.t2 }}>{error}</div>}
             </div>
-            <button onClick={scan} style={{
+            <button type="button" onClick={scan} style={{
               width: '100%', marginTop: 14, background: accent, color: '#fff', border: 'none',
               borderRadius: 14, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer',
             }}>Capture & Scan</button>
-            <button onClick={goManual} style={{
+            <button type="button" onClick={goManual} style={{
               width: '100%', marginTop: 8, background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
               borderRadius: 14, padding: '12px', fontFamily: SF, fontSize: 14, cursor: 'pointer',
             }}>Enter manually</button>
@@ -587,12 +587,12 @@ function ReceiptScanSheet({ onClose, accent }) {
               </div>
             )}
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-              <button onClick={save} disabled={!receipt.vendor || !receipt.amount} style={{
+              <button type="button" onClick={save} disabled={!receipt.vendor || !receipt.amount} style={{
                 flex: 1, background: accent, color: '#fff', border: 'none',
                 borderRadius: 10, padding: '10px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: (!receipt.vendor || !receipt.amount) ? 'not-allowed' : 'pointer',
                 opacity: (!receipt.vendor || !receipt.amount) ? 0.5 : 1,
               }}>Save & file</button>
-              <button onClick={() => setStage('manual')} style={{
+              <button type="button" onClick={() => setStage('manual')} style={{
                 background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                 borderRadius: 10, padding: '10px 14px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}>Edit</button>
@@ -625,7 +625,7 @@ function ReceiptScanSheet({ onClose, accent }) {
                 }} />
               </div>
             </div>
-            <button onClick={async () => {
+            <button type="button" onClick={async () => {
               if (!receipt?.vendor || !receipt?.amount) { toast('Please fill in vendor and amount', 'error'); return; }
               const result = await Backend.ai.categorizeReceipt(receipt);
               setAi(result);
@@ -665,7 +665,7 @@ function ChaseSheet({ invoice, onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Chase {invoice.id}</div>
         <div style={{ width: 50 }}/>
       </div>
@@ -705,14 +705,14 @@ function ChaseSheet({ invoice, onClose, accent }) {
         )}
 
         <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-          <button onClick={send} disabled={loading || sent} style={{
+          <button type="button" onClick={send} disabled={loading || sent} style={{
             flex: 1, background: sent ? T.green : (loading ? T.bg3 : accent),
             color: '#fff', border: 'none',
             borderRadius: 12, padding: '12px', fontFamily: SF, fontSize: 14, fontWeight: 700,
             cursor: loading || sent ? 'default' : 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
           }}>{sent ? <>{Ic.check} Sent</> : React.cloneElement(Ic.send, { size: 15 })} {!sent && 'Send email'}</button>
-          <button onClick={() => window.cortexxInvoicePDF && window.cortexxInvoicePDF(invoice)} title="Export PDF" style={{
+          <button type="button" onClick={() => window.cortexxInvoicePDF && window.cortexxInvoicePDF(invoice)} title="Export PDF" style={{
             background: 'transparent', color: T.t1, border: `0.5px solid ${T.hairMid}`,
             borderRadius: 12, padding: '12px 14px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
             display: 'flex', alignItems: 'center', gap: 6,

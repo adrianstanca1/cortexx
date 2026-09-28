@@ -19,7 +19,7 @@ function DocumentsScreen({ accent }) {
           title={folder || "Documents"}
           subtitle={folder ? `${list.length} files` : `${docs.length} files in ${folders.length} folders`}
           right={folder ? (
-            <button onClick={() => setFolder(null)} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 13, cursor: 'pointer' }}>All</button>
+            <button type="button" onClick={() => setFolder(null)} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 13, cursor: 'pointer' }}>All</button>
           ) : <HeaderBtn icon={Ic.upload} accent={accent} onClick={() => window.cortexxNav('upload')}/>}
         />
 
@@ -29,7 +29,7 @@ function DocumentsScreen({ accent }) {
               {folders.map(f => {
                 const count = docs.filter(d => d.folder === f).length;
                 return (
-                  <button key={f} onClick={() => setFolder(f)} style={{
+                  <button type="button" key={f} onClick={() => setFolder(f)} style={{
                     background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 12,
                     padding: '14px 12px', cursor: 'pointer', textAlign: 'left',
                     display: 'flex', alignItems: 'center', gap: 10,
@@ -83,20 +83,20 @@ function DiaryScreen({ accent }) {
         <MobileHeader
           title="Site diary"
           subtitle={`${entries.length} entries · last: ${_formatRelDate(entries[0]?.date)}`}
-          right={<button onClick={() => window.cortexxNav('adddiary')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={() => window.cortexxNav('adddiary')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
 
         {/* Project filter pills */}
         <div style={{ padding: '4px 16px 14px', display: 'flex', gap: 6, overflowX: 'auto' }}>
-          <button onClick={() => setActiveProject(null)} style={{
+          <button type="button" onClick={() => setActiveProject(null)} style={{
             background: !activeProject ? T.bg3 : 'transparent', border: `0.5px solid ${T.hairMid}`,
             color: !activeProject ? T.t1 : T.t2, fontFamily: SF, fontSize: 12, fontWeight: 600,
             padding: '6px 12px', borderRadius: 12, cursor: 'pointer', whiteSpace: 'nowrap',
           }}>All sites</button>
           {projects.filter(p => ['active','snagging'].includes(p.status)).map(p => (
-            <button key={p.id} onClick={() => setActiveProject(p.id)} style={{
+            <button type="button" key={p.id} onClick={() => setActiveProject(p.id)} style={{
               background: activeProject === p.id ? T.bg3 : 'transparent', border: `0.5px solid ${T.hairMid}`,
               color: activeProject === p.id ? T.t1 : T.t2, fontFamily: SF, fontSize: 12, fontWeight: 600,
               padding: '6px 12px', borderRadius: 12, cursor: 'pointer', whiteSpace: 'nowrap',
@@ -160,7 +160,7 @@ function SnagsScreen({ accent }) {
         <MobileHeader
           title="Snags"
           subtitle={`${open.length} open · ${fixed.length} fixed`}
-          right={<button onClick={() => window.cortexxNav('addsnag')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={() => window.cortexxNav('addsnag')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
@@ -174,12 +174,13 @@ function SnagsScreen({ accent }) {
           {list.map(s => {
             const proj = projects.find(p => p.id === s.projectId);
             return (
-              <div key={s.id} onClick={() => toggle(s.id, s.status)} style={{
+              <div key={s.id} style={{
                 background: T.bg2, borderRadius: 12, padding: '10px 12px',
                 border: `0.5px solid ${T.hair}`, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 10,
                 opacity: s.status === 'fixed' ? 0.5 : 1,
               }}>
+                <button type="button" aria-label={`Toggle snag status: ${s.title}`} onClick={() => toggle(s.id, s.status)} style={{ display: 'flex', alignItems: 'center', gap: 10, flex: 1, minWidth: 0, padding: 0, border: 'none', background: 'transparent', color: 'inherit', textAlign: 'left', cursor: 'pointer' }}>
                 <div style={{
                   width: 22, height: 22, borderRadius: 11,
                   border: s.status === 'fixed' ? 'none' : `2px solid ${PRIO_C[s.priority]}`,
@@ -196,9 +197,10 @@ function SnagsScreen({ accent }) {
                   }}>{s.title}</div>
                   <div style={{ fontFamily: SF, fontSize: 11, color: T.t2, marginTop: 2 }}>
                     {proj?.name?.split(' ').slice(0,2).join(' ')} · {s.area} · {s.assignee}
-                {s.photos > 0 && <button onClick={(e) => { e.stopPropagation(); window.cortexxNav('annotate', s); }} style={{ background: 'none', border: 'none', color: T.t2, fontFamily: SF, fontSize: 11, cursor: 'pointer', padding: 0 }}> · 📷 {s.photos}</button>}
                   </div>
                 </div>
+                </button>
+                {s.photos > 0 && <button type="button" onClick={() => window.cortexxNav('annotate', s)} aria-label={`Open ${s.photos} snag photo${s.photos === 1 ? '' : 's'}`} style={{ background: 'none', border: 'none', color: T.t2, fontFamily: SF, fontSize: 11, cursor: 'pointer', padding: 4 }}>📷 {s.photos}</button>}
                 {s.status === 'open' && <Pill c={PRIO_C[s.priority]} size="xs">{s.priority}</Pill>}
               </div>
             );
@@ -254,11 +256,11 @@ function ChangeOrdersScreen({ accent }) {
                 <div style={{ fontFamily: SF, fontSize: 12, color: T.t2, lineHeight: 1.4 }}>{c.reason}</div>
                 {c.status === 'pending' && (
                   <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
-                    <button onClick={() => approve(c.id)} style={{
+                    <button type="button" onClick={() => approve(c.id)} style={{
                       flex: 1, background: T.green, color: '#fff', border: 'none',
                       borderRadius: 8, padding: '8px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     }}>Approve</button>
-                    <button onClick={() => reject(c.id)} style={{
+                    <button type="button" onClick={() => reject(c.id)} style={{
                       background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                       borderRadius: 8, padding: '8px 14px', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                     }}>Reject</button>
@@ -321,7 +323,7 @@ function InboxScreen({ accent, onAction }) {
           title="Inbox"
           subtitle={`${unread.length} unread · ${notifs.length} total`}
           right={unread.length > 0 ? (
-            <button onClick={markAllRead} style={{
+            <button type="button" onClick={markAllRead} style={{
               background: 'transparent', border: `0.5px solid ${T.hairMid}`,
               color: T.t1, fontFamily: SF, fontSize: 12, fontWeight: 600,
               padding: '7px 12px', borderRadius: 16, cursor: 'pointer',
@@ -343,7 +345,7 @@ function InboxScreen({ accent, onAction }) {
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {portalMsgs.filter(m => seg === 'unread' ? !m.read : true).map(m => (
-                  <div key={m.id} onClick={() => { markPortalRead(m.id); if (window.cortexxNav) window.cortexxNav('clientmsgs'); }} style={{
+                  <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={m.id} onClick={() => { markPortalRead(m.id); if (window.cortexxNav) window.cortexxNav('clientmsgs'); }} style={{
                     background: m.read ? T.bg2 : `${T.purple}11`,
                     border: `0.5px solid ${m.read ? T.hair : T.purple + '44'}`,
                     borderRadius: 12, padding: '12px 14px', cursor: 'pointer',
@@ -366,7 +368,7 @@ function InboxScreen({ accent, onAction }) {
           {list.map(n => {
             const Icon = NOTIF_ICON[n.kind] || Ic.bell;
             return (
-              <div key={n.id} onClick={() => {
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={n.id} onClick={() => {
                 markRead(n.id);
                 if (onAction) onAction(n.action);
               }} style={{
@@ -453,12 +455,12 @@ function OnboardingSheet({ onClose, accent }) {
             ))}
           </div>
           <div style={{ flex: 1 }}/>
-          <button onClick={() => setStep('name')} style={{
+          <button type="button" onClick={() => setStep('name')} style={{
             background: accent, color: '#fff', border: 'none', borderRadius: 14,
             padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer',
             boxShadow: `0 6px 18px ${accent}55`,
           }}>Get started</button>
-          <button onClick={onClose} style={{
+          <button type="button" onClick={onClose} style={{
             background: 'none', border: 'none', color: T.t3, fontFamily: SF, fontSize: 13,
             padding: '12px', cursor: 'pointer', marginTop: 4,
           }}>Skip · use demo data</button>
@@ -481,14 +483,14 @@ function OnboardingSheet({ onClose, accent }) {
           <input
             value={name} onChange={e => setName(e.target.value)}
             placeholder="Your name"
-            autoFocus
+
             style={{
               marginTop: 24, background: T.bg2, border: `0.5px solid ${T.hairMid}`,
               borderRadius: 12, padding: '14px 16px',
               color: T.t1, fontFamily: SF, fontSize: 18, outline: 'none',
             }}/>
           <div style={{ flex: 1 }}/>
-          <button onClick={() => setStep('brief')} disabled={!name.trim()} style={{
+          <button type="button" onClick={() => setStep('brief')} disabled={!name.trim()} style={{
             background: name.trim() ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 14,
             padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700,
             cursor: name.trim() ? 'pointer' : 'default',
@@ -519,12 +521,12 @@ function OnboardingSheet({ onClose, accent }) {
             resize: 'none', lineHeight: 1.4,
           }}/>
         <div style={{ flex: 1 }}/>
-        <button onClick={finish} disabled={seeding} style={{
+        <button type="button" onClick={finish} disabled={seeding} style={{
           background: accent, color: '#fff', border: 'none', borderRadius: 14,
           padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer',
           opacity: seeding ? 0.5 : 1,
         }}>{seeding ? 'Setting up your workspace…' : 'Finish setup'}</button>
-        <button onClick={finish} style={{
+        <button type="button" onClick={finish} style={{
           background: 'none', border: 'none', color: T.t3, fontFamily: SF, fontSize: 13,
           padding: '12px', cursor: 'pointer', marginTop: 4,
         }}>Skip for now</button>

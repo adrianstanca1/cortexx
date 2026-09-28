@@ -165,7 +165,7 @@ export default function VariationsPage() {
               {variations.length} total · {pendingCount} pending
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Draft variation" disabled={projects.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(139,92,246,0.3)' : '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Draft variation" disabled={projects.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(139,92,246,0.3)' : '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -193,7 +193,7 @@ export default function VariationsPage() {
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'draft', 'submitted', 'approved', 'rejected'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#8b5cf6' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#7c3aed' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -209,7 +209,7 @@ export default function VariationsPage() {
           <IcWrench size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{variations.length === 0 ? 'No variations yet' : 'Nothing in this filter'}</p>
           {variations.length === 0 && projects.length > 0 && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#8b5cf6', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#7c3aed', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Draft first variation
             </button>
           )}
@@ -217,7 +217,7 @@ export default function VariationsPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(v => (
-            <button key={v.id} onClick={() => setActiveVar(v)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button type="button" key={v.id} onClick={() => setActiveVar(v)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: 'var(--t3)', letterSpacing: 0.5 }}>{v.number}</span>
                 {v.project && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{v.project.name}</span>}
@@ -241,19 +241,19 @@ export default function VariationsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Draft variation</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
-            <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What changed scope?" style={inputStyle} />
+            <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What changed scope?" style={inputStyle} />
             <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Detail of the change" rows={3} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
 
             <div>
-              <label style={labelStyle}>Project</label>
-              <select value={form.projectId} onChange={e => {
+              <label htmlFor="field-255" style={labelStyle}>Project</label>
+              <select id="field-255" value={form.projectId} onChange={e => {
                 const projectId = e.target.value
                 const p = projects.find(pr => pr.id === projectId)
                 setForm(prev => ({ ...prev, projectId, clientName: prev.clientName || p?.clientName || '' }))
@@ -264,21 +264,21 @@ export default function VariationsPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Cost impact (£)</label>
-                <input type="number" step="0.01" value={form.costImpact} onChange={e => setForm(p => ({ ...p, costImpact: e.target.value }))} placeholder="0" style={inputStyle} />
+                <label htmlFor="field-267" style={labelStyle}>Cost impact (£)</label>
+                <input id="field-267" type="number" step="0.01" value={form.costImpact} onChange={e => setForm(p => ({ ...p, costImpact: e.target.value }))} placeholder="0" style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Days impact</label>
-                <input type="number" step="1" value={form.daysImpact} onChange={e => setForm(p => ({ ...p, daysImpact: e.target.value }))} placeholder="0" style={inputStyle} />
+                <label htmlFor="field-271" style={labelStyle}>Days impact</label>
+                <input id="field-271" type="number" step="1" value={form.daysImpact} onChange={e => setForm(p => ({ ...p, daysImpact: e.target.value }))} placeholder="0" style={inputStyle} />
               </div>
             </div>
 
             <div>
-              <label style={labelStyle}>Client name (for approval email)</label>
-              <input value={form.clientName} onChange={e => setForm(p => ({ ...p, clientName: e.target.value }))} placeholder="Client" style={inputStyle} />
+              <label htmlFor="field-277" style={labelStyle}>Client name (for approval email)</label>
+              <input id="field-277" value={form.clientName} onChange={e => setForm(p => ({ ...p, clientName: e.target.value }))} placeholder="Client" style={inputStyle} />
             </div>
 
-            <button onClick={create} disabled={saving || !form.title.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#8b5cf6', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.title.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#7c3aed', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Save as draft</>}
             </button>
           </div>
@@ -287,14 +287,14 @@ export default function VariationsPage() {
 
       {activeVar && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveVar(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveVar(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 700, letterSpacing: 0.5 }}>{activeVar.number}</div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeVar.title}</h2>
               </div>
-              <button onClick={() => setActiveVar(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveVar(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -327,23 +327,23 @@ export default function VariationsPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
               {activeVar.status === 'draft' && (
-                <button onClick={() => changeStatus(activeVar, 'submitted')} style={statusBtn('#f59e0b')}>Submit for approval</button>
+                <button type="button" onClick={() => changeStatus(activeVar, 'submitted')} style={statusBtn('#f59e0b')}>Submit for approval</button>
               )}
               {activeVar.status === 'submitted' && (
                 <>
-                  <button onClick={() => changeStatus(activeVar, 'approved')} style={statusBtn('#22c55e')}>Mark approved</button>
-                  <button onClick={() => changeStatus(activeVar, 'rejected')} style={statusBtn('#ef4444')}>Mark rejected</button>
+                  <button type="button" onClick={() => changeStatus(activeVar, 'approved')} style={statusBtn('#22c55e')}>Mark approved</button>
+                  <button type="button" onClick={() => changeStatus(activeVar, 'rejected')} style={statusBtn('#ef4444')}>Mark rejected</button>
                 </>
               )}
               {(activeVar.status === 'approved' || activeVar.status === 'rejected') && (
-                <button onClick={() => changeStatus(activeVar, 'submitted')} style={statusBtn('var(--t3)')}>Reopen as submitted</button>
+                <button type="button" onClick={() => changeStatus(activeVar, 'submitted')} style={statusBtn('var(--t3)')}>Reopen as submitted</button>
               )}
-              <button onClick={() => sendForApproval(activeVar)} style={{ ...statusBtn('#8b5cf6'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <button type="button" onClick={() => sendForApproval(activeVar)} style={{ ...statusBtn('#8b5cf6'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcSend size={12} color="#fff" /> Email for approval
               </button>
             </div>
 
-            <button onClick={() => remove(activeVar.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activeVar.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeVar.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <button type="button" onClick={() => remove(activeVar.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activeVar.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeVar.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <IcTrash size={12} color="#ef4444" />
               {confirmDelete === activeVar.id ? 'Sure?' : 'Delete variation'}
             </button>

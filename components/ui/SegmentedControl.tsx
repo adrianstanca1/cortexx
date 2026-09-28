@@ -67,7 +67,7 @@ export default function SegmentedControl({
       {options.map((o) => {
         const isActive = o.value === value
         return (
-          <button
+          <button type="button"
             key={o.value}
             role="radio"
             aria-checked={isActive}
@@ -79,7 +79,7 @@ export default function SegmentedControl({
               padding,
               border: 0,
               background: 'transparent',
-              color: isActive ? 'var(--t1)' : 'var(--t3)',
+              color: isActive ? 'var(--t1)' : 'var(--t2)',
               fontFamily: font,
               fontSize: size === 'sm' ? 12 : 13,
               fontWeight: isActive ? 700 : 500,

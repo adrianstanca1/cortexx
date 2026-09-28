@@ -268,7 +268,7 @@ export default function AppsPage() {
         </div>
         <div style={{ background: 'var(--bg1)', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.07)' }}>
           {CAPTURE.map((c, i) => (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
               key={c.id}
               onClick={() => handleCapture(c)}
               style={{
@@ -289,7 +289,7 @@ export default function AppsPage() {
                 <div style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t2)', marginTop: 1 }}>{c.sub}</div>
               </div>
               {c.ai ? (
-                <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: '#8b5cf6' }}>AI</span>
+                <span style={{ fontFamily: 'var(--font-system)', fontSize: 10, fontWeight: 700, color: '#a78bfa' }}>AI</span>
               ) : (
                 <IcArrowRight size={16} color="var(--t3)" />
               )}
@@ -332,7 +332,7 @@ export default function AppsPage() {
                     {showBadge && (
                       <span style={{
                         position: 'absolute', top: 6, right: 6,
-                        background: '#ef4444', color: '#fff',
+                        background: '#dc2626', color: '#fff',
                         fontSize: 9, fontWeight: 700, fontFamily: 'var(--font-system)',
                         padding: '1px 5px', borderRadius: 99, minWidth: 16, textAlign: 'center',
                       }}>{badge}</span>
@@ -340,7 +340,7 @@ export default function AppsPage() {
                     {m.ai && (
                       <span style={{
                         position: 'absolute', top: 6, right: 6,
-                        fontSize: 9, fontWeight: 700, color: '#8b5cf6', fontFamily: 'var(--font-system)',
+                        fontSize: 9, fontWeight: 700, color: '#a78bfa', fontFamily: 'var(--font-system)',
                       }}>AI</span>
                     )}
                     <div style={{

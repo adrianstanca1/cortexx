@@ -244,6 +244,7 @@ function ObservabilityScreen({
       justifyContent: 'space-between'
     }
   }, React.createElement("span", null, "BREADCRUMBS \xB7 ", crumbs.length), React.createElement("button", {
+    type: "button",
     onClick: () => {
       O.clear();
       force();

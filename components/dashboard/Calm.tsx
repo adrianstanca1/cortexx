@@ -74,7 +74,7 @@ export default function Calm({ accent = '#2563eb', data }: CalmProps) {
               t.assignee?.name,
             ].filter(Boolean).join(' · ') || 'No due date'
             return (
-              <div
+              <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
                 key={t.id}
                 onClick={() => t.projectId && router.push(`/projects/${t.projectId}`)}
                 style={{

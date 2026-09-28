@@ -83,7 +83,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
         <p style={{ color: 'var(--t3)', fontSize: 12, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 20 }}>
           Sign in or create an account for {invite.email} to continue.
         </p>
-        <button onClick={() => signIn(undefined, { callbackUrl: `/invite/${token}` })} style={ctaStyle}>
+        <button type="button" onClick={() => signIn(undefined, { callbackUrl: `/invite/${token}` })} style={ctaStyle}>
           Sign in
         </button>
         <Link href={`/register?callbackUrl=/invite/${token}`} style={{ ...ctaStyle, background: 'transparent', color: '#f59e0b', border: '1px solid rgba(245,158,11,0.4)', marginTop: 8 }}>
@@ -102,7 +102,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
         <p style={{ color: 'var(--t2)', fontSize: 14, fontFamily: 'var(--font-system)', textAlign: 'center', marginBottom: 16, lineHeight: 1.5 }}>
           This invite is for <strong style={{ color: 'var(--t1)' }}>{invite.email}</strong> but you&apos;re signed in as <strong style={{ color: 'var(--t1)' }}>{sessionEmail}</strong>.
         </p>
-        <button onClick={() => signIn(undefined, { callbackUrl: `/invite/${token}` })} style={ctaStyle}>
+        <button type="button" onClick={() => signIn(undefined, { callbackUrl: `/invite/${token}` })} style={ctaStyle}>
           Switch account
         </button>
       </Frame>
@@ -120,7 +120,7 @@ export default function InvitePage({ params }: { params: Promise<{ token: string
           {error}
         </div>
       )}
-      <button onClick={accept} disabled={accepting} style={{ ...ctaStyle, opacity: accepting ? 0.5 : 1 }}>
+      <button type="button" onClick={accept} disabled={accepting} style={{ ...ctaStyle, opacity: accepting ? 0.5 : 1 }}>
         {accepting ? 'Joining…' : 'Accept invitation'}
       </button>
       <Link href="/dashboard" style={{ ...ctaStyle, background: 'transparent', color: 'var(--t3)', border: '1px solid rgba(255,255,255,0.1)', marginTop: 8 }}>

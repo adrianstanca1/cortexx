@@ -6,16 +6,20 @@ function PhotoAnnotateSheet({ snag, onClose, accent }) {
   const [activePin, setActivePin] = React.useState(null);
   const [pinNote, setPinNote] = React.useState('');
 
-  const handleClick = (e) => {
+  const addPinAt = (x, y) => {
     if (!adding) return;
-    const rect = e.currentTarget.getBoundingClientRect();
-    const x = ((e.clientX - rect.left) / rect.width) * 100;
-    const y = ((e.clientY - rect.top) / rect.height) * 100;
     const newPin = { id: pins.length + 1, x, y, note: 'New annotation' };
     setPins([...pins, newPin]);
     setActivePin(newPin.id);
     setPinNote('');
     setAdding(false);
+  };
+
+  const handleClick = (e) => {
+    if (!adding) return;
+    if (e.detail === 0) return addPinAt(50, 50);
+    const rect = e.currentTarget.getBoundingClientRect();
+    addPinAt(((e.clientX - rect.left) / rect.width) * 100, ((e.clientY - rect.top) / rect.height) * 100);
   };
 
   const savePin = () => {
@@ -34,19 +38,19 @@ function PhotoAnnotateSheet({ snag, onClose, accent }) {
   return (
     <Sheet onClose={onClose} fullscreen>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}` }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ flex: 1, textAlign: 'center' }}>
           <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: T.t1 }}>{snag?.title || 'Photo'}</div>
           <div style={{ fontFamily: SFMono, fontSize: 10, color: T.t3, marginTop: 1 }}>{pins.length} annotation{pins.length !== 1 ? 's' : ''}</div>
         </div>
-        <button onClick={() => toast('Photo shared', 'success')} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer' }}>Share</button>
+        <button type="button" onClick={() => toast('Photo shared', 'success')} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer' }}>Share</button>
       </div>
 
       {/* Photo canvas */}
       <div style={{ flex: 1, background: '#0a0e16', position: 'relative', overflow: 'hidden' }}>
-        <div onClick={handleClick} style={{
+        <div style={{
           width: '100%', height: '100%',
           background: `linear-gradient(135deg, #1a3a5c, #2c3a5c, #3a2c5c)`,
           cursor: adding ? 'crosshair' : 'default',
@@ -68,13 +72,18 @@ function PhotoAnnotateSheet({ snag, onClose, accent }) {
             <text x="50%" y="80%" textAnchor="middle" fontSize="9" fill="rgba(255,255,255,0.3)" fontFamily={SFMono}>SITE PHOTO · CAMDEN · {new Date().toLocaleDateString('en-GB')}</text>
           </svg>
 
+          <button type="button" aria-label="Place annotation on photo" onClick={handleClick} disabled={!adding}
+            style={{ position: 'absolute', inset: 0, zIndex: 1, border: 'none', background: 'transparent', padding: 0, cursor: adding ? 'crosshair' : 'default' }}/>
+
           {/* Pins */}
           {pins.map((p, i) => (
-            <div key={p.id} style={{
+            <button type="button" key={p.id} aria-label={`Annotation ${i + 1}: ${p.note}`} style={{
               position: 'absolute',
+              zIndex: 2,
               left: `${p.x}%`, top: `${p.y}%`,
               transform: 'translate(-50%, -100%)',
               cursor: 'pointer',
+              border: 'none', background: 'transparent', padding: 0,
             }} onClick={(e) => { e.stopPropagation(); setActivePin(p.id); setPinNote(p.note); }}>
               {/* Pin shape */}
               <svg width="32" height="42" viewBox="0 0 32 42" style={{ filter: 'drop-shadow(0 2px 6px rgba(0,0,0,0.5))' }}>
@@ -82,7 +91,7 @@ function PhotoAnnotateSheet({ snag, onClose, accent }) {
                 <circle cx="16" cy="16" r="9" fill="#fff"/>
                 <text x="16" y="20" textAnchor="middle" fontSize="12" fontWeight="700" fontFamily={SF} fill={T.bg0}>{i + 1}</text>
               </svg>
-            </div>
+            </button>
           ))}
 
           {/* Active pin tooltip */}
@@ -99,9 +108,9 @@ function PhotoAnnotateSheet({ snag, onClose, accent }) {
                 </div>
                 <span style={{ fontFamily: SF, fontSize: 11, color: T.amber, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.4 }}>Annotation</span>
                 <div style={{ flex: 1 }}/>
-                <button onClick={() => deletePin(activePin)} style={{ background: 'none', border: 'none', color: T.red, cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 600 }}>Remove</button>
+                <button type="button" onClick={() => deletePin(activePin)} style={{ background: 'none', border: 'none', color: T.red, cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 600 }}>Remove</button>
               </div>
-              <input value={pinNote} onChange={e => setPinNote(e.target.value)} autoFocus
+              <input value={pinNote} onChange={e => setPinNote(e.target.value)}
                 placeholder="Note (e.g. 'Touch up paint here')"
                 style={{
                   width: '100%', boxSizing: 'border-box',
@@ -109,11 +118,11 @@ function PhotoAnnotateSheet({ snag, onClose, accent }) {
                   padding: '8px 10px', color: T.t1, fontFamily: SF, fontSize: 13, outline: 'none',
                 }}/>
               <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
-                <button onClick={savePin} style={{
+                <button type="button" onClick={savePin} style={{
                   flex: 1, background: T.green, color: '#fff', border: 'none', borderRadius: 8,
                   padding: '8px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                 }}>Save</button>
-                <button onClick={() => setActivePin(null)} style={{
+                <button type="button" onClick={() => setActivePin(null)} style={{
                   background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                   borderRadius: 8, padding: '8px 14px', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 }}>Done</button>
@@ -137,7 +146,7 @@ function PhotoAnnotateSheet({ snag, onClose, accent }) {
 
       {/* Toolbar */}
       <div style={{ padding: '10px 12px 30px', borderTop: `0.5px solid ${T.hair}`, display: 'flex', gap: 8, background: T.bg0 }}>
-        <button onClick={() => setAdding(!adding)} style={{
+        <button type="button" onClick={() => setAdding(!adding)} style={{
           flex: 1, background: adding ? T.amber : T.bg2,
           color: adding ? T.bg0 : T.t1,
           border: adding ? 'none' : `0.5px solid ${T.hairMid}`,
@@ -145,12 +154,12 @@ function PhotoAnnotateSheet({ snag, onClose, accent }) {
           fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
         }}>{React.cloneElement(Ic.pin, { size: 14 })} {adding ? 'Cancel' : 'Add pin'}</button>
-        <button onClick={() => { setPins([]); toast('Cleared', 'info'); }} style={{
+        <button type="button" onClick={() => { setPins([]); toast('Cleared', 'info'); }} style={{
           background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
           borderRadius: 12, padding: '12px 14px',
           fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
         }}>Clear</button>
-        <button onClick={async () => {
+        <button type="button" onClick={async () => {
           await Backend.db.activity.create({ who: 'You', what: `annotated photo with ${pins.length} pins`, where: snag?.area || 'Site', when: new Date().toISOString().slice(0,16), icon: 'camera', color: '#8b5cf6' });
           toast(`Saved ${pins.length} annotation${pins.length !== 1 ? 's' : ''}`, 'success');
           onClose();

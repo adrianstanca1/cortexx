@@ -195,6 +195,14 @@ function ClientMessagesScreen({
       gap: 8
     }
   }, msgs.map(m => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: m.id,
     onClick: () => open(m),
     style: {
@@ -291,6 +299,7 @@ function ClientMessagesScreen({
       color: T.t2
     }
   }, reply.project)), React.createElement("button", {
+    type: "button",
     onClick: () => {
       remove(reply.id);
       setReply(null);
@@ -344,6 +353,7 @@ function ClientMessagesScreen({
       boxSizing: 'border-box'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: sendReply,
     disabled: !draft.trim(),
     style: {

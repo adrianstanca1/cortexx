@@ -249,20 +249,20 @@ export default function TimesheetsPage() {
             <Link href="/timesheets/reconcile" style={{ padding: '9px 11px', borderRadius: 9, border: '0.5px solid rgba(16,185,129,0.35)', background: 'rgba(16,185,129,0.10)', color: '#34d399', fontFamily: SF, fontSize: 11, fontWeight: 700, textDecoration: 'none' }}>
               Reconcile
             </Link>
-            <button onClick={() => setShowAdd(true)} aria-label="Add entry" disabled={team.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: team.length === 0 ? 'rgba(139,92,246,0.3)' : '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: team.length === 0 ? 'not-allowed' : 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} aria-label="Add entry" disabled={team.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: team.length === 0 ? 'rgba(139,92,246,0.3)' : '#8b5cf6', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: team.length === 0 ? 'not-allowed' : 'pointer' }}>
               <IcPlus size={18} color="#fff" />
             </button>
           </div>
         </div>
 
         <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
-          <button onClick={() => shiftWeek(-1)} aria-label="Previous week" style={navBtn}><IcChevL size={16} color="var(--t2)" /></button>
+          <button type="button" onClick={() => shiftWeek(-1)} aria-label="Previous week" style={navBtn}><IcChevL size={16} color="var(--t2)" /></button>
           <div style={{ flex: 1, textAlign: 'center', fontFamily: SF, fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>
             {fmtWeekRange(monday)} {isCurrentWeek && <span style={{ color: '#10b981', fontSize: 11, marginLeft: 6 }}>· this week</span>}
           </div>
-          <button onClick={() => shiftWeek(1)} aria-label="Next week" style={navBtn}><IcChevR size={16} color="var(--t2)" /></button>
+          <button type="button" onClick={() => shiftWeek(1)} aria-label="Next week" style={navBtn}><IcChevR size={16} color="var(--t2)" /></button>
           {!isCurrentWeek && (
-            <button onClick={jumpToThisWeek} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.35)', color: '#a78bfa', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Today</button>
+            <button type="button" onClick={jumpToThisWeek} style={{ padding: '4px 10px', borderRadius: 8, background: 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.35)', color: '#a78bfa', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>Today</button>
           )}
         </div>
       </div>
@@ -276,7 +276,7 @@ export default function TimesheetsPage() {
           <IcClock size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No hours logged for this week</p>
           {team.length > 0 && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#8b5cf6', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#8b5cf6', border: 'none', color: '#090b0d', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Log first hours
             </button>
           )}
@@ -300,11 +300,11 @@ export default function TimesheetsPage() {
                     {m.approved ? 'Approved' : 'Pending'}
                   </span>
                   {!m.approved && (
-                    <button onClick={() => approveMember(m)} disabled={approving === m.member.id} aria-label={`Approve ${m.member.name}'s week`} style={{ background: 'rgba(16,185,129,0.2)', border: '0.5px solid rgba(16,185,129,0.4)', color: '#10b981', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                    <button type="button" onClick={() => approveMember(m)} disabled={approving === m.member.id} aria-label={`Approve ${m.member.name}'s week`} style={{ background: 'rgba(16,185,129,0.2)', border: '0.5px solid rgba(16,185,129,0.4)', color: '#10b981', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                       {approving === m.member.id ? '…' : '✓ Week'}
                     </button>
                   )}
-                  <button onClick={() => sendToPayroll(m)} aria-label="Send to payroll" style={{ background: 'rgba(139,92,246,0.2)', border: '0.5px solid rgba(139,92,246,0.4)', color: '#a78bfa', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                  <button type="button" onClick={() => sendToPayroll(m)} aria-label="Send to payroll" style={{ background: 'rgba(139,92,246,0.2)', border: '0.5px solid rgba(139,92,246,0.4)', color: '#a78bfa', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                     <IcSend size={11} color="#a78bfa" />
                   </button>
                 </div>
@@ -316,7 +316,7 @@ export default function TimesheetsPage() {
                   const isToday = isCurrentWeek && new Date().getDay() === (i === 6 ? 0 : i + 1)
                   return (
                     <div key={day} style={{ padding: '6px 4px', borderRadius: 6, background: hrs > 0 ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.03)', border: isToday ? '0.5px solid rgba(139,92,246,0.4)' : '0.5px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                      <div style={{ fontFamily: SF, fontSize: 9, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase' }}>{day}</div>
+                      <div style={{ fontFamily: SF, fontSize: 9, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase' }}>{day}</div>
                       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: hrs > 0 ? 'var(--t1)' : 'var(--t3)', fontWeight: 600, marginTop: 2 }}>{hrs > 0 ? hrs.toFixed(1) : '–'}</div>
                     </div>
                   )
@@ -335,10 +335,10 @@ export default function TimesheetsPage() {
                       <div style={{ flex: 1, fontFamily: SF, fontSize: 11, color: 'var(--t3)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
                         {e.project?.name || 'No project'}
                       </div>
-                      <button onClick={() => toggleApprove(e)} disabled={approving === e.id} aria-label={e.approved ? 'Unapprove' : 'Approve'} style={{ background: 'transparent', border: 'none', padding: 2, cursor: 'pointer' }}>
+                      <button type="button" onClick={() => toggleApprove(e)} disabled={approving === e.id} aria-label={e.approved ? 'Unapprove' : 'Approve'} style={{ background: 'transparent', border: 'none', padding: 2, cursor: 'pointer' }}>
                         <IcCheck size={12} color={e.approved ? '#10b981' : 'var(--t3)'} />
                       </button>
-                      <button onClick={() => removeEntry(e.id)} aria-label={confirmDelete === e.id ? 'Confirm delete' : 'Delete entry'} style={{ background: confirmDelete === e.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === e.id ? '2px 6px' : 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                      <button type="button" onClick={() => removeEntry(e.id)} aria-label={confirmDelete === e.id ? 'Confirm delete' : 'Delete entry'} style={{ background: confirmDelete === e.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === e.id ? '2px 6px' : 2, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                         <IcTrash size={11} color="#ef4444" />
                         {confirmDelete === e.id && <span style={{ fontFamily: SF, fontSize: 9, color: '#ef4444', fontWeight: 700 }}>Sure?</span>}
                       </button>
@@ -355,23 +355,23 @@ export default function TimesheetsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Log hours</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
-              <label style={labelStyle}>Member</label>
-              <select value={form.memberId} onChange={e => setForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-366" style={labelStyle}>Member</label>
+              <select id="field-366" value={form.memberId} onChange={e => setForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
             </div>
 
             <div>
-              <label style={labelStyle}>Project (optional)</label>
-              <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-373" style={labelStyle}>Project (optional)</label>
+              <select id="field-373" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 <option value="">— Unassigned —</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
@@ -379,16 +379,16 @@ export default function TimesheetsPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '2fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Date</label>
-                <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <label htmlFor="field-382" style={labelStyle}>Date</label>
+                <input id="field-382" type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
               <div>
-                <label style={labelStyle}>Hours</label>
-                <input type="number" min="0.25" max="24" step="0.25" value={form.hours} onChange={e => setForm(p => ({ ...p, hours: e.target.value }))} style={inputStyle} />
+                <label htmlFor="field-386" style={labelStyle}>Hours</label>
+                <input id="field-386" type="number" min="0.25" max="24" step="0.25" value={form.hours} onChange={e => setForm(p => ({ ...p, hours: e.target.value }))} style={inputStyle} />
               </div>
             </div>
 
-            <button onClick={addEntry} disabled={saving || !form.memberId || !form.date || !form.hours} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#8b5cf6', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.memberId || !form.date || !form.hours ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={addEntry} disabled={saving || !form.memberId || !form.date || !form.hours} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#8b5cf6', border: 'none', color: '#090b0d', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.memberId || !form.date || !form.hours ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Log entry</>}
             </button>
           </div>

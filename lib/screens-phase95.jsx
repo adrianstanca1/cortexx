@@ -143,25 +143,25 @@ function PhotoMentionSheet({ onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1, display: 'flex', alignItems: 'center', gap: 5 }}>{React.cloneElement(Ic.camera, { size: 14 })} Photo → actions</div>
         <div style={{ width: 50 }}/>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 24px' }}>
         <input ref={fileRef} type="file" accept="image/*" onChange={pick} style={{ display: 'none' }}/>
         {!preview ? (
-          <button onClick={() => fileRef.current && fileRef.current.click()} style={{ width: '100%', aspectRatio: '4/3', background: T.bg2, border: `1.5px dashed ${T.hairMid}`, borderRadius: 14, color: T.t2, fontFamily: SF, fontSize: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
+          <button type="button" onClick={() => fileRef.current && fileRef.current.click()} style={{ width: '100%', aspectRatio: '4/3', background: T.bg2, border: `1.5px dashed ${T.hairMid}`, borderRadius: 14, color: T.t2, fontFamily: SF, fontSize: 14, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
             {React.cloneElement(Ic.camera, { size: 30, color: T.t3 })}
             Tap to add a site photo
           </button>
         ) : (
           <div style={{ position: 'relative' }}>
             <img src={preview} alt="" style={{ width: '100%', borderRadius: 14, display: 'block' }}/>
-            <button onClick={() => fileRef.current && fileRef.current.click()} style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Change</button>
+            <button type="button" onClick={() => fileRef.current && fileRef.current.click()} style={{ position: 'absolute', top: 10, right: 10, background: 'rgba(0,0,0,.6)', color: '#fff', border: 'none', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Change</button>
           </div>
         )}
         {preview && !result && (
-          <button onClick={analyse} disabled={busy} style={{ width: '100%', marginTop: 12, background: accent, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <button type="button" onClick={analyse} disabled={busy} style={{ width: '100%', marginTop: 12, background: accent, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.7 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {React.cloneElement(Ic.spark, { size: 16 })} {busy ? 'Cortex is looking…' : 'Extract actions'}
           </button>
         )}
@@ -177,7 +177,7 @@ function PhotoMentionSheet({ onClose, accent }) {
                   <div style={{ fontFamily: SF, fontSize: 14, color: T.t1 }}>{it.title}</div>
                   <div style={{ fontFamily: SF, fontSize: 11, color: T.t3 }}>{it.priority} priority</div>
                 </div>
-                <button onClick={() => file(it, i)} disabled={filed[i]} style={{ background: filed[i] ? T.green : accent, color: '#fff', border: 'none', borderRadius: 9, padding: '8px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: filed[i] ? 'default' : 'pointer' }}>{filed[i] ? '✓ Added' : 'Create'}</button>
+                <button type="button" onClick={() => file(it, i)} disabled={filed[i]} style={{ background: filed[i] ? T.green : accent, color: '#fff', border: 'none', borderRadius: 9, padding: '8px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: filed[i] ? 'default' : 'pointer' }}>{filed[i] ? '✓ Added' : 'Create'}</button>
               </div>
             ))}
           </div>
@@ -213,7 +213,7 @@ function InboxTriageSheet({ onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1, display: 'flex', alignItems: 'center', gap: 5 }}>{React.cloneElement(Ic.spark, { size: 14 })} Inbox triage</div>
         <div style={{ width: 50 }}/>
       </div>
@@ -221,7 +221,7 @@ function InboxTriageSheet({ onClose, accent }) {
         <div style={{ fontFamily: SF, fontSize: 12, color: T.t2, marginBottom: 10, lineHeight: 1.5 }}>Paste an inbound email (or a WhatsApp/voicemail transcript). Cortex categorises it and files the right record.</div>
         <textarea value={text} onChange={e => setText(e.target.value)} rows={7} placeholder="Paste email text here…"
           style={{ width: '100%', boxSizing: 'border-box', background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: 12, color: T.t1, fontFamily: SF, fontSize: 14, outline: 'none', resize: 'vertical' }}/>
-        <button onClick={triage} disabled={busy || !text.trim()} style={{ width: '100%', marginTop: 10, background: text.trim() ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: (busy || !text.trim()) ? 'default' : 'pointer', opacity: text.trim() ? 1 : 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+        <button type="button" onClick={triage} disabled={busy || !text.trim()} style={{ width: '100%', marginTop: 10, background: text.trim() ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: (busy || !text.trim()) ? 'default' : 'pointer', opacity: text.trim() ? 1 : 0.5, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
           {React.cloneElement(Ic.spark, { size: 16 })} {busy ? 'Triaging…' : 'Triage'}
         </button>
         {result && (
@@ -242,7 +242,7 @@ function InboxTriageSheet({ onClose, accent }) {
             {filed ? (
               <div style={{ fontFamily: SF, fontSize: 13, color: T.green, fontWeight: 600 }}>✓ Filed as {filed.kind}: {filed.record.name || filed.record.title}</div>
             ) : (
-              <button onClick={file} style={{ width: '100%', background: accent, color: '#fff', border: 'none', borderRadius: 11, padding: '13px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>File automatically</button>
+              <button type="button" onClick={file} style={{ width: '100%', background: accent, color: '#fff', border: 'none', borderRadius: 11, padding: '13px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>File automatically</button>
             )}
           </div>
         )}

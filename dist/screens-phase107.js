@@ -129,6 +129,7 @@ function RetentionSheet({
       flexWrap: 'wrap'
     }
   }, PRESET.map(p => React.createElement("button", {
+    type: "button",
     key: p,
     onClick: () => setPct(p),
     style: {
@@ -185,6 +186,7 @@ function RetentionSheet({
       marginTop: 8
     }
   }, React.createElement("label", {
+    htmlFor: "retention-pc-date",
     style: {
       display: 'block',
       fontSize: 11,
@@ -192,6 +194,7 @@ function RetentionSheet({
       marginBottom: 4
     }
   }, "Practical completion date (50% released)"), React.createElement("input", {
+    id: "retention-pc-date",
     type: "date",
     value: pcDate,
     onChange: e => setPcDate(e.target.value),
@@ -211,6 +214,7 @@ function RetentionSheet({
       marginTop: 8
     }
   }, React.createElement("label", {
+    htmlFor: "retention-defects-days",
     style: {
       display: 'block',
       fontSize: 11,
@@ -218,6 +222,7 @@ function RetentionSheet({
       marginBottom: 4
     }
   }, "Defects liability period (days)"), React.createElement("input", {
+    id: "retention-defects-days",
     type: "number",
     value: defectsDays,
     onChange: e => setDefectsDays(e.target.value),
@@ -247,6 +252,7 @@ function RetentionSheet({
     d.setDate(d.getDate() + Number(defectsDays));
     return d.toISOString().slice(0, 10);
   })())))), React.createElement("button", {
+    type: "button",
     onClick: save,
     style: {
       marginTop: 16,
@@ -326,6 +332,7 @@ function RetentionSheet({
       marginTop: 10
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => release('pc'),
     style: {
       flex: 1,
@@ -338,6 +345,7 @@ function RetentionSheet({
       fontWeight: 600
     }
   }, "Release at PC"), React.createElement("button", {
+    type: "button",
     onClick: () => release('final'),
     style: {
       flex: 1,
@@ -408,6 +416,14 @@ function RetentionLedgerScreen({
     onClick,
     accent: accentCol
   }) => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     onClick: onClick,
     style: {
       marginTop: 8,
@@ -508,6 +524,7 @@ function RetentionLedgerScreen({
       letterSpacing: 0.6
     }
   }, "UPCOMING RELEASES \xB7 ", led.upcoming.length), React.createElement("button", {
+    type: "button",
     onClick: remindAll,
     style: {
       padding: '6px 12px',

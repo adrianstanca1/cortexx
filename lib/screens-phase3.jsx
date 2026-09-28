@@ -111,12 +111,12 @@ function LoginSheet({ onClose, accent }) {
               </div>
 
               <div style={{ marginTop: 32, display: 'flex', flexDirection: 'column', gap: 10 }}>
-                <button onClick={() => setStep('email')} style={{
+                <button type="button" onClick={() => setStep('email')} style={{
                   background: accent, color: '#fff', border: 'none', borderRadius: 14,
                   padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer',
                   boxShadow: `0 6px 18px ${accent}55`,
                 }}>Get started — it's free</button>
-                <button onClick={() => setStep('signin')} style={{
+                <button type="button" onClick={() => setStep('signin')} style={{
                   background: 'transparent', color: T.t1, border: `0.5px solid ${T.hairMid}`,
                   borderRadius: 14, padding: '14px',
                   fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer',
@@ -130,19 +130,19 @@ function LoginSheet({ onClose, accent }) {
               <div style={{ fontFamily: SF, fontSize: 26, fontWeight: 600, color: T.t1, letterSpacing: -0.5, lineHeight: 1.15 }}>Welcome back.</div>
               <div style={{ fontFamily: SF, fontSize: 13, color: T.t2, marginTop: 6 }}>Sign in to continue managing your sites.</div>
 
-              <input value={email} onChange={e => setEmail(e.target.value)} type="email" autoFocus placeholder="you@cortexbuild.app"
+              <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@cortexbuild.app"
                 style={{ marginTop: 24, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none' }}/>
               <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Password"
                 style={{ marginTop: 8, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none' }}/>
 
-              <button onClick={signIn} disabled={working} style={{
+              <button type="button" onClick={signIn} disabled={working} style={{
                 marginTop: 16, background: accent, color: '#fff', border: 'none', borderRadius: 14,
                 padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: working ? 0.5 : 1,
               }}>{working ? 'Signing in…' : 'Sign in'}</button>
 
               <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 14, fontFamily: SF, fontSize: 12 }}>
-                <button onClick={() => toast('Reset link sent', 'success')} style={{ background: 'none', border: 'none', color: accent, cursor: 'pointer', padding: 0 }}>Forgot password?</button>
-                <button onClick={() => setStep('start')} style={{ background: 'none', border: 'none', color: T.t3, cursor: 'pointer', padding: 0 }}>Back</button>
+                <button type="button" onClick={() => toast('Reset link sent', 'success')} style={{ background: 'none', border: 'none', color: accent, cursor: 'pointer', padding: 0 }}>Forgot password?</button>
+                <button type="button" onClick={() => setStep('start')} style={{ background: 'none', border: 'none', color: T.t3, cursor: 'pointer', padding: 0 }}>Back</button>
               </div>
             </>
           )}
@@ -151,16 +151,16 @@ function LoginSheet({ onClose, accent }) {
             <>
               <div style={{ fontFamily: SF, fontSize: 26, fontWeight: 600, color: T.t1, letterSpacing: -0.5, lineHeight: 1.15 }}>What's your email?</div>
               <div style={{ fontFamily: SF, fontSize: 13, color: T.t2, marginTop: 6 }}>We'll set you up. No credit card, no trial limit.</div>
-              <input value={email} onChange={e => setEmail(e.target.value)} type="email" autoFocus placeholder="you@yourcompany.co.uk"
+              <input value={email} onChange={e => setEmail(e.target.value)} type="email" placeholder="you@yourcompany.co.uk"
                 style={{ marginTop: 24, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none' }}/>
               <input value={password} onChange={e => setPassword(e.target.value)} type="password" placeholder="Choose a password"
                 style={{ marginTop: 8, background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none' }}/>
-              <button onClick={signUp} disabled={!email.trim() || !password || working} style={{
+              <button type="button" onClick={signUp} disabled={!email.trim() || !password || working} style={{
                 marginTop: 16, background: (email.trim() && password) ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 14,
                 padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700,
                 cursor: (email.trim() && password && !working) ? 'pointer' : 'default', opacity: working ? 0.5 : 1,
               }}>{working ? 'Setting up your workspace…' : 'Create my workspace'}</button>
-              <button onClick={() => setStep('start')} style={{ background: 'none', border: 'none', color: T.t3, cursor: 'pointer', padding: '12px 0', fontFamily: SF, fontSize: 12, marginTop: 8 }}>Back</button>
+              <button type="button" onClick={() => setStep('start')} style={{ background: 'none', border: 'none', color: T.t3, cursor: 'pointer', padding: '12px 0', fontFamily: SF, fontSize: 12, marginTop: 8 }}>Back</button>
             </>
           )}
         </div>
@@ -218,7 +218,7 @@ function SettingsScreen({ accent }) {
     <ScreenBg accent={accent}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
         <div style={{ padding: '4px 16px 12px', display: 'flex', alignItems: 'center' }}>
-          <button onClick={back} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+          <button type="button" onClick={back} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
             {Ic.chevL} <span>Settings</span>
           </button>
         </div>
@@ -427,7 +427,7 @@ function HelpScreen({ accent }) {
 
         {/* AI Help shortcut */}
         <div style={{ padding: '4px 16px 14px' }}>
-          <button onClick={() => window.cortexxNav('ai')} style={{
+          <button type="button" onClick={() => window.cortexxNav('ai')} style={{
             width: '100%', background: `linear-gradient(135deg, ${T.purple}, ${accent})`,
             border: 'none', borderRadius: 14, padding: '14px 16px',
             color: '#fff', cursor: 'pointer', textAlign: 'left',
@@ -453,7 +453,7 @@ function HelpScreen({ accent }) {
               <div key={i} style={{
                 borderBottom: i === a.length - 1 ? 'none' : `0.5px solid ${T.hair}`,
               }}>
-                <button onClick={() => setOpen(open === i ? null : i)} style={{
+                <button type="button" onClick={() => setOpen(open === i ? null : i)} style={{
                   width: '100%', background: 'transparent', border: 'none',
                   padding: '12px 14px', cursor: 'pointer', textAlign: 'left',
                   display: 'flex', alignItems: 'center', gap: 10, color: T.t1,
@@ -503,7 +503,7 @@ function PurchaseOrdersScreen({ accent }) {
         <MobileHeader
           title="Purchase orders"
           subtitle={`£${total.toLocaleString()} open · ${pos.filter(p => p.status === 'open').length} POs`}
-          right={<button onClick={async () => {
+          right={<button type="button" onClick={async () => {
             const next = 'PO-' + (1043 + Math.floor(Math.random() * 50));
             await Backend.db.purchaseOrders.create({
               id: next, supplier: 'New supplier', projectId: 1, total: 0,
@@ -527,7 +527,7 @@ function PurchaseOrdersScreen({ accent }) {
             const proj = projects.find(p => p.id == po.projectId);
             const c = PO_STATUS_C[po.status];
             return (
-              <div key={po.id} onClick={() => {
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={po.id} onClick={() => {
                 if (po.status === 'open') {
                   Backend.db.purchaseOrders.update(po.id, { status: 'received' });
                   toast(`${po.id} marked received`, 'success');
@@ -592,7 +592,7 @@ function ClientPortalScreen({ accent }) {
         <div style={{ padding: '8px 16px 4px', background: `linear-gradient(135deg, ${T.purple}22, ${accent}11)`, marginBottom: 8 }}>
           <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
             <Pill c={T.purple} solid size="xs">CLIENT PORTAL · PREVIEW</Pill>
-            <button onClick={shareLink} style={{
+            <button type="button" onClick={shareLink} style={{
               background: T.purple, color: '#fff', border: 'none', borderRadius: 16, padding: '6px 12px',
               fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
             }}>{React.cloneElement(Ic.share, { size: 12 })} Share link</button>
@@ -603,7 +603,7 @@ function ClientPortalScreen({ accent }) {
           {/* Project selector */}
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '10px 0 2px' }}>
             {liveProjects.map(p => (
-              <button key={p.id} onClick={() => setPid(p.id)} style={{
+              <button type="button" key={p.id} onClick={() => setPid(p.id)} style={{
                 background: pid == p.id ? accent : T.bg2, color: pid == p.id ? '#fff' : T.t2,
                 border: `0.5px solid ${pid == p.id ? accent : T.hairMid}`, borderRadius: 14,
                 padding: '5px 11px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
@@ -676,7 +676,7 @@ function ClientPortalScreen({ accent }) {
                   title={`${iv.id} · £${iv.amount.toLocaleString()}`}
                   sub={iv.status === 'paid' ? `Paid ${_formatRelDate(iv.paid)}` : `Due ${_formatRelDate(iv.due)}`}
                   right={iv.status === 'paid' ? <Pill c={c} size="xs">{iv.status}</Pill> : (
-                    <button onClick={(e)=>{e.stopPropagation(); if(window.cortexxNav) window.cortexxNav('payinvoice:'+iv.id);}}
+                    <button type="button" onClick={(e)=>{e.stopPropagation(); if(window.cortexxNav) window.cortexxNav('payinvoice:'+iv.id);}}
                       style={{ padding:'5px 10px', borderRadius: 6, border:'1px solid '+T.hair, background:c, color:'#fff', fontFamily: 'inherit', fontSize: 11, fontWeight: 700, textTransform:'uppercase', letterSpacing: 0.4, cursor:'pointer' }}>Pay</button>
                   )}
                   isLast={i === a.length - 1}/>
@@ -696,7 +696,7 @@ function ClientPortalScreen({ accent }) {
               <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: T.t1 }}>Adrian Stanca</div>
               <div style={{ fontFamily: SF, fontSize: 11, color: T.t2 }}>Project lead · CortexBuild Ltd</div>
             </div>
-            <button style={{
+            <button type="button" style={{
               background: accent, color: '#fff', border: 'none', borderRadius: 18,
               padding: '7px 14px', fontFamily: SF, fontSize: 12, fontWeight: 700,
               cursor: 'pointer',

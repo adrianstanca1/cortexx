@@ -87,6 +87,7 @@ function NfcProvisionScreen({
       gap: 8
     }
   }, projects.map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => {
       setPid(p.id);
@@ -149,6 +150,14 @@ function NfcProvisionScreen({
       margin: '20px 2px 8px'
     }
   }, "Check-in link"), React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     onClick: copy,
     style: {
       background: T.bg0,
@@ -173,6 +182,7 @@ function NfcProvisionScreen({
       color: copied ? T.green : accent
     }
   }, copied ? '✓ Copied' : 'Copy')), supported ? React.createElement("button", {
+    type: "button",
     onClick: write,
     disabled: writing,
     style: {

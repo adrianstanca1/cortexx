@@ -137,6 +137,7 @@ function AdminScreen({
     title: "Org admin",
     subtitle: `${tenant.name} · ${members.length} members`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => setInviteOpen(!inviteOpen),
       style: {
         width: 36,
@@ -232,6 +233,7 @@ function AdminScreen({
     key: r,
     value: r
   }, r))), React.createElement("button", {
+    type: "button",
     onClick: () => {
       if (!iName.trim()) {
         toast('Name required', 'error');
@@ -295,6 +297,7 @@ function AdminScreen({
     c: T.amber,
     size: "xs"
   }, "invited"), React.createElement("button", {
+    type: "button",
     onClick: () => setEditing(editing === m.id ? null : m.id),
     style: {
       background: `${roleC[m.role] || accent}22`,
@@ -315,6 +318,7 @@ function AdminScreen({
       gap: 5
     }
   }, roles.map(r => React.createElement("button", {
+    type: "button",
     key: r,
     onClick: () => {
       window.CortexMembers.setRole(m.id, r);
@@ -334,6 +338,7 @@ function AdminScreen({
       fontWeight: 600
     }
   }, r)), React.createElement("button", {
+    type: "button",
     onClick: () => {
       window.CortexMembers.remove(m.id);
       refresh();

@@ -235,6 +235,7 @@ function PhotoMentionSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -275,6 +276,7 @@ function PhotoMentionSheet({
       display: 'none'
     }
   }), !preview ? React.createElement("button", {
+    type: "button",
     onClick: () => fileRef.current && fileRef.current.click(),
     style: {
       width: '100%',
@@ -308,6 +310,7 @@ function PhotoMentionSheet({
       display: 'block'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: () => fileRef.current && fileRef.current.click(),
     style: {
       position: 'absolute',
@@ -323,6 +326,7 @@ function PhotoMentionSheet({
       cursor: 'pointer'
     }
   }, "Change")), preview && !result && React.createElement("button", {
+    type: "button",
     onClick: analyse,
     disabled: busy,
     style: {
@@ -404,6 +408,7 @@ function PhotoMentionSheet({
       color: T.t3
     }
   }, it.priority, " priority")), React.createElement("button", {
+    type: "button",
     onClick: () => file(it, i),
     disabled: filed[i],
     style: {
@@ -459,6 +464,7 @@ function InboxTriageSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -517,6 +523,7 @@ function InboxTriageSheet({
       resize: 'vertical'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: triage,
     disabled: busy || !text.trim(),
     style: {
@@ -602,6 +609,7 @@ function InboxTriageSheet({
       fontWeight: 600
     }
   }, "\u2713 Filed as ", filed.kind, ": ", filed.record.name || filed.record.title) : React.createElement("button", {
+    type: "button",
     onClick: file,
     style: {
       width: '100%',

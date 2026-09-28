@@ -69,6 +69,7 @@
         marginBottom: 16
       }
     }, [['pipeline', 'Pipeline'], ['takeoff', 'Takeoff'], ['rfq', 'RFQ'], ['analytics', 'Win/Loss']].map(([k, l]) => React.createElement('button', {
+      type: 'button',
       key: k,
       onClick: () => setTab(k),
       style: {
@@ -170,6 +171,7 @@
           marginTop: 10
         }
       }, stage.k !== 'submitted' && React.createElement('button', {
+        type: 'button',
         onClick: e => {
           e.stopPropagation();
           advance(b);
@@ -186,6 +188,7 @@
           cursor: 'pointer'
         }
       }, 'Advance →'), stage.k === 'submitted' && React.createElement(React.Fragment, null, React.createElement('button', {
+        type: 'button',
         onClick: e => {
           e.stopPropagation();
           mark(b, 'won');
@@ -202,6 +205,7 @@
           cursor: 'pointer'
         }
       }, '✓ Won'), React.createElement('button', {
+        type: 'button',
         onClick: e => {
           e.stopPropagation();
           mark(b, 'lost');
@@ -289,6 +293,7 @@
             color: acc
           }
         }, money(total))), React.createElement('button', {
+          type: 'button',
           onClick: () => window.cortexxNav && window.cortexxNav('addtakeoff', b),
           style: {
             marginTop: 12,
@@ -372,6 +377,7 @@
             color: T.t1
           }
         }, money(r.price)), React.createElement('button', {
+          type: 'button',
           onClick: async () => {
             for (const x of rows) await Backend.db.rfqs.update(x.id, {
               selected: x.id === r.id
@@ -571,6 +577,7 @@
         color: T.t3
       }
     }, 'Win rate'))), React.createElement(TabBar), tab === 'pipeline' && React.createElement(Pipeline), tab === 'takeoff' && React.createElement(Takeoff), tab === 'rfq' && React.createElement(RFQ), tab === 'analytics' && React.createElement(Analytics), tab === 'pipeline' && React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('addbid'),
       style: {
         marginTop: 16,
@@ -613,6 +620,7 @@
         padding: '20px 20px 16px'
       }
     }, React.createElement('button', {
+      type: 'button',
       onClick: onClose,
       style: {
         width: 36,

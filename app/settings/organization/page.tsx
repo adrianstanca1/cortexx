@@ -174,7 +174,7 @@ export default function OrganizationSettingsPage() {
         {loading ? (
           <div style={{ color: 'var(--t3)', fontSize: 12, fontFamily: 'var(--font-system)' }}>Loading…</div>
         ) : error ? (
-          <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
+          <div style={{ color: '#f87171', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {members.map(m => (
@@ -216,9 +216,9 @@ export default function OrganizationSettingsPage() {
                   )}
                 </div>
                 {canManage && m.role !== 'owner' && (
-                  <button
+                  <button type="button"
                     onClick={() => removeMember(m.id, m.email)}
-                    style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 12, padding: '4px 8px' }}
+                    style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 12, padding: '4px 8px' }}
                   >
                     Remove
                   </button>
@@ -462,7 +462,7 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
               {plan.features.slice(0, 5).map(f => <li key={f} style={{ marginBottom: 2 }}>• {f}</li>)}
             </ul>
             {canManage && plan.key !== 'enterprise' && (
-              <button
+              <button type="button"
                 onClick={() => {
                   if (memberOverflow) {
                     const overBy = billing!.memberCount - plan.limits.users
@@ -481,7 +481,7 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
         })}
       </div>
       {canManage && (
-        <button
+        <button type="button"
           onClick={openPortal}
           disabled={!!busy}
           style={{ marginTop: 12, padding: '8px 14px', borderRadius: 8, background: 'transparent', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', opacity: busy ? 0.5 : 1 }}

@@ -155,6 +155,7 @@ function LaunchScreen({
       padding: '4px 16px 8px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setSection(null),
     style: {
       background: 'none',

@@ -92,6 +92,7 @@ function DigestScreen({
     on,
     onClick
   }) => React.createElement("button", {
+    type: "button",
     onClick: onClick,
     style: {
       width: 44,
@@ -203,6 +204,7 @@ function DigestScreen({
       gap: 6
     }
   }, FREQ.map(f => React.createElement("button", {
+    type: "button",
     key: f.k,
     onClick: () => save({
       ...cfg,
@@ -449,6 +451,7 @@ function DigestScreen({
       padding: '4px 16px 0'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: sendTest,
     disabled: total === 0,
     style: {

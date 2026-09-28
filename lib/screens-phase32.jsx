@@ -129,14 +129,14 @@ function CommandPalette({ onClose, accent }) {
   React.useEffect(() => { setActiveIdx(0); }, [q]);
 
   return (
-    <div onClick={onClose} style={{
+    <div style={{
       position: 'absolute', inset: 0, zIndex: 200,
       background: 'rgba(0,0,0,0.6)',
       display: 'flex', alignItems: 'flex-start', justifyContent: 'center',
       paddingTop: 60, animation: 'fade 0.15s',
     }}>
       <style>{`@keyframes fade { from { opacity: 0 } to { opacity: 1 } }`}</style>
-      <div onClick={e => e.stopPropagation()} style={{
+      <div role="presentation" onClick={e => e.stopPropagation()} style={{
         width: '90%', maxWidth: 380, background: T.bg1,
         borderRadius: 14, border: `0.5px solid ${T.hairStrong}`,
         boxShadow: '0 24px 64px rgba(0,0,0,0.6)',
@@ -154,7 +154,7 @@ function CommandPalette({ onClose, accent }) {
             <div style={{ padding: 30, textAlign: 'center', fontFamily: SF, fontSize: 13, color: T.t3 }}>No matches for "{q}"</div>
           )}
           {results.map((r, i) => (
-            <button key={r.l} onClick={() => run(r)}
+            <button type="button" key={r.l} onClick={() => run(r)}
               onMouseEnter={() => setActiveIdx(i)}
               style={{
                 width: '100%', background: i === activeIdx ? T.bg3 : 'transparent',

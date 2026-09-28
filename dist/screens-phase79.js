@@ -248,6 +248,7 @@ function PhotoToSnagSheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -275,6 +276,7 @@ function PhotoToSnagSheet({
       padding: '14px 16px 24px'
     }
   }, stage === 'pick' && React.createElement(React.Fragment, null, React.createElement("button", {
+    type: "button",
     onClick: pick,
     style: {
       width: '100%',
@@ -339,6 +341,7 @@ function PhotoToSnagSheet({
     }
   }, React.createElement("img", {
     src: previewUrl,
+    alt: "Defect inspection while scanning",
     style: {
       width: '100%',
       maxHeight: 280,
@@ -389,6 +392,7 @@ function PhotoToSnagSheet({
     }
   }, React.createElement("img", {
     src: previewUrl,
+    alt: "Defect inspection",
     style: {
       width: '100%',
       maxHeight: 180,
@@ -420,6 +424,14 @@ function PhotoToSnagSheet({
   }, result.snags.map((sn, i) => {
     const sel = picked.has(i);
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: i,
       onClick: () => toggle(i),
       style: {
@@ -500,6 +512,7 @@ function PhotoToSnagSheet({
       paddingBottom: 4
     }
   }, projects.filter(p => p.status !== 'completed').map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -516,6 +529,7 @@ function PhotoToSnagSheet({
       cursor: 'pointer'
     }
   }, p.name))), React.createElement("button", {
+    type: "button",
     onClick: fileSelected,
     disabled: picked.size === 0,
     style: {
@@ -540,6 +554,7 @@ function PhotoToSnagSheet({
   }, React.cloneElement(Ic.check, {
     size: 15
   }), "File ", picked.size, " snag", picked.size !== 1 ? 's' : ''), React.createElement("button", {
+    type: "button",
     onClick: pick,
     style: {
       marginTop: 8,

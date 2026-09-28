@@ -139,7 +139,7 @@ export default function ChatIndexPage() {
               {items.filter(i => !i.archivedAt).length} active conversation{items.filter(i => !i.archivedAt).length === 1 ? '' : 's'}
             </p>
           </div>
-          <button onClick={() => setShowCompose(true)} aria-label="New conversation" style={{ padding: '8px 14px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowCompose(true)} aria-label="New conversation" style={{ padding: '8px 14px', borderRadius: 10, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             + New
           </button>
         </div>
@@ -153,7 +153,7 @@ export default function ChatIndexPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcBell size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No conversations yet</p>
-          <button onClick={() => setShowCompose(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowCompose(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Start one
           </button>
         </div>
@@ -182,27 +182,27 @@ export default function ChatIndexPage() {
 
       {showCompose && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowCompose(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowCompose(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>New conversation</h2>
-              <button onClick={() => setShowCompose(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowCompose(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
-              <label style={labelStyle}>Project (optional)</label>
-              <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-193" style={labelStyle}>Project (optional)</label>
+              <select id="field-193" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 <option value="">— Workspace-wide —</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
 
             <div>
-              <label style={labelStyle}>Title</label>
-              <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What's this thread about?" style={inputStyle} />
+              <label htmlFor="field-201" style={labelStyle}>Title</label>
+              <input id="field-201" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What's this thread about?" style={inputStyle} />
             </div>
 
-            <button onClick={create} disabled={saving || !form.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={create} disabled={saving || !form.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1 }}>
               {saving ? 'Creating…' : 'Start chat'}
             </button>
           </div>

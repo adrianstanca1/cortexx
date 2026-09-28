@@ -138,7 +138,7 @@ export default function ReceiptsPage() {
       <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 9 }}><IcChevL size={18} color="var(--t3)" /><span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span></Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
         <div><h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 800, color: 'var(--t1)' }}>Receipts</h1><p style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>AI OCR · review · approve · reconcile</p></div>
-        <Link href="/capture?type=receipt" aria-label="Scan receipt" style={{ width: 38, height: 38, borderRadius: 11, background: '#10b981', display: 'grid', placeItems: 'center' }}><IcCamera size={18} color="#fff" /></Link>
+        <Link href="/capture?type=receipt" aria-label="Scan receipt" style={{ width: 38, height: 38, borderRadius: 11, background: '#047857', display: 'grid', placeItems: 'center' }}><IcCamera size={18} color="#fff" /></Link>
       </div>
     </div>
 
@@ -176,7 +176,7 @@ export default function ReceiptsPage() {
           </div>
           {r.notes && <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', lineHeight: 1.4, marginTop: 8 }}>{r.notes}</div>}
           <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-            {r.document.url && <a href={r.document.url} target="_blank" rel="noreferrer" style={smallBtn('var(--t2)')}>Image</a>}
+            {r.document.url && <a href={r.document.url} target="_blank" rel="noopener noreferrer" style={smallBtn('var(--t2)')}>Image</a>}
             {r.status !== 'reconciled' && <button type="button" disabled={scanning === r.id} onClick={() => rescan(r)} style={smallBtn('#8b5cf6')}><IcSpark size={10} color="#8b5cf6" /> {scanning === r.id ? 'Scanning…' : 'Re-scan'}</button>}
             <button type="button" onClick={() => openEdit(r)} style={smallBtn(r.status === 'approved' ? '#10b981' : '#3b82f6')}>{r.status === 'approved' ? 'Reconcile' : r.status === 'reconciled' ? 'View' : 'Review'}</button>
           </div>
@@ -187,7 +187,7 @@ export default function ReceiptsPage() {
     <TabBar />
 
     {editing && <div style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-      <div onClick={() => setEditing(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
+      <button type="button" aria-label="Close dialog" onClick={() => setEditing(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
       <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 34px', maxHeight: '92dvh', overflowY: 'auto', display: 'grid', gap: 11 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><div><h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>Review receipt</h2><div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', marginTop: 2 }}>{editing.project?.name || 'Unassigned'} · {editing.document.name}</div></div><button type="button" onClick={() => setEditing(null)} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t2)" /></button></div>
         <Field label="Vendor"><input value={form.vendor} onChange={e => setForm(p => ({ ...p, vendor: e.target.value }))} style={inputStyle} /></Field>

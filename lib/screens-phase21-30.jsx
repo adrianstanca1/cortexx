@@ -33,7 +33,7 @@ function APIScreen({ accent }) {
     <Section title="API access">
       <GroupedList>
         <Row icon={Ic.zap} iconBg={accent} title="API key" sub="cxx_live_••••••••••••3f42"
-          right={<button onClick={async () => { try { await navigator.clipboard.writeText('cxx_live_demo_key_3f42'); toast('Copied', 'success'); } catch { toast('Copy failed', 'error'); } }} style={{ background: T.bg3, color: T.t1, border: 'none', borderRadius: 8, padding: '4px 10px', fontFamily: SFMono, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>COPY</button>}/>
+          right={<button type="button" onClick={async () => { try { await navigator.clipboard.writeText('cxx_live_demo_key_3f42'); toast('Copied', 'success'); } catch { toast('Copy failed', 'error'); } }} style={{ background: T.bg3, color: T.t1, border: 'none', borderRadius: 8, padding: '4px 10px', fontFamily: SFMono, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>COPY</button>}/>
         <Row icon={Ic.swap} iconBg={T.purple} title="Webhooks" sub="3 endpoints configured"
           onClick={() => window.open('/docs/webhooks', '_blank')}/>
         <Row icon={Ic.book} iconBg={T.cyan} title="API docs" sub="cortexbuildpro.tech/docs" isLast
@@ -68,7 +68,7 @@ function TemplateLibScreen({ accent }) {
       right={<HeaderBtn icon={Ic.plus} accent={accent} onClick={() => window.cortexxNav('addtemplate')}/>}/>
     <Section><GroupedList>
       {tpls.map((t, i, a) => <Row key={t.k} icon={t.i} iconBg={t.c} title={t.l} sub={`Used ${t.used} times`}
-        right={<button style={{ background: T.bg3, color: T.t1, border: 'none', borderRadius: 14, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>USE</button>}
+        right={<button type="button" style={{ background: T.bg3, color: T.t1, border: 'none', borderRadius: 14, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>USE</button>}
         isLast={i === a.length - 1} onClick={() => toast(`Using "${t.l}"`, 'success')}/>)}
     </GroupedList></Section>
   </div></ScreenBg>;
@@ -208,10 +208,10 @@ function TourSheet({ onClose, accent }) {
         <div style={{ fontFamily: SF, fontSize: 15, color: T.t2, marginTop: 14, lineHeight: 1.5 }}>{s.d}</div>
       </div>
       <div style={{ display: 'flex', gap: 8 }}>
-        {step > 0 && <button onClick={() => setStep(step - 1)} style={{ background: T.bg2, color: T.t1, border: `0.5px solid ${T.hairMid}`, borderRadius: 14, padding: '14px 20px', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Back</button>}
-        <button onClick={() => step < STEPS.length - 1 ? setStep(step + 1) : onClose()} style={{ flex: 1, background: accent, color: '#fff', border: 'none', borderRadius: 14, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: `0 6px 18px ${accent}55` }}>{step < STEPS.length - 1 ? 'Next' : 'Get started'}</button>
+        {step > 0 && <button type="button" onClick={() => setStep(step - 1)} style={{ background: T.bg2, color: T.t1, border: `0.5px solid ${T.hairMid}`, borderRadius: 14, padding: '14px 20px', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Back</button>}
+        <button type="button" onClick={() => step < STEPS.length - 1 ? setStep(step + 1) : onClose()} style={{ flex: 1, background: accent, color: '#fff', border: 'none', borderRadius: 14, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer', boxShadow: `0 6px 18px ${accent}55` }}>{step < STEPS.length - 1 ? 'Next' : 'Get started'}</button>
       </div>
-      <button onClick={onClose} style={{ background: 'none', border: 'none', color: T.t3, fontFamily: SF, fontSize: 13, padding: '12px', cursor: 'pointer', marginTop: 4 }}>Skip tour</button>
+      <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: T.t3, fontFamily: SF, fontSize: 13, padding: '12px', cursor: 'pointer', marginTop: 4 }}>Skip tour</button>
     </div>
   </Sheet>;
 }
@@ -265,12 +265,12 @@ function TomorrowSheet({ onClose, accent }) {
   };
   return <Sheet onClose={onClose}>
     <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-      <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+      <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
       <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1, display: 'flex', alignItems: 'center', gap: 5 }}>{React.cloneElement(Ic.spark, { size: 14 })} Tomorrow</div>
       <div style={{ width: 50 }}/>
     </div>
     <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 24px' }}>
-      <button onClick={generate} disabled={loading} style={{ width: '100%', padding: '14px', background: loading ? T.bg3 : `linear-gradient(135deg, ${T.purple}, ${accent})`, color: '#fff', border: 'none', borderRadius: 12, fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: loading ? 'default' : 'pointer' }}>{loading ? 'Cortex thinking…' : 'Generate tomorrow\'s plan'}</button>
+      <button type="button" onClick={generate} disabled={loading} style={{ width: '100%', padding: '14px', background: loading ? T.bg3 : `linear-gradient(135deg, ${T.purple}, ${accent})`, color: '#fff', border: 'none', borderRadius: 12, fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: loading ? 'default' : 'pointer' }}>{loading ? 'Cortex thinking…' : 'Generate tomorrow\'s plan'}</button>
       {brief && (
         <div style={{ marginTop: 16, background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 14, padding: 16 }}>
           <div style={{ fontFamily: SF, fontSize: 11, color: T.purple, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 10 }}>◆ AI brief</div>

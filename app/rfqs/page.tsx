@@ -185,7 +185,7 @@ export default function RfqsPage() {
 
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'sent', 'awarded', 'closed', 'cancelled'] as const).map(value => (
-          <button key={value} onClick={() => setFilter(value)} style={filterButton(filter === value)}>
+          <button type="button" key={value} onClick={() => setFilter(value)} style={filterButton(filter === value)}>
             {value === 'all' ? 'All' : RFQ_META[value].label}
           </button>
         ))}
@@ -229,8 +229,8 @@ export default function RfqsPage() {
                               {supplier.paymentTerms || supplier.category}
                             </div>
                           </div>
-                          {!quote && rfq.status === 'sent' && <button onClick={() => openQuote(rfq, supplier)} style={actionBtn('#8b5cf6')}>Enter quote</button>}
-                          {quote && rfq.status === 'sent' && quote.status === 'received' && <button onClick={() => openQuote(rfq, supplier)} style={actionBtn('var(--t3)')}>Edit</button>}
+                          {!quote && rfq.status === 'sent' && <button type="button" onClick={() => openQuote(rfq, supplier)} style={actionBtn('#8b5cf6')}>Enter quote</button>}
+                          {quote && rfq.status === 'sent' && quote.status === 'received' && <button type="button" onClick={() => openQuote(rfq, supplier)} style={actionBtn('var(--t3)')}>Edit</button>}
                         </div>
 
                         {quote && (
@@ -251,7 +251,7 @@ export default function RfqsPage() {
                               </div>
                             )}
                             {rfq.status === 'sent' && quote.status === 'received' && (
-                              <button onClick={() => award(rfq, quote)} disabled={saving} style={{ ...actionBtn('#22c55e'), marginTop: 8 }}>Award & create PO</button>
+                              <button type="button" onClick={() => award(rfq, quote)} disabled={saving} style={{ ...actionBtn('#22c55e'), marginTop: 8 }}>Award & create PO</button>
                             )}
                           </div>
                         )}
@@ -269,22 +269,22 @@ export default function RfqsPage() {
 
       {quoteFor && (
         <Modal title={`${quoteFor.rfq.reference} · ${quoteFor.supplier.name}`} close={() => setQuoteFor(null)}>
-          <label style={labelStyle}>Supplier quote reference</label>
-          <input value={quoteForm.reference} onChange={e => setQuoteForm(v => ({ ...v, reference: e.target.value }))} style={inputStyle} placeholder="e.g. Q-1042" />
+          <label htmlFor="field-272" style={labelStyle}>Supplier quote reference</label>
+          <input id="field-272" value={quoteForm.reference} onChange={e => setQuoteForm(v => ({ ...v, reference: e.target.value }))} style={inputStyle} placeholder="e.g. Q-1042" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div>
-              <label style={labelStyle}>VAT %</label>
-              <input type="number" min="0" max="100" step="0.1" value={quoteForm.vatRate} onChange={e => setQuoteForm(v => ({ ...v, vatRate: e.target.value }))} style={inputStyle} />
+              <label htmlFor="field-276" style={labelStyle}>VAT %</label>
+              <input id="field-276" type="number" min="0" max="100" step="0.1" value={quoteForm.vatRate} onChange={e => setQuoteForm(v => ({ ...v, vatRate: e.target.value }))} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Lead days</label>
-              <input type="number" min="0" step="1" value={quoteForm.leadDays} onChange={e => setQuoteForm(v => ({ ...v, leadDays: e.target.value }))} style={inputStyle} />
+              <label htmlFor="field-280" style={labelStyle}>Lead days</label>
+              <input id="field-280" type="number" min="0" step="1" value={quoteForm.leadDays} onChange={e => setQuoteForm(v => ({ ...v, leadDays: e.target.value }))} style={inputStyle} />
             </div>
           </div>
-          <label style={labelStyle}>Valid until</label>
-          <input type="date" value={quoteForm.validUntil} onChange={e => setQuoteForm(v => ({ ...v, validUntil: e.target.value }))} style={inputStyle} />
+          <label htmlFor="field-284" style={labelStyle}>Valid until</label>
+          <input id="field-284" type="date" value={quoteForm.validUntil} onChange={e => setQuoteForm(v => ({ ...v, validUntil: e.target.value }))} style={inputStyle} />
 
-          <label style={labelStyle}>Price each requisition line</label>
+          <div style={labelStyle}>Price each requisition line</div>
           {quoteFor.rfq.requisition.lineItems.map((line, index) => (
             <div key={index} style={{ background: 'var(--surface-raised)', padding: 10, borderRadius: 9 }}>
               <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t1)', fontWeight: 700 }}>{line.description}</div>
@@ -292,9 +292,9 @@ export default function RfqsPage() {
               <input type="number" min="0.01" step="0.01" value={quoteForm.prices[index] || ''} onChange={e => updatePrice(index, e.target.value)} placeholder="Unit price £" style={{ ...inputStyle, marginTop: 7 }} />
             </div>
           ))}
-          <label style={labelStyle}>Notes</label>
-          <textarea rows={2} value={quoteForm.notes} onChange={e => setQuoteForm(v => ({ ...v, notes: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} />
-          <button onClick={saveQuote} disabled={saving} style={primaryBtn}>{saving ? 'Saving…' : 'Save supplier quote'}</button>
+          <label htmlFor="field-295" style={labelStyle}>Notes</label>
+          <textarea id="field-295" rows={2} value={quoteForm.notes} onChange={e => setQuoteForm(v => ({ ...v, notes: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} />
+          <button type="button" onClick={saveQuote} disabled={saving} style={primaryBtn}>{saving ? 'Saving…' : 'Save supplier quote'}</button>
         </Modal>
       )}
     </div>
@@ -322,11 +322,11 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function Modal({ title, close, children }: { title: string; close: () => void; children: React.ReactNode }) {
   return (
-    <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,.58)', display: 'flex', alignItems: 'flex-end' }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#0a1426', borderRadius: '20px 20px 0 0', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,.58)', display: 'flex', alignItems: 'flex-end' }}>
+      <div role="presentation" onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#0a1426', borderRadius: '20px 20px 0 0', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, color: 'var(--t1)', fontFamily: SF, fontSize: 17 }}>{title}</h2>
-          <button onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t3)" /></button>
+          <button type="button" onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t3)" /></button>
         </div>
         {children}
       </div>
@@ -346,9 +346,9 @@ const cardStyle: React.CSSProperties = { background: 'var(--surface-raised)', bo
 const mono: React.CSSProperties = { fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'var(--t2)', fontWeight: 700 }
 const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,.1)', borderRadius: 9, padding: '9px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 12, outline: 'none' }
 const labelStyle: React.CSSProperties = { marginTop: 3, fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 700 }
-const primaryBtn: React.CSSProperties = { background: '#8b5cf6', border: 0, borderRadius: 10, padding: 11, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }
+const primaryBtn: React.CSSProperties = { background: '#7c3aed', border: 0, borderRadius: 10, padding: 11, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }
 const actionBtn = (color: string): React.CSSProperties => ({ background: color + '20', color, border: `0.5px solid ${color}66`, borderRadius: 8, padding: '6px 9px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer' })
 const statusPill = (color: string): React.CSSProperties => ({ background: color + '22', color, border: `0.5px solid ${color}55`, borderRadius: 99, padding: '2px 7px', fontFamily: SF, fontSize: 9, fontWeight: 800, textTransform: 'uppercase' })
 const factPill = (color: string): React.CSSProperties => ({ background: color + '18', color, borderRadius: 99, padding: '3px 7px', fontFamily: SF, fontSize: 9, fontWeight: 700 })
-const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#8b5cf6' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
-const navLink = (active: boolean): React.CSSProperties => ({ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', fontFamily: SF, fontSize: 11, fontWeight: 700, background: active ? '#8b5cf6' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)' })
+const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#7c3aed' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
+const navLink = (active: boolean): React.CSSProperties => ({ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', fontFamily: SF, fontSize: 11, fontWeight: 700, background: active ? '#7c3aed' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)' })

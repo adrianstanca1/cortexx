@@ -135,7 +135,7 @@ export default function ProjectGalleryPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginTop: 10 }}>
           {['all', ...types].map(t => (
-            <button key={t} type="button" onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button key={t} type="button" onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#b45309' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {t}
             </button>
           ))}
@@ -154,7 +154,7 @@ export default function ProjectGalleryPage() {
           <div style={{ padding: '40px 20px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
             <IcCamera size={32} color="var(--t3)" />
             <p style={{ fontSize: 13, marginTop: 8 }}>No documents{filter !== 'all' ? ` of type "${filter}"` : ''} yet.</p>
-            <Link href={`/capture?type=photo&projectId=${encodeURIComponent(id)}`} style={{ display: 'inline-block', marginTop: 16, padding: '10px 18px', borderRadius: 12, background: '#f59e0b', color: '#fff', textDecoration: 'none', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Capture photo</Link>
+            <Link href={`/capture?type=photo&projectId=${encodeURIComponent(id)}`} style={{ display: 'inline-block', marginTop: 16, padding: '10px 18px', borderRadius: 12, background: '#b45309', color: '#fff', textDecoration: 'none', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Capture photo</Link>
           </div>
         ) : (
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(150px, 1fr))', gap: 10 }}>
@@ -227,15 +227,15 @@ export default function ProjectGalleryPage() {
           role="dialog"
           aria-modal="true"
           aria-label={active.name}
-          onClick={() => setActive(null)}
+
           style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(2,8,18,0.96)', display: 'flex', flexDirection: 'column' }}
         >
           <button type="button" onClick={() => setActive(null)} aria-label="Close preview" style={{ position: 'absolute', top: 14, right: 14, zIndex: 2, width: 38, height: 38, borderRadius: 19, border: '0.5px solid rgba(255,255,255,0.16)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 20, cursor: 'pointer' }}>×</button>
-          <div onClick={e => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px 16px 16px' }}>
+          <div role="presentation" onClick={e => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px 16px 16px' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={active.url} alt={active.name} decoding="async" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }} />
           </div>
-          <div onClick={e => e.stopPropagation()} style={{ padding: '14px 18px 24px', background: 'var(--surface-raised)', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+          <div role="presentation" onClick={e => e.stopPropagation()} style={{ padding: '14px 18px 24px', background: 'var(--surface-raised)', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 700, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active.name}</div>
             <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 3 }}>
               <span style={{ textTransform: 'capitalize' }}>{active.type}</span>

@@ -76,7 +76,7 @@ function TrainingMatrixScreen({ accent }) {
 
             {/* rows */}
             {team.map((m, ri) => (
-              <div key={m.id} onClick={() => window.cortexxNav('member', m)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={m.id} onClick={() => window.cortexxNav('member', m)} style={{
                 display: 'flex', alignItems: 'center', gap: 2, padding: '0 8px',
                 borderTop: `0.5px solid ${T.hair}`, cursor: 'pointer',
               }}>
@@ -115,7 +115,7 @@ function TrainingMatrixScreen({ accent }) {
                   icon={Ic.alert} iconBg={T.amber}
                   title={`${m.n} · ${c.name}`}
                   sub={`Expires ${c.expires}`}
-                  right={<button onClick={async (e) => { e.stopPropagation(); toast('Renewal reminder set', 'success'); }} style={{
+                  right={<button type="button" onClick={async (e) => { e.stopPropagation(); toast('Renewal reminder set', 'success'); }} style={{
                     background: T.amber, color: '#0a1830', border: 'none', borderRadius: 14,
                     padding: '5px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 700,
                   }}>Renew</button>}

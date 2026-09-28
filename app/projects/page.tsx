@@ -135,7 +135,7 @@ export default function ProjectsPage() {
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: 'var(--font-system)' }}>Projects</h1>
             <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: 'var(--font-system)' }}>{stats.active} active · {stats.snagging} snagging · {stats.quoting} quoting</p>
           </div>
-          {canCreateProject && <button className="module-primary" onClick={() => setShowModal(true)} aria-label="Create new project" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          {canCreateProject && <button type="button" className="module-primary" onClick={() => setShowModal(true)} aria-label="Create new project" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>}
         </div>
@@ -146,11 +146,11 @@ export default function ProjectsPage() {
         {/* Status filter chips + Archived toggle */}
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginTop: 10 }}>
           {[{ id: 'all', label: 'All', count: projects.length }, { id: 'active', label: 'Active', count: stats.active }, { id: 'snagging', label: 'Snagging', count: stats.snagging }, { id: 'quoting', label: 'Quoting', count: stats.quoting }, { id: 'complete', label: 'Done', count: projects.filter(p => p.status === 'complete').length }].map(f => (
-            <button key={f.id} onClick={() => setStatusFilter(f.id)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: statusFilter === f.id ? (f.id === 'all' ? '#f59e0b' : `${statusColor[f.id] || '#f59e0b'}`) : 'rgba(255,255,255,0.06)', color: statusFilter === f.id ? '#fff' : 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: statusFilter === f.id ? 700 : 400, cursor: 'pointer' }}>
-              {f.label} {f.count > 0 && <span style={{ opacity: 0.8 }}>· {f.count}</span>}
+            <button type="button" key={f.id} onClick={() => setStatusFilter(f.id)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: statusFilter === f.id ? (f.id === 'all' ? '#f59e0b' : `${statusColor[f.id] || '#f59e0b'}`) : 'rgba(255,255,255,0.06)', color: statusFilter === f.id ? '#090b0d' : 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: statusFilter === f.id ? 700 : 400, cursor: 'pointer' }}>
+              {f.label} {f.count > 0 && <span>· {f.count}</span>}
             </button>
           ))}
-          <button
+          <button type="button"
             onClick={() => setShowArchived(v => !v)}
             style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: '1px dashed rgba(82,116,154,0.5)', background: showArchived ? 'rgba(82,116,154,0.2)' : 'transparent', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: showArchived ? 700 : 400, cursor: 'pointer' }}
           >
@@ -175,11 +175,11 @@ export default function ProjectsPage() {
       {/* New project modal */}
       {showModal && canCreateProject && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>New project</h3>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {[
               { key: 'name', label: 'Project name *', placeholder: 'Camden Mews Refurb' },
@@ -189,8 +189,8 @@ export default function ProjectsPage() {
               { key: 'budget', label: 'Budget (£)', placeholder: '85000', type: 'number', min: '0' },
             ].map(f => (
               <div key={f.key}>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>{f.label}</label>
-                <input
+                <label htmlFor={`project-${f.key}`} style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>{f.label}</label>
+                <input id={`project-${f.key}`}
                   value={form[f.key as keyof typeof form]}
                   onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))}
                   placeholder={f.placeholder}
@@ -202,10 +202,10 @@ export default function ProjectsPage() {
             ))}
             {/* Status */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Status</label>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Status</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {STATUSES.map(s => (
-                  <button key={s} onClick={() => setForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: form.status === s ? `${statusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${form.status === s ? statusColor[s] : 'rgba(255,255,255,0.1)'}`, color: form.status === s ? statusColor[s] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
+                  <button type="button" key={s} onClick={() => setForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: form.status === s ? `${statusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${form.status === s ? statusColor[s] : 'rgba(255,255,255,0.1)'}`, color: form.status === s ? statusColor[s] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
                     {statusLabel[s]}
                   </button>
                 ))}
@@ -215,12 +215,12 @@ export default function ProjectsPage() {
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               {[{ key: 'startDate', label: 'Start date' }, { key: 'endDate', label: 'End date' }].map(f => (
                 <div key={f.key}>
-                  <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>{f.label}</label>
-                  <input type="date" value={form[f.key as keyof typeof form]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+                  <label htmlFor={`project-${f.key}`} style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>{f.label}</label>
+                  <input id={`project-${f.key}`} type="date" value={form[f.key as keyof typeof form]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
                 </div>
               ))}
             </div>
-            <button onClick={createProject} disabled={saving || !form.name.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={createProject} disabled={saving || !form.name.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1 }}>
               {saving ? 'Creating…' : 'Create project'}
             </button>
           </div>

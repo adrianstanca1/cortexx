@@ -62,11 +62,11 @@ function RecordPaymentSheet({ invoice, onClose, accent, onDone }) {
           <div style={{ fontFamily: SFMono, fontSize: 15, color: T.green, fontWeight: 700, marginTop: 4 }}>£{paidPayment.amount.toLocaleString()} · {paidPayment.client}</div>
           <div style={{ fontFamily: SF, fontSize: 13, color: T.t2, marginTop: 6 }}>{paidPayment.invoiceId} {paidPayment.full ? 'marked paid' : 'partially settled'}</div>
 
-          <button onClick={() => window.cortexxReceiptPDF && window.cortexxReceiptPDF(paidPayment)} style={{
+          <button type="button" onClick={() => window.cortexxReceiptPDF && window.cortexxReceiptPDF(paidPayment)} style={{
             width: '100%', marginTop: 22, background: accent, color: '#fff', border: 'none', borderRadius: 12, padding: '14px',
             fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,
           }}>{React.cloneElement(Ic.download, { size: 16 })} Issue receipt (PDF)</button>
-          <button onClick={onClose} style={{
+          <button type="button" onClick={onClose} style={{
             width: '100%', marginTop: 8, background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '13px',
             fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer',
           }}>Done</button>
@@ -92,7 +92,7 @@ function RecordPaymentSheet({ invoice, onClose, accent, onDone }) {
         <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Method</div>
         <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 14 }}>
           {PAY_METHODS.map(m => (
-            <button key={m.k} onClick={() => setMethod(m.k)} style={{
+            <button type="button" key={m.k} onClick={() => setMethod(m.k)} style={{
               background: method === m.k ? `${accent}14` : T.bg2, border: `0.5px solid ${method === m.k ? accent : T.hair}`,
               borderRadius: 10, padding: '12px', cursor: 'pointer', fontFamily: SF, fontSize: 13, fontWeight: 600,
               color: method === m.k ? accent : T.t1, display: 'flex', alignItems: 'center', gap: 8,
@@ -113,7 +113,7 @@ function RecordPaymentSheet({ invoice, onClose, accent, onDone }) {
           </div>
         </div>
 
-        <button onClick={confirm} disabled={!valid || busy} style={{
+        <button type="button" onClick={confirm} disabled={!valid || busy} style={{
           width: '100%', background: valid ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '15px',
           fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: valid ? 'pointer' : 'default', opacity: valid ? 1 : 0.5,
         }}>{busy ? 'Saving…' : 'Confirm payment'}</button>
@@ -173,7 +173,7 @@ function PaymentsLedgerScreen({ accent }) {
                 {iv.status === 'paid' ? (
                   <Pill c={T.green} size="xs">PAID</Pill>
                 ) : (
-                  <button onClick={() => setPayInvoice(iv)} style={{
+                  <button type="button" onClick={() => setPayInvoice(iv)} style={{
                     background: accent, color: '#fff', border: 'none', borderRadius: 9, padding: '8px 12px',
                     fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', whiteSpace: 'nowrap',
                   }}>Record payment</button>
@@ -200,7 +200,7 @@ function PaymentsLedgerScreen({ accent }) {
                   </div>
                   <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 4 }}>
                     <span style={{ fontFamily: SFMono, fontSize: 14, color: T.green, fontWeight: 700 }}>£{p.amount.toLocaleString()}</span>
-                    <button onClick={() => window.cortexxReceiptPDF && window.cortexxReceiptPDF(p)} style={{
+                    <button type="button" onClick={() => window.cortexxReceiptPDF && window.cortexxReceiptPDF(p)} style={{
                       background: 'transparent', border: `0.5px solid ${T.hairMid}`, borderRadius: 7, padding: '3px 8px',
                       fontFamily: SF, fontSize: 10, fontWeight: 700, color: T.t2, cursor: 'pointer',
                       display: 'flex', alignItems: 'center', gap: 3,

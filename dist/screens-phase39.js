@@ -310,30 +310,35 @@ function VeraScreen({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: runBriefing,
     disabled: loading.briefing,
     style: veraBtn(T.blue)
   }, React.cloneElement(Ic.sun, {
     size: 16
   }), " ", loading.briefing ? 'Reading…' : 'Daily briefing'), React.createElement("button", {
+    type: "button",
     onClick: runDecisions,
     disabled: loading.decisions,
     style: veraBtn(T.amber)
   }, React.cloneElement(Ic.alert, {
     size: 16
   }), " ", loading.decisions ? 'Thinking…' : 'Decisions'), React.createElement("button", {
+    type: "button",
     onClick: runStrategy,
     disabled: loading.strategy,
     style: veraBtn(T.green)
   }, React.cloneElement(Ic.flag, {
     size: 16
   }), " ", loading.strategy ? 'Drafting…' : '30-day strategy'), React.createElement("button", {
+    type: "button",
     onClick: runLead,
     disabled: loading.lead,
     style: veraBtn(T.purple)
   }, React.cloneElement(Ic.trend, {
     size: 16
   }), " ", loading.lead ? 'Hunting…' : 'Find a lead'), React.createElement("button", {
+    type: "button",
     onClick: runEstimate,
     disabled: loading.estimate,
     style: {
@@ -442,6 +447,7 @@ function VeraScreen({
       marginTop: 10
     }
   }, (d.options || ['Yes', 'No', 'Later']).map((opt, j) => React.createElement("button", {
+    type: "button",
     key: j,
     onClick: () => toast(`"${opt}" recorded`, 'success'),
     style: {

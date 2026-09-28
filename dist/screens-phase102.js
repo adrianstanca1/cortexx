@@ -354,6 +354,7 @@ function BankRecScreen({
     },
     onChange: e => onFile(e.target.files && e.target.files[0])
   }), React.createElement("button", {
+    type: "button",
     onClick: () => fileRef.current && fileRef.current.click(),
     style: {
       width: '100%',
@@ -367,6 +368,7 @@ function BankRecScreen({
       fontWeight: 700
     }
   }, "Choose CSV file"), React.createElement("button", {
+    type: "button",
     onClick: pullFromBank,
     style: {
       width: '100%',
@@ -561,6 +563,7 @@ function BankRecScreen({
       bottom: 12
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: restart,
     style: {
       flex: 1,
@@ -574,6 +577,7 @@ function BankRecScreen({
       fontWeight: 600
     }
   }, "Back"), React.createElement("button", {
+    type: "button",
     onClick: apply,
     disabled: busy || !Object.values(selected).filter(Boolean).length,
     style: {
@@ -613,6 +617,7 @@ function BankRecScreen({
       marginBottom: 24
     }
   }, "Marked paid \xB7 activity logged \xB7 cash flow updated"), React.createElement("button", {
+    type: "button",
     onClick: restart,
     style: {
       padding: '10px 22px',

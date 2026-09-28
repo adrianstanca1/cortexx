@@ -48,7 +48,7 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
       {/* Site selector — SITE label small, project name big with chevron */}
       {activeProject && (
         <div style={{ padding: '8px 20px 18px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <div onClick={() => router.push('/projects')} style={{ cursor: 'pointer' }}>
+          <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => router.push('/projects')} style={{ cursor: 'pointer' }}>
             <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', fontWeight: 600, letterSpacing: 0.3, display: 'flex', alignItems: 'center', gap: 6 }}>
               SITE
               <span title={connected ? 'Live updates connected' : 'Reconnecting…'} style={{ width: 6, height: 6, borderRadius: '50%', background: connected ? '#10b981' : 'var(--t3)', boxShadow: connected ? '0 0 6px #10b98166' : 'none', transition: 'all 0.3s' }} />
@@ -75,7 +75,7 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
       {/* Big primary action — glove-friendly Capture CTA */}
       <div style={{ padding: '0 16px 12px' }}>
         <Link href="/capture" style={{ textDecoration: 'none' }}>
-          <button style={{
+          <button type="button" style={{
             width: '100%', background: `linear-gradient(135deg, ${accent}, ${accent}dd)`,
             border: 'none', borderRadius: 18, padding: '20px 18px',
             color: '#0a1830', cursor: 'pointer',
@@ -114,7 +114,7 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
           { l: 'Voice RFI', s: 'Speak it', c: '#06b6d4', I: IcMic, href: '/capture?type=voice' },
           { l: 'Incident', s: 'Report now', c: '#ef4444', I: IcAlert, href: '/capture?type=incident' },
         ].map(x => (
-          <button
+          <button type="button"
             key={x.l}
             onClick={() => router.push(x.href)}
             style={{
@@ -157,7 +157,7 @@ export default function Field({ accent = '#f59e0b', data }: FieldProps) {
             : done ? 'Done' : task.dueTime ? `Due ${task.dueTime}` : task.dueDate ? `Due ${new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}` : 'Today'
           const c = done ? 'var(--t3)' : inProgress ? accent : 'var(--t1)'
           return (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
               key={task.id}
               onClick={() => toggleTask(task)}
               style={{

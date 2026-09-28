@@ -132,7 +132,7 @@ const Bar = ({ pct, c = T.blue, h = 4, bg = 'rgba(255,255,255,0.08)' }) => (
 const WorkspaceChip = ({ accent = T.blue }) => {
   const rec = window.CortexTenant ? window.CortexTenant.activeRecord() : { name: 'CortexBuild Pro', color: accent };
   return (
-    <button onClick={() => window.cortexxNav && window.cortexxNav('switchworkspace')} title="Switch workspace" style={{
+    <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('switchworkspace')} title="Switch workspace" style={{
       display: 'flex', alignItems: 'center', gap: 4, background: 'transparent', border: 'none', cursor: 'pointer', padding: 0,
     }}>
       <Avatar name={rec.name} size={30} c={rec.color || accent}/>
@@ -161,7 +161,7 @@ function MobileHeader({ title, subtitle, accent = T.blue, right, ws }) {
 }
 
 const HeaderBtn = ({ icon, badge, count, onClick, accent = T.blue }) => (
-  <button onClick={onClick} style={{
+  <button type="button" onClick={onClick} style={{
     width: 36, height: 36, borderRadius: 18,
     background: T.bg2, border: `0.5px solid ${T.hair}`,
     color: T.t1, cursor: 'pointer', position: 'relative',
@@ -209,7 +209,7 @@ function TabBar({ active = 'dashboard', accent = T.blue, onCapture }) {
         if (t.k === '_fab') {
           return (
             <div key="_fab" style={{ flex: 1, display: 'flex', justifyContent: 'center' }}>
-              <button onClick={onCapture} style={{
+              <button type="button" onClick={onCapture} style={{
                 width: 52, height: 52, borderRadius: 26,
                 background: `linear-gradient(135deg, ${accent}, ${accent}cc)`,
                 border: 'none',
@@ -222,7 +222,7 @@ function TabBar({ active = 'dashboard', accent = T.blue, onCapture }) {
         }
         const isActive = active === t.k;
         return (
-          <button key={t.k} style={{
+          <button type="button" key={t.k} style={{
             flex: 1, display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 3,
             background: 'none', border: 'none', cursor: 'pointer',
             color: isActive ? accent : T.t3, padding: '4px 0',

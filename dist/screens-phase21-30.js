@@ -85,6 +85,7 @@ function APIScreen({
     title: "API key",
     sub: "cxx_live_\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u2022\u20223f42",
     right: React.createElement("button", {
+      type: "button",
       onClick: async () => {
         try {
           await navigator.clipboard.writeText('cxx_live_demo_key_3f42');
@@ -207,6 +208,7 @@ function TemplateLibScreen({
     title: t.l,
     sub: `Used ${t.used} times`,
     right: React.createElement("button", {
+      type: "button",
       style: {
         background: T.bg3,
         color: T.t1,
@@ -633,6 +635,7 @@ function TourSheet({
       gap: 8
     }
   }, step > 0 && React.createElement("button", {
+    type: "button",
     onClick: () => setStep(step - 1),
     style: {
       background: T.bg2,
@@ -646,6 +649,7 @@ function TourSheet({
       cursor: 'pointer'
     }
   }, "Back"), React.createElement("button", {
+    type: "button",
     onClick: () => step < STEPS.length - 1 ? setStep(step + 1) : onClose(),
     style: {
       flex: 1,
@@ -661,6 +665,7 @@ function TourSheet({
       boxShadow: `0 6px 18px ${accent}55`
     }
   }, step < STEPS.length - 1 ? 'Next' : 'Get started')), React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -790,6 +795,7 @@ function TomorrowSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -822,6 +828,7 @@ function TomorrowSheet({
       padding: '0 16px 24px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: generate,
     disabled: loading,
     style: {

@@ -182,6 +182,20 @@ function TweaksPanel({
     window.addEventListener('mousemove', move);
     window.addEventListener('mouseup', up);
   };
+  const onDragKey = e => {
+    const STEP = 12;
+    let {
+      x,
+      y
+    } = offsetRef.current;
+    if (e.key === 'ArrowLeft') x += STEP;else if (e.key === 'ArrowRight') x -= STEP;else if (e.key === 'ArrowUp') y += STEP;else if (e.key === 'ArrowDown') y -= STEP;else return;
+    e.preventDefault();
+    offsetRef.current = {
+      x,
+      y
+    };
+    clampToViewport();
+  };
   if (!open) return null;
   return React.createElement(React.Fragment, null, React.createElement("style", null, __TWEAKS_STYLE), React.createElement("div", {
     ref: dragRef,
@@ -192,9 +206,25 @@ function TweaksPanel({
       bottom: offsetRef.current.y
     }
   }, React.createElement("div", {
-    className: "twk-hd",
-    onMouseDown: onDragStart
-  }, React.createElement("b", null, title), React.createElement("button", {
+    className: "twk-hd"
+  }, React.createElement("button", {
+    type: "button",
+    "aria-label": "Move tweaks panel. Use arrow keys.",
+    onMouseDown: onDragStart,
+    onKeyDown: onDragKey,
+    style: {
+      flex: 1,
+      minWidth: 0,
+      border: 'none',
+      background: 'transparent',
+      color: 'inherit',
+      textAlign: 'left',
+      padding: 0,
+      cursor: 'move',
+      font: 'inherit'
+    }
+  }, React.createElement("b", null, title)), React.createElement("button", {
+    type: "button",
     className: "twk-x",
     "aria-label": "Close tweaks",
     onMouseDown: e => e.stopPropagation(),

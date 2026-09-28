@@ -192,7 +192,7 @@ export default function AskCortexPage() {
             </p>
           </div>
           {visibleMessages.length > 0 && (
-            <button onClick={clear} aria-label="Clear conversation" style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '5px 9px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <button type="button" onClick={clear} aria-label="Clear conversation" style={{ background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '5px 9px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
               <IcTrash size={11} color="var(--t3)" />
               <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 600 }}>Clear</span>
             </button>
@@ -221,7 +221,7 @@ export default function AskCortexPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: 420 }}>
               {SUGGESTIONS.map(s => (
-                <button key={s} onClick={() => send(s)} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '10px 14px', textAlign: 'left', fontFamily: SF, fontSize: 13, color: '#c1d2e8', cursor: 'pointer' }}>
+                <button type="button" key={s} onClick={() => send(s)} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '10px 14px', textAlign: 'left', fontFamily: SF, fontSize: 13, color: '#c1d2e8', cursor: 'pointer' }}>
                   {s}
                 </button>
               ))}
@@ -284,7 +284,7 @@ export default function AskCortexPage() {
             rows={1}
             style={{ flex: 1, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', resize: 'none', maxHeight: 140, minHeight: 40 }}
           />
-          <button onClick={() => send(input)} disabled={sending || !input.trim()} aria-label="Send" style={{ width: 40, height: 40, borderRadius: 12, background: input.trim() && !sending ? '#8b5cf6' : 'rgba(139,92,246,0.3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() && !sending ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
+          <button type="button" onClick={() => send(input)} disabled={sending || !input.trim()} aria-label="Send" style={{ width: 40, height: 40, borderRadius: 12, background: input.trim() && !sending ? '#8b5cf6' : 'rgba(139,92,246,0.3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() && !sending ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
             <IcSend size={18} color="#fff" />
           </button>
         </div>

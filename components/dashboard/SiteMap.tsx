@@ -40,10 +40,10 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
           <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{projects.length} site{projects.length !== 1 ? 's' : ''} · {activeCount} active</p>
         </div>
         <div style={{ display: 'flex', gap: 8 }}>
-          <button onClick={() => router.push('/projects')} style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => router.push('/projects')} style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcFilter size={16} color="var(--t2)" />
           </button>
-          <button onClick={() => router.push('/projects')} style={{ width: 36, height: 36, borderRadius: 10, background: accent, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => router.push('/projects')} style={{ width: 36, height: 36, borderRadius: 10, background: accent, border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={16} color="#fff" />
           </button>
         </div>
@@ -68,7 +68,7 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
               const c = statusColor[p.status] || 'var(--t3)'
               const sz = 10
               return (
-                <g key={p.id} transform={`translate(${pos.x},${pos.y})`} style={{ cursor: 'pointer' }} onClick={() => router.push(`/projects/${p.id}`)}>
+                <g role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); router.push(`/projects/${p.id}`) } }} key={p.id} transform={`translate(${pos.x},${pos.y})`} style={{ cursor: 'pointer' }} onClick={() => router.push(`/projects/${p.id}`)}>
                   <circle r={sz + 8} fill={c} opacity="0.15" />
                   <circle r={sz} fill={c} opacity="0.4" />
                   <circle r={sz - 4} fill={c} />
@@ -114,7 +114,7 @@ export default function SiteMap({ accent = '#2563eb', data }: SiteMapProps) {
         {projects.map((p) => {
           const c = statusColor[p.status] || 'var(--t3)'
           return (
-            <div key={p.id} onClick={() => router.push(`/projects/${p.id}`)} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
+            <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={p.id} onClick={() => router.push(`/projects/${p.id}`)} style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '10px 12px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer' }}>
               <div style={{ width: 8, height: 8, borderRadius: 4, background: c, flexShrink: 0 }} />
               <div style={{ flex: 1 }}>
                 <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 600, color: 'var(--t1)' }}>{p.name}</div>

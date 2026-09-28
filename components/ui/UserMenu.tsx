@@ -35,7 +35,7 @@ export default function UserMenu() {
 
   return (
     <div ref={ref} style={{ position: 'fixed', top: 12, right: 12, zIndex: 200 }}>
-      <button
+      <button type="button"
         onClick={() => setOpen(v => !v)}
         aria-label="User menu"
         aria-expanded={open}
@@ -93,7 +93,7 @@ export default function UserMenu() {
           >
             Account settings
           </Link>
-          <button
+          <button type="button"
             onClick={() => { setOpen(false); signOut({ callbackUrl: '/login' }) }}
             role="menuitem"
             style={{ display: 'block', width: '100%', padding: '11px 16px', background: 'none', border: 'none', color: '#ef4444', fontSize: 13, textAlign: 'left', cursor: 'pointer', fontFamily: 'var(--font-system)' }}

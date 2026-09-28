@@ -139,7 +139,7 @@ export default function CostCatalogPage() {
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Cost catalog</h1>
             <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{items.length} items · {categories.length} categories</p>
           </div>
-          <button onClick={() => { setEditing(null); setForm({ code: '', description: '', category: '', unit: 'item', unitCost: '', vendor: '', notes: '' }); setShowAdd(true) }} aria-label="Add item" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => { setEditing(null); setForm({ code: '', description: '', category: '', unit: 'item', unitCost: '', vendor: '', notes: '' }); setShowAdd(true) }} aria-label="Add item" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -151,9 +151,9 @@ export default function CostCatalogPage() {
 
         {categories.length > 0 && (
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
-            <button onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
+            <button type="button" onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#0e7490' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
             {categories.map(c => (
-              <button key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
+              <button type="button" key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#0e7490' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
             ))}
           </div>
         )}
@@ -167,7 +167,7 @@ export default function CostCatalogPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcLayers size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No items in the catalog</p>
-          <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Add first item
           </button>
         </div>
@@ -178,7 +178,7 @@ export default function CostCatalogPage() {
               <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 1, marginBottom: 6, paddingLeft: 4 }}>{cat} · {list.length}</div>
               <div style={{ background: 'var(--surface-raised)', borderRadius: 12, border: '0.5px solid rgba(255,255,255,0.07)', overflow: 'hidden' }}>
                 {list.map((it, i) => (
-                  <button key={it.id} onClick={() => openEdit(it)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: i < list.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none', textAlign: 'left', cursor: 'pointer' }}>
+                  <button type="button" key={it.id} onClick={() => openEdit(it)} style={{ display: 'flex', alignItems: 'center', gap: 10, width: '100%', padding: '10px 14px', background: 'transparent', border: 'none', borderBottom: i < list.length - 1 ? '0.5px solid rgba(255,255,255,0.04)' : 'none', textAlign: 'left', cursor: 'pointer' }}>
                     <div style={{ flex: 1, minWidth: 0 }}>
                       <div style={{ fontFamily: SF, fontSize: 13, color: 'var(--t1)' }}>{it.description}</div>
                       <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 1 }}>
@@ -202,13 +202,13 @@ export default function CostCatalogPage() {
 
       {(showAdd || editing) && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => { setShowAdd(false); setEditing(null) }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => { setShowAdd(false); setEditing(null) }} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{editing ? 'Edit item' : 'Add item'}</h2>
-              <button onClick={() => { setShowAdd(false); setEditing(null) }} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => { setShowAdd(false); setEditing(null) }} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
-            <input autoFocus value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" style={inputStyle} />
+            <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="Code (optional)" style={inputStyle} />
               <input value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="Category" list="cost-categories" style={inputStyle} />
@@ -216,12 +216,12 @@ export default function CostCatalogPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Cost (£)</label>
-                <input type="number" step="0.01" value={form.unitCost} onChange={e => setForm(p => ({ ...p, unitCost: e.target.value }))} placeholder="0.00" style={inputStyle} />
+                <label htmlFor="field-219" style={labelStyle}>Cost (£)</label>
+                <input id="field-219" type="number" step="0.01" value={form.unitCost} onChange={e => setForm(p => ({ ...p, unitCost: e.target.value }))} placeholder="0.00" style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Per</label>
-                <select value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-223" style={labelStyle}>Per</label>
+                <select id="field-223" value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                   {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
@@ -231,12 +231,12 @@ export default function CostCatalogPage() {
 
             <div style={{ display: 'flex', gap: 8 }}>
               {editing && (
-                <button onClick={() => remove(editing.id)} style={{ padding: '12px 14px', borderRadius: 10, background: confirmDelete === editing.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === editing.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                <button type="button" onClick={() => remove(editing.id)} style={{ padding: '12px 14px', borderRadius: 10, background: confirmDelete === editing.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === editing.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                   <IcTrash size={13} color="#ef4444" />
                   {confirmDelete === editing.id ? 'Sure?' : ''}
                 </button>
               )}
-              <button onClick={save} disabled={saving || !form.description.trim()} style={{ flex: 1, padding: '12px 0', borderRadius: 12, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.description.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button type="button" onClick={save} disabled={saving || !form.description.trim()} style={{ flex: 1, padding: '12px 0', borderRadius: 12, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.description.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {saving ? 'Saving…' : <><IcCheck size={15} color="#fff" /> {editing ? 'Save' : 'Add'}</>}
               </button>
             </div>

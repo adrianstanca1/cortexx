@@ -183,7 +183,7 @@ export default function MileagePage() {
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Mileage</h1>
             <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{monthLabel} · HMRC rate</p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Log journey" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Log journey" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -200,14 +200,14 @@ export default function MileagePage() {
         </div>
 
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-          <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', padding: '5px 10px', fontSize: 12, width: 'auto' }} />
+          <input aria-label="Mileage month" type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', padding: '5px 10px', fontSize: 12, width: 'auto' }} />
           {(['all', 'pending', 'approved'] as const).map(f => (
-            <button key={f} onClick={() => setApprovedFilter(f)} style={{ padding: '4px 10px', borderRadius: 99, border: 'none', background: approvedFilter === f ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: approvedFilter === f ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: approvedFilter === f ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button type="button" key={f} onClick={() => setApprovedFilter(f)} style={{ padding: '4px 10px', borderRadius: 99, border: 'none', background: approvedFilter === f ? '#0e7490' : 'rgba(255,255,255,0.06)', color: approvedFilter === f ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: approvedFilter === f ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {f}
             </button>
           ))}
           {entries.length > 0 && (
-            <button onClick={exportCsv} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+            <button type="button" onClick={exportCsv} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
               <IcSend size={11} color="var(--t2)" /> CSV
             </button>
           )}
@@ -222,7 +222,7 @@ export default function MileagePage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcTruck size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No journeys this month</p>
-          <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Log first journey
           </button>
         </div>
@@ -245,10 +245,10 @@ export default function MileagePage() {
                 <span>·</span>
                 <span style={{ textTransform: 'capitalize' }}>{e.vehicleType} @ {e.ratePence}p</span>
                 {e.purpose && <><span>·</span><span>{e.purpose}</span></>}
-                <button onClick={() => toggleApprove(e)} style={{ marginLeft: 'auto', background: e.approved ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.18)', border: `0.5px solid ${e.approved ? 'rgba(16,185,129,0.4)' : 'rgba(245,158,11,0.4)'}`, color: e.approved ? '#10b981' : '#f59e0b', borderRadius: 8, padding: '2px 8px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
+                <button type="button" onClick={() => toggleApprove(e)} style={{ marginLeft: 'auto', background: e.approved ? 'rgba(16,185,129,0.18)' : 'rgba(245,158,11,0.18)', border: `0.5px solid ${e.approved ? 'rgba(16,185,129,0.4)' : 'rgba(245,158,11,0.4)'}`, color: e.approved ? '#10b981' : '#f59e0b', borderRadius: 8, padding: '2px 8px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
                   {e.approved ? '✓ Approved' : 'Pending'}
                 </button>
-                <button onClick={() => remove(e.id)} aria-label={confirmDelete === e.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === e.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === e.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <button type="button" onClick={() => remove(e.id)} aria-label={confirmDelete === e.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === e.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === e.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                   <IcTrash size={11} color="#ef4444" />
                   {confirmDelete === e.id && <span style={{ fontSize: 10, fontWeight: 700, color: '#ef4444' }}>Sure?</span>}
                 </button>
@@ -262,36 +262,36 @@ export default function MileagePage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Log journey</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Member</label>
-                <select value={form.memberId} onChange={e => setForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-274" style={labelStyle}>Member</label>
+                <select id="field-274" value={form.memberId} onChange={e => setForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                   <option value="">— Personal —</option>
                   {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Date</label>
-                <input type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <label htmlFor="field-281" style={labelStyle}>Date</label>
+                <input id="field-281" type="date" value={form.date} onChange={e => setForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
             </div>
 
             <div>
-              <label style={labelStyle}>From</label>
+              <div style={labelStyle}>From</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: 6 }}>
                 <input value={form.fromAddress} onChange={e => setForm(p => ({ ...p, fromAddress: e.target.value }))} placeholder="Address" style={inputStyle} />
                 <input value={form.fromPostcode} onChange={e => setForm(p => ({ ...p, fromPostcode: e.target.value }))} placeholder="Postcode" style={inputStyle} />
               </div>
             </div>
             <div>
-              <label style={labelStyle}>To</label>
+              <div style={labelStyle}>To</div>
               <div style={{ display: 'grid', gridTemplateColumns: '1fr 90px', gap: 6 }}>
                 <input value={form.toAddress} onChange={e => setForm(p => ({ ...p, toAddress: e.target.value }))} placeholder="Address" style={inputStyle} />
                 <input value={form.toPostcode} onChange={e => setForm(p => ({ ...p, toPostcode: e.target.value }))} placeholder="Postcode" style={inputStyle} />
@@ -300,12 +300,12 @@ export default function MileagePage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Miles</label>
-                <input type="number" step="0.1" value={form.miles} onChange={e => setForm(p => ({ ...p, miles: e.target.value }))} placeholder="0.0" style={inputStyle} />
+                <label htmlFor="field-303" style={labelStyle}>Miles</label>
+                <input id="field-303" type="number" step="0.1" value={form.miles} onChange={e => setForm(p => ({ ...p, miles: e.target.value }))} placeholder="0.0" style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Vehicle</label>
-                <select value={form.vehicleType} onChange={e => setForm(p => ({ ...p, vehicleType: e.target.value as MileageEntry['vehicleType'] }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-307" style={labelStyle}>Vehicle</label>
+                <select id="field-307" value={form.vehicleType} onChange={e => setForm(p => ({ ...p, vehicleType: e.target.value as MileageEntry['vehicleType'] }))} style={{ ...inputStyle, appearance: 'none' }}>
                   <option value="car">Car (45p)</option>
                   <option value="van">Van (45p)</option>
                   <option value="motorbike">Motorbike (24p)</option>
@@ -324,7 +324,7 @@ export default function MileagePage() {
               </div>
             )}
 
-            <button onClick={create} disabled={saving || !form.fromAddress.trim() || !form.toAddress.trim() || !form.miles} style={{ padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.fromAddress.trim() || !form.toAddress.trim() || !form.miles ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.fromAddress.trim() || !form.toAddress.trim() || !form.miles} style={{ padding: '14px 0', borderRadius: 14, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.fromAddress.trim() || !form.toAddress.trim() || !form.miles ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Log journey</>}
             </button>
           </div>

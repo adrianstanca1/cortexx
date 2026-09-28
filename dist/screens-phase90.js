@@ -136,6 +136,7 @@ function RecordPaymentSheet({
         marginTop: 6
       }
     }, paidPayment.invoiceId, " ", paidPayment.full ? 'marked paid' : 'partially settled'), React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxReceiptPDF && window.cortexxReceiptPDF(paidPayment),
       style: {
         width: '100%',
@@ -157,6 +158,7 @@ function RecordPaymentSheet({
     }, React.cloneElement(Ic.download, {
       size: 16
     }), " Issue receipt (PDF)"), React.createElement("button", {
+      type: "button",
       onClick: onClose,
       style: {
         width: '100%',
@@ -254,6 +256,7 @@ function RecordPaymentSheet({
       marginBottom: 14
     }
   }, PAY_METHODS.map(m => React.createElement("button", {
+    type: "button",
     key: m.k,
     onClick: () => setMethod(m.k),
     style: {
@@ -337,6 +340,7 @@ function RecordPaymentSheet({
       boxSizing: 'border-box'
     }
   }))), React.createElement("button", {
+    type: "button",
     onClick: confirm,
     disabled: !valid || busy,
     style: {
@@ -494,6 +498,7 @@ function PaymentsLedgerScreen({
     c: T.green,
     size: "xs"
   }, "PAID") : React.createElement("button", {
+    type: "button",
     onClick: () => setPayInvoice(iv),
     style: {
       background: accent,
@@ -586,6 +591,7 @@ function PaymentsLedgerScreen({
       fontWeight: 700
     }
   }, "\xA3", p.amount.toLocaleString()), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxReceiptPDF && window.cortexxReceiptPDF(p),
     style: {
       background: 'transparent',

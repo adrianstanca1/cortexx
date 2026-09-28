@@ -29,6 +29,7 @@ function MyDayScreen({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('clock'),
     style: {
       background: onSite ? `linear-gradient(135deg, ${T.green}33, ${T.green}11)` : T.bg2,
@@ -69,6 +70,7 @@ function MyDayScreen({
       marginTop: 6
     }
   }, onSite ? todayClock[0].location : 'Tap to check in')), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('inbox'),
     style: {
       background: T.bg2,
@@ -155,6 +157,7 @@ function MyDayScreen({
     i: Ic.receipt,
     c: T.amber
   }].map(o => React.createElement("button", {
+    type: "button",
     key: o.k,
     onClick: () => window.cortexxNav(o.k === 'task' ? 'addtask' : o.k === 'voice' ? 'voice' : 'scan'),
     style: {
@@ -243,6 +246,7 @@ function WorkspaceSheet({
       if (!w.current) onClose();
     }
   }))), React.createElement("button", {
+    type: "button",
     onClick: () => toast('Workspace creation needs server side — add via Settings → Workspace', 'info'),
     style: {
       width: '100%',

@@ -114,7 +114,7 @@ export default function Exec({ data }: ExecProps) {
           </div>
           <div style={{ fontFamily: SF, fontSize: 12, color: T.t2, marginTop: 2 }}>{dateStr} · Wk {week}</div>
         </div>
-        <button
+        <button type="button"
           aria-label={inboxCount > 0 ? `Inbox (${inboxCount})` : 'Inbox'}
           onClick={() => router.push('/inbox')}
           style={{ position: 'relative', width: 36, height: 36, borderRadius: 10, background: T.bg2, border: `0.5px solid ${T.hair}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
@@ -179,7 +179,7 @@ export default function Exec({ data }: ExecProps) {
 
 function Row({ icon, iconBg, title, sub, isLast, onClick }: { icon: React.ReactNode; iconBg: string; title: string; sub?: string; isLast?: boolean; onClick?: () => void }) {
   return (
-    <button
+    <button type="button"
       onClick={onClick}
       disabled={!onClick}
       style={{ display: 'flex', alignItems: 'center', gap: 12, width: '100%', padding: '12px 14px', background: 'transparent', border: 'none', borderBottom: isLast ? 'none' : `0.5px solid ${T.hair}`, textAlign: 'left', cursor: onClick ? 'pointer' : 'default' }}

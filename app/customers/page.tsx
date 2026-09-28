@@ -129,7 +129,7 @@ export default function CustomersPage() {
               {total} active · showing {customers.length}{showArchived ? ' (archived)' : ''}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Add customer" style={{ width: 36, height: 36, borderRadius: 10, background: '#2563eb', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Add customer" style={{ width: 36, height: 36, borderRadius: 10, background: '#2563eb', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -138,7 +138,7 @@ export default function CustomersPage() {
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search name / contact / email…" style={{ ...inputStyle, paddingLeft: 32, fontSize: 13 }} />
           <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="var(--t3)" /></div>
         </div>
-        <button onClick={() => setShowArchived(s => !s)} style={{ background: showArchived ? 'rgba(255,255,255,0.1)' : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', color: showArchived ? 'var(--t1)' : 'var(--t3)', borderRadius: 99, padding: '3px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+        <button type="button" onClick={() => setShowArchived(s => !s)} style={{ background: showArchived ? 'rgba(255,255,255,0.1)' : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', color: showArchived ? 'var(--t1)' : 'var(--t3)', borderRadius: 99, padding: '3px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
           {showArchived ? '← Active customers' : 'Show archived'}
         </button>
       </div>
@@ -152,7 +152,7 @@ export default function CustomersPage() {
           <IcTeam size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{total === 0 ? 'No customers yet' : 'No matches'}</p>
           {total === 0 && !showArchived && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Add first customer
             </button>
           )}
@@ -160,7 +160,7 @@ export default function CustomersPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {customers.map(c => (
-            <button key={c.id} onClick={() => setActiveCustomer(c)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', textAlign: 'left', opacity: c.archivedAt ? 0.5 : 1 }}>
+            <button type="button" key={c.id} onClick={() => setActiveCustomer(c)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 12, alignItems: 'center', cursor: 'pointer', textAlign: 'left', opacity: c.archivedAt ? 0.5 : 1 }}>
               <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: '#2563eb22', color: '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SF, fontSize: 14, fontWeight: 700 }}>
                 {c.name.slice(0, 2).toUpperCase()}
               </div>
@@ -184,13 +184,13 @@ export default function CustomersPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add customer</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
-            <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Customer / company name" style={inputStyle} />
+            <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Customer / company name" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <input value={form.contactName} onChange={e => setForm(p => ({ ...p, contactName: e.target.value }))} placeholder="Contact name" style={inputStyle} />
               <input value={form.contactPhone} onChange={e => setForm(p => ({ ...p, contactPhone: e.target.value }))} placeholder="Phone" style={inputStyle} />
@@ -199,7 +199,7 @@ export default function CustomersPage() {
             <input value={form.address} onChange={e => setForm(p => ({ ...p, address: e.target.value }))} placeholder="Address" style={inputStyle} />
             <input value={form.postcode} onChange={e => setForm(p => ({ ...p, postcode: e.target.value }))} placeholder="Postcode" style={inputStyle} />
             <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Notes (optional)" rows={2} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
-            <button onClick={create} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add</>}
             </button>
           </div>
@@ -208,14 +208,14 @@ export default function CustomersPage() {
 
       {activeCustomer && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveCustomer(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveCustomer(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{activeCustomer.name}</h2>
                 {activeCustomer.archivedAt && <div style={{ fontFamily: SF, fontSize: 11, color: '#f59e0b', marginTop: 2 }}>Archived</div>}
               </div>
-              <button onClick={() => setActiveCustomer(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveCustomer(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>
               {activeCustomer.contactName && <div><span style={{ color: 'var(--t3)' }}>Contact:</span> {activeCustomer.contactName}</div>}
@@ -228,10 +228,10 @@ export default function CustomersPage() {
               <Link href={`/quotes?customerId=${activeCustomer.id}`} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(139,92,246,0.18)', border: '0.5px solid rgba(139,92,246,0.4)', color: '#a78bfa', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', textDecoration: 'none', textAlign: 'center', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcDoc size={12} color="#a78bfa" /> Quotes ({activeCustomer._count?.quotes || 0})
               </Link>
-              <button onClick={() => toggleArchive(activeCustomer)} style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={() => toggleArchive(activeCustomer)} style={{ padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 {activeCustomer.archivedAt ? 'Unarchive' : 'Archive'}
               </button>
-              <button onClick={() => remove(activeCustomer.id)} style={{ padding: '10px 14px', borderRadius: 10, background: confirmDelete === activeCustomer.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeCustomer.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+              <button type="button" onClick={() => remove(activeCustomer.id)} style={{ padding: '10px 14px', borderRadius: 10, background: confirmDelete === activeCustomer.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeCustomer.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                 <IcTrash size={12} color="#ef4444" />
                 {confirmDelete === activeCustomer.id ? 'Sure?' : ''}
               </button>

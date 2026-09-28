@@ -39,6 +39,7 @@
         marginBottom: 16
       }
     }, [['cashflow', 'Cashflow'], ['pnl', 'P&L'], ['wip', 'WIP'], ['alerts', 'Alerts' + (alerts.length ? ' (' + alerts.length + ')' : '')]].map(([k, l]) => React.createElement('button', {
+      type: 'button',
       key: k,
       onClick: () => setTab(k),
       style: {
@@ -423,6 +424,7 @@
         color: T.t2
       }
     }, 'Revenue ' + moneyK(pnl.revenue) + ' · Cost ' + moneyK(pnl.cost) + ' · Profit ' + moneyK(pnl.profit)), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('project', project),
       style: {
         marginTop: 10,

@@ -7,7 +7,7 @@ const Section = ({ title, action, children, pad = 16 }) => (
     {title && (
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'baseline', padding: '0 20px 8px' }}>
         <div style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: T.t2, textTransform: 'uppercase', letterSpacing: 0.6 }}>{title}</div>
-        {action && <button style={{ background: 'none', border: 'none', color: T.blueL, fontFamily: SF, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>{action}</button>}
+        {action && <button type="button" style={{ background: 'none', border: 'none', color: T.blueL, fontFamily: SF, fontSize: 13, fontWeight: 500, cursor: 'pointer' }}>{action}</button>}
       </div>
     )}
     <div style={{ padding: `0 ${pad}px` }}>{children}</div>
@@ -19,7 +19,7 @@ const GroupedList = ({ children }) => (
 );
 
 const Row = ({ icon, iconBg, title, sub, right, danger, isLast, onClick }) => (
-  <div onClick={onClick} style={{
+  <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={onClick} style={{
     display: 'flex', alignItems: 'center', gap: 12,
     padding: '12px 14px',
     borderBottom: isLast ? 'none' : `0.5px solid ${T.hair}`,
@@ -50,7 +50,7 @@ const SegControl = ({ value, onChange, options, accent = T.blue }) => (
     {options.map(o => {
       const active = value === o.k;
       return (
-        <button key={o.k} onClick={() => onChange(o.k)} style={{
+        <button type="button" key={o.k} onClick={() => onChange(o.k)} style={{
           background: active ? T.bg3 : 'transparent',
           border: 'none', borderRadius: 7,
           padding: '7px 8px',
@@ -109,7 +109,7 @@ function ProjectsScreen({ openProject, accent }) {
           subtitle={`${projects.length} total · ${counts.active} active`}
           right={<div style={{ display: 'flex', gap: 8 }}>
             <HeaderBtn icon={Ic.search} onClick={() => window.cortexxNav('search')}/>
-            <button onClick={() => window.cortexxNav('addproject')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type="button" onClick={() => window.cortexxNav('addproject')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {React.cloneElement(Ic.plus, { size: 20 })}
             </button>
           </div>}
@@ -140,7 +140,7 @@ function ProjectsScreen({ openProject, accent }) {
         {/* Project cards */}
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 10 }}>
           {filtered.map(p => (
-            <div key={p.id} onClick={() => openProject(p)}
+            <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={p.id} onClick={() => openProject(p)}
               onPointerDown={e => e.currentTarget.style.transform = 'scale(0.985)'}
               onPointerUp={e => e.currentTarget.style.transform = ''}
               onPointerLeave={e => e.currentTarget.style.transform = ''}
@@ -246,7 +246,7 @@ function TasksScreen({ accent, onAdd }) {
         <MobileHeader
           title="Tasks"
           subtitle={`${todo.length} to do · ${done.length} done`}
-          right={<button onClick={() => { window.cortexxNav('addtask'); }} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={() => { window.cortexxNav('addtask'); }} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
@@ -319,7 +319,17 @@ function SwipeTaskRow({ task, accent, onComplete, onSelect, onTap, isSelected, i
         <span style={{ color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 6 }}>{React.cloneElement(Ic.check, { size: 15, sw: 3 })} {task.done ? 'Reopen' : 'Done'}</span>
       </div>
       <div
-        onClick={() => { if (!moved.current) onTap(); }}
+        role="button"
+        tabIndex={0}
+        aria-label={`${task.t}. ${isSelected ? 'Selected' : 'Not selected'}. Press Enter to open or S to toggle selection.`}
+        onKeyDown={event => {
+          if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click(); }
+          else if (event.key.toLowerCase() === 's') { event.preventDefault(); onSelect(); }
+        }}
+        onClick={(e) => {
+          if (e.target.closest?.('[data-task-select]')) { onSelect(); return; }
+          if (!moved.current) onTap();
+        }}
         onContextMenu={(e) => { e.preventDefault(); onSelect(); }}
         onTouchStart={onStart} onTouchMove={onMove} onTouchEnd={onEnd}
         style={{
@@ -331,7 +341,7 @@ function SwipeTaskRow({ task, accent, onComplete, onSelect, onTap, isSelected, i
           transition: start.current == null ? 'transform 0.2s cubic-bezier(.2,.7,.3,1)' : 'none',
           position: 'relative',
         }}>
-        <div onClick={(e) => { e.stopPropagation(); onSelect(); }} style={{
+        <div data-task-select="" aria-hidden="true" style={{
           width: 20, height: 20, borderRadius: 4, flexShrink: 0,
           border: `1.5px solid ${isSelected ? accent : T.hairMid}`,
           background: isSelected ? accent : 'transparent',
@@ -377,7 +387,7 @@ function TeamScreen({ accent }) {
           subtitle={`${team.length} members · ${team.filter(t=>t.status==='on-site').length} on site`}
           right={<div style={{ display: 'flex', gap: 8 }}>
             <HeaderBtn icon={Ic.search} onClick={() => window.cortexxNav('search')}/>
-            <button onClick={() => window.cortexxNav('addteam')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type="button" onClick={() => window.cortexxNav('addteam')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {React.cloneElement(Ic.plus, { size: 20 })}
             </button>
           </div>}
@@ -399,7 +409,7 @@ function TeamScreen({ accent }) {
               <div style={{ padding: '0 16px' }}>
                 <GroupedList>
                   {members.map((m, i) => (
-                    <div key={m.id} onClick={() => window.cortexxNav('member', m)} style={{
+                    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={m.id} onClick={() => window.cortexxNav('member', m)} style={{
                       display: 'flex', alignItems: 'center', gap: 12, cursor: 'pointer',
                       padding: '12px 14px',
                       borderBottom: i === members.length - 1 ? 'none' : `0.5px solid ${T.hair}`,

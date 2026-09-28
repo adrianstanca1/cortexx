@@ -25,6 +25,7 @@ function QuotesScreen({
     title: "Quotes",
     subtitle: `${quotes.filter(q => q.status === 'sent').length} sent · £${(activeValue / 1000).toFixed(0)}k pipeline`,
     right: React.createElement("button", {
+      type: "button",
       onClick: onAdd,
       style: {
         width: 36,
@@ -69,6 +70,14 @@ function QuotesScreen({
       gap: 8
     }
   }, filtered.map(q => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: q.id,
     onClick: () => onOpen && onOpen(q),
     style: {
@@ -147,6 +156,7 @@ function QuoteDetailSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -164,6 +174,7 @@ function QuoteDetailSheet({
       color: T.t1
     }
   }, quote.id), React.createElement("button", {
+    type: "button",
     style: {
       background: 'none',
       border: 'none',
@@ -381,6 +392,7 @@ function AIEstimatorSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -457,6 +469,7 @@ function AIEstimatorSheet({
       marginBottom: 4
     }
   }, "Examples"), examples.map((ex, i) => React.createElement("button", {
+    type: "button",
     key: i,
     onClick: () => setBrief(ex),
     style: {
@@ -472,6 +485,7 @@ function AIEstimatorSheet({
       cursor: 'pointer'
     }
   }, "\"", ex, "\""))), React.createElement("button", {
+    type: "button",
     onClick: estimate,
     disabled: !brief.trim() || estimating,
     style: {
@@ -576,6 +590,7 @@ function AIEstimatorSheet({
   }, result.assumptions.map((a, i) => React.createElement("li", {
     key: i
   }, a)))), React.createElement("button", {
+    type: "button",
     onClick: save,
     style: {
       width: '100%',
@@ -619,6 +634,7 @@ function TimesheetsScreen({
     title: "Timesheets",
     subtitle: `Week ${week.split('-W')[1]} · ${total}h total`,
     right: pending.length > 0 ? React.createElement("button", {
+      type: "button",
       onClick: approveAll,
       style: {
         background: T.green,
@@ -748,6 +764,7 @@ function TimesheetsScreen({
         color: T.t1
       }
     }, hrs, "h"), t.status === 'pending' ? React.createElement("button", {
+      type: "button",
       onClick: () => approve(t.id),
       style: {
         background: T.green,
@@ -996,6 +1013,14 @@ function MaterialsScreen({
       padding: '4px 16px 12px'
     }
   }, React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     onClick: async () => {
       if (!forecast) {
         setForecast('thinking');
@@ -1238,6 +1263,7 @@ function SubsScreen({
       marginTop: 12
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => toast(`Calling ${s.contact}…`, 'info'),
     style: {
       flex: 1,
@@ -1258,6 +1284,7 @@ function SubsScreen({
   }, React.cloneElement(Ic.phone, {
     size: 12
   }), " Call"), React.createElement("button", {
+    type: "button",
     onClick: () => toast(`Message draft started for ${s.contact}`, 'success'),
     style: {
       flex: 1,

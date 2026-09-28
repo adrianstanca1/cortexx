@@ -28,7 +28,7 @@
 
     const TabBar = () => React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16 } },
       [['approvals', 'Approvals' + (pending.length ? ' (' + pending.length + ')' : '')], ['delivery', 'Delivery'], ['suppliers', 'Suppliers'], ['stock', 'Stock']].map(([k, l]) =>
-        React.createElement('button', { key: k, onClick: () => setTab(k),
+        React.createElement('button', { type: 'button', key: k, onClick: () => setTab(k),
           style: { flex: 1, padding: '9px 4px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
             background: tab === k ? acc : T.bg2, color: tab === k ? '#fff' : T.t2 } }, l)))
 
@@ -45,8 +45,8 @@
             React.createElement('div', { style: { fontSize: 13, color: T.t2, marginBottom: 4 } }, po.supplier),
             React.createElement('div', { style: { fontSize: 12, color: T.t3, marginBottom: 12 } }, po.description || 'No description'),
             React.createElement('div', { style: { display: 'flex', gap: 8 } },
-              React.createElement('button', { onClick: () => approve(po), style: { flex: 1, padding: 10, borderRadius: 9, background: T.green, border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' } }, '✓ Approve'),
-              React.createElement('button', { onClick: () => reject(po), style: { flex: 1, padding: 10, borderRadius: 9, background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', color: T.red, fontWeight: 700, fontSize: 13, cursor: 'pointer' } }, '✕ Reject'))))
+              React.createElement('button', { type: 'button', onClick: () => approve(po), style: { flex: 1, padding: 10, borderRadius: 9, background: T.green, border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' } }, '✓ Approve'),
+              React.createElement('button', { type: 'button', onClick: () => reject(po), style: { flex: 1, padding: 10, borderRadius: 9, background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', color: T.red, fontWeight: 700, fontSize: 13, cursor: 'pointer' } }, '✕ Reject'))))
     );
 
     // ── Delivery tracking ──────────────────────────────────────────
@@ -63,8 +63,8 @@
               React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', alignItems: 'center' } },
                 React.createElement('span', { style: { fontSize: 12, color: overdue ? T.red : T.t3 } }, (overdue ? '⚠ Overdue · ' : 'Expected ') + (po.deliveryDate || 'TBC')),
                 React.createElement('div', { style: { display: 'flex', gap: 6 } },
-                  po.status === 'approved' && React.createElement('button', { onClick: () => order(po), style: { padding: '6px 12px', borderRadius: 8, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, 'Mark ordered'),
-                  React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('confirmdelivery'), style: { padding: '6px 12px', borderRadius: 8, background: acc, border: 'none', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, '📦 Receive'))));
+                  po.status === 'approved' && React.createElement('button', { type: 'button', onClick: () => order(po), style: { padding: '6px 12px', borderRadius: 8, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, 'Mark ordered'),
+                  React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('confirmdelivery'), style: { padding: '6px 12px', borderRadius: 8, background: acc, border: 'none', color: '#fff', fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, '📦 Receive'))));
           })
     );
 
@@ -93,7 +93,7 @@
     const Stock = () => React.createElement('div', null,
       lowStock.length > 0 && React.createElement('div', { style: card({ marginBottom: 14, background: 'rgba(245,158,11,0.08)', borderColor: 'rgba(245,158,11,0.4)' }) },
         React.createElement('div', { style: { fontWeight: 700, color: T.t1, fontSize: 13, marginBottom: 4 } }, '⚠ ' + lowStock.length + ' item' + (lowStock.length > 1 ? 's' : '') + ' below minimum'),
-        React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('addpo'), style: { marginTop: 6, padding: '8px 14px', borderRadius: 8, background: acc, border: 'none', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, 'Raise replenishment PO')),
+        React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('addpo'), style: { marginTop: 6, padding: '8px 14px', borderRadius: 8, background: acc, border: 'none', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, 'Raise replenishment PO')),
       materials.length === 0
         ? React.createElement('p', { style: { color: T.t2, fontSize: 13, textAlign: 'center', padding: 30 } }, 'No materials tracked.')
         : materials.map(m => {

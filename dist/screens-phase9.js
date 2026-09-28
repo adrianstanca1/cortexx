@@ -137,9 +137,12 @@ function UploadSheet({
     style: {
       padding: '0 16px 24px'
     }
-  }, stage === 'pick' && React.createElement(React.Fragment, null, React.createElement("div", {
+  }, stage === 'pick' && React.createElement(React.Fragment, null, React.createElement("button", {
+    type: "button",
     onClick: () => inputRef.current?.click(),
     style: {
+      width: '100%',
+      color: 'inherit',
       border: `1.5px dashed ${T.hairStrong}`,
       borderRadius: 14,
       padding: '24px 16px',
@@ -170,14 +173,15 @@ function UploadSheet({
       color: T.t2,
       marginTop: 4
     }
-  }, "PDF, DWG, XLSX, JPG, PNG \xB7 up to 50 MB"), React.createElement("input", {
+  }, "PDF, DWG, XLSX, JPG, PNG \xB7 up to 50 MB")), React.createElement("input", {
     ref: inputRef,
     type: "file",
     onChange: handleRealFile,
     style: {
       display: 'none'
-    }
-  })), React.createElement("div", {
+    },
+    "aria-label": "Choose file to upload"
+  }), React.createElement("div", {
     style: {
       fontFamily: SF,
       fontSize: 11,
@@ -290,6 +294,7 @@ function UploadSheet({
       marginTop: 4
     }
   }, "Available in ", target === 'drawing' ? 'Drawings' : 'Documents'), React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       marginTop: 20,
@@ -492,6 +497,7 @@ function DatabaseScreen({
         alignItems: 'center'
       }
     }, React.createElement("button", {
+      type: "button",
       onClick: () => setActiveTable(null),
       style: {
         background: 'none',

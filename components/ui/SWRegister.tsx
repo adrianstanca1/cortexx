@@ -103,9 +103,9 @@ export default function SWRegister() {
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>New version available</div>
         <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>Reload to get the latest Cortexx</div>
       </div>
-      <button
+      <button type="button"
         onClick={apply}
-        style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+        style={{ background: '#b45309', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
       >
         Reload
       </button>

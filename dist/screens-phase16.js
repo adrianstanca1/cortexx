@@ -302,6 +302,7 @@ function TeamMemberSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -319,6 +320,7 @@ function TeamMemberSheet({
       color: T.t1
     }
   }, "Team member"), React.createElement("button", {
+    type: "button",
     onClick: editing ? save : () => setEditing(true),
     style: {
       background: 'none',
@@ -481,6 +483,7 @@ function TeamMemberSheet({
       zIndex: 5
     }
   }, tabs.map(t => React.createElement("button", {
+    type: "button",
     key: t,
     onClick: () => setTab(t),
     style: {
@@ -555,6 +558,7 @@ function TeamMemberSheet({
       padding: '0 16px 12px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('addcert', live),
     style: {
       width: '100%',
@@ -650,6 +654,7 @@ function TeamMemberSheet({
         gap: 4
       }
     }, React.createElement("button", {
+      type: "button",
       onClick: () => toast(`Viewing ${c.name} cert`, 'info'),
       style: {
         background: 'transparent',
@@ -663,6 +668,7 @@ function TeamMemberSheet({
         fontWeight: 600
       }
     }, "View"), React.createElement("button", {
+      type: "button",
       onClick: async () => {
         await Backend.db.removeCertificate(live.id, c.id);
         toast('Certificate removed', 'success');
@@ -736,6 +742,7 @@ function TeamMemberSheet({
   }, React.cloneElement(Ic.camera, {
     size: 24
   })))), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('upload'),
     style: {
       width: '100%',
@@ -896,6 +903,7 @@ function AddCertSheet({
       verified: v
     })
   }), React.createElement("button", {
+    type: "button",
     onClick: () => toast('Open file picker to attach scan/photo', 'info'),
     style: {
       background: T.bg2,

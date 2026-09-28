@@ -88,13 +88,13 @@ function SearchSheet({ onClose, accent, onNavigate }) {
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}` }}>
         <div style={{ color: T.t2 }}>{React.cloneElement(Ic.search, { size: 18 })}</div>
         <input
-          autoFocus value={q} onChange={e => setQ(e.target.value)}
+          value={q} onChange={e => setQ(e.target.value)}
           placeholder="Search projects, tasks, people, docs…"
           style={{
             flex: 1, background: 'transparent', border: 'none',
             color: T.t1, fontFamily: SF, fontSize: 16, outline: 'none',
           }}/>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Cancel</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Cancel</button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto', padding: '12px 0' }}>
@@ -103,7 +103,7 @@ function SearchSheet({ onClose, accent, onNavigate }) {
             <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 8 }}>Suggestions</div>
             <div style={{ display: 'flex', flexWrap: 'wrap', gap: 6 }}>
               {['Camden', 'Tom', 'Plasterboard', 'Q-2117', 'Brixton snags'].map(s => (
-                <button key={s} onClick={() => setQ(s)} style={{
+                <button type="button" key={s} onClick={() => setQ(s)} style={{
                   background: T.bg2, border: `0.5px solid ${T.hairMid}`,
                   color: T.blueL, padding: '6px 12px', borderRadius: 14,
                   fontFamily: SF, fontSize: 13, fontWeight: 500, cursor: 'pointer',
@@ -358,7 +358,7 @@ function AddSnagSheet({ onClose, accent, projectId = 1 }) {
     onClose();
   };
   return <FormSheet title="Log snag" onClose={onClose} accent={accent} onSave={save} extraBtn={
-    <button onClick={aiDetect} disabled={detecting} style={{
+    <button type="button" onClick={aiDetect} disabled={detecting} style={{
       background: 'transparent', color: T.purple, border: `0.5px solid ${T.purple}66`,
       borderRadius: 10, padding: '8px 12px', fontFamily: SF, fontSize: 12, fontWeight: 600,
       cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 5,
@@ -422,7 +422,7 @@ function AddDiarySheet({ onClose, accent }) {
     onClose();
   };
   return <FormSheet title="New diary entry" onClose={onClose} accent={accent} onSave={save} extraBtn={
-    <button onClick={aiSummarise} disabled={summarising || !form.notes} style={{
+    <button type="button" onClick={aiSummarise} disabled={summarising || !form.notes} style={{
       background: 'transparent', color: T.purple, border: `0.5px solid ${T.purple}66`,
       borderRadius: 10, padding: '8px 12px', fontFamily: SF, fontSize: 12, fontWeight: 600,
       cursor: form.notes ? 'pointer' : 'default', opacity: form.notes ? 1 : 0.5,
@@ -445,9 +445,9 @@ function FormSheet({ title, children, onSave, onClose, accent, extraBtn }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>{title}</div>
-        <button onClick={onSave} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>Save</button>
+        <button type="button" onClick={onSave} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>Save</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '6px 16px 24px', display: 'flex', flexDirection: 'column', gap: 14 }}>
         {children}

@@ -119,7 +119,6 @@ function SearchSheet({
   }, React.cloneElement(Ic.search, {
     size: 18
   })), React.createElement("input", {
-    autoFocus: true,
     value: q,
     onChange: e => setQ(e.target.value),
     placeholder: "Search projects, tasks, people, docs\u2026",
@@ -133,6 +132,7 @@ function SearchSheet({
       outline: 'none'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -169,6 +169,7 @@ function SearchSheet({
       gap: 6
     }
   }, ['Camden', 'Tom', 'Plasterboard', 'Q-2117', 'Brixton snags'].map(s => React.createElement("button", {
+    type: "button",
     key: s,
     onClick: () => setQ(s),
     style: {
@@ -691,6 +692,7 @@ function AddSnagSheet({
     accent: accent,
     onSave: save,
     extraBtn: React.createElement("button", {
+      type: "button",
       onClick: aiDetect,
       disabled: detecting,
       style: {
@@ -877,6 +879,7 @@ function AddDiarySheet({
     accent: accent,
     onSave: save,
     extraBtn: React.createElement("button", {
+      type: "button",
       onClick: aiSummarise,
       disabled: summarising || !form.notes,
       style: {
@@ -952,6 +955,7 @@ function FormSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -969,6 +973,7 @@ function FormSheet({
       color: T.t1
     }
   }, title), React.createElement("button", {
+    type: "button",
     onClick: onSave,
     style: {
       background: 'none',

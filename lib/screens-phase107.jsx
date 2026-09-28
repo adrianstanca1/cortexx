@@ -60,7 +60,7 @@ function RetentionSheet({ accent, invoiceId, onClose }) {
         <div style={{ marginTop: 18, fontSize: 11, fontWeight: 700, color: T.t2, letterSpacing: 0.6 }}>RETENTION %</div>
         <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
           {PRESET.map(p => (
-            <button key={p} onClick={() => setPct(p)}
+            <button type="button" key={p} onClick={() => setPct(p)}
               style={{ flex: '1 1 60px', padding: '10px 6px', borderRadius: 10,
                 border: '1px solid ' + (pct === p ? accent : T.hair),
                 background: pct === p ? accent + '22' : T.bg2,
@@ -79,20 +79,20 @@ function RetentionSheet({ accent, invoiceId, onClose }) {
         {/* Dates */}
         <div style={{ marginTop: 18, fontSize: 11, fontWeight: 700, color: T.t2, letterSpacing: 0.6 }}>RELEASE SCHEDULE</div>
         <div style={{ marginTop: 8 }}>
-          <label style={{ display: 'block', fontSize: 11, color: T.t2, marginBottom: 4 }}>Practical completion date (50% released)</label>
-          <input type="date" value={pcDate} onChange={e => setPcDate(e.target.value)}
+          <label htmlFor="retention-pc-date" style={{ display: 'block', fontSize: 11, color: T.t2, marginBottom: 4 }}>Practical completion date (50% released)</label>
+          <input id="retention-pc-date" type="date" value={pcDate} onChange={e => setPcDate(e.target.value)}
             style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontFamily: SFMono, fontSize: 13, boxSizing: 'border-box' }}/>
         </div>
         <div style={{ marginTop: 8 }}>
-          <label style={{ display: 'block', fontSize: 11, color: T.t2, marginBottom: 4 }}>Defects liability period (days)</label>
-          <input type="number" value={defectsDays} onChange={e => setDefectsDays(e.target.value)}
+          <label htmlFor="retention-defects-days" style={{ display: 'block', fontSize: 11, color: T.t2, marginBottom: 4 }}>Defects liability period (days)</label>
+          <input id="retention-defects-days" type="number" value={defectsDays} onChange={e => setDefectsDays(e.target.value)}
             style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontFamily: SFMono, fontSize: 13, boxSizing: 'border-box' }}/>
           <div style={{ fontSize: 11, color: T.t2, marginTop: 4 }}>
             {pcDate && <>Final release: <strong style={{ color: T.t1 }}>{(() => { const d=new Date(pcDate); d.setDate(d.getDate()+Number(defectsDays)); return d.toISOString().slice(0,10); })()}</strong></>}
           </div>
         </div>
 
-        <button onClick={save}
+        <button type="button" onClick={save}
           style={{ marginTop: 16, width: '100%', padding: 14, borderRadius: 12, border: 'none', background: accent, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 700 }}>
           Save retention settings
         </button>
@@ -108,11 +108,11 @@ function RetentionSheet({ accent, invoiceId, onClose }) {
             <input type="number" value={releaseAmt} onChange={e => setReleaseAmt(e.target.value)} placeholder="Amount (blank = all outstanding)"
               style={{ width: '100%', padding: 10, borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontFamily: SFMono, fontSize: 13, boxSizing: 'border-box' }}/>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <button onClick={() => release('pc')}
+              <button type="button" onClick={() => release('pc')}
                 style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontSize: 13, fontWeight: 600 }}>
                 Release at PC
               </button>
-              <button onClick={() => release('final')}
+              <button type="button" onClick={() => release('final')}
                 style={{ flex: 1, padding: 12, borderRadius: 10, border: 'none', background: T.green, color: '#fff', fontSize: 13, fontWeight: 700 }}>
                 Release (final)
               </button>
@@ -170,7 +170,7 @@ function RetentionLedgerScreen({ accent }) {
   };
 
   const RowCard = ({ children, onClick, accent: accentCol }) => (
-    <div onClick={onClick} style={{ marginTop: 8, padding: 12, borderRadius: 10, background: T.bg2, border: '1px solid ' + (accentCol || T.hair), cursor: onClick ? 'pointer' : 'default' }}>{children}</div>
+    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={onClick} style={{ marginTop: 8, padding: 12, borderRadius: 10, background: T.bg2, border: '1px solid ' + (accentCol || T.hair), cursor: onClick ? 'pointer' : 'default' }}>{children}</div>
   );
 
   return (
@@ -202,7 +202,7 @@ function RetentionLedgerScreen({ accent }) {
           <>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: 22, marginBottom: 8 }}>
               <div style={{ fontSize: 11, fontWeight: 700, color: T.t2, letterSpacing: 0.6 }}>UPCOMING RELEASES · {led.upcoming.length}</div>
-              <button onClick={remindAll}
+              <button type="button" onClick={remindAll}
                 style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid '+T.hair, background: accent, color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 700, letterSpacing: 0.4, textTransform: 'uppercase' }}>
                 🔔 Remind all
               </button>

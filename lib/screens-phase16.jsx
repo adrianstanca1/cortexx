@@ -117,9 +117,9 @@ function TeamMemberSheet({ member, onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Team member</div>
-        <button onClick={editing ? save : () => setEditing(true)} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>{editing ? 'Save' : 'Edit'}</button>
+        <button type="button" onClick={editing ? save : () => setEditing(true)} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>{editing ? 'Save' : 'Edit'}</button>
       </div>
 
       <div style={{ flex: 1, overflowY: 'auto' }}>
@@ -168,7 +168,7 @@ function TeamMemberSheet({ member, onClose, accent }) {
             {/* Tabs */}
             <div style={{ padding: '0 16px', display: 'flex', gap: 4, borderBottom: `0.5px solid ${T.hair}`, position: 'sticky', top: 0, background: T.bg0, zIndex: 5 }}>
               {tabs.map(t => (
-                <button key={t} onClick={() => setTab(t)} style={{
+                <button type="button" key={t} onClick={() => setTab(t)} style={{
                   background: 'none', border: 'none',
                   padding: '10px 12px',
                   fontFamily: SF, fontSize: 13, fontWeight: 600,
@@ -206,7 +206,7 @@ function TeamMemberSheet({ member, onClose, accent }) {
               {tab === 'Certificates' && (
                 <>
                   <div style={{ padding: '0 16px 12px' }}>
-                    <button onClick={() => window.cortexxNav('addcert', live)} style={{
+                    <button type="button" onClick={() => window.cortexxNav('addcert', live)} style={{
                       width: '100%', background: T.bg2, border: `0.5px dashed ${T.hairMid}`,
                       color: T.t1, borderRadius: 12, padding: '12px',
                       fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -235,12 +235,12 @@ function TeamMemberSheet({ member, onClose, accent }) {
                                   <div style={{ fontFamily: SFMono, fontSize: 11, color: sc, fontWeight: 600, marginTop: 4 }}>Expires {c.expires}</div>
                                 </div>
                                 <div style={{ display: 'flex', flexDirection: 'column', gap: 4 }}>
-                                  <button onClick={() => toast(`Viewing ${c.name} cert`, 'info')} style={{
+                                  <button type="button" onClick={() => toast(`Viewing ${c.name} cert`, 'info')} style={{
                                     background: 'transparent', color: T.blueL, border: `0.5px solid ${T.hairMid}`,
                                     borderRadius: 6, padding: '4px 8px', cursor: 'pointer',
                                     fontFamily: SF, fontSize: 10, fontWeight: 600,
                                   }}>View</button>
-                                  <button onClick={async () => { await Backend.db.removeCertificate(live.id, c.id); toast('Certificate removed', 'success'); }} style={{
+                                  <button type="button" onClick={async () => { await Backend.db.removeCertificate(live.id, c.id); toast('Certificate removed', 'success'); }} style={{
                                     background: 'transparent', color: T.red, border: `0.5px solid ${T.red}44`,
                                     borderRadius: 6, padding: '4px 8px', cursor: 'pointer',
                                     fontFamily: SF, fontSize: 10, fontWeight: 600,
@@ -291,7 +291,7 @@ function TeamMemberSheet({ member, onClose, accent }) {
                       }}>{React.cloneElement(Ic.camera, { size: 24 })}</div>
                     ))}
                   </div>
-                  <button onClick={() => window.cortexxNav('upload')} style={{
+                  <button type="button" onClick={() => window.cortexxNav('upload')} style={{
                     width: '100%', marginTop: 12, background: T.bg2, border: `0.5px dashed ${T.hairMid}`,
                     color: T.t1, borderRadius: 12, padding: '12px',
                     fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -346,7 +346,7 @@ function AddCertSheet({ member, onClose, accent }) {
       {v:'valid',l:'Valid'},{v:'expiring',l:'Expiring soon'},{v:'expired',l:'Expired'},
     ]}/>
     <FormToggle label="Verified by you" v={f.verified} onChange={v => setF({...f, verified: v})}/>
-    <button onClick={() => toast('Open file picker to attach scan/photo', 'info')} style={{
+    <button type="button" onClick={() => toast('Open file picker to attach scan/photo', 'info')} style={{
       background: T.bg2, border: `0.5px dashed ${T.hairMid}`, color: T.t1,
       borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
       display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,

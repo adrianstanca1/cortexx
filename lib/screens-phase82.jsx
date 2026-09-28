@@ -118,7 +118,7 @@ function PhotoReviewScreen({ accent }) {
     <ScreenBg accent={accent}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
         <MobileHeader title="Photo review" subtitle={`${counts.pending} awaiting review`}
-          right={<button onClick={() => fileInput.current && fileInput.current.click()} style={{
+          right={<button type="button" onClick={() => fileInput.current && fileInput.current.click()} style={{
             width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>{React.cloneElement(Ic.camera, { size: 18 })}</button>}/>
@@ -133,7 +133,7 @@ function PhotoReviewScreen({ accent }) {
         </div>
 
         {shown.length === 0 ? (
-          <div onClick={() => fileInput.current && fileInput.current.click()} style={{
+          <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => fileInput.current && fileInput.current.click()} style={{
             margin: '4px 16px', padding: '40px 20px', border: `1.5px dashed ${T.hairStrong}`,
             background: T.bg2, borderRadius: 14, textAlign: 'center', cursor: 'pointer',
           }}>
@@ -150,7 +150,7 @@ function PhotoReviewScreen({ accent }) {
                 let url = ''; try { url = window.cortexxPhotoStore.blobURL(p.blob); } catch (e) {}
                 return (
                   <div key={p.id} style={{ background: T.bg2, borderRadius: 12, overflow: 'hidden', border: `0.5px solid ${T.hair}` }}>
-                    <div onClick={() => setViewing({ ...p, url })} style={{
+                    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => setViewing({ ...p, url })} style={{
                       aspectRatio: '4/3', background: url ? `url(${url}) center/cover` : T.bg3, cursor: 'pointer', position: 'relative',
                     }}>
                       <div style={{ position: 'absolute', top: 6, left: 6 }}>
@@ -159,8 +159,8 @@ function PhotoReviewScreen({ accent }) {
                     </div>
                     {filter === 'pending' && (
                       <div style={{ display: 'flex', gap: 4, padding: 6 }}>
-                        <button onClick={() => setStatus(p.id, 'approved')} style={{ flex: 1, background: `${T.green}22`, color: T.green, border: 'none', borderRadius: 7, padding: '7px', cursor: 'pointer', fontFamily: SF, fontSize: 12, fontWeight: 700 }}>✓</button>
-                        <button onClick={() => setStatus(p.id, 'rejected')} style={{ flex: 1, background: `${T.red}22`, color: T.red, border: 'none', borderRadius: 7, padding: '7px', cursor: 'pointer', fontFamily: SF, fontSize: 12, fontWeight: 700 }}>✗</button>
+                        <button type="button" onClick={() => setStatus(p.id, 'approved')} style={{ flex: 1, background: `${T.green}22`, color: T.green, border: 'none', borderRadius: 7, padding: '7px', cursor: 'pointer', fontFamily: SF, fontSize: 12, fontWeight: 700 }}>✓</button>
+                        <button type="button" onClick={() => setStatus(p.id, 'rejected')} style={{ flex: 1, background: `${T.red}22`, color: T.red, border: 'none', borderRadius: 7, padding: '7px', cursor: 'pointer', fontFamily: SF, fontSize: 12, fontWeight: 700 }}>✗</button>
                       </div>
                     )}
                   </div>
@@ -171,18 +171,18 @@ function PhotoReviewScreen({ accent }) {
         )}
 
         {viewing && (
-          <div onClick={() => setViewing(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 100, display: 'flex', flexDirection: 'column' }}>
+          <div style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 100, display: 'flex', flexDirection: 'column' }}>
             <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-              <button onClick={() => setViewing(null)} style={{ background: 'none', border: 'none', color: '#fff', fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
+              <button type="button" onClick={() => setViewing(null)} style={{ background: 'none', border: 'none', color: '#fff', fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
               <Pill c={statusC[viewing.reviewStatus || 'pending']}>{viewing.reviewStatus || 'pending'}</Pill>
             </div>
-            <div onClick={e => e.stopPropagation()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
+            <div role="presentation" onClick={e => e.stopPropagation()} style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
               {viewing.url && <img src={viewing.url} alt="" style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12 }}/>}
             </div>
-            <div onClick={e => e.stopPropagation()} style={{ padding: 16, display: 'flex', gap: 8 }}>
-              <button onClick={() => setStatus(viewing.id, 'approved')} style={{ flex: 1, background: T.green, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Approve</button>
-              <button onClick={() => setStatus(viewing.id, 'rejected')} style={{ flex: 1, background: 'transparent', color: T.red, border: `0.5px solid ${T.red}66`, borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Reject</button>
-              <button onClick={async () => { await window.cortexxPhotoStore.remove(viewing.id); await load(); setViewing(null); if (window.cortexxToast) window.cortexxToast('Photo deleted', 'success'); }} style={{ background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+            <div role="presentation" onClick={e => e.stopPropagation()} style={{ padding: 16, display: 'flex', gap: 8 }}>
+              <button type="button" onClick={() => setStatus(viewing.id, 'approved')} style={{ flex: 1, background: T.green, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Approve</button>
+              <button type="button" onClick={() => setStatus(viewing.id, 'rejected')} style={{ flex: 1, background: 'transparent', color: T.red, border: `0.5px solid ${T.red}66`, borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Reject</button>
+              <button type="button" onClick={async () => { await window.cortexxPhotoStore.remove(viewing.id); await load(); setViewing(null); if (window.cortexxToast) window.cortexxToast('Photo deleted', 'success'); }} style={{ background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '14px 16px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
             </div>
           </div>
         )}
@@ -218,7 +218,7 @@ function TenantScreen({ accent }) {
                 iconBg={null}
                 title={t.name}
                 sub={`${t.role} · ${t.plan}`}
-                right={t.id === activeId ? <Pill c={T.green} size="xs">ACTIVE</Pill> : <button onClick={() => window.CortexTenant.switch(t.id)} style={{ background: accent, color: '#fff', border: 'none', borderRadius: 14, padding: '5px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>Switch</button>}
+                right={t.id === activeId ? <Pill c={T.green} size="xs">ACTIVE</Pill> : <button type="button" onClick={() => window.CortexTenant.switch(t.id)} style={{ background: accent, color: '#fff', border: 'none', borderRadius: 14, padding: '5px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>Switch</button>}
                 isLast={i === tenants.length - 1}/>
             ))}
           </GroupedList>
@@ -227,7 +227,7 @@ function TenantScreen({ accent }) {
           <div style={{ background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 12, padding: 12 }}>
             <input value={newName} onChange={e => setNewName(e.target.value)} placeholder="New company name"
               style={{ width: '100%', boxSizing: 'border-box', background: T.bg3, border: `0.5px solid ${T.hairMid}`, borderRadius: 10, padding: '10px 12px', color: T.t1, fontFamily: SF, fontSize: 14, outline: 'none' }}/>
-            <button onClick={() => {
+            <button type="button" onClick={() => {
               if (!newName.trim()) { if (window.cortexxToast) window.cortexxToast('Enter a name', 'error'); return; }
               const id = window.CortexTenant.create(newName.trim());
               if (window.cortexxToast) window.cortexxToast('Workspace created', 'success');
