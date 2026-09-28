@@ -506,6 +506,7 @@ function DCArtboardFrame({
     role: "button",
     tabIndex: 0,
     onKeyDown: event => {
+      if (event.target !== event.currentTarget) return;
       if (event.key === 'Enter' || event.key === ' ') {
         event.preventDefault();
         event.currentTarget.click();
@@ -704,7 +705,22 @@ function DCFocusOverlay({
       fontFamily: DC.font,
       color: '#fff'
     }
-  }, React.createElement("div", {
+  }, React.createElement("button", {
+    type: "button",
+    "aria-label": "Exit artboard focus",
+    tabIndex: -1,
+    onClick: () => ctx.setFocus(null),
+    style: {
+      position: 'absolute',
+      inset: 0,
+      width: '100%',
+      height: '100%',
+      border: 'none',
+      padding: 0,
+      background: 'transparent',
+      cursor: 'default'
+    }
+  }), React.createElement("div", {
     role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
@@ -835,7 +851,8 @@ function DCFocusOverlay({
       flexDirection: 'column',
       alignItems: 'center',
       justifyContent: 'center',
-      gap: 16
+      gap: 16,
+      pointerEvents: 'none'
     }
   }, React.createElement("div", {
     role: "presentation",
@@ -843,7 +860,8 @@ function DCFocusOverlay({
     style: {
       width: width * scale,
       height: height * scale,
-      position: 'relative'
+      position: 'relative',
+      pointerEvents: 'auto'
     }
   }, React.createElement("div", {
     style: {
@@ -871,7 +889,8 @@ function DCFocusOverlay({
       fontSize: 14,
       fontWeight: 500,
       opacity: .85,
-      textAlign: 'center'
+      textAlign: 'center',
+      pointerEvents: 'auto'
     }
   }, (sec.labels || {})[aid] ?? artboard.props.label, React.createElement("span", {
     style: {
