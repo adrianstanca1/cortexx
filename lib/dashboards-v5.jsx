@@ -92,7 +92,7 @@ function DashV15_SiteNotice({ accent, dashboardId, setDashboardId }) {
           <span style={{ background: V15.ink, color: V15.hi, padding: '2px 7px', letterSpacing: 1 }}>POSTED</span>
           <span>{timeStr}</span>
           <span style={{ flex: 1 }}/>
-          <button onClick={() => setNav('switchworkspace')} title="Switch workspace" style={{
+          <button type="button" onClick={() => setNav('switchworkspace')} title="Switch workspace" style={{
             background: V15.ink, color: V15.hi, border: 'none', cursor: 'pointer',
             fontFamily: MONO, fontSize: 10, fontWeight: 700, letterSpacing: 1,
             padding: '3px 8px', display: 'flex', alignItems: 'center', gap: 5, textTransform: 'uppercase',
@@ -107,7 +107,7 @@ function DashV15_SiteNotice({ accent, dashboardId, setDashboardId }) {
       {/* SECTION 01 — ACTION REQUIRED */}
       <SectionLabel15 num="01" label="Action Required" extra={`${high.length} ITEM${high.length === 1 ? '' : 'S'}`}/>
       {focus ? (
-        <button onClick={() => setNav('tab', 'tasks')} style={{
+        <button type="button" onClick={() => setNav('tab', 'tasks')} style={{
           display: 'block', width: '100%', textAlign: 'left',
           background: focus.prio === 'high' ? V15.red : V15.bg2,
           border: 'none', borderBottom: `1px solid ${V15.rule}`,
@@ -171,7 +171,7 @@ function DashV15_SiteNotice({ accent, dashboardId, setDashboardId }) {
       {/* SECTION 04 — TODAY'S JOBS */}
       <SectionLabel15 num="04" label="Today's Jobs" extra={`${active.length}`}/>
       {active.slice(0, 4).map((p, i) => (
-        <button key={p.id} onClick={() => setNav('project', p)} style={{
+        <button type="button" key={p.id} onClick={() => setNav('project', p)} style={{
           display: 'flex', alignItems: 'stretch', gap: 0,
           width: '100%', textAlign: 'left',
           background: i % 2 === 0 ? V15.bg2 : V15.bg, color: V15.fg,
@@ -316,7 +316,7 @@ function StatBlock15({ big, label, sub, accent }) {
 
 function Bar15({ label, value, fill, color, rightLabel, onClick }) {
   return (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} style={{
       display: 'block', width: '100%', textAlign: 'left',
       background: 'transparent', border: 'none',
       borderBottom: `1px solid ${V15.rule}`,
@@ -338,7 +338,7 @@ function Bar15({ label, value, fill, color, rightLabel, onClick }) {
 
 function DeskBtn15({ label, sub, onClick, rightCol, bottomRow }) {
   return (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} style={{
       background: 'transparent', color: V15.fg,
       border: 'none',
       borderLeft: rightCol ? `1px solid ${V15.rule}` : 'none',

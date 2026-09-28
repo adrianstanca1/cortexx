@@ -40,7 +40,7 @@
 
     const TabBar = () => React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16 } },
       [['pack', 'Handover pack'], ['snagging', 'Snagging' + (openSnags.length ? ' (' + openSnags.length + ')' : '')]].map(([k, l]) =>
-        React.createElement('button', { key: k, onClick: () => setTab(k),
+        React.createElement('button', { type: 'button', key: k, onClick: () => setTab(k),
           style: { flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
             background: tab === k ? acc : T.bg2, color: tab === k ? '#fff' : T.t2 } }, l)))
 
@@ -56,7 +56,7 @@
             React.createElement('span', { style: { fontSize: 28, fontWeight: 800, color: T.t1 } }, readiness + '%'),
             React.createElement('span', { style: { fontSize: 10, color: T.t3 } }, 'ready'))),
         React.createElement('div', { style: { fontSize: 13, color: T.t2 } }, items.filter(i => i.status === 'received').length + ' of ' + items.length + ' documents received'),
-        readiness === 100 && React.createElement('button', { onClick: () => window.cortexxToast && window.cortexxToast('📦 Handover pack ready to issue', 'success'),
+        readiness === 100 && React.createElement('button', { type: 'button', onClick: () => window.cortexxToast && window.cortexxToast('📦 Handover pack ready to issue', 'success'),
           style: { marginTop: 12, padding: '10px 20px', borderRadius: 10, background: T.green, border: 'none', color: '#fff', fontWeight: 700, fontSize: 13, cursor: 'pointer' } }, '📦 Issue handover pack')),
       items.length === 0
         ? React.createElement('p', { style: { color: T.t2, fontSize: 13, textAlign: 'center', padding: 20 } }, 'No handover items for this project yet.')
@@ -69,7 +69,7 @@
                 React.createElement('div', { style: { fontSize: 11, color: T.t3 } }, item.category + ' · ' + item.responsible + ' · due ' + item.due)),
               React.createElement('span', { style: { display: 'inline-flex', alignItems: 'center', gap: 4, padding: '4px 10px', borderRadius: 999, background: st.c + '22', color: st.c, fontSize: 11, fontWeight: 700 } }, st.icon + ' ' + st.l));
           }),
-      React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('addhandover', { projectId }),
+      React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('addhandover', { projectId }),
         style: { marginTop: 10, width: '100%', padding: 13, borderRadius: 12, background: T.bg2, border: '1px dashed ' + T.hair, color: acc, fontWeight: 700, fontSize: 14, cursor: 'pointer' } }, '+ Add handover document')
     );
 
@@ -93,7 +93,7 @@
             React.createElement('span', { style: { fontSize: 13, fontWeight: 700, color: T.t1 } }, s.title || s.desc || 'Snag'),
             React.createElement('span', { style: { fontSize: 10, fontWeight: 700, color: s.priority === 'high' ? T.red : s.priority === 'med' ? '#f59e0b' : T.t3 } }, (s.priority || 'low').toUpperCase())),
           React.createElement('div', { style: { fontSize: 11, color: T.t3, marginBottom: 10 } }, (s.area || s.location || 'Site') + (s.assignee ? ' · ' + s.assignee : '')),
-          React.createElement('button', { onClick: async () => { await Backend.db.snags.update(s.id, { status: 'closed' }); window.cortexxToast && window.cortexxToast('Snag closed', 'success'); },
+          React.createElement('button', { type: 'button', onClick: async () => { await Backend.db.snags.update(s.id, { status: 'closed' }); window.cortexxToast && window.cortexxToast('Snag closed', 'success'); },
             style: { width: '100%', padding: 9, borderRadius: 9, background: T.bg2, border: '1px solid ' + T.hair, color: T.green, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, '✓ Mark closed')))
       );
     };

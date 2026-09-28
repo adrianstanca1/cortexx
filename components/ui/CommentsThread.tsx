@@ -84,7 +84,7 @@ export default function CommentsThread({ taskId }: { taskId: string }) {
                   <p style={{ fontFamily: 'var(--font-system)', fontSize: 12, color: 'var(--t1)', marginTop: 2, wordBreak: 'break-word', whiteSpace: 'pre-wrap' }}>{c.body}</p>
                 </div>
                 {canDelete && (
-                  <button
+                  <button type="button"
                     onClick={() => remove(c.id)}
                     aria-label="Delete comment"
                     style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, opacity: 0.4, display: 'flex', alignSelf: 'flex-start' }}

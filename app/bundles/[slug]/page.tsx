@@ -218,7 +218,7 @@ export default function BundlePage() {
               {bundle.actions.map(a => {
                 const Icon = ICON_MAP[a.icon] || IcDoc
                 return (
-                  <button
+                  <button type="button"
                     key={a.key}
                     onClick={() => openAction(a.key)}
                     style={{

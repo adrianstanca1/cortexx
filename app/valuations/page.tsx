@@ -375,7 +375,7 @@ export default function ValuationsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 36px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
               <h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>New valuation</h2>
@@ -426,7 +426,7 @@ export default function ValuationsPage() {
 
       {paymentTarget && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setPaymentTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setPaymentTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 36px', display: 'flex', flexDirection: 'column', gap: 12 }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div><h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>Record payment</h2><div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 3 }}>{currentCertificate(paymentTarget)?.certificateNumber}</div></div>
@@ -443,7 +443,7 @@ export default function ValuationsPage() {
 
       {revisionTarget && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setRevisionTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setRevisionTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 36px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div><h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>Revise certificate</h2><div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 3 }}>{currentCertificate(revisionTarget)?.certificateNumber} · creates next revision</div></div>

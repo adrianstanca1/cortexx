@@ -84,6 +84,7 @@ function BankScreen({
       marginBottom: 20
     }
   }, "Connect your business bank account via TrueLayer Open Banking to automatically import transactions."), React.createElement("button", {
+    type: "button",
     onClick: connectBank,
     style: {
       background: accent,
@@ -103,10 +104,15 @@ function BankScreen({
       fontSize: 13,
       color: T.t3
     }
-  }, "Or ", React.createElement("span", {
+  }, "Or ", React.createElement("button", {
+    type: "button",
     style: {
       color: accent,
-      cursor: 'pointer'
+      cursor: 'pointer',
+      border: 0,
+      background: 'transparent',
+      padding: 0,
+      font: 'inherit'
     },
     onClick: () => {
       window.location.href = '/bank';

@@ -114,7 +114,7 @@ export default function ProjectBoardPage() {
                 colTasks.map(t => {
                   const next = col.id === 'todo' ? 'in_progress' : col.id === 'in_progress' ? 'done' : 'todo'
                   return (
-                    <div
+                    <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
                       key={t.id}
                       draggable
                       onDragStart={e => onDragStart(e, t.id)}

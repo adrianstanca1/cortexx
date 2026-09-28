@@ -145,7 +145,7 @@ export default function PermitsPage() {
               {permits.length} permits · {permits.filter(p => p.status === 'active').length} active
             </p>
           </div>
-          <button onClick={openAdd} aria-label="Add permit" style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Add permit" style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Raise</span>
           </button>
@@ -156,7 +156,7 @@ export default function PermitsPage() {
         {(['all', 'draft', 'active', 'expired', 'cancelled'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#f59e0b' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#f59e0b' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {s}
             </button>
           )
@@ -195,15 +195,15 @@ export default function PermitsPage() {
             </div>
             <div style={{ display: 'flex', gap: 6, marginTop: 8, flexWrap: 'wrap' }}>
               {p.status === 'draft' && (
-                <button onClick={() => setStatus(p, 'active')} style={pillBtn('#10b981')}>Activate</button>
+                <button type="button" onClick={() => setStatus(p, 'active')} style={pillBtn('#10b981')}>Activate</button>
               )}
               {p.status === 'active' && (
                 <>
-                  <button onClick={() => setStatus(p, 'expired')} style={pillBtn('var(--bg3)', '#fca5a5')}>Expire</button>
-                  <button onClick={() => setStatus(p, 'cancelled')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Cancel</button>
+                  <button type="button" onClick={() => setStatus(p, 'expired')} style={pillBtn('var(--bg3)', '#fca5a5')}>Expire</button>
+                  <button type="button" onClick={() => setStatus(p, 'cancelled')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Cancel</button>
                 </>
               )}
-              <button onClick={() => setConfirmDelete(p.id)} aria-label="Delete permit" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
+              <button type="button" onClick={() => setConfirmDelete(p.id)} aria-label="Delete permit" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                 <IcTrash size={11} color="#fca5a5" /> Delete
               </button>
             </div>
@@ -211,8 +211,8 @@ export default function PermitsPage() {
               <div style={{ marginTop: 10, padding: 10, background: 'rgba(239,68,68,0.1)', border: '0.5px solid rgba(239,68,68,0.4)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                 <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this permit?</span>
                 <div style={{ display: 'flex', gap: 6 }}>
-                  <button onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                  <button onClick={() => remove(p.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                  <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                  <button type="button" onClick={() => remove(p.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                 </div>
               </div>
             )}
@@ -221,11 +221,11 @@ export default function PermitsPage() {
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }}>
+          <div role="presentation" onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Raise permit</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
                 <IcX size={18} color="var(--t3)" />
               </button>
             </div>
@@ -242,7 +242,7 @@ export default function PermitsPage() {
               <Field label="Type">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(TYPE_LABEL) as Permit['type'][]).map(t => (
-                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#f59e0b' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button type="button" key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#f59e0b' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {TYPE_LABEL[t]}
                     </button>
                   ))}
@@ -251,7 +251,7 @@ export default function PermitsPage() {
               <Field label="Risk level">
                 <div style={{ display: 'flex', gap: 6 }}>
                   {(['low', 'medium', 'high', 'critical'] as const).map(r => (
-                    <button key={r} onClick={() => setForm(f => ({ ...f, riskLevel: r }))} style={{ background: form.riskLevel === r ? RISK_COLOR[r] : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.riskLevel === r ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
+                    <button type="button" key={r} onClick={() => setForm(f => ({ ...f, riskLevel: r }))} style={{ background: form.riskLevel === r ? RISK_COLOR[r] : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.riskLevel === r ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}>
                       {r}
                     </button>
                   ))}
@@ -274,7 +274,7 @@ export default function PermitsPage() {
               <Field label="Conditions / controls">
                 <textarea value={form.conditions} onChange={e => setForm(f => ({ ...f, conditions: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} placeholder="Fire watch in attendance, extinguisher within reach, area cleared 6m radius…" />
               </Field>
-              <button onClick={save} disabled={saving} style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Raise permit'}
               </button>
             </div>

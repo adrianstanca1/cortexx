@@ -231,9 +231,9 @@ export default function InspectionsPage() {
               {inspections.length} total · {inspections.filter(i => i.status === 'failed').length} failed
             </p>
           </div>
-          <button onClick={openAdd} aria-label="Add inspection" style={{ background: '#10b981', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
-            <IcPlus size={14} color="#fff" />
-            <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Schedule</span>
+          <button type="button" onClick={openAdd} aria-label="Add inspection" style={{ background: '#10b981', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <IcPlus size={14} color="#090b0d" />
+            <span style={{ fontFamily: SF, fontSize: 13, color: '#090b0d', fontWeight: 700 }}>Schedule</span>
           </button>
         </div>
       </div>
@@ -242,7 +242,7 @@ export default function InspectionsPage() {
         {(['all', 'draft', 'in_progress', 'passed', 'failed'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#10b981' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#10b981' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#090b0d' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {s.replace(/_/g, ' ')}
             </button>
           )
@@ -264,7 +264,7 @@ export default function InspectionsPage() {
           const evidenceReady = hasReleaseEvidence(i)
           return (
             <div key={i.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${i.status === 'failed' ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
-              <div onClick={() => setExpanded(isOpen ? null : i.id)} style={{ cursor: 'pointer' }}>
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => setExpanded(isOpen ? null : i.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                   <span style={{ background: TYPE_COLOR[i.type] + '33', color: TYPE_COLOR[i.type], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{TYPE_LABEL[i.type]}</span>
                   {i.pointType !== 'inspection' && <span style={{ background: '#8b5cf633', color: '#c4b5fd', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 800, textTransform: 'uppercase' }}>{i.pointType} point</span>}
@@ -286,7 +286,7 @@ export default function InspectionsPage() {
                       <div key={item.id} style={{ background: '#0a1426', borderRadius: 8, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ flex: 1, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>{item.label}</div>
                         {(['pass', 'fail', 'na'] as const).map(r => (
-                          <button key={r} onClick={() => updateItem(i, item.id, r)} style={{ background: item.result === r ? (r === 'pass' ? '#10b981' : r === 'fail' ? '#ef4444' : 'var(--t3)') : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', color: item.result === r ? '#fff' : 'var(--t2)', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
+                          <button type="button" key={r} onClick={() => updateItem(i, item.id, r)} style={{ background: item.result === r ? (r === 'pass' ? '#10b981' : r === 'fail' ? '#ef4444' : 'var(--t3)') : 'transparent', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '4px 8px', color: item.result === r ? '#090b0d' : 'var(--t2)', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', textTransform: 'uppercase' }}>
                             {r}
                           </button>
                         ))}
@@ -301,27 +301,27 @@ export default function InspectionsPage() {
                       </label>
                     )}
                     {i.pointType !== 'inspection' && i.releaseStatus !== 'released' && (
-                      <button disabled={!evidenceReady || evidenceBusy === i.id} onClick={() => releasePoint(i, 'released')} title={!evidenceReady ? 'Attach an evidence image before release' : undefined} style={{ ...pillBtn('#8b5cf6'), opacity: evidenceReady && evidenceBusy !== i.id ? 1 : .45 }}>
+                      <button type="button" disabled={!evidenceReady || evidenceBusy === i.id} onClick={() => releasePoint(i, 'released')} title={!evidenceReady ? 'Attach an evidence image before release' : undefined} style={{ ...pillBtn('#8b5cf6'), opacity: evidenceReady && evidenceBusy !== i.id ? 1 : .45 }}>
                         <IcCheck size={11} color="#fff" /> {i.pointType === 'witness' ? 'Witness / release' : 'Release hold'}
                       </button>
                     )}
                     {i.pointType !== 'inspection' && i.releaseStatus === 'pending' && (
-                      <button onClick={() => releasePoint(i, 'rejected')} style={pillBtn('#7f1d1d', '#fecaca', '#ef444466')}>Reject point</button>
+                      <button type="button" onClick={() => releasePoint(i, 'rejected')} style={pillBtn('#7f1d1d', '#fecaca', '#ef444466')}>Reject point</button>
                     )}
                     {i.status !== 'passed' && (
-                      <button onClick={() => setStatus(i, 'passed')} style={pillBtn('#10b981')}>
+                      <button type="button" onClick={() => setStatus(i, 'passed')} style={pillBtn('#10b981')}>
                         <IcCheck size={11} color="#fff" /> Pass
                       </button>
                     )}
                     {i.status !== 'failed' && (
-                      <button onClick={() => setStatus(i, 'failed')} style={pillBtn('#ef4444')}>
+                      <button type="button" onClick={() => setStatus(i, 'failed')} style={pillBtn('#ef4444')}>
                         <IcAlert size={11} color="#fff" /> Fail
                       </button>
                     )}
                     {(i.status === 'passed' || i.status === 'failed') && (
-                      <button onClick={() => setStatus(i, 'in_progress')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Reopen</button>
+                      <button type="button" onClick={() => setStatus(i, 'in_progress')} style={pillBtn('var(--bg3)', '#c1d2e8')}>Reopen</button>
                     )}
-                    <button onClick={() => setConfirmDelete(i.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
+                    <button type="button" onClick={() => setConfirmDelete(i.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                       <IcTrash size={11} color="#fca5a5" /> Delete
                     </button>
                   </div>
@@ -332,8 +332,8 @@ export default function InspectionsPage() {
                 <div style={{ marginTop: 10, padding: 10, background: 'rgba(239,68,68,0.1)', border: '0.5px solid rgba(239,68,68,0.4)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this inspection?</span>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button onClick={() => remove(i.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                    <button type="button" onClick={() => remove(i.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#090b0d', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </div>
                 </div>
               )}
@@ -343,17 +343,17 @@ export default function InspectionsPage() {
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }}>
+          <div role="presentation" onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Schedule inspection</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
                 <IcX size={18} color="var(--t3)" />
               </button>
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 12 }}>
               <Field label="Project *">
-                <select value={form.projectId} onChange={e => setForm(f => ({ ...f, projectId: e.target.value, drawingId: '', drawingRevisionId: '' }))} style={inputStyle}>
+                <select aria-label="Project" value={form.projectId} onChange={e => setForm(f => ({ ...f, projectId: e.target.value, drawingId: '', drawingRevisionId: '' }))} style={inputStyle}>
                   <option value="">Select…</option>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
@@ -364,7 +364,7 @@ export default function InspectionsPage() {
               <Field label="Type">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(TYPE_LABEL) as Inspection['type'][]).map(t => (
-                    <button key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? TYPE_COLOR[t] : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button type="button" key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? TYPE_COLOR[t] : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#090b0d' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {TYPE_LABEL[t]}
                     </button>
                   ))}
@@ -373,7 +373,7 @@ export default function InspectionsPage() {
               <Field label="Control point">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(['inspection', 'hold', 'witness'] as const).map(pointType => (
-                    <button key={pointType} type="button" onClick={() => setForm(f => ({ ...f, pointType }))} style={{ background: form.pointType === pointType ? '#8b5cf6' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.pointType === pointType ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}>
+                    <button key={pointType} type="button" onClick={() => setForm(f => ({ ...f, pointType }))} style={{ background: form.pointType === pointType ? '#8b5cf6' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.pointType === pointType ? '#090b0d' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', textTransform: 'capitalize' }}>
                       {pointType === 'inspection' ? 'Standard inspection' : `${pointType} point`}
                     </button>
                   ))}
@@ -383,7 +383,7 @@ export default function InspectionsPage() {
                 <input type="text" value={form.location} onChange={e => setForm(f => ({ ...f, location: e.target.value }))} style={inputStyle} placeholder="East elevation · Level 4 · Grid E3" />
               </Field>
               <Field label="Drawing / latest revision">
-                <select value={form.drawingId} onChange={e => {
+                <select aria-label="Drawing or latest revision" value={form.drawingId} onChange={e => {
                   const drawing = drawings.find(d => d.id === e.target.value)
                   setForm(f => ({ ...f, drawingId: e.target.value, drawingRevisionId: drawing?.revisions?.[0]?.id || '' }))
                 }} style={inputStyle}>
@@ -392,12 +392,12 @@ export default function InspectionsPage() {
                 </select>
               </Field>
               <Field label="Scheduled for">
-                <input type="datetime-local" value={form.scheduledAt} onChange={e => setForm(f => ({ ...f, scheduledAt: e.target.value }))} style={inputStyle} />
+                <input aria-label="Scheduled for" type="datetime-local" value={form.scheduledAt} onChange={e => setForm(f => ({ ...f, scheduledAt: e.target.value }))} style={inputStyle} />
               </Field>
               <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', background: 'rgba(16,185,129,0.08)', borderRadius: 8, padding: 10 }}>
                 A starter checklist for <strong>{TYPE_LABEL[form.type]}</strong> ({DEFAULT_CHECKLISTS[form.type].length} items) will be pre-populated. {form.pointType === 'hold' ? 'This hold point cannot pass until it is formally released.' : form.pointType === 'witness' ? 'This witness point cannot pass until witness/release is recorded.' : 'Tap items on the card to mark pass / fail / N/A.'}
               </div>
-              <button onClick={save} disabled={saving} style={{ background: '#10b981', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#10b981', border: 'none', borderRadius: 10, padding: 12, color: '#090b0d', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Schedule'}
               </button>
             </div>

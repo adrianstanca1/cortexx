@@ -147,20 +147,20 @@ export default function ObservationsPage() {
               {unsafeOpenCount > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {unsafeOpenCount} unsafe / near-miss open</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Log observation" disabled={projects.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(34,197,94,0.3)' : '#22c55e', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Log observation" disabled={projects.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(34,197,94,0.3)' : '#22c55e', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 6 }}>
           {(['all', 'positive', 'improvement', 'unsafe', 'near_miss'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#22c55e' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#22c55e' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : TYPE_CFG[t].label}
             </button>
           ))}
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {(['all', 'open', 'resolved'] as const).map(s => (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '3px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: statusFilter === s ? 'rgba(255,255,255,0.1)' : 'transparent', color: statusFilter === s ? 'var(--t1)' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '3px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: statusFilter === s ? 'rgba(255,255,255,0.1)' : 'transparent', color: statusFilter === s ? 'var(--t1)' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer' }}>
               {s === 'all' ? 'All' : s === 'open' ? 'Open' : 'Resolved'}
             </button>
           ))}
@@ -176,7 +176,7 @@ export default function ObservationsPage() {
           <IcAlert size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{items.length === 0 ? 'No observations logged yet' : 'Nothing in this filter'}</p>
           {items.length === 0 && projects.length > 0 && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#22c55e', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#22c55e', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Log first observation
             </button>
           )}
@@ -198,10 +198,10 @@ export default function ObservationsPage() {
                 <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 8 }}>
                   {o.location && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>{o.location}</span>}
                   {o.reportedBy && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>— {o.reportedBy}</span>}
-                  <button onClick={() => toggleResolved(o)} style={{ marginLeft: 'auto', background: o.status === 'resolved' ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)', border: `0.5px solid ${o.status === 'resolved' ? 'rgba(245,158,11,0.4)' : 'rgba(16,185,129,0.4)'}`, color: o.status === 'resolved' ? '#f59e0b' : '#10b981', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={() => toggleResolved(o)} style={{ marginLeft: 'auto', background: o.status === 'resolved' ? 'rgba(245,158,11,0.18)' : 'rgba(16,185,129,0.18)', border: `0.5px solid ${o.status === 'resolved' ? 'rgba(245,158,11,0.4)' : 'rgba(16,185,129,0.4)'}`, color: o.status === 'resolved' ? '#f59e0b' : '#10b981', borderRadius: 8, padding: '3px 9px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}>
                     {o.status === 'resolved' ? 'Reopen' : 'Resolve'}
                   </button>
-                  <button onClick={() => remove(o.id)} aria-label={confirmDelete === o.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === o.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === o.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button type="button" onClick={() => remove(o.id)} aria-label={confirmDelete === o.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === o.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === o.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                     <IcTrash size={11} color="#ef4444" />
                     {confirmDelete === o.id && <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#ef4444' }}>Sure?</span>}
                   </button>
@@ -216,36 +216,36 @@ export default function ObservationsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Log observation</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
-              <label style={labelStyle}>Type</label>
+              <div style={labelStyle}>Type</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
                 {(['positive', 'improvement', 'unsafe', 'near_miss'] as const).map(t => (
-                  <button key={t} onClick={() => setForm(p => ({ ...p, type: t }))} style={{ padding: '8px', borderRadius: 8, border: form.type === t ? `1px solid ${TYPE_CFG[t].color}` : '1px solid rgba(255,255,255,0.1)', background: form.type === t ? TYPE_CFG[t].bg : 'rgba(255,255,255,0.02)', color: form.type === t ? TYPE_CFG[t].color : 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                  <button type="button" key={t} onClick={() => setForm(p => ({ ...p, type: t }))} style={{ padding: '8px', borderRadius: 8, border: form.type === t ? `1px solid ${TYPE_CFG[t].color}` : '1px solid rgba(255,255,255,0.1)', background: form.type === t ? TYPE_CFG[t].bg : 'rgba(255,255,255,0.02)', color: form.type === t ? TYPE_CFG[t].color : 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                     {TYPE_CFG[t].emoji} {TYPE_CFG[t].label}
                   </button>
                 ))}
               </div>
             </div>
 
-            <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What did you see?" style={inputStyle} />
+            <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What did you see?" style={inputStyle} />
             <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Detail (optional)" rows={3} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
             <input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="Where (e.g. Level 2 corridor)" style={inputStyle} />
 
             <div>
-              <label style={labelStyle}>Project</label>
-              <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-242" style={labelStyle}>Project</label>
+              <select id="field-242" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
 
-            <button onClick={create} disabled={saving || !form.title.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: TYPE_CFG[form.type].color, border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.title.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: TYPE_CFG[form.type].color, border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Log observation</>}
             </button>
           </div>

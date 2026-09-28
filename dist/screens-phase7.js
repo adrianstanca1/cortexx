@@ -256,6 +256,7 @@ function SubInvoicesScreen({
         borderTop: `0.5px solid ${T.hair}`
       }
     }, React.createElement("button", {
+      type: "button",
       onClick: () => approve(iv.id),
       style: {
         flex: 1,
@@ -270,6 +271,7 @@ function SubInvoicesScreen({
         cursor: 'pointer'
       }
     }, "Approve"), React.createElement("button", {
+      type: "button",
       onClick: () => reject(iv.id),
       style: {
         background: 'transparent',
@@ -283,6 +285,7 @@ function SubInvoicesScreen({
         cursor: 'pointer'
       }
     }, "Reject"), React.createElement("button", {
+      type: "button",
       onClick: () => toast(`Opening ${iv.id}…`, 'info'),
       style: {
         background: 'transparent',
@@ -304,6 +307,7 @@ function SubInvoicesScreen({
         borderTop: `0.5px solid ${T.hair}`
       }
     }, React.createElement("button", {
+      type: "button",
       onClick: () => pay(iv.id),
       style: {
         flex: 1,

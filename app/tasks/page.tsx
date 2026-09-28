@@ -359,7 +359,7 @@ export default function TasksPage() {
         subtitle={selectMode ? `${selectedIds.size} selected` : `${tasks.filter((t) => t.status !== 'done').length} remaining`}
         notifCount={overdueCount}
         rightSlot={
-          <button
+          <button type="button"
             onClick={() => { if (selectMode) exitSelectMode(); else setSelectMode(true) }}
             style={{ background: selectMode ? '#f59e0b' : 'rgba(255,255,255,0.07)', color: selectMode ? '#fff' : 'var(--t2)', border: 'none', borderRadius: 10, padding: '7px 12px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
           >
@@ -373,7 +373,7 @@ export default function TasksPage() {
         <div style={{ display: 'flex', alignItems: 'center', gap: 8, background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: '9px 14px' }}>
           <IcSearch size={14} color="var(--t3)" />
           <input value={search} onChange={e => setSearch(e.target.value)} placeholder="Search tasks, projects, people…" style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 13, flex: 1 }} />
-          {search && <button onClick={() => setSearch('')} aria-label="Clear search" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><IcX size={14} color="var(--t3)" /></button>}
+          {search && <button type="button" onClick={() => setSearch('')} aria-label="Clear search" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}><IcX size={14} color="var(--t3)" /></button>}
         </div>
       </div>
 
@@ -401,7 +401,7 @@ export default function TasksPage() {
             overdueCount
 
           return (
-            <button
+            <button type="button"
               key={f.id}
               onClick={() => setFilter(f.id)}
               style={{
@@ -476,8 +476,8 @@ export default function TasksPage() {
                   cursor: 'pointer',
                   opacity: isDone && !isSelected ? 0.6 : 1,
                 }}
-                onClick={() => selectMode ? toggleSelected(task.id) : toggleTask(task)}
               >
+                <div role="button" tabIndex={0} onClick={() => selectMode ? toggleSelected(task.id) : toggleTask(task)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} style={{ display: 'flex', gap: 12, flex: 1, minWidth: 0, outlineOffset: 4 }}>
                 <div
                   style={{
                     width: 24,
@@ -537,6 +537,7 @@ export default function TasksPage() {
                     )}
                   </div>
                 </div>
+                </div>
 
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   <Pill label={task.priority} />
@@ -547,14 +548,14 @@ export default function TasksPage() {
                     <Avatar name={task.assignee.name} color={task.assignee.avatarColor} size={22} />
                   )}
                   <div style={{ display: 'flex', gap: 4 }}>
-                    <button
+                    <button type="button"
                       onClick={(e) => openEditModal(e, task)}
                       aria-label="Edit task"
                       style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2, opacity: 0.4, display: 'flex' }}
                     >
                       <IcEdit size={13} color="var(--t2)" />
                     </button>
-                    <button
+                    <button type="button"
                       onClick={(e) => deleteTask(e, task)}
                       aria-label={confirmDeleteId === task.id ? 'Confirm delete task' : 'Delete task'}
                       style={{ background: confirmDeleteId === task.id ? 'rgba(239,68,68,0.2)' : 'none', borderRadius: 4, border: 'none', cursor: 'pointer', padding: confirmDeleteId === task.id ? '2px 6px' : 2, opacity: confirmDeleteId === task.id ? 1 : 0.4, display: 'flex', alignItems: 'center', gap: 4 }}
@@ -573,9 +574,9 @@ export default function TasksPage() {
       {selectMode && selectedIds.size > 0 && (
         <div style={{ position: 'fixed', bottom: 76, left: '50%', transform: 'translateX(-50%)', maxWidth: 480, width: 'calc(100% - 24px)', background: 'rgba(12,26,46,0.98)', backdropFilter: 'blur(12px)', borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(245,158,11,0.3)', zIndex: 90, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
           <span style={{ flex: 1, fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>{selectedIds.size} selected</span>
-          <button onClick={() => bulk('complete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Done</button>
-          <button onClick={() => bulk('reopen')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Reopen</button>
-          <button onClick={() => bulk('delete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Delete</button>
+          <button type="button" onClick={() => bulk('complete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Done</button>
+          <button type="button" onClick={() => bulk('reopen')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Reopen</button>
+          <button type="button" onClick={() => bulk('delete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Delete</button>
         </div>
       )}
 
@@ -584,18 +585,18 @@ export default function TasksPage() {
       {/* New task modal */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>New task</h3>
-              <button onClick={() => setShowModal(false)} aria-label="Close new task dialog" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowModal(false)} aria-label="Close new task dialog" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             {/* Title */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Task title *</label>
-              <input
-                autoFocus
+              <label htmlFor="field-596" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Task title *</label>
+              <input id="field-596"
+
                 value={form.title}
                 onChange={e => setForm(p => ({ ...p, title: e.target.value }))}
                 placeholder="e.g. Install kitchen units"
@@ -605,16 +606,16 @@ export default function TasksPage() {
 
             {/* Notes */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Notes</label>
-              <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              <label htmlFor="field-608" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Notes</label>
+              <input id="field-608" value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             {/* Priority */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Priority</label>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Priority</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {PRIORITIES.map(p => (
-                  <button key={p} onClick={() => setForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: form.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${form.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: form.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
+                  <button type="button" key={p} onClick={() => setForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: form.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${form.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: form.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
                     {p}
                   </button>
                 ))}
@@ -624,8 +625,8 @@ export default function TasksPage() {
             {/* Due date & time */}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <div>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
-                <input
+                <label htmlFor="field-627" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
+                <input id="field-627"
                   type="date"
                   value={form.dueDate}
                   onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))}
@@ -633,8 +634,8 @@ export default function TasksPage() {
                 />
               </div>
               <div>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
-                <input
+                <label htmlFor="field-636" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
+                <input id="field-636"
                   type="time"
                   value={form.dueTime}
                   onChange={e => setForm(p => ({ ...p, dueTime: e.target.value }))}
@@ -645,8 +646,8 @@ export default function TasksPage() {
 
             {/* Project */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project{requiresProject ? ' *' : ''}</label>
-              <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={selectStyle}>
+              <label htmlFor="field-648" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project{requiresProject ? ' *' : ''}</label>
+              <select id="field-648" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={selectStyle}>
                 {!requiresProject && <option value="">No project</option>}
                 {requiresProject && projects.length === 0 && <option value="">No assigned projects</option>}
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
@@ -656,7 +657,7 @@ export default function TasksPage() {
 
             {/* Assignee */}
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</label>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</div>
               {activePersona === 'operative' ? (
                 <div style={{ ...selectStyle, color: 'var(--t2)' }}>Assigned to you automatically</div>
               ) : (
@@ -668,13 +669,13 @@ export default function TasksPage() {
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
-              <select value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={selectStyle}>
+              <label htmlFor="field-671" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
+              <select id="field-671" value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} style={selectStyle}>
                 {CATEGORIES.map(c => <option key={c || 'none'} value={c}>{c || 'None'}</option>)}
               </select>
             </div>
 
-            <button onClick={createTask} disabled={saving || !form.title.trim() || (requiresProject && !form.projectId)} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || (requiresProject && !form.projectId) ? 0.5 : 1 }}>
+            <button type="button" onClick={createTask} disabled={saving || !form.title.trim() || (requiresProject && !form.projectId)} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || (requiresProject && !form.projectId) ? 0.5 : 1 }}>
               {saving ? 'Creating…' : 'Create task'}
             </button>
           </div>
@@ -684,28 +685,28 @@ export default function TasksPage() {
       {/* Edit task modal */}
       {editTarget && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setEditTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setEditTarget(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Edit task</h3>
-              <button onClick={() => setEditTarget(null)} aria-label="Close edit task dialog" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setEditTarget(null)} aria-label="Close edit task dialog" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Task title *</label>
-              <input autoFocus value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              <label htmlFor="field-695" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Task title *</label>
+              <input id="field-695" value={editForm.title} onChange={e => setEditForm(p => ({ ...p, title: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Notes</label>
-              <input value={editForm.description} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
+              <label htmlFor="field-700" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Notes</label>
+              <input id="field-700" value={editForm.description} onChange={e => setEditForm(p => ({ ...p, description: e.target.value }))} placeholder="Optional details" style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box' }} />
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Priority</label>
+              <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 8 }}>Priority</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {PRIORITIES.map(p => (
-                  <button key={p} onClick={() => setEditForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: editForm.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${editForm.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: editForm.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
+                  <button type="button" key={p} onClick={() => setEditForm(prev => ({ ...prev, priority: p }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: editForm.priority === p ? `${priorityColor[p]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${editForm.priority === p ? priorityColor[p] : 'rgba(255,255,255,0.1)'}`, color: editForm.priority === p ? priorityColor[p] : 'var(--t2)', fontSize: 11, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>
                     {p}
                   </button>
                 ))}
@@ -714,39 +715,39 @@ export default function TasksPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
               <div>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
-                <input type="date" value={editForm.dueDate} onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+                <label htmlFor="field-717" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Due date</label>
+                <input id="field-717" type="date" value={editForm.dueDate} onChange={e => setEditForm(p => ({ ...p, dueDate: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
               </div>
               <div>
-                <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
-                <input type="time" value={editForm.dueTime} onChange={e => setEditForm(p => ({ ...p, dueTime: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
+                <label htmlFor="field-721" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Time</label>
+                <input id="field-721" type="time" value={editForm.dueTime} onChange={e => setEditForm(p => ({ ...p, dueTime: e.target.value }))} style={{ width: '100%', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 10, padding: '11px 14px', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 14, outline: 'none', boxSizing: 'border-box', colorScheme: 'dark' }} />
               </div>
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project</label>
-              <select value={editForm.projectId} onChange={e => setEditForm(p => ({ ...p, projectId: e.target.value }))} style={selectStyle}>
+              <label htmlFor="field-727" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Project</label>
+              <select id="field-727" value={editForm.projectId} onChange={e => setEditForm(p => ({ ...p, projectId: e.target.value }))} style={selectStyle}>
                 <option value="">No project</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</label>
-              <select value={editForm.assigneeId} onChange={e => setEditForm(p => ({ ...p, assigneeId: e.target.value }))} style={selectStyle}>
+              <label htmlFor="field-735" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Assignee</label>
+              <select id="field-735" value={editForm.assigneeId} onChange={e => setEditForm(p => ({ ...p, assigneeId: e.target.value }))} style={selectStyle}>
                 <option value="">Unassigned</option>
                 {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
             </div>
 
             <div>
-              <label style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
-              <select value={editForm.category} onChange={e => setEditForm(p => ({ ...p, category: e.target.value }))} style={selectStyle}>
+              <label htmlFor="field-743" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, display: 'block', marginBottom: 6 }}>Category</label>
+              <select id="field-743" value={editForm.category} onChange={e => setEditForm(p => ({ ...p, category: e.target.value }))} style={selectStyle}>
                 {CATEGORIES.map(c => <option key={c || 'none'} value={c}>{c || 'None'}</option>)}
               </select>
             </div>
 
-            <button onClick={saveEdit} disabled={savingEdit || !editForm.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.title.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={saveEdit} disabled={savingEdit || !editForm.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.title.trim() ? 0.5 : 1 }}>
               {savingEdit ? 'Saving…' : 'Save changes'}
             </button>
 

@@ -103,14 +103,14 @@ function PhotosV2Screen({ accent }) {
     <ScreenBg accent={accent}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
         <MobileHeader title="Photos" subtitle={`${photos.length} stored locally · IndexedDB`}
-          right={<button onClick={() => fileInput.current?.click()} style={{
+          right={<button type="button" onClick={() => fileInput.current?.click()} style={{
             width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff',
             cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center',
           }}>{React.cloneElement(Ic.camera, { size: 18 })}</button>}/>
         <input ref={fileInput} type="file" accept="image/*" multiple capture="environment" onChange={handleFile} style={{ display: 'none' }}/>
 
         {photos.length === 0 ? (
-          <div onClick={() => fileInput.current?.click()} style={{
+          <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => fileInput.current?.click()} style={{
             margin: '4px 16px', padding: '40px 20px', border: `1.5px dashed ${T.hairStrong}`,
             background: T.bg2, borderRadius: 14, textAlign: 'center', cursor: 'pointer',
           }}>
@@ -124,7 +124,7 @@ function PhotosV2Screen({ accent }) {
               {photos.map(p => {
                 const url = window.cortexxPhotoStore.blobURL(p.blob);
                 return (
-                  <div key={p.id} onClick={() => setViewing({...p, url})} style={{
+                  <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={p.id} onClick={() => setViewing({...p, url})} style={{
                     aspectRatio: '1', borderRadius: 8, overflow: 'hidden', cursor: 'pointer',
                     background: `url(${url}) center/cover`,
                     border: `0.5px solid ${T.hair}`, position: 'relative',
@@ -140,18 +140,18 @@ function PhotosV2Screen({ accent }) {
         )}
 
         {viewing && (
-          <div onClick={() => setViewing(null)} style={{
+          <div style={{
             position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.95)', zIndex: 100,
             display: 'flex', flexDirection: 'column',
           }}>
             <div style={{ padding: '14px 16px', display: 'flex', justifyContent: 'space-between' }}>
-              <button onClick={() => setViewing(null)} style={{ background: 'none', border: 'none', color: '#fff', fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
-              <button onClick={async (e) => { e.stopPropagation(); await window.cortexxPhotoStore.remove(viewing.id); await refresh(); setViewing(null); toast('Photo deleted', 'success'); }} style={{ background: 'none', border: 'none', color: T.red, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Delete</button>
+              <button type="button" onClick={() => setViewing(null)} style={{ background: 'none', border: 'none', color: '#fff', fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
+              <button type="button" onClick={async (e) => { e.stopPropagation(); await window.cortexxPhotoStore.remove(viewing.id); await refresh(); setViewing(null); toast('Photo deleted', 'success'); }} style={{ background: 'none', border: 'none', color: T.red, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Delete</button>
             </div>
             <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 16 }}>
-              <img src={viewing.url} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12 }}/>
+              <img src={viewing.url} alt={viewing.name || 'Project photo'} style={{ maxWidth: '100%', maxHeight: '100%', borderRadius: 12 }}/>
             </div>
-            <div onClick={(e) => e.stopPropagation()}>
+            <div role="presentation" onClick={(e) => e.stopPropagation()}>
               {window.PhotoVisionAction && <PhotoVisionAction blob={viewing.blob} accent={accent}/>}
             </div>
             <div style={{ padding: 16, color: '#fff', fontFamily: SF, fontSize: 12, textAlign: 'center' }}>

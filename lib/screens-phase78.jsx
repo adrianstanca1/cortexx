@@ -152,7 +152,7 @@ Note to parse: """${text}"""`;
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1, display: 'flex', alignItems: 'center', gap: 6 }}>
           <span style={{ color: T.purple }}>{React.cloneElement(Ic.spark, { size: 14 })}</span> Smart parse
         </div>
@@ -166,7 +166,7 @@ Note to parse: """${text}"""`;
 
         <textarea value={text} onChange={(e) => { setText(e.target.value); setResult(null); setErr(''); }}
           placeholder="Paste email, brief, or voice transcript…"
-          rows={6} autoFocus
+          rows={6}
           style={{
             width: '100%', boxSizing: 'border-box',
             background: T.bg2, border: `0.5px solid ${T.hair}`,
@@ -180,7 +180,7 @@ Note to parse: """${text}"""`;
             <div style={{ fontFamily: SF, fontSize: 10.5, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 6 }}>Try one of these</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 5 }}>
               {examples.map((ex, i) => (
-                <button key={i} onClick={() => { setText(ex); setResult(null); }} style={{
+                <button type="button" key={i} onClick={() => { setText(ex); setResult(null); }} style={{
                   textAlign: 'left', background: T.bg2,
                   border: `0.5px solid ${T.hair}`, borderRadius: 10,
                   padding: '9px 12px', color: T.blueL,
@@ -191,7 +191,7 @@ Note to parse: """${text}"""`;
           </div>
         )}
 
-        <button onClick={parse} disabled={!text.trim() || busy} style={{
+        <button type="button" onClick={parse} disabled={!text.trim() || busy} style={{
           width: '100%', marginTop: 14, padding: '13px',
           background: text.trim() && !busy ? `linear-gradient(135deg, ${T.purple}, ${accent})` : T.bg3,
           color: '#fff', border: 'none', borderRadius: 12,
@@ -227,7 +227,7 @@ Note to parse: """${text}"""`;
                 {result.records.length} record{result.records.length !== 1 ? 's' : ''} found
               </div>
               {result.records.some(r => !r._saved) && (
-                <button onClick={saveAll} style={{
+                <button type="button" onClick={saveAll} style={{
                   background: T.bg2, border: `0.5px solid ${accent}66`, color: accent,
                   borderRadius: 12, padding: '5px 11px', cursor: 'pointer',
                   fontFamily: SF, fontSize: 11, fontWeight: 700,
@@ -292,7 +292,7 @@ function ParsedRecord({ rec, accent, onSave }) {
         </div>
       </div>
       {!rec._saved ? (
-        <button onClick={onSave} style={{
+        <button type="button" onClick={onSave} style={{
           marginTop: 8, background: `${c}22`, border: `0.5px solid ${c}55`,
           color: c, borderRadius: 8, padding: '5px 10px',
           fontFamily: SF, fontSize: 11.5, fontWeight: 600, cursor: 'pointer',
@@ -461,7 +461,7 @@ function TaskBulkActionBar() {
       <BulkBtn color={T.red}   icon={Ic.alert}  onClick={() => prio('high')}>!</BulkBtn>
       <BulkBtn color={T.amber} icon={Ic.flag}   onClick={() => prio('med')}>m</BulkBtn>
       <BulkBtn color={T.t3}    icon={Ic.trash}  onClick={del}>Del</BulkBtn>
-      <button onClick={sel.clear} style={{
+      <button type="button" onClick={sel.clear} style={{
         marginLeft: 'auto', background: 'transparent', color: T.t2,
         border: 'none', fontFamily: SF, fontSize: 13, cursor: 'pointer',
       }}>Cancel</button>
@@ -470,7 +470,7 @@ function TaskBulkActionBar() {
 }
 function BulkBtn({ icon, children, color, onClick }) {
   return (
-    <button onClick={onClick} title={children} style={{
+    <button type="button" onClick={onClick} title={children} style={{
       background: `${color}22`, border: `0.5px solid ${color}55`,
       color, borderRadius: 10, padding: '7px 10px',
       cursor: 'pointer', display: 'inline-flex', alignItems: 'center', gap: 4,

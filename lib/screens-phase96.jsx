@@ -106,8 +106,8 @@ function NfcCheckinConfirm({ projectId, onDone, accent }) {
   };
 
   return (
-    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 4000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }} onClick={onDone}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, background: T.bg1, borderRadius: '20px 20px 0 0', padding: '26px 22px calc(26px + env(safe-area-inset-bottom))', boxShadow: '0 -8px 40px rgba(0,0,0,.5)' }}>
+    <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,.6)', zIndex: 4000, display: 'flex', alignItems: 'flex-end', justifyContent: 'center' }}>
+      <div role="presentation" onClick={e => e.stopPropagation()} style={{ width: '100%', maxWidth: 420, background: T.bg1, borderRadius: '20px 20px 0 0', padding: '26px 22px calc(26px + env(safe-area-inset-bottom))', boxShadow: '0 -8px 40px rgba(0,0,0,.5)' }}>
         <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'center', textAlign: 'center', gap: 6 }}>
           <div style={{ width: 56, height: 56, borderRadius: 28, background: `${accent}1f`, display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: 4 }}>
             {React.cloneElement(Ic.pin, { size: 26, color: accent })}
@@ -122,10 +122,10 @@ function NfcCheckinConfirm({ projectId, onDone, accent }) {
               <div style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, letterSpacing: 1, textTransform: 'uppercase', color: accent }}>NFC tag detected</div>
               <div style={{ fontFamily: SF, fontSize: 21, fontWeight: 700, color: T.t1, letterSpacing: -0.4 }}>{proj?.name || 'Site'}</div>
               <div style={{ fontFamily: SF, fontSize: 14, color: T.t2, marginBottom: 14 }}>{onSite ? "You're currently on site." : 'Ready to start your shift?'}</div>
-              <button onClick={confirm} disabled={busy} style={{ width: '100%', background: nextAction === 'in' ? T.green : accent, color: '#fff', border: 'none', borderRadius: 14, padding: '16px', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.7 : 1 }}>
+              <button type="button" onClick={confirm} disabled={busy} style={{ width: '100%', background: nextAction === 'in' ? T.green : accent, color: '#fff', border: 'none', borderRadius: 14, padding: '16px', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: busy ? 'default' : 'pointer', opacity: busy ? 0.7 : 1 }}>
                 {busy ? 'Logging…' : (nextAction === 'in' ? 'Check in now' : 'Check out now')}
               </button>
-              <button onClick={onDone} style={{ marginTop: 8, background: 'none', border: 'none', color: T.t3, fontFamily: SF, fontSize: 14, cursor: 'pointer', padding: 8 }}>Not now</button>
+              <button type="button" onClick={onDone} style={{ marginTop: 8, background: 'none', border: 'none', color: T.t3, fontFamily: SF, fontSize: 14, cursor: 'pointer', padding: 8 }}>Not now</button>
             </>
           )}
         </div>

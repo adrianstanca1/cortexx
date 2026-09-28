@@ -36,7 +36,7 @@ export default function GlobalError({
       <p style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: '#8ea8c5', textAlign: 'center', maxWidth: 320 }}>
         {error.message || 'An unexpected error occurred. The team has been notified.'}
       </p>
-      <button
+      <button type="button"
         onClick={reset}
         style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 12, padding: '12px 24px', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}
       >

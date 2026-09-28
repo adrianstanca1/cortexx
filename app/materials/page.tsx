@@ -131,7 +131,7 @@ export default function MaterialsPage() {
               {items.length} items{lowStockCount > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {lowStockCount} low stock</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Add material" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Add material" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -140,12 +140,12 @@ export default function MaterialsPage() {
           <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="var(--t3)" /></div>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', paddingBottom: 2 }}>
-          <button onClick={() => setLowStockOnly(s => !s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: lowStockOnly ? '#ef4444' : 'rgba(239,68,68,0.12)', color: lowStockOnly ? '#fff' : '#ef4444', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+          <button type="button" onClick={() => setLowStockOnly(s => !s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: lowStockOnly ? '#ef4444' : 'rgba(239,68,68,0.12)', color: lowStockOnly ? '#fff' : '#ef4444', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
             <IcAlert size={11} color={lowStockOnly ? '#fff' : '#ef4444'} /> Low stock
           </button>
-          <button onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
+          <button type="button" onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
           {categories.map(c => (
-            <button key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
+            <button type="button" key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
           ))}
         </div>
       </div>
@@ -158,14 +158,14 @@ export default function MaterialsPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcWrench size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No materials</p>
-          <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add first</button>
+          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add first</button>
         </div>
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {items.map(it => {
             const low = it.reorderPoint > 0 && it.stockLevel <= it.reorderPoint
             return (
-              <button key={it.id} onClick={() => setActiveItem(it)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${low ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
+              <button type="button" key={it.id} onClick={() => setActiveItem(it)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${low ? 'rgba(239,68,68,0.35)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{it.name}</div>
                   <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>
@@ -186,13 +186,13 @@ export default function MaterialsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add material</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
-            <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Name (e.g. 25mm OSB sheet)" style={inputStyle} />
+            <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Name (e.g. 25mm OSB sheet)" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="Code" style={inputStyle} />
               <input value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="Category" list="mat-cats" style={inputStyle} />
@@ -200,29 +200,29 @@ export default function MaterialsPage() {
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Cost £</label>
-                <input type="number" step="0.01" value={form.unitCost} onChange={e => setForm(p => ({ ...p, unitCost: e.target.value }))} style={inputStyle} />
+                <label htmlFor="field-203" style={labelStyle}>Cost £</label>
+                <input id="field-203" type="number" step="0.01" value={form.unitCost} onChange={e => setForm(p => ({ ...p, unitCost: e.target.value }))} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Per</label>
-                <select value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-207" style={labelStyle}>Per</label>
+                <select id="field-207" value={form.unit} onChange={e => setForm(p => ({ ...p, unit: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                   {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>In stock</label>
-                <input type="number" step="0.1" value={form.stockLevel} onChange={e => setForm(p => ({ ...p, stockLevel: e.target.value }))} style={inputStyle} />
+                <label htmlFor="field-213" style={labelStyle}>In stock</label>
+                <input id="field-213" type="number" step="0.1" value={form.stockLevel} onChange={e => setForm(p => ({ ...p, stockLevel: e.target.value }))} style={inputStyle} />
               </div>
             </div>
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Reorder at</label>
-                <input type="number" step="0.1" value={form.reorderPoint} onChange={e => setForm(p => ({ ...p, reorderPoint: e.target.value }))} style={inputStyle} />
+                <label htmlFor="field-219" style={labelStyle}>Reorder at</label>
+                <input id="field-219" type="number" step="0.1" value={form.reorderPoint} onChange={e => setForm(p => ({ ...p, reorderPoint: e.target.value }))} style={inputStyle} />
               </div>
               <input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="Location (yard / van / site)" style={{ ...inputStyle, alignSelf: 'flex-end' }} />
             </div>
             <input value={form.supplier} onChange={e => setForm(p => ({ ...p, supplier: e.target.value }))} placeholder="Supplier" style={inputStyle} />
-            <button onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add</>}
             </button>
           </div>
@@ -231,14 +231,14 @@ export default function MaterialsPage() {
 
       {activeItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveItem(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveItem(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{activeItem.name}</h2>
                 {activeItem.code && <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', marginTop: 2 }}>{activeItem.code}</div>}
               </div>
-              <button onClick={() => setActiveItem(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveItem(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
@@ -260,14 +260,14 @@ export default function MaterialsPage() {
 
             {adjustingId === activeItem.id ? (
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'var(--bg3)', padding: '8px 10px', borderRadius: 10 }}>
-                <input autoFocus type="number" step="0.1" value={adjustDelta} onChange={e => setAdjustDelta(e.target.value)} placeholder="±qty (e.g. -2)" style={{ ...inputStyle, padding: '6px 10px', fontSize: 13 }} />
-                <button onClick={() => adjustStock(activeItem.id, Number(adjustDelta))} disabled={!adjustDelta} style={{ padding: '6px 10px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Apply</button>
-                <button onClick={() => { setAdjustingId(null); setAdjustDelta('') }} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t3)', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
+                <input type="number" step="0.1" value={adjustDelta} onChange={e => setAdjustDelta(e.target.value)} placeholder="±qty (e.g. -2)" style={{ ...inputStyle, padding: '6px 10px', fontSize: 13 }} />
+                <button type="button" onClick={() => adjustStock(activeItem.id, Number(adjustDelta))} disabled={!adjustDelta} style={{ padding: '6px 10px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Apply</button>
+                <button type="button" onClick={() => { setAdjustingId(null); setAdjustDelta('') }} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t3)', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
               </div>
             ) : (
               <div style={{ display: 'flex', gap: 6 }}>
-                <button onClick={() => { setAdjustingId(activeItem.id); setAdjustDelta('-1') }} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(239,68,68,0.15)', border: '0.5px solid rgba(239,68,68,0.4)', color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>− Used</button>
-                <button onClick={() => { setAdjustingId(activeItem.id); setAdjustDelta('1') }} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(16,185,129,0.15)', border: '0.5px solid rgba(16,185,129,0.4)', color: '#10b981', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>+ Received</button>
+                <button type="button" onClick={() => { setAdjustingId(activeItem.id); setAdjustDelta('-1') }} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(239,68,68,0.15)', border: '0.5px solid rgba(239,68,68,0.4)', color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>− Used</button>
+                <button type="button" onClick={() => { setAdjustingId(activeItem.id); setAdjustDelta('1') }} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(16,185,129,0.15)', border: '0.5px solid rgba(16,185,129,0.4)', color: '#10b981', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>+ Received</button>
               </div>
             )}
 
@@ -278,7 +278,7 @@ export default function MaterialsPage() {
               {activeItem.notes && <div style={{ marginTop: 6, padding: 10, background: 'var(--bg3)', borderRadius: 8, whiteSpace: 'pre-wrap' }}>{activeItem.notes}</div>}
             </div>
 
-            <button onClick={() => remove(activeItem.id)} style={{ marginTop: 6, padding: '10px', borderRadius: 10, background: confirmDelete === activeItem.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeItem.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <button type="button" onClick={() => remove(activeItem.id)} style={{ marginTop: 6, padding: '10px', borderRadius: 10, background: confirmDelete === activeItem.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeItem.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <IcTrash size={12} color="#ef4444" />
               {confirmDelete === activeItem.id ? 'Sure?' : 'Delete material'}
             </button>

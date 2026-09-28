@@ -75,7 +75,7 @@ export default function TplLibraryPage() {
           {(['all', ...categories]).map(c => {
             const active = filter === c
             return (
-              <button
+              <button type="button"
                 key={c}
                 onClick={() => setFilter(c)}
                 style={{

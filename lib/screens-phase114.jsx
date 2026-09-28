@@ -44,7 +44,7 @@
 
     const TabBar = () => React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16 } },
       [['pipeline', 'Pipeline'], ['takeoff', 'Takeoff'], ['rfq', 'RFQ'], ['analytics', 'Win/Loss']].map(([k, l]) =>
-        React.createElement('button', { key: k, onClick: () => setTab(k),
+        React.createElement('button', { type: 'button', key: k, onClick: () => setTab(k),
           style: { flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
             background: tab === k ? acc : T.bg2, color: tab === k ? '#fff' : T.t2 } }, l)))
 
@@ -66,10 +66,10 @@
               React.createElement('span', { style: { fontSize: 12, color: T.t3 } }, b.ref + ' · ' + b.client),
               !['won', 'lost'].includes(b.stage) && React.createElement('span', { style: { fontSize: 11, color: acc, fontWeight: 700 } }, b.probability + '% likely')),
             !['won', 'lost'].includes(b.stage) && React.createElement('div', { style: { display: 'flex', gap: 6, marginTop: 10 } },
-              stage.k !== 'submitted' && React.createElement('button', { onClick: (e) => { e.stopPropagation(); advance(b); }, style: { flex: 1, padding: 7, borderRadius: 8, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, 'Advance →'),
+              stage.k !== 'submitted' && React.createElement('button', { type: 'button', onClick: (e) => { e.stopPropagation(); advance(b); }, style: { flex: 1, padding: 7, borderRadius: 8, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, 'Advance →'),
               stage.k === 'submitted' && React.createElement(React.Fragment, null,
-                React.createElement('button', { onClick: (e) => { e.stopPropagation(); mark(b, 'won'); }, style: { flex: 1, padding: 7, borderRadius: 8, background: 'rgba(16,185,129,0.15)', border: '1px solid ' + T.green, color: T.green, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, '✓ Won'),
-                React.createElement('button', { onClick: (e) => { e.stopPropagation(); mark(b, 'lost'); }, style: { flex: 1, padding: 7, borderRadius: 8, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: T.red, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, '✕ Lost'))))));
+                React.createElement('button', { type: 'button', onClick: (e) => { e.stopPropagation(); mark(b, 'won'); }, style: { flex: 1, padding: 7, borderRadius: 8, background: 'rgba(16,185,129,0.15)', border: '1px solid ' + T.green, color: T.green, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, '✓ Won'),
+                React.createElement('button', { type: 'button', onClick: (e) => { e.stopPropagation(); mark(b, 'lost'); }, style: { flex: 1, padding: 7, borderRadius: 8, background: 'rgba(239,68,68,0.12)', border: '1px solid rgba(239,68,68,0.4)', color: T.red, fontSize: 11.5, fontWeight: 700, cursor: 'pointer' } }, '✕ Lost'))))));
       })
     );
 
@@ -91,7 +91,7 @@
             React.createElement('div', { style: { display: 'flex', justifyContent: 'space-between', paddingTop: 10, marginTop: 4 } },
               React.createElement('span', { style: { fontSize: 13, fontWeight: 800, color: T.t2 } }, 'Measured total'),
               React.createElement('span', { style: { fontSize: 16, fontWeight: 800, color: acc } }, money(total))),
-            React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('addtakeoff', b), style: { marginTop: 12, width: '100%', padding: 10, borderRadius: 9, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, '+ Add measurement'));
+            React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('addtakeoff', b), style: { marginTop: 12, width: '100%', padding: 10, borderRadius: 9, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, '+ Add measurement'));
         })
       );
     };
@@ -111,7 +111,7 @@
                 React.createElement('div', { style: { fontSize: 13, fontWeight: 700, color: T.t1 } }, r.supplier, r.price === cheapest && React.createElement('span', { style: { marginLeft: 6, fontSize: 10, color: T.green, fontWeight: 700 } }, 'LOWEST')),
                 React.createElement('div', { style: { fontSize: 11, color: T.t3 } }, 'Lead ' + r.lead + ' · ★ ' + r.rating)),
               React.createElement('span', { style: { fontSize: 14, fontWeight: 800, color: T.t1 } }, money(r.price)),
-              React.createElement('button', { onClick: async () => { for (const x of rows) await Backend.db.rfqs.update(x.id, { selected: x.id === r.id }); window.cortexxToast && window.cortexxToast('Selected ' + r.supplier, 'success'); }, style: { padding: '5px 10px', borderRadius: 7, background: r.selected ? T.green : 'transparent', border: '1px solid ' + (r.selected ? T.green : T.hair), color: r.selected ? '#fff' : T.t2, fontSize: 11, fontWeight: 700, cursor: 'pointer' } }, r.selected ? '✓' : 'Select'))));
+              React.createElement('button', { type: 'button', onClick: async () => { for (const x of rows) await Backend.db.rfqs.update(x.id, { selected: x.id === r.id }); window.cortexxToast && window.cortexxToast('Selected ' + r.supplier, 'success'); }, style: { padding: '5px 10px', borderRadius: 7, background: r.selected ? T.green : 'transparent', border: '1px solid ' + (r.selected ? T.green : T.hair), color: r.selected ? '#fff' : T.t2, fontSize: 11, fontWeight: 700, cursor: 'pointer' } }, r.selected ? '✓' : 'Select'))));
         })
       );
     };
@@ -161,7 +161,7 @@
       tab === 'takeoff' && React.createElement(Takeoff),
       tab === 'rfq' && React.createElement(RFQ),
       tab === 'analytics' && React.createElement(Analytics),
-      tab === 'pipeline' && React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('addbid'),
+      tab === 'pipeline' && React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('addbid'),
         style: { marginTop: 16, width: '100%', padding: 14, borderRadius: 12, background: acc, color: '#fff', border: 'none', fontWeight: 700, fontSize: 15, cursor: 'pointer' } }, '+ New bid'),
       openBid && React.createElement(BidDetail, { bid: openBid, onClose: () => setOpenBid(null), accent: acc })
     );
@@ -172,7 +172,7 @@
     const stage = STAGES.find(s => s.k === bid.stage) || STAGES[0];
     return React.createElement('div', { style: { position: 'fixed', inset: 0, background: T.bg1, zIndex: 1100, overflowY: 'auto', paddingBottom: 100 } },
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '20px 20px 16px' } },
-        React.createElement('button', { onClick: onClose, style: { width: 36, height: 36, borderRadius: 18, background: T.bg2, border: 'none', color: T.t1, fontSize: 20, cursor: 'pointer' } }, '←'),
+        React.createElement('button', { type: 'button', onClick: onClose, style: { width: 36, height: 36, borderRadius: 18, background: T.bg2, border: 'none', color: T.t1, fontSize: 20, cursor: 'pointer' } }, '←'),
         React.createElement('h2', { style: { color: T.t1, fontSize: 18, fontWeight: 800, margin: 0, flex: 1 } }, bid.ref)),
       React.createElement('div', { style: { padding: '0 20px' } },
         React.createElement('div', { style: { fontSize: 22, fontWeight: 800, color: T.t1, marginBottom: 6 } }, bid.title),

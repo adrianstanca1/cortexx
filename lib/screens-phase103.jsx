@@ -44,13 +44,13 @@ function PushSettingsScreen({ accent }) {
         </div>
 
         {!st.subscribed && st.supported && (
-          <button onClick={subscribe} disabled={busy}
+          <button type="button" onClick={subscribe} disabled={busy}
             style={{ marginTop: 14, width: '100%', padding: 12, borderRadius: 10, border: 'none', background: accent, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 700, opacity: busy ? 0.7 : 1 }}>
             {busy ? 'Subscribing…' : 'Enable notifications'}
           </button>
         )}
         {st.subscribed && (
-          <button onClick={unsub} disabled={busy}
+          <button type="button" onClick={unsub} disabled={busy}
             style={{ marginTop: 14, width: '100%', padding: 12, borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.red, fontFamily: SF, fontSize: 14, fontWeight: 700 }}>
             Unsubscribe
           </button>
@@ -112,7 +112,7 @@ function E2EEScreen({ accent }) {
             <div style={{ fontSize: 11, fontWeight: 700, color: T.t2, marginBottom: 8, letterSpacing: 0.6 }}>{enabled ? 'UNLOCK' : 'SET PASSPHRASE'}</div>
             <input type="password" value={pass} onChange={e => setPass(e.target.value)} placeholder="Passphrase (8+ chars)"
               style={{ width: '100%', padding: 12, borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontFamily: SFMono, fontSize: 14, boxSizing: 'border-box' }}/>
-            <button onClick={enable} disabled={busy || pass.length < 8}
+            <button type="button" onClick={enable} disabled={busy || pass.length < 8}
               style={{ marginTop: 10, width: '100%', padding: 12, borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 700, opacity: (busy || pass.length < 8) ? 0.5 : 1 }}>
               {busy ? 'Deriving…' : (enabled ? 'Unlock' : 'Enable E2EE')}
             </button>
@@ -120,14 +120,14 @@ function E2EEScreen({ accent }) {
         )}
 
         {unlocked && (
-          <button onClick={lock}
+          <button type="button" onClick={lock}
             style={{ marginTop: 14, width: '100%', padding: 12, borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontSize: 14, fontWeight: 700 }}>
             Lock now
           </button>
         )}
 
         {enabled && (
-          <button onClick={forgetAll}
+          <button type="button" onClick={forgetAll}
             style={{ marginTop: 8, width: '100%', padding: 12, borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.red, fontSize: 13, fontWeight: 600 }}>
             Forget passphrase (start over)
           </button>
@@ -278,11 +278,11 @@ function CIS300Screen({ accent }) {
         </div>
 
         <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-          <button onClick={downloadCsv}
+          <button type="button" onClick={downloadCsv}
             style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontSize: 13, fontWeight: 700 }}>
             CSV (accountant)
           </button>
-          <button onClick={downloadXml} disabled={!ret.subs.length}
+          <button type="button" onClick={downloadXml} disabled={!ret.subs.length}
             style={{ flex: 2, padding: 12, borderRadius: 10, border: 'none', background: accent, color: '#fff', fontSize: 14, fontWeight: 700, opacity: ret.subs.length ? 1 : 0.5 }}>
             CIS300 XML (HMRC)
           </button>
@@ -290,7 +290,7 @@ function CIS300Screen({ accent }) {
 
         {/* Submit to HMRC */}
         {hmrcCfg && hmrcCfg.configured && (
-          <button onClick={submitToHMRC} disabled={submitting || !ret.subs.length || !empRefs.utr}
+          <button type="button" onClick={submitToHMRC} disabled={submitting || !ret.subs.length || !empRefs.utr}
             style={{ marginTop: 10, width: '100%', padding: 14, borderRadius: 12, border: 'none',
               background: hmrcCfg.env === 'live' ? T.green : T.amber, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 800,
               opacity: (submitting || !ret.subs.length || !empRefs.utr) ? 0.5 : 1 }}>

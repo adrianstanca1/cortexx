@@ -33,7 +33,7 @@
             <div style={{ width: 56, height: 56, borderRadius: 14, background: 'rgba(239,68,68,0.15)', color: '#ef4444', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 28 }}>⚠</div>
             <div style={{ fontSize: 15, fontWeight: 600, color: '#eef3fa' }}>This screen hit a snag</div>
             <div style={{ fontSize: 12, lineHeight: 1.5, maxWidth: 260 }}>The rest of CortexBuild Pro is fine. Close and reopen this screen, or tap retry.</div>
-            <button onClick={() => this.setState({ error: null })} style={{ marginTop: 4, background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Retry</button>
+            <button type="button" onClick={() => this.setState({ error: null })} style={{ marginTop: 4, background: '#2563eb', color: '#fff', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Retry</button>
           </div>
         );
       }
@@ -87,7 +87,7 @@
             />
           </TweakSection>
           <TweakSection title="Performance">
-            <button
+            <button type="button"
               onClick={() => window.cortexxPerfOverlay && window.cortexxPerfOverlay()}
               style={{
                 width: '100%',

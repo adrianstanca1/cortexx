@@ -210,6 +210,7 @@ function LoginSheet({
       gap: 10
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setStep('email'),
     style: {
       background: accent,
@@ -224,6 +225,7 @@ function LoginSheet({
       boxShadow: `0 6px 18px ${accent}55`
     }
   }, "Get started \u2014 it's free"), React.createElement("button", {
+    type: "button",
     onClick: () => setStep('signin'),
     style: {
       background: 'transparent',
@@ -256,7 +258,6 @@ function LoginSheet({
     value: email,
     onChange: e => setEmail(e.target.value),
     type: "email",
-    autoFocus: true,
     placeholder: "you@cortexbuild.app",
     style: {
       marginTop: 24,
@@ -286,6 +287,7 @@ function LoginSheet({
       outline: 'none'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: signIn,
     disabled: working,
     style: {
@@ -310,6 +312,7 @@ function LoginSheet({
       fontSize: 12
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => toast('Reset link sent', 'success'),
     style: {
       background: 'none',
@@ -319,6 +322,7 @@ function LoginSheet({
       padding: 0
     }
   }, "Forgot password?"), React.createElement("button", {
+    type: "button",
     onClick: () => setStep('start'),
     style: {
       background: 'none',
@@ -347,7 +351,6 @@ function LoginSheet({
     value: email,
     onChange: e => setEmail(e.target.value),
     type: "email",
-    autoFocus: true,
     placeholder: "you@yourcompany.co.uk",
     style: {
       marginTop: 24,
@@ -377,6 +380,7 @@ function LoginSheet({
       outline: 'none'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: signUp,
     disabled: !email.trim() || !password || working,
     style: {
@@ -393,6 +397,7 @@ function LoginSheet({
       opacity: working ? 0.5 : 1
     }
   }, working ? 'Setting up your workspace…' : 'Create my workspace'), React.createElement("button", {
+    type: "button",
     onClick: () => setStep('start'),
     style: {
       background: 'none',
@@ -514,6 +519,7 @@ function SettingsScreen({
       alignItems: 'center'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: back,
     style: {
       background: 'none',
@@ -978,6 +984,7 @@ function HelpScreen({
       padding: '4px 16px 14px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('ai'),
     style: {
       width: '100%',
@@ -1031,6 +1038,7 @@ function HelpScreen({
       borderBottom: i === a.length - 1 ? 'none' : `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setOpen(open === i ? null : i),
     style: {
       width: '100%',
@@ -1116,6 +1124,7 @@ function PurchaseOrdersScreen({
     title: "Purchase orders",
     subtitle: `£${total.toLocaleString()} open · ${pos.filter(p => p.status === 'open').length} POs`,
     right: React.createElement("button", {
+      type: "button",
       onClick: async () => {
         const next = 'PO-' + (1043 + Math.floor(Math.random() * 50));
         await Backend.db.purchaseOrders.create({
@@ -1180,6 +1189,14 @@ function PurchaseOrdersScreen({
     const proj = projects.find(p => p.id == po.projectId);
     const c = PO_STATUS_C[po.status];
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: po.id,
       onClick: () => {
         if (po.status === 'open') {
@@ -1293,6 +1310,7 @@ function ClientPortalScreen({
     solid: true,
     size: "xs"
   }, "CLIENT PORTAL \xB7 PREVIEW"), React.createElement("button", {
+    type: "button",
     onClick: shareLink,
     style: {
       background: T.purple,
@@ -1326,6 +1344,7 @@ function ClientPortalScreen({
       padding: '10px 0 2px'
     }
   }, liveProjects.map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setPid(p.id),
     style: {
@@ -1533,6 +1552,7 @@ function ClientPortalScreen({
         c: c,
         size: "xs"
       }, iv.status) : React.createElement("button", {
+        type: "button",
         onClick: e => {
           e.stopPropagation();
           if (window.cortexxNav) window.cortexxNav('payinvoice:' + iv.id);
@@ -1587,6 +1607,7 @@ function ClientPortalScreen({
       color: T.t2
     }
   }, "Project lead \xB7 CortexBuild Ltd")), React.createElement("button", {
+    type: "button",
     style: {
       background: accent,
       color: '#fff',

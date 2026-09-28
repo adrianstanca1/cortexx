@@ -132,7 +132,7 @@ function PersonasScreen({ accent }) {
         <MobileHeader title="Leadership team" subtitle="5 AI personas · always available"/>
         <div style={{ padding: '4px 16px 14px', display: 'flex', gap: 6, overflowX: 'auto' }}>
           {Object.entries(personas).map(([k, p]) => (
-            <button key={k} onClick={() => { setActive(k); setA(null); }} style={{
+            <button type="button" key={k} onClick={() => { setActive(k); setA(null); }} style={{
               background: active === k ? `${p.c}33` : T.bg2,
               border: `0.5px solid ${active === k ? p.c : T.hair}`,
               borderRadius: 14, padding: '10px 12px', cursor: 'pointer', flexShrink: 0,
@@ -155,7 +155,7 @@ function PersonasScreen({ accent }) {
           <input value={q} onChange={e => setQ(e.target.value)} placeholder={`Ask ${personas[active].name.split(' ')[0]} anything…`}
             onKeyDown={e => { if (e.key === 'Enter') ask(); }}
             style={{ width: '100%', boxSizing: 'border-box', background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '12px', color: T.t1, fontFamily: SF, fontSize: 14, outline: 'none' }}/>
-          <button onClick={ask} disabled={loading || !q.trim()} style={{
+          <button type="button" onClick={ask} disabled={loading || !q.trim()} style={{
             width: '100%', marginTop: 8, background: personas[active].c, color: '#fff', border: 'none',
             borderRadius: 12, padding: '12px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
             opacity: loading || !q.trim() ? 0.5 : 1,

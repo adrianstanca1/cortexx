@@ -177,13 +177,13 @@ export default function RfisPage() {
               {overdueCount > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {overdueCount} overdue</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Raise RFI" disabled={projects.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(245,158,11,0.3)' : '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Raise RFI" disabled={projects.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(245,158,11,0.3)' : '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'open', 'answered', 'closed'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -199,7 +199,7 @@ export default function RfisPage() {
           <IcAlert size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{rfis.length === 0 ? 'No RFIs raised yet' : 'Nothing in this filter'}</p>
           {rfis.length === 0 && projects.length > 0 && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Raise first RFI
             </button>
           )}
@@ -207,7 +207,7 @@ export default function RfisPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(r => (
-            <button key={r.id} onClick={() => { setActiveRfi(r); setResponseText(r.response || '') }} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: `0.5px solid ${isOverdue(r) ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.07)'}`, textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button type="button" key={r.id} onClick={() => { setActiveRfi(r); setResponseText(r.response || '') }} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: `0.5px solid ${isOverdue(r) ? 'rgba(239,68,68,0.4)' : 'rgba(255,255,255,0.07)'}`, textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: 'var(--t3)', letterSpacing: 0.5 }}>{r.number}</span>
                 <span style={{ fontFamily: SF, fontSize: 9, fontWeight: 800, color: PRIORITY_COLOR[r.priority], textTransform: 'uppercase', letterSpacing: 0.5 }}>{r.priority}</span>
@@ -230,11 +230,11 @@ export default function RfisPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Raise RFI</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <input value={form.subject} onChange={e => setForm(p => ({ ...p, subject: e.target.value }))} placeholder="Subject" style={inputStyle} />
@@ -242,14 +242,14 @@ export default function RfisPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Project</label>
-                <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-245" style={labelStyle}>Project</label>
+                <select id="field-245" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Priority</label>
-                <select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value as Rfi['priority'] }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-251" style={labelStyle}>Priority</label>
+                <select id="field-251" value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value as Rfi['priority'] }))} style={{ ...inputStyle, appearance: 'none' }}>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
@@ -258,19 +258,19 @@ export default function RfisPage() {
             </div>
 
             <div>
-              <label style={labelStyle}>Ball-in-court</label>
-              <input value={form.assignee} onChange={e => setForm(p => ({ ...p, assignee: e.target.value }))} placeholder="e.g. Structural Engineer" list="rfi-assignees" style={inputStyle} />
+              <label htmlFor="field-261" style={labelStyle}>Ball-in-court</label>
+              <input id="field-261" value={form.assignee} onChange={e => setForm(p => ({ ...p, assignee: e.target.value }))} placeholder="e.g. Structural Engineer" list="rfi-assignees" style={inputStyle} />
               <datalist id="rfi-assignees">
                 {COMMON_ASSIGNEES.map(a => <option key={a} value={a} />)}
               </datalist>
             </div>
 
             <div>
-              <label style={labelStyle}>Response needed by</label>
-              <input type="date" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-269" style={labelStyle}>Response needed by</label>
+              <input id="field-269" type="date" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
 
-            <button onClick={create} disabled={saving || !form.subject.trim() || !form.body.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.subject.trim() || !form.body.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.subject.trim() || !form.body.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.subject.trim() || !form.body.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Raising…' : <><IcCheck size={16} color="#fff" /> Raise RFI</>}
             </button>
           </div>
@@ -279,14 +279,14 @@ export default function RfisPage() {
 
       {activeRfi && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveRfi(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveRfi(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 700, letterSpacing: 0.5 }}>{activeRfi.number}</div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeRfi.subject}</h2>
               </div>
-              <button onClick={() => setActiveRfi(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveRfi(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
@@ -306,9 +306,9 @@ export default function RfisPage() {
 
             {activeRfi.status !== 'closed' ? (
               <div>
-                <label style={labelStyle}>Response</label>
-                <textarea value={responseText} onChange={e => setResponseText(e.target.value)} placeholder={activeRfi.response ? 'Update the existing response…' : 'Answer here…'} rows={4} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
-                <button onClick={answer} disabled={saving || !responseText.trim()} style={{ marginTop: 8, padding: '10px 0', borderRadius: 10, background: '#10b981', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving || !responseText.trim() ? 0.5 : 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <label htmlFor="field-309" style={labelStyle}>Response</label>
+                <textarea id="field-309" value={responseText} onChange={e => setResponseText(e.target.value)} placeholder={activeRfi.response ? 'Update the existing response…' : 'Answer here…'} rows={4} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
+                <button type="button" onClick={answer} disabled={saving || !responseText.trim()} style={{ marginTop: 8, padding: '10px 0', borderRadius: 10, background: '#10b981', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving || !responseText.trim() ? 0.5 : 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <IcSend size={13} color="#fff" /> {saving ? 'Sending…' : (activeRfi.response ? 'Update answer' : 'Answer & mark answered')}
                 </button>
               </div>
@@ -320,10 +320,10 @@ export default function RfisPage() {
             ) : null}
 
             <div style={{ display: 'flex', gap: 8, marginTop: 4 }}>
-              <button onClick={() => cycleStatus(activeRfi)} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={() => cycleStatus(activeRfi)} style={{ flex: 1, padding: '10px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 {activeRfi.status === 'open' ? 'Mark closed' : activeRfi.status === 'answered' ? 'Mark closed' : 'Reopen'}
               </button>
-              <button onClick={() => remove(activeRfi.id)} style={{ padding: '10px 14px', borderRadius: 10, background: confirmDelete === activeRfi.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeRfi.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+              <button type="button" onClick={() => remove(activeRfi.id)} style={{ padding: '10px 14px', borderRadius: 10, background: confirmDelete === activeRfi.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeRfi.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                 <IcTrash size={12} color="#ef4444" />
                 {confirmDelete === activeRfi.id ? 'Sure?' : 'Delete'}
               </button>

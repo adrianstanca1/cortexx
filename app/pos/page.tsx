@@ -263,7 +263,7 @@ export default function POsPage() {
               {pos.length} total · {openCount} open · <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f59e0b' }}>£{committedValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</span> committed
             </p>
           </div>
-          <button className="module-primary" onClick={() => setShowAdd(true)} aria-label="Raise PO" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" className="module-primary" onClick={() => setShowAdd(true)} aria-label="Raise PO" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -274,7 +274,7 @@ export default function POsPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'draft', 'pending_approval', 'approved', 'sent', 'part_received', 'received', 'closed'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -290,13 +290,13 @@ export default function POsPage() {
           <IcDoc size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{pos.length === 0 ? 'No purchase orders' : 'Nothing in this filter'}</p>
           {pos.length === 0 && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Raise first PO</button>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Raise first PO</button>
           )}
         </div>
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(p => (
-            <button key={p.id} onClick={() => setActivePo(p)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button type="button" key={p.id} onClick={() => setActivePo(p)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: 'var(--t3)' }}>{p.number}</span>
                 <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>{p.supplier}</span>
@@ -319,20 +319,19 @@ export default function POsPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Raise PO</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
-            <input autoFocus value={form.supplier} onChange={e => setForm(p => ({ ...p, supplier: e.target.value }))} placeholder="Supplier" style={inputStyle} />
+            <input value={form.supplier} onChange={e => setForm(p => ({ ...p, supplier: e.target.value }))} placeholder="Supplier" style={inputStyle} />
             <input type="email" value={form.contactEmail} onChange={e => setForm(p => ({ ...p, contactEmail: e.target.value }))} placeholder="Supplier email" style={inputStyle} />
 
             {/* AI-draft toggle + panel */}
             {!aiOpen ? (
-              <button
+              <button type="button"
                 onClick={() => { setAiOpen(true); setAiError(null) }}
-                type="button"
                 style={{
                   background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(245,158,11,0.10))',
                   border: '0.5px dashed rgba(139,92,246,0.5)',
@@ -356,7 +355,7 @@ export default function POsPage() {
               <div style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.35)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: '#c4b5fd' }}>✨ Estimate with AI</span>
-                  <button onClick={() => { setAiOpen(false); setAiError(null) }} aria-label="Close" type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                  <button type="button" onClick={() => { setAiOpen(false); setAiError(null) }} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
                     <IcX size={14} color="var(--t2)" />
                   </button>
                 </div>
@@ -371,10 +370,9 @@ export default function POsPage() {
                 {aiError && (
                   <div style={{ fontFamily: SF, fontSize: 11, color: '#ef4444' }}>{aiError}</div>
                 )}
-                <button
+                <button type="button"
                   onClick={draftWithAi}
                   disabled={aiBusy || aiBrief.trim().length < 10}
-                  type="button"
                   style={{
                     padding: '8px 14px',
                     borderRadius: 10,
@@ -410,7 +408,7 @@ export default function POsPage() {
             </select>
 
             <div>
-              <label style={labelStyle}>Items</label>
+              <div style={labelStyle}>Items</div>
               {form.items.map((it, idx) => (
                 <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 50px 70px 28px', gap: 4, marginBottom: 4, alignItems: 'center' }}>
                   <input value={it.description} onChange={e => updateItem(idx, { description: e.target.value })} placeholder="Description" style={{ ...inputStyle, padding: '8px 10px', fontSize: 12 }} />
@@ -419,20 +417,20 @@ export default function POsPage() {
                     {UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                   </select>
                   <input type="number" step="0.01" value={it.unitPrice} onChange={e => updateItem(idx, { unitPrice: Number(e.target.value) })} placeholder="£" style={{ ...inputStyle, padding: '8px 6px', fontSize: 12, textAlign: 'right' }} />
-                  <button onClick={() => setForm(p => ({ ...p, items: p.items.filter((_, i) => i !== idx) }))} disabled={form.items.length === 1} style={{ background: 'none', border: 'none', padding: 2, cursor: form.items.length === 1 ? 'not-allowed' : 'pointer', opacity: form.items.length === 1 ? 0.3 : 1 }}><IcX size={14} color="#ef4444" /></button>
+                  <button type="button" onClick={() => setForm(p => ({ ...p, items: p.items.filter((_, i) => i !== idx) }))} disabled={form.items.length === 1} style={{ background: 'none', border: 'none', padding: 2, cursor: form.items.length === 1 ? 'not-allowed' : 'pointer', opacity: form.items.length === 1 ? 0.3 : 1 }}><IcX size={14} color="#ef4444" /></button>
                 </div>
               ))}
-              <button onClick={() => setForm(p => ({ ...p, items: [...p.items, blankItem()] }))} style={{ background: 'rgba(245,158,11,0.12)', border: '0.5px dashed rgba(245,158,11,0.4)', color: '#f59e0b', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', width: '100%' }}>+ Add line</button>
+              <button type="button" onClick={() => setForm(p => ({ ...p, items: [...p.items, blankItem()] }))} style={{ background: 'rgba(245,158,11,0.12)', border: '0.5px dashed rgba(245,158,11,0.4)', color: '#f59e0b', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', width: '100%' }}>+ Add line</button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: 10 }}>
               <div>
-                <label style={labelStyle}>VAT %</label>
-                <input type="number" step="1" value={form.vatRate} onChange={e => setForm(p => ({ ...p, vatRate: e.target.value }))} style={inputStyle} />
+                <label htmlFor="field-428" style={labelStyle}>VAT %</label>
+                <input id="field-428" type="number" step="1" value={form.vatRate} onChange={e => setForm(p => ({ ...p, vatRate: e.target.value }))} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Expected delivery</label>
-                <input type="date" value={form.expectedDelivery} onChange={e => setForm(p => ({ ...p, expectedDelivery: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <label htmlFor="field-432" style={labelStyle}>Expected delivery</label>
+                <input id="field-432" type="date" value={form.expectedDelivery} onChange={e => setForm(p => ({ ...p, expectedDelivery: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
             </div>
 
@@ -440,7 +438,7 @@ export default function POsPage() {
               <span>Total (inc VAT)</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>£{totals.total.toFixed(2)}</span>
             </div>
 
-            <button onClick={create} disabled={saving || !form.supplier.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.supplier.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.supplier.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.supplier.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Save draft</>}
             </button>
           </div>
@@ -449,7 +447,7 @@ export default function POsPage() {
 
       {activePo && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActivePo(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActivePo(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
@@ -462,7 +460,7 @@ export default function POsPage() {
                   </div>
                 )}
               </div>
-              <button onClick={() => setActivePo(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActivePo(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <div style={{ background: 'var(--bg3)', padding: 12, borderRadius: 10 }}>
               {(activePo.lineItems || []).map((li, i) => (
@@ -481,7 +479,7 @@ export default function POsPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
               {['approved', 'sent', 'part_received', 'received'].includes(activePo.status) && (
-                <button onClick={() => emailSupplier(activePo)} style={{ ...statusBtn('#f59e0b'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+                <button type="button" onClick={() => emailSupplier(activePo)} style={{ ...statusBtn('#f59e0b'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                   <IcSend size={12} color="#fff" /> Email supplier
                 </button>
               )}
@@ -494,33 +492,33 @@ export default function POsPage() {
                 <IcDoc size={12} color="#8b5cf6" /> Download PDF
               </a>
               {activePo.status === 'draft' && (
-                <button onClick={() => changeStatus(activePo, 'pending_approval')} style={statusBtn('#a78bfa')}>Submit for approval</button>
+                <button type="button" onClick={() => changeStatus(activePo, 'pending_approval')} style={statusBtn('#a78bfa')}>Submit for approval</button>
               )}
               {activePo.status === 'rejected' && (
-                <button onClick={() => changeStatus(activePo, 'pending_approval')} style={statusBtn('#a78bfa')}>Resubmit approval</button>
+                <button type="button" onClick={() => changeStatus(activePo, 'pending_approval')} style={statusBtn('#a78bfa')}>Resubmit approval</button>
               )}
               {activePo.status === 'pending_approval' && (
-                <button onClick={() => changeStatus(activePo, 'approved')} style={statusBtn('#38bdf8')}>Approve</button>
+                <button type="button" onClick={() => changeStatus(activePo, 'approved')} style={statusBtn('#38bdf8')}>Approve</button>
               )}
               {activePo.status === 'pending_approval' && (
-                <button onClick={() => changeStatus(activePo, 'rejected')} style={statusBtn('#ef4444')}>Reject</button>
+                <button type="button" onClick={() => changeStatus(activePo, 'rejected')} style={statusBtn('#ef4444')}>Reject</button>
               )}
               {activePo.status === 'approved' && (
-                <button onClick={() => changeStatus(activePo, 'sent')} style={statusBtn('#f59e0b')}>Mark sent</button>
+                <button type="button" onClick={() => changeStatus(activePo, 'sent')} style={statusBtn('#f59e0b')}>Mark sent</button>
               )}
               {(activePo.status === 'sent' || activePo.status === 'part_received') && (
-                <button onClick={() => recordDelivery(activePo)} style={statusBtn('#22c55e')}>Record delivery</button>
+                <button type="button" onClick={() => recordDelivery(activePo)} style={statusBtn('#22c55e')}>Record delivery</button>
               )}
               {activePo.status === 'received' && (
-                <button onClick={() => changeStatus(activePo, 'closed')} style={statusBtn('#06b6d4')}>Close</button>
+                <button type="button" onClick={() => changeStatus(activePo, 'closed')} style={statusBtn('#06b6d4')}>Close</button>
               )}
               {['draft', 'pending_approval', 'rejected', 'approved', 'sent'].includes(activePo.status) && (
-                <button onClick={() => changeStatus(activePo, 'cancelled')} style={statusBtn('#ef4444')}>Cancel</button>
+                <button type="button" onClick={() => changeStatus(activePo, 'cancelled')} style={statusBtn('#ef4444')}>Cancel</button>
               )}
             </div>
 
             {(['draft', 'rejected'] as PO['status'][]).includes(activePo.status) && (
-              <button onClick={() => remove(activePo.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activePo.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activePo.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <button type="button" onClick={() => remove(activePo.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activePo.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activePo.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcTrash size={12} color="#ef4444" /> {confirmDelete === activePo.id ? 'Sure?' : 'Delete PO'}
               </button>
             )}

@@ -207,7 +207,7 @@ function PhotoToSnagSheet({ onClose, accent }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Photo → Snag</div>
         <div style={{ width: 50 }}/>
       </div>
@@ -215,7 +215,7 @@ function PhotoToSnagSheet({ onClose, accent }) {
       <div style={{ flex: 1, overflowY: 'auto', padding: '14px 16px 24px' }}>
         {stage === 'pick' && (
           <>
-            <button onClick={pick} style={{
+            <button type="button" onClick={pick} style={{
               width: '100%', aspectRatio: '4 / 3',
               background: T.bg2, border: `1.5px dashed ${T.hairStrong}`,
               borderRadius: 14, color: T.t1, cursor: 'pointer',
@@ -238,7 +238,7 @@ function PhotoToSnagSheet({ onClose, accent }) {
         {stage === 'scanning' && previewUrl && (
           <>
             <div style={{ position: 'relative', borderRadius: 14, overflow: 'hidden', marginBottom: 14, background: '#000' }}>
-              <img src={previewUrl} style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block', opacity: 0.55 }}/>
+              <img src={previewUrl} alt="Defect inspection while scanning" style={{ width: '100%', maxHeight: 280, objectFit: 'cover', display: 'block', opacity: 0.55 }}/>
               <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: 10 }}>
                 <div style={{
                   width: 52, height: 52, borderRadius: 12,
@@ -257,7 +257,7 @@ function PhotoToSnagSheet({ onClose, accent }) {
           <>
             {previewUrl && (
               <div style={{ borderRadius: 12, overflow: 'hidden', marginBottom: 12, maxHeight: 180, background: '#000' }}>
-                <img src={previewUrl} style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block' }}/>
+                <img src={previewUrl} alt="Defect inspection" style={{ width: '100%', maxHeight: 180, objectFit: 'cover', display: 'block' }}/>
               </div>
             )}
             <div style={{ fontFamily: SF, fontSize: 13, color: T.t1, lineHeight: 1.45, marginBottom: 14 }}>
@@ -274,7 +274,7 @@ function PhotoToSnagSheet({ onClose, accent }) {
               {result.snags.map((sn, i) => {
                 const sel = picked.has(i);
                 return (
-                  <div key={i} onClick={() => toggle(i)} style={{
+                  <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={i} onClick={() => toggle(i)} style={{
                     background: sel ? `${accent}14` : T.bg2,
                     border: `0.5px solid ${sel ? accent : T.hair}`,
                     borderRadius: 12, padding: '11px 13px', cursor: 'pointer',
@@ -303,7 +303,7 @@ function PhotoToSnagSheet({ onClose, accent }) {
                 <div style={{ marginTop: 16, fontFamily: SF, fontSize: 10.5, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7, marginBottom: 6 }}>Project</div>
                 <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
                   {projects.filter(p => p.status !== 'completed').map(p => (
-                    <button key={p.id} onClick={() => setProjectId(p.id)} style={{
+                    <button type="button" key={p.id} onClick={() => setProjectId(p.id)} style={{
                       padding: '7px 12px', borderRadius: 14, flexShrink: 0,
                       border: `0.5px solid ${projectId === p.id ? accent : T.hair}`,
                       background: projectId === p.id ? `${accent}22` : T.bg2,
@@ -314,7 +314,7 @@ function PhotoToSnagSheet({ onClose, accent }) {
                   ))}
                 </div>
 
-                <button onClick={fileSelected} disabled={picked.size === 0} style={{
+                <button type="button" onClick={fileSelected} disabled={picked.size === 0} style={{
                   marginTop: 16, width: '100%', padding: '13px',
                   background: picked.size === 0 ? T.bg3 : `linear-gradient(135deg, ${accent}, ${accent}cc)`,
                   color: '#fff', border: 'none', borderRadius: 12,
@@ -328,7 +328,7 @@ function PhotoToSnagSheet({ onClose, accent }) {
                   File {picked.size} snag{picked.size !== 1 ? 's' : ''}
                 </button>
 
-                <button onClick={pick} style={{
+                <button type="button" onClick={pick} style={{
                   marginTop: 8, width: '100%', padding: '11px',
                   background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                   borderRadius: 12, fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',

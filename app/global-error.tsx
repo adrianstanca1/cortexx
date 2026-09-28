@@ -53,7 +53,7 @@ export default function GlobalErrorBoundary({
             </p>
           )}
           <div style={{ display: 'flex', gap: 8, marginTop: 8 }}>
-            <button
+            <button type="button"
               onClick={reset}
               style={{ background: '#f59e0b', color: '#06101e', border: 'none', borderRadius: 10, padding: '10px 20px', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}
             >

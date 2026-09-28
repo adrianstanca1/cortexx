@@ -163,7 +163,7 @@ export default function MemberDetailPage() {
         title={
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
             <span>Qualifications & training ({certs.length})</span>
-            <button
+            <button type="button"
               onClick={() => { setEditing(null); setDialogOpen(true) }}
               style={{ background: 'rgba(245,158,11,0.18)', border: 'none', borderRadius: 6, padding: '4px 8px', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
             >
@@ -190,7 +190,7 @@ export default function MemberDetailPage() {
               </div>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0 }}>
                 <StatusBadge status={c.statusBucket || 'no_expiry'} />
-                <button
+                <button type="button"
                   onClick={() => { setEditing(c); setDialogOpen(true) }}
                   aria-label="Edit qualification"
                   style={{ background: 'none', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer' }}

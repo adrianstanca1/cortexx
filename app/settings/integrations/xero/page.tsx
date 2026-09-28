@@ -82,10 +82,10 @@ export default function XeroIntegrationPage() {
                 <h2 style={{ margin: '5px 0 3px', fontSize: 18 }}>{state.connection?.tenantName || 'Not connected'}</h2>
                 <div style={{ color: connected ? '#34d399' : '#f59e0b', fontSize: 13 }}>{state.connection?.status || 'disconnected'}</div>
               </div>
-              {!connected ? <button style={button} disabled={!!busy} onClick={() => void action('connect', async () => {
+              {!connected ? <button type="button" style={button} disabled={!!busy} onClick={() => void action('connect', async () => {
                 const res = await fetch('/api/integrations/xero/connect', { method: 'POST' }); const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Connect failed'); window.location.assign(data.authorizeUrl)
-              })}>{busy === 'connect' ? 'Preparing…' : 'Connect Xero'}</button> : <button style={{ ...button, background: '#7f1d1d' }} disabled={!!busy} onClick={() => {
+              })}>{busy === 'connect' ? 'Preparing…' : 'Connect Xero'}</button> : <button type="button" style={{ ...button, background: '#7f1d1d' }} disabled={!!busy} onClick={() => {
                 if (window.confirm('Disconnect this company from Xero? Imported bank history and Cortexx reconciliation will be retained.')) void action('disconnect', async () => {
                   const res = await fetch('/api/integrations/xero', { method: 'DELETE' }); const data = await res.json();
                   if (!res.ok) throw new Error(data.error || 'Disconnect failed'); return data.warning ? `Disconnected locally. ${data.warning}` : 'Xero disconnected.'
@@ -100,7 +100,7 @@ export default function XeroIntegrationPage() {
             <p style={{ color: 'var(--t2)', fontSize: 13, lineHeight: 1.55 }}>Imports Xero bank transactions into the canonical Cortexx bank ledger. Existing matches and allocations are never overwritten. Repeat imports are idempotent by Xero transaction ID.</p>
             <div style={{ display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap' }}>
               <label style={{ color: '#c5d4e7', fontSize: 13 }}>Max pages per run <input aria-label="Max Xero pages per run" type="number" min={1} max={10} value={maxPages} onChange={e => setMaxPages(Math.max(1, Math.min(10, Number(e.target.value) || 1)))} style={{ ...input, width: 70, marginLeft: 6 }} /></label>
-              <button style={{ ...button, background: '#1d4ed8' }} disabled={!!busy} onClick={() => void action('save', async () => {
+              <button type="button" style={{ ...button, background: '#1d4ed8' }} disabled={!!busy} onClick={() => void action('save', async () => {
                 const res = await fetch('/api/integrations/xero', { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ maxPages }) }); const data = await res.json();
                 if (!res.ok) throw new Error(data.error || 'Save failed'); return 'Import limit saved.'
               })}>Save limit</button>
@@ -110,7 +110,7 @@ export default function XeroIntegrationPage() {
               Last import: {state.connection?.lastSyncAt ? new Date(state.connection.lastSyncAt).toLocaleString('en-GB') : 'never'}{state.connection?.lastSyncStatus ? ` · ${state.connection.lastSyncStatus}` : ''}
             </div>
             {state.connection?.lastSyncError && <p style={{ color: '#f87171', fontSize: 12 }}>Last import error: {state.connection.lastSyncError}</p>}
-            <button style={{ ...button, marginTop: 12 }} disabled={!connected || !!busy} onClick={() => void action('sync', async () => {
+            <button type="button" style={{ ...button, marginTop: 12 }} disabled={!connected || !!busy} onClick={() => void action('sync', async () => {
               const res = await fetch('/api/integrations/xero/sync', { method: 'POST' }); const data = await res.json();
               if (!res.ok) throw new Error(data.retryAfter ? `${data.error}; retry in ${data.retryAfter}s` : data.error || 'Import failed')
               return `Bank import complete: ${data.created} new, ${data.updated} updated, ${data.unchanged} unchanged${data.bounded ? ' (page limit reached)' : ''}.`
@@ -121,7 +121,7 @@ export default function XeroIntegrationPage() {
             <h2 style={{ marginTop: 0, fontSize: 17 }}>Connection health</h2>
             <div style={{ color: 'var(--t2)', fontSize: 13, lineHeight: 1.6 }}>Last health check: {state.connection?.lastHealthAt ? new Date(state.connection.lastHealthAt).toLocaleString('en-GB') : 'never'}</div>
             {state.connection?.lastHealthError && <p style={{ color: '#f87171', fontSize: 12 }}>{state.connection.lastHealthError}</p>}
-            <button style={{ ...button, background: '#1d4ed8', marginTop: 10 }} disabled={!connected || !!busy} onClick={() => void action('test', async () => {
+            <button type="button" style={{ ...button, background: '#1d4ed8', marginTop: 10 }} disabled={!connected || !!busy} onClick={() => void action('test', async () => {
               const res = await fetch('/api/integrations/xero/test', { method: 'POST' }); const data = await res.json();
               if (!res.ok) throw new Error(data.error || 'Test failed'); return `Connected to ${data.organisation?.name || 'Xero'}.`
             })}>Test connection</button>

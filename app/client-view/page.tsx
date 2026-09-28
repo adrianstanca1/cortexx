@@ -134,13 +134,13 @@ export default function ClientViewPage() {
                         <span style={{ flex: 1, fontFamily: 'ui-monospace, monospace', fontSize: 11, color: '#10b981', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{url}</span>
                       </div>
                       <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
-                        <button onClick={() => copy(url, p.id)} style={btnStyle('#06b6d4')}>Copy link</button>
+                        <button type="button" onClick={() => copy(url, p.id)} style={btnStyle('#06b6d4')}>Copy link</button>
                         <Link href={url} target="_blank" rel="noopener noreferrer" style={{ ...btnStyle('var(--t3)'), textDecoration: 'none', display: 'flex', alignItems: 'center', gap: 4 }}>Preview</Link>
-                        <button onClick={() => share(url, p.name)} style={{ ...btnStyle('#8b5cf6'), display: 'flex', alignItems: 'center', gap: 4 }}>
+                        <button type="button" onClick={() => share(url, p.name)} style={{ ...btnStyle('#8b5cf6'), display: 'flex', alignItems: 'center', gap: 4 }}>
                           <IcSend size={11} color="#a78bfa" /> Email
                         </button>
-                        <button onClick={() => createOrRotate(p)} disabled={working === p.id} style={btnStyle('#f59e0b')}>{working === p.id ? '…' : 'Rotate'}</button>
-                        <button onClick={() => revoke(p)} disabled={working === p.id} style={{ ...btnStyle('#ef4444'), marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 3 }}>
+                        <button type="button" onClick={() => createOrRotate(p)} disabled={working === p.id} style={btnStyle('#f59e0b')}>{working === p.id ? '…' : 'Rotate'}</button>
+                        <button type="button" onClick={() => revoke(p)} disabled={working === p.id} style={{ ...btnStyle('#ef4444'), marginLeft: 'auto', display: 'flex', alignItems: 'center', gap: 3 }}>
                           <IcTrash size={11} color="#ef4444" />
                           {confirmRevoke === p.id ? 'Sure?' : 'Revoke'}
                         </button>
@@ -162,7 +162,7 @@ export default function ClientViewPage() {
                       <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{p.name}</div>
                       {p.clientName && <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>{p.clientName}</div>}
                     </div>
-                    <button onClick={() => createOrRotate(p)} disabled={working === p.id} style={{ background: '#10b981', border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <button type="button" onClick={() => createOrRotate(p)} disabled={working === p.id} style={{ background: '#10b981', border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <IcCheck size={12} color="#fff" /> {working === p.id ? '…' : 'Create link'}
                     </button>
                   </div>

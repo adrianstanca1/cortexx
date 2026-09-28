@@ -123,6 +123,7 @@ function PhotosV2Screen({
     title: "Photos",
     subtitle: `${photos.length} stored locally · IndexedDB`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => fileInput.current?.click(),
       style: {
         width: 36,
@@ -150,6 +151,14 @@ function PhotosV2Screen({
       display: 'none'
     }
   }), photos.length === 0 ? React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     onClick: () => fileInput.current?.click(),
     style: {
       margin: '4px 16px',
@@ -195,6 +204,14 @@ function PhotosV2Screen({
   }, photos.map(p => {
     const url = window.cortexxPhotoStore.blobURL(p.blob);
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: p.id,
       onClick: () => setViewing({
         ...p,
@@ -223,7 +240,6 @@ function PhotosV2Screen({
       }
     }, Math.round(p.size / 1024), "kb"));
   }))), viewing && React.createElement("div", {
-    onClick: () => setViewing(null),
     style: {
       position: 'absolute',
       inset: 0,
@@ -239,6 +255,7 @@ function PhotosV2Screen({
       justifyContent: 'space-between'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setViewing(null),
     style: {
       background: 'none',
@@ -249,6 +266,7 @@ function PhotosV2Screen({
       cursor: 'pointer'
     }
   }, "Close"), React.createElement("button", {
+    type: "button",
     onClick: async e => {
       e.stopPropagation();
       await window.cortexxPhotoStore.remove(viewing.id);
@@ -274,12 +292,14 @@ function PhotosV2Screen({
     }
   }, React.createElement("img", {
     src: viewing.url,
+    alt: viewing.name || 'Project photo',
     style: {
       maxWidth: '100%',
       maxHeight: '100%',
       borderRadius: 12
     }
   })), React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation()
   }, window.PhotoVisionAction && React.createElement(PhotoVisionAction, {
     blob: viewing.blob,

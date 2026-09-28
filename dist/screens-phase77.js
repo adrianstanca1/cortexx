@@ -163,6 +163,7 @@ function VoiceMemoSheetReal({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -220,6 +221,7 @@ function VoiceMemoSheetReal({
       textAlign: 'center'
     }
   }, stage === 'idle' && React.createElement(React.Fragment, null, React.createElement("button", {
+    type: "button",
     onClick: start,
     disabled: !hasSpeech && !hasMedia,
     style: {
@@ -261,6 +263,7 @@ function VoiceMemoSheetReal({
       marginBottom: 18
     }
   }, mmss), React.createElement("button", {
+    type: "button",
     onClick: stop,
     style: {
       width: 110,
@@ -351,7 +354,13 @@ function VoiceMemoSheetReal({
     style: {
       width: '100%'
     }
-  })), summary && React.createElement("div", {
+  }, React.createElement("track", {
+    kind: "captions",
+    srcLang: "en",
+    label: "Transcript",
+    default: true,
+    src: 'data:text/vtt;charset=utf-8,' + encodeURIComponent('WEBVTT\n\n00:00.000 --> 23:59:59.000\n' + (transcript || 'Audio recording'))
+  }))), summary && React.createElement("div", {
     style: {
       marginTop: 14,
       background: `${T.purple}1a`,
@@ -418,6 +427,7 @@ function VoiceMemoSheetReal({
       paddingBottom: 4
     }
   }, projects.map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -440,6 +450,7 @@ function VoiceMemoSheetReal({
       marginTop: 16
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: save,
     style: {
       flex: 1,
@@ -455,6 +466,7 @@ function VoiceMemoSheetReal({
       boxShadow: `0 6px 18px ${accent}44`
     }
   }, "Save memo"), React.createElement("button", {
+    type: "button",
     onClick: () => {
       setStage('idle');
       setTranscript('');
@@ -588,6 +600,7 @@ function ReceiptScanSheetReal({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -615,6 +628,7 @@ function ReceiptScanSheetReal({
       padding: '14px 16px 24px'
     }
   }, stage === 'pick' && React.createElement(React.Fragment, null, React.createElement("button", {
+    type: "button",
     onClick: pick,
     style: {
       width: '100%',
@@ -681,6 +695,7 @@ function ReceiptScanSheetReal({
     }
   }, React.createElement("img", {
     src: previewUrl,
+    alt: "Receipt preview while scanning",
     style: {
       width: '100%',
       maxHeight: 280,
@@ -737,6 +752,7 @@ function ReceiptScanSheetReal({
     }
   }, React.createElement("img", {
     src: previewUrl,
+    alt: "Receipt preview",
     style: {
       width: '100%',
       maxHeight: 180,
@@ -906,6 +922,7 @@ function ReceiptScanSheetReal({
       overflowX: 'auto'
     }
   }, projects.filter(p => p.status !== 'completed').map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -935,6 +952,7 @@ function ReceiptScanSheetReal({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: save,
     style: {
       flex: 1,
@@ -950,6 +968,7 @@ function ReceiptScanSheetReal({
       boxShadow: `0 6px 18px ${accent}44`
     }
   }, "Save & file"), React.createElement("button", {
+    type: "button",
     onClick: pick,
     style: {
       background: 'transparent',
@@ -1097,6 +1116,7 @@ function GlobalSearchSheet({
       fontSize: 16
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -1149,6 +1169,14 @@ function GlobalSearchSheet({
       letterSpacing: 0.7
     }
   }, group, " \xB7 ", items.length), items.map((r, i) => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: i,
     onClick: () => {
       r.action();

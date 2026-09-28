@@ -100,7 +100,7 @@ export default function InvoicesPage() {
           const active = filter === s
           const t = totals[s]
           return (
-            <button
+            <button type="button"
               key={s}
               onClick={() => setFilter(s)}
               style={{
@@ -144,9 +144,9 @@ export default function InvoicesPage() {
             {filtered.map(inv => (
               <li
                 key={inv.id}
-                onClick={() => inv.projectId && router.push(`/projects/${inv.projectId}`)}
+
                 style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '14px 16px', border: '0.5px solid rgba(255,255,255,0.07)', cursor: inv.projectId ? 'pointer' : 'default', display: 'flex', alignItems: 'center', gap: 12, fontFamily: 'var(--font-system)' }}
-              >
+              ><div role="button" tabIndex={0} onClick={() => inv.projectId && router.push(`/projects/${inv.projectId}`)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}>
                 <div style={{ width: 8, height: 8, borderRadius: 4, background: STATUS_COLOR[inv.status], flexShrink: 0 }} />
                 <div style={{ flex: 1, minWidth: 0 }}>
                   <div style={{ fontSize: 14, color: 'var(--t1)', fontWeight: 600 }}>
@@ -160,7 +160,7 @@ export default function InvoicesPage() {
                   <IcPound size={14} color="var(--t2)" />
                   {inv.amount.toLocaleString()}
                 </div>
-              </li>
+              </div></li>
             ))}
           </ul>
         )}

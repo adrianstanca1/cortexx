@@ -251,13 +251,13 @@ export default function QuotesPage() {
               {quotes.length} total · <span style={{ fontFamily: 'ui-monospace, monospace', color: '#f59e0b' }}>£{openValue.toLocaleString('en-GB', { maximumFractionDigits: 0 })}</span> out
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Draft quote" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Draft quote" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'draft', 'sent', 'accepted', 'rejected'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -273,7 +273,7 @@ export default function QuotesPage() {
           <IcDoc size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{quotes.length === 0 ? 'No quotes drafted' : 'Nothing in this filter'}</p>
           {quotes.length === 0 && (
-            <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Draft first quote
             </button>
           )}
@@ -281,7 +281,7 @@ export default function QuotesPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(q => (
-            <button key={q.id} onClick={() => setActiveQuote(q)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
+            <button type="button" key={q.id} onClick={() => setActiveQuote(q)} style={{ background: 'var(--surface-raised)', borderRadius: 14, padding: '14px', border: '0.5px solid rgba(255,255,255,0.07)', textAlign: 'left', cursor: 'pointer', display: 'flex', flexDirection: 'column', gap: 4 }}>
               <div style={{ display: 'flex', alignItems: 'center', gap: 8 }}>
                 <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 10, fontWeight: 700, color: 'var(--t3)', letterSpacing: 0.5 }}>{q.number}</span>
                 <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)' }}>{q.customerName}</span>
@@ -301,20 +301,19 @@ export default function QuotesPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Draft quote</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
-            <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Quote title" style={inputStyle} />
+            <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Quote title" style={inputStyle} />
 
             {/* AI-draft toggle + panel */}
             {!aiOpen ? (
-              <button
+              <button type="button"
                 onClick={() => { setAiOpen(true); setAiError(null) }}
-                type="button"
                 style={{
                   background: 'linear-gradient(135deg, rgba(139,92,246,0.15), rgba(6,182,212,0.10))',
                   border: '0.5px dashed rgba(139,92,246,0.5)',
@@ -338,7 +337,7 @@ export default function QuotesPage() {
               <div style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.35)', borderRadius: 12, padding: '12px 14px', display: 'flex', flexDirection: 'column', gap: 8 }}>
                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
                   <span style={{ fontFamily: SF, fontSize: 12, fontWeight: 700, color: '#c4b5fd' }}>✨ Draft with AI</span>
-                  <button onClick={() => { setAiOpen(false); setAiError(null) }} aria-label="Close" type="button" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
+                  <button type="button" onClick={() => { setAiOpen(false); setAiError(null) }} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 2 }}>
                     <IcX size={14} color="var(--t2)" />
                   </button>
                 </div>
@@ -353,10 +352,9 @@ export default function QuotesPage() {
                 {aiError && (
                   <div style={{ fontFamily: SF, fontSize: 11, color: '#ef4444' }}>{aiError}</div>
                 )}
-                <button
+                <button type="button"
                   onClick={draftWithAi}
                   disabled={aiBusy || aiBrief.trim().length < 10}
-                  type="button"
                   style={{
                     padding: '8px 14px',
                     borderRadius: 10,
@@ -384,8 +382,8 @@ export default function QuotesPage() {
             )}
 
             <div>
-              <label style={labelStyle}>Customer</label>
-              <select value={form.customerId} onChange={e => {
+              <label htmlFor="field-385" style={labelStyle}>Customer</label>
+              <select id="field-385" value={form.customerId} onChange={e => {
                 const customerId = e.target.value
                 const c = customers.find(cu => cu.id === customerId)
                 setForm(prev => ({ ...prev, customerId, customerName: c?.name || prev.customerName }))
@@ -399,7 +397,7 @@ export default function QuotesPage() {
             </div>
 
             <div>
-              <label style={labelStyle}>Line items</label>
+              <div style={labelStyle}>Line items</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6 }}>
                 {form.items.map((it, idx) => (
                   <div key={idx} style={{ display: 'grid', gridTemplateColumns: '1fr 50px 50px 70px 28px', gap: 4, alignItems: 'center' }}>
@@ -409,25 +407,25 @@ export default function QuotesPage() {
                       {COMMON_UNITS.map(u => <option key={u} value={u}>{u}</option>)}
                     </select>
                     <input type="number" step="0.01" value={it.unitPrice} onChange={e => updateItem(idx, { unitPrice: Number(e.target.value) })} placeholder="£" style={{ ...inputStyle, padding: '8px 6px', fontSize: 12, textAlign: 'right' }} />
-                    <button onClick={() => removeItem(idx)} disabled={form.items.length === 1} aria-label="Remove" style={{ background: 'none', border: 'none', padding: 2, cursor: form.items.length === 1 ? 'not-allowed' : 'pointer', opacity: form.items.length === 1 ? 0.3 : 1 }}>
+                    <button type="button" onClick={() => removeItem(idx)} disabled={form.items.length === 1} aria-label="Remove" style={{ background: 'none', border: 'none', padding: 2, cursor: form.items.length === 1 ? 'not-allowed' : 'pointer', opacity: form.items.length === 1 ? 0.3 : 1 }}>
                       <IcX size={14} color="#ef4444" />
                     </button>
                   </div>
                 ))}
               </div>
-              <button onClick={addItem} style={{ marginTop: 6, background: 'rgba(6,182,212,0.12)', border: '0.5px dashed rgba(6,182,212,0.4)', color: '#06b6d4', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', width: '100%' }}>
+              <button type="button" onClick={addItem} style={{ marginTop: 6, background: 'rgba(6,182,212,0.12)', border: '0.5px dashed rgba(6,182,212,0.4)', color: '#06b6d4', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', width: '100%' }}>
                 + Add line
               </button>
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>VAT %</label>
-                <input type="number" step="1" min="0" max="100" value={form.vatRate} onChange={e => setForm(p => ({ ...p, vatRate: e.target.value }))} style={inputStyle} />
+                <label htmlFor="field-423" style={labelStyle}>VAT %</label>
+                <input id="field-423" type="number" step="1" min="0" max="100" value={form.vatRate} onChange={e => setForm(p => ({ ...p, vatRate: e.target.value }))} style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>Valid until</label>
-                <input type="date" value={form.validUntil} onChange={e => setForm(p => ({ ...p, validUntil: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <label htmlFor="field-427" style={labelStyle}>Valid until</label>
+                <input id="field-427" type="date" value={form.validUntil} onChange={e => setForm(p => ({ ...p, validUntil: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
             </div>
 
@@ -443,7 +441,7 @@ export default function QuotesPage() {
               </div>
             </div>
 
-            <button onClick={create} disabled={saving || !form.title.trim() || (!form.customerId && !form.customerName.trim())} style={{ padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.title.trim() || (!form.customerId && !form.customerName.trim())} style={{ padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Save draft</>}
             </button>
           </div>
@@ -452,7 +450,7 @@ export default function QuotesPage() {
 
       {activeQuote && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveQuote(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveQuote(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
@@ -460,7 +458,7 @@ export default function QuotesPage() {
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF, marginTop: 2 }}>{activeQuote.title}</h2>
                 <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>For: {activeQuote.customerName}</div>
               </div>
-              <button onClick={() => setActiveQuote(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveQuote(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ background: 'var(--bg3)', padding: 12, borderRadius: 10 }}>
@@ -486,7 +484,7 @@ export default function QuotesPage() {
             </div>
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
-              <button onClick={() => sendByEmail(activeQuote)} style={{ ...statusBtn('#06b6d4'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <button type="button" onClick={() => sendByEmail(activeQuote)} style={{ ...statusBtn('#06b6d4'), display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcSend size={12} color="#fff" /> {activeQuote.status === 'draft' ? 'Send (mark sent)' : 'Email again'}
               </button>
               <a
@@ -499,19 +497,19 @@ export default function QuotesPage() {
               </a>
               {activeQuote.status === 'sent' && (
                 <>
-                  <button onClick={() => changeStatus(activeQuote, 'accepted')} style={statusBtn('#22c55e')}>Mark accepted</button>
-                  <button onClick={() => changeStatus(activeQuote, 'rejected')} style={statusBtn('#ef4444')}>Mark rejected</button>
+                  <button type="button" onClick={() => changeStatus(activeQuote, 'accepted')} style={statusBtn('#22c55e')}>Mark accepted</button>
+                  <button type="button" onClick={() => changeStatus(activeQuote, 'rejected')} style={statusBtn('#ef4444')}>Mark rejected</button>
                 </>
               )}
               {(activeQuote.status === 'accepted' || activeQuote.status === 'rejected') && (
-                <button onClick={() => changeStatus(activeQuote, 'sent')} style={statusBtn('var(--t3)')}>Reopen as sent</button>
+                <button type="button" onClick={() => changeStatus(activeQuote, 'sent')} style={statusBtn('var(--t3)')}>Reopen as sent</button>
               )}
               {activeQuote.status !== 'draft' && (
-                <button onClick={() => changeStatus(activeQuote, 'draft')} style={statusBtn('var(--t3)')}>Revert to draft</button>
+                <button type="button" onClick={() => changeStatus(activeQuote, 'draft')} style={statusBtn('var(--t3)')}>Revert to draft</button>
               )}
             </div>
 
-            <button onClick={() => remove(activeQuote.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activeQuote.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeQuote.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <button type="button" onClick={() => remove(activeQuote.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activeQuote.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeQuote.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <IcTrash size={12} color="#ef4444" />
               {confirmDelete === activeQuote.id ? 'Sure?' : 'Delete quote'}
             </button>

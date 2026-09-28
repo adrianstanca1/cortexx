@@ -59,7 +59,7 @@ export default function Focus({ accent = '#10b981', data }: FocusProps) {
       <div style={{ padding: '0 0 100px', height: '100%', display: 'flex', flexDirection: 'column', minHeight: 640, alignItems: 'center', justifyContent: 'center' }}>
         <div style={{ fontFamily: 'var(--font-system)', fontSize: 32, color: 'var(--t1)', fontWeight: 600 }}>😴</div>
         <div style={{ fontFamily: 'var(--font-system)', fontSize: 18, color: 'var(--t2)', marginTop: 12 }}>Snoozed for 30 min</div>
-        <button onClick={() => setSnoozed(false)} style={{ marginTop: 24, background: 'transparent', color: 'var(--t3)', border: '0.5px solid rgba(255,255,255,0.13)', borderRadius: 14, padding: '12px 20px', fontFamily: 'var(--font-system)', fontSize: 14, cursor: 'pointer' }}>Wake up</button>
+        <button type="button" onClick={() => setSnoozed(false)} style={{ marginTop: 24, background: 'transparent', color: 'var(--t3)', border: '0.5px solid rgba(255,255,255,0.13)', borderRadius: 14, padding: '12px 20px', fontFamily: 'var(--font-system)', fontSize: 14, cursor: 'pointer' }}>Wake up</button>
       </div>
     )
   }
@@ -84,10 +84,10 @@ export default function Focus({ accent = '#10b981', data }: FocusProps) {
               {focusTask.dueDate && <span style={{ color: 'var(--t3)' }}>Due {new Date(focusTask.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}.</span>}
             </div>
             <div style={{ marginTop: 36, display: 'flex', gap: 10 }}>
-              <button onClick={handleStart} style={{ flex: 1, background: started ? '#f59e0b' : accent, color: 'var(--bg0)', border: 'none', borderRadius: 14, padding: '16px 18px', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: `0 8px 24px ${accent}55` }}>
+              <button type="button" onClick={handleStart} style={{ flex: 1, background: started ? '#f59e0b' : accent, color: 'var(--bg0)', border: 'none', borderRadius: 14, padding: '16px 18px', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', boxShadow: `0 8px 24px ${accent}55` }}>
                 {started ? 'On it…' : 'Start now'}
               </button>
-                      <button onClick={() => { setSnoozed(true); setSnoozeUntil(Date.now() + 30 * 60 * 1000) }} style={{ background: 'transparent', color: 'var(--t2)', border: '0.5px solid rgba(255,255,255,0.13)', borderRadius: 14, padding: '16px 20px', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+                      <button type="button" onClick={() => { setSnoozed(true); setSnoozeUntil(Date.now() + 30 * 60 * 1000) }} style={{ background: 'transparent', color: 'var(--t2)', border: '0.5px solid rgba(255,255,255,0.13)', borderRadius: 14, padding: '16px 20px', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Snooze
               </button>
             </div>

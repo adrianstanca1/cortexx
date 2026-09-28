@@ -148,7 +148,7 @@ export default function MeetingsPage() {
               {meetings.filter(m => m.status === 'scheduled' && new Date(m.scheduledAt) > new Date()).length} upcoming
             </p>
           </div>
-          <button onClick={openAdd} aria-label="Schedule meeting" style={{ background: '#06b6d4', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Schedule meeting" style={{ background: '#06b6d4', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Schedule</span>
           </button>
@@ -157,7 +157,7 @@ export default function MeetingsPage() {
 
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'scheduled', 'completed', 'cancelled'] as const).map(s => (
-          <button key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#06b6d4' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+          <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#06b6d4' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
             {s}
           </button>
         ))}
@@ -176,7 +176,7 @@ export default function MeetingsPage() {
           const openActions = m.actionItems.filter(a => !a.done).length
           return (
             <div key={m.id} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 14 }}>
-              <div onClick={() => setExpanded(isOpen ? null : m.id)} style={{ cursor: 'pointer' }}>
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => setExpanded(isOpen ? null : m.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <span style={{ background: STATUS_COLOR[m.status] + '33', color: STATUS_COLOR[m.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{m.status}</span>
                   {openActions > 0 && <span style={{ color: '#f59e0b', fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{openActions} OPEN</span>}
@@ -207,24 +207,24 @@ export default function MeetingsPage() {
                     <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase', marginBottom: 6 }}>Action items</div>
                     {m.actionItems.map(a => (
                       <div key={a.id} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', background: a.done ? '#0a1426' : 'var(--bg3)', borderRadius: 6, marginBottom: 4 }}>
-                        <button onClick={() => toggleAction(m, a.id)} style={{ width: 18, height: 18, borderRadius: 4, border: '0.5px solid rgba(255,255,255,0.2)', background: a.done ? '#10b981' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                        <button type="button" onClick={() => toggleAction(m, a.id)} style={{ width: 18, height: 18, borderRadius: 4, border: '0.5px solid rgba(255,255,255,0.2)', background: a.done ? '#10b981' : 'transparent', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                           {a.done && <IcCheck size={11} color="#fff" />}
                         </button>
                         <span style={{ flex: 1, fontFamily: SF, fontSize: 12, color: a.done ? 'var(--t3)' : '#c1d2e8', textDecoration: a.done ? 'line-through' : 'none' }}>{a.title}</span>
                         {a.assignee && <span style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)' }}>@{a.assignee}</span>}
-                        <button onClick={() => removeAction(m, a.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 2 }}><IcTrash size={11} color="var(--t3)" /></button>
+                        <button type="button" onClick={() => removeAction(m, a.id)} style={{ background: 'transparent', border: 'none', cursor: 'pointer', padding: 2 }}><IcTrash size={11} color="var(--t3)" /></button>
                       </div>
                     ))}
                     <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                       <input type="text" value={newAction} onChange={e => setNewAction(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addAction(m) }} placeholder="New action…" style={{ ...inputStyle, flex: 1 }} />
-                      <button onClick={() => addAction(m)} style={{ background: '#06b6d4', border: 'none', borderRadius: 8, padding: '6px 12px', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Add</button>
+                      <button type="button" onClick={() => addAction(m)} style={{ background: '#06b6d4', border: 'none', borderRadius: 8, padding: '6px 12px', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Add</button>
                     </div>
                   </div>
 
                   <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                    {m.status !== 'completed' && <button onClick={() => update(m, { status: 'completed' })} style={pillBtn('#10b981')}>Mark completed</button>}
-                    {m.status !== 'cancelled' && m.status !== 'completed' && <button onClick={() => update(m, { status: 'cancelled' })} style={pillBtn('var(--bg3)', '#c1d2e8')}>Cancel</button>}
-                    <button onClick={() => setConfirmDelete(m.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
+                    {m.status !== 'completed' && <button type="button" onClick={() => update(m, { status: 'completed' })} style={pillBtn('#10b981')}>Mark completed</button>}
+                    {m.status !== 'cancelled' && m.status !== 'completed' && <button type="button" onClick={() => update(m, { status: 'cancelled' })} style={pillBtn('var(--bg3)', '#c1d2e8')}>Cancel</button>}
+                    <button type="button" onClick={() => setConfirmDelete(m.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                       <IcTrash size={11} color="#fca5a5" /> Delete
                     </button>
                   </div>
@@ -235,8 +235,8 @@ export default function MeetingsPage() {
                 <div style={{ marginTop: 10, padding: 10, background: 'rgba(239,68,68,0.1)', border: '0.5px solid rgba(239,68,68,0.4)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this meeting?</span>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button onClick={() => remove(m.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                    <button type="button" onClick={() => remove(m.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </div>
                 </div>
               )}
@@ -246,11 +246,11 @@ export default function MeetingsPage() {
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }}>
+          <div role="presentation" onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Schedule meeting</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
                 <IcX size={18} color="var(--t3)" />
               </button>
             </div>
@@ -278,7 +278,7 @@ export default function MeetingsPage() {
               <Field label="Attendees (one per line)">
                 <textarea value={form.attendees} onChange={e => setForm(f => ({ ...f, attendees: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
               </Field>
-              <button onClick={save} disabled={saving} style={{ background: '#06b6d4', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#06b6d4', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Schedule'}
               </button>
             </div>

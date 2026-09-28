@@ -11,7 +11,7 @@
 function FloatingAIPill({ accent }) {
   const [collapsed, setCollapsed] = React.useState(false);
   return (
-    <button onClick={() => window.cortexxNav && window.cortexxNav('ai')} style={{
+    <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('ai')} style={{
       position: 'absolute',
       bottom: 100, right: 14, zIndex: 8,
       width: collapsed ? 44 : 'auto', height: 44,

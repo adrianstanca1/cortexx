@@ -106,6 +106,7 @@ function NotificationPrefsScreen({
     on,
     onClick
   }) => React.createElement("button", {
+    type: "button",
     onClick: onClick,
     style: {
       width: 44,
@@ -346,6 +347,7 @@ function WorkspaceSwitcher({
   }, tenants.map(t => {
     const isActive = t.id === activeId;
     return React.createElement("button", {
+      type: "button",
       key: t.id,
       onClick: () => {
         if (!isActive && window.CortexTenant) window.CortexTenant.switch(t.id);else onClose();
@@ -389,6 +391,7 @@ function WorkspaceSwitcher({
       color: T.t3
     }));
   }), React.createElement("button", {
+    type: "button",
     onClick: () => {
       onClose();
       setTimeout(() => window.cortexxNav && window.cortexxNav('newworkspace'), 250);
@@ -655,6 +658,7 @@ function CheckoutSheet({
       width: '100%'
     }
   })))), React.createElement("button", {
+    type: "button",
     onClick: pay,
     disabled: !valid || busy,
     style: {

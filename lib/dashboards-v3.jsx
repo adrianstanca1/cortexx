@@ -236,13 +236,13 @@ function DashV12_Focus({ accent = T.green }) {
           </div>
 
           <div style={{ marginTop: 36, display: 'flex', gap: 10 }}>
-            <button onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
+            <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
               flex: 1, background: accent, color: '#06101e', border: 'none',
               borderRadius: 14, padding: '16px 18px',
               fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer',
               boxShadow: `0 8px 24px ${accent}55`,
             }}>Start now</button>
-            <button onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
+            <button type="button" onClick={() => window.cortexxNav && window.cortexxNav('capture')} style={{
               background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
               borderRadius: 14, padding: '16px 20px',
               fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer',

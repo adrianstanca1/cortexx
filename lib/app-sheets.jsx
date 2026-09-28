@@ -5,17 +5,23 @@ function Sheet({ onClose, height = '92%', children, fullscreen = false }) {
   return (
     <div style={{
       position: 'absolute', inset: 0, zIndex: 100,
-      background: 'rgba(0,0,0,0.55)',
       display: 'flex', alignItems: 'flex-end',
       animation: 'sheet-fade 0.2s',
-    }} onClick={onClose}>
-      <div style={{
+    }}>
+      <button
+        type="button"
+        aria-label="Close dialog"
+        onClick={onClose}
+        style={{ position: 'absolute', inset: 0, border: 'none', padding: 0, background: 'rgba(0,0,0,0.55)' }}
+      />
+      <div role="presentation" style={{
+        position: 'relative', zIndex: 1,
         width: '100%', height: fullscreen ? '100%' : height,
         background: T.bg0,
         borderRadius: fullscreen ? 0 : '20px 20px 0 0',
         overflow: 'hidden', display: 'flex', flexDirection: 'column',
         animation: 'sheet-slide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)',
-      }} onClick={e => e.stopPropagation()}>
+      }}>
         {!fullscreen && (
           <div style={{ display: 'flex', justifyContent: 'center', paddingTop: 8, paddingBottom: 4 }}>
             <div style={{ width: 36, height: 5, borderRadius: 3, background: T.hairStrong }}/>
@@ -52,15 +58,15 @@ function ProjectSheet({ project, onClose, accent }) {
     <Sheet onClose={onClose}>
       {/* Header bar */}
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Project</div>
-        <button onClick={() => { window.cortexxNav('health', project); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <button type="button" onClick={() => { window.cortexxNav('health', project); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
           {React.cloneElement(Ic.spark, { size: 13 })} Health
         </button>
-        <button onClick={() => { window.cortexxNav('appgrid'); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <button type="button" onClick={() => { window.cortexxNav('appgrid'); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
           {React.cloneElement(Ic.grid || Ic.spark, { size: 13 })} Apps
         </button>
-        <button style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }} onClick={async () => {
+        <button type="button" style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }} onClick={async () => {
           if (editing) {
             await Backend.db.projects.update(project.id, {
               name: draft.name, client: draft.client, addr: draft.addr,
@@ -130,7 +136,7 @@ function ProjectSheet({ project, onClose, accent }) {
         {/* Tabs */}
         <div style={{ padding: '0 16px', display: 'flex', gap: 4, borderBottom: `0.5px solid ${T.hair}`, position: 'sticky', top: 0, background: T.bg0, zIndex: 5 }}>
           {tabs.map(t => (
-            <button key={t} onClick={() => setTab(t)} style={{
+            <button type="button" key={t} onClick={() => setTab(t)} style={{
               background: 'none', border: 'none',
               padding: '10px 12px',
               fontFamily: SF, fontSize: 13, fontWeight: 600,
@@ -206,7 +212,7 @@ function ProjectSheet({ project, onClose, accent }) {
           </Section>}
 
           {tab === 'Photos' && <div style={{ padding: '0 16px' }}>
-            <button onClick={() => window.cortexxNav('photos')} style={{
+            <button type="button" onClick={() => window.cortexxNav('photos')} style={{
               width: '100%', background: T.bg2, border: `0.5px dashed ${T.hairMid}`,
               color: T.t1, borderRadius: 12, padding: '14px',
               fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
@@ -259,9 +265,9 @@ function ProjectSheet({ project, onClose, accent }) {
                       sub={iv.status === 'paid' ? `Paid ${formatTaskWhen(iv.paid)}` : `${iv.status} · ${formatTaskWhen(iv.due)}`}
                       right={iv.status === 'paid' ? <span style={{ fontFamily: SFMono, fontSize: 11, color: c, fontWeight: 700, textTransform: 'uppercase' }}>{iv.status}</span> : (
                         <div style={{ display:'flex', gap:6, alignItems:'center' }}>
-                          <button onClick={(e)=>{e.stopPropagation(); window.__cortexxRetentionInv=iv.id; if(window.cortexxNav) window.cortexxNav('retentioninv');}}
+                          <button type="button" onClick={(e)=>{e.stopPropagation(); window.__cortexxRetentionInv=iv.id; if(window.cortexxNav) window.cortexxNav('retentioninv');}}
                             style={{ padding:'5px 8px', borderRadius: 6, border:'1px solid '+T.hair, background:T.bg1, color:T.t2, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform:'uppercase', letterSpacing: 0.4, cursor:'pointer' }}>Ret</button>
-                          <button onClick={(e)=>{e.stopPropagation(); if(window.cortexxNav) window.cortexxNav('payinvoice:'+iv.id);}}
+                          <button type="button" onClick={(e)=>{e.stopPropagation(); if(window.cortexxNav) window.cortexxNav('payinvoice:'+iv.id);}}
                             style={{ padding:'5px 10px', borderRadius: 6, border:'1px solid '+T.hair, background:c, color:'#fff', fontFamily: SF, fontSize: 11, fontWeight: 700, textTransform:'uppercase', letterSpacing: 0.4, cursor:'pointer' }}>Pay</button>
                         </div>
                       )}
@@ -274,13 +280,13 @@ function ProjectSheet({ project, onClose, accent }) {
 
           {tab === 'Docs' && <Section title="Project documents">
             <div style={{ display: 'flex', gap: 6, marginBottom: 10 }}>
-              <button onClick={() => window.cortexxNav('upload')} style={{
+              <button type="button" onClick={() => window.cortexxNav('upload')} style={{
                 flex: 1, background: T.bg2, border: `0.5px dashed ${T.hairMid}`,
                 color: T.t1, borderRadius: 10, padding: '10px',
                 fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                 display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
               }}>{React.cloneElement(Ic.upload, { size: 13 })} Document</button>
-              <button onClick={() => window.cortexxNav('drawings')} style={{
+              <button type="button" onClick={() => window.cortexxNav('drawings')} style={{
                 flex: 1, background: T.bg2, border: `0.5px dashed ${T.hairMid}`,
                 color: T.t1, borderRadius: 10, padding: '10px',
                 fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
@@ -460,7 +466,7 @@ function CaptureSheet({ onClose, accent, onAction }) {
     ]},
   ];
   const AppTile = ({ a }) => a.k === '_blank' ? <div/> : (
-    <button onClick={() => onAction(a.k)} style={{
+    <button type="button" onClick={() => onAction(a.k)} style={{
       background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 14,
       padding: '12px 8px', cursor: 'pointer',
       display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
@@ -608,7 +614,7 @@ function AISheet({ onClose, accent }) {
   return (
     <Sheet onClose={onClose} fullscreen>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}` }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ flex: 1, textAlign: 'center' }}>
@@ -644,7 +650,7 @@ function AISheet({ onClose, accent }) {
               whiteSpace: 'pre-wrap',
             }}>{m.t}</div>
             {m.who === 'ai' && (
-              <button onClick={() => speak(m.t, i)} title="Read aloud" style={{
+              <button type="button" onClick={() => speak(m.t, i)} title="Read aloud" style={{
                 background: 'none', border: 'none', cursor: 'pointer', padding: '4px 6px', marginTop: 2,
                 color: speakingIdx === i ? accent : T.t3, fontFamily: SF, fontSize: 11, fontWeight: 600,
                 display: 'flex', alignItems: 'center', gap: 4,
@@ -670,7 +676,7 @@ function AISheet({ onClose, accent }) {
         {messages.length === 1 && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
             {suggestions.map((s, i) => (
-              <button key={i} onClick={() => send(s)} style={{
+              <button type="button" key={i} onClick={() => send(s)} style={{
                 background: T.bg2, border: `0.5px solid ${T.hairMid}`,
                 color: T.blueL, padding: '8px 14px', borderRadius: 12,
                 fontFamily: SF, fontSize: 13, fontWeight: 500, cursor: 'pointer',
@@ -720,7 +726,7 @@ function SafetySheet({ onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Safety & H&S</div>
         <div style={{ width: 50 }}/>
       </div>
@@ -761,7 +767,7 @@ function SafetySheet({ onClose, accent }) {
               { l: 'Toolbox talk', i: Ic.team, c: T.amber },
               { l: 'Site induction', i: Ic.hardhat, c: T.green },
             ].map((a, i) => (
-              <button key={i} style={{
+              <button type="button" key={i} style={{
                 background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 12,
                 padding: '14px 12px', cursor: 'pointer',
                 display: 'flex', alignItems: 'center', gap: 10,

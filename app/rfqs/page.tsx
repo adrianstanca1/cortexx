@@ -185,7 +185,7 @@ export default function RfqsPage() {
 
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'sent', 'awarded', 'closed', 'cancelled'] as const).map(value => (
-          <button key={value} onClick={() => setFilter(value)} style={filterButton(filter === value)}>
+          <button type="button" key={value} onClick={() => setFilter(value)} style={filterButton(filter === value)}>
             {value === 'all' ? 'All' : RFQ_META[value].label}
           </button>
         ))}
@@ -229,8 +229,8 @@ export default function RfqsPage() {
                               {supplier.paymentTerms || supplier.category}
                             </div>
                           </div>
-                          {!quote && rfq.status === 'sent' && <button onClick={() => openQuote(rfq, supplier)} style={actionBtn('#8b5cf6')}>Enter quote</button>}
-                          {quote && rfq.status === 'sent' && quote.status === 'received' && <button onClick={() => openQuote(rfq, supplier)} style={actionBtn('var(--t3)')}>Edit</button>}
+                          {!quote && rfq.status === 'sent' && <button type="button" onClick={() => openQuote(rfq, supplier)} style={actionBtn('#8b5cf6')}>Enter quote</button>}
+                          {quote && rfq.status === 'sent' && quote.status === 'received' && <button type="button" onClick={() => openQuote(rfq, supplier)} style={actionBtn('var(--t3)')}>Edit</button>}
                         </div>
 
                         {quote && (
@@ -251,7 +251,7 @@ export default function RfqsPage() {
                               </div>
                             )}
                             {rfq.status === 'sent' && quote.status === 'received' && (
-                              <button onClick={() => award(rfq, quote)} disabled={saving} style={{ ...actionBtn('#22c55e'), marginTop: 8 }}>Award & create PO</button>
+                              <button type="button" onClick={() => award(rfq, quote)} disabled={saving} style={{ ...actionBtn('#22c55e'), marginTop: 8 }}>Award & create PO</button>
                             )}
                           </div>
                         )}
@@ -269,22 +269,22 @@ export default function RfqsPage() {
 
       {quoteFor && (
         <Modal title={`${quoteFor.rfq.reference} · ${quoteFor.supplier.name}`} close={() => setQuoteFor(null)}>
-          <label style={labelStyle}>Supplier quote reference</label>
-          <input value={quoteForm.reference} onChange={e => setQuoteForm(v => ({ ...v, reference: e.target.value }))} style={inputStyle} placeholder="e.g. Q-1042" />
+          <label htmlFor="field-272" style={labelStyle}>Supplier quote reference</label>
+          <input id="field-272" value={quoteForm.reference} onChange={e => setQuoteForm(v => ({ ...v, reference: e.target.value }))} style={inputStyle} placeholder="e.g. Q-1042" />
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
             <div>
-              <label style={labelStyle}>VAT %</label>
-              <input type="number" min="0" max="100" step="0.1" value={quoteForm.vatRate} onChange={e => setQuoteForm(v => ({ ...v, vatRate: e.target.value }))} style={inputStyle} />
+              <label htmlFor="field-276" style={labelStyle}>VAT %</label>
+              <input id="field-276" type="number" min="0" max="100" step="0.1" value={quoteForm.vatRate} onChange={e => setQuoteForm(v => ({ ...v, vatRate: e.target.value }))} style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Lead days</label>
-              <input type="number" min="0" step="1" value={quoteForm.leadDays} onChange={e => setQuoteForm(v => ({ ...v, leadDays: e.target.value }))} style={inputStyle} />
+              <label htmlFor="field-280" style={labelStyle}>Lead days</label>
+              <input id="field-280" type="number" min="0" step="1" value={quoteForm.leadDays} onChange={e => setQuoteForm(v => ({ ...v, leadDays: e.target.value }))} style={inputStyle} />
             </div>
           </div>
-          <label style={labelStyle}>Valid until</label>
-          <input type="date" value={quoteForm.validUntil} onChange={e => setQuoteForm(v => ({ ...v, validUntil: e.target.value }))} style={inputStyle} />
+          <label htmlFor="field-284" style={labelStyle}>Valid until</label>
+          <input id="field-284" type="date" value={quoteForm.validUntil} onChange={e => setQuoteForm(v => ({ ...v, validUntil: e.target.value }))} style={inputStyle} />
 
-          <label style={labelStyle}>Price each requisition line</label>
+          <div style={labelStyle}>Price each requisition line</div>
           {quoteFor.rfq.requisition.lineItems.map((line, index) => (
             <div key={index} style={{ background: 'var(--surface-raised)', padding: 10, borderRadius: 9 }}>
               <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t1)', fontWeight: 700 }}>{line.description}</div>
@@ -292,9 +292,9 @@ export default function RfqsPage() {
               <input type="number" min="0.01" step="0.01" value={quoteForm.prices[index] || ''} onChange={e => updatePrice(index, e.target.value)} placeholder="Unit price £" style={{ ...inputStyle, marginTop: 7 }} />
             </div>
           ))}
-          <label style={labelStyle}>Notes</label>
-          <textarea rows={2} value={quoteForm.notes} onChange={e => setQuoteForm(v => ({ ...v, notes: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} />
-          <button onClick={saveQuote} disabled={saving} style={primaryBtn}>{saving ? 'Saving…' : 'Save supplier quote'}</button>
+          <label htmlFor="field-295" style={labelStyle}>Notes</label>
+          <textarea id="field-295" rows={2} value={quoteForm.notes} onChange={e => setQuoteForm(v => ({ ...v, notes: e.target.value }))} style={{ ...inputStyle, resize: 'vertical' }} />
+          <button type="button" onClick={saveQuote} disabled={saving} style={primaryBtn}>{saving ? 'Saving…' : 'Save supplier quote'}</button>
         </Modal>
       )}
     </div>
@@ -322,11 +322,11 @@ function Metric({ label, value }: { label: string; value: string }) {
 
 function Modal({ title, close, children }: { title: string; close: () => void; children: React.ReactNode }) {
   return (
-    <div onClick={close} style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,.58)', display: 'flex', alignItems: 'flex-end' }}>
-      <div onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#0a1426', borderRadius: '20px 20px 0 0', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
+    <div style={{ position: 'fixed', inset: 0, zIndex: 100, background: 'rgba(0,0,0,.58)', display: 'flex', alignItems: 'flex-end' }}>
+      <div role="presentation" onClick={e => e.stopPropagation()} style={{ width: '100%', maxHeight: '88vh', overflowY: 'auto', background: '#0a1426', borderRadius: '20px 20px 0 0', padding: 18, display: 'flex', flexDirection: 'column', gap: 10 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <h2 style={{ margin: 0, color: 'var(--t1)', fontFamily: SF, fontSize: 17 }}>{title}</h2>
-          <button onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t3)" /></button>
+          <button type="button" onClick={close} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t3)" /></button>
         </div>
         {children}
       </div>

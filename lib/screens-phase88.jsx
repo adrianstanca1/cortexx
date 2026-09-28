@@ -37,7 +37,7 @@ function NotificationPrefsScreen({ accent }) {
   ];
 
   const Switch = ({ on, onClick }) => (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} style={{
       width: 44, height: 26, borderRadius: 13, border: 'none', cursor: 'pointer', flexShrink: 0,
       background: on ? accent : T.bg3, position: 'relative', transition: 'background 0.2s',
     }}>
@@ -107,7 +107,7 @@ function WorkspaceSwitcher({ accent, onClose }) {
           {tenants.map(t => {
             const isActive = t.id === activeId;
             return (
-              <button key={t.id} onClick={() => { if (!isActive && window.CortexTenant) window.CortexTenant.switch(t.id); else onClose(); }} style={{
+              <button type="button" key={t.id} onClick={() => { if (!isActive && window.CortexTenant) window.CortexTenant.switch(t.id); else onClose(); }} style={{
                 background: isActive ? `${accent}11` : T.bg2, border: `0.5px solid ${isActive ? accent : T.hair}`,
                 borderRadius: 12, padding: 12, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
               }}>
@@ -120,7 +120,7 @@ function WorkspaceSwitcher({ accent, onClose }) {
               </button>
             );
           })}
-          <button onClick={() => { onClose(); setTimeout(() => window.cortexxNav && window.cortexxNav('newworkspace'), 250); }} style={{
+          <button type="button" onClick={() => { onClose(); setTimeout(() => window.cortexxNav && window.cortexxNav('newworkspace'), 250); }} style={{
             background: 'none', border: `1px dashed ${T.hairMid}`, borderRadius: 12, padding: 14, cursor: 'pointer',
             display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8, color: accent, fontFamily: SF, fontSize: 14, fontWeight: 600,
           }}>{React.cloneElement(Ic.plus, { size: 16 })} New workspace</button>
@@ -231,7 +231,7 @@ function CheckoutSheet({ accent, plan, price, onClose }) {
             </div>
           </div>
         </div>
-        <button onClick={pay} disabled={!valid || busy} style={{
+        <button type="button" onClick={pay} disabled={!valid || busy} style={{
           width: '100%', marginTop: 18, background: valid ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '15px',
           fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: valid ? 'pointer' : 'default', opacity: valid ? 1 : 0.5,
         }}>{busy ? 'Processing…' : `Pay ${price} & upgrade`}</button>

@@ -23,7 +23,7 @@ function MyDayScreen({ accent }) {
 
         {/* Quick status row */}
         <div style={{ padding: '4px 16px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
-          <button onClick={() => window.cortexxNav('clock')} style={{
+          <button type="button" onClick={() => window.cortexxNav('clock')} style={{
             background: onSite ? `linear-gradient(135deg, ${T.green}33, ${T.green}11)` : T.bg2,
             border: `0.5px solid ${onSite ? T.green + '55' : T.hair}`,
             borderRadius: 12, padding: 12, cursor: 'pointer', textAlign: 'left',
@@ -34,7 +34,7 @@ function MyDayScreen({ accent }) {
             </div>
             <div style={{ fontFamily: SF, fontSize: 13, color: T.t1, fontWeight: 600, marginTop: 6 }}>{onSite ? todayClock[0].location : 'Tap to check in'}</div>
           </button>
-          <button onClick={() => window.cortexxNav('inbox')} style={{
+          <button type="button" onClick={() => window.cortexxNav('inbox')} style={{
             background: T.bg2, border: `0.5px solid ${T.hair}`,
             borderRadius: 12, padding: 12, cursor: 'pointer', textAlign: 'left',
           }}>
@@ -70,7 +70,7 @@ function MyDayScreen({ accent }) {
               { k: 'voice',   l: 'Voice',    i: Ic.mic,     c: T.red },
               { k: 'receipt', l: 'Receipt',  i: Ic.receipt, c: T.amber },
             ].map(o => (
-              <button key={o.k} onClick={() => window.cortexxNav(o.k === 'task' ? 'addtask' : o.k === 'voice' ? 'voice' : 'scan')} style={{
+              <button type="button" key={o.k} onClick={() => window.cortexxNav(o.k === 'task' ? 'addtask' : o.k === 'voice' ? 'voice' : 'scan')} style={{
                 background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 12,
                 padding: '14px 8px', cursor: 'pointer',
                 display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 6,
@@ -112,7 +112,7 @@ function WorkspaceSheet({ onClose, accent }) {
               onClick={() => { toast(w.current ? 'Already in this workspace' : `Switched to ${w.name}`, w.current ? 'info' : 'success'); if (!w.current) onClose(); }}/>
           ))}
         </GroupedList>
-        <button onClick={() => toast('Workspace creation needs server side — add via Settings → Workspace', 'info')} style={{
+        <button type="button" onClick={() => toast('Workspace creation needs server side — add via Settings → Workspace', 'info')} style={{
           width: '100%', marginTop: 12, background: 'transparent', color: accent,
           border: `0.5px dashed ${T.hairMid}`, borderRadius: 12, padding: '12px',
           fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',

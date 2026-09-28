@@ -102,6 +102,7 @@ function DashV1_ActionFirst({
       marginTop: 14
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       flex: 1,
@@ -122,6 +123,7 @@ function DashV1_ActionFirst({
   }, React.cloneElement(Ic.pin, {
     size: 15
   }), " Check in"), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       background: 'rgba(255,255,255,0.18)',
@@ -1239,6 +1241,7 @@ function DashV5_AIForward({
       position: 'relative'
     }
   }, ['Show me', 'Read out loud', 'Skip today'].map((s, i) => React.createElement("button", {
+    type: "button",
     key: i,
     style: {
       background: i === 0 ? accent : 'transparent',
@@ -1320,6 +1323,7 @@ function DashV5_AIForward({
       marginTop: 10
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       flex: 1,
@@ -1334,6 +1338,7 @@ function DashV5_AIForward({
       cursor: 'pointer'
     }
   }, x.a), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       background: 'transparent',
@@ -1449,6 +1454,7 @@ function DashV6_Field({
       padding: '0 16px 12px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       width: '100%',
@@ -1530,6 +1536,7 @@ function DashV6_Field({
     i: Ic.alert,
     route: 'incident'
   }].map((x, i) => React.createElement("button", {
+    type: "button",
     key: i,
     onClick: () => window.cortexxNav && window.cortexxNav(x.route),
     style: {
@@ -1612,6 +1619,7 @@ function DashV6_Field({
     done: false,
     c: T.t3
   }].map((x, i) => React.createElement("button", {
+    type: "button",
     key: i,
     onClick: () => window.cortexxNav && window.cortexxNav('tab', 'tasks'),
     style: {

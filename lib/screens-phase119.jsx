@@ -60,7 +60,7 @@
     function Tile(k) {
       var l = built.label(k);
       if (q && l.toLowerCase().indexOf(q) === -1 && k.toLowerCase().indexOf(q) === -1) return null;
-      return React.createElement('button', {
+      return React.createElement('button', { type: 'button',
         key: k,
         onClick: function () { if (root.cortexxNav) root.cortexxNav(k); },
         style: {
@@ -95,11 +95,11 @@
     },
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', padding: '16px 18px 8px' } },
         React.createElement('div', { style: { fontSize: 20, fontWeight: 700 } }, 'All Apps'),
-        React.createElement('button', { onClick: onClose, style: { background: 'none', border: 'none', color: accent, fontSize: 28, cursor: 'pointer', lineHeight: 1 } }, '×')
+        React.createElement('button', { type: 'button', onClick: onClose, style: { background: 'none', border: 'none', color: accent, fontSize: 28, cursor: 'pointer', lineHeight: 1 } }, '×')
       ),
       React.createElement('div', { style: { padding: '0 18px 10px' } },
         React.createElement('input', {
-          autoFocus: true, value: search, onChange: function (e) { setSearch(e.target.value); },
+          value: search, onChange: function (e) { setSearch(e.target.value); },
           placeholder: 'Search ' + (built.groups ? Object.keys(built.groups).length : '') + ' domains…',
           style: { width: '100%', padding: '10px 12px', borderRadius: 10, border: '1px solid rgba(128,128,128,0.3)', background: 'rgba(255,255,255,0.06)', color: '#fff', fontSize: 15, outline: 'none' }
         })

@@ -330,14 +330,14 @@ function CaptureContent() {
       <div style={{ padding: '16px 20px 16px 60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--font-system)', letterSpacing: '-0.02em' }}>Capture</h1>
-          <button onClick={() => setShowProjectPicker(!showProjectPicker)} aria-label="Change project" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+          <button type="button" onClick={() => setShowProjectPicker(!showProjectPicker)} aria-label="Change project" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
             <IcPin size={11} color="var(--t3)" />
             <span style={{ fontSize: 12, color: activeProject ? 'var(--t2)' : 'var(--t3)', fontFamily: 'var(--font-system)' }}>
               {activeProject?.name || 'Select project'}
             </span>
           </button>
         </div>
-        <button onClick={() => router.back()} aria-label="Close capture" style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+        <button type="button" onClick={() => router.back()} aria-label="Close capture" style={{ width: 36, height: 36, borderRadius: 10, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
           <IcX size={18} color="var(--t2)" />
         </button>
       </div>
@@ -346,7 +346,7 @@ function CaptureContent() {
       {showProjectPicker && projects.length > 0 && (
         <div style={{ margin: '8px 20px 0', background: 'var(--surface-raised)', borderRadius: 12, border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
           {projects.map(p => (
-            <button
+            <button type="button"
               key={p.id}
               onClick={() => {
                 setActiveProject(p)
@@ -406,7 +406,7 @@ function CaptureContent() {
                   ? `Uploading… ${uploadProgress}%`
                   : action.sub
               return (
-                <button key={action.id} onClick={() => handleAction(action.id)} disabled={disabled} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 18px', borderRadius: 18, background: isSelected ? `${action.color}22` : 'rgba(255,255,255,0.04)', border: `1.5px solid ${isSelected ? action.color : 'rgba(255,255,255,0.08)'}`, cursor: disabled ? 'default' : 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', transform: isSelected ? 'scale(0.98)' : 'scale(1)' }}>
+                <button type="button" key={action.id} onClick={() => handleAction(action.id)} disabled={disabled} style={{ display: 'flex', alignItems: 'center', gap: 16, padding: '20px 18px', borderRadius: 18, background: isSelected ? `${action.color}22` : 'rgba(255,255,255,0.04)', border: `1.5px solid ${isSelected ? action.color : 'rgba(255,255,255,0.08)'}`, cursor: disabled ? 'default' : 'pointer', textAlign: 'left', width: '100%', transition: 'all 0.15s', transform: isSelected ? 'scale(0.98)' : 'scale(1)' }}>
                   <div style={{ width: 52, height: 52, borderRadius: 16, background: `${action.color}22`, display: 'flex', alignItems: 'center', justifyContent: 'center', flexShrink: 0 }}>
                     <action.Icon size={24} color={action.color} />
                   </div>
@@ -427,7 +427,7 @@ function CaptureContent() {
 
             <div style={{ height: 1, background: 'rgba(255,255,255,0.07)', margin: '4px 0' }} />
 
-            <button onClick={() => handleAction('checkin')} disabled={!activeProject || selected === 'checkin'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '16px 0', borderRadius: 16, background: 'linear-gradient(135deg, #f59e0b, #f59e0bcc)', border: 'none', cursor: activeProject ? 'pointer' : 'not-allowed', width: '100%', boxShadow: '0 4px 16px rgba(245,158,11,0.3)', opacity: activeProject ? 1 : 0.5 }}>
+            <button type="button" onClick={() => handleAction('checkin')} disabled={!activeProject || selected === 'checkin'} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 10, padding: '16px 0', borderRadius: 16, background: 'linear-gradient(135deg, #f59e0b, #f59e0bcc)', border: 'none', cursor: activeProject ? 'pointer' : 'not-allowed', width: '100%', boxShadow: '0 4px 16px rgba(245,158,11,0.3)', opacity: activeProject ? 1 : 0.5 }}>
               <span style={{ fontSize: 16, fontWeight: 700, color: '#fff', fontFamily: 'var(--font-system)' }}>
                 Check In to {activeProject?.name || 'Site'}
               </span>

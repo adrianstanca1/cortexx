@@ -97,6 +97,7 @@ function AuditScreen({
       overflowX: 'auto'
     }
   }, areas.map(a => React.createElement("button", {
+    type: "button",
     key: a,
     onClick: () => setFilter(a),
     style: {
@@ -264,6 +265,7 @@ function SSOLoginScreen({
       gap: 10
     }
   }, providers.map(p => React.createElement("button", {
+    type: "button",
     key: p.k,
     onClick: () => setStage('workspace'),
     style: {
@@ -334,6 +336,7 @@ function SSOLoginScreen({
       outline: 'none'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: () => setStage('workspace'),
     disabled: !email.trim(),
     style: {
@@ -363,6 +366,7 @@ function SSOLoginScreen({
       gap: 8
     }
   }, tenants.map(t => React.createElement("button", {
+    type: "button",
     key: t.id,
     onClick: () => setTenant(t.id),
     style: {
@@ -405,6 +409,7 @@ function SSOLoginScreen({
     size: 18,
     sw: 3
   }))))), React.createElement("button", {
+    type: "button",
     onClick: () => {
       if (window.CortexTenant && tenant !== window.CortexTenant.active()) {
         window.CortexTenant.switch(tenant);
@@ -427,6 +432,7 @@ function SSOLoginScreen({
       cursor: 'pointer'
     }
   }, "Enter workspace"), React.createElement("button", {
+    type: "button",
     onClick: () => setStage('providers'),
     style: {
       width: '100%',

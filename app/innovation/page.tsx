@@ -358,8 +358,8 @@ export default function InnovationPage() {
             </p>
           </div>
           <div style={{ position: 'relative', zIndex: 1, minWidth: 230 }}>
-            <label style={label}>Scope</label>
-            <select value={projectId} onChange={e => setProjectId(e.target.value)} style={select}>
+            <label htmlFor="field-361" style={label}>Scope</label>
+            <select id="field-361" value={projectId} onChange={e => setProjectId(e.target.value)} style={select}>
               <option value="">Portfolio · all accessible projects</option>
               {(data?.projects || []).map(project => <option key={project.id} value={project.id}>{project.name}</option>)}
             </select>
@@ -410,7 +410,7 @@ export default function InnovationPage() {
                     </select>
                     <select value={impact} onChange={e => setImpact(Number(e.target.value))} style={selectSmall}>{[5,4,3,2,1].map(n => <option key={n} value={n}>Impact {n}</option>)}</select>
                     <select value={effort} onChange={e => setEffort(Number(e.target.value))} style={selectSmall}>{[1,2,3,4,5].map(n => <option key={n} value={n}>Effort {n}</option>)}</select>
-                    <button disabled={saving} style={primaryButton}>Add</button>
+                    <button type="submit" disabled={saving} style={primaryButton}>Add</button>
                   </form>
                 )}
                 <div style={{ display: 'grid', gap: 8, marginTop: 14 }}>
@@ -493,7 +493,7 @@ export default function InnovationPage() {
                     <select value={constraintCategory} onChange={e => setConstraintCategory(e.target.value)} style={selectSmall}>
                       <option value="design">Design</option><option value="material">Material</option><option value="access">Access</option><option value="labour">Labour</option><option value="plant">Plant</option><option value="quality">Quality</option><option value="safety">Safety</option><option value="other">Other</option>
                     </select>
-                    <button disabled={saving} style={primaryButton}>Raise</button>
+                    <button type="submit" disabled={saving} style={primaryButton}>Raise</button>
                   </form>
                 )}
                 <div style={{ display: 'grid', gap: 8, marginTop: 14 }}>
@@ -504,7 +504,7 @@ export default function InnovationPage() {
                         <b style={{ color: 'var(--t1)', fontSize: 12 }}>{constraint.title}</b>
                         <div style={{ color: 'var(--t3)', fontSize: 10, marginTop: 4 }}>{constraint.project?.name || 'Project'} · {constraint.category} · owner {constraint.ownerName || 'unassigned'}</div>
                       </div>
-                      {data?.permissions.write && <button disabled={saving} onClick={() => resolveConstraint(constraint)} style={miniButton}>Resolve</button>}
+                      {data?.permissions.write && <button type="button" disabled={saving} onClick={() => resolveConstraint(constraint)} style={miniButton}>Resolve</button>}
                     </div>
                   ))}
                   {(data?.constraints || []).length === 0 && <Empty text="No open constraints in this scope." />}
@@ -557,7 +557,6 @@ export default function InnovationPage() {
           role="dialog"
           aria-modal="true"
           aria-label="Pilot measurement plan"
-          onMouseDown={event => { if (event.target === event.currentTarget && !saving) setMeasureIdea(null) }}
           style={modalOverlay}
         >
           <form onSubmit={saveMeasurement} style={modalCard}>

@@ -47,9 +47,15 @@ function InlineField({
       }
     });
   }
-  return React.createElement("span", {
+  return React.createElement("button", {
+    type: "button",
     onClick: () => setEditing(true),
     style: {
+      background: 'transparent',
+      border: 'none',
+      color: 'inherit',
+      textAlign: 'inherit',
+      font: 'inherit',
       cursor: 'text',
       borderRadius: 4,
       padding: '4px 6px',
@@ -139,6 +145,7 @@ function ResponsiveSidebar({
       letterSpacing: -0.3
     }
   }, "CortexBuild Pro")), tabs.map(t => React.createElement("button", {
+    type: "button",
     key: t.k,
     onClick: () => setTab(t.k),
     style: {
@@ -163,6 +170,7 @@ function ResponsiveSidebar({
       flex: 1
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('cmdk'),
     style: {
       background: T.bg3,

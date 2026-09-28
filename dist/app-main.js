@@ -49,6 +49,7 @@ function InteractiveTabBar({
           justifyContent: 'center'
         }
       }, React.createElement("button", {
+        type: "button",
         onClick: onCapture,
         style: {
           width: 52,
@@ -70,6 +71,7 @@ function InteractiveTabBar({
     }
     const isActive = tab === t.k;
     return React.createElement("button", {
+      type: "button",
       key: t.k,
       onClick: () => setTab(t.k),
       style: {
@@ -474,6 +476,7 @@ function CortexxApp({
   })), React.createElement(FloatingUploadPill, {
     accent: accent
   }), true && React.createElement("button", {
+    type: "button",
     onClick: () => setSheet('ai'),
     style: {
       position: 'absolute',
@@ -497,6 +500,7 @@ function CortexxApp({
   })), tab === 'dashboard' && React.createElement(CmdKHint, {
     accent: accent
   }), tab === 'dashboard' && onChangeDashboard && React.createElement("button", {
+    type: "button",
     onClick: () => setSheet('dashpick'),
     style: {
       position: 'absolute',
@@ -1545,6 +1549,7 @@ function SheetWrap({
       zIndex: 5
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => {
       if (window.cortexxSheetBack) window.cortexxSheetBack();else onClose();
     },

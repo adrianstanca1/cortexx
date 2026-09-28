@@ -41,7 +41,7 @@
 
     const TabBar = () => React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16 } },
       [['overview', 'Overview'], ['talks', 'Talks'], ['alerts', 'Alerts'], ['audits', 'Audits']].map(([k, l]) =>
-        React.createElement('button', { key: k, onClick: () => setTab(k),
+        React.createElement('button', { type: 'button', key: k, onClick: () => setTab(k),
           style: { flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
             background: tab === k ? acc : T.bg2, color: tab === k ? '#fff' : T.t2 } }, l)))
 
@@ -69,7 +69,7 @@
           React.createElement('div', null,
             React.createElement('div', { style: { fontSize: 26, fontWeight: 800, color: totalAlerts ? '#f59e0b' : T.green } }, totalAlerts),
             React.createElement('div', { style: { fontSize: 11, color: T.t3 } }, 'Fatigue & competency alerts')),
-          totalAlerts > 0 && React.createElement('button', { onClick: () => setTab('alerts'), style: { padding: '8px 14px', borderRadius: 9, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, 'Review →')))
+          totalAlerts > 0 && React.createElement('button', { type: 'button', onClick: () => setTab('alerts'), style: { padding: '8px 14px', borderRadius: 9, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, 'Review →')))
     );
 
     // ── Toolbox-talk scheduler ─────────────────────────────────────
@@ -82,11 +82,11 @@
               React.createElement('div', { style: { flex: 1 } },
                 React.createElement('div', { style: { fontSize: 13, fontWeight: 700, color: T.t1, textDecoration: t.done ? 'line-through' : 'none' } }, t.topic),
                 React.createElement('div', { style: { fontSize: 11, color: T.t3 } }, projName(t.projectId) + ' · ' + t.assignedTo + ' · ' + t.planned)),
-              !t.done && React.createElement('button', { onClick: async () => {
+              !t.done && React.createElement('button', { type: 'button', onClick: async () => {
                   await Backend.db.talkSchedule.update(t.id, { done: true });
                   window.cortexxNav && window.cortexxNav('toolboxtalk');
                 }, style: { padding: '7px 12px', borderRadius: 8, background: acc, border: 'none', color: '#fff', fontWeight: 700, fontSize: 11.5, cursor: 'pointer' } }, 'Deliver')))),
-      React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('scheduletalk'),
+      React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('scheduletalk'),
         style: { marginTop: 10, width: '100%', padding: 13, borderRadius: 12, background: acc, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer' } }, '+ Schedule toolbox talk')
     );
 
@@ -118,9 +118,9 @@
           React.createElement('span', { style: { fontSize: 11, color: T.t3 } }, projName(a.projectId) + ' · ' + a.auditor + ' · ' + a.scheduled),
           a.status === 'complete'
             ? React.createElement('span', { style: { fontSize: 13, fontWeight: 800, color: T.green } }, a.score + '%')
-            : React.createElement('button', { onClick: async () => { const score = 90 + Math.floor(Math.random() * 10); await Backend.db.hsAudits.update(a.id, { status: 'complete', score }); window.cortexxToast && window.cortexxToast('Audit complete — ' + score + '%', 'success'); },
+            : React.createElement('button', { type: 'button', onClick: async () => { const score = 90 + Math.floor(Math.random() * 10); await Backend.db.hsAudits.update(a.id, { status: 'complete', score }); window.cortexxToast && window.cortexxToast('Audit complete — ' + score + '%', 'success'); },
                 style: { padding: '6px 12px', borderRadius: 8, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontWeight: 700, fontSize: 11.5, cursor: 'pointer' } }, 'Complete')))),
-      React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('scheduleaudit'),
+      React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('scheduleaudit'),
         style: { marginTop: 10, width: '100%', padding: 13, borderRadius: 12, background: acc, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer' } }, '+ Schedule audit')
     );
 

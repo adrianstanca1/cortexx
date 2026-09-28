@@ -25,6 +25,7 @@ function DocumentsScreen({
     title: folder || "Documents",
     subtitle: folder ? `${list.length} files` : `${docs.length} files in ${folders.length} folders`,
     right: folder ? React.createElement("button", {
+      type: "button",
       onClick: () => setFolder(null),
       style: {
         background: 'none',
@@ -52,6 +53,7 @@ function DocumentsScreen({
   }, folders.map(f => {
     const count = docs.filter(d => d.folder === f).length;
     return React.createElement("button", {
+      type: "button",
       key: f,
       onClick: () => setFolder(f),
       style: {
@@ -128,6 +130,7 @@ function DiaryScreen({
     title: "Site diary",
     subtitle: `${entries.length} entries · last: ${_formatRelDate(entries[0]?.date)}`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('adddiary'),
       style: {
         width: 36,
@@ -152,6 +155,7 @@ function DiaryScreen({
       overflowX: 'auto'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setActiveProject(null),
     style: {
       background: !activeProject ? T.bg3 : 'transparent',
@@ -166,6 +170,7 @@ function DiaryScreen({
       whiteSpace: 'nowrap'
     }
   }, "All sites"), projects.filter(p => ['active', 'snagging'].includes(p.status)).map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setActiveProject(p.id),
     style: {
@@ -311,6 +316,7 @@ function SnagsScreen({
     title: "Snags",
     subtitle: `${open.length} open · ${fixed.length} fixed`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('addsnag'),
       style: {
         width: 36,
@@ -354,7 +360,6 @@ function SnagsScreen({
     const proj = projects.find(p => p.id === s.projectId);
     return React.createElement("div", {
       key: s.id,
-      onClick: () => toggle(s.id, s.status),
       style: {
         background: T.bg2,
         borderRadius: 12,
@@ -365,6 +370,23 @@ function SnagsScreen({
         alignItems: 'center',
         gap: 10,
         opacity: s.status === 'fixed' ? 0.5 : 1
+      }
+    }, React.createElement("button", {
+      type: "button",
+      "aria-label": `Toggle snag status: ${s.title}`,
+      onClick: () => toggle(s.id, s.status),
+      style: {
+        display: 'flex',
+        alignItems: 'center',
+        gap: 10,
+        flex: 1,
+        minWidth: 0,
+        padding: 0,
+        border: 'none',
+        background: 'transparent',
+        color: 'inherit',
+        textAlign: 'left',
+        cursor: 'pointer'
       }
     }, React.createElement("div", {
       style: {
@@ -406,11 +428,10 @@ function SnagsScreen({
         color: T.t2,
         marginTop: 2
       }
-    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 ", s.area, " \xB7 ", s.assignee, s.photos > 0 && React.createElement("button", {
-      onClick: e => {
-        e.stopPropagation();
-        window.cortexxNav('annotate', s);
-      },
+    }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 ", s.area, " \xB7 ", s.assignee))), s.photos > 0 && React.createElement("button", {
+      type: "button",
+      onClick: () => window.cortexxNav('annotate', s),
+      "aria-label": `Open ${s.photos} snag photo${s.photos === 1 ? '' : 's'}`,
       style: {
         background: 'none',
         border: 'none',
@@ -418,9 +439,9 @@ function SnagsScreen({
         fontFamily: SF,
         fontSize: 11,
         cursor: 'pointer',
-        padding: 0
+        padding: 4
       }
-    }, " \xB7 \uD83D\uDCF7 ", s.photos))), s.status === 'open' && React.createElement(Pill, {
+    }, "\uD83D\uDCF7 ", s.photos), s.status === 'open' && React.createElement(Pill, {
       c: PRIO_C[s.priority],
       size: "xs"
     }, s.priority));
@@ -530,6 +551,7 @@ function ChangeOrdersScreen({
         marginTop: 12
       }
     }, React.createElement("button", {
+      type: "button",
       onClick: () => approve(c.id),
       style: {
         flex: 1,
@@ -544,6 +566,7 @@ function ChangeOrdersScreen({
         cursor: 'pointer'
       }
     }, "Approve"), React.createElement("button", {
+      type: "button",
       onClick: () => reject(c.id),
       style: {
         background: 'transparent',
@@ -626,6 +649,7 @@ function InboxScreen({
     title: "Inbox",
     subtitle: `${unread.length} unread · ${notifs.length} total`,
     right: unread.length > 0 ? React.createElement("button", {
+      type: "button",
       onClick: markAllRead,
       style: {
         background: 'transparent',
@@ -695,6 +719,14 @@ function InboxScreen({
       gap: 6
     }
   }, portalMsgs.filter(m => seg === 'unread' ? !m.read : true).map(m => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: m.id,
     onClick: () => {
       markPortalRead(m.id);
@@ -767,6 +799,14 @@ function InboxScreen({
   }, "Reply \u2192"))))), list.map(n => {
     const Icon = NOTIF_ICON[n.kind] || Ic.bell;
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: n.id,
       onClick: () => {
         markRead(n.id);
@@ -968,6 +1008,7 @@ function OnboardingSheet({
         flex: 1
       }
     }), React.createElement("button", {
+      type: "button",
       onClick: () => setStep('name'),
       style: {
         background: accent,
@@ -982,6 +1023,7 @@ function OnboardingSheet({
         boxShadow: `0 6px 18px ${accent}55`
       }
     }, "Get started"), React.createElement("button", {
+      type: "button",
       onClick: onClose,
       style: {
         background: 'none',
@@ -1037,7 +1079,6 @@ function OnboardingSheet({
       value: name,
       onChange: e => setName(e.target.value),
       placeholder: "Your name",
-      autoFocus: true,
       style: {
         marginTop: 24,
         background: T.bg2,
@@ -1054,6 +1095,7 @@ function OnboardingSheet({
         flex: 1
       }
     }), React.createElement("button", {
+      type: "button",
       onClick: () => setStep('brief'),
       disabled: !name.trim(),
       style: {
@@ -1129,6 +1171,7 @@ function OnboardingSheet({
       flex: 1
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: finish,
     disabled: seeding,
     style: {
@@ -1144,6 +1187,7 @@ function OnboardingSheet({
       opacity: seeding ? 0.5 : 1
     }
   }, seeding ? 'Setting up your workspace…' : 'Finish setup'), React.createElement("button", {
+    type: "button",
     onClick: finish,
     style: {
       background: 'none',

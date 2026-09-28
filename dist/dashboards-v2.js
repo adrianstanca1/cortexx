@@ -736,6 +736,7 @@ function DashV9_Stories({
       flex: 1
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       background: '#fff',

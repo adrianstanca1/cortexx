@@ -96,6 +96,7 @@
         marginBottom: 14
       }
     }, [['timeline', 'Timeline'], ['heatmap', 'Capacity'], ['clashes', 'Clashes' + (clashes.length ? ' (' + clashes.length + ')' : '')]].map(([k, l]) => React.createElement('button', {
+      type: 'button',
       key: k,
       onClick: () => setTab(k),
       style: {
@@ -336,6 +337,7 @@
         color: T.t2
       }
     }, fmtShort(it.start) + ' → ' + fmtShort(it.end)))), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxToast && window.cortexxToast('Open the timeline to re-assign one booking', 'info'),
       style: {
         marginTop: 10,
@@ -395,6 +397,7 @@
         color: T.t3
       }
     }, 'Booking clashes'))), React.createElement(Header), tab === 'timeline' && React.createElement(Timeline), tab === 'heatmap' && React.createElement(Heatmap), tab === 'clashes' && React.createElement(Clashes), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('addallocation'),
       style: {
         marginTop: 16,
@@ -490,6 +493,7 @@
         padding: '20px 20px 0'
       }
     }, React.createElement('button', {
+      type: 'button',
       onClick: onClose,
       style: {
         width: 36,
@@ -510,6 +514,7 @@
         flex: 1
       }
     }, 'Allocate Resource'), React.createElement('button', {
+      type: 'button',
       onClick: save,
       disabled: saving,
       style: {

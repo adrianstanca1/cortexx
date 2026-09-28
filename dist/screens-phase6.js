@@ -226,6 +226,14 @@ function DrawingsScreen({
   }, drawings.map(d => {
     const proj = projects.find(p => p.id === d.projectId);
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: d.id,
       onClick: () => onOpen && onOpen(d),
       style: {
@@ -385,6 +393,7 @@ function DrawingViewerSheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -417,6 +426,7 @@ function DrawingViewerSheet({
       marginTop: 1
     }
   }, drawing.version, " \xB7 ", pins.length, " pins")), React.createElement("button", {
+    type: "button",
     onClick: () => toast('Drawing exported', 'success'),
     style: {
       background: 'none',
@@ -427,6 +437,14 @@ function DrawingViewerSheet({
       cursor: 'pointer'
     }
   }, "Share")), React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     style: {
       flex: 1,
       background: '#0a1830',
@@ -556,6 +574,7 @@ function DrawingViewerSheet({
       background: T.bg0
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setAddingPin(!addingPin),
     style: {
       flex: 1,
@@ -576,6 +595,7 @@ function DrawingViewerSheet({
   }, React.cloneElement(Ic.pin, {
     size: 14
   }), " ", addingPin ? 'Tap drawing…' : 'Add pin'), React.createElement("button", {
+    type: "button",
     onClick: () => {
       setPins([]);
       toast('Pins cleared', 'info');
@@ -665,6 +685,7 @@ function PermitsScreen({
         marginTop: 2
       }
     }, proj?.name?.split(' ').slice(0, 2).join(' '), " \xB7 ", p.area, " \xB7 Issued by ", p.issuer)), !p.signed && React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('signature', {
         subject: `${p.kind} · ${p.area}`,
         signerName: 'You',
@@ -888,6 +909,7 @@ function VoiceMemoSheet({
       marginBottom: 16
     }
   }, recorderError), React.createElement("button", {
+    type: "button",
     onClick: startRecording,
     style: {
       width: 120,
@@ -944,6 +966,7 @@ function VoiceMemoSheet({
       fontWeight: 600
     }
   }, "\u25CF RECORDING"), React.createElement("button", {
+    type: "button",
     onClick: stop,
     style: {
       marginTop: 26,
@@ -1035,6 +1058,7 @@ function VoiceMemoSheet({
       marginTop: 14
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: save,
     style: {
       flex: 1,
@@ -1049,6 +1073,7 @@ function VoiceMemoSheet({
       cursor: 'pointer'
     }
   }, "Save memo"), React.createElement("button", {
+    type: "button",
     onClick: () => {
       setTranscript(null);
       setDuration(0);

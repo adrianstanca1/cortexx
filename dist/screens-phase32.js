@@ -521,7 +521,6 @@ function CommandPalette({
     setActiveIdx(0);
   }, [q]);
   return React.createElement("div", {
-    onClick: onClose,
     style: {
       position: 'absolute',
       inset: 0,
@@ -534,6 +533,7 @@ function CommandPalette({
       animation: 'fade 0.15s'
     }
   }, React.createElement("style", null, `@keyframes fade { from { opacity: 0 } to { opacity: 1 } }`), React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
       width: '90%',
@@ -600,6 +600,7 @@ function CommandPalette({
       color: T.t3
     }
   }, "No matches for \"", q, "\""), results.map((r, i) => React.createElement("button", {
+    type: "button",
     key: r.l,
     onClick: () => run(r),
     onMouseEnter: () => setActiveIdx(i),

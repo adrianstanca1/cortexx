@@ -89,6 +89,7 @@ function SignatureSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -106,6 +107,7 @@ function SignatureSheet({
       color: T.t1
     }
   }, "Signature"), React.createElement("button", {
+    type: "button",
     onClick: sign,
     style: {
       background: 'none',
@@ -196,6 +198,7 @@ function SignatureSheet({
       marginTop: 14
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: clear,
     style: {
       flex: 1,
@@ -210,6 +213,7 @@ function SignatureSheet({
       cursor: 'pointer'
     }
   }, "Clear"), React.createElement("button", {
+    type: "button",
     onClick: sign,
     disabled: !hasSignature,
     style: {
@@ -292,6 +296,7 @@ function ApprovalSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -309,6 +314,7 @@ function ApprovalSheet({
       color: T.t1
     }
   }, "Approval chain"), React.createElement("button", {
+    type: "button",
     onClick: () => {
       onApproved && onApproved(allApproved);
       onClose();
@@ -478,6 +484,7 @@ function ApprovalSheet({
         gap: 5
       }
     }, React.createElement("button", {
+      type: "button",
       onClick: () => approve(i),
       style: {
         background: T.green,
@@ -491,6 +498,7 @@ function ApprovalSheet({
         fontWeight: 700
       }
     }, "\u2713"), React.createElement("button", {
+      type: "button",
       onClick: () => reject(i),
       style: {
         background: 'transparent',

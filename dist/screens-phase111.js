@@ -44,6 +44,7 @@
       padding: '20px 20px 0'
     }
   }, React.createElement('button', {
+    type: 'button',
     onClick: onClose,
     style: {
       width: 36,
@@ -64,6 +65,7 @@
       flex: 1
     }
   }, title), onSave && React.createElement('button', {
+    type: 'button',
     onClick: onSave,
     disabled: saving,
     style: {
@@ -263,6 +265,7 @@
         gap: 8
       }
     }, attendees.map(m => React.createElement('button', {
+      type: 'button',
       key: m.id,
       onClick: () => toggleSign(m.id),
       style: {
@@ -533,6 +536,7 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
       key: p.id,
       value: p.id
     }, p.name)))), !report && React.createElement('button', {
+      type: 'button',
       onClick: generate,
       disabled: loading,
       style: {
@@ -571,6 +575,7 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
         gap: 10
       }
     }, React.createElement('button', {
+      type: 'button',
       onClick: () => {
         const el = document.createElement('textarea');
         el.value = report.text;
@@ -592,6 +597,7 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
         cursor: 'pointer'
       }
     }, '📋 Copy'), React.createElement('button', {
+      type: 'button',
       onClick: () => window.print(),
       style: {
         flex: 1,
@@ -605,6 +611,7 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
         cursor: 'pointer'
       }
     }, '🖨 Print'), React.createElement('button', {
+      type: 'button',
       onClick: generate,
       style: {
         flex: 1,

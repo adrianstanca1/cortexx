@@ -133,7 +133,7 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
             { l: 'Read out loud', onClick: () => { if ('speechSynthesis' in window && briefings[0]) { const u = new SpeechSynthesisUtterance(briefings[0]); speechSynthesis.speak(u) } } },
             { l: 'Skip today', onClick: () => { /* no-op for now */ } },
           ].map((b, i) => (
-            <button key={i} onClick={b.onClick} style={{
+            <button type="button" key={i} onClick={b.onClick} style={{
               background: b.primary ? accent : 'transparent',
               color: b.primary ? '#fff' : '#60a5fa',
               border: b.primary ? 'none' : '0.5px solid rgba(255,255,255,0.13)',
@@ -161,10 +161,10 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
               </span>
             </div>
             <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
-              <button onClick={() => setDismissed(prev => [...prev, d.id])} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: '#10b98122', border: '1px solid #10b98144', fontSize: 13, fontWeight: 600, color: '#10b981', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <button type="button" onClick={() => setDismissed(prev => [...prev, d.id])} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: '#10b98122', border: '1px solid #10b98144', fontSize: 13, fontWeight: 600, color: '#10b981', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcCheck size={13} color="#10b981" /> Done
               </button>
-              <button onClick={() => snoozeItem(d.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13, fontWeight: 600, color: 'var(--t2)', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+              <button type="button" onClick={() => snoozeItem(d.id)} style={{ flex: 1, padding: '8px 0', borderRadius: 10, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', fontSize: 13, fontWeight: 600, color: 'var(--t2)', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
                 <IcClock size={13} color="var(--t2)" /> Snooze 30m
               </button>
             </div>
@@ -195,7 +195,7 @@ export default function AIForward({ accent = '#f59e0b', data }: AIForwardProps) 
           placeholder="Ask Cortex anything…"
           style={{ background: 'none', border: 'none', outline: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 13, flex: 1 }}
         />
-        <button
+        <button type="button"
           onClick={handleAsk}
           disabled={aiLoading || !aiQuery.trim()}
           style={{ width: 30, height: 30, borderRadius: 9, background: aiQuery.trim() ? '#2563eb' : 'rgba(37,99,235,0.3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: aiQuery.trim() ? 'pointer' : 'default', flexShrink: 0 }}

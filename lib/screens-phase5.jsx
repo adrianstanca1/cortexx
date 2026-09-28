@@ -138,7 +138,7 @@ function TemplatesScreen({ accent }) {
         <MobileHeader
           title="Job templates"
           subtitle="Reusable project blueprints"
-          right={<button onClick={async () => { await Backend.db.jobTemplates.create({ name: 'Untitled template', stages: 1, milestones: ['Stage 1'], typical_value: 0, typical_weeks: 1 }); toast('Template created', 'success'); }} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={async () => { await Backend.db.jobTemplates.create({ name: 'Untitled template', stages: 1, milestones: ['Stage 1'], typical_value: 0, typical_weeks: 1 }); toast('Template created', 'success'); }} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
@@ -154,7 +154,7 @@ function TemplatesScreen({ accent }) {
                     {t.stages} stages · ~{t.typical_weeks} wks · ~£{(t.typical_value/1000).toFixed(0)}k
                   </div>
                 </div>
-                <button onClick={async () => {
+                <button type="button" onClick={async () => {
                   await Backend.db.projects.create({
                     name: `New ${t.name}`, client: 'TBC', value: t.typical_value, pct: 0,
                     status: 'quoting', addr: 'TBC', team: 0, due: null, margin: 0, createdAt: '2026-05-22'

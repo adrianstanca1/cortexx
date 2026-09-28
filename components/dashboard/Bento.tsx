@@ -58,7 +58,7 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
       <div style={{ padding: '4px 16px', display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 }}>
         {/* Big — Active site (full width) */}
         {activeProject && (
-          <div
+          <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
             onClick={() => router.push(`/projects/${activeProject.id}`)}
             style={{
               gridColumn: '1 / 3',
@@ -143,7 +143,7 @@ export default function Bento({ accent = '#2563eb', data }: BentoProps) {
         </div>
 
         {/* AI shortcut — wide */}
-        <div
+        <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
           onClick={() => router.push('/dashboard?v=5')}
           style={{
             gridColumn: '1 / 3',

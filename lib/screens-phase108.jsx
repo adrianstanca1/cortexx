@@ -91,7 +91,7 @@ function SubscriptionScreen({ accent, onClose }) {
                 {isCurrent
                   ? <span style={{ padding: '4px 10px', borderRadius: 6, background: T.green, color: '#fff', fontSize: 10, fontFamily: SFMono, fontWeight: 700, letterSpacing: 0.4 }}>CURRENT</span>
                   : (
-                    <button onClick={() => buy(p.id)} disabled={busy === p.id}
+                    <button type="button" onClick={() => buy(p.id)} disabled={busy === p.id}
                       style={{ padding: '8px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, opacity: busy === p.id ? 0.6 : 1 }}>
                       {busy === p.id ? '…' : (native ? 'Subscribe' : 'Checkout')}
                     </button>
@@ -110,12 +110,12 @@ function SubscriptionScreen({ accent, onClose }) {
 
         {/* Restore / manage */}
         <div style={{ display: 'flex', gap: 8, marginTop: 18 }}>
-          <button onClick={restore} disabled={busy === 'restore'}
+          <button type="button" onClick={restore} disabled={busy === 'restore'}
             style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontFamily: SF, fontSize: 13, fontWeight: 600 }}>
             {busy === 'restore' ? 'Restoring…' : 'Restore purchases'}
           </button>
           {stat.entitled && (
-            <button onClick={() => IAP.cancel()}
+            <button type="button" onClick={() => IAP.cancel()}
               style={{ flex: 1, padding: 12, borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.red, fontFamily: SF, fontSize: 13, fontWeight: 600 }}>
               Manage / cancel
             </button>

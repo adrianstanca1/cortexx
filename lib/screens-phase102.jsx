@@ -272,11 +272,11 @@ function BankRecScreen({ accent }) {
             </div>
             <input ref={fileRef} type="file" accept=".csv,text/csv" style={{ display: 'none' }}
               onChange={(e) => onFile(e.target.files && e.target.files[0])}/>
-            <button onClick={() => fileRef.current && fileRef.current.click()}
+            <button type="button" onClick={() => fileRef.current && fileRef.current.click()}
               style={{ width: '100%', padding: '12px 14px', borderRadius: 10, border: 'none', background: accent, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 700 }}>
               Choose CSV file
             </button>
-            <button onClick={pullFromBank}
+            <button type="button" onClick={pullFromBank}
               style={{ width: '100%', marginTop: 8, padding: '12px 14px', borderRadius: 10, border: '1px solid '+T.hair, background: T.bg2, color: T.t1, fontFamily: SF, fontSize: 13, fontWeight: 600 }}>
               Pull from connected bank (Open Banking)
             </button>
@@ -330,8 +330,8 @@ function BankRecScreen({ accent }) {
           </>}
 
           <div style={{ display: 'flex', gap: 8, marginTop: 18, position: 'sticky', bottom: 12 }}>
-            <button onClick={restart} style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontFamily: SF, fontSize: 13, fontWeight: 600 }}>Back</button>
-            <button onClick={apply} disabled={busy || !Object.values(selected).filter(Boolean).length}
+            <button type="button" onClick={restart} style={{ flex: 1, padding: '12px 14px', borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontFamily: SF, fontSize: 13, fontWeight: 600 }}>Back</button>
+            <button type="button" onClick={apply} disabled={busy || !Object.values(selected).filter(Boolean).length}
               style={{ flex: 2, padding: '12px 14px', borderRadius: 10, border: 'none', background: T.green, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 700, opacity: (busy || !Object.values(selected).filter(Boolean).length) ? 0.5 : 1 }}>
               {busy ? 'Reconciling…' : 'Reconcile ' + Object.values(selected).filter(Boolean).length + ' invoice' + (Object.values(selected).filter(Boolean).length === 1 ? '' : 's')}
             </button>
@@ -342,7 +342,7 @@ function BankRecScreen({ accent }) {
           <div style={{ fontSize: 60, marginBottom: 12 }}>✓</div>
           <div style={{ fontSize: 18, fontWeight: 700, color: T.t1, marginBottom: 8 }}>{count} invoice{count === 1 ? '' : 's'} reconciled</div>
           <div style={{ fontSize: 13, color: T.t2, marginBottom: 24 }}>Marked paid · activity logged · cash flow updated</div>
-          <button onClick={restart}
+          <button type="button" onClick={restart}
             style={{ padding: '10px 22px', borderRadius: 10, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontFamily: SF, fontSize: 13, fontWeight: 600 }}>
             Reconcile another statement
           </button>

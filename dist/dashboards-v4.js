@@ -180,13 +180,16 @@ function DashV14_Broadsheet({
       gap: 4
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setNav('switchworkspace'),
     title: "Switch workspace",
     style: chipBtn14()
   }, Ic.building || Ic.layers, " ", React.createElement("span", null, (window.CortexTenant ? window.CortexTenant.activeRecord().name : 'CORTEXX').toUpperCase().slice(0, 12), " \u25BE")), React.createElement("button", {
+    type: "button",
     onClick: () => setNav('search'),
     style: chipBtn14()
   }, Ic.search, " ", React.createElement("span", null, "SEARCH")), React.createElement("button", {
+    type: "button",
     onClick: () => setNav('inbox'),
     style: chipBtn14()
   }, Ic.bell, " ", React.createElement("span", null, "WIRE"))))), React.createElement("div", {
@@ -263,11 +266,20 @@ function DashV14_Broadsheet({
       color: V14.ink
     }
   }, (focus?.t || 'A')[0].toUpperCase()), "s of dawn, ", React.createElement("strong", null, onSite), " trades reported on site across the active portfolio. The book carries ", React.createElement("strong", null, "\xA3", (pipeline / 1000).toFixed(0), "k"), " of live pipeline against", React.createElement("strong", null, " \xA3", (outstanding / 1000).toFixed(0), "k"), " outstanding on the ledger.", focus ? React.createElement(React.Fragment, null, " The desk recommends opening with ", React.createElement("em", null, focus.t.toLowerCase()), "; estimates put the work at less than the hour.") : React.createElement(React.Fragment, null, " The desk recommends a clear-out morning \u2014 backlog grooming over fresh starts.")), focus && React.createElement("button", {
+    type: "button",
     onClick: () => setNav('tab', 'tasks'),
     style: leadCTA14()
   }, "Take it on \u2192")), React.createElement(Dingbat14, {
     label: "DESK REPORTS"
-  }), active.slice(0, 3).map((p, i) => React.createElement("article", {
+  }), active.slice(0, 3).map((p, i) => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: p.id,
     onClick: () => setNav('project', p),
     style: {
@@ -566,6 +578,7 @@ function DeskLink14({
   bottomRow
 }) {
   return React.createElement("button", {
+    type: "button",
     onClick: onClick,
     style: {
       background: 'transparent',

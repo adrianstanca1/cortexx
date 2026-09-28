@@ -73,7 +73,7 @@ function UploadSheet({ onClose, accent, target = 'document' }) {
       <div style={{ padding: '0 16px 24px' }}>
         {stage === 'pick' && (
           <>
-            <div onClick={() => inputRef.current?.click()} style={{
+            <button type="button" onClick={() => inputRef.current?.click()} style={{ width: '100%', color: 'inherit',
               border: `1.5px dashed ${T.hairStrong}`,
               borderRadius: 14, padding: '24px 16px', textAlign: 'center',
               background: T.bg2, marginBottom: 14, cursor: 'pointer',
@@ -81,8 +81,8 @@ function UploadSheet({ onClose, accent, target = 'document' }) {
               <div style={{ color: accent, fontSize: 36, marginBottom: 8 }}>{React.cloneElement(Ic.upload, { size: 36 })}</div>
               <div style={{ fontFamily: SF, fontSize: 13, color: T.t1, fontWeight: 600 }}>Tap to pick a file</div>
               <div style={{ fontFamily: SF, fontSize: 11, color: T.t2, marginTop: 4 }}>PDF, DWG, XLSX, JPG, PNG · up to 50 MB</div>
-              <input ref={inputRef} type="file" onChange={handleRealFile} style={{ display: 'none' }}/>
-            </div>
+            </button>
+            <input ref={inputRef} type="file" onChange={handleRealFile} style={{ display: 'none' }} aria-label="Choose file to upload"/>
             <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Or sample files</div>
             <GroupedList>
               {files.map((f, i, a) => (
@@ -125,7 +125,7 @@ function UploadSheet({ onClose, accent, target = 'document' }) {
             }}>{React.cloneElement(Ic.check, { size: 32, sw: 3 })}</div>
             <div style={{ fontFamily: SF, fontSize: 15, color: T.t1, fontWeight: 600 }}>{fileMeta.name}</div>
             <div style={{ fontFamily: SF, fontSize: 12, color: T.t2, marginTop: 4 }}>Available in {target === 'drawing' ? 'Drawings' : 'Documents'}</div>
-            <button onClick={onClose} style={{
+            <button type="button" onClick={onClose} style={{
               marginTop: 20, background: accent, color: '#fff', border: 'none',
               borderRadius: 12, padding: '12px 28px',
               fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
@@ -245,7 +245,7 @@ function DatabaseScreen({ accent }) {
       <ScreenBg accent={accent}>
         <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
           <div style={{ padding: '4px 16px 12px', display: 'flex', alignItems: 'center' }}>
-            <button onClick={() => setActiveTable(null)} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+            <button type="button" onClick={() => setActiveTable(null)} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
               {Ic.chevL} <span>Tables</span>
             </button>
           </div>

@@ -8,6 +8,7 @@ function FloatingAIPill({
 }) {
   const [collapsed, setCollapsed] = React.useState(false);
   return React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('ai'),
     style: {
       position: 'absolute',

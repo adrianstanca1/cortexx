@@ -82,9 +82,9 @@ export default function ProcessDocPage() {
             return (
               <li
                 key={r.id}
-                onClick={() => void openRecord(r.id)}
+
                 style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '13px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', color: 'var(--t1)', cursor: 'pointer' }}
-              >
+              ><div role="button" tabIndex={0} onClick={() => void openRecord(r.id)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}>
                 <div style={{ display: 'flex', gap: 8, justifyContent: 'space-between', alignItems: 'flex-start' }}>
                   <div style={{ minWidth: 0 }}>
                     <div style={{ fontSize: 13, fontWeight: 800 }}>{title}</div>
@@ -100,7 +100,7 @@ export default function ProcessDocPage() {
                 <div style={{ fontSize: 10, color: 'var(--t3)', marginTop: 8 }}>
                   {new Date(publishedAt || r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
                 </div>
-              </li>
+              </div></li>
             )
           })}
         </ul>

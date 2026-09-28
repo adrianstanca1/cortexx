@@ -172,6 +172,7 @@ function PhotoReviewScreen({
     title: "Photo review",
     subtitle: `${counts.pending} awaiting review`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => fileInput.current && fileInput.current.click(),
       style: {
         width: 36,
@@ -219,6 +220,14 @@ function PhotoReviewScreen({
       n: counts.rejected
     }]
   })), shown.length === 0 ? React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     onClick: () => fileInput.current && fileInput.current.click(),
     style: {
       margin: '4px 16px',
@@ -275,6 +284,14 @@ function PhotoReviewScreen({
         border: `0.5px solid ${T.hair}`
       }
     }, React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       onClick: () => setViewing({
         ...p,
         url
@@ -301,6 +318,7 @@ function PhotoReviewScreen({
         padding: 6
       }
     }, React.createElement("button", {
+      type: "button",
       onClick: () => setStatus(p.id, 'approved'),
       style: {
         flex: 1,
@@ -315,6 +333,7 @@ function PhotoReviewScreen({
         fontWeight: 700
       }
     }, "\u2713"), React.createElement("button", {
+      type: "button",
       onClick: () => setStatus(p.id, 'rejected'),
       style: {
         flex: 1,
@@ -330,7 +349,6 @@ function PhotoReviewScreen({
       }
     }, "\u2717")));
   }))), viewing && React.createElement("div", {
-    onClick: () => setViewing(null),
     style: {
       position: 'absolute',
       inset: 0,
@@ -347,6 +365,7 @@ function PhotoReviewScreen({
       alignItems: 'center'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setViewing(null),
     style: {
       background: 'none',
@@ -359,6 +378,7 @@ function PhotoReviewScreen({
   }, "Close"), React.createElement(Pill, {
     c: statusC[viewing.reviewStatus || 'pending']
   }, viewing.reviewStatus || 'pending')), React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
       flex: 1,
@@ -376,6 +396,7 @@ function PhotoReviewScreen({
       borderRadius: 12
     }
   })), React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
       padding: 16,
@@ -383,6 +404,7 @@ function PhotoReviewScreen({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setStatus(viewing.id, 'approved'),
     style: {
       flex: 1,
@@ -397,6 +419,7 @@ function PhotoReviewScreen({
       cursor: 'pointer'
     }
   }, "Approve"), React.createElement("button", {
+    type: "button",
     onClick: () => setStatus(viewing.id, 'rejected'),
     style: {
       flex: 1,
@@ -411,6 +434,7 @@ function PhotoReviewScreen({
       cursor: 'pointer'
     }
   }, "Reject"), React.createElement("button", {
+    type: "button",
     onClick: async () => {
       await window.cortexxPhotoStore.remove(viewing.id);
       await load();
@@ -491,6 +515,7 @@ function TenantScreen({
       c: T.green,
       size: "xs"
     }, "ACTIVE") : React.createElement("button", {
+      type: "button",
       onClick: () => window.CortexTenant.switch(t.id),
       style: {
         background: accent,
@@ -531,6 +556,7 @@ function TenantScreen({
       outline: 'none'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: () => {
       if (!newName.trim()) {
         if (window.cortexxToast) window.cortexxToast('Enter a name', 'error');

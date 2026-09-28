@@ -553,7 +553,7 @@ function ConnectionModal({ title, initialName, initialProvider, initialCategory,
       aria-modal="true"
       aria-label={title}
       style={{ position: 'fixed', inset: 0, background: 'rgba(2,8,18,0.75)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 60, padding: 16 }}
-      onClick={e => { if (e.target === e.currentTarget) onClose() }}
+
     >
       <form onSubmit={save} style={{ background: '#0d1c33', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 16, padding: 20, width: '100%', maxWidth: 460, maxHeight: '85dvh', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 12 }}>
         <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>

@@ -138,13 +138,13 @@ export default function MessagesPage() {
               {pinned.length > 0 && <span style={{ color: '#f59e0b', marginLeft: 6 }}>· {pinned.length} pinned</span>}
             </p>
           </div>
-          <button onClick={() => setShowCompose(true)} aria-label="Compose announcement" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowCompose(true)} aria-label="Compose announcement" style={{ width: 36, height: 36, borderRadius: 10, background: '#06b6d4', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'general', 'safety', 'urgent', 'update'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : TYPE_CFG[t].label}
             </button>
           ))}
@@ -159,7 +159,7 @@ export default function MessagesPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcBell size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No announcements yet</p>
-          <button onClick={() => setShowCompose(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowCompose(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Post first
           </button>
         </div>
@@ -182,18 +182,18 @@ export default function MessagesPage() {
 
       {showCompose && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowCompose(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowCompose(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>New announcement</h2>
-              <button onClick={() => setShowCompose(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowCompose(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
-              <label style={labelStyle}>Type</label>
+              <div style={labelStyle}>Type</div>
               <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: 6 }}>
                 {(['general', 'safety', 'urgent', 'update'] as const).map(t => (
-                  <button key={t} onClick={() => setForm(p => ({ ...p, type: t }))} style={{ padding: '8px', borderRadius: 8, border: form.type === t ? `1px solid ${TYPE_CFG[t].color}` : '1px solid rgba(255,255,255,0.1)', background: form.type === t ? TYPE_CFG[t].bg : 'rgba(255,255,255,0.02)', color: form.type === t ? TYPE_CFG[t].color : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" key={t} onClick={() => setForm(p => ({ ...p, type: t }))} style={{ padding: '8px', borderRadius: 8, border: form.type === t ? `1px solid ${TYPE_CFG[t].color}` : '1px solid rgba(255,255,255,0.1)', background: form.type === t ? TYPE_CFG[t].bg : 'rgba(255,255,255,0.02)', color: form.type === t ? TYPE_CFG[t].color : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>
                     {TYPE_CFG[t].label}
                   </button>
                 ))}
@@ -203,18 +203,18 @@ export default function MessagesPage() {
               )}
             </div>
 
-            <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Title" style={inputStyle} />
+            <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="Title" style={inputStyle} />
             <textarea value={form.body} onChange={e => setForm(p => ({ ...p, body: e.target.value }))} placeholder="What's the message?" rows={5} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
 
             <div>
-              <label style={labelStyle}>Scope (optional)</label>
-              <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-210" style={labelStyle}>Scope (optional)</label>
+              <select id="field-210" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 <option value="">— Whole workspace —</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
 
-            <button onClick={post} disabled={saving || !form.title.trim() || !form.body.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || !form.body.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={post} disabled={saving || !form.title.trim() || !form.body.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || !form.body.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Posting…' : <><IcCheck size={16} color="#fff" /> Post</>}
             </button>
           </div>
@@ -237,11 +237,11 @@ function Card({ a, onPin, onDelete, confirmDelete }: { a: Announcement; onPin: (
       <div style={{ fontFamily: SF, fontSize: 13, color: '#c1d2e8', whiteSpace: 'pre-wrap', lineHeight: 1.4 }}>{a.body}</div>
       <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginTop: 4 }}>
         {a.authorName && <span style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>— {a.authorName}</span>}
-        <button onClick={() => onPin(a)} aria-label={a.isPinned ? 'Unpin' : 'Pin'} style={{ marginLeft: 'auto', background: a.isPinned ? `${cfg.color}22` : 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+        <button type="button" onClick={() => onPin(a)} aria-label={a.isPinned ? 'Unpin' : 'Pin'} style={{ marginLeft: 'auto', background: a.isPinned ? `${cfg.color}22` : 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 6, padding: '3px 7px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
           <IcPin size={11} color={a.isPinned ? cfg.color : 'var(--t3)'} />
           <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: a.isPinned ? cfg.color : 'var(--t3)' }}>{a.isPinned ? 'Pinned' : 'Pin'}</span>
         </button>
-        <button onClick={() => onDelete(a.id)} aria-label={confirmDelete === a.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === a.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === a.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+        <button type="button" onClick={() => onDelete(a.id)} aria-label={confirmDelete === a.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === a.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === a.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
           <IcTrash size={11} color="#ef4444" />
           {confirmDelete === a.id && <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#ef4444' }}>Sure?</span>}
         </button>

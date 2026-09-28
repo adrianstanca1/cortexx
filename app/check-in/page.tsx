@@ -166,13 +166,13 @@ export default function CheckInPage() {
               {activeCount} active now · {checkins.length} total today
             </p>
           </div>
-          <button onClick={() => setShowIn(true)} disabled={team.length === 0 || projects.length === 0} aria-label="Check in" style={{ padding: '8px 14px', borderRadius: 10, background: team.length && projects.length ? '#10b981' : 'rgba(16,185,129,0.3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: team.length && projects.length ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <IcCheck size={14} color="#fff" /> Check in
+          <button type="button" onClick={() => setShowIn(true)} disabled={team.length === 0 || projects.length === 0} aria-label="Check in" style={{ padding: '8px 14px', borderRadius: 10, background: team.length && projects.length ? '#10b981' : 'rgba(16,185,129,0.3)', border: 'none', color: '#090b0d', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: team.length && projects.length ? 'pointer' : 'not-allowed', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <IcCheck size={14} color="#090b0d" /> Check in
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6 }}>
           {(['all', 'active'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#10b981' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#10b981' : 'rgba(255,255,255,0.06)', color: filter === t ? '#090b0d' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All check-ins' : `Active (${activeCount})`}
             </button>
           ))}
@@ -210,13 +210,13 @@ export default function CheckInPage() {
                   </div>
                 </div>
                 {active ? (
-                  <button onClick={() => checkOut(ci)} style={{ background: 'rgba(245,158,11,0.18)', border: '0.5px solid rgba(245,158,11,0.4)', color: '#f59e0b', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+                  <button type="button" onClick={() => checkOut(ci)} style={{ background: 'rgba(245,158,11,0.18)', border: '0.5px solid rgba(245,158,11,0.4)', color: '#f59e0b', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                     Check out
                   </button>
                 ) : (
                   <span style={{ fontFamily: SF, fontSize: 10, color: '#10b981', fontWeight: 700, textTransform: 'uppercase' }}>Done</span>
                 )}
-                <button onClick={() => remove(ci.id)} aria-label={confirmDelete === ci.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === ci.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === ci.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
+                <button type="button" onClick={() => remove(ci.id)} aria-label={confirmDelete === ci.id ? 'Confirm delete' : 'Delete'} style={{ background: confirmDelete === ci.id ? 'rgba(239,68,68,0.18)' : 'transparent', border: 'none', borderRadius: 4, padding: confirmDelete === ci.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 3 }}>
                   <IcTrash size={11} color="#ef4444" />
                   {confirmDelete === ci.id && <span style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: '#ef4444' }}>Sure?</span>}
                 </button>
@@ -230,23 +230,23 @@ export default function CheckInPage() {
 
       {showIn && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowIn(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowIn(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Check in</h2>
-              <button onClick={() => setShowIn(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowIn(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div>
-              <label style={labelStyle}>Member</label>
-              <select value={form.memberId} onChange={e => setForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-241" style={labelStyle}>Member</label>
+              <select id="field-241" value={form.memberId} onChange={e => setForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 {team.map(m => <option key={m.id} value={m.id}>{m.name} — {m.role}</option>)}
               </select>
             </div>
 
             <div>
-              <label style={labelStyle}>Site</label>
-              <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-248" style={labelStyle}>Site</label>
+              <select id="field-248" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
@@ -260,8 +260,8 @@ export default function CheckInPage() {
 
             <textarea value={form.notes} onChange={e => setForm(p => ({ ...p, notes: e.target.value }))} placeholder="Notes (optional — induction confirmed, weather, etc.)" rows={2} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
 
-            <button onClick={checkIn} disabled={saving || !form.memberId || !form.projectId} style={{ padding: '14px 0', borderRadius: 14, background: '#10b981', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.memberId || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
-              {saving ? 'Checking in…' : <><IcCheck size={16} color="#fff" /> Check in now</>}
+            <button type="button" onClick={checkIn} disabled={saving || !form.memberId || !form.projectId} style={{ padding: '14px 0', borderRadius: 14, background: '#10b981', border: 'none', color: '#090b0d', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.memberId || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              {saving ? 'Checking in…' : <><IcCheck size={16} color="#090b0d" /> Check in now</>}
             </button>
           </div>
         </div>

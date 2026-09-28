@@ -69,6 +69,7 @@ function HealthCheckSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -91,6 +92,7 @@ function HealthCheckSheet({
   }, React.cloneElement(Ic.spark, {
     size: 14
   }), " Health check"), React.createElement("button", {
+    type: "button",
     onClick: async () => {
       setLoading(true);
       const r = await Backend.ai.healthCheck(project);

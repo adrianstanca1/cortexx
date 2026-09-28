@@ -243,6 +243,7 @@ function RFIsScreen({
     title: "RFIs",
     subtitle: `${rfis.filter(r => r.status === 'open').length} open · ${rfis.length} total`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('addrfi'),
       style: {
         width: 36,
@@ -289,6 +290,14 @@ function RFIsScreen({
   }, filtered.map(r => {
     const proj = projects.find(p => p.id == r.projectId);
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: r.id,
       onClick: () => onOpen && onOpen(r),
       style: {
@@ -411,6 +420,7 @@ function RFIDetailSheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -549,6 +559,7 @@ function RFIDetailSheet({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: aiSuggest,
     disabled: suggesting,
     style: {
@@ -577,6 +588,7 @@ function RFIDetailSheet({
       outline: 'none'
     }
   })), React.createElement("button", {
+    type: "button",
     onClick: send,
     disabled: !reply.trim(),
     style: {
@@ -613,6 +625,7 @@ function MessagesScreen({
     title: "Messages",
     subtitle: `${msgs.length} threads · ${msgs.reduce((s, m) => s + (m.unread || 0), 0)} unread`,
     right: React.createElement("button", {
+      type: "button",
       onClick: async () => {
         await Backend.db.messages.create({
           kind: 'team',
@@ -655,6 +668,14 @@ function MessagesScreen({
   }, msgs.map(m => {
     const c = m.kind === 'team' ? T.blue : m.kind === 'client' ? T.green : T.purple;
     return React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: m.id,
       onClick: () => onOpen && onOpen(m),
       style: {
@@ -782,6 +803,7 @@ function MessageThreadSheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -882,6 +904,7 @@ function MessageThreadSheet({
       outline: 'none'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: send,
     disabled: !input.trim(),
     style: {
@@ -949,6 +972,7 @@ function ReportsScreen({
     title: "Reports",
     subtitle: "AI-narrated business reports",
     right: React.createElement("button", {
+      type: "button",
       onClick: () => {
         const rep = reports.find(r => r.k === picked) || {};
         if (window.cortexxReportPDF) {
@@ -1068,6 +1092,7 @@ function ReportsScreen({
       padding: '0 16px 14px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: generate,
     disabled: loading,
     style: {
@@ -1136,6 +1161,7 @@ function ReportsScreen({
       marginTop: 14
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.print(),
     style: {
       flex: 1,
@@ -1156,6 +1182,7 @@ function ReportsScreen({
   }, React.cloneElement(Ic.print, {
     size: 13
   }), " Export PDF"), React.createElement("button", {
+    type: "button",
     onClick: async () => {
       try {
         await navigator.share({

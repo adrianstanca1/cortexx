@@ -255,6 +255,7 @@ function SubPortalScreen({
       }
     }, "CIS \u2212\xA3", iv.cisDeduction))));
   }), React.createElement("button", {
+    type: "button",
     onClick: () => toast('Invoice draft started', 'success'),
     style: {
       background: 'transparent',

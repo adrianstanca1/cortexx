@@ -264,7 +264,7 @@ export default function TeamPage() {
       {/* Tab switch */}
       <div style={{ display: 'flex', padding: '10px 16px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         {(['members', 'timesheets'] as const).map(t => (
-          <button key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: '10px 4px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: t === tab ? 600 : 400, color: t === tab ? '#f59e0b' : 'var(--t3)', cursor: 'pointer', fontFamily: 'var(--font-system)', borderBottom: t === tab ? '2px solid #f59e0b' : '2px solid transparent', marginBottom: -1, textTransform: 'capitalize' }}>
+          <button type="button" key={t} onClick={() => setTab(t)} style={{ flex: 1, padding: '10px 4px', border: 'none', background: 'transparent', fontSize: 13, fontWeight: t === tab ? 600 : 400, color: t === tab ? '#f59e0b' : 'var(--t3)', cursor: 'pointer', fontFamily: 'var(--font-system)', borderBottom: t === tab ? '2px solid #f59e0b' : '2px solid transparent', marginBottom: -1, textTransform: 'capitalize' }}>
             {t === 'timesheets' && pendingCount > 0 ? `Timesheets (${pendingCount})` : t}
           </button>
         ))}
@@ -282,7 +282,7 @@ export default function TeamPage() {
           ) : (
             team.map(member => (
               <div key={member.id} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '14px 16px', borderRadius: 16, background: member.onSite ? 'rgba(16,185,129,0.06)' : 'rgba(255,255,255,0.04)', border: `1px solid ${member.onSite ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.07)'}` }}>
-                <div onClick={() => toggleOnSite(member)} style={{ position: 'relative', cursor: 'pointer' }}>
+                <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => toggleOnSite(member)} style={{ position: 'relative', cursor: 'pointer' }}>
                   <Avatar name={member.name} color={member.avatarColor} size={44} />
                   {member.onSite && <div style={{ position: 'absolute', bottom: 1, right: 1, width: 12, height: 12, borderRadius: '50%', background: '#10b981', border: '2px solid #06101e' }} />}
                 </div>
@@ -300,7 +300,7 @@ export default function TeamPage() {
                 </Link>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   {member.onSite && <span style={{ fontSize: 9, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.15)', padding: '3px 8px', borderRadius: 99, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>On site</span>}
-                  <button onClick={() => openEditModal(member)} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <button type="button" onClick={() => openEditModal(member)} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <IcEdit size={13} color="var(--t2)" />
                   </button>
                 </div>
@@ -314,7 +314,7 @@ export default function TeamPage() {
       {tab === 'timesheets' && (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: 4 }}>
-            <button onClick={() => { setHoursForm(p => ({ ...p, memberId: team[0]?.id || '' })); setShowHoursModal(true) }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => { setHoursForm(p => ({ ...p, memberId: team[0]?.id || '' })); setShowHoursModal(true) }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               <IcPlus size={14} color="#fff" /> Log hours
             </button>
           </div>
@@ -323,7 +323,7 @@ export default function TeamPage() {
               <p style={{ flex: 1, fontSize: 12, color: '#f59e0b', fontFamily: 'var(--font-system)', fontWeight: 600 }}>
                 {pendingCount} timesheet{pendingCount !== 1 ? 's' : ''} pending approval
               </p>
-              <button
+              <button type="button"
                 onClick={async () => {
                   if (!window.confirm(`Approve all ${pendingCount} timesheet${pendingCount !== 1 ? 's' : ''} for this week?`)) return
                   // Get current ISO week/year via first entry, or fall back
@@ -364,7 +364,7 @@ export default function TeamPage() {
                 {ts.approved ? (
                   <span style={{ fontSize: 10, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.15)', padding: '3px 8px', borderRadius: 99, letterSpacing: '0.06em', fontFamily: 'var(--font-system)' }}>APPROVED</span>
                 ) : (
-                  <button onClick={() => approveAll(ts.member.id, ts.entries)} disabled={approving === ts.member.id}
+                  <button type="button" onClick={() => approveAll(ts.member.id, ts.entries)} disabled={approving === ts.member.id}
                     style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(16,185,129,0.15)', border: '1px solid rgba(16,185,129,0.3)', fontSize: 12, fontWeight: 600, color: '#10b981', cursor: 'pointer', fontFamily: 'var(--font-system)', display: 'flex', alignItems: 'center', gap: 4, opacity: approving === ts.member.id ? 0.5 : 1 }}>
                     <IcCheck size={12} color="#10b981" />
                     {approving === ts.member.id ? '…' : 'Approve'}
@@ -379,11 +379,11 @@ export default function TeamPage() {
       {/* Add member modal (opened via QuickActions or '?new=1' deep-link) */}
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Add team member</h3>
-              <button onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {[
               { key: 'name', label: 'Full name *', placeholder: 'Tom Reilly' },
@@ -393,19 +393,19 @@ export default function TeamPage() {
               { key: 'dailyRate', label: 'Daily rate (£)', placeholder: '280' },
             ].map(f => (
               <div key={f.key}>
-                <label style={labelStyle}>{f.label}</label>
-                <input value={form[f.key as keyof typeof form]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={f.key === 'dailyRate' ? 'number' : f.key === 'email' ? 'email' : 'text'} min={f.key === 'dailyRate' ? '0' : undefined} style={inputStyle} />
+                <label htmlFor="field-396" style={labelStyle}>{f.label}</label>
+                <input id="field-396" value={form[f.key as keyof typeof form]} onChange={e => setForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={f.key === 'dailyRate' ? 'number' : f.key === 'email' ? 'email' : 'text'} min={f.key === 'dailyRate' ? '0' : undefined} style={inputStyle} />
               </div>
             ))}
             <div>
-              <label style={labelStyle}>Avatar colour</label>
+              <div style={labelStyle}>Avatar colour</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {AVATAR_COLORS.map(c => (
-                  <button key={c} onClick={() => setForm(p => ({ ...p, avatarColor: c }))} style={{ width: 28, height: 28, borderRadius: '50%', background: c, border: form.avatarColor === c ? '3px solid #fff' : '3px solid transparent', cursor: 'pointer', flexShrink: 0 }} />
+                  <button type="button" key={c} onClick={() => setForm(p => ({ ...p, avatarColor: c }))} style={{ width: 28, height: 28, borderRadius: '50%', background: c, border: form.avatarColor === c ? '3px solid #fff' : '3px solid transparent', cursor: 'pointer', flexShrink: 0 }} />
                 ))}
               </div>
             </div>
-            <button onClick={createMember} disabled={saving || !form.name.trim() || !form.role.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() || !form.role.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={createMember} disabled={saving || !form.name.trim() || !form.role.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() || !form.role.trim() ? 0.5 : 1 }}>
               {saving ? 'Adding…' : 'Add member'}
             </button>
           </div>
@@ -415,11 +415,11 @@ export default function TeamPage() {
       {/* Edit member modal */}
       {showEditModal && editTarget && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowEditModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowEditModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Edit {editTarget.name}</h3>
-              <button onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowEditModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             {[
               { key: 'name', label: 'Full name *', placeholder: 'Tom Reilly' },
@@ -429,28 +429,28 @@ export default function TeamPage() {
               { key: 'dailyRate', label: 'Daily rate (£)', placeholder: '280' },
             ].map(f => (
               <div key={f.key}>
-                <label style={labelStyle}>{f.label}</label>
-                <input value={editForm[f.key as keyof typeof editForm]} onChange={e => setEditForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={f.key === 'dailyRate' ? 'number' : f.key === 'email' ? 'email' : 'text'} min={f.key === 'dailyRate' ? '0' : undefined} style={inputStyle} />
+                <label htmlFor="field-432" style={labelStyle}>{f.label}</label>
+                <input id="field-432" value={editForm[f.key as keyof typeof editForm]} onChange={e => setEditForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={f.key === 'dailyRate' ? 'number' : f.key === 'email' ? 'email' : 'text'} min={f.key === 'dailyRate' ? '0' : undefined} style={inputStyle} />
               </div>
             ))}
             <div>
-              <label style={labelStyle}>Avatar colour</label>
+              <div style={labelStyle}>Avatar colour</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {AVATAR_COLORS.map(c => (
-                  <button key={c} onClick={() => setEditForm(p => ({ ...p, avatarColor: c }))} style={{ width: 28, height: 28, borderRadius: '50%', background: c, border: editForm.avatarColor === c ? '3px solid #fff' : '3px solid transparent', cursor: 'pointer', flexShrink: 0 }} />
+                  <button type="button" key={c} onClick={() => setEditForm(p => ({ ...p, avatarColor: c }))} style={{ width: 28, height: 28, borderRadius: '50%', background: c, border: editForm.avatarColor === c ? '3px solid #fff' : '3px solid transparent', cursor: 'pointer', flexShrink: 0 }} />
                 ))}
               </div>
             </div>
-            <button onClick={saveMemberEdit} disabled={savingEdit || !editForm.name.trim() || !editForm.role.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.name.trim() || !editForm.role.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={saveMemberEdit} disabled={savingEdit || !editForm.name.trim() || !editForm.role.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.name.trim() || !editForm.role.trim() ? 0.5 : 1 }}>
               {savingEdit ? 'Saving…' : 'Save changes'}
             </button>
             {confirmDelete ? (
               <div style={{ display: 'flex', gap: 8 }}>
-                <button onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                <button onClick={deleteMember} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm remove</button>
+                <button type="button" onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
+                <button type="button" onClick={deleteMember} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm remove</button>
               </div>
             ) : (
-              <button onClick={() => setConfirmDelete(true)} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+              <button type="button" onClick={() => setConfirmDelete(true)} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
                 Remove from team
               </button>
             )}
@@ -461,35 +461,35 @@ export default function TeamPage() {
       {/* Log hours modal */}
       {showHoursModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowHoursModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowHoursModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h3 style={{ fontFamily: 'var(--font-system)', fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Log hours</h3>
-              <button onClick={() => setShowHoursModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
+              <button type="button" onClick={() => setShowHoursModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
-              <label style={labelStyle}>Team member *</label>
-              <select value={hoursForm.memberId} onChange={e => setHoursForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-471" style={labelStyle}>Team member *</label>
+              <select id="field-471" value={hoursForm.memberId} onChange={e => setHoursForm(p => ({ ...p, memberId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 <option value="">Select member</option>
                 {team.map(m => <option key={m.id} value={m.id}>{m.name}</option>)}
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Project (optional)</label>
-              <select value={hoursForm.projectId} onChange={e => setHoursForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-478" style={labelStyle}>Project (optional)</label>
+              <select id="field-478" value={hoursForm.projectId} onChange={e => setHoursForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 <option value="">No project</option>
                 {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
               </select>
             </div>
             <div>
-              <label style={labelStyle}>Hours *</label>
-              <input type="number" step="0.5" min="0.5" max="24" value={hoursForm.hours} onChange={e => setHoursForm(p => ({ ...p, hours: e.target.value }))} placeholder="8" style={inputStyle} />
+              <label htmlFor="field-485" style={labelStyle}>Hours *</label>
+              <input id="field-485" type="number" step="0.5" min="0.5" max="24" value={hoursForm.hours} onChange={e => setHoursForm(p => ({ ...p, hours: e.target.value }))} placeholder="8" style={inputStyle} />
             </div>
             <div>
-              <label style={labelStyle}>Date</label>
-              <input type="date" value={hoursForm.date} onChange={e => setHoursForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-489" style={labelStyle}>Date</label>
+              <input id="field-489" type="date" value={hoursForm.date} onChange={e => setHoursForm(p => ({ ...p, date: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
-            <button onClick={logHours} disabled={savingHours || !hoursForm.memberId || !hoursForm.hours} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingHours || !hoursForm.memberId || !hoursForm.hours ? 0.5 : 1 }}>
+            <button type="button" onClick={logHours} disabled={savingHours || !hoursForm.memberId || !hoursForm.hours} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#2563eb', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingHours || !hoursForm.memberId || !hoursForm.hours ? 0.5 : 1 }}>
               {savingHours ? 'Logging…' : 'Log hours'}
             </button>
           </div>

@@ -201,7 +201,7 @@ function StartTripSheet({ onClose, accent }) {
         display: 'flex', justifyContent: 'space-between', alignItems: 'center',
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>{tracking ? 'Trip in progress' : 'New trip'}</div>
         <div style={{ width: 50 }}/>
       </div>
@@ -231,7 +231,7 @@ function StartTripSheet({ onClose, accent }) {
               <div style={{ fontFamily: SF, fontSize: 10.5, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.7, padding: '0 2px 8px' }}>Destination</div>
               <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
                 {projects.map(p => (
-                  <button key={p.id} onClick={() => setProjectId(p.id)} style={{
+                  <button type="button" key={p.id} onClick={() => setProjectId(p.id)} style={{
                     padding: '7px 12px', borderRadius: 14, flexShrink: 0,
                     border: `0.5px solid ${projectId === p.id ? accent : T.hair}`,
                     background: projectId === p.id ? `${accent}22` : T.bg2,
@@ -256,7 +256,7 @@ function StartTripSheet({ onClose, accent }) {
         )}
 
         {/* Big action button */}
-        <button onClick={tracking ? stop : begin} style={{
+        <button type="button" onClick={tracking ? stop : begin} style={{
           marginTop: 20, width: '100%',
           background: tracking ? `linear-gradient(135deg, ${T.red}, ${T.red}cc)` : `linear-gradient(135deg, ${T.green}, ${T.green}cc)`,
           color: '#fff', border: 'none', borderRadius: 14,
@@ -297,7 +297,7 @@ function AddTagSheet({ onClose, accent }) {
         <div style={{ fontFamily: SF, fontSize: 11, color: T.t2, fontWeight: 600, marginBottom: 8 }}>Color</div>
         <div style={{ display: 'flex', gap: 8, flexWrap: 'wrap' }}>
           {TAG_COLORS.map(c => (
-            <button key={c} onClick={() => setColor(c)} style={{
+            <button type="button" key={c} onClick={() => setColor(c)} style={{
               width: 32, height: 32, borderRadius: 16, background: c,
               border: color === c ? `2.5px solid #fff` : '2.5px solid transparent',
               boxShadow: color === c ? `0 0 0 1px ${c}` : 'none',

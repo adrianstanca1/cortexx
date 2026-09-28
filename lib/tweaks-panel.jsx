@@ -227,15 +227,34 @@ function TweaksPanel({ title = 'Tweaks', children }) {
     window.addEventListener('mouseup', up);
   };
 
+  const onDragKey = (e) => {
+    const STEP = 12;
+    let { x, y } = offsetRef.current;
+    if (e.key === 'ArrowLeft') x += STEP;
+    else if (e.key === 'ArrowRight') x -= STEP;
+    else if (e.key === 'ArrowUp') y += STEP;
+    else if (e.key === 'ArrowDown') y -= STEP;
+    else return;
+    e.preventDefault();
+    offsetRef.current = { x, y };
+    clampToViewport();
+  };
+
   if (!open) return null;
   return (
     <>
       <style>{__TWEAKS_STYLE}</style>
       <div ref={dragRef} className="twk-panel" data-noncommentable=""
            style={{ right: offsetRef.current.x, bottom: offsetRef.current.y }}>
-        <div className="twk-hd" onMouseDown={onDragStart}>
-          <b>{title}</b>
-          <button className="twk-x" aria-label="Close tweaks"
+        <div className="twk-hd">
+          <button
+            type="button"
+            aria-label="Move tweaks panel. Use arrow keys."
+            onMouseDown={onDragStart}
+            onKeyDown={onDragKey}
+            style={{ flex: 1, minWidth: 0, border: 'none', background: 'transparent', color: 'inherit', textAlign: 'left', padding: 0, cursor: 'move', font: 'inherit' }}
+          ><b>{title}</b></button>
+          <button type="button" className="twk-x" aria-label="Close tweaks"
                   onMouseDown={(e) => e.stopPropagation()}
                   onClick={dismiss}>✕</button>
         </div>

@@ -49,11 +49,11 @@ function HealthCheckSheet({ project, onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1, display: 'flex', alignItems: 'center', gap: 5 }}>
           {React.cloneElement(Ic.spark, { size: 14 })} Health check
         </div>
-        <button onClick={async () => { setLoading(true); const r = await Backend.ai.healthCheck(project); setResult(r); setLoading(false); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer' }}>Rerun</button>
+        <button type="button" onClick={async () => { setLoading(true); const r = await Backend.ai.healthCheck(project); setResult(r); setLoading(false); }} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer' }}>Rerun</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto', padding: '0 16px 24px' }}>
         <div style={{ padding: '4px 4px 14px' }}>

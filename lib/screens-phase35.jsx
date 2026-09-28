@@ -56,7 +56,7 @@ function AIHistoryScreen({ accent }) {
             </div>
             <div style={{ fontFamily: SF, fontSize: 15, color: T.t1, fontWeight: 600 }}>No history yet</div>
             <div style={{ fontFamily: SF, fontSize: 12, color: T.t2, marginTop: 6 }}>Ask Cortex anything — chats appear here</div>
-            <button onClick={() => window.cortexxNav('ai')} style={{
+            <button type="button" onClick={() => window.cortexxNav('ai')} style={{
               marginTop: 20, background: accent, color: '#fff', border: 'none', borderRadius: 12,
               padding: '10px 18px', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer',
             }}>Start a chat</button>

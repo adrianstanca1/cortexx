@@ -137,7 +137,7 @@ export default function ToolboxTalksPage() {
               {monthCount} this month · {talks.length} total
             </p>
           </div>
-          <button onClick={openAdd} aria-label="Log talk" style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Log talk" style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Log</span>
           </button>
@@ -155,7 +155,7 @@ export default function ToolboxTalksPage() {
           const isOpen = expanded === t.id
           return (
             <div key={t.id} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 12, padding: 14 }}>
-              <div onClick={() => setExpanded(isOpen ? null : t.id)} style={{ cursor: 'pointer' }}>
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => setExpanded(isOpen ? null : t.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4 }}>
                   <span style={{ background: 'var(--bg3)', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700 }}>{niceDate(t.date)}</span>
                   {t.signedOff && <span style={{ color: '#10b981', fontFamily: SF, fontSize: 10, fontWeight: 700, display: 'flex', alignItems: 'center', gap: 3 }}><IcCheck size={10} color="#10b981" /> Signed</span>}
@@ -178,10 +178,10 @@ export default function ToolboxTalksPage() {
                     <Section label="Notes" body={t.notes} />
                   )}
                   <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-                    <button onClick={() => toggleSignOff(t)} style={pillBtn(t.signedOff ? 'var(--bg3)' : '#10b981', t.signedOff ? '#c1d2e8' : '#fff')}>
+                    <button type="button" onClick={() => toggleSignOff(t)} style={pillBtn(t.signedOff ? 'var(--bg3)' : '#10b981', t.signedOff ? '#c1d2e8' : '#fff')}>
                       {t.signedOff ? 'Un-sign' : 'Sign off'}
                     </button>
-                    <button onClick={() => setConfirmDelete(t.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
+                    <button type="button" onClick={() => setConfirmDelete(t.id)} aria-label="Delete" style={pillBtn('transparent', '#fca5a5', '#ef444466')}>
                       <IcTrash size={11} color="#fca5a5" /> Delete
                     </button>
                   </div>
@@ -191,8 +191,8 @@ export default function ToolboxTalksPage() {
                 <div style={{ marginTop: 10, padding: 10, background: 'rgba(239,68,68,0.1)', border: '0.5px solid rgba(239,68,68,0.4)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 8 }}>
                   <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this talk?</span>
                   <div style={{ display: 'flex', gap: 6 }}>
-                    <button onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button onClick={() => remove(t.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
+                    <button type="button" onClick={() => remove(t.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </div>
                 </div>
               )}
@@ -202,11 +202,11 @@ export default function ToolboxTalksPage() {
       </div>
 
       {showModal && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }} onClick={() => setShowModal(false)}>
-          <div onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 100, display: 'flex', alignItems: 'flex-end' }}>
+          <div role="presentation" onClick={e => e.stopPropagation()} style={{ background: '#0a1426', width: '100%', maxHeight: '85vh', borderRadius: '20px 20px 0 0', padding: 20, overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
               <h2 style={{ fontFamily: SF, fontSize: 18, fontWeight: 700, color: 'var(--t1)' }}>Log toolbox talk</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
+              <button type="button" onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'transparent', border: 'none', cursor: 'pointer' }}>
                 <IcX size={18} color="var(--t3)" />
               </button>
             </div>
@@ -237,7 +237,7 @@ export default function ToolboxTalksPage() {
               <Field label="Notes">
                 <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' as const }} />
               </Field>
-              <button onClick={save} disabled={saving} style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Log talk'}
               </button>
             </div>

@@ -295,13 +295,13 @@ export default function FieldDeliveriesPage() {
               const remaining = Math.max(0, Number(line.quantity || 0) - already)
               if (remaining <= 0) return null
               return (
-                <label key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 92px', gap: 10, alignItems: 'center', marginBottom: 9 }}>
+                <div key={index} style={{ display: 'grid', gridTemplateColumns: '1fr 92px', gap: 10, alignItems: 'center', marginBottom: 9 }}>
                   <span>
                     <span style={{ display: 'block', color: 'var(--t1)', fontFamily: SF, fontSize: 12, fontWeight: 700 }}>{line.description}</span>
                     <span style={{ display: 'block', color: 'var(--t3)', fontFamily: SF, fontSize: 10, marginTop: 2 }}>{remaining} {line.unit || ''} outstanding</span>
                   </span>
-                  <input type="number" min="0" max={remaining} step="any" value={qty[index] || ''} onChange={e => setQty(current => ({ ...current, [index]: e.target.value }))} style={inputStyle} />
-                </label>
+                  <input type="number" aria-label={`Received quantity for ${line.description}`} min="0" max={remaining} step="any" value={qty[index] || ''} onChange={e => setQty(current => ({ ...current, [index]: e.target.value }))} style={inputStyle} />
+                </div>
               )
             })}
 

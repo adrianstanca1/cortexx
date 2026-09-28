@@ -112,7 +112,7 @@ function InfrastructureScreen({ accent }) {
               {notifGranted ? (
                 <Pill c={T.green} size="xs">ON</Pill>
               ) : (
-                <button onClick={requestNotif} style={{
+                <button type="button" onClick={requestNotif} style={{
                   background: accent, color: '#fff', border: 'none', borderRadius: 14,
                   padding: '6px 12px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer',
                 }}>Allow</button>
@@ -195,7 +195,7 @@ function InfrastructureScreen({ accent }) {
                 ) : aiReady ? (
                   <Pill c={T.green} size="xs">READY</Pill>
                 ) : (
-                  <button onClick={async () => {
+                  <button type="button" onClick={async () => {
                     if (downloading) return;
                     setDownloading(true);
                     setAiProgress('Starting download…');

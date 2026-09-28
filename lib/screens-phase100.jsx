@@ -78,7 +78,7 @@ function LLMSettingsScreen({ accent }) {
   };
 
   const tierPill = (label, k) => (
-    <button onClick={() => setMode(k)}
+    <button type="button" onClick={() => setMode(k)}
       style={{
         flex: 1, padding: '10px 8px', borderRadius: 10, border: '1px solid ' + T.hair,
         background: st.mode === k ? accent : T.bg2,
@@ -142,7 +142,7 @@ function LLMSettingsScreen({ accent }) {
         <div style={{ marginTop: 18 }}>
           <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 }}>
             <div style={{ fontSize: 11, fontWeight: 700, color: T.t2, letterSpacing: 0.6 }}>SERVER LLM</div>
-            <button onClick={probeHealth} disabled={probing}
+            <button type="button" onClick={probeHealth} disabled={probing}
               style={{ padding: '6px 12px', borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg2,
                 color: T.t1, fontFamily: SF, fontSize: 12, fontWeight: 600, opacity: probing ? 0.5 : 1 }}>
               {probing ? 'Checking…' : 'Check health'}
@@ -200,7 +200,7 @@ function LLMSettingsScreen({ accent }) {
             {wllmProgress && (
               <div style={{ marginTop: 10, fontSize: 12, color: T.t1, fontFamily: SFMono }}>{wllmProgress}</div>
             )}
-            <button onClick={enableWebLLM} disabled={wllmBusy || aSt.webllm || !aSt.webgpu}
+            <button type="button" onClick={enableWebLLM} disabled={wllmBusy || aSt.webllm || !aSt.webgpu}
               style={{ marginTop: 12, width: '100%', padding: '10px 14px', borderRadius: 10, border: 'none',
                 background: aSt.webllm ? T.green : (aSt.webgpu ? accent : T.hair),
                 color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700,
@@ -211,7 +211,7 @@ function LLMSettingsScreen({ accent }) {
         </div>
 
         {/* Test prompt */}
-        <button onClick={testPrompt}
+        <button type="button" onClick={testPrompt}
           style={{ marginTop: 18, width: '100%', padding: '12px 14px', borderRadius: 12,
             border: '1px solid ' + T.hair, background: T.bg2, color: T.t1,
             fontFamily: SF, fontSize: 13, fontWeight: 700 }}>

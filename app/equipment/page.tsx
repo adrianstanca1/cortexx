@@ -146,7 +146,7 @@ export default function EquipmentPage() {
               {alerts > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {alerts} service alerts</span>}
             </p>
           </div>
-          <button onClick={() => setShowAdd(true)} aria-label="Add equipment" style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--t3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Add equipment" style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--t3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -156,7 +156,7 @@ export default function EquipmentPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
           {(['all', 'in_service', 'in_yard', 'in_service_centre', 'out_of_service'] as const).map(s => (
-            <button key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: statusFilter === s ? 'var(--t3)' : 'rgba(255,255,255,0.06)', color: statusFilter === s ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: statusFilter === s ? 'var(--t3)' : 'rgba(255,255,255,0.06)', color: statusFilter === s ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               {s === 'all' ? 'All' : STATUS_LABEL[s]}
             </button>
           ))}
@@ -171,14 +171,14 @@ export default function EquipmentPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcWrench size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No equipment registered</p>
-          <button onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: 'var(--t3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: 'var(--t3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Add first item
           </button>
         </div>
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {items.map(e => (
-            <button key={e.id} onClick={() => setActiveItem(e)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
+            <button type="button" key={e.id} onClick={() => setActiveItem(e)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: '#52749a22', color: 'var(--t3)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                 <IcWrench size={18} color="var(--t3)" />
               </div>
@@ -212,13 +212,13 @@ export default function EquipmentPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Add equipment</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
-            <input autoFocus value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Equipment name (e.g. Hilti TE-50)" style={inputStyle} />
+            <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Equipment name (e.g. Hilti TE-50)" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="Asset code" style={inputStyle} />
               <input value={form.serial} onChange={e => setForm(p => ({ ...p, serial: e.target.value }))} placeholder="Serial" style={inputStyle} />
@@ -241,15 +241,15 @@ export default function EquipmentPage() {
             )}
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Last serviced</label>
-                <input type="date" value={form.lastServicedAt} onChange={e => setForm(p => ({ ...p, lastServicedAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <label htmlFor="field-244" style={labelStyle}>Last serviced</label>
+                <input id="field-244" type="date" value={form.lastServicedAt} onChange={e => setForm(p => ({ ...p, lastServicedAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
               <div>
-                <label style={labelStyle}>Next service</label>
-                <input type="date" value={form.nextServiceAt} onChange={e => setForm(p => ({ ...p, nextServiceAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+                <label htmlFor="field-248" style={labelStyle}>Next service</label>
+                <input id="field-248" type="date" value={form.nextServiceAt} onChange={e => setForm(p => ({ ...p, nextServiceAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
             </div>
-            <button onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: 'var(--t3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: 'var(--t3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add</>}
             </button>
           </div>
@@ -258,14 +258,14 @@ export default function EquipmentPage() {
 
       {activeItem && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveItem(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveItem(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
                 <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>{activeItem.name}</h2>
                 <div style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>{activeItem.category || 'Uncategorised'} · {activeItem.ownership}</div>
               </div>
-              <button onClick={() => setActiveItem(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveItem(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             <div style={{ display: 'flex', flexDirection: 'column', gap: 4, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>
@@ -279,13 +279,13 @@ export default function EquipmentPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
               {(Object.keys(STATUS_LABEL) as Status[]).map(s => (
-                <button key={s} onClick={() => setStatus(activeItem, s)} disabled={activeItem.status === s} style={{ padding: '8px', borderRadius: 8, border: `0.5px solid ${activeItem.status === s ? STATUS_COLOR[s] : 'rgba(255,255,255,0.1)'}`, background: activeItem.status === s ? `${STATUS_COLOR[s]}22` : 'rgba(255,255,255,0.04)', color: activeItem.status === s ? STATUS_COLOR[s] : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: activeItem.status === s ? 'default' : 'pointer' }}>
+                <button type="button" key={s} onClick={() => setStatus(activeItem, s)} disabled={activeItem.status === s} style={{ padding: '8px', borderRadius: 8, border: `0.5px solid ${activeItem.status === s ? STATUS_COLOR[s] : 'rgba(255,255,255,0.1)'}`, background: activeItem.status === s ? `${STATUS_COLOR[s]}22` : 'rgba(255,255,255,0.04)', color: activeItem.status === s ? STATUS_COLOR[s] : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: activeItem.status === s ? 'default' : 'pointer' }}>
                   {STATUS_LABEL[s]}
                 </button>
               ))}
             </div>
 
-            <button onClick={() => remove(activeItem.id)} style={{ marginTop: 4, padding: '10px', borderRadius: 10, background: confirmDelete === activeItem.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeItem.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <button type="button" onClick={() => remove(activeItem.id)} style={{ marginTop: 4, padding: '10px', borderRadius: 10, background: confirmDelete === activeItem.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeItem.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <IcTrash size={12} color="#ef4444" />
               {confirmDelete === activeItem.id ? 'Sure?' : 'Delete equipment'}
             </button>

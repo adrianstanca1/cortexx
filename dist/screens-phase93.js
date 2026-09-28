@@ -284,6 +284,7 @@ function LedgerExportScreen({
     onClick,
     children
   }) => React.createElement("button", {
+    type: "button",
     onClick: onClick,
     style: {
       padding: '8px 14px',
@@ -330,6 +331,7 @@ function LedgerExportScreen({
       gap: 8
     }
   }, FORMATS.map(f => React.createElement("button", {
+    type: "button",
     key: f.k,
     onClick: () => setFormat(f.k),
     style: {
@@ -406,6 +408,7 @@ function LedgerExportScreen({
     l: 'Purchase receipts',
     c: sum.purchCount
   }].map(x => React.createElement("button", {
+    type: "button",
     key: x.k,
     onClick: () => x.set(v => !v),
     style: {
@@ -569,6 +572,7 @@ function LedgerExportScreen({
       lineHeight: 1.7
     }
   }, preview.csv.split('\r\n').slice(0, 4).join('\n') || 'No data', preview.count > 3 ? `\n… +${preview.count - 3} more line${preview.count - 3 === 1 ? '' : 's'}` : '')), React.createElement("button", {
+    type: "button",
     onClick: doExport,
     disabled: busy,
     style: {

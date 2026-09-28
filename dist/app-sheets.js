@@ -9,14 +9,26 @@ function Sheet({
       position: 'absolute',
       inset: 0,
       zIndex: 100,
-      background: 'rgba(0,0,0,0.55)',
       display: 'flex',
       alignItems: 'flex-end',
       animation: 'sheet-fade 0.2s'
-    },
-    onClick: onClose
-  }, React.createElement("div", {
+    }
+  }, React.createElement("button", {
+    type: "button",
+    "aria-label": "Close dialog",
+    onClick: onClose,
     style: {
+      position: 'absolute',
+      inset: 0,
+      border: 'none',
+      padding: 0,
+      background: 'rgba(0,0,0,0.55)'
+    }
+  }), React.createElement("div", {
+    role: "presentation",
+    style: {
+      position: 'relative',
+      zIndex: 1,
       width: '100%',
       height: fullscreen ? '100%' : height,
       background: T.bg0,
@@ -25,8 +37,7 @@ function Sheet({
       display: 'flex',
       flexDirection: 'column',
       animation: 'sheet-slide 0.3s cubic-bezier(0.2, 0.8, 0.2, 1)'
-    },
-    onClick: e => e.stopPropagation()
+    }
   }, !fullscreen && React.createElement("div", {
     style: {
       display: 'flex',
@@ -75,6 +86,7 @@ function ProjectSheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -92,6 +104,7 @@ function ProjectSheet({
       color: T.t1
     }
   }, "Project"), React.createElement("button", {
+    type: "button",
     onClick: () => {
       window.cortexxNav('health', project);
     },
@@ -109,6 +122,7 @@ function ProjectSheet({
   }, React.cloneElement(Ic.spark, {
     size: 13
   }), " Health"), React.createElement("button", {
+    type: "button",
     onClick: () => {
       window.cortexxNav('appgrid');
     },
@@ -126,6 +140,7 @@ function ProjectSheet({
   }, React.cloneElement(Ic.grid || Ic.spark, {
     size: 13
   }), " Apps"), React.createElement("button", {
+    type: "button",
     style: {
       background: 'none',
       border: 'none',
@@ -344,6 +359,7 @@ function ProjectSheet({
       zIndex: 5
     }
   }, tabs.map(t => React.createElement("button", {
+    type: "button",
     key: t,
     onClick: () => setTab(t),
     style: {
@@ -485,6 +501,7 @@ function ProjectSheet({
       padding: '0 16px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('photos'),
     style: {
       width: '100%',
@@ -638,6 +655,7 @@ function ProjectSheet({
           alignItems: 'center'
         }
       }, React.createElement("button", {
+        type: "button",
         onClick: e => {
           e.stopPropagation();
           window.__cortexxRetentionInv = iv.id;
@@ -657,6 +675,7 @@ function ProjectSheet({
           cursor: 'pointer'
         }
       }, "Ret"), React.createElement("button", {
+        type: "button",
         onClick: e => {
           e.stopPropagation();
           if (window.cortexxNav) window.cortexxNav('payinvoice:' + iv.id);
@@ -686,6 +705,7 @@ function ProjectSheet({
       marginBottom: 10
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('upload'),
     style: {
       flex: 1,
@@ -706,6 +726,7 @@ function ProjectSheet({
   }, React.cloneElement(Ic.upload, {
     size: 13
   }), " Document"), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav('drawings'),
     style: {
       flex: 1,
@@ -1436,6 +1457,7 @@ function CaptureSheet({
   const AppTile = ({
     a
   }) => a.k === '_blank' ? React.createElement("div", null) : React.createElement("button", {
+    type: "button",
     onClick: () => onAction(a.k),
     style: {
       background: T.bg2,
@@ -1697,6 +1719,7 @@ function AISheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -1798,6 +1821,7 @@ function AISheet({
       whiteSpace: 'pre-wrap'
     }
   }, m.t), m.who === 'ai' && React.createElement("button", {
+    type: "button",
     onClick: () => speak(m.t, i),
     title: "Read aloud",
     style: {
@@ -1845,6 +1869,7 @@ function AISheet({
       marginTop: 8
     }
   }, suggestions.map((s, i) => React.createElement("button", {
+    type: "button",
     key: i,
     onClick: () => send(s),
     style: {
@@ -1942,6 +1967,7 @@ function SafetySheet({
       padding: '4px 16px 10px'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -2076,6 +2102,7 @@ function SafetySheet({
     i: Ic.hardhat,
     c: T.green
   }].map((a, i) => React.createElement("button", {
+    type: "button",
     key: i,
     style: {
       background: T.bg2,

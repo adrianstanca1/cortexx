@@ -144,7 +144,7 @@ export default function VeraAutopilotPage() {
                     then: {a.action}
                   </div>
                 </div>
-                <button
+                <button type="button"
                   onClick={() => toggle(a.id)}
                   style={{
                     flexShrink: 0,

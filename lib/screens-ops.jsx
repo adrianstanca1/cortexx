@@ -18,7 +18,7 @@ function QuotesScreen({ accent, onAdd, onOpen }) {
         <MobileHeader
           title="Quotes"
           subtitle={`${quotes.filter(q => q.status === 'sent').length} sent · £${(activeValue/1000).toFixed(0)}k pipeline`}
-          right={<button onClick={onAdd} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={onAdd} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
@@ -31,7 +31,7 @@ function QuotesScreen({ accent, onAdd, onOpen }) {
         </div>
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(q => (
-            <div key={q.id} onClick={() => onOpen && onOpen(q)} style={{
+            <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={q.id} onClick={() => onOpen && onOpen(q)} style={{
               background: T.bg2, borderRadius: 14, padding: 14,
               border: `0.5px solid ${T.hair}`, cursor: 'pointer',
             }}>
@@ -66,9 +66,9 @@ function QuoteDetailSheet({ quote, onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>{quote.id}</div>
-        <button style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }} onClick={async () => {
+        <button type="button" style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }} onClick={async () => {
           await Backend.db.quotes.update(quote.id, { status: 'sent' });
           toast(`Quote sent to ${quote.client}`, 'success');
           onClose();
@@ -176,7 +176,7 @@ function AIEstimatorSheet({ onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Cancel</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1, display: 'flex', alignItems: 'center', gap: 6 }}>
           {React.cloneElement(Ic.spark, { size: 14, })} AI Estimator
         </div>
@@ -202,7 +202,7 @@ function AIEstimatorSheet({ onClose, accent }) {
           <div style={{ marginTop: 10 }}>
             <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, fontWeight: 600, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 }}>Examples</div>
             {examples.map((ex, i) => (
-              <button key={i} onClick={() => setBrief(ex)} style={{
+              <button type="button" key={i} onClick={() => setBrief(ex)} style={{
                 display: 'block', width: '100%', textAlign: 'left',
                 background: 'transparent', border: 'none', color: T.blueL,
                 fontFamily: SF, fontSize: 13, padding: '5px 0', cursor: 'pointer',
@@ -211,7 +211,7 @@ function AIEstimatorSheet({ onClose, accent }) {
           </div>
         )}
 
-        <button onClick={estimate} disabled={!brief.trim() || estimating} style={{
+        <button type="button" onClick={estimate} disabled={!brief.trim() || estimating} style={{
           width: '100%', marginTop: 14, padding: '12px',
           background: brief.trim() && !estimating ? `linear-gradient(135deg, ${T.purple}, ${accent})` : T.bg3,
           color: '#fff', border: 'none', borderRadius: 12,
@@ -243,7 +243,7 @@ function AIEstimatorSheet({ onClose, accent }) {
                 <ul style={{ margin: 0, paddingLeft: 18 }}>{result.assumptions.map((a, i) => <li key={i}>{a}</li>)}</ul>
               </div>
             )}
-            <button onClick={save} style={{
+            <button type="button" onClick={save} style={{
               width: '100%', marginTop: 12, padding: '10px',
               background: accent, color: '#fff', border: 'none', borderRadius: 10,
               fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
@@ -275,7 +275,7 @@ function TimesheetsScreen({ accent }) {
           title="Timesheets"
           subtitle={`Week ${week.split('-W')[1]} · ${total}h total`}
           right={pending.length > 0 ? (
-            <button onClick={approveAll} style={{
+            <button type="button" onClick={approveAll} style={{
               background: T.green, color: '#fff', border: 'none',
               borderRadius: 18, padding: '8px 14px', cursor: 'pointer',
               fontFamily: SF, fontSize: 12, fontWeight: 700,
@@ -318,7 +318,7 @@ function TimesheetsScreen({ accent }) {
                   <div style={{ textAlign: 'right' }}>
                     <div style={{ fontFamily: SFMono, fontSize: 17, fontWeight: 700, color: T.t1 }}>{hrs}h</div>
                     {t.status === 'pending' ? (
-                      <button onClick={() => approve(t.id)} style={{
+                      <button type="button" onClick={() => approve(t.id)} style={{
                         background: T.green, color: '#fff', border: 'none',
                         borderRadius: 12, padding: '3px 8px', cursor: 'pointer',
                         fontFamily: SF, fontSize: 10, fontWeight: 700, marginTop: 2,
@@ -465,7 +465,7 @@ function MaterialsScreen({ accent }) {
         />
         {lowStock > 0 && (
           <div style={{ padding: '4px 16px 12px' }}>
-            <div onClick={async () => {
+            <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={async () => {
               if (!forecast) {
                 setForecast('thinking');
                 const r = await Backend.ai.forecastMaterials();
@@ -560,13 +560,13 @@ function SubsScreen({ accent }) {
                 <Pill c={T.t3} size="xs">{s.jobsDone} jobs · since {s.since}</Pill>
               </div>
               <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
-                <button onClick={() => toast(`Calling ${s.contact}…`, 'info')} style={{
+                <button type="button" onClick={() => toast(`Calling ${s.contact}…`, 'info')} style={{
                   flex: 1, background: 'transparent', border: `0.5px solid ${T.hairMid}`,
                   color: T.t1, borderRadius: 8, padding: '7px',
                   fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                   display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5,
                 }}>{React.cloneElement(Ic.phone, { size: 12 })} Call</button>
-                <button onClick={() => toast(`Message draft started for ${s.contact}`, 'success')} style={{
+                <button type="button" onClick={() => toast(`Message draft started for ${s.contact}`, 'success')} style={{
                   flex: 1, background: 'transparent', border: `0.5px solid ${T.hairMid}`,
                   color: T.t1, borderRadius: 8, padding: '7px',
                   fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',

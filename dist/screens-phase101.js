@@ -146,6 +146,7 @@ function PaymentLinkScreen({
       };
     var disabled = !opts.available || busy === p;
     return React.createElement("button", {
+      type: "button",
       onClick: function () {
         generate(p);
       },
@@ -321,6 +322,7 @@ function PaymentLinkScreen({
       color: T.t2
     }
   }, "Amount: "), React.createElement("strong", null, "\xA3", result.amount)), React.createElement("button", {
+    type: "button",
     onClick: function () {
       copy([result.accountName, result.sortCode, result.accountNo, result.iban, 'Ref: ' + result.reference, 'Amount: £' + result.amount].filter(Boolean).join('\n'), 'Bank details');
     },
@@ -353,6 +355,7 @@ function PaymentLinkScreen({
       marginTop: 10
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: function () {
       copy(result.url, 'Link');
     },
@@ -439,6 +442,7 @@ function PaymentLinkScreen({
       marginTop: 10
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: function () {
       copy(inv.payment_link_url, 'Link');
     },

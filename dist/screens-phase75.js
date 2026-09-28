@@ -219,6 +219,7 @@ function SiteProgressPhotoSheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -239,6 +240,7 @@ function SiteProgressPhotoSheet({
       color: T.t1
     }
   }, "Site photo"), React.createElement("button", {
+    type: "button",
     onClick: save,
     disabled: !blob || saving,
     style: {
@@ -257,6 +259,7 @@ function SiteProgressPhotoSheet({
       padding: '14px 16px 24px'
     }
   }, !previewUrl ? React.createElement("button", {
+    type: "button",
     onClick: trigger,
     style: {
       width: '100%',
@@ -306,6 +309,7 @@ function SiteProgressPhotoSheet({
     }
   }, React.createElement("img", {
     src: previewUrl,
+    alt: "Selected site preview",
     style: {
       width: '100%',
       display: 'block',
@@ -313,6 +317,7 @@ function SiteProgressPhotoSheet({
       objectFit: 'cover'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: trigger,
     style: {
       position: 'absolute',
@@ -365,6 +370,7 @@ function SiteProgressPhotoSheet({
       paddingBottom: 4
     }
   }, projects.filter(p => p.status !== 'completed').map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -437,6 +443,7 @@ function SiteProgressPhotoSheet({
     c: accent,
     size: "xs"
   }, t)))) : null)), previewUrl && React.createElement("button", {
+    type: "button",
     onClick: save,
     disabled: saving,
     style: {
@@ -643,6 +650,7 @@ function IncidentReportSheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -660,6 +668,7 @@ function IncidentReportSheet({
       color: T.t1
     }
   }, "Incident report"), React.createElement("button", {
+    type: "button",
     onClick: save,
     style: {
       background: 'none',
@@ -686,6 +695,7 @@ function IncidentReportSheet({
   }, INCIDENT_SEV.map(s => {
     const active = severity === s.v;
     return React.createElement("button", {
+      type: "button",
       key: s.v,
       onClick: () => setSeverity(s.v),
       style: {
@@ -733,7 +743,6 @@ function IncidentReportSheet({
     onChange: e => setWhat(e.target.value),
     placeholder: "Be specific: who, what, where, when, immediate action taken.",
     rows: 4,
-    autoFocus: true,
     style: {
       width: '100%',
       boxSizing: 'border-box',
@@ -758,6 +767,7 @@ function IncidentReportSheet({
       marginBottom: 14
     }
   }, projects.map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -791,6 +801,7 @@ function IncidentReportSheet({
       outline: 'none'
     }
   }), React.createElement(SectionLabel75, null, "Photo (optional, AI hazard scan)"), !previewUrl ? React.createElement("button", {
+    type: "button",
     onClick: trigger,
     style: {
       width: '100%',
@@ -827,6 +838,7 @@ function IncidentReportSheet({
     }
   }, React.createElement("img", {
     src: previewUrl,
+    alt: "Attached scene",
     style: {
       width: '100%',
       display: 'block',
@@ -834,6 +846,7 @@ function IncidentReportSheet({
       objectFit: 'cover'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: trigger,
     style: {
       position: 'absolute',
@@ -960,6 +973,7 @@ function PhotoVisionAction({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: analyse,
     style: {
       background: `${T.purple}33`,
@@ -979,6 +993,7 @@ function PhotoVisionAction({
   }, React.cloneElement(Ic.spark, {
     size: 13
   }), " Analyse"), React.createElement("button", {
+    type: "button",
     onClick: findSnags,
     style: {
       background: `${T.amber}33`,

@@ -24,6 +24,7 @@ const Section = ({
     letterSpacing: 0.6
   }
 }, title), action && React.createElement("button", {
+  type: "button",
   style: {
     background: 'none',
     border: 'none',
@@ -58,6 +59,14 @@ const Row = ({
   isLast,
   onClick
 }) => React.createElement("div", {
+  role: "button",
+  tabIndex: 0,
+  onKeyDown: event => {
+    if (event.key === 'Enter' || event.key === ' ') {
+      event.preventDefault();
+      event.currentTarget.click();
+    }
+  },
   onClick: onClick,
   style: {
     display: 'flex',
@@ -124,6 +133,7 @@ const SegControl = ({
 }, options.map(o => {
   const active = value === o.k;
   return React.createElement("button", {
+    type: "button",
     key: o.k,
     onClick: () => onChange(o.k),
     style: {
@@ -203,6 +213,7 @@ function ProjectsScreen({
       icon: Ic.search,
       onClick: () => window.cortexxNav('search')
     }), React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('addproject'),
       style: {
         width: 36,
@@ -297,6 +308,14 @@ function ProjectsScreen({
       gap: 10
     }
   }, filtered.map(p => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: p.id,
     onClick: () => openProject(p),
     onPointerDown: e => e.currentTarget.style.transform = 'scale(0.985)',
@@ -507,6 +526,7 @@ function TasksScreen({
     title: "Tasks",
     subtitle: `${todo.length} to do · ${done.length} done`,
     right: React.createElement("button", {
+      type: "button",
       onClick: () => {
         window.cortexxNav('addtask');
       },
@@ -650,7 +670,23 @@ function SwipeTaskRow({
     size: 15,
     sw: 3
   }), " ", task.done ? 'Reopen' : 'Done')), React.createElement("div", {
-    onClick: () => {
+    role: "button",
+    tabIndex: 0,
+    "aria-label": `${task.t}. ${isSelected ? 'Selected' : 'Not selected'}. Press Enter to open or S to toggle selection.`,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      } else if (event.key.toLowerCase() === 's') {
+        event.preventDefault();
+        onSelect();
+      }
+    },
+    onClick: e => {
+      if (e.target.closest?.('[data-task-select]')) {
+        onSelect();
+        return;
+      }
       if (!moved.current) onTap();
     },
     onContextMenu: e => {
@@ -673,10 +709,8 @@ function SwipeTaskRow({
       position: 'relative'
     }
   }, React.createElement("div", {
-    onClick: e => {
-      e.stopPropagation();
-      onSelect();
-    },
+    "data-task-select": "",
+    "aria-hidden": "true",
     style: {
       width: 20,
       height: 20,
@@ -776,6 +810,7 @@ function TeamScreen({
       icon: Ic.search,
       onClick: () => window.cortexxNav('search')
     }), React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxNav('addteam'),
       style: {
         width: 36,
@@ -828,6 +863,14 @@ function TeamScreen({
         padding: '0 16px'
       }
     }, React.createElement(GroupedList, null, members.map((m, i) => React.createElement("div", {
+      role: "button",
+      tabIndex: 0,
+      onKeyDown: event => {
+        if (event.key === 'Enter' || event.key === ' ') {
+          event.preventDefault();
+          event.currentTarget.click();
+        }
+      },
       key: m.id,
       onClick: () => window.cortexxNav('member', m),
       style: {

@@ -106,7 +106,7 @@ function ClientMessagesScreen({ accent }) {
           ) : (
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {msgs.map(m => (
-                <div key={m.id} onClick={() => open(m)} style={{
+                <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={m.id} onClick={() => open(m)} style={{
                   background: T.bg2, borderRadius: 14, padding: 14, cursor: 'pointer',
                   border: `0.5px solid ${m.read ? T.hair : accent}`, position: 'relative',
                 }}>
@@ -137,13 +137,13 @@ function ClientMessagesScreen({ accent }) {
                 <div style={{ fontFamily: SF, fontSize: 16, fontWeight: 700, color: T.t1 }}>{reply.client}</div>
                 <div style={{ fontFamily: SF, fontSize: 12, color: T.t2 }}>{reply.project}</div>
               </div>
-              <button onClick={() => { remove(reply.id); setReply(null); }} title="Delete" style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.t3, padding: 6 }}>{React.cloneElement(Ic.trash || Ic.x, { size: 16 })}</button>
+              <button type="button" onClick={() => { remove(reply.id); setReply(null); }} title="Delete" style={{ background: 'none', border: 'none', cursor: 'pointer', color: T.t3, padding: 6 }}>{React.cloneElement(Ic.trash || Ic.x, { size: 16 })}</button>
             </div>
             <div style={{ background: T.bg2, borderRadius: 12, padding: 14, fontFamily: SF, fontSize: 14, color: T.t1, lineHeight: 1.5, marginBottom: 14 }}>{reply.text}</div>
             <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Your reply</div>
             <textarea value={draft} onChange={e => setDraft(e.target.value)} rows={4} placeholder={`Reply to ${reply.client}…`}
               style={{ width: '100%', background: T.bg3, border: `0.5px solid ${T.hairMid}`, borderRadius: 10, padding: 12, color: T.t1, fontFamily: SF, fontSize: 14, outline: 'none', resize: 'vertical', boxSizing: 'border-box' }}/>
-            <button onClick={sendReply} disabled={!draft.trim()} style={{
+            <button type="button" onClick={sendReply} disabled={!draft.trim()} style={{
               width: '100%', marginTop: 12, background: draft.trim() ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '14px',
               fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: draft.trim() ? 'pointer' : 'default', opacity: draft.trim() ? 1 : 0.5,
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8,

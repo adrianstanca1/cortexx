@@ -59,14 +59,14 @@ export default function FormDefinitionPage() {
           {rows.map(r => (
             <li
               key={r.id}
-              onClick={() => setSelected(r)}
+
               style={{ background: 'var(--surface-raised)', borderRadius: 10, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', cursor: 'pointer' }}
-            >
+            ><div role="button" tabIndex={0} onClick={() => setSelected(r)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}>
               <div>{[r.name, r.schema, r.description].filter(Boolean).join(' · ') || r.id}</div>
               <div style={{ fontSize: 11, color: 'var(--t3)', marginTop: 4 }}>
                 {new Date(r.createdAt).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' })}
               </div>
-            </li>
+            </div></li>
           ))}
         </ul>
       )}

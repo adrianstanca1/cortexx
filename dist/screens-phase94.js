@@ -184,6 +184,7 @@ function CloudSyncScreen({
     autoCapitalize: "none",
     autoCorrect: "off"
   }), React.createElement("button", {
+    type: "button",
     onClick: saveApi,
     disabled: busy,
     style: {
@@ -228,6 +229,7 @@ function CloudSyncScreen({
     k: 'password',
     l: 'Password'
   }].map(x => React.createElement("button", {
+    type: "button",
     key: x.k,
     onClick: () => setMode(x.k),
     style: {
@@ -261,6 +263,7 @@ function CloudSyncScreen({
       marginBottom: 8
     }
   }), mode === 'magic' ? React.createElement("button", {
+    type: "button",
     onClick: doMagic,
     disabled: busy || !email.trim(),
     style: {
@@ -277,6 +280,7 @@ function CloudSyncScreen({
       opacity: email.trim() ? 1 : 0.5
     }
   }, busy ? 'Sending…' : 'Email me a magic link') : React.createElement("button", {
+    type: "button",
     onClick: doPassword,
     disabled: busy || !email.trim() || !password,
     style: {
@@ -308,6 +312,7 @@ function CloudSyncScreen({
       marginBottom: 8
     }
   }, "Dev mode returned the link directly (no email sent in development):"), React.createElement("button", {
+    type: "button",
     onClick: verifyDev,
     disabled: busy,
     style: {
@@ -361,6 +366,7 @@ function CloudSyncScreen({
       color: T.t2
     }
   }, "Realtime push from other devices")), React.createElement("button", {
+    type: "button",
     onClick: () => cloud.setLive(!st.live),
     style: {
       width: 46,
@@ -384,6 +390,7 @@ function CloudSyncScreen({
       transition: 'left .15s'
     }
   }))), React.createElement("button", {
+    type: "button",
     onClick: () => cloud.pull(),
     style: {
       width: '100%',
@@ -407,6 +414,7 @@ function CloudSyncScreen({
       color: T.t1
     }
   }, "Pull latest now")), React.createElement("button", {
+    type: "button",
     onClick: () => {
       cloud.signOut();
       if (window.cortexxToast) window.cortexxToast('Signed out of cloud', 'info');

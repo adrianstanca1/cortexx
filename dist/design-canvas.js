@@ -503,6 +503,14 @@ function DCArtboardFrame({
     cy: "11",
     r: "1.1"
   }))), React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     className: "dc-labeltext",
     onClick: onFocus,
     title: "Click to focus"
@@ -517,6 +525,7 @@ function DCArtboardFrame({
       lineHeight: 1
     }
   }))), React.createElement("button", {
+    type: "button",
     className: "dc-expand",
     onClick: onFocus,
     onPointerDown: e => e.stopPropagation(),
@@ -648,6 +657,7 @@ function DCFocusOverlay({
     dir,
     onClick
   }) => React.createElement("button", {
+    type: "button",
     onClick: e => {
       e.stopPropagation();
       onClick();
@@ -684,7 +694,6 @@ function DCFocusOverlay({
     d: dir === 'left' ? 'M11 3L5 9l6 6' : 'M7 3l6 6-6 6'
   })));
   return ReactDOM.createPortal(React.createElement("div", {
-    onClick: () => ctx.setFocus(null),
     onWheel: e => e.preventDefault(),
     style: {
       position: 'fixed',
@@ -696,6 +705,7 @@ function DCFocusOverlay({
       color: '#fff'
     }
   }, React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
       position: 'absolute',
@@ -713,6 +723,7 @@ function DCFocusOverlay({
       position: 'relative'
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setDd(o => !o),
     style: {
       border: 'none',
@@ -771,6 +782,7 @@ function DCFocusOverlay({
       zIndex: 10
     }
   }, sectionOrder.map(sid => React.createElement("button", {
+    type: "button",
     key: sid,
     onClick: () => {
       setDd(false);
@@ -796,6 +808,7 @@ function DCFocusOverlay({
       flex: 1
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: () => ctx.setFocus(null),
     onMouseEnter: e => e.currentTarget.style.background = 'rgba(255,255,255,.12)',
     onMouseLeave: e => e.currentTarget.style.background = 'transparent',
@@ -825,6 +838,7 @@ function DCFocusOverlay({
       gap: 16
     }
   }, React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
       width: width * scale,
@@ -851,6 +865,7 @@ function DCFocusOverlay({
       color: '#bbb'
     }
   }, aid))), React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
       fontSize: 14,
@@ -871,6 +886,7 @@ function DCFocusOverlay({
     dir: "right",
     onClick: () => go(1)
   }), React.createElement("div", {
+    role: "presentation",
     onClick: e => e.stopPropagation(),
     style: {
       position: 'absolute',
@@ -881,6 +897,7 @@ function DCFocusOverlay({
       gap: 8
     }
   }, peers.map((p, i) => React.createElement("button", {
+    type: "button",
     key: p,
     onClick: () => ctx.setFocus(`${sectionId}/${p}`),
     style: {

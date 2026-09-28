@@ -55,7 +55,7 @@ function LaunchScreen({ accent }) {
   return <ScreenBg accent={accent}>
     <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
       <div style={{ padding: '4px 16px 8px' }}>
-        <button onClick={() => setSection(null)} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={() => setSection(null)} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
       </div>

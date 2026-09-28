@@ -97,10 +97,10 @@ export default function CostCodesPage() {
     <TabBar />
 
     {showAdd && <div style={{ position: 'fixed', inset: 0, zIndex: 220, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-      <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
+      <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.68)' }} />
       <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '22px 20px 34px', display: 'grid', gap: 11 }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}><h2 style={{ fontFamily: SF, fontSize: 19, color: 'var(--t1)' }}>New cost code</h2><button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'transparent', border: 0, cursor: 'pointer' }}><IcX size={19} color="var(--t2)" /></button></div>
-        <input autoFocus value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="Code, e.g. MAT" style={inputStyle} />
+        <input value={form.code} onChange={e => setForm(p => ({ ...p, code: e.target.value }))} placeholder="Code, e.g. MAT" style={inputStyle} />
         <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Name, e.g. Materials" style={inputStyle} />
         <input value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="Category (optional)" style={inputStyle} />
         <textarea rows={3} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description (optional)" style={{ ...inputStyle, resize: 'vertical' }} />

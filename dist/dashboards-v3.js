@@ -555,6 +555,7 @@ function DashV12_Focus({
       gap: 10
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       flex: 1,
@@ -570,6 +571,7 @@ function DashV12_Focus({
       boxShadow: `0 8px 24px ${accent}55`
     }
   }, "Start now"), React.createElement("button", {
+    type: "button",
     onClick: () => window.cortexxNav && window.cortexxNav('capture'),
     style: {
       background: 'transparent',

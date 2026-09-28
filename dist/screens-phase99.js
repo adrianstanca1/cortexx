@@ -315,14 +315,7 @@ function OfflineMapScreen({
       background: '#aadaff',
       touchAction: 'none',
       cursor: tool === 'pan' ? 'grab' : 'crosshair'
-    },
-    onMouseDown: onDown,
-    onMouseMove: onMove,
-    onMouseUp: onUp,
-    onMouseLeave: onUp,
-    onTouchStart: onDown,
-    onTouchMove: onMove,
-    onTouchEnd: onUp
+    }
   }, tiles.map(t => React.createElement("img", {
     key: t.tx + '/' + t.ty,
     src: t.url,
@@ -393,19 +386,88 @@ function OfflineMapScreen({
       fontFamily: "sans-serif"
     }, m.label));
     return null;
-  })), React.createElement("div", {
+  })), React.createElement("button", {
+    type: "button",
+    "aria-label": `Site map ${tool} tool. Use arrow keys to pan. Press Enter or Space to place pin or text at the map centre.`,
+    onKeyDown: e => {
+      const step = 0.00015 * Math.pow(2, 17 - zoom);
+      if (e.key === 'ArrowUp') {
+        e.preventDefault();
+        setCenter(c => ({
+          ...c,
+          lat: c.lat + step
+        }));
+      } else if (e.key === 'ArrowDown') {
+        e.preventDefault();
+        setCenter(c => ({
+          ...c,
+          lat: c.lat - step
+        }));
+      } else if (e.key === 'ArrowLeft') {
+        e.preventDefault();
+        setCenter(c => ({
+          ...c,
+          lng: c.lng - step
+        }));
+      } else if (e.key === 'ArrowRight') {
+        e.preventDefault();
+        setCenter(c => ({
+          ...c,
+          lng: c.lng + step
+        }));
+      } else if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        if (tool === 'pin') saveMarks([...marks, {
+          type: 'pin',
+          ...center,
+          label: '',
+          id: Date.now()
+        }]);else if (tool === 'text') {
+          const txt = prompt('Annotation text:');
+          if (txt) saveMarks([...marks, {
+            type: 'text',
+            ...center,
+            label: txt,
+            id: Date.now()
+          }]);
+        }
+      }
+    },
+    onMouseDown: onDown,
+    onMouseMove: onMove,
+    onMouseUp: onUp,
+    onMouseLeave: onUp,
+    onTouchStart: onDown,
+    onTouchMove: onMove,
+    onTouchEnd: onUp,
+    style: {
+      position: 'absolute',
+      inset: 0,
+      zIndex: 1,
+      width: '100%',
+      height: '100%',
+      border: 'none',
+      padding: 0,
+      background: 'transparent',
+      touchAction: 'none',
+      cursor: tool === 'pan' ? 'grab' : 'crosshair'
+    }
+  }), React.createElement("div", {
     style: {
       position: 'absolute',
       right: 10,
       bottom: 10,
+      zIndex: 2,
       display: 'flex',
       flexDirection: 'column',
       gap: 6
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: () => setZoom(z => Math.min(19, z + 1)),
     style: zoomBtn
   }, "+"), React.createElement("button", {
+    type: "button",
     onClick: () => setZoom(z => Math.max(12, z - 1)),
     style: zoomBtn
   }, "\u2212")), offline && React.createElement("div", {
@@ -428,6 +490,7 @@ function OfflineMapScreen({
       marginTop: 12
     }
   }, TOOLS.map(t => React.createElement("button", {
+    type: "button",
     key: t.k,
     onClick: () => setTool(t.k),
     style: {
@@ -449,6 +512,7 @@ function OfflineMapScreen({
   }, t.i ? React.cloneElement(t.i, {
     size: 16
   }) : null, t.l)), marks.length > 0 && React.createElement("button", {
+    type: "button",
     onClick: () => saveMarks([]),
     style: {
       background: T.bg2,
@@ -490,6 +554,7 @@ function OfflineMapScreen({
       color: T.t2
     }
   }, cached, " tiles cached on this device")), cached > 0 && React.createElement("button", {
+    type: "button",
     onClick: async () => {
       await Backend.map.clearCache();
       setCached(0);
@@ -524,6 +589,7 @@ function OfflineMapScreen({
       marginTop: 6
     }
   }, dl.done, "/", dl.total, " tiles\u2026")) : React.createElement("button", {
+    type: "button",
     onClick: download,
     style: {
       width: '100%',

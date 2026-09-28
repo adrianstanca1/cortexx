@@ -25,7 +25,7 @@
 
     const TabBar = () => React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16 } },
       [['feed', 'Progress feed'], ['variations', 'Variations' + (pendingChanges.length ? ' (' + pendingChanges.length + ')' : '')], ['satisfaction', 'Satisfaction']].map(([k, l]) =>
-        React.createElement('button', { key: k, onClick: () => setTab(k),
+        React.createElement('button', { type: 'button', key: k, onClick: () => setTab(k),
           style: { flex: 1, padding: '9px 4px', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 11.5, fontWeight: 700,
             background: tab === k ? acc : T.bg2, color: tab === k ? '#fff' : T.t2 } }, l)))
 
@@ -44,7 +44,7 @@
               React.createElement('div', { style: { fontSize: 13, fontWeight: 700, color: T.t1 } }, f.title),
               React.createElement('div', { style: { fontSize: 12, color: T.t2, margin: '2px 0 4px' } }, f.body),
               React.createElement('div', { style: { fontSize: 11, color: T.t3 } }, projName(f.projectId) + ' · ' + f.when + (f.clientVisible ? ' · 👁 visible to client' : ' · 🔒 internal'))))),
-      React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('postupdate'),
+      React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('postupdate'),
         style: { marginTop: 6, width: '100%', padding: 13, borderRadius: 12, background: acc, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer' } }, '+ Post progress update')
     );
 
@@ -64,8 +64,8 @@
                 React.createElement('span', { style: { fontSize: 11, color: T.t3 } }, projName(c.projectId)),
                 React.createElement('span', { style: { fontSize: 11, fontWeight: 700, color: col } }, status.toUpperCase())),
               (status === 'pending' || status === 'submitted') && React.createElement('div', { style: { display: 'flex', gap: 8, marginTop: 10 } },
-                React.createElement('button', { onClick: async () => { await Backend.db.changeOrders.update(c.id, { status: 'approved' }); window.cortexxToast && window.cortexxToast('Variation approved', 'success'); }, style: { flex: 1, padding: 9, borderRadius: 9, background: T.green, border: 'none', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, '✓ Client approved'),
-                React.createElement('button', { onClick: async () => { await Backend.db.changeOrders.update(c.id, { status: 'rejected' }); window.cortexxToast && window.cortexxToast('Variation rejected', 'info'); }, style: { flex: 1, padding: 9, borderRadius: 9, background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', color: T.red, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, '✕ Rejected')));
+                React.createElement('button', { type: 'button', onClick: async () => { await Backend.db.changeOrders.update(c.id, { status: 'approved' }); window.cortexxToast && window.cortexxToast('Variation approved', 'success'); }, style: { flex: 1, padding: 9, borderRadius: 9, background: T.green, border: 'none', color: '#fff', fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, '✓ Client approved'),
+                React.createElement('button', { type: 'button', onClick: async () => { await Backend.db.changeOrders.update(c.id, { status: 'rejected' }); window.cortexxToast && window.cortexxToast('Variation rejected', 'info'); }, style: { flex: 1, padding: 9, borderRadius: 9, background: 'transparent', border: '1px solid rgba(239,68,68,0.4)', color: T.red, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, '✕ Rejected')));
           })
     );
 
@@ -87,7 +87,7 @@
                 React.createElement('div', { style: { fontSize: 11, color: T.t3 } }, projName(s.projectId) + ' · ' + s.surveyedOn)),
               React.createElement('span', { style: { fontSize: 20, fontWeight: 800, color: s.score >= 9 ? T.green : s.score >= 7 ? '#f59e0b' : T.red } }, s.score + '/10')),
             s.comment && React.createElement('div', { style: { fontSize: 12, color: T.t2, fontStyle: 'italic', lineHeight: 1.5, paddingTop: 6, borderTop: '1px solid ' + T.hair } }, '"' + s.comment + '"'))),
-      React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('requestsurvey'),
+      React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('requestsurvey'),
         style: { marginTop: 6, width: '100%', padding: 13, borderRadius: 12, background: T.bg2, border: '1px dashed ' + T.hair, color: acc, fontWeight: 700, fontSize: 14, cursor: 'pointer' } }, '+ Request client survey')
     );
 
@@ -127,9 +127,9 @@
     };
     return React.createElement('div', { style: { position: 'fixed', inset: 0, background: T.bg1, zIndex: 1100, overflowY: 'auto', paddingBottom: 100 } },
       React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '20px 20px 0' } },
-        React.createElement('button', { onClick: onClose, style: { width: 36, height: 36, borderRadius: 18, background: T.bg2, border: 'none', color: T.t1, fontSize: 20, cursor: 'pointer' } }, '←'),
+        React.createElement('button', { type: 'button', onClick: onClose, style: { width: 36, height: 36, borderRadius: 18, background: T.bg2, border: 'none', color: T.t1, fontSize: 20, cursor: 'pointer' } }, '←'),
         React.createElement('h2', { style: { color: T.t1, fontSize: 18, fontWeight: 800, margin: 0, flex: 1 } }, 'Post Update'),
-        React.createElement('button', { onClick: save, disabled: saving, style: { padding: '8px 18px', borderRadius: 10, background: accent || T.blue, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.6 : 1 } }, saving ? 'Posting…' : 'Post')),
+        React.createElement('button', { type: 'button', onClick: save, disabled: saving, style: { padding: '8px 18px', borderRadius: 10, background: accent || T.blue, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: 'pointer', opacity: saving ? 0.6 : 1 } }, saving ? 'Posting…' : 'Post')),
       React.createElement('div', { style: { padding: '20px 20px 0' } },
         React.createElement(Field, { label: 'Project' },
           React.createElement('select', { style: inp, value: form.projectId, onChange: e => set('projectId', e.target.value) }, projects.map(p => React.createElement('option', { key: p.id, value: p.id }, p.name)))),

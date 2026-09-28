@@ -55,14 +55,14 @@ export default function RegisterPage() {
           Cortexx construction management
         </p>
 
-        <label style={labelStyle}>Name (optional)</label>
-        <input value={name} onChange={e => setName(e.target.value)} style={inputStyle} autoComplete="name" />
+        <label htmlFor="field-58" style={labelStyle}>Name (optional)</label>
+        <input id="field-58" value={name} onChange={e => setName(e.target.value)} style={inputStyle} autoComplete="name" />
 
-        <label style={labelStyle}>Email</label>
-        <input type="email" required autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
+        <label htmlFor="field-61" style={labelStyle}>Email</label>
+        <input id="field-61" type="email" required autoComplete="email" value={email} onChange={e => setEmail(e.target.value)} style={inputStyle} />
 
-        <label style={labelStyle}>Password (8+ characters)</label>
-        <input type="password" required minLength={8} autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} style={inputStyle} />
+        <label htmlFor="field-64" style={labelStyle}>Password (8+ characters)</label>
+        <input id="field-64" type="password" required minLength={8} autoComplete="new-password" value={password} onChange={e => setPassword(e.target.value)} style={inputStyle} />
 
         {error && (
           <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>

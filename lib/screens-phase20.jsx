@@ -101,7 +101,7 @@ function SubPortalScreen({ accent }) {
                 </div>
               );
             })}
-            <button onClick={() => toast('Invoice draft started', 'success')} style={{
+            <button type="button" onClick={() => toast('Invoice draft started', 'success')} style={{
               background: 'transparent', color: accent, border: `0.5px dashed ${T.hairMid}`,
               borderRadius: 12, padding: '12px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
               display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 5, marginTop: 4,

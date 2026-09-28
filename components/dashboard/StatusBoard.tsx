@@ -94,7 +94,7 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
             )}
           </svg>
           {heroProject && (
-            <div
+            <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
               onClick={() => router.push(`/projects/${heroProject.id}`)}
               style={{ padding: '10px 14px', borderTop: '0.5px solid rgba(255,255,255,0.07)', cursor: 'pointer', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}
             >
@@ -145,7 +145,7 @@ export default function StatusBoard({ accent = '#2563eb', data }: StatusBoardPro
           const c = p.status === 'active' ? '#10b981' : p.status === 'snagging' ? '#f59e0b' : p.status === 'quoting' ? '#8b5cf6' : 'var(--t3)'
           const stLabel = p.status.toUpperCase()
           return (
-            <div
+            <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
               key={p.id}
               onClick={() => router.push(`/projects/${p.id}`)}
               style={{

@@ -52,6 +52,7 @@
         marginBottom: 16
       }
     }, [['approvals', 'Approvals' + (pending.length ? ' (' + pending.length + ')' : '')], ['delivery', 'Delivery'], ['suppliers', 'Suppliers'], ['stock', 'Stock']].map(([k, l]) => React.createElement('button', {
+      type: 'button',
       key: k,
       onClick: () => setTab(k),
       style: {
@@ -123,6 +124,7 @@
         gap: 8
       }
     }, React.createElement('button', {
+      type: 'button',
       onClick: () => approve(po),
       style: {
         flex: 1,
@@ -136,6 +138,7 @@
         cursor: 'pointer'
       }
     }, '✓ Approve'), React.createElement('button', {
+      type: 'button',
       onClick: () => reject(po),
       style: {
         flex: 1,
@@ -200,6 +203,7 @@
           gap: 6
         }
       }, po.status === 'approved' && React.createElement('button', {
+        type: 'button',
         onClick: () => order(po),
         style: {
           padding: '6px 12px',
@@ -212,6 +216,7 @@
           cursor: 'pointer'
         }
       }, 'Mark ordered'), React.createElement('button', {
+        type: 'button',
         onClick: () => window.cortexxNav && window.cortexxNav('confirmdelivery'),
         style: {
           padding: '6px 12px',
@@ -340,6 +345,7 @@
         marginBottom: 4
       }
     }, '⚠ ' + lowStock.length + ' item' + (lowStock.length > 1 ? 's' : '') + ' below minimum'), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('addpo'),
       style: {
         marginTop: 6,

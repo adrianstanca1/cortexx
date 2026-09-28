@@ -109,7 +109,7 @@ function LabelPrinterScreen({ accent }) {
 
           <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 16 }}>
             {TYPES.map(t => (
-              <button key={t.k} onClick={() => setType(t.k)} style={{
+              <button type="button" key={t.k} onClick={() => setType(t.k)} style={{
                 background: type === t.k ? `${accent}1a` : T.bg2, border: `0.5px solid ${type === t.k ? accent : T.hair}`, borderRadius: 12, padding: 13, cursor: 'pointer', textAlign: 'left',
               }}>
                 <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: T.t1 }}>{t.l}</div>
@@ -153,11 +153,11 @@ function LabelPrinterScreen({ accent }) {
             )}
           </div>
 
-          <button onClick={print} style={{ width: '100%', marginTop: 16, background: accent, color: '#fff', border: 'none', borderRadius: 13, padding: '15px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+          <button type="button" onClick={print} style={{ width: '100%', marginTop: 16, background: accent, color: '#fff', border: 'none', borderRadius: 13, padding: '15px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
             {React.cloneElement(Ic.print || Ic.download, { size: 16 })} Print label
           </button>
           {btSupported && (
-            <button onClick={connectBluetooth} style={{ width: '100%', marginTop: 8, background: T.bg2, color: T.t1, border: `0.5px solid ${T.hairMid}`, borderRadius: 13, padding: '13px', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
+            <button type="button" onClick={connectBluetooth} style={{ width: '100%', marginTop: 8, background: T.bg2, color: T.t1, border: `0.5px solid ${T.hairMid}`, borderRadius: 13, padding: '13px', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
               Pair Bluetooth thermal printer
             </button>
           )}

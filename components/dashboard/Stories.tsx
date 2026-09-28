@@ -35,7 +35,7 @@ export default function Stories({ accent = '#8b5cf6', data }: StoriesProps) {
           const c = statusColors[project.status] || 'var(--t3)'
           const hasProgress = project.progress > 0
           return (
-            <div key={project.id} onClick={() => router.push(`/projects/${project.id}`)} style={{ flexShrink: 0, textAlign: 'center', width: 64, cursor: 'pointer' }}>
+            <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={project.id} onClick={() => router.push(`/projects/${project.id}`)} style={{ flexShrink: 0, textAlign: 'center', width: 64, cursor: 'pointer' }}>
               <div style={{ width: 60, height: 60, borderRadius: 30, padding: 2.5, boxSizing: 'border-box', background: hasProgress ? `conic-gradient(from 0deg, ${c}, ${accent}, ${c})` : 'rgba(255,255,255,0.07)' }}>
                 <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: `linear-gradient(135deg, ${c}, ${c}88)`, display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, color: '#fff' }}>
                   {project.name[0]}
@@ -46,7 +46,7 @@ export default function Stories({ accent = '#8b5cf6', data }: StoriesProps) {
             </div>
           )
         })}
-        <div style={{ flexShrink: 0, textAlign: 'center', width: 64, cursor: 'pointer' }} onClick={() => router.push('/projects')}>
+        <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} style={{ flexShrink: 0, textAlign: 'center', width: 64, cursor: 'pointer' }} onClick={() => router.push('/projects')}>
           <div style={{ width: 60, height: 60, borderRadius: 30, padding: 2.5, boxSizing: 'border-box', background: 'transparent', border: '1.5px dashed #52749a' }}>
             <div style={{ width: '100%', height: '100%', borderRadius: '50%', background: 'transparent', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: 'var(--font-system)', fontSize: 24, fontWeight: 700, color: 'var(--t3)' }}>+</div>
           </div>
@@ -92,7 +92,7 @@ export default function Stories({ accent = '#8b5cf6', data }: StoriesProps) {
             <div style={{ display: 'flex', alignItems: 'center', gap: 10, marginTop: 14, paddingTop: 12, borderTop: '0.5px solid rgba(255,255,255,0.07)' }}>
               <span style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)' }}>{featured.onSiteCount} on site now</span>
               <div style={{ flex: 1 }} />
-              <button onClick={() => router.push(`/projects/${featured.id}`)} style={{ background: '#fff', color: 'var(--bg0)', border: 'none', borderRadius: 10, padding: '7px 14px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Open</button>
+              <button type="button" onClick={() => router.push(`/projects/${featured.id}`)} style={{ background: '#fff', color: 'var(--bg0)', border: 'none', borderRadius: 10, padding: '7px 14px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Open</button>
             </div>
           </div>
         </div>

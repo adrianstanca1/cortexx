@@ -88,7 +88,7 @@ export default function AuditLogPage() {
 
       <div style={{ display: 'flex', gap: 6, marginBottom: 16, flexWrap: 'wrap' }}>
         {['', 'project', 'invoice', 'task', 'member', 'invite', 'billing'].map(f => (
-          <button
+          <button type="button"
             key={f || 'all'}
             onClick={() => setFilter(f)}
             style={{ padding: '5px 10px', borderRadius: 999, background: filter === f ? '#f59e0b' : 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.07)', color: filter === f ? 'var(--bg0)' : 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 11, fontWeight: 600, cursor: 'pointer', textTransform: 'capitalize' }}
@@ -127,7 +127,7 @@ export default function AuditLogPage() {
             </div>
           ))}
           {hasMore && (
-            <button
+            <button type="button"
               onClick={loadMore}
               disabled={loadingMore}
               style={{ width: '100%', padding: '10px 12px', background: 'transparent', border: 'none', borderTop: '0.5px solid rgba(255,255,255,0.05)', fontFamily: 'var(--font-system)', fontSize: 11, color: loadingMore ? 'var(--t3)' : '#f59e0b', textAlign: 'center', cursor: loadingMore ? 'default' : 'pointer', fontWeight: 600 }}

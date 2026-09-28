@@ -40,7 +40,7 @@ function AuditScreen({ accent }) {
         <MobileHeader title="Audit log" subtitle={`${entries.length} events · append-only`}/>
         <div style={{ padding: '4px 16px 12px', display: 'flex', gap: 6, overflowX: 'auto' }}>
           {areas.map(a => (
-            <button key={a} onClick={() => setFilter(a)} style={{
+            <button type="button" key={a} onClick={() => setFilter(a)} style={{
               background: filter === a ? accent : T.bg2, color: filter === a ? '#fff' : T.t2,
               border: `0.5px solid ${filter === a ? accent : T.hairMid}`, borderRadius: 14,
               padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, fontWeight: 600, whiteSpace: 'nowrap', flexShrink: 0,
@@ -99,7 +99,7 @@ function SSOLoginScreen({ accent, onClose }) {
         {stage === 'providers' && (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
             {providers.map(p => (
-              <button key={p.k} onClick={() => setStage('workspace')} style={{
+              <button type="button" key={p.k} onClick={() => setStage('workspace')} style={{
                 background: p.k === 'apple' ? '#fff' : T.bg2, color: p.k === 'apple' ? '#000' : T.t1,
                 border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '13px',
                 fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: 'pointer',
@@ -116,7 +116,7 @@ function SSOLoginScreen({ accent, onClose }) {
             </div>
             <input value={email} onChange={e => setEmail(e.target.value)} placeholder="you@company.co.uk"
               style={{ background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: '13px', color: T.t1, fontFamily: SF, fontSize: 14, outline: 'none' }}/>
-            <button onClick={() => setStage('workspace')} disabled={!email.trim()} style={{
+            <button type="button" onClick={() => setStage('workspace')} disabled={!email.trim()} style={{
               background: email.trim() ? accent : T.bg3, color: '#fff', border: 'none', borderRadius: 12, padding: '13px',
               fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: email.trim() ? 'pointer' : 'default', opacity: email.trim() ? 1 : 0.5,
             }}>Continue</button>
@@ -128,7 +128,7 @@ function SSOLoginScreen({ accent, onClose }) {
             <div style={{ fontFamily: SF, fontSize: 13, color: T.t2, textAlign: 'center', marginBottom: 14 }}>Choose your workspace</div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
               {tenants.map(t => (
-                <button key={t.id} onClick={() => setTenant(t.id)} style={{
+                <button type="button" key={t.id} onClick={() => setTenant(t.id)} style={{
                   background: tenant === t.id ? `${accent}11` : T.bg2,
                   border: `0.5px solid ${tenant === t.id ? accent : T.hair}`, borderRadius: 12, padding: 12,
                   cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
@@ -142,14 +142,14 @@ function SSOLoginScreen({ accent, onClose }) {
                 </button>
               ))}
             </div>
-            <button onClick={() => {
+            <button type="button" onClick={() => {
               if (window.CortexTenant && tenant !== window.CortexTenant.active()) { window.CortexTenant.switch(tenant); return; }
               if (window.cortexxToast) window.cortexxToast('Signed in', 'success');
               onClose();
             }} style={{ width: '100%', marginTop: 16, background: accent, color: '#fff', border: 'none', borderRadius: 12, padding: '14px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: 'pointer' }}>
               Enter workspace
             </button>
-            <button onClick={() => setStage('providers')} style={{ width: '100%', marginTop: 6, background: 'none', border: 'none', color: T.t3, fontFamily: SF, fontSize: 12, cursor: 'pointer', padding: 8 }}>Back</button>
+            <button type="button" onClick={() => setStage('providers')} style={{ width: '100%', marginTop: 6, background: 'none', border: 'none', color: T.t3, fontFamily: SF, fontSize: 12, cursor: 'pointer', padding: 8 }}>Back</button>
           </div>
         )}
 

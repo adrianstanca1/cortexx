@@ -25,7 +25,7 @@ function InlineField({ value, onSave, placeholder, type = 'text', size = 'md', a
         outline: 'none', width: '100%', boxSizing: 'border-box',
       }}/>;
   }
-  return <span onClick={() => setEditing(true)} style={{
+  return <button type="button" onClick={() => setEditing(true)} style={{ background: 'transparent', border: 'none', color: 'inherit', textAlign: 'inherit', font: 'inherit',
     cursor: 'text', borderRadius: 4,
     padding: '4px 6px', margin: '-4px -6px',
     transition: 'background 0.12s',
@@ -33,7 +33,7 @@ function InlineField({ value, onSave, placeholder, type = 'text', size = 'md', a
   }} onMouseEnter={(e) => e.currentTarget.style.background = T.bg3}
      onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}>
     {value || <span style={{ color: T.t3, fontStyle: 'italic' }}>{placeholder || 'tap to edit'}</span>}
-  </span>;
+  </button>;
 }
 
 // ═══════════════════════════════════════════════════════════════════
@@ -66,7 +66,7 @@ function ResponsiveSidebar({ tab, setTab, accent }) {
         <div style={{ fontFamily: SF, fontSize: 16, fontWeight: 700, color: T.t1, letterSpacing: -0.3 }}>CortexBuild Pro</div>
       </div>
       {tabs.map(t => (
-        <button key={t.k} onClick={() => setTab(t.k)} style={{
+        <button type="button" key={t.k} onClick={() => setTab(t.k)} style={{
           background: tab === t.k ? `${accent}22` : 'transparent', border: 'none',
           color: tab === t.k ? accent : T.t2, fontFamily: SF, fontSize: 13, fontWeight: 600,
           padding: '10px 12px', borderRadius: 8, cursor: 'pointer', textAlign: 'left',
@@ -74,7 +74,7 @@ function ResponsiveSidebar({ tab, setTab, accent }) {
         }}>{React.cloneElement(t.i, { size: 17 })} {t.l}</button>
       ))}
       <div style={{ flex: 1 }}/>
-      <button onClick={() => window.cortexxNav('cmdk')} style={{
+      <button type="button" onClick={() => window.cortexxNav('cmdk')} style={{
         background: T.bg3, border: 'none', color: T.t1, fontFamily: SF, fontSize: 12, fontWeight: 600,
         padding: '8px 12px', borderRadius: 8, cursor: 'pointer', textAlign: 'left',
         display: 'flex', alignItems: 'center', gap: 8,

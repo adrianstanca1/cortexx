@@ -47,7 +47,7 @@ function NfcProvisionScreen({ accent }) {
           <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.6, margin: '6px 2px 8px' }}>Project / site</div>
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {projects.map(p => (
-              <button key={p.id} onClick={() => { setPid(p.id); setWrote(false); }} style={{
+              <button type="button" key={p.id} onClick={() => { setPid(p.id); setWrote(false); }} style={{
                 background: T.bg2, border: `0.5px solid ${pid == p.id ? accent : T.hair}`, borderRadius: 12, padding: 13,
                 cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 12, textAlign: 'left',
               }}>
@@ -64,14 +64,14 @@ function NfcProvisionScreen({ accent }) {
 
           {/* The URL */}
           <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.6, margin: '20px 2px 8px' }}>Check-in link</div>
-          <div onClick={copy} style={{ background: T.bg0, border: `0.5px solid ${T.hair}`, borderRadius: 11, padding: 13, fontFamily: SFMono, fontSize: 12, color: T.t2, wordBreak: 'break-all', cursor: 'pointer', position: 'relative' }}>
+          <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={copy} style={{ background: T.bg0, border: `0.5px solid ${T.hair}`, borderRadius: 11, padding: 13, fontFamily: SFMono, fontSize: 12, color: T.t2, wordBreak: 'break-all', cursor: 'pointer', position: 'relative' }}>
             {url}
             <span style={{ position: 'absolute', top: 8, right: 10, fontFamily: SF, fontSize: 11, fontWeight: 700, color: copied ? T.green : accent }}>{copied ? '✓ Copied' : 'Copy'}</span>
           </div>
 
           {/* Write button */}
           {supported ? (
-            <button onClick={write} disabled={writing} style={{ width: '100%', marginTop: 16, background: wrote ? T.green : accent, color: '#fff', border: 'none', borderRadius: 13, padding: '15px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: writing ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={write} disabled={writing} style={{ width: '100%', marginTop: 16, background: wrote ? T.green : accent, color: '#fff', border: 'none', borderRadius: 13, padding: '15px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: writing ? 'default' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {React.cloneElement(Ic.pin, { size: 16 })} {writing ? 'Hold tag to phone…' : wrote ? '✓ Tag written — write another?' : 'Write to NFC tag'}
             </button>
           ) : (

@@ -157,6 +157,14 @@ function TrainingMatrixScreen({
       whiteSpace: 'nowrap'
     }
   }, c.short))), team.map((m, ri) => React.createElement("div", {
+    role: "button",
+    tabIndex: 0,
+    onKeyDown: event => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        event.currentTarget.click();
+      }
+    },
     key: m.id,
     onClick: () => window.cortexxNav('member', m),
     style: {
@@ -237,6 +245,7 @@ function TrainingMatrixScreen({
     title: `${m.n} · ${c.name}`,
     sub: `Expires ${c.expires}`,
     right: React.createElement("button", {
+      type: "button",
       onClick: async e => {
         e.stopPropagation();
         toast('Renewal reminder set', 'success');

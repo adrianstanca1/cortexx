@@ -79,7 +79,7 @@ function DrawingsScreen({ accent, onOpen }) {
           {drawings.map(d => {
             const proj = projects.find(p => p.id === d.projectId);
             return (
-              <div key={d.id} onClick={() => onOpen && onOpen(d)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={d.id} onClick={() => onOpen && onOpen(d)} style={{
                 background: T.bg2, borderRadius: 14, overflow: 'hidden',
                 border: `0.5px solid ${T.hair}`, cursor: 'pointer',
               }}>
@@ -150,16 +150,16 @@ function DrawingViewerSheet({ drawing, onClose, accent }) {
   return (
     <Sheet onClose={onClose} fullscreen>
       <div style={{ display: 'flex', alignItems: 'center', gap: 10, padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}` }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ flex: 1, textAlign: 'center' }}>
           <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: T.t1 }}>{drawing.name}</div>
           <div style={{ fontFamily: SFMono, fontSize: 10, color: T.t3, marginTop: 1 }}>{drawing.version} · {pins.length} pins</div>
         </div>
-        <button onClick={() => toast('Drawing exported', 'success')} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer' }}>Share</button>
+        <button type="button" onClick={() => toast('Drawing exported', 'success')} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 14, cursor: 'pointer' }}>Share</button>
       </div>
-      <div style={{ flex: 1, background: '#0a1830', position: 'relative', overflow: 'auto' }} onClick={handleClick}>
+      <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} style={{ flex: 1, background: '#0a1830', position: 'relative', overflow: 'auto' }} onClick={handleClick}>
         <svg width="100%" height="400" viewBox="0 0 320 400" preserveAspectRatio="xMidYMid meet" style={{ display: 'block', cursor: addingPin ? 'crosshair' : 'default' }}>
           <defs>
             <pattern id="bigbp" width="24" height="24" patternUnits="userSpaceOnUse">
@@ -193,14 +193,14 @@ function DrawingViewerSheet({ drawing, onClose, accent }) {
         )}
       </div>
       <div style={{ padding: '10px 12px 30px', borderTop: `0.5px solid ${T.hair}`, display: 'flex', gap: 8, background: T.bg0 }}>
-        <button onClick={() => setAddingPin(!addingPin)} style={{
+        <button type="button" onClick={() => setAddingPin(!addingPin)} style={{
           flex: 1, background: addingPin ? T.amber : T.bg2,
           color: addingPin ? '#0a1830' : T.t1,
           border: addingPin ? 'none' : `0.5px solid ${T.hairMid}`,
           borderRadius: 12, padding: '12px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
           display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6,
         }}>{React.cloneElement(Ic.pin, { size: 14 })} {addingPin ? 'Tap drawing…' : 'Add pin'}</button>
-        <button onClick={() => { setPins([]); toast('Pins cleared', 'info'); }} style={{
+        <button type="button" onClick={() => { setPins([]); toast('Pins cleared', 'info'); }} style={{
           background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
           borderRadius: 12, padding: '12px 14px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
         }}>Clear</button>
@@ -241,7 +241,7 @@ function PermitsScreen({ accent }) {
                     </div>
                   </div>
                   {!p.signed && (
-                    <button onClick={() => window.cortexxNav('signature', {
+                    <button type="button" onClick={() => window.cortexxNav('signature', {
                       subject: `${p.kind} · ${p.area}`,
                       signerName: 'You',
                       onSigned: async () => { await Backend.db.permits.update(p.id, { signed: true }); }
@@ -393,7 +393,7 @@ function VoiceMemoSheet({ onClose, accent }) {
                 {recorderError}
               </div>
             )}
-            <button onClick={startRecording} style={{
+            <button type="button" onClick={startRecording} style={{
               width: 120, height: 120, borderRadius: 60,
               background: `linear-gradient(135deg, ${T.red}, ${T.red}cc)`,
               border: 'none', color: '#fff', cursor: 'pointer',
@@ -416,7 +416,7 @@ function VoiceMemoSheet({ onClose, accent }) {
               animation: 'pulse-rec 1.4s infinite',
             }}>{React.cloneElement(Ic.mic, { size: 56 })}</div>
             <div style={{ fontFamily: SF, fontSize: 12, color: T.red, marginTop: 16, fontWeight: 600 }}>● RECORDING</div>
-            <button onClick={stop} style={{
+            <button type="button" onClick={stop} style={{
               marginTop: 26, background: T.bg2, color: T.t1, border: `0.5px solid ${T.hairMid}`,
               borderRadius: 12, padding: '12px 24px',
               fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
@@ -450,11 +450,11 @@ function VoiceMemoSheet({ onClose, accent }) {
               fontFamily: SF, fontSize: 14, color: T.t1, lineHeight: 1.6,
             }}>{transcript}</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-              <button onClick={save} style={{
+              <button type="button" onClick={save} style={{
                 flex: 1, background: accent, color: '#fff', border: 'none', borderRadius: 12,
                 padding: '12px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer',
               }}>Save memo</button>
-              <button onClick={() => { setTranscript(null); setDuration(0); }} style={{
+              <button type="button" onClick={() => { setTranscript(null); setDuration(0); }} style={{
                 background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                 borderRadius: 12, padding: '12px 16px', fontFamily: SF, fontSize: 13, fontWeight: 600, cursor: 'pointer',
               }}>Re-record</button>

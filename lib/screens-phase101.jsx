@@ -88,7 +88,7 @@ function PaymentLinkScreen({ accent, invoiceId, onClose }) {
   var ProviderBtn = function (props) {
     var p = props.p, opts = providers && providers[p] || { available: false };
     var disabled = !opts.available || busy === p;
-    return <button onClick={function () { generate(p); }} disabled={disabled}
+    return <button type="button" onClick={function () { generate(p); }} disabled={disabled}
       style={{ width: '100%', padding: 14, marginTop: 8, borderRadius: 12, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontFamily: SF, fontSize: 14, fontWeight: 600, textAlign: 'left', opacity: disabled ? 0.5 : 1, display: 'flex', alignItems: 'center', gap: 12 }}>
       <span style={{ width: 36, height: 36, borderRadius: 8, background: props.color + '20', color: props.color, display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: 16 }}>{props.glyph}</span>
       <span style={{ flex: 1 }}>
@@ -135,14 +135,14 @@ function PaymentLinkScreen({ accent, invoiceId, onClose }) {
                 {result.iban && <div><span style={{ color: T.t2 }}>IBAN: </span><span style={{ fontFamily: SFMono }}>{result.iban}</span></div>}
                 <div><span style={{ color: T.t2 }}>Reference: </span><strong>{result.reference}</strong></div>
                 <div><span style={{ color: T.t2 }}>Amount: </span><strong>£{result.amount}</strong></div>
-                <button onClick={function () { copy([result.accountName, result.sortCode, result.accountNo, result.iban, 'Ref: ' + result.reference, 'Amount: £' + result.amount].filter(Boolean).join('\n'), 'Bank details'); }}
+                <button type="button" onClick={function () { copy([result.accountName, result.sortCode, result.accountNo, result.iban, 'Ref: ' + result.reference, 'Amount: £' + result.amount].filter(Boolean).join('\n'), 'Bank details'); }}
                   style={{ marginTop: 12, padding: '8px 14px', borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontFamily: SF, fontSize: 12, fontWeight: 600 }}>Copy all details</button>
               </div>
             ) : (
               <>
                 <div style={{ padding: 10, borderRadius: 8, background: T.bg1, border: '1px solid ' + T.hair, fontFamily: SFMono, fontSize: 11, wordBreak: 'break-all', color: T.t1 }}>{result.url}</div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-                  <button onClick={function () { copy(result.url, 'Link'); }}
+                  <button type="button" onClick={function () { copy(result.url, 'Link'); }}
                     style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: 'none', background: accent, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Copy link</button>
                   <a href={result.url} target="_blank" rel="noopener noreferrer"
                     style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontFamily: SF, fontSize: 13, fontWeight: 700, textAlign: 'center', textDecoration: 'none' }}>Open</a>
@@ -165,7 +165,7 @@ function PaymentLinkScreen({ accent, invoiceId, onClose }) {
             <div style={{ fontSize: 11, fontWeight: 700, color: T.t2, letterSpacing: 0.6, marginBottom: 8 }}>EXISTING LINK ({(inv.payment_provider || 'stripe').toUpperCase()})</div>
             <div style={{ padding: 10, borderRadius: 8, background: T.bg1, border: '1px solid ' + T.hair, fontFamily: SFMono, fontSize: 11, wordBreak: 'break-all', color: T.t1 }}>{inv.payment_link_url}</div>
             <div style={{ display: 'flex', gap: 8, marginTop: 10 }}>
-              <button onClick={function () { copy(inv.payment_link_url, 'Link'); }}
+              <button type="button" onClick={function () { copy(inv.payment_link_url, 'Link'); }}
                 style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg1, color: T.t1, fontFamily: SF, fontSize: 12, fontWeight: 600 }}>Copy</button>
               <a href={inv.payment_link_url} target="_blank" rel="noopener noreferrer"
                 style={{ flex: 1, padding: '10px 14px', borderRadius: 8, border: '1px solid ' + T.hair, background: T.bg2, color: T.t1, fontFamily: SF, fontSize: 12, fontWeight: 600, textAlign: 'center', textDecoration: 'none' }}>Open</a>

@@ -48,6 +48,7 @@
         marginBottom: 16
       }
     }, [['overview', 'Overview'], ['talks', 'Talks'], ['alerts', 'Alerts'], ['audits', 'Audits']].map(([k, l]) => React.createElement('button', {
+      type: 'button',
       key: k,
       onClick: () => setTab(k),
       style: {
@@ -177,6 +178,7 @@
         color: T.t3
       }
     }, 'Fatigue & competency alerts')), totalAlerts > 0 && React.createElement('button', {
+      type: 'button',
       onClick: () => setTab('alerts'),
       style: {
         padding: '8px 14px',
@@ -230,6 +232,7 @@
         color: T.t3
       }
     }, projName(t.projectId) + ' · ' + t.assignedTo + ' · ' + t.planned)), !t.done && React.createElement('button', {
+      type: 'button',
       onClick: async () => {
         await Backend.db.talkSchedule.update(t.id, {
           done: true
@@ -247,6 +250,7 @@
         cursor: 'pointer'
       }
     }, 'Deliver')))), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('scheduletalk'),
       style: {
         marginTop: 10,
@@ -385,6 +389,7 @@
         color: T.green
       }
     }, a.score + '%') : React.createElement('button', {
+      type: 'button',
       onClick: async () => {
         const score = 90 + Math.floor(Math.random() * 10);
         await Backend.db.hsAudits.update(a.id, {
@@ -404,6 +409,7 @@
         cursor: 'pointer'
       }
     }, 'Complete')))), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('scheduleaudit'),
       style: {
         marginTop: 10,

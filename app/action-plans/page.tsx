@@ -95,7 +95,7 @@ export default function ActionPlansPage() {
           const count = f.id === 'all' ? rows.length : rows.filter(r => r.status === f.id).length
           const active = f.id === filter
           return (
-            <button
+            <button type="button"
               key={f.id}
               onClick={() => setFilter(f.id)}
               style={{
@@ -147,7 +147,6 @@ export default function ActionPlansPage() {
             return (
               <li
                 key={r.id}
-                onClick={() => setSelected(r)}
                 style={{
                   background: 'var(--surface-raised)',
                   borderRadius: 10,
@@ -163,7 +162,7 @@ export default function ActionPlansPage() {
                   gap: 12,
                 }}
               >
-                <div style={{ minWidth: 0, flex: 1 }}>
+                <button type="button" onClick={() => setSelected(r)} style={{ minWidth: 0, flex: 1, background: 'none', border: 'none', padding: 0, textAlign: 'left', cursor: 'pointer', color: 'inherit', outlineOffset: 4 }}>
                   <div style={{ fontWeight: 600, color: isDone ? 'var(--t3)' : 'var(--t1)', textDecoration: isDone ? 'line-through' : 'none' }}>
                     {r.title || r.id}
                   </div>
@@ -174,9 +173,9 @@ export default function ActionPlansPage() {
                     {r.dueDate && <span>Due: {new Date(r.dueDate).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>}
                     <span>{new Date(r.createdAt).toLocaleDateString('en-GB', { day: '2-digit', month: 'short' })}</span>
                   </div>
-                </div>
+                </button>
                 {!isDone && (
-                  <button
+                  <button type="button"
                     onClick={e => markDone(r, e)}
                     style={{
                       flexShrink: 0,

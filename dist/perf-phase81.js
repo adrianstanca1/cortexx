@@ -205,7 +205,7 @@
     overlay.innerHTML = `
       <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
         <span style="color:#60a5fa;font-weight:700;letter-spacing:0.5px;">PERF · ${tabId}</span>
-        <button id="cxp-close" style="background:none;border:0;color:#7a9cc0;cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button>
+        <button type="button" id="cxp-close" style="background:none;border:0;color:#7a9cc0;cursor:pointer;font-size:14px;padding:0;line-height:1;">×</button>
       </div>
       <div id="cxp-body"></div>
       <div style="margin-top:8px;color:#3d5e82;font-size:9.5px;letter-spacing:0.4px;">⌘⇧P TO TOGGLE</div>

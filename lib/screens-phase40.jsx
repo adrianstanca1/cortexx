@@ -153,7 +153,7 @@ function VeraActionsScreen({ accent }) {
             <div style={{ fontFamily: SF, fontSize: 14, color: T.t1, lineHeight: 1.5 }}>
               Vera runs these autonomously. Tap to trigger now, or schedule recurring runs.
             </div>
-            <button onClick={() => run('all', 'full sweep')} disabled={running} style={{
+            <button type="button" onClick={() => run('all', 'full sweep')} disabled={running} style={{
               marginTop: 12, width: '100%',
               background: `linear-gradient(135deg, ${T.purple}, ${accent})`,
               color: '#fff', border: 'none', borderRadius: 12, padding: '12px',
@@ -173,7 +173,7 @@ function VeraActionsScreen({ accent }) {
               { k: 'materials', l: 'Forecast material orders', d: 'Flag low stock with AI advice',        i: Ic.box },
             ].map((a, i, arr) => (
               <Row key={a.k} icon={a.i} iconBg={accent} title={a.l} sub={a.d}
-                right={<button onClick={(e) => { e.stopPropagation(); run(a.k, a.l); }} disabled={running === a.k} style={{
+                right={<button type="button" onClick={(e) => { e.stopPropagation(); run(a.k, a.l); }} disabled={running === a.k} style={{
                   background: running === a.k ? T.bg3 : T.purple, color: '#fff', border: 'none',
                   borderRadius: 14, padding: '5px 12px', cursor: running === a.k ? 'default' : 'pointer',
                   fontFamily: SF, fontSize: 11, fontWeight: 700,

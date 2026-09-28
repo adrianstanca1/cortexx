@@ -82,7 +82,7 @@ export default function AiHistoryPage() {
             </p>
           </div>
           {entries.length > 0 && (
-            <button
+            <button type="button"
               onClick={clearHistory}
               style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 8, color: '#ef4444', opacity: 0.7 }}
               title="Clear all history"

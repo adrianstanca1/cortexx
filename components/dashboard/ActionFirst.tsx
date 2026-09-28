@@ -125,7 +125,7 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
                   {nextTask.project?.name || 'Unassigned'}{nextTask.assignee ? ` · ${nextTask.assignee.name}` : ''}
                 </div>
                 <div style={{ display: 'flex', gap: 8, marginTop: 14 }}>
-                  <button
+                  <button type="button"
                     onClick={handleCheckIn}
                     disabled={checkingIn || !nextTask?.projectId}
                     style={{
@@ -139,7 +139,7 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
                   >
                     <IcPin size={15} color={accent} /> {checkingIn ? 'Checking in…' : 'Check in'}
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => nextTask.projectId && router.push(`/projects/${nextTask.projectId}`)}
                     style={{
                       background: 'rgba(255,255,255,0.18)', color: '#fff',
@@ -184,7 +184,7 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
               const iconName = iconForCategory(task.category)
               const color = task.priority === 'critical' ? '#ef4444' : task.priority === 'high' ? '#f59e0b' : '#2563eb'
               return (
-                <div key={task.id} onClick={() => task.projectId && router.push(`/projects/${task.projectId}`)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', cursor: task.projectId ? 'pointer' : 'default' }}>
+                <div role="link" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={task.id} onClick={() => task.projectId && router.push(`/projects/${task.projectId}`)} style={{ display: 'flex', alignItems: 'center', gap: 14, padding: '12px 16px', borderRadius: 14, background: 'rgba(255,255,255,0.04)', border: '1px solid rgba(255,255,255,0.07)', cursor: task.projectId ? 'pointer' : 'default' }}>
                   <span style={{ fontSize: 12, fontWeight: 600, color: 'var(--t3)', width: 40, fontFamily: 'var(--font-system)' }}>
                     {task.dueDate ? new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' }) : '—'}
                   </span>

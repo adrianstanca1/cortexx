@@ -1,6 +1,7 @@
 // ESLint flat config for Next 16 + ESLint 9.
 // Wraps the Next-shipped `core-web-vitals` ruleset.
 import next from 'eslint-config-next/core-web-vitals'
+import jsxA11y from 'eslint-plugin-jsx-a11y'
 
 // React 19 ships a stricter compiler-grade hook ruleset. Two of them
 // (`set-state-in-effect` and `purity`) flag the canonical client-side
@@ -20,6 +21,10 @@ const config = [
       'react-hooks/refs': 'warn',
       'react-hooks/use-memo': 'warn',
     },
+  },
+  {
+    files: ['app/**/*.{js,jsx,ts,tsx}', 'components/**/*.{js,jsx,ts,tsx}'],
+    rules: jsxA11y.configs.recommended.rules,
   },
 ]
 

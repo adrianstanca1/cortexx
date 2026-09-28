@@ -300,6 +300,7 @@ function BillingScreen({
       borderRadius: 5
     }
   }, f))), !p.current && React.createElement("button", {
+    type: "button",
     onClick: () => p.name === 'Enterprise' ? toast('Sales will be in touch shortly', 'success') : window.cortexxNav && window.cortexxNav('checkout', {
       plan: p.name,
       price: p.price

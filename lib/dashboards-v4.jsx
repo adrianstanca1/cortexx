@@ -136,9 +136,9 @@ function DashV14_Broadsheet({ accent, dashboardId, setDashboardId }) {
               "Built on dirt and detail since 2021"
             </div>
             <div style={{ display: 'flex', gap: 4 }}>
-              <button onClick={() => setNav('switchworkspace')} title="Switch workspace" style={chipBtn14()}>{Ic.building || Ic.layers} <span>{(window.CortexTenant ? window.CortexTenant.activeRecord().name : 'CORTEXX').toUpperCase().slice(0, 12)} ▾</span></button>
-              <button onClick={() => setNav('search')} style={chipBtn14()}>{Ic.search} <span>SEARCH</span></button>
-              <button onClick={() => setNav('inbox')} style={chipBtn14()}>{Ic.bell} <span>WIRE</span></button>
+              <button type="button" onClick={() => setNav('switchworkspace')} title="Switch workspace" style={chipBtn14()}>{Ic.building || Ic.layers} <span>{(window.CortexTenant ? window.CortexTenant.activeRecord().name : 'CORTEXX').toUpperCase().slice(0, 12)} ▾</span></button>
+              <button type="button" onClick={() => setNav('search')} style={chipBtn14()}>{Ic.search} <span>SEARCH</span></button>
+              <button type="button" onClick={() => setNav('inbox')} style={chipBtn14()}>{Ic.bell} <span>WIRE</span></button>
             </div>
           </div>
         </div>
@@ -195,7 +195,7 @@ function DashV14_Broadsheet({ accent, dashboardId, setDashboardId }) {
             </div>
 
             {focus && (
-              <button onClick={() => setNav('tab', 'tasks')} style={leadCTA14()}>
+              <button type="button" onClick={() => setNav('tab', 'tasks')} style={leadCTA14()}>
                 Take it on →
               </button>
             )}
@@ -206,7 +206,7 @@ function DashV14_Broadsheet({ accent, dashboardId, setDashboardId }) {
 
           {/* PROJECTS — three short stories */}
           {active.slice(0, 3).map((p, i) => (
-            <article key={p.id} onClick={() => setNav('project', p)} style={{
+            <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={p.id} onClick={() => setNav('project', p)} style={{
               breakInside: 'avoid', marginBottom: 12, cursor: 'pointer',
             }}>
               <div style={{
@@ -232,7 +232,7 @@ function DashV14_Broadsheet({ accent, dashboardId, setDashboardId }) {
                 <div style={{ position: 'absolute', inset: 0, background: V14.rule }}/>
                 <div style={{ position: 'absolute', left: 0, top: 0, bottom: 0, width: `${p.pct ?? 0}%`, background: V14.ink }}/>
               </div>
-            </article>
+            </div>
           ))}
 
           {/* CLASSIFIEDS — KPIs as boxed ads */}
@@ -355,7 +355,7 @@ function Classified14({ label, value, note }) {
 
 function DeskLink14({ label, sub, onClick, rightCol, bottomRow }) {
   return (
-    <button onClick={onClick} style={{
+    <button type="button" onClick={onClick} style={{
       background: 'transparent', border: 'none', cursor: 'pointer',
       borderLeft: rightCol ? `1px solid ${V14.ink}` : 'none',
       borderBottom: bottomRow ? 'none' : `1px solid ${V14.ink}`,

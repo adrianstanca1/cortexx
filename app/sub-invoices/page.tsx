@@ -192,7 +192,7 @@ export default function SubInvoicesPage() {
             <h1 style={{ fontSize: 22, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.4, fontFamily: SF }}>Sub invoices</h1>
             <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 2, fontFamily: SF }}>{invoices.length} total · {pendingCount} pending</p>
           </div>
-          <button onClick={() => setShowAdd(true)} disabled={subs.length === 0} aria-label="Record invoice" style={{ width: 36, height: 36, borderRadius: 10, background: subs.length === 0 ? 'rgba(245,158,11,0.3)' : '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: subs.length === 0 ? 'not-allowed' : 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} disabled={subs.length === 0} aria-label="Record invoice" style={{ width: 36, height: 36, borderRadius: 10, background: subs.length === 0 ? 'rgba(245,158,11,0.3)' : '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: subs.length === 0 ? 'not-allowed' : 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -212,12 +212,12 @@ export default function SubInvoicesPage() {
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', paddingBottom: 2 }}>
           {(['all', 'received', 'approved', 'paid', 'disputed'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
           {invoices.length > 0 && (
-            <button onClick={exportCsv} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>CSV</button>
+            <button type="button" onClick={exportCsv} style={{ marginLeft: 'auto', padding: '4px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.1)', background: 'transparent', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>CSV</button>
           )}
         </div>
       </div>
@@ -237,7 +237,7 @@ export default function SubInvoicesPage() {
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
           {filtered.map(i => (
-            <button key={i.id} onClick={() => setActiveInv(i)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
+            <button type="button" key={i.id} onClick={() => setActiveInv(i)} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', gap: 10, alignItems: 'center', cursor: 'pointer', textAlign: 'left' }}>
               <div style={{ flex: 1, minWidth: 0 }}>
                 <div style={{ display: 'flex', alignItems: 'baseline', gap: 6 }}>
                   <span style={{ fontFamily: 'ui-monospace, monospace', fontSize: 11, color: 'var(--t3)', fontWeight: 600 }}>{i.number}</span>
@@ -267,15 +267,15 @@ export default function SubInvoicesPage() {
 
       {showAdd && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowAdd(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '92dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Record sub invoice</h2>
-              <button onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowAdd(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <div>
-              <label style={labelStyle}>Subcontractor</label>
-              <select value={form.subcontractorId} onChange={e => setForm(p => ({ ...p, subcontractorId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+              <label htmlFor="field-277" style={labelStyle}>Subcontractor</label>
+              <select id="field-277" value={form.subcontractorId} onChange={e => setForm(p => ({ ...p, subcontractorId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                 {subs.map(s => <option key={s.id} value={s.id}>{s.name} — CIS {s.cisStatus}</option>)}
               </select>
               {selectedSub && (
@@ -307,12 +307,12 @@ export default function SubInvoicesPage() {
             <input value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description" style={inputStyle} />
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 80px', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Net £</label>
-                <input type="number" step="0.01" value={form.netAmount} onChange={e => setForm(p => ({ ...p, netAmount: e.target.value }))} placeholder="0.00" style={inputStyle} />
+                <label htmlFor="field-310" style={labelStyle}>Net £</label>
+                <input id="field-310" type="number" step="0.01" value={form.netAmount} onChange={e => setForm(p => ({ ...p, netAmount: e.target.value }))} placeholder="0.00" style={inputStyle} />
               </div>
               <div>
-                <label style={labelStyle}>VAT %</label>
-                <input type="number" step="1" value={form.vatRate} onChange={e => setForm(p => ({ ...p, vatRate: e.target.value }))} style={inputStyle} />
+                <label htmlFor="field-314" style={labelStyle}>VAT %</label>
+                <input id="field-314" type="number" step="1" value={form.vatRate} onChange={e => setForm(p => ({ ...p, vatRate: e.target.value }))} style={inputStyle} />
               </div>
             </div>
 
@@ -326,7 +326,7 @@ export default function SubInvoicesPage() {
               </div>
             )}
 
-            <button onClick={create} disabled={saving || !form.subcontractorId || !form.number.trim() || !form.netAmount} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.subcontractorId || !form.number.trim() || !form.netAmount ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.subcontractorId || !form.number.trim() || !form.netAmount} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.subcontractorId || !form.number.trim() || !form.netAmount ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Record</>}
             </button>
           </div>
@@ -335,7 +335,7 @@ export default function SubInvoicesPage() {
 
       {activeInv && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setActiveInv(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setActiveInv(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 12, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start' }}>
               <div>
@@ -348,7 +348,7 @@ export default function SubInvoicesPage() {
                   {activeInv.costCode && <> · {activeInv.costCode.code}</>}
                 </div>
               </div>
-              <button onClick={() => setActiveInv(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setActiveInv(null)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
             {activeInv.description && <div style={{ background: 'var(--bg3)', padding: '10px 12px', borderRadius: 10, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>{activeInv.description}</div>}
@@ -383,23 +383,23 @@ export default function SubInvoicesPage() {
 
             <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: 6 }}>
               {activeInv.status === 'received' && (
-                <button onClick={() => changeStatus(activeInv, 'approved')} style={statusBtn('#f59e0b')}>Approve</button>
+                <button type="button" onClick={() => changeStatus(activeInv, 'approved')} style={statusBtn('#f59e0b')}>Approve</button>
               )}
               {(activeInv.status === 'received' || activeInv.status === 'approved') && (
-                <button onClick={() => changeStatus(activeInv, 'paid')} style={statusBtn('#22c55e')}>Mark paid</button>
+                <button type="button" onClick={() => changeStatus(activeInv, 'paid')} style={statusBtn('#22c55e')}>Mark paid</button>
               )}
               {activeInv.status !== 'disputed' && activeInv.status !== 'paid' && (
-                <button onClick={() => changeStatus(activeInv, 'disputed')} style={statusBtn('#ef4444')}>Dispute</button>
+                <button type="button" onClick={() => changeStatus(activeInv, 'disputed')} style={statusBtn('#ef4444')}>Dispute</button>
               )}
               {activeInv.status === 'paid' && (
-                <button onClick={() => changeStatus(activeInv, 'approved')} style={statusBtn('var(--t3)')}>Unmark paid</button>
+                <button type="button" onClick={() => changeStatus(activeInv, 'approved')} style={statusBtn('var(--t3)')}>Unmark paid</button>
               )}
               {activeInv.status === 'disputed' && (
-                <button onClick={() => changeStatus(activeInv, 'received')} style={statusBtn('var(--t3)')}>Resolve</button>
+                <button type="button" onClick={() => changeStatus(activeInv, 'received')} style={statusBtn('var(--t3)')}>Resolve</button>
               )}
             </div>
 
-            <button onClick={() => remove(activeInv.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activeInv.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeInv.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
+            <button type="button" onClick={() => remove(activeInv.id)} style={{ padding: '10px', borderRadius: 10, background: confirmDelete === activeInv.id ? 'rgba(239,68,68,0.18)' : 'rgba(255,255,255,0.04)', border: `0.5px solid ${confirmDelete === activeInv.id ? 'rgba(239,68,68,0.5)' : 'rgba(255,255,255,0.15)'}`, color: '#ef4444', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 4 }}>
               <IcTrash size={12} color="#ef4444" /> {confirmDelete === activeInv.id ? 'Sure?' : 'Delete'}
             </button>
           </div>

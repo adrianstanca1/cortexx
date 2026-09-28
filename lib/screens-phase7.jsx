@@ -92,17 +92,17 @@ function SubInvoicesScreen({ accent }) {
                 </div>
                 {iv.status === 'pending' && (
                   <div style={{ display: 'flex', gap: 6, marginTop: 12, paddingTop: 10, borderTop: `0.5px solid ${T.hair}` }}>
-                    <button onClick={() => approve(iv.id)} style={{
+                    <button type="button" onClick={() => approve(iv.id)} style={{
                       flex: 1, background: T.green, color: '#fff', border: 'none',
                       borderRadius: 8, padding: '8px',
                       fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     }}>Approve</button>
-                    <button onClick={() => reject(iv.id)} style={{
+                    <button type="button" onClick={() => reject(iv.id)} style={{
                       background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                       borderRadius: 8, padding: '8px 14px',
                       fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                     }}>Reject</button>
-                    <button onClick={() => toast(`Opening ${iv.id}…`, 'info')} style={{
+                    <button type="button" onClick={() => toast(`Opening ${iv.id}…`, 'info')} style={{
                       background: 'transparent', color: T.blueL, border: `0.5px solid ${T.hairMid}`,
                       borderRadius: 8, padding: '8px 12px',
                       fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
@@ -111,7 +111,7 @@ function SubInvoicesScreen({ accent }) {
                 )}
                 {iv.status === 'approved' && (
                   <div style={{ display: 'flex', gap: 6, marginTop: 12, paddingTop: 10, borderTop: `0.5px solid ${T.hair}` }}>
-                    <button onClick={() => pay(iv.id)} style={{
+                    <button type="button" onClick={() => pay(iv.id)} style={{
                       flex: 1, background: accent, color: '#fff', border: 'none',
                       borderRadius: 8, padding: '8px',
                       fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',

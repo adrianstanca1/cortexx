@@ -95,6 +95,7 @@
             maxWidth: 260
           }
         }, "The rest of CortexBuild Pro is fine. Close and reopen this screen, or tap retry."), React.createElement("button", {
+          type: "button",
           onClick: () => this.setState({
             error: null
           }),
@@ -166,6 +167,7 @@
     })), React.createElement(TweakSection, {
       title: "Performance"
     }, React.createElement("button", {
+      type: "button",
       onClick: () => window.cortexxPerfOverlay && window.cortexxPerfOverlay(),
       style: {
         width: '100%',

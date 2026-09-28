@@ -223,13 +223,13 @@ export default function SnagsPage() {
               {snags.length} total{openCount > 0 ? ` · ${openCount} open` : ''}
             </p>
           </div>
-          <button onClick={() => setShowModal(true)} aria-label="Add snag" disabled={projects.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(245,158,11,0.3)' : '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
+          <button type="button" onClick={() => setShowModal(true)} aria-label="Add snag" disabled={projects.length === 0} style={{ width: 36, height: 36, borderRadius: 10, background: projects.length === 0 ? 'rgba(245,158,11,0.3)' : '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: projects.length === 0 ? 'not-allowed' : 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'open', 'in_progress', 'closed'] as const).map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#090b0d' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -245,7 +245,7 @@ export default function SnagsPage() {
           <IcAlert size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{snags.length === 0 ? 'No snags raised yet' : 'Nothing in this filter'}</p>
           {snags.length === 0 && projects.length > 0 && (
-            <button onClick={() => setShowModal(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowModal(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#090b0d', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Raise first snag
             </button>
           )}
@@ -278,7 +278,7 @@ export default function SnagsPage() {
                 </div>
               </div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, alignItems: 'flex-end' }}>
-                <button
+                <button type="button"
                   onClick={() => cycleStatus(s)}
                   aria-label={`Mark as ${STATUS_LABEL[NEXT_STATUS[s.status]]}`}
                   style={{ background: `${STATUS_COLOR[s.status]}22`, color: STATUS_COLOR[s.status], border: `1px solid ${STATUS_COLOR[s.status]}55`, borderRadius: 99, padding: '3px 9px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer' }}
@@ -286,7 +286,7 @@ export default function SnagsPage() {
                   {STATUS_LABEL[s.status]}
                 </button>
                 {s.photoUrl && (
-                  <button
+                  <button type="button"
                     onClick={() => analyze(s.id)}
                     disabled={analyses[s.id]?.loading}
                     aria-label="Analyse photo with AI"
@@ -296,7 +296,7 @@ export default function SnagsPage() {
                     {analyses[s.id]?.loading ? 'Analysing…' : analyses[s.id]?.defects?.length ? 'Re-analyse' : 'Analyse'}
                   </button>
                 )}
-                <button
+                <button type="button"
                   onClick={() => remove(s.id)}
                   aria-label={confirmDelete === s.id ? 'Confirm delete' : 'Delete snag'}
                   style={{ background: confirmDelete === s.id ? 'rgba(239,68,68,0.2)' : 'none', border: 'none', borderRadius: 4, padding: confirmDelete === s.id ? '3px 7px' : 3, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
@@ -343,27 +343,27 @@ export default function SnagsPage() {
 
       {showModal && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 200, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Close dialog" onClick={() => setShowModal(false)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.6)', backdropFilter: 'blur(4px)' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 4 }}>
               <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', letterSpacing: -0.3, fontFamily: SF }}>Raise snag</h2>
-              <button onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setShowModal(false)} aria-label="Close" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
 
-            <input autoFocus value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What's the issue?" style={inputStyle} />
+            <input value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What's the issue?" style={inputStyle} />
             <textarea value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Details (optional)" rows={3} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
             <input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="Location (e.g. Plot 4, kitchen)" style={inputStyle} />
 
             <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 10 }}>
               <div>
-                <label style={labelStyle}>Project</label>
-                <select value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-359" style={labelStyle}>Project</label>
+                <select id="field-359" value={form.projectId} onChange={e => setForm(p => ({ ...p, projectId: e.target.value }))} style={{ ...inputStyle, appearance: 'none' }}>
                   {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
                 </select>
               </div>
               <div>
-                <label style={labelStyle}>Priority</label>
-                <select value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value as Snag['priority'] }))} style={{ ...inputStyle, appearance: 'none' }}>
+                <label htmlFor="field-365" style={labelStyle}>Priority</label>
+                <select id="field-365" value={form.priority} onChange={e => setForm(p => ({ ...p, priority: e.target.value as Snag['priority'] }))} style={{ ...inputStyle, appearance: 'none' }}>
                   <option value="low">Low</option>
                   <option value="medium">Medium</option>
                   <option value="high">High</option>
@@ -373,28 +373,28 @@ export default function SnagsPage() {
             </div>
 
             <div>
-              <label style={labelStyle}>Due date (optional)</label>
-              <input type="date" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              <label htmlFor="field-376" style={labelStyle}>Due date (optional)</label>
+              <input id="field-376" type="date" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
 
             <div>
-              <label style={labelStyle}>Photo (optional)</label>
-              <input ref={photoInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); e.target.value = '' }} />
+              <label htmlFor="field-381" style={labelStyle}>Photo (optional)</label>
+              <input id="field-381" ref={photoInputRef} type="file" accept="image/*" capture="environment" style={{ display: 'none' }} onChange={e => { const f = e.target.files?.[0]; if (f) uploadPhoto(f); e.target.value = '' }} />
               {form.photoUrl ? (
                 <div style={{ display: 'flex', gap: 10, alignItems: 'center' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={form.photoUrl} alt="" width={64} height={64} style={{ width: 64, height: 64, borderRadius: 10, objectFit: 'cover' }} />
-                  <button onClick={() => setForm(p => ({ ...p, photoUrl: '' }))} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#ef4444', borderRadius: 8, padding: '6px 10px', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Remove</button>
+                  <button type="button" onClick={() => setForm(p => ({ ...p, photoUrl: '' }))} style={{ background: 'rgba(255,255,255,0.06)', border: 'none', color: '#ef4444', borderRadius: 8, padding: '6px 10px', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Remove</button>
                 </div>
               ) : (
-                <button onClick={() => photoInputRef.current?.click()} disabled={photoUploading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 13, cursor: photoUploading ? 'wait' : 'pointer', width: '100%', justifyContent: 'center' }}>
+                <button type="button" onClick={() => photoInputRef.current?.click()} disabled={photoUploading} style={{ display: 'flex', alignItems: 'center', gap: 8, padding: '10px 14px', borderRadius: 10, background: 'rgba(255,255,255,0.04)', border: '1px dashed rgba(255,255,255,0.15)', color: 'var(--t2)', fontFamily: SF, fontSize: 13, cursor: photoUploading ? 'wait' : 'pointer', width: '100%', justifyContent: 'center' }}>
                   <IcCamera size={16} color="var(--t2)" />
                   {photoUploading ? 'Uploading…' : 'Attach photo'}
                 </button>
               )}
             </div>
 
-            <button onClick={create} disabled={saving || !form.title.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.title.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#090b0d', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Raise snag</>}
             </button>
           </div>

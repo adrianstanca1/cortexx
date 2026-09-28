@@ -269,6 +269,7 @@ function StartTripSheet({
       borderBottom: `0.5px solid ${T.hair}`
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -361,6 +362,7 @@ function StartTripSheet({
       paddingBottom: 4
     }
   }, projects.map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setProjectId(p.id),
     style: {
@@ -401,6 +403,7 @@ function StartTripSheet({
       l: 'Other business'
     }]
   }))), React.createElement("button", {
+    type: "button",
     onClick: tracking ? stop : begin,
     style: {
       marginTop: 20,
@@ -475,6 +478,7 @@ function AddTagSheet({
       flexWrap: 'wrap'
     }
   }, TAG_COLORS.map(c => React.createElement("button", {
+    type: "button",
     key: c,
     onClick: () => setColor(c),
     style: {

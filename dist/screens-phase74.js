@@ -346,6 +346,7 @@ function AddImprovementSheet({
     accent: accent,
     onSave: save,
     extraBtn: React.createElement("button", {
+      type: "button",
       onClick: suggest,
       disabled: suggesting,
       style: {
@@ -545,6 +546,7 @@ function ImprovementDetailSheet({
       background: T.bg0
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -662,12 +664,14 @@ function ImprovementDetailSheet({
       gap: 8
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: back,
     disabled: laneIdx <= 0,
     style: btnSecondary74(accent, laneIdx <= 0)
   }, React.cloneElement(Ic.chevL, {
     size: 14
   }), " Back"), React.createElement("button", {
+    type: "button",
     onClick: advance,
     disabled: laneIdx >= LANES.length - 1,
     style: btnPrimary74(LANE_C[LANES[Math.min(LANES.length - 1, laneIdx + 1)]], laneIdx >= LANES.length - 1)
@@ -767,6 +771,7 @@ function ImprovementDetailSheet({
       display: 'inline-block'
     }
   }, draft.delta > 0 ? '+' : '', draft.delta, "% \xB7 ", draft.wins, " win", draft.wins !== 1 ? 's' : '', " logged"), React.createElement("button", {
+    type: "button",
     onClick: logWin,
     style: {
       marginTop: 12,

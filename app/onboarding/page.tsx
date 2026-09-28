@@ -82,9 +82,9 @@ export default function OnboardingPage() {
           This is what your team and clients will see. You can change it later in settings.
         </p>
 
-        <label style={labelStyle}>Workspace name</label>
-        <input
-          autoFocus
+        <label htmlFor="field-85" style={labelStyle}>Workspace name</label>
+        <input id="field-85"
+
           maxLength={100}
           required
           placeholder="e.g. Patterson Construction"

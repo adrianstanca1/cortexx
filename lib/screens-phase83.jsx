@@ -57,7 +57,7 @@ function AdminScreen({ accent }) {
     <ScreenBg accent={accent}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
         <MobileHeader title="Org admin" subtitle={`${tenant.name} · ${members.length} members`}
-          right={<button onClick={() => setInviteOpen(!inviteOpen)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{React.cloneElement(Ic.plus, { size: 20 })}</button>}/>
+          right={<button type="button" onClick={() => setInviteOpen(!inviteOpen)} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>{React.cloneElement(Ic.plus, { size: 20 })}</button>}/>
 
         {/* Org summary */}
         <div style={{ padding: '4px 16px 14px', display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', gap: 8 }}>
@@ -80,7 +80,7 @@ function AdminScreen({ accent }) {
               <input value={iName} onChange={e => setIName(e.target.value)} placeholder="Name" style={inp()}/>
               <input value={iEmail} onChange={e => setIEmail(e.target.value)} placeholder="Email" style={inp()}/>
               <select value={iRole} onChange={e => setIRole(e.target.value)} style={{ ...inp(), appearance: 'none' }}>{roles.map(r => <option key={r} value={r}>{r}</option>)}</select>
-              <button onClick={() => { if (!iName.trim()) { toast('Name required', 'error'); return; } window.CortexMembers.invite(iName.trim(), iEmail.trim(), iRole); refresh(); setInviteOpen(false); setIName(''); setIEmail(''); toast('Invitation sent', 'success'); }} style={{ background: accent, color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Send invite</button>
+              <button type="button" onClick={() => { if (!iName.trim()) { toast('Name required', 'error'); return; } window.CortexMembers.invite(iName.trim(), iEmail.trim(), iRole); refresh(); setInviteOpen(false); setIName(''); setIEmail(''); toast('Invitation sent', 'success'); }} style={{ background: accent, color: '#fff', border: 'none', borderRadius: 10, padding: '11px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Send invite</button>
             </div>
           </div>
         )}
@@ -97,14 +97,14 @@ function AdminScreen({ accent }) {
                     <div style={{ fontFamily: SF, fontSize: 11, color: T.t2 }}>{m.email}</div>
                   </div>
                   {m.status === 'invited' && <Pill c={T.amber} size="xs">invited</Pill>}
-                  <button onClick={() => setEditing(editing === m.id ? null : m.id)} style={{ background: `${roleC[m.role] || accent}22`, color: roleC[m.role] || accent, border: 'none', borderRadius: 12, padding: '5px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>{m.role} ▾</button>
+                  <button type="button" onClick={() => setEditing(editing === m.id ? null : m.id)} style={{ background: `${roleC[m.role] || accent}22`, color: roleC[m.role] || accent, border: 'none', borderRadius: 12, padding: '5px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>{m.role} ▾</button>
                 </div>
                 {editing === m.id && (
                   <div style={{ marginTop: 10, display: 'flex', flexWrap: 'wrap', gap: 5 }}>
                     {roles.map(r => (
-                      <button key={r} onClick={() => { window.CortexMembers.setRole(m.id, r); refresh(); setEditing(null); toast(`${m.name.split(' ')[0]} → ${r}`, 'success'); }} style={{ background: m.role === r ? (roleC[r] || accent) : T.bg3, color: m.role === r ? '#fff' : T.t1, border: 'none', borderRadius: 10, padding: '6px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 600 }}>{r}</button>
+                      <button type="button" key={r} onClick={() => { window.CortexMembers.setRole(m.id, r); refresh(); setEditing(null); toast(`${m.name.split(' ')[0]} → ${r}`, 'success'); }} style={{ background: m.role === r ? (roleC[r] || accent) : T.bg3, color: m.role === r ? '#fff' : T.t1, border: 'none', borderRadius: 10, padding: '6px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 600 }}>{r}</button>
                     ))}
-                    <button onClick={() => { window.CortexMembers.remove(m.id); refresh(); setEditing(null); toast('Member removed', 'info'); }} style={{ background: 'transparent', color: T.red, border: `0.5px solid ${T.red}44`, borderRadius: 10, padding: '6px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 600 }}>Remove</button>
+                    <button type="button" onClick={() => { window.CortexMembers.remove(m.id); refresh(); setEditing(null); toast('Member removed', 'info'); }} style={{ background: 'transparent', color: T.red, border: `0.5px solid ${T.red}44`, borderRadius: 10, padding: '6px 10px', cursor: 'pointer', fontFamily: SF, fontSize: 11, fontWeight: 600 }}>Remove</button>
                   </div>
                 )}
                 {/* Permission preview */}

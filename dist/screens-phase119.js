@@ -55,6 +55,7 @@
       var l = built.label(k);
       if (q && l.toLowerCase().indexOf(q) === -1 && k.toLowerCase().indexOf(q) === -1) return null;
       return React.createElement('button', {
+        type: 'button',
         key: k,
         onClick: function () {
           if (root.cortexxNav) root.cortexxNav(k);
@@ -138,6 +139,7 @@
         fontWeight: 700
       }
     }, 'All Apps'), React.createElement('button', {
+      type: 'button',
       onClick: onClose,
       style: {
         background: 'none',
@@ -152,7 +154,6 @@
         padding: '0 18px 10px'
       }
     }, React.createElement('input', {
-      autoFocus: true,
       value: search,
       onChange: function (e) {
         setSearch(e.target.value);

@@ -220,7 +220,7 @@ function AddImprovementSheet({ onClose, accent }) {
   return (
     <FormSheet title="New improvement" onClose={onClose} accent={accent} onSave={save}
       extraBtn={
-        <button onClick={suggest} disabled={suggesting}
+        <button type="button" onClick={suggest} disabled={suggesting}
           style={{
             background: T.bg2, border: `0.5px solid ${T.purple}66`, color: T.purple,
             borderRadius: 12, padding: '8px 14px', cursor: 'pointer',
@@ -315,7 +315,7 @@ function ImprovementDetailSheet({ improvement, onClose, accent }) {
         padding: '12px 16px', borderBottom: `0.5px solid ${T.hair}`,
         background: T.bg0,
       }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 15, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 2 }}>
           {Ic.chevL} <span>Back</span>
         </button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Improvement</div>
@@ -359,11 +359,11 @@ function ImprovementDetailSheet({ improvement, onClose, accent }) {
             ))}
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={back} disabled={laneIdx <= 0}
+            <button type="button" onClick={back} disabled={laneIdx <= 0}
               style={btnSecondary74(accent, laneIdx <= 0)}>
               {React.cloneElement(Ic.chevL, { size: 14 })} Back
             </button>
-            <button onClick={advance} disabled={laneIdx >= LANES.length - 1}
+            <button type="button" onClick={advance} disabled={laneIdx >= LANES.length - 1}
               style={btnPrimary74(LANE_C[LANES[Math.min(LANES.length - 1, laneIdx + 1)]], laneIdx >= LANES.length - 1)}>
               Move to {LANES[Math.min(LANES.length - 1, laneIdx + 1)]} {React.cloneElement(Ic.chevR, { size: 14 })}
             </button>
@@ -406,7 +406,7 @@ function ImprovementDetailSheet({ improvement, onClose, accent }) {
                 {draft.delta > 0 ? '+' : ''}{draft.delta}% · {draft.wins} win{draft.wins !== 1 ? 's' : ''} logged
               </div>
             )}
-            <button onClick={logWin} style={{
+            <button type="button" onClick={logWin} style={{
               marginTop: 12, width: '100%',
               background: `linear-gradient(135deg, ${T.green}, ${T.green}cc)`,
               color: '#fff', border: 'none', borderRadius: 10,

@@ -153,7 +153,7 @@ function InspectionsScreen({ accent, onOpen }) {
           subtitle={`${inspections.filter(i => i.status === 'passed').length} passed · ${inspections.filter(i => i.status === 'failed').length} failed · ${inspections.filter(i => i.status === 'scheduled').length} scheduled`}
           right={<div style={{ display: 'flex', gap: 8 }}>
             <HeaderBtn icon={Ic.filter} onClick={() => setShowFilter(!showFilter)}/>
-            <button onClick={() => window.cortexxNav('addinspection')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+            <button type="button" onClick={() => window.cortexxNav('addinspection')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
               {React.cloneElement(Ic.plus, { size: 20 })}
             </button>
           </div>}
@@ -165,9 +165,9 @@ function InspectionsScreen({ accent, onOpen }) {
             <div style={{ background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12, padding: 10 }}>
               <div style={{ fontFamily: SF, fontSize: 10, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Filter by project</div>
               <div style={{ display: 'flex', flexWrap: 'wrap', gap: 5 }}>
-                <button onClick={() => setProjectFilter('all')} style={{ background: projectFilter === 'all' ? accent : T.bg3, color: projectFilter === 'all' ? '#fff' : T.t1, border: 'none', borderRadius: 12, padding: '5px 10px', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>All projects</button>
+                <button type="button" onClick={() => setProjectFilter('all')} style={{ background: projectFilter === 'all' ? accent : T.bg3, color: projectFilter === 'all' ? '#fff' : T.t1, border: 'none', borderRadius: 12, padding: '5px 10px', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>All projects</button>
                 {projects.map(p => (
-                  <button key={p.id} onClick={() => setProjectFilter(p.id)} style={{ background: projectFilter == p.id ? accent : T.bg3, color: projectFilter == p.id ? '#fff' : T.t1, border: 'none', borderRadius: 12, padding: '5px 10px', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{p.name.split(' ').slice(0,2).join(' ')}</button>
+                  <button type="button" key={p.id} onClick={() => setProjectFilter(p.id)} style={{ background: projectFilter == p.id ? accent : T.bg3, color: projectFilter == p.id ? '#fff' : T.t1, border: 'none', borderRadius: 12, padding: '5px 10px', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer', whiteSpace: 'nowrap' }}>{p.name.split(' ').slice(0,2).join(' ')}</button>
                 ))}
               </div>
             </div>
@@ -179,7 +179,7 @@ function InspectionsScreen({ accent, onOpen }) {
           <div style={{ fontFamily: SF, fontSize: 11, color: T.t3, fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.6, marginBottom: 8 }}>Quick start</div>
           <div style={{ display: 'flex', gap: 8, overflowX: 'auto', paddingBottom: 4 }}>
             {INSP_TEMPLATES.map(t => (
-              <button key={t.k} onClick={() => { toast(`New ${t.l} inspection`, 'success'); window.cortexxNav('addinspection'); }} style={{
+              <button type="button" key={t.k} onClick={() => { toast(`New ${t.l} inspection`, 'success'); window.cortexxNav('addinspection'); }} style={{
                 background: T.bg2, border: `0.5px solid ${T.hairMid}`, borderRadius: 12,
                 padding: '10px 14px', cursor: 'pointer', whiteSpace: 'nowrap',
                 display: 'flex', alignItems: 'center', gap: 8, flexShrink: 0,
@@ -205,7 +205,7 @@ function InspectionsScreen({ accent, onOpen }) {
             const proj = projects.find(p => p.id === insp.projectId);
             const passed = insp.items.filter(it => it.ok).length;
             return (
-              <div key={insp.id} onClick={() => onOpen && onOpen(insp)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={insp.id} onClick={() => onOpen && onOpen(insp)} style={{
                 background: T.bg2, borderRadius: 14, padding: 14,
                 border: `0.5px solid ${T.hair}`, cursor: 'pointer',
               }}>
@@ -259,9 +259,9 @@ function InspectionDetailSheet({ inspection, onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Inspection</div>
-        <button onClick={sign} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>Sign</button>
+        <button type="button" onClick={sign} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, fontWeight: 600, cursor: 'pointer' }}>Sign</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: '4px 20px 16px' }}>
@@ -276,7 +276,7 @@ function InspectionDetailSheet({ inspection, onClose, accent }) {
         <Section title="Checklist">
           <GroupedList>
             {items.map((it, i) => (
-              <div key={i} onClick={() => toggleItem(i)} style={{
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={i} onClick={() => toggleItem(i)} style={{
                 display: 'flex', alignItems: 'flex-start', gap: 12, padding: '12px 14px', cursor: 'pointer',
                 borderBottom: i === items.length - 1 ? 'none' : `0.5px solid ${T.hair}`,
               }}>
@@ -314,7 +314,7 @@ function CustomersScreen({ accent, onOpen }) {
         <MobileHeader
           title="Customers"
           subtitle={`${customers.length} contacts · £${(totalValue/1000).toFixed(0)}k lifetime`}
-          right={<button onClick={() => window.cortexxNav('addcustomer')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={() => window.cortexxNav('addcustomer')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
@@ -330,7 +330,7 @@ function CustomersScreen({ accent, onOpen }) {
         </div>
         <div style={{ padding: '0 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
           {filtered.map(c => (
-            <div key={c.id} onClick={() => onOpen && onOpen(c)} style={{
+            <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={c.id} onClick={() => onOpen && onOpen(c)} style={{
               background: T.bg2, borderRadius: 14, padding: 14,
               border: `0.5px solid ${T.hair}`, cursor: 'pointer',
               display: 'flex', gap: 12, alignItems: 'center',
@@ -361,9 +361,9 @@ function CustomerDetailSheet({ customer, onClose, accent }) {
   return (
     <Sheet onClose={onClose}>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '4px 16px 10px' }}>
-        <button onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
+        <button type="button" onClick={onClose} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Close</button>
         <div style={{ fontFamily: SF, fontSize: 15, fontWeight: 600, color: T.t1 }}>Customer</div>
-        <button onClick={() => window.cortexxNav('editfield', { label: 'Customer', current: customer.name, onSave: async (v) => { /* would patch */ } })} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Edit</button>
+        <button type="button" onClick={() => window.cortexxNav('editfield', { label: 'Customer', current: customer.name, onSave: async (v) => { /* would patch */ } })} style={{ background: 'none', border: 'none', color: accent, fontFamily: SF, fontSize: 16, cursor: 'pointer' }}>Edit</button>
       </div>
       <div style={{ flex: 1, overflowY: 'auto' }}>
         <div style={{ padding: '4px 20px 18px', display: 'flex', gap: 16, alignItems: 'center' }}>
@@ -439,7 +439,7 @@ function LeadsScreen({ accent }) {
         <MobileHeader
           title="Lead pipeline"
           subtitle={`${leads.filter(l => l.stage !== 'lost').length} active · £${(totalValue/1000).toFixed(0)}k pipeline`}
-          right={<button onClick={() => window.cortexxNav('addlead')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={() => window.cortexxNav('addlead')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />
@@ -449,7 +449,7 @@ function LeadsScreen({ accent }) {
           {STAGES.map(s => {
             const n = leads.filter(l => l.stage === s.k).length;
             return (
-              <button key={s.k} onClick={() => setActiveStage(s.k)} style={{
+              <button type="button" key={s.k} onClick={() => setActiveStage(s.k)} style={{
                 flexShrink: 0,
                 background: activeStage === s.k ? `${s.c}33` : 'transparent',
                 border: `0.5px solid ${activeStage === s.k ? s.c + '66' : T.hairMid}`,
@@ -489,20 +489,20 @@ function LeadsScreen({ accent }) {
                 </div>
                 {!['won','lost'].includes(l.stage) && (
                   <div style={{ display: 'flex', gap: 6, marginTop: 12 }}>
-                    <button onClick={() => advance(l)} style={{
+                    <button type="button" onClick={() => advance(l)} style={{
                       flex: 1, background: stage.c, color: '#fff', border: 'none',
                       borderRadius: 8, padding: '8px',
                       fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer',
                     }}>Advance →</button>
                     {l.stage === 'qualified' && (
-                      <button onClick={() => window.cortexxNav('estimator')} style={{
+                      <button type="button" onClick={() => window.cortexxNav('estimator')} style={{
                         background: 'transparent', color: T.purple, border: `0.5px solid ${T.purple}66`,
                         borderRadius: 8, padding: '8px 12px',
                         fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
                         display: 'flex', alignItems: 'center', gap: 5,
                       }}>{React.cloneElement(Ic.spark, { size: 12 })} Quote</button>
                     )}
-                    <button onClick={() => Backend.db.leads.update(l.id, { stage: 'lost' })} style={{
+                    <button type="button" onClick={() => Backend.db.leads.update(l.id, { stage: 'lost' })} style={{
                       background: 'transparent', color: T.t2, border: `0.5px solid ${T.hairMid}`,
                       borderRadius: 8, padding: '8px 10px',
                       fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer',
@@ -533,19 +533,19 @@ function PhotosScreen({ accent }) {
         <MobileHeader
           title="Photos"
           subtitle={`${grid} of ${totalPhotos} site photos`}
-          right={<button onClick={async () => { await Backend.db.activity.create({ who: 'You', what: 'opened camera', where: 'Photos', when: new Date().toISOString().slice(0,16), icon: 'camera', color: '#8b5cf6' }); toast('Photo captured & uploaded', 'success'); }} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={async () => { await Backend.db.activity.create({ who: 'You', what: 'opened camera', where: 'Photos', when: new Date().toISOString().slice(0,16), icon: 'camera', color: '#8b5cf6' }); toast('Photo captured & uploaded', 'success'); }} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.camera, { size: 18 })}
           </button>}
         />
         {/* Project filter */}
         <div style={{ padding: '4px 16px 14px', display: 'flex', gap: 6, overflowX: 'auto' }}>
-          <button onClick={() => setActiveProject(null)} style={{
+          <button type="button" onClick={() => setActiveProject(null)} style={{
             background: !activeProject ? T.bg3 : 'transparent', border: `0.5px solid ${T.hairMid}`,
             color: !activeProject ? T.t1 : T.t2, fontFamily: SF, fontSize: 12, fontWeight: 600,
             padding: '6px 12px', borderRadius: 12, cursor: 'pointer', whiteSpace: 'nowrap',
           }}>All</button>
           {projects.filter(p => ['active','snagging'].includes(p.status)).map(p => (
-            <button key={p.id} onClick={() => setActiveProject(p.id)} style={{
+            <button type="button" key={p.id} onClick={() => setActiveProject(p.id)} style={{
               background: activeProject === p.id ? T.bg3 : 'transparent', border: `0.5px solid ${T.hairMid}`,
               color: activeProject === p.id ? T.t1 : T.t2, fontFamily: SF, fontSize: 12, fontWeight: 600,
               padding: '6px 12px', borderRadius: 12, cursor: 'pointer', whiteSpace: 'nowrap',
@@ -560,7 +560,7 @@ function PhotosScreen({ accent }) {
               const palette = ['#1a3a5c','#2c4a3e','#3a2c5c','#5c3a2c','#2c3a5c','#3a5c2c','#4a3a5c','#5c4a2c'];
               const tag = i < 3 ? 'NEW' : null;
               return (
-                <div key={i} onClick={() => toast(`Photo ${i+1} opened`, 'info')} style={{
+                <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} key={i} onClick={() => toast(`Photo ${i+1} opened`, 'info')} style={{
                   aspectRatio: '1',
                   background: `linear-gradient(${135 + i*30}deg, ${palette[i % palette.length]}, ${T.bg2})`,
                   borderRadius: 8, border: `0.5px solid ${T.hair}`, cursor: 'pointer',
@@ -611,7 +611,7 @@ function MileageScreen({ accent }) {
         <MobileHeader
           title="Mileage"
           subtitle={`${trips.length} trips logged this week`}
-          right={<button onClick={() => window.cortexxNav('starttrip')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+          right={<button type="button" onClick={() => window.cortexxNav('starttrip')} style={{ width: 36, height: 36, borderRadius: 18, background: accent, border: 'none', color: '#fff', cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
             {React.cloneElement(Ic.plus, { size: 20 })}
           </button>}
         />

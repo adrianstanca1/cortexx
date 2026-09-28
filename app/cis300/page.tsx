@@ -142,7 +142,7 @@ export default function Cis300Page() {
             }}
           />
         </label>
-        <button
+        <button type="button"
           onClick={compute}
           disabled={computing}
           style={{
@@ -195,7 +195,7 @@ export default function Cis300Page() {
             return (
               <li
                 key={r.id}
-                onClick={() => router.push(`/cis300/${r.id}`)}
+
                 style={{
                   background: 'var(--surface-raised)',
                   borderRadius: 10,
@@ -210,7 +210,7 @@ export default function Cis300Page() {
                   alignItems: 'center',
                   gap: 12,
                 }}
-              >
+              ><div role="button" tabIndex={0} onClick={() => router.push(`/cis300/${r.id}`)} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}>
                 <div style={{ minWidth: 0, flex: 1 }}>
                   <div style={{ fontWeight: 600, marginBottom: 4 }}>{formatTaxMonth(r.taxMonth)}</div>
                   <div style={{ fontSize: 12, color: 'var(--t2)' }}>
@@ -231,7 +231,7 @@ export default function Cis300Page() {
                 >
                   {r.status}
                 </span>
-              </li>
+              </div></li>
             )
           })}
         </ul>

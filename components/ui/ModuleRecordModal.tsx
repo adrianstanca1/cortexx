@@ -121,16 +121,16 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
 
   return (
     <div
-      onClick={onClose}
+
       style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', zIndex: 100, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: 20 }}
     >
-      <div
+      <div role="presentation"
         onClick={e => e.stopPropagation()}
         style={{ background: '#0a1a31', borderRadius: 14, padding: 20, maxWidth: 560, width: '100%', maxHeight: '85vh', overflowY: 'auto', border: '0.5px solid rgba(255,255,255,0.1)', fontFamily: 'var(--font-system)' }}
       >
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 16 }}>
           <h2 style={{ fontSize: 16, color: 'var(--t1)', fontWeight: 700, margin: 0 }}>Edit record</h2>
-          <button onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--t3)', fontSize: 20, cursor: 'pointer', padding: 0 }}>×</button>
+          <button type="button" onClick={onClose} style={{ background: 'transparent', border: 'none', color: 'var(--t3)', fontSize: 20, cursor: 'pointer', padding: 0 }}>×</button>
         </div>
 
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
@@ -177,7 +177,7 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
         )}
 
         <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: 20, gap: 8 }}>
-          <button
+          <button type="button"
             onClick={del}
             disabled={saving}
             style={{ ...btnStyle, color: '#ef4444', border: '0.5px solid rgba(239,68,68,0.4)' }}
@@ -185,8 +185,8 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
             Delete
           </button>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button onClick={onClose} disabled={saving} style={{ ...btnStyle, color: 'var(--t2)' }}>Cancel</button>
-            <button
+            <button type="button" onClick={onClose} disabled={saving} style={{ ...btnStyle, color: 'var(--t2)' }}>Cancel</button>
+            <button type="button"
               onClick={save}
               disabled={saving || Object.keys(edits).length === 0}
               style={{ ...btnStyle, background: '#f59e0b', color: 'var(--bg0)', borderColor: 'transparent', opacity: saving || Object.keys(edits).length === 0 ? 0.5 : 1 }}

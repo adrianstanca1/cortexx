@@ -162,6 +162,7 @@ function InfrastructureScreen({
     c: T.green,
     size: "xs"
   }, "ON") : React.createElement("button", {
+    type: "button",
     onClick: requestNotif,
     style: {
       background: accent,
@@ -307,6 +308,7 @@ function InfrastructureScreen({
     c: T.green,
     size: "xs"
   }, "READY") : React.createElement("button", {
+    type: "button",
     onClick: async () => {
       if (downloading) return;
       setDownloading(true);

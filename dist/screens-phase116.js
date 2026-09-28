@@ -79,6 +79,7 @@
         marginBottom: 16
       }
     }, [['pack', 'Handover pack'], ['snagging', 'Snagging' + (openSnags.length ? ' (' + openSnags.length + ')' : '')]].map(([k, l]) => React.createElement('button', {
+      type: 'button',
       key: k,
       onClick: () => setTab(k),
       style: {
@@ -157,6 +158,7 @@
         color: T.t2
       }
     }, items.filter(i => i.status === 'received').length + ' of ' + items.length + ' documents received'), readiness === 100 && React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxToast && window.cortexxToast('📦 Handover pack ready to issue', 'success'),
       style: {
         marginTop: 12,
@@ -225,6 +227,7 @@
         }
       }, st.icon + ' ' + st.l));
     }), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('addhandover', {
         projectId
       }),
@@ -331,6 +334,7 @@
           marginBottom: 10
         }
       }, (s.area || s.location || 'Site') + (s.assignee ? ' · ' + s.assignee : '')), React.createElement('button', {
+        type: 'button',
         onClick: async () => {
           await Backend.db.snags.update(s.id, {
             status: 'closed'

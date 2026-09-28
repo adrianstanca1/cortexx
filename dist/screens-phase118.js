@@ -29,6 +29,7 @@
         marginBottom: 16
       }
     }, [['feed', 'Progress feed'], ['variations', 'Variations' + (pendingChanges.length ? ' (' + pendingChanges.length + ')' : '')], ['satisfaction', 'Satisfaction']].map(([k, l]) => React.createElement('button', {
+      type: 'button',
       key: k,
       onClick: () => setTab(k),
       style: {
@@ -118,6 +119,7 @@
         color: T.t3
       }
     }, projName(f.projectId) + ' · ' + f.when + (f.clientVisible ? ' · 👁 visible to client' : ' · 🔒 internal'))))), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('postupdate'),
       style: {
         marginTop: 6,
@@ -196,6 +198,7 @@
           marginTop: 10
         }
       }, React.createElement('button', {
+        type: 'button',
         onClick: async () => {
           await Backend.db.changeOrders.update(c.id, {
             status: 'approved'
@@ -214,6 +217,7 @@
           cursor: 'pointer'
         }
       }, '✓ Client approved'), React.createElement('button', {
+        type: 'button',
         onClick: async () => {
           await Backend.db.changeOrders.update(c.id, {
             status: 'rejected'
@@ -318,6 +322,7 @@
         borderTop: '1px solid ' + T.hair
       }
     }, '"' + s.comment + '"'))), React.createElement('button', {
+      type: 'button',
       onClick: () => window.cortexxNav && window.cortexxNav('requestsurvey'),
       style: {
         marginTop: 6,
@@ -468,6 +473,7 @@
         padding: '20px 20px 0'
       }
     }, React.createElement('button', {
+      type: 'button',
       onClick: onClose,
       style: {
         width: 36,
@@ -488,6 +494,7 @@
         flex: 1
       }
     }, 'Post Update'), React.createElement('button', {
+      type: 'button',
       onClick: save,
       disabled: saving,
       style: {

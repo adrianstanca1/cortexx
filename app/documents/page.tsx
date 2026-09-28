@@ -318,13 +318,13 @@ export default function DocumentsPage() {
               )}
             </p>
           </div>
-          <button className="module-primary" onClick={openAdd} aria-label="Add document" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" className="module-primary" onClick={openAdd} aria-label="Add document" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {['all', ...types].map(t => (
-            <button key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#090b0d' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {t}
             </button>
           ))}
@@ -332,7 +332,7 @@ export default function DocumentsPage() {
         {allTags.length > 0 && (
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingTop: 8, paddingBottom: 2 }}>
             {allTags.map(tag => (
-              <button key={tag} onClick={() => setTagFilter(curr => curr === tag ? null : tag)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: tagFilter === tag ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.05)', color: tagFilter === tag ? '#f59e0b' : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: tagFilter === tag ? 700 : 400, cursor: 'pointer' }}>
+              <button type="button" key={tag} onClick={() => setTagFilter(curr => curr === tag ? null : tag)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: tagFilter === tag ? 'rgba(245,158,11,0.22)' : 'rgba(255,255,255,0.05)', color: tagFilter === tag ? '#f59e0b' : 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: tagFilter === tag ? 700 : 400, cursor: 'pointer' }}>
                 #{tag}
               </button>
             ))}
@@ -344,7 +344,7 @@ export default function DocumentsPage() {
             { value: 'latest', label: 'Latest only' },
             { value: 'outdated', label: 'Has newer version' },
           ].map(opt => (
-            <button key={opt.value} onClick={() => setVersionFilter(opt.value as typeof versionFilter)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: versionFilter === opt.value ? 'rgba(82,116,154,0.25)' : 'rgba(255,255,255,0.05)', color: versionFilter === opt.value ? '#c1d2e8' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: versionFilter === opt.value ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={opt.value} onClick={() => setVersionFilter(opt.value as typeof versionFilter)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: versionFilter === opt.value ? 'rgba(82,116,154,0.25)' : 'rgba(255,255,255,0.05)', color: versionFilter === opt.value ? '#c1d2e8' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: versionFilter === opt.value ? 700 : 400, cursor: 'pointer' }}>
               {opt.label}
             </button>
           ))}
@@ -400,7 +400,7 @@ export default function DocumentsPage() {
                     )}
                   </div>
                   {isPdf && d.url && (
-                    <button
+                    <button type="button"
                       onClick={() => setPreviewUrl(d.url!)}
                       aria-label="Preview PDF"
                       style={{ background: 'rgba(245,158,11,0.12)', border: 'none', borderRadius: 8, padding: '6px 10px', cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, color: '#f59e0b', fontFamily: SF, fontSize: 11, fontWeight: 700 }}
@@ -409,14 +409,14 @@ export default function DocumentsPage() {
                       Preview
                     </button>
                   )}
-                  <button
+                  <button type="button"
                     onClick={() => openEdit(d)}
                     aria-label="Edit document"
                     style={{ background: 'transparent', border: 'none', borderRadius: 4, padding: 4, cursor: 'pointer', display: 'flex', alignItems: 'center' }}
                   >
                     <IcEdit size={14} color="var(--t2)" />
                   </button>
-                  <button
+                  <button type="button"
                     onClick={() => remove(d.id)}
                     aria-label={confirmDelete === d.id ? 'Confirm delete' : 'Delete document'}
                     style={{ background: confirmDelete === d.id ? 'rgba(239,68,68,0.2)' : 'none', border: 'none', borderRadius: 4, padding: confirmDelete === d.id ? '4px 8px' : 4, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}
@@ -470,7 +470,7 @@ export default function DocumentsPage() {
                 if (f) handleFileSelect(f)
               }}
             />
-            <button
+            <button type="button"
               onClick={() => fileInputRef.current?.click()}
               disabled={uploading}
               style={{
@@ -516,7 +516,7 @@ export default function DocumentsPage() {
                         if (f) handleFileSelect(f, { newVersion: true })
                       }}
                     />
-                    <button
+                    <button type="button"
                       onClick={() => versionInputRef.current?.click()}
                       disabled={uploading}
                       style={{ marginTop: 8, padding: '6px 10px', borderRadius: 8, border: 'none', background: 'rgba(245,158,11,0.15)', color: '#f59e0b', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: uploading ? 'not-allowed' : 'pointer' }}
@@ -570,7 +570,7 @@ export default function DocumentsPage() {
             {form.tags.map(tag => (
               <span key={tag} style={{ display: 'inline-flex', alignItems: 'center', gap: 4, padding: '3px 8px', borderRadius: 99, background: 'rgba(245,158,11,0.18)', color: '#f59e0b', fontFamily: SF, fontSize: 12, fontWeight: 600 }}>
                 {tag}
-                <button onClick={() => removeTag(tag)} aria-label={`Remove ${tag}`} style={{ background: 'none', border: 'none', padding: 0, color: '#f59e0b', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</button>
+                <button type="button" onClick={() => removeTag(tag)} aria-label={`Remove ${tag}`} style={{ background: 'none', border: 'none', padding: 0, color: '#f59e0b', cursor: 'pointer', fontSize: 14, lineHeight: 1 }}>×</button>
               </span>
             ))}
             <input
@@ -598,7 +598,7 @@ export default function DocumentsPage() {
           {QUICK_TEMPLATES.map(t => {
             const Icon = t.icon
             return (
-              <button
+              <button type="button"
                 key={t.type}
                 onClick={() => setForm(p => ({ ...p, type: t.type, name: p.name || `${t.label} - ${new Date().toLocaleDateString('en-GB')}` }))}
                 style={{

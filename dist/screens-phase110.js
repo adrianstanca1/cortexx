@@ -40,6 +40,7 @@
         gap: 12
       }
     }, React.createElement('button', {
+      type: 'button',
       onClick: onClose,
       style: {
         width: 36,
@@ -63,6 +64,7 @@
         flex: 1
       }
     }, title), onSave && React.createElement('button', {
+      type: 'button',
       onClick: onSave,
       disabled: saving,
       style: {
@@ -835,6 +837,7 @@
         fontSize: 12
       }
     }, fmt(usage.used) + ' of ~' + fmt(usage.total) + ' used. Export a data backup to free space.')), React.createElement('button', {
+      type: 'button',
       onClick: () => {
         window.cortexxNav && window.cortexxNav('database');
       },

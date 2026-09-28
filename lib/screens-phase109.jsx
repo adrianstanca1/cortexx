@@ -91,7 +91,7 @@ function ObservabilityScreen({ accent }) {
         {/* Breadcrumbs */}
         <div style={{ marginTop: 18, fontSize: 11, fontWeight: 700, color: T.t2, letterSpacing: 0.6, display: 'flex', justifyContent: 'space-between' }}>
           <span>BREADCRUMBS · {crumbs.length}</span>
-          <button onClick={() => { O.clear(); force(); }}
+          <button type="button" onClick={() => { O.clear(); force(); }}
             style={{ padding: '2px 8px', borderRadius: 4, border: '1px solid ' + T.hair, background: 'transparent', color: T.t2, fontSize: 10, fontFamily: SF, cursor: 'pointer' }}>Clear</button>
         </div>
         <div style={{ marginTop: 6, padding: 10, borderRadius: 12, background: T.bg2, border: '1px solid ' + T.hair, maxHeight: 380, overflow: 'auto' }}>

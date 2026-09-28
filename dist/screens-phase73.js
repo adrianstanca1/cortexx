@@ -233,6 +233,7 @@ function DocGenSheet({
       zIndex: 5
     }
   }, React.createElement("button", {
+    type: "button",
     onClick: onClose,
     style: {
       background: 'none',
@@ -336,8 +337,7 @@ function DocGenSheet({
       fontSize: 13.5,
       resize: 'none',
       outline: 'none'
-    },
-    autoFocus: true
+    }
   })), meta.needsProject && projects.length > 0 && React.createElement(React.Fragment, null, React.createElement(SectionLabel73, {
     style: {
       marginTop: 14
@@ -350,6 +350,7 @@ function DocGenSheet({
       paddingBottom: 4
     }
   }, projects.filter(p => p.status !== 'completed').slice(0, 8).map(p => React.createElement("button", {
+    type: "button",
     key: p.id,
     onClick: () => setPickedProject(pickedProject?.id === p.id ? null : p),
     style: {
@@ -377,6 +378,7 @@ function DocGenSheet({
       fontSize: 12
     }
   }, err), React.createElement("button", {
+    type: "button",
     onClick: run,
     disabled: meta.needsContext && !ctx.trim(),
     style: {
@@ -613,6 +615,7 @@ function ActionBtn73({
   color
 }) {
   return React.createElement("button", {
+    type: "button",
     onClick: onClick,
     style: {
       background: T.bg2,
@@ -735,6 +738,7 @@ function DocGenLauncher({
   }, Object.entries(window.DOC_KINDS).map(([k, m]) => {
     const cnt = allRecent.filter(r => r.kind === k).length;
     return React.createElement("button", {
+      type: "button",
       key: k,
       onClick: () => window.cortexxNav('docgen', k),
       style: {

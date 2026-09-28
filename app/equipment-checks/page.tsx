@@ -287,7 +287,7 @@ export default function EquipmentChecksPage() {
             {(['all', 'draft', 'in_progress', 'passed', 'failed', 'overdue'] as const).map(s => {
               const color = s === 'all' ? '#8b5cf6' : s === 'overdue' ? '#ef4444' : STATUS_COLOR[s as Check['status']]
               return (
-                <button
+                <button type="button"
                   key={s}
                   onClick={() => setStatusFilter(s)}
                   style={{
@@ -322,7 +322,7 @@ export default function EquipmentChecksPage() {
 
       <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 8 }}>
         {EQUIPMENT_TYPES.map(t => (
-          <button
+          <button type="button"
             key={t.value}
             onClick={() => openCreate(t.value)}
             style={{
@@ -368,7 +368,7 @@ export default function EquipmentChecksPage() {
               : null
           return (
             <div key={c.id} style={{ background: 'var(--surface-raised)', border: `0.5px solid ${c.status === 'failed' || overdue ? '#ef444466' : 'rgba(255,255,255,0.07)'}`, borderRadius: 12, padding: 14 }}>
-              <div onClick={() => setExpanded(isOpen ? null : c.id)} style={{ cursor: 'pointer' }}>
+              <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }} onClick={() => setExpanded(isOpen ? null : c.id)} style={{ cursor: 'pointer' }}>
                 <div style={{ display: 'flex', alignItems: 'center', gap: 6, marginBottom: 4, flexWrap: 'wrap' }}>
                   <span style={{ background: 'rgba(255,255,255,0.08)', color: '#c1d2e8', padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'capitalize' }}>{c.type.replace(/_/g, ' ')}</span>
                   <span style={{ background: STATUS_COLOR[c.status] + '33', color: STATUS_COLOR[c.status], padding: '2px 8px', borderRadius: 6, fontFamily: SF, fontSize: 10, fontWeight: 700, textTransform: 'uppercase' }}>{STATUS_LABEL[c.status]}</span>
@@ -392,7 +392,7 @@ export default function EquipmentChecksPage() {
                       <div key={item.id} style={{ background: '#0a1426', borderRadius: 8, padding: '8px 10px', display: 'flex', alignItems: 'center', gap: 8 }}>
                         <div style={{ flex: 1, fontFamily: SF, fontSize: 13, color: '#c1d2e8' }}>{item.label}</div>
                         {(['pass', 'fail', 'na'] as const).map(r => (
-                          <button
+                          <button type="button"
                             key={r}
                             onClick={() => updateItem(c, item.id, r)}
                             style={{

@@ -22,12 +22,12 @@
     );
   const SheetHeader = ({ title, onClose, onSave, saving }) =>
     React.createElement('div', { style: { display: 'flex', alignItems: 'center', gap: 12, padding: '20px 20px 0' } },
-      React.createElement('button', {
+      React.createElement('button', { type: 'button',
         onClick: onClose,
         style: { width: 36, height: 36, borderRadius: 18, background: T.bg2, border: 'none', color: T.t1, fontSize: 20, cursor: 'pointer' }
       }, '←'),
       React.createElement('h2', { style: { color: T.t1, fontSize: 18, fontWeight: 800, margin: 0, flex: 1 } }, title),
-      onSave && React.createElement('button', {
+      onSave && React.createElement('button', { type: 'button',
         onClick: onSave, disabled: saving,
         style: { padding: '8px 18px', borderRadius: 10, background: T.green, color: '#fff', border: 'none', fontWeight: 700, fontSize: 14, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }
       }, saving ? 'Saving…' : 'Save')
@@ -132,7 +132,7 @@
           'Attendee sign-off (' + signedCount + '/' + attendees.length + ' signed)'
         ),
         React.createElement('div', { style: { display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8 } },
-          attendees.map(m => React.createElement('button', {
+          attendees.map(m => React.createElement('button', { type: 'button',
             key: m.id,
             onClick: () => toggleSign(m.id),
             style: {
@@ -311,7 +311,7 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
           projects.map(p => React.createElement('option', { key: p.id, value: p.id }, p.name))
         )
       ),
-      !report && React.createElement('button', {
+      !report && React.createElement('button', { type: 'button',
         onClick: generate, disabled: loading,
         style: { width: '100%', padding: 14, borderRadius: 12, background: T.blue, color: '#fff', border: 'none', fontWeight: 700, fontSize: 15, cursor: loading ? 'not-allowed' : 'pointer', opacity: loading ? 0.6 : 1, marginBottom: 16 }
       }, loading ? '⏳ Generating with AI…' : '✦ Generate weekly report'),
@@ -321,7 +321,7 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
           style: { background: T.bg2, borderRadius: 12, padding: 16, marginBottom: 16, fontSize: 14, color: T.t1, lineHeight: 1.7, whiteSpace: 'pre-wrap' }
         }, report.text),
         React.createElement('div', { style: { display: 'flex', gap: 10 } },
-          React.createElement('button', {
+          React.createElement('button', { type: 'button',
             onClick: () => {
               const el = document.createElement('textarea');
               el.value = report.text; document.body.appendChild(el); el.select();
@@ -330,11 +330,11 @@ Write a 3-paragraph report: (1) Progress summary, (2) Labour & resources, (3) Is
             },
             style: { flex: 1, padding: 12, borderRadius: 10, background: T.bg2, border: '1px solid '+T.hair, color: T.t1, fontWeight: 700, fontSize: 14, cursor: 'pointer' }
           }, '📋 Copy'),
-          React.createElement('button', {
+          React.createElement('button', { type: 'button',
             onClick: () => window.print(),
             style: { flex: 1, padding: 12, borderRadius: 10, background: T.bg2, border: '1px solid '+T.hair, color: T.t1, fontWeight: 700, fontSize: 14, cursor: 'pointer' }
           }, '🖨 Print'),
-          React.createElement('button', {
+          React.createElement('button', { type: 'button',
             onClick: generate,
             style: { flex: 1, padding: 12, borderRadius: 10, background: T.bg2, border: '1px solid '+T.hair, color: T.t1, fontWeight: 700, fontSize: 14, cursor: 'pointer' }
           }, '↻ Regenerate')

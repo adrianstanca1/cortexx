@@ -268,7 +268,7 @@ export default function AppsPage() {
         </div>
         <div style={{ background: 'var(--bg1)', borderRadius: 14, border: '0.5px solid rgba(255,255,255,0.07)' }}>
           {CAPTURE.map((c, i) => (
-            <div
+            <div role="button" tabIndex={0} onKeyDown={event => { if (event.key === 'Enter' || event.key === ' ') { event.preventDefault(); event.currentTarget.click() } }}
               key={c.id}
               onClick={() => handleCapture(c)}
               style={{

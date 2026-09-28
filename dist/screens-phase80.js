@@ -206,6 +206,7 @@ function AddInspectionSheet({
     l: 'Pick date',
     d: form.date
   }].map(o => React.createElement("button", {
+    type: "button",
     key: o.k,
     onClick: () => setForm(f => ({
       ...f,
@@ -261,6 +262,7 @@ function AddInspectionSheet({
       color: T.t2
     }
   }, "\xB7 ", form.items.length)), React.createElement("button", {
+    type: "button",
     onClick: suggestItems,
     disabled: suggesting,
     style: {
@@ -313,6 +315,7 @@ function AddInspectionSheet({
       lineHeight: 1.35
     }
   }, it.q), React.createElement("button", {
+    type: "button",
     onClick: () => removeItem(i),
     style: {
       background: 'none',
@@ -353,6 +356,7 @@ function AddInspectionSheet({
       boxSizing: 'border-box'
     }
   }), React.createElement("button", {
+    type: "button",
     onClick: addItem,
     disabled: !newItem.trim(),
     style: {

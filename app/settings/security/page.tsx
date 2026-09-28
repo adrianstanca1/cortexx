@@ -121,7 +121,7 @@ export default function SecurityPage() {
             <strong>2FA is off.</strong> Click below to start enrolment with any authenticator app
             (Google Authenticator, Authy, 1Password, Bitwarden).
           </div>
-          <button onClick={startSetup} style={primaryBtn}>Start 2FA setup</button>
+          <button type="button" onClick={startSetup} style={primaryBtn}>Start 2FA setup</button>
         </section>
       )}
 
@@ -144,7 +144,7 @@ export default function SecurityPage() {
           <form onSubmit={enable} style={{ marginTop: 18 }}>
             <div style={labelStyle}>3. Enter the 6-digit code your app shows:</div>
             <input
-              autoFocus
+
               required
               inputMode="numeric"
               maxLength={7}  // allow a space mid-code
@@ -177,7 +177,7 @@ export default function SecurityPage() {
               </div>
             ))}
           </div>
-          <button
+          <button type="button"
             onClick={() => {
               const text = enableResult.backupCodes.join('\n')
               navigator.clipboard?.writeText(text).then(() => alert('Codes copied to clipboard'))

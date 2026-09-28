@@ -26,7 +26,7 @@
 
     const TabBar = () => React.createElement('div', { style: { display: 'flex', gap: 8, marginBottom: 16 } },
       [['cashflow', 'Cashflow'], ['pnl', 'P&L'], ['wip', 'WIP'], ['alerts', 'Alerts' + (alerts.length ? ' (' + alerts.length + ')' : '')]].map(([k, l]) =>
-        React.createElement('button', { key: k, onClick: () => setTab(k),
+        React.createElement('button', { type: 'button', key: k, onClick: () => setTab(k),
           style: { flex: 1, padding: '9px 0', borderRadius: 10, border: 'none', cursor: 'pointer', fontSize: 12.5, fontWeight: 700,
             background: tab === k ? acc : T.bg2, color: tab === k ? '#fff' : T.t2 } }, l)))
 
@@ -116,7 +116,7 @@
               React.createElement('span', { style: { fontWeight: 800, color: T.t1, fontSize: 14, flex: 1 } }, project.name),
               React.createElement('span', { style: { fontSize: 18, fontWeight: 800, color: pnl.marginPct < 5 ? T.red : '#f59e0b' } }, pnl.marginPct + '%')),
             React.createElement('div', { style: { fontSize: 12, color: T.t2 } }, 'Revenue ' + moneyK(pnl.revenue) + ' · Cost ' + moneyK(pnl.cost) + ' · Profit ' + moneyK(pnl.profit)),
-            React.createElement('button', { onClick: () => window.cortexxNav && window.cortexxNav('project', project),
+            React.createElement('button', { type: 'button', onClick: () => window.cortexxNav && window.cortexxNav('project', project),
               style: { marginTop: 10, width: '100%', padding: 9, borderRadius: 9, background: T.bg2, border: '1px solid ' + T.hair, color: acc, fontWeight: 700, fontSize: 12.5, cursor: 'pointer' } }, 'Review project →')))
     );
 

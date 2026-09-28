@@ -197,9 +197,7 @@ function OfflineMapScreen({ accent }) {
           </select>
 
           {/* Map viewport */}
-          <div style={{ position: 'relative', width: '100%', height: H, borderRadius: 14, overflow: 'hidden', border: `0.5px solid ${T.hairMid}`, background: '#aadaff', touchAction: 'none', cursor: tool === 'pan' ? 'grab' : 'crosshair' }}
-            onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
-            onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp}>
+          <div style={{ position: 'relative', width: '100%', height: H, borderRadius: 14, overflow: 'hidden', border: `0.5px solid ${T.hairMid}`, background: '#aadaff', touchAction: 'none', cursor: tool === 'pan' ? 'grab' : 'crosshair' }}>
             {/* Tiles */}
             {tiles.map(t => (
               <img key={t.tx + '/' + t.ty} src={t.url} alt="" draggable={false} crossOrigin="anonymous"
@@ -219,10 +217,28 @@ function OfflineMapScreen({ accent }) {
                 return null;
               })}
             </svg>
+            <button type="button"
+              aria-label={`Site map ${tool} tool. Use arrow keys to pan. Press Enter or Space to place pin or text at the map centre.`}
+              onKeyDown={e => {
+                const step = 0.00015 * Math.pow(2, 17 - zoom);
+                if (e.key === 'ArrowUp') { e.preventDefault(); setCenter(c => ({ ...c, lat: c.lat + step })); }
+                else if (e.key === 'ArrowDown') { e.preventDefault(); setCenter(c => ({ ...c, lat: c.lat - step })); }
+                else if (e.key === 'ArrowLeft') { e.preventDefault(); setCenter(c => ({ ...c, lng: c.lng - step })); }
+                else if (e.key === 'ArrowRight') { e.preventDefault(); setCenter(c => ({ ...c, lng: c.lng + step })); }
+                else if (e.key === 'Enter' || e.key === ' ') {
+                  e.preventDefault();
+                  if (tool === 'pin') saveMarks([...marks, { type: 'pin', ...center, label: '', id: Date.now() }]);
+                  else if (tool === 'text') { const txt = prompt('Annotation text:'); if (txt) saveMarks([...marks, { type: 'text', ...center, label: txt, id: Date.now() }]); }
+                }
+              }}
+              onMouseDown={onDown} onMouseMove={onMove} onMouseUp={onUp} onMouseLeave={onUp}
+              onTouchStart={onDown} onTouchMove={onMove} onTouchEnd={onUp}
+              style={{ position: 'absolute', inset: 0, zIndex: 1, width: '100%', height: '100%', border: 'none', padding: 0, background: 'transparent', touchAction: 'none', cursor: tool === 'pan' ? 'grab' : 'crosshair' }}
+            />
             {/* Zoom controls */}
-            <div style={{ position: 'absolute', right: 10, bottom: 10, display: 'flex', flexDirection: 'column', gap: 6 }}>
-              <button onClick={() => setZoom(z => Math.min(19, z + 1))} style={zoomBtn}>+</button>
-              <button onClick={() => setZoom(z => Math.max(12, z - 1))} style={zoomBtn}>−</button>
+            <div style={{ position: 'absolute', right: 10, bottom: 10, zIndex: 2, display: 'flex', flexDirection: 'column', gap: 6 }}>
+              <button type="button" onClick={() => setZoom(z => Math.min(19, z + 1))} style={zoomBtn}>+</button>
+              <button type="button" onClick={() => setZoom(z => Math.max(12, z - 1))} style={zoomBtn}>−</button>
             </div>
             {offline && <div style={{ position: 'absolute', left: 10, top: 10, background: T.amber, color: '#111', fontFamily: SF, fontSize: 10, fontWeight: 800, padding: '3px 8px', borderRadius: 6 }}>OFFLINE</div>}
           </div>
@@ -230,11 +246,11 @@ function OfflineMapScreen({ accent }) {
           {/* Tools */}
           <div style={{ display: 'flex', gap: 8, marginTop: 12 }}>
             {TOOLS.map(t => (
-              <button key={t.k} onClick={() => setTool(t.k)} style={{ flex: 1, background: tool === t.k ? accent : T.bg2, color: tool === t.k ? '#fff' : T.t2, border: `0.5px solid ${tool === t.k ? accent : T.hairMid}`, borderRadius: 11, padding: '11px 6px', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
+              <button type="button" key={t.k} onClick={() => setTool(t.k)} style={{ flex: 1, background: tool === t.k ? accent : T.bg2, color: tool === t.k ? '#fff' : T.t2, border: `0.5px solid ${tool === t.k ? accent : T.hairMid}`, borderRadius: 11, padding: '11px 6px', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer', display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4 }}>
                 {t.i ? React.cloneElement(t.i, { size: 16 }) : null}{t.l}
               </button>
             ))}
-            {marks.length > 0 && <button onClick={() => saveMarks([])} style={{ background: T.bg2, color: T.red, border: `0.5px solid ${T.hairMid}`, borderRadius: 11, padding: '11px', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Clear</button>}
+            {marks.length > 0 && <button type="button" onClick={() => saveMarks([])} style={{ background: T.bg2, color: T.red, border: `0.5px solid ${T.hairMid}`, borderRadius: 11, padding: '11px', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Clear</button>}
           </div>
 
           {/* Offline pack */}
@@ -244,7 +260,7 @@ function OfflineMapScreen({ accent }) {
                 <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: T.t1 }}>Offline tiles</div>
                 <div style={{ fontFamily: SF, fontSize: 11, color: T.t2 }}>{cached} tiles cached on this device</div>
               </div>
-              {cached > 0 && <button onClick={async () => { await Backend.map.clearCache(); setCached(0); }} style={{ background: 'none', border: 'none', color: T.red, fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Clear</button>}
+              {cached > 0 && <button type="button" onClick={async () => { await Backend.map.clearCache(); setCached(0); }} style={{ background: 'none', border: 'none', color: T.red, fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Clear</button>}
             </div>
             {dl ? (
               <div>
@@ -252,7 +268,7 @@ function OfflineMapScreen({ accent }) {
                 <div style={{ fontFamily: SFMono, fontSize: 11, color: T.t2, marginTop: 6 }}>{dl.done}/{dl.total} tiles…</div>
               </div>
             ) : (
-              <button onClick={download} style={{ width: '100%', background: accent, color: '#fff', border: 'none', borderRadius: 11, padding: '13px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+              <button type="button" onClick={download} style={{ width: '100%', background: accent, color: '#fff', border: 'none', borderRadius: 11, padding: '13px', fontFamily: SF, fontSize: 14, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
                 {React.cloneElement(Ic.download, { size: 15 })} Download this area for offline
               </button>
             )}

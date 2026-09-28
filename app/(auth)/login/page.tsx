@@ -50,7 +50,7 @@ function LoginForm() {
           id="email"
           name="email"
           type="email"
-          autoFocus
+
           autoComplete="email"
           required
           value={email}

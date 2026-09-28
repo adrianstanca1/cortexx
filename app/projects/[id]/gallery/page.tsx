@@ -227,15 +227,15 @@ export default function ProjectGalleryPage() {
           role="dialog"
           aria-modal="true"
           aria-label={active.name}
-          onClick={() => setActive(null)}
+
           style={{ position: 'fixed', inset: 0, zIndex: 200, background: 'rgba(2,8,18,0.96)', display: 'flex', flexDirection: 'column' }}
         >
           <button type="button" onClick={() => setActive(null)} aria-label="Close preview" style={{ position: 'absolute', top: 14, right: 14, zIndex: 2, width: 38, height: 38, borderRadius: 19, border: '0.5px solid rgba(255,255,255,0.16)', background: 'rgba(0,0,0,0.55)', color: '#fff', fontSize: 20, cursor: 'pointer' }}>×</button>
-          <div onClick={e => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px 16px 16px' }}>
+          <div role="presentation" onClick={e => e.stopPropagation()} style={{ flex: 1, minHeight: 0, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '56px 16px 16px' }}>
             {/* eslint-disable-next-line @next/next/no-img-element */}
             <img src={active.url} alt={active.name} decoding="async" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: 8 }} />
           </div>
-          <div onClick={e => e.stopPropagation()} style={{ padding: '14px 18px 24px', background: 'var(--surface-raised)', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
+          <div role="presentation" onClick={e => e.stopPropagation()} style={{ padding: '14px 18px 24px', background: 'var(--surface-raised)', borderTop: '0.5px solid rgba(255,255,255,0.08)' }}>
             <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 700, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{active.name}</div>
             <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t3)', marginTop: 3 }}>
               <span style={{ textTransform: 'capitalize' }}>{active.type}</span>

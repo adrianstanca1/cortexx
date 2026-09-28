@@ -217,7 +217,7 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
             </a>
             {item.status === 'draft' && (
               <>
-                <button
+                <button type="button"
                   onClick={markSubmitted}
                   disabled={working}
                   style={{
@@ -235,7 +235,7 @@ export default function Cis300DetailPage({ params }: { params: Promise<{ id: str
                 >
                   Mark submitted
                 </button>
-                <button
+                <button type="button"
                   onClick={remove}
                   disabled={working}
                   style={{
