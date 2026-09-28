@@ -73,7 +73,7 @@
     "speakeasy": "^2.0.0",
     "stripe": "^22.4.0",
     "web-push": "^3.6.7",
-    "web-vitals": "^6.0.1"
+    "web-vitals": "^6.2.2"
   },
   "devDependencies": {
     "@babel/cli": "^7.24.0",
