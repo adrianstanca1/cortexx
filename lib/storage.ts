@@ -25,7 +25,7 @@
  *     resolved by getObjectUrl() at read-time, so toggling between
  *     adapters doesn't require a data migration of stored URLs
  */
-import { randomBytes } from 'node:crypto'
+import { createHash, randomBytes } from 'node:crypto'
 import { createReadStream } from 'node:fs'
 import { mkdir, stat, unlink, writeFile } from 'node:fs/promises'
 import { Readable } from 'node:stream'
@@ -136,6 +136,21 @@ export function isAllowedMime(mimeType: string): boolean {
 
 export function generateStoredName(ext: string): string {
   return `${Date.now()}-${randomBytes(8).toString('hex')}${ext}`
+}
+
+/**
+ * Generate a deterministic object key for one client upload attempt. The client
+ * keeps the same uploadId across retries, so a response lost after persistence
+ * does not create a second object. Organization identity is part of the hash so
+ * an upload id reused in another tenant cannot collide with the first object.
+ */
+export function generateIdempotentStoredName(ext: string, organizationId: string, uploadId: string): string | null {
+  const id = uploadId.trim()
+  if (!/^[A-Za-z0-9_-]{16,128}$/.test(id)) return null
+  if (!/^\.[a-z0-9]{1,5}$/.test(ext)) return null
+  if (!organizationId) return null
+  const digest = createHash('sha256').update(`${organizationId}:${id}`).digest('hex').slice(0, 32)
+  return `upload-${digest}${ext}`
 }
 
 /** Reject path traversal / nested keys. */
