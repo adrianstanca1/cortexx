@@ -124,3 +124,73 @@ test('legacy queue without an owner remains unassigned on the next sign-in', () 
   assert.equal(h.cloud.status().queued, 0);
   assert.equal(JSON.parse(h.data.get('cortexx_sync_queue')).length, 1);
 });
+
+const cursorKey = (ws = 'a', uid = 'user', api = 'https://construction.test') =>
+  `cortexx_last_pull:${encodeURIComponent(api)}:${encodeURIComponent(ws)}:${encodeURIComponent(uid)}`;
+
+test('pull cursors are isolated by workspace, user and API destination', async () => {
+  const h = setup(async () => response({ collections: {}, at: '2026-09-28T08:00:00Z' }), {
+    storage: { cortexx_last_pull: 'unsafe-global-cursor' },
+  });
+  assert.equal(h.cloud.status().lastPull, null);
+  await h.cloud.pull();
+  assert.equal(new URL(h.calls.at(-1).url).searchParams.get('since'), '');
+  const saved = h.cloud.status().lastPull;
+  assert.equal(h.data.get(cursorKey()), saved);
+  await h.cloud.pull();
+  assert.equal(new URL(h.calls.at(-1).url).searchParams.get('since'), saved);
+
+  for (const [ws, uid] of [['b', 'user'], ['a', 'other']]) {
+    h.cloud._authed({ token: token(ws, uid) });
+    assert.equal(h.cloud.status().lastPull, null);
+    await tick();
+    assert.equal(new URL(h.calls.at(-1).url).searchParams.get('since'), '');
+    assert.equal(h.data.get(cursorKey(ws, uid)), saved);
+  }
+  h.cloud._authed({ token: token() });
+  await tick();
+  assert.equal(new URL(h.calls.at(-1).url).searchParams.get('since'), saved);
+  h.cloud.setApi('https://other.test');
+  assert.equal(h.cloud.status().lastPull, null);
+  await h.cloud.pull();
+  assert.equal(new URL(h.calls.at(-1).url).searchParams.get('since'), '');
+  assert.equal(h.data.get(cursorKey('a', 'user', 'https://other.test')), saved);
+  h.cloud.signOut();
+  assert.equal(h.cloud.status().lastPull, null);
+});
+
+test('an older overlapping pull cannot overwrite newer records or their cursor', async () => {
+  const finishes = [];
+  const h = setup(() => new Promise(resolve => finishes.push(resolve)));
+  const older = h.cloud.pull();
+  const newer = h.cloud.pull();
+  finishes[1](response({ collections: { tasks: [{ id: 1, t: 'New' }] }, at: 'new', fullSnapshot: true }));
+  await newer;
+  finishes[0](response({ collections: { tasks: [{ id: 1, t: 'Old' }] }, at: 'old', fullSnapshot: true }));
+  assert.equal(await older, null);
+  assert.equal(h.backend.db.tasks.getSync(1).t, 'New');
+  assert.equal(h.cloud.status().lastPull, 'new');
+});
+
+test('a pull from a signed-out session stays invalid after the same account signs back in', async () => {
+  let finish;
+  const h = setup(() => new Promise(resolve => { finish = resolve; }));
+  const pending = h.cloud.pull();
+  h.cloud.signOut();
+  h.cloud._authed({ token: token() });
+  finish(response({ collections: { tasks: [{ id: 1, t: 'Stale' }] }, at: 'stale' }));
+  assert.equal(await pending, null);
+  assert.equal(h.backend.db.tasks.getSync(1), undefined);
+  assert.equal(h.cloud.status().lastPull, null);
+});
+
+test('a pull racing a local edit does not advance its cursor or erase pending work', async () => {
+  let finish;
+  const h = setup(() => new Promise(resolve => { finish = resolve; }));
+  const pending = h.cloud.pull();
+  await h.cloud.push('tasks', 'update', 1, { id: 1, t: 'Local' });
+  finish(response({ collections: { tasks: [] }, at: 'unsafe', fullSnapshot: true }));
+  assert.equal(await pending, null);
+  assert.equal(h.cloud.status().lastPull, null);
+  assert.equal(h.cloud.status().queued, 1);
+});
