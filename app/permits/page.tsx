@@ -145,7 +145,7 @@ export default function PermitsPage() {
               {permits.length} permits · {permits.filter(p => p.status === 'active').length} active
             </p>
           </div>
-          <button type="button" onClick={openAdd} aria-label="Add permit" style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Add permit" style={{ background: '#b45309', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Raise</span>
           </button>
@@ -156,7 +156,7 @@ export default function PermitsPage() {
         {(['all', 'draft', 'active', 'expired', 'cancelled'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#f59e0b' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#b45309' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {s}
             </button>
           )
@@ -212,7 +212,7 @@ export default function PermitsPage() {
                 <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this permit?</span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                  <button type="button" onClick={() => remove(p.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                  <button type="button" onClick={() => remove(p.id)} style={{ background: '#dc2626', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                 </div>
               </div>
             )}
@@ -242,7 +242,7 @@ export default function PermitsPage() {
               <Field label="Type">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(TYPE_LABEL) as Permit['type'][]).map(t => (
-                    <button type="button" key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#f59e0b' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button type="button" key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#b45309' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {TYPE_LABEL[t]}
                     </button>
                   ))}
@@ -274,7 +274,7 @@ export default function PermitsPage() {
               <Field label="Conditions / controls">
                 <textarea value={form.conditions} onChange={e => setForm(f => ({ ...f, conditions: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} placeholder="Fire watch in attendance, extinguisher within reach, area cleared 6m radius…" />
               </Field>
-              <button type="button" onClick={save} disabled={saving} style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#b45309', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Raise permit'}
               </button>
             </div>

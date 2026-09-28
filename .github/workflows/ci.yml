@@ -249,6 +249,66 @@ jobs:
           if-no-files-found: ignore
           retention-days: 14
 
+  accessibility-e2e:
+    name: accessibility-e2e
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_PASSWORD: test
+          POSTGRES_DB: cortexx_a11y
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U postgres"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://postgres:test@localhost:5432/cortexx_a11y
+      NEXTAUTH_URL: http://127.0.0.1:3000
+      AUTH_URL: http://127.0.0.1:3000
+      NEXTAUTH_SECRET: ci-a11y-secret-not-used-outside-ci
+      AUTH_SECRET: ci-a11y-secret-not-used-outside-ci
+      ADMIN_EMAIL: admin@cortexbuildpro.com
+      ADMIN_PASSWORD: changeme-please-1234
+      E2E_ADMIN_EMAIL: admin@cortexbuildpro.com
+      E2E_ADMIN_PASSWORD: changeme-please-1234
+      DEFAULT_ORG_SLUG: cortexbuildpro
+      DEFAULT_ORG_NAME: Cortexbuild Pro
+      MULTITENANT_ENFORCED: 'true'
+      FULL_A11Y_SWEEP: '1'
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: npm
+      - run: npm ci
+      - run: npx prisma generate
+      - name: Apply migrations
+        run: npx prisma migrate deploy
+      - name: Seed deterministic accessibility account
+        run: npx tsx scripts/seed-e2e.ts
+      - name: Install Chromium
+        run: npm run e2e:install
+      - name: Build production app
+        run: npm run build
+      - name: Full WCAG A/AA route sweep — desktop + mobile
+        run: npx playwright test test/e2e/accessibility-sweep.spec.mjs --project=desktop-chromium --project=mobile-chromium --workers=1 --retries=0
+      - name: Upload accessibility report
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: accessibility-playwright-report
+          path: |
+            playwright-report/
+            test-results/playwright/
+          if-no-files-found: ignore
+          retention-days: 14
+
   browser-e2e:
     name: browser-e2e
     runs-on: ubuntu-latest

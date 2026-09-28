@@ -137,7 +137,7 @@ export default function ToolboxTalksPage() {
               {monthCount} this month · {talks.length} total
             </p>
           </div>
-          <button type="button" onClick={openAdd} aria-label="Log talk" style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Log talk" style={{ background: '#b45309', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Log</span>
           </button>
@@ -192,7 +192,7 @@ export default function ToolboxTalksPage() {
                   <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this talk?</span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button type="button" onClick={() => remove(t.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <button type="button" onClick={() => remove(t.id)} style={{ background: '#dc2626', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </div>
                 </div>
               )}
@@ -237,7 +237,7 @@ export default function ToolboxTalksPage() {
               <Field label="Notes">
                 <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' as const }} />
               </Field>
-              <button type="button" onClick={save} disabled={saving} style={{ background: '#f59e0b', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#b45309', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Log talk'}
               </button>
             </div>

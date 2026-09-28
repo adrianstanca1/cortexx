@@ -134,7 +134,7 @@ export default function SuppliersPage() {
               {suppliers.filter(s => !s.archivedAt).length} active
             </p>
           </div>
-          {permissions.canEdit && <button type="button" onClick={openAdd} aria-label="Add supplier" style={{ background: '#8b5cf6', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          {permissions.canEdit && <button type="button" onClick={openAdd} aria-label="Add supplier" style={{ background: '#7c3aed', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Add</span>
           </button>}
@@ -144,7 +144,7 @@ export default function SuppliersPage() {
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'materials', 'plant', 'services', 'other'] as const).map(c => {
           const active = categoryFilter === c
-          const color = c === 'all' ? '#8b5cf6' : CATEGORY_COLOR[c as Supplier['category']]
+          const color = c === 'all' ? '#7c3aed' : CATEGORY_COLOR[c as Supplier['category']]
           return (
             <button type="button" key={c} onClick={() => setCategoryFilter(c)} style={{ background: active ? color : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {c === 'all' ? 'All' : CATEGORY_LABEL[c as Supplier['category']]}
@@ -196,7 +196,7 @@ export default function SuppliersPage() {
                 <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this supplier?</span>
                 <div style={{ display: 'flex', gap: 6 }}>
                   <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                  <button type="button" onClick={() => remove(s.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                  <button type="button" onClick={() => remove(s.id)} style={{ background: '#dc2626', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                 </div>
               </div>
             )}
@@ -256,7 +256,7 @@ export default function SuppliersPage() {
               <Field label="Notes">
                 <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={2} style={{ ...inputStyle, resize: 'vertical' as const }} />
               </Field>
-              <button type="button" onClick={save} disabled={saving} style={{ background: '#8b5cf6', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#7c3aed', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : editing ? 'Save changes' : 'Add supplier'}
               </button>
             </div>

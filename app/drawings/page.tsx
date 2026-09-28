@@ -392,7 +392,7 @@ export default function DrawingsPage() {
                 {activeDwg.revisions.length >= 2 && (
                   <button type="button"
                     onClick={() => setCompareSelection(prev => prev.length === 0 && activeDwg.revisions.length >= 2 ? [activeDwg.revisions[1].id, activeDwg.revisions[0].id] : [])}
-                    style={{ background: compareSelection.length > 0 ? '#8b5cf6' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: compareSelection.length > 0 ? '#fff' : '#a78bfa', borderRadius: 8, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
+                    style={{ background: compareSelection.length > 0 ? '#7c3aed' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: compareSelection.length > 0 ? '#fff' : '#a78bfa', borderRadius: 8, padding: '4px 10px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}
                   >
                     {compareSelection.length > 0 ? `Comparing ${compareSelection.length}/2` : '✨ Compare revs'}
                   </button>
@@ -425,7 +425,7 @@ export default function DrawingsPage() {
                                 return [...prev, r.id]
                               })
                             }}
-                            style={{ background: isSel ? '#8b5cf6' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: isSel ? '#fff' : '#a78bfa', borderRadius: 6, padding: '4px 8px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', minWidth: 28 }}
+                            style={{ background: isSel ? '#7c3aed' : 'rgba(139,92,246,0.15)', border: '0.5px solid rgba(139,92,246,0.4)', color: isSel ? '#fff' : '#a78bfa', borderRadius: 6, padding: '4px 8px', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', minWidth: 28 }}
                           >
                             {isSel ? selIdx + 1 : '+'}
                           </button>
@@ -451,7 +451,7 @@ export default function DrawingsPage() {
                 <button type="button"
                   onClick={() => runRevCompare(activeDwg.id)}
                   disabled={comparing}
-                  style={{ marginTop: 8, width: '100%', background: '#8b5cf6', border: 'none', color: '#fff', borderRadius: 10, padding: '10px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: comparing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
+                  style={{ marginTop: 8, width: '100%', background: '#7c3aed', border: 'none', color: '#fff', borderRadius: 10, padding: '10px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: comparing ? 'not-allowed' : 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}
                 >
                   ✨ {comparing ? 'Comparing revisions… (30–90s)' : 'Run AI compare'}
                 </button>

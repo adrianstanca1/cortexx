@@ -201,7 +201,7 @@ export default function PhotosPage() {
             All
           </button>
           {projects.map(p => (
-            <button type="button" key={p.id} onClick={() => setFilter(p.id)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === p.id ? '#8b5cf6' : 'rgba(255,255,255,0.06)', color: filter === p.id ? '#090b0d' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === p.id ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <button type="button" key={p.id} onClick={() => setFilter(p.id)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === p.id ? '#7c3aed' : 'rgba(255,255,255,0.06)', color: filter === p.id ? '#090b0d' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === p.id ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               {p.name}
             </button>
           ))}
@@ -239,7 +239,7 @@ export default function PhotosPage() {
                   <img src={p.url!} alt={p.name} style={{ width: '100%', height: '100%', objectFit: 'cover', display: 'block' }} loading="lazy" />
                 </button>
                 {compareMode && isSelected && (
-                  <span style={{ position: 'absolute', top: 4, left: 4, width: 24, height: 24, borderRadius: 12, background: '#8b5cf6', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
+                  <span style={{ position: 'absolute', top: 4, left: 4, width: 24, height: 24, borderRadius: 12, background: '#7c3aed', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, display: 'flex', alignItems: 'center', justifyContent: 'center', pointerEvents: 'none' }}>
                     {selectIndex + 1}
                   </span>
                 )}

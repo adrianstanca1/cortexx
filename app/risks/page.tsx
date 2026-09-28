@@ -171,7 +171,7 @@ export default function RisksPage() {
               {risks.filter(r => r.status === 'open').length} open · {risks.filter(r => r.score >= 15 && r.status !== 'closed').length} high
             </p>
           </div>
-          <button type="button" onClick={openAdd} aria-label="Add risk" style={{ background: '#ef4444', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Add risk" style={{ background: '#dc2626', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Log</span>
           </button>
@@ -206,7 +206,7 @@ export default function RisksPage() {
 
       <div style={{ padding: '0 16px 12px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'open', 'mitigated', 'accepted', 'closed'] as const).map(s => (
-          <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#ef4444' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+          <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#dc2626' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
             {s}
           </button>
         ))}
@@ -256,7 +256,7 @@ export default function RisksPage() {
                   <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this risk?</span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button type="button" onClick={() => remove(r.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <button type="button" onClick={() => remove(r.id)} style={{ background: '#dc2626', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </div>
                 </div>
               )}
@@ -287,7 +287,7 @@ export default function RisksPage() {
               <Field label="Category">
                 <div style={{ display: 'flex', gap: 6, flexWrap: 'wrap' }}>
                   {(Object.keys(CATEGORY_LABEL) as Risk['category'][]).map(c => (
-                    <button type="button" key={c} onClick={() => setForm(f => ({ ...f, category: c }))} style={{ background: form.category === c ? '#ef4444' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.category === c ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button type="button" key={c} onClick={() => setForm(f => ({ ...f, category: c }))} style={{ background: form.category === c ? '#dc2626' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.category === c ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {CATEGORY_LABEL[c]}
                     </button>
                   ))}
@@ -313,7 +313,7 @@ export default function RisksPage() {
               <Field label="Review by">
                 <input type="date" value={form.reviewBy} onChange={e => setForm(f => ({ ...f, reviewBy: e.target.value }))} style={inputStyle} />
               </Field>
-              <button type="button" onClick={save} disabled={saving} style={{ background: '#ef4444', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#dc2626', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Log risk'}
               </button>
             </div>

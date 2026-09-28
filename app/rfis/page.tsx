@@ -183,7 +183,7 @@ export default function RfisPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'open', 'answered', 'closed'] as const).map(t => (
-            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#b45309' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -199,7 +199,7 @@ export default function RfisPage() {
           <IcAlert size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{rfis.length === 0 ? 'No RFIs raised yet' : 'Nothing in this filter'}</p>
           {rfis.length === 0 && projects.length > 0 && (
-            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Raise first RFI
             </button>
           )}
@@ -270,7 +270,7 @@ export default function RfisPage() {
               <input id="field-269" type="date" value={form.dueDate} onChange={e => setForm(p => ({ ...p, dueDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
 
-            <button type="button" onClick={create} disabled={saving || !form.subject.trim() || !form.body.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.subject.trim() || !form.body.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.subject.trim() || !form.body.trim() || !form.projectId} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.subject.trim() || !form.body.trim() || !form.projectId ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Raising…' : <><IcCheck size={16} color="#fff" /> Raise RFI</>}
             </button>
           </div>
@@ -308,7 +308,7 @@ export default function RfisPage() {
               <div>
                 <label htmlFor="field-309" style={labelStyle}>Response</label>
                 <textarea id="field-309" value={responseText} onChange={e => setResponseText(e.target.value)} placeholder={activeRfi.response ? 'Update the existing response…' : 'Answer here…'} rows={4} style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
-                <button type="button" onClick={answer} disabled={saving || !responseText.trim()} style={{ marginTop: 8, padding: '10px 0', borderRadius: 10, background: '#10b981', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving || !responseText.trim() ? 0.5 : 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
+                <button type="button" onClick={answer} disabled={saving || !responseText.trim()} style={{ marginTop: 8, padding: '10px 0', borderRadius: 10, background: '#047857', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer', opacity: saving || !responseText.trim() ? 0.5 : 1, width: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6 }}>
                   <IcSend size={13} color="#fff" /> {saving ? 'Sending…' : (activeRfi.response ? 'Update answer' : 'Answer & mark answered')}
                 </button>
               </div>

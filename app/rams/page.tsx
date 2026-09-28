@@ -268,11 +268,11 @@ export default function RamsPage() {
             </p>
           </div>
           <div style={{ display: 'flex', gap: 8 }}>
-            <button type="button" onClick={() => { setGenProjectId(projects[0]?.id || ''); setShowGenerate(true) }} aria-label="Generate RAMS" style={{ background: '#8b5cf6', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <button type="button" onClick={() => { setGenProjectId(projects[0]?.id || ''); setShowGenerate(true) }} aria-label="Generate RAMS" style={{ background: '#7c3aed', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
               <IcSpark size={14} color="#fff" />
               <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Generate</span>
             </button>
-            <button type="button" onClick={openAdd} aria-label="Add RAMS" style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+            <button type="button" onClick={openAdd} aria-label="Add RAMS" style={{ background: '#15803d', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
               <IcPlus size={14} color="#fff" />
               <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Add</span>
             </button>
@@ -284,7 +284,7 @@ export default function RamsPage() {
         {(['all', 'draft', 'reviewed', 'approved', 'active', 'expired', 'archived'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#22c55e' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#15803d' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {FILTER_LABEL[s]}
             </button>
           )
@@ -370,7 +370,7 @@ export default function RamsPage() {
                   <div style={{ display: 'flex', gap: 6 }}>
                     <input type="text" value={signName} onChange={e => setSignName(e.target.value)} placeholder="Your name" style={{ ...inputStyle, flex: 1 }} />
                     <button type="button" onClick={() => { setSigning(null); setSignAction(null) }} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button type="button" onClick={() => sign(d.id)} style={{ background: '#10b981', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{signAction === 'review' ? 'Submit' : 'Sign'}</button>
+                    <button type="button" onClick={() => sign(d.id)} style={{ background: '#047857', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>{signAction === 'review' ? 'Submit' : 'Sign'}</button>
                   </div>
                 </div>
               )}
@@ -379,7 +379,7 @@ export default function RamsPage() {
                   <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this document?</span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button type="button" onClick={() => remove(d.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <button type="button" onClick={() => remove(d.id)} style={{ background: '#dc2626', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </div>
                 </div>
               )}
@@ -463,7 +463,7 @@ export default function RamsPage() {
               <Field label="Type">
                 <div style={{ display: 'flex', gap: 6 }}>
                   {(Object.keys(TYPE_LABEL) as Rams['type'][]).map(t => (
-                    <button type="button" key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#22c55e' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
+                    <button type="button" key={t} onClick={() => setForm(f => ({ ...f, type: t }))} style={{ background: form.type === t ? '#15803d' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 8, padding: '6px 10px', color: form.type === t ? '#fff' : '#c1d2e8', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>
                       {TYPE_LABEL[t]}
                     </button>
                   ))}
@@ -481,7 +481,7 @@ export default function RamsPage() {
               <Field label="Review by">
                 <input type="date" value={form.reviewBy} onChange={e => setForm(f => ({ ...f, reviewBy: e.target.value }))} style={inputStyle} />
               </Field>
-              <button type="button" onClick={save} disabled={saving} style={{ background: '#22c55e', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#15803d', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : (editingId ? 'Save changes' : 'Save document')}
               </button>
             </div>

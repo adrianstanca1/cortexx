@@ -300,7 +300,7 @@ export default function TeamPage() {
                 </Link>
                 <div style={{ display: 'flex', flexDirection: 'column', alignItems: 'flex-end', gap: 6 }}>
                   {member.onSite && <span style={{ fontSize: 9, fontWeight: 700, color: '#10b981', background: 'rgba(16,185,129,0.15)', padding: '3px 8px', borderRadius: 99, letterSpacing: '0.08em', textTransform: 'uppercase', fontFamily: 'var(--font-system)' }}>On site</span>}
-                  <button type="button" onClick={() => openEditModal(member)} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                  <button type="button" aria-label={`Edit ${member.name}`} onClick={() => openEditModal(member)} style={{ width: 28, height: 28, borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
                     <IcEdit size={13} color="var(--t2)" />
                   </button>
                 </div>
@@ -340,7 +340,7 @@ export default function TeamPage() {
                   setTimesheets(fresh.byMember || [])
                   setToast({ msg: 'All timesheets approved' })
                 }}
-                style={{ padding: '6px 12px', borderRadius: 8, background: '#f59e0b', border: 'none', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-system)' }}
+                style={{ padding: '6px 12px', borderRadius: 8, background: '#b45309', border: 'none', fontSize: 12, fontWeight: 700, color: '#fff', cursor: 'pointer', fontFamily: 'var(--font-system)' }}
               >
                 Approve all
               </button>
@@ -405,7 +405,7 @@ export default function TeamPage() {
                 ))}
               </div>
             </div>
-            <button type="button" onClick={createMember} disabled={saving || !form.name.trim() || !form.role.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() || !form.role.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={createMember} disabled={saving || !form.name.trim() || !form.role.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() || !form.role.trim() ? 0.5 : 1 }}>
               {saving ? 'Adding…' : 'Add member'}
             </button>
           </div>
@@ -441,13 +441,13 @@ export default function TeamPage() {
                 ))}
               </div>
             </div>
-            <button type="button" onClick={saveMemberEdit} disabled={savingEdit || !editForm.name.trim() || !editForm.role.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.name.trim() || !editForm.role.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={saveMemberEdit} disabled={savingEdit || !editForm.name.trim() || !editForm.role.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.name.trim() || !editForm.role.trim() ? 0.5 : 1 }}>
               {savingEdit ? 'Saving…' : 'Save changes'}
             </button>
             {confirmDelete ? (
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" onClick={() => setConfirmDelete(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                <button type="button" onClick={deleteMember} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm remove</button>
+                <button type="button" onClick={deleteMember} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#dc2626', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Confirm remove</button>
               </div>
             ) : (
               <button type="button" onClick={() => setConfirmDelete(true)} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>

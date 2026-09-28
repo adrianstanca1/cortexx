@@ -97,7 +97,7 @@ export default function InstallHint() {
       {hint === 'native' && (
         <button type="button"
           onClick={install}
-          style={{ background: '#f59e0b', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          style={{ background: '#b45309', color: '#fff', border: 'none', borderRadius: 10, padding: '8px 14px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
         >
           Install
         </button>

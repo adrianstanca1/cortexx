@@ -166,7 +166,7 @@ export default function FieldProductivityPage() {
           </div>
           <button type="button" onClick={() => setShowForm(v => !v)} style={primaryBtn}>{showForm ? 'Close' : '+ Log output'}</button>
         </div>
-        <select value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
+        <select aria-label="Project" value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
           {!projects.length && <option value="">No active project</option>}
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>

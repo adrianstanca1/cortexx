@@ -174,7 +174,7 @@ export default function OrganizationSettingsPage() {
         {loading ? (
           <div style={{ color: 'var(--t3)', fontSize: 12, fontFamily: 'var(--font-system)' }}>Loading…</div>
         ) : error ? (
-          <div style={{ color: '#ef4444', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
+          <div style={{ color: '#f87171', fontSize: 13, fontFamily: 'var(--font-system)' }}>{error}</div>
         ) : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
             {members.map(m => (
@@ -218,7 +218,7 @@ export default function OrganizationSettingsPage() {
                 {canManage && m.role !== 'owner' && (
                   <button type="button"
                     onClick={() => removeMember(m.id, m.email)}
-                    style={{ background: 'transparent', border: 'none', color: '#ef4444', cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 12, padding: '4px 8px' }}
+                    style={{ background: 'transparent', border: 'none', color: '#f87171', cursor: 'pointer', fontFamily: 'var(--font-system)', fontSize: 12, padding: '4px 8px' }}
                   >
                     Remove
                   </button>

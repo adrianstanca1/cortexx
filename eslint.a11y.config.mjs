@@ -34,7 +34,13 @@ const config = [
       '@next/next': nextPlugin,
       'react-hooks': reactHooks,
     },
-    rules: jsxA11y.configs.recommended.rules,
+    rules: {
+      ...jsxA11y.configs.recommended.rules,
+      // WCAG requires keyboard access to scrollable regions. Allow tabIndex
+      // specifically on named ARIA regions while keeping the rule strict for
+      // ordinary non-interactive elements.
+      'jsx-a11y/no-noninteractive-tabindex': ['error', { roles: ['region'] }],
+    },
   },
 ]
 

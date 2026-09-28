@@ -53,4 +53,20 @@ Runtime remediation completed in this pass includes:
 - corrected mapped project-form label/control associations;
 - replaced focusable full-screen backdrop divs with native backdrop buttons without adding spurious tab stops.
 
-Final rendered result: all six accessibility E2E journeys pass on desktop and mobile with zero WCAG A/AA violations.
+Final rendered result:
+- the focused accessibility suite passes authentication, critical authenticated workflows and critical creation dialogs on desktop and mobile with zero WCAG A/AA violations;
+- the complete rendered sweep covers all **115 non-dynamic application routes** and passes **115/115 on desktop Chromium and 115/115 on mobile Chromium** with zero accepted violations;
+- redirecting routes wait for a stable document title before analysis, preventing transient navigation states from being mistaken for product defects;
+- a dedicated `accessibility-e2e` GitHub CI job provisions its own PostgreSQL database, applies migrations, seeds deterministic tenant data, builds the production app, and runs the complete desktop/mobile sweep;
+- regular browser shards skip the expensive full sweep, so regression protection is comprehensive without multiplying normal matrix cost.
+
+The runtime pass also resolved the remaining rendered-only defects that static lint could not detect: unlabeled selects and icon controls, mobile/form accessible-name gaps, light accent text on dark cards, white text on bright amber/blue/green actions, priority/status pill contrast, and shared dashboard action contrast.
+
+
+## Completion review corrections
+
+- Restored status-pill backgrounds and ghost borders for CSS variables and RGB colours by using `color-mix` instead of appending hex alpha suffixes. A rendered regression checks all eight colour/variant combinations.
+- Accessibility journeys now reject missing/failed HTTP responses and unexpected login or registration redirects, instead of accepting an accessible error page as a passing application route.
+- Corrected low-contrast bank credit amounts and saved-result labels introduced by the colour pass.
+- Integrated the previously separate canvas fixes: spaces and Enter work while renaming; keyboard focus activation remains available; backdrop/margin dismissal works without dismissing clicks inside the artboard. Desktop and mobile regressions are included in the regular browser suite.
+- Full browser verification uses an isolated PostgreSQL database and the production build. Merge remains conditional on green CI for the final commit.

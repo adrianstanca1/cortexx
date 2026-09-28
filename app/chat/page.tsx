@@ -139,7 +139,7 @@ export default function ChatIndexPage() {
               {items.filter(i => !i.archivedAt).length} active conversation{items.filter(i => !i.archivedAt).length === 1 ? '' : 's'}
             </p>
           </div>
-          <button type="button" onClick={() => setShowCompose(true)} aria-label="New conversation" style={{ padding: '8px 14px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowCompose(true)} aria-label="New conversation" style={{ padding: '8px 14px', borderRadius: 10, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             + New
           </button>
         </div>
@@ -153,7 +153,7 @@ export default function ChatIndexPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcBell size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No conversations yet</p>
-          <button type="button" onClick={() => setShowCompose(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowCompose(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Start one
           </button>
         </div>
@@ -202,7 +202,7 @@ export default function ChatIndexPage() {
               <input id="field-201" value={form.title} onChange={e => setForm(p => ({ ...p, title: e.target.value }))} placeholder="What's this thread about?" style={inputStyle} />
             </div>
 
-            <button type="button" onClick={create} disabled={saving || !form.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={create} disabled={saving || !form.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() ? 0.5 : 1 }}>
               {saving ? 'Creating…' : 'Start chat'}
             </button>
           </div>

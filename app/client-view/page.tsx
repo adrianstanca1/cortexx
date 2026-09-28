@@ -114,7 +114,7 @@ export default function ClientViewPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcLayers size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No projects yet</p>
-          <Link href="/projects" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#10b981', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Create one</Link>
+          <Link href="/projects" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#047857', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Create one</Link>
         </div>
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 14 }}>
@@ -162,7 +162,7 @@ export default function ClientViewPage() {
                       <div style={{ fontFamily: SF, fontSize: 14, fontWeight: 600, color: 'var(--t1)' }}>{p.name}</div>
                       {p.clientName && <div style={{ fontFamily: SF, fontSize: 11, color: 'var(--t2)', marginTop: 1 }}>{p.clientName}</div>}
                     </div>
-                    <button type="button" onClick={() => createOrRotate(p)} disabled={working === p.id} style={{ background: '#10b981', border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+                    <button type="button" onClick={() => createOrRotate(p)} disabled={working === p.id} style={{ background: '#047857', border: 'none', color: '#fff', borderRadius: 8, padding: '6px 12px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
                       <IcCheck size={12} color="#fff" /> {working === p.id ? '…' : 'Create link'}
                     </button>
                   </div>

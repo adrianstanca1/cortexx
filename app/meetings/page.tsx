@@ -148,7 +148,7 @@ export default function MeetingsPage() {
               {meetings.filter(m => m.status === 'scheduled' && new Date(m.scheduledAt) > new Date()).length} upcoming
             </p>
           </div>
-          <button type="button" onClick={openAdd} aria-label="Schedule meeting" style={{ background: '#06b6d4', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Schedule meeting" style={{ background: '#0e7490', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Schedule</span>
           </button>
@@ -157,7 +157,7 @@ export default function MeetingsPage() {
 
       <div style={{ padding: '12px 16px', display: 'flex', gap: 6, overflowX: 'auto' }}>
         {(['all', 'scheduled', 'completed', 'cancelled'] as const).map(s => (
-          <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#06b6d4' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+          <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: statusFilter === s ? '#0e7490' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: statusFilter === s ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
             {s}
           </button>
         ))}
@@ -217,7 +217,7 @@ export default function MeetingsPage() {
                     ))}
                     <div style={{ display: 'flex', gap: 6, marginTop: 6 }}>
                       <input type="text" value={newAction} onChange={e => setNewAction(e.target.value)} onKeyDown={e => { if (e.key === 'Enter') addAction(m) }} placeholder="New action…" style={{ ...inputStyle, flex: 1 }} />
-                      <button type="button" onClick={() => addAction(m)} style={{ background: '#06b6d4', border: 'none', borderRadius: 8, padding: '6px 12px', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Add</button>
+                      <button type="button" onClick={() => addAction(m)} style={{ background: '#0e7490', border: 'none', borderRadius: 8, padding: '6px 12px', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer' }}>Add</button>
                     </div>
                   </div>
 
@@ -236,7 +236,7 @@ export default function MeetingsPage() {
                   <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this meeting?</span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button type="button" onClick={() => remove(m.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <button type="button" onClick={() => remove(m.id)} style={{ background: '#dc2626', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </div>
                 </div>
               )}
@@ -278,7 +278,7 @@ export default function MeetingsPage() {
               <Field label="Attendees (one per line)">
                 <textarea value={form.attendees} onChange={e => setForm(f => ({ ...f, attendees: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
               </Field>
-              <button type="button" onClick={save} disabled={saving} style={{ background: '#06b6d4', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#0e7490', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Schedule'}
               </button>
             </div>

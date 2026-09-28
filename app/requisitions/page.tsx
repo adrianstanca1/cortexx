@@ -322,7 +322,7 @@ function ProcurementNav({ active }: { active: 'requisitions' | 'rfqs' | 'pos' })
         <Link key={key} href={href} style={{
           flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px',
           fontFamily: SF, fontSize: 11, fontWeight: 700,
-          background: active === key ? '#f59e0b' : 'var(--surface-raised)',
+          background: active === key ? '#b45309' : 'var(--surface-raised)',
           color: active === key ? '#fff' : 'var(--t2)',
         }}>{label}</Link>
       ))}
@@ -356,10 +356,10 @@ const cardStyle: React.CSSProperties = { background: 'var(--surface-raised)', bo
 const monoSmall: React.CSSProperties = { fontFamily: 'ui-monospace, monospace', fontSize: 10, color: 'var(--t2)', fontWeight: 700 }
 const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 9, padding: '9px 10px', color: 'var(--t1)', fontFamily: SF, fontSize: 12, outline: 'none' }
 const labelStyle: React.CSSProperties = { marginTop: 3, fontFamily: SF, fontSize: 11, color: 'var(--t2)', fontWeight: 700 }
-const primaryBtn: React.CSSProperties = { background: '#f59e0b', border: 0, borderRadius: 10, padding: 11, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }
+const primaryBtn: React.CSSProperties = { background: '#b45309', border: 0, borderRadius: 10, padding: 11, color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }
 const primaryIconBtn: React.CSSProperties = { width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center' }
 const smallBtn: React.CSSProperties = { background: 'var(--bg3)', border: '0.5px solid rgba(255,255,255,.12)', borderRadius: 8, padding: '5px 9px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }
 const dangerTextBtn: React.CSSProperties = { justifySelf: 'start', background: 'transparent', border: 0, color: '#fca5a5', fontFamily: SF, fontSize: 10, cursor: 'pointer' }
 const actionBtn = (color: string): React.CSSProperties => ({ background: color + '20', color, border: `0.5px solid ${color}66`, borderRadius: 8, padding: '6px 9px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
 const statusPill = (color: string): React.CSSProperties => ({ background: color + '22', color, border: `0.5px solid ${color}55`, borderRadius: 99, padding: '2px 7px', fontFamily: SF, fontSize: 9, fontWeight: 800, textTransform: 'uppercase' })
-const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#f59e0b' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })
+const filterButton = (active: boolean): React.CSSProperties => ({ flexShrink: 0, background: active ? '#b45309' : 'var(--surface-raised)', color: active ? '#fff' : 'var(--t2)', border: 0, borderRadius: 99, padding: '6px 11px', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' })

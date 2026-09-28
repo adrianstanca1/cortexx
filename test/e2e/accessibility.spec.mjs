@@ -1,5 +1,6 @@
 import { test, expect } from '@playwright/test'
 import AxeBuilder from '@axe-core/playwright'
+import { assertRouteHealth } from './helpers/route-health.mjs'
 import { signIn } from './helpers/auth.mjs'
 
 const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
@@ -30,7 +31,8 @@ function formatViolations(route, violations) {
 }
 
 async function analyze(page, route) {
-  await page.goto(route, { waitUntil: 'domcontentloaded' })
+  const response = await page.goto(route, { waitUntil: 'domcontentloaded' })
+  assertRouteHealth(response, route, page.url())
   await expect(page.locator('body')).toBeVisible()
   const results = await new AxeBuilder({ page })
     .withTags(['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa'])
@@ -68,7 +70,8 @@ test('critical creation dialogs have no WCAG A/AA violations', async ({ page }) 
   ]
   const findings = []
   for (const item of dialogs) {
-    await page.goto(item.route, { waitUntil: 'domcontentloaded' })
+    const response = await page.goto(item.route, { waitUntil: 'domcontentloaded' })
+    assertRouteHealth(response, item.route, page.url())
     if (item.open) await page.getByRole(item.open[0], { name: item.open[1], exact: true }).click()
     if (item.ready) await expect(page.getByRole(item.ready[0], { name: item.ready[1], exact: true })).toBeVisible()
     else await page.waitForTimeout(150)
@@ -77,5 +80,26 @@ test('critical creation dialogs have no WCAG A/AA violations', async ({ page }) 
       .analyze()
     findings.push(...formatViolations(item.route + ' [open]', results.violations))
   }
+  expect(findings, findings.join('\n')).toEqual([])
+})
+
+test('core dynamic project workspaces have no WCAG A/AA violations', async ({ page }) => {
+  test.setTimeout(180_000)
+  await signIn(page, email, password, { dashboard: true })
+  const response = await page.context().request.get('/api/projects')
+  expect(response.ok()).toBeTruthy()
+  const payload = await response.json()
+  const project = payload.projects?.[0] || payload[0]
+  expect(project?.id).toBeTruthy()
+
+  const routes = [
+    '/projects/' + project.id,
+    '/projects/' + project.id + '/board',
+    '/projects/' + project.id + '/gallery',
+    '/projects/' + project.id + '/programme',
+    '/projects/' + project.id + '/programme/resources',
+  ]
+  const findings = []
+  for (const route of routes) findings.push(...await analyze(page, route))
   expect(findings, findings.join('\n')).toEqual([])
 })

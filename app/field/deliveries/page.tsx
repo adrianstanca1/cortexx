@@ -185,7 +185,7 @@ export default function FieldDeliveriesPage() {
             <p style={{ margin: '3px 0 0', color: 'var(--t2)', fontFamily: SF, fontSize: 11 }}>Expected materials, shortages and goods received.</p>
           </div>
         </div>
-        <select value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
+        <select aria-label="Project" value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
           {!projects.length && <option value="">No active project</option>}
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>

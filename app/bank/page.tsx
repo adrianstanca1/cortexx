@@ -190,12 +190,12 @@ export default function BankPage() {
       <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 9 }}><IcChevL size={18} color="var(--t3)" /><span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span></Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <div><h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 800, color: 'var(--t1)' }}>Bank reconciliation</h1><p style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>Bank feed → invoices, valuations and subcontract payments</p></div>
-        <button type="button" onClick={() => setShowAdd(true)} style={roundAction}><IcPlus size={18} color="#fff" /></button>
+        <button type="button" aria-label="Add bank transaction" onClick={() => setShowAdd(true)} style={roundAction}><IcPlus size={18} color="#fff" /></button>
       </div>
       <div style={{ display: 'flex', gap: 6, marginTop: 10, flexWrap: 'wrap' }}>
-        <button type="button" onClick={connectBank} disabled={connecting} style={pillBtn(bankingConfigured ? '#2563eb' : 'var(--t3)')}>{connecting ? 'Connecting…' : bankingConfigured ? 'Connect bank' : 'Bank feed not configured'}</button>
-        <button type="button" onClick={importBankFeed} disabled={importing || bankingConfigured === false} style={pillBtn('#10b981')}>{importing ? 'Syncing…' : 'Sync bank feed'}</button>
-        <button type="button" onClick={() => csvInputRef.current?.click()} disabled={csvImporting} style={pillBtn('#8b5cf6')}>{csvImporting ? 'Importing CSV…' : 'Import CSV statement'}</button>
+        <button type="button" onClick={connectBank} disabled={connecting} style={pillBtn(bankingConfigured ? '#2563eb' : '#475569')}>{connecting ? 'Connecting…' : bankingConfigured ? 'Connect bank' : 'Bank feed not configured'}</button>
+        <button type="button" onClick={importBankFeed} disabled={importing || bankingConfigured === false} style={pillBtn('#047857')}>{importing ? 'Syncing…' : 'Sync bank feed'}</button>
+        <button type="button" onClick={() => csvInputRef.current?.click()} disabled={csvImporting} style={pillBtn('#7c3aed')}>{csvImporting ? 'Importing CSV…' : 'Import CSV statement'}</button>
         <input
           ref={csvInputRef}
           type="file"
@@ -217,13 +217,13 @@ export default function BankPage() {
       <Kpi label="To allocate" value={money(summary.unallocatedValue)} color="var(--t1)" />
     </section>
 
-    <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '12px 16px 4px' }}>{(['all', 'unmatched', 'partial', 'reconciled', 'ignored'] as const).map(s => <button key={s} type="button" onClick={() => setFilter(s)} style={{ ...pillBtn(filter === s ? '#2563eb' : '#334b68'), color: filter === s ? '#fff' : 'var(--t2)' }}>{s === 'all' ? 'All' : s[0].toUpperCase() + s.slice(1)}</button>)}</div>
+    <div style={{ display: 'flex', gap: 6, overflowX: 'auto', padding: '12px 16px 4px' }}>{(['all', 'unmatched', 'partial', 'reconciled', 'ignored'] as const).map(s => <button key={s} type="button" onClick={() => setFilter(s)} style={{ ...pillBtn(filter === s ? '#2563eb' : '#334b68'), color: filter === s ? '#fff' : '#e5e7eb' }}>{s === 'all' ? 'All' : s[0].toUpperCase() + s.slice(1)}</button>)}</div>
 
     {loading ? <div style={emptyStyle}>Loading bank transactions…</div> : visible.length === 0 ? <div style={emptyStyle}>No transactions in this view.</div> : <main style={{ padding: '10px 16px', display: 'grid', gap: 8 }}>
       {visible.map(item => {
         const credit = Number(item.amount) > 0
         return <button key={item.id} type="button" onClick={() => openTransaction(item)} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 13, padding: 13, textAlign: 'left', cursor: 'pointer' }}>
-          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><div style={{ minWidth: 0 }}><div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 750, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description || item.reference || item.accountName || 'Bank transaction'}</div><div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', marginTop: 3 }}>{item.occurredAt ? new Date(item.occurredAt).toLocaleDateString('en-GB') : 'No date'} · {item.accountName || item.source}</div></div><div style={{ textAlign: 'right', flexShrink: 0 }}><div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15, fontWeight: 850, color: credit ? '#10b981' : 'var(--t1)' }}>{credit ? '+' : '−'}{money(Math.abs(Number(item.amount) || 0), item.currency)}</div><span style={{ display: 'inline-block', marginTop: 4, borderRadius: 99, padding: '2px 7px', background: STATUS_COLOR[item.status] + '20', color: STATUS_COLOR[item.status], fontFamily: SF, fontSize: 8, fontWeight: 900, textTransform: 'uppercase' }}>{item.status}</span></div></div>
+          <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12 }}><div style={{ minWidth: 0 }}><div style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)', fontWeight: 750, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{item.description || item.reference || item.accountName || 'Bank transaction'}</div><div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t2)', marginTop: 3 }}>{item.occurredAt ? new Date(item.occurredAt).toLocaleDateString('en-GB') : 'No date'} · {item.accountName || item.source}</div></div><div style={{ textAlign: 'right', flexShrink: 0 }}><div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 15, fontWeight: 850, color: credit ? '#34d399' : 'var(--t1)' }}>{credit ? '+' : '−'}{money(Math.abs(Number(item.amount) || 0), item.currency)}</div><span style={{ display: 'inline-block', marginTop: 4, borderRadius: 99, padding: '2px 7px', background: STATUS_COLOR[item.status] + '20', color: STATUS_COLOR[item.status], fontFamily: SF, fontSize: 8, fontWeight: 900, textTransform: 'uppercase' }}>{item.status}</span></div></div>
           {item.status === 'partial' && <div style={{ marginTop: 7, fontFamily: SF, fontSize: 10, color: 'var(--t2)' }}>{money(item.reconciliation.allocated)} allocated · {money(item.reconciliation.remaining)} remaining</div>}
         </button>
       })}
@@ -256,7 +256,7 @@ const roundAction: React.CSSProperties = { width: 38, height: 38, border: 0, bor
 function pillBtn(background: string): React.CSSProperties { return { border: '1px solid rgba(255,255,255,0.08)', borderRadius: 99, background, color: '#fff', padding: '6px 10px', fontFamily: SF, fontSize: 10, fontWeight: 800, cursor: 'pointer' } }
 const emptyStyle: React.CSSProperties = { padding: 44, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 13 }
 const inputStyle: React.CSSProperties = { width: '100%', boxSizing: 'border-box', background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.10)', borderRadius: 9, color: 'var(--t1)', padding: '10px 11px', fontFamily: SF, fontSize: 12, outline: 'none' }
-const primaryBtn: React.CSSProperties = { minHeight: 44, border: 0, borderRadius: 11, background: '#f59e0b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: SF, fontSize: 13, fontWeight: 800, cursor: 'pointer' }
+const primaryBtn: React.CSSProperties = { minHeight: 44, border: 0, borderRadius: 11, background: '#b45309', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: SF, fontSize: 13, fontWeight: 800, cursor: 'pointer' }
 const secondaryBtn: React.CSSProperties = { minHeight: 40, border: '1px solid rgba(255,255,255,0.12)', borderRadius: 10, background: 'rgba(255,255,255,0.04)', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 800, cursor: 'pointer' }
 const smallDanger: React.CSSProperties = { border: '1px solid rgba(239,68,68,0.35)', borderRadius: 7, background: 'rgba(239,68,68,0.08)', color: '#ef4444', padding: '5px 7px', fontFamily: SF, fontSize: 9, fontWeight: 800, cursor: 'pointer' }
 const sectionLabel: React.CSSProperties = { fontFamily: SF, fontSize: 9, color: 'var(--t2)', fontWeight: 900, textTransform: 'uppercase', marginBottom: 6 }

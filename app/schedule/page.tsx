@@ -130,7 +130,7 @@ export default function SchedulePage() {
           </div>
           <div style={{ display: 'flex', gap: 4 }}>
             {([4, 8, 12] as const).map(w => (
-              <button type="button" key={w} onClick={() => setWeeks(w)} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: weeks === w ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: weeks === w ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{w}w</button>
+              <button type="button" key={w} onClick={() => setWeeks(w)} style={{ padding: '5px 10px', borderRadius: 8, border: 'none', background: weeks === w ? '#0e7490' : 'rgba(255,255,255,0.06)', color: weeks === w ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer' }}>{w}w</button>
             ))}
           </div>
         </div>
@@ -163,7 +163,7 @@ export default function SchedulePage() {
           <IcClock size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No tasks scheduled in this window</p>
           <p style={{ marginTop: 4, fontSize: 12 }}>Tasks need a due date to appear on the schedule.</p>
-          <Link href="/tasks" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Open tasks</Link>
+          <Link href="/tasks" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#0e7490', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Open tasks</Link>
         </div>
       ) : (
         <div style={{ overflowX: 'auto', paddingBottom: 20 }}>
@@ -245,7 +245,7 @@ export default function SchedulePage() {
 const navBtn: React.CSSProperties = { width: 32, height: 32, borderRadius: 8, background: 'rgba(255,255,255,0.06)', border: '0.5px solid rgba(255,255,255,0.07)', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }
 const chip = (active: boolean): React.CSSProperties => ({
   flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none',
-  background: active ? '#06b6d4' : 'rgba(255,255,255,0.06)',
+  background: active ? '#0e7490' : 'rgba(255,255,255,0.06)',
   color: active ? '#fff' : 'var(--t3)',
   fontFamily: SF, fontSize: 11, fontWeight: active ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap',
 })

@@ -506,7 +506,7 @@ export default function ProjectDetailPage() {
           <div style={{ display: 'flex', alignItems: 'center', gap: 10 }}>
             <Link href={`/projects/${id}/board`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(245,158,11,0.1)', border: '0.5px solid rgba(245,158,11,0.2)', color: '#f59e0b', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Board</Link>
             <Link href={`/projects/${id}/programme`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: '0.5px solid rgba(16,185,129,0.2)', color: '#10b981', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Programme</Link>
-            <Link href={`/projects/${id}/gallery`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(37,99,235,0.1)', border: '0.5px solid rgba(37,99,235,0.2)', color: '#2563eb', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Gallery</Link>
+            <Link href={`/projects/${id}/gallery`} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(37,99,235,0.1)', border: '0.5px solid rgba(37,99,235,0.2)', color: '#60a5fa', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', textDecoration: 'none', fontWeight: 600 }}>Gallery</Link>
             <button type="button" onClick={() => { setEditForm({ status: project.status, progress: project.progress.toString(), budget: project.budget.toString(), name: project.name, clientName: project.clientName, startDate: project.startDate?.split('T')[0] || '', endDate: project.endDate?.split('T')[0] || '' }); setConfirmDeleteProject(false); setShowEditModal(true) }} style={{ padding: '6px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: '0.5px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer' }}>Edit</button>
             <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 28, fontWeight: 700, color: sc }}>{project.progress}<span style={{ fontSize: 14, color: 'var(--t3)' }}>%</span></div>
           </div>
@@ -617,7 +617,7 @@ export default function ProjectDetailPage() {
           <div>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: 12 }}>
               <span style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)' }}>{openTasks.length} open · {doneTasks.length} done</span>
-              <button type="button" onClick={() => setShowTaskModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+              <button type="button" onClick={() => setShowTaskModal(true)} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '7px 14px', borderRadius: 10, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={14} color="#fff" /> Add task
               </button>
             </div>
@@ -777,7 +777,7 @@ export default function ProjectDetailPage() {
                 const nextNum = (project.invoices?.length || 0) + 1
                 setInvoiceForm({ number: `INV-${String(nextNum).padStart(3, '0')}`, clientName: project.clientName, amount: '', dueDate: '', status: 'draft' })
                 setShowInvoiceModal(true)
-              }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
+              }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={12} color="#fff" /> Add invoice
               </button>
             </div>
@@ -858,7 +858,7 @@ export default function ProjectDetailPage() {
                 {project.assignments?.map(a => a.member && <option key={a.member.id} value={a.member.id}>{a.member.name}</option>)}
               </select>
             </div>
-            <button type="button" onClick={createTask} disabled={savingTask || !taskForm.title.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingTask || !taskForm.title.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={createTask} disabled={savingTask || !taskForm.title.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingTask || !taskForm.title.trim() ? 0.5 : 1 }}>
               {savingTask ? 'Adding…' : 'Add task'}
             </button>
           </div>
@@ -896,7 +896,7 @@ export default function ProjectDetailPage() {
                 ))}
               </div>
             </div>
-            <button type="button" onClick={createInvoice} disabled={savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate ? 0.5 : 1 }}>
+            <button type="button" onClick={createInvoice} disabled={savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate ? 0.5 : 1 }}>
               {savingInvoice ? 'Creating…' : 'Create invoice'}
             </button>
           </div>
@@ -944,7 +944,7 @@ export default function ProjectDetailPage() {
               <label htmlFor="field-944" style={labelStyle}>End date</label>
               <input id="field-944" type="date" value={editForm.endDate} onChange={e => setEditForm(p => ({ ...p, endDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
-            <button type="button" onClick={saveEdit} disabled={savingEdit} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit ? 0.5 : 1 }}>
+            <button type="button" onClick={saveEdit} disabled={savingEdit} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit ? 0.5 : 1 }}>
               {savingEdit ? 'Saving…' : 'Save changes'}
             </button>
 
@@ -961,7 +961,7 @@ export default function ProjectDetailPage() {
             {confirmDeleteProject ? (
               <div style={{ display: 'flex', gap: 8 }}>
                 <button type="button" onClick={() => setConfirmDeleteProject(false)} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'var(--t2)', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>Cancel</button>
-                <button type="button" onClick={deleteProject} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#ef4444', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Delete forever</button>
+                <button type="button" onClick={deleteProject} style={{ flex: 1, padding: '12px 0', borderRadius: 14, background: '#dc2626', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, cursor: 'pointer' }}>Delete forever</button>
               </div>
             ) : (
               <button type="button" onClick={() => setConfirmDeleteProject(true)} style={{ padding: '12px 0', borderRadius: 14, background: 'rgba(239,68,68,0.1)', border: '1px solid rgba(239,68,68,0.2)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 600, cursor: 'pointer' }}>
@@ -1063,7 +1063,7 @@ export default function ProjectDetailPage() {
               <label htmlFor="field-1063" style={labelStyle}>Expiry date</label>
               <input id="field-1063" type="date" value={docForm.expiresAt} onChange={e => setDocForm(p => ({ ...p, expiresAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
             </div>
-            <button type="button" onClick={createDocument} disabled={savingDoc || !docForm.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingDoc || !docForm.name.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={createDocument} disabled={savingDoc || !docForm.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingDoc || !docForm.name.trim() ? 0.5 : 1 }}>
               {savingDoc ? 'Adding…' : 'Add document'}
             </button>
           </div>

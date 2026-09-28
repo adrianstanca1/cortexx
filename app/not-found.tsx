@@ -14,7 +14,7 @@ export default function NotFound() {
       </p>
       <Link
         href="/dashboard"
-        style={{ background: '#f59e0b', color: '#fff', borderRadius: 12, padding: '12px 24px', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}
+        style={{ background: '#b45309', color: '#fff', borderRadius: 12, padding: '12px 24px', fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700, textDecoration: 'none' }}
       >
         Go to dashboard
       </Link>

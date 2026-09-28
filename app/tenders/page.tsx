@@ -139,7 +139,7 @@ export default function TendersPage() {
               Pipeline {money(pipelineValue)} · won {money(wonValue)}
             </p>
           </div>
-          <button type="button" onClick={openAdd} aria-label="Add tender" style={{ background: '#3b82f6', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Add tender" style={{ background: '#2563eb', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Add</span>
           </button>
@@ -150,7 +150,7 @@ export default function TendersPage() {
         {(['all', 'draft', 'submitted', 'won', 'lost', 'withdrawn'] as const).map(s => {
           const active = statusFilter === s
           return (
-            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#3b82f6' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
+            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ background: active ? '#1d4ed8' : 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.1)', borderRadius: 999, padding: '6px 12px', cursor: 'pointer', fontFamily: SF, fontSize: 12, color: active ? '#fff' : '#c1d2e8', fontWeight: 600, flexShrink: 0, textTransform: 'capitalize' }}>
               {s}
             </button>
           )
@@ -201,7 +201,7 @@ export default function TendersPage() {
                   <span style={{ fontFamily: SF, fontSize: 12, color: '#fca5a5' }}>Delete this tender?</span>
                   <div style={{ display: 'flex', gap: 6 }}>
                     <button type="button" onClick={() => setConfirmDelete(null)} style={{ background: 'transparent', border: '0.5px solid rgba(255,255,255,0.2)', borderRadius: 6, padding: '4px 10px', color: '#c1d2e8', fontFamily: SF, fontSize: 11, cursor: 'pointer' }}>Cancel</button>
-                    <button type="button" onClick={() => remove(t.id)} style={{ background: '#ef4444', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
+                    <button type="button" onClick={() => remove(t.id)} style={{ background: '#dc2626', border: 'none', borderRadius: 6, padding: '4px 10px', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 600, cursor: 'pointer' }}>Delete</button>
                   </div>
                 </div>
               )}
@@ -243,7 +243,7 @@ export default function TendersPage() {
               <Field label="Notes">
                 <textarea value={form.notes} onChange={e => setForm(f => ({ ...f, notes: e.target.value }))} rows={3} style={{ ...inputStyle, resize: 'vertical' as const }} />
               </Field>
-              <button type="button" onClick={save} disabled={saving} style={{ background: '#3b82f6', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
+              <button type="button" onClick={save} disabled={saving} style={{ background: '#1d4ed8', border: 'none', borderRadius: 10, padding: 12, color: '#fff', fontFamily: SF, fontSize: 14, fontWeight: 600, cursor: saving ? 'not-allowed' : 'pointer', opacity: saving ? 0.6 : 1 }}>
                 {saving ? 'Saving…' : 'Save tender'}
               </button>
             </div>

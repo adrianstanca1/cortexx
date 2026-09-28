@@ -405,11 +405,11 @@ export default function InnovationPage() {
                 {data?.permissions.write && (
                   <form onSubmit={createIdea} className="idea-form">
                     <input value={ideaTitle} onChange={e => setIdeaTitle(e.target.value)} placeholder="Capture an improvement…" style={input} />
-                    <select value={ideaArea} onChange={e => setIdeaArea(e.target.value)} style={selectSmall}>
+                    <select aria-label="Improvement area" value={ideaArea} onChange={e => setIdeaArea(e.target.value)} style={selectSmall}>
                       <option value="productivity">Productivity</option><option value="safety">Safety</option><option value="quality">Quality</option><option value="logistics">Logistics</option><option value="procurement">Procurement</option><option value="carbon">Carbon</option><option value="digital">Digital</option><option value="programme">Programme</option><option value="commercial">Commercial</option><option value="other">Other</option>
                     </select>
-                    <select value={impact} onChange={e => setImpact(Number(e.target.value))} style={selectSmall}>{[5,4,3,2,1].map(n => <option key={n} value={n}>Impact {n}</option>)}</select>
-                    <select value={effort} onChange={e => setEffort(Number(e.target.value))} style={selectSmall}>{[1,2,3,4,5].map(n => <option key={n} value={n}>Effort {n}</option>)}</select>
+                    <select aria-label="Impact score" value={impact} onChange={e => setImpact(Number(e.target.value))} style={selectSmall}>{[5,4,3,2,1].map(n => <option key={n} value={n}>Impact {n}</option>)}</select>
+                    <select aria-label="Effort score" value={effort} onChange={e => setEffort(Number(e.target.value))} style={selectSmall}>{[1,2,3,4,5].map(n => <option key={n} value={n}>Effort {n}</option>)}</select>
                     <button type="submit" disabled={saving} style={primaryButton}>Add</button>
                   </form>
                 )}
@@ -487,10 +487,10 @@ export default function InnovationPage() {
                   <form onSubmit={createConstraint} className="constraint-form">
                     <input value={constraintTitle} onChange={e => setConstraintTitle(e.target.value)} placeholder="What is stopping the work?" style={input} />
                     <input value={constraintOwner} onChange={e => setConstraintOwner(e.target.value)} placeholder="Owner" style={input} />
-                    <select value={constraintPriority} onChange={e => setConstraintPriority(e.target.value)} style={selectSmall}>
+                    <select aria-label="Constraint priority" value={constraintPriority} onChange={e => setConstraintPriority(e.target.value)} style={selectSmall}>
                       <option value="critical">Critical</option><option value="high">High</option><option value="medium">Medium</option><option value="low">Low</option>
                     </select>
-                    <select value={constraintCategory} onChange={e => setConstraintCategory(e.target.value)} style={selectSmall}>
+                    <select aria-label="Constraint category" value={constraintCategory} onChange={e => setConstraintCategory(e.target.value)} style={selectSmall}>
                       <option value="design">Design</option><option value="material">Material</option><option value="access">Access</option><option value="labour">Labour</option><option value="plant">Plant</option><option value="quality">Quality</option><option value="safety">Safety</option><option value="other">Other</option>
                     </select>
                     <button type="submit" disabled={saving} style={primaryButton}>Raise</button>

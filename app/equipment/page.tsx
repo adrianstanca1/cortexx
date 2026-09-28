@@ -146,7 +146,7 @@ export default function EquipmentPage() {
               {alerts > 0 && <span style={{ color: '#ef4444', marginLeft: 6 }}>· {alerts} service alerts</span>}
             </p>
           </div>
-          <button type="button" onClick={() => setShowAdd(true)} aria-label="Add equipment" style={{ width: 36, height: 36, borderRadius: 10, background: 'var(--t3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} aria-label="Add equipment" style={{ width: 36, height: 36, borderRadius: 10, background: '#475569', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
         </div>
@@ -156,7 +156,7 @@ export default function EquipmentPage() {
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto' }}>
           {(['all', 'in_service', 'in_yard', 'in_service_centre', 'out_of_service'] as const).map(s => (
-            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: statusFilter === s ? 'var(--t3)' : 'rgba(255,255,255,0.06)', color: statusFilter === s ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
+            <button type="button" key={s} onClick={() => setStatusFilter(s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: statusFilter === s ? '#475569' : 'rgba(255,255,255,0.06)', color: statusFilter === s ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: statusFilter === s ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>
               {s === 'all' ? 'All' : STATUS_LABEL[s]}
             </button>
           ))}
@@ -171,7 +171,7 @@ export default function EquipmentPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcWrench size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No equipment registered</p>
-          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: 'var(--t3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#475569', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Add first item
           </button>
         </div>
@@ -249,7 +249,7 @@ export default function EquipmentPage() {
                 <input id="field-248" type="date" value={form.nextServiceAt} onChange={e => setForm(p => ({ ...p, nextServiceAt: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
               </div>
             </div>
-            <button type="button" onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: 'var(--t3)', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#475569', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add</>}
             </button>
           </div>

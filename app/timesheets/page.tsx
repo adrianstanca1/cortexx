@@ -316,7 +316,7 @@ export default function TimesheetsPage() {
                   const isToday = isCurrentWeek && new Date().getDay() === (i === 6 ? 0 : i + 1)
                   return (
                     <div key={day} style={{ padding: '6px 4px', borderRadius: 6, background: hrs > 0 ? 'rgba(139,92,246,0.12)' : 'rgba(255,255,255,0.03)', border: isToday ? '0.5px solid rgba(139,92,246,0.4)' : '0.5px solid rgba(255,255,255,0.05)', textAlign: 'center' }}>
-                      <div style={{ fontFamily: SF, fontSize: 9, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase' }}>{day}</div>
+                      <div style={{ fontFamily: SF, fontSize: 9, color: 'var(--t2)', fontWeight: 700, textTransform: 'uppercase' }}>{day}</div>
                       <div style={{ fontFamily: 'ui-monospace, monospace', fontSize: 12, color: hrs > 0 ? 'var(--t1)' : 'var(--t3)', fontWeight: 600, marginTop: 2 }}>{hrs > 0 ? hrs.toFixed(1) : '–'}</div>
                     </div>
                   )

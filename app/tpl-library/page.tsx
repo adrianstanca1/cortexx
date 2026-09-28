@@ -64,7 +64,7 @@ export default function TplLibraryPage() {
             </h1>
             <p style={{ fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', margin: '4px 0 0' }}>
               Browse and reuse workspace templates.{' '}
-              <Link href="/templates" style={{ color: '#f59e0b', textDecoration: 'none' }}>Create one →</Link>
+              <Link href="/templates" style={{ color: '#f59e0b', textDecoration: 'underline', textUnderlineOffset: 2 }}>Create one →</Link>
             </p>
           </div>
         </div>
@@ -106,7 +106,7 @@ export default function TplLibraryPage() {
             <IcDoc size={32} color="var(--t3)" />
             <p style={{ marginTop: 12 }}>
               {filter === 'all'
-                ? <>No templates yet. <Link href="/templates" style={{ color: '#f59e0b', textDecoration: 'none' }}>Create the first one →</Link></>
+                ? <>No templates yet. <Link href="/templates" style={{ color: '#f59e0b', textDecoration: 'underline', textUnderlineOffset: 2 }}>Create the first one →</Link></>
                 : `No templates in this category.`}
             </p>
           </div>

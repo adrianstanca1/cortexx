@@ -18,8 +18,8 @@ const statusColors: Record<string, string> = {
   done: '#10b981',
   low: '#10b981',
   medium: '#f59e0b',
-  high: '#ef4444',
-  critical: '#ef4444',
+  high: '#f87171',
+  critical: '#f87171',
   sent: '#2563eb',
   paid: '#10b981',
   overdue: '#ef4444',
@@ -46,9 +46,9 @@ export default function Pill({ label, color, ghost = false, size = 'sm', dot = f
         letterSpacing: '0.04em',
         textTransform: 'uppercase',
         fontFamily: 'var(--font-system)',
-        background: ghost ? 'transparent' : `${resolvedColor}22`,
+        background: ghost ? 'transparent' : 'color-mix(in srgb, currentColor 13.333%, transparent)',
         color: resolvedColor,
-        border: ghost ? `1px solid ${resolvedColor}66` : 'none',
+        border: ghost ? '1px solid color-mix(in srgb, currentColor 40%, transparent)' : 'none',
         whiteSpace: 'nowrap',
       }}
     >

@@ -285,7 +285,7 @@ export default function EquipmentChecksPage() {
         <div style={{ display: 'flex', flexDirection: 'column', gap: 10 }}>
           <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
             {(['all', 'draft', 'in_progress', 'passed', 'failed', 'overdue'] as const).map(s => {
-              const color = s === 'all' ? '#8b5cf6' : s === 'overdue' ? '#ef4444' : STATUS_COLOR[s as Check['status']]
+              const color = s === 'all' ? '#7c3aed' : s === 'overdue' ? '#ef4444' : STATUS_COLOR[s as Check['status']]
               return (
                 <button type="button"
                   key={s}

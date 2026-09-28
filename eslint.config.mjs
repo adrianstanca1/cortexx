@@ -24,7 +24,12 @@ const config = [
   },
   {
     files: ['app/**/*.{js,jsx,ts,tsx}', 'components/**/*.{js,jsx,ts,tsx}'],
-    rules: jsxA11y.configs.recommended.rules,
+    rules: {
+      ...jsxA11y.configs.recommended.rules,
+      // Named scroll regions need keyboard focus to satisfy WCAG. Keep the
+      // no-noninteractive-tabindex rule strict everywhere else.
+      'jsx-a11y/no-noninteractive-tabindex': ['error', { roles: ['region'] }],
+    },
   },
 ]
 

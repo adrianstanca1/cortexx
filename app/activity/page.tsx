@@ -144,11 +144,12 @@ export default function ActivityPage() {
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2, marginTop: 10 }}>
           {(['all', 'human', 'ai'] as const).map(t => (
-            <button type="button" key={t} onClick={() => setActorFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: actorFilter === t ? (t === 'ai' ? '#8b5cf6' : t === 'human' ? '#2563eb' : '#f59e0b') : 'rgba(255,255,255,0.06)', color: actorFilter === t ? '#fff' : 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: actorFilter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button type="button" key={t} onClick={() => setActorFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: actorFilter === t ? (t === 'ai' ? '#7c3aed' : t === 'human' ? '#2563eb' : '#b45309') : 'rgba(255,255,255,0.06)', color: actorFilter === t ? '#fff' : 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: actorFilter === t ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {t}
             </button>
           ))}
           <select
+            aria-label="Filter activity by project"
             value={projectFilter}
             onChange={e => setProjectFilter(e.target.value)}
             style={{ flexShrink: 0, padding: '5px 10px', borderRadius: 99, border: '0.5px solid rgba(255,255,255,0.07)', background: projectFilter ? 'rgba(245,158,11,0.15)' : 'rgba(255,255,255,0.06)', color: projectFilter ? '#f59e0b' : 'var(--t3)', fontFamily: 'var(--font-system)', fontSize: 12, cursor: 'pointer', appearance: 'none' }}

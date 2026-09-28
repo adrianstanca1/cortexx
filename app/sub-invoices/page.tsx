@@ -212,7 +212,7 @@ export default function SubInvoicesPage() {
 
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', paddingBottom: 2 }}>
           {(['all', 'received', 'approved', 'paid', 'disputed'] as const).map(t => (
-            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: filter === t ? '#b45309' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -326,7 +326,7 @@ export default function SubInvoicesPage() {
               </div>
             )}
 
-            <button type="button" onClick={create} disabled={saving || !form.subcontractorId || !form.number.trim() || !form.netAmount} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.subcontractorId || !form.number.trim() || !form.netAmount ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.subcontractorId || !form.number.trim() || !form.netAmount} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.subcontractorId || !form.number.trim() || !form.netAmount ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Record</>}
             </button>
           </div>

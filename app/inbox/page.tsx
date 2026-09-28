@@ -158,7 +158,7 @@ export default function InboxPage() {
           )}
 
           {data.pendingTimesheets.length > 0 && (
-            <Section title="Pending timesheet approvals" count={data.pendingTimesheets.length} color="#2563eb">
+            <Section title="Pending timesheet approvals" count={data.pendingTimesheets.length} color="#60a5fa">
               {data.pendingTimesheets.map(t => (
                 <Link key={t.memberId} href="/team" style={cardStyle}>
                   <IcClock size={14} color="#2563eb" />

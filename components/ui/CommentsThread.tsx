@@ -108,7 +108,7 @@ export default function CommentsThread({ taskId }: { taskId: string }) {
         <button
           type="submit"
           disabled={posting || !body.trim()}
-          style={{ padding: '8px 14px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: posting || !body.trim() ? 0.5 : 1 }}
+          style={{ padding: '8px 14px', borderRadius: 10, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 13, fontWeight: 600, cursor: 'pointer', opacity: posting || !body.trim() ? 0.5 : 1 }}
         >
           {posting ? '…' : 'Post'}
         </button>

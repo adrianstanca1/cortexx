@@ -200,9 +200,9 @@ export default function MileagePage() {
         </div>
 
         <div style={{ display: 'flex', gap: 6, alignItems: 'center', flexWrap: 'wrap' }}>
-          <input type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', padding: '5px 10px', fontSize: 12, width: 'auto' }} />
+          <input aria-label="Mileage month" type="month" value={month} onChange={e => setMonth(e.target.value)} style={{ ...inputStyle, colorScheme: 'dark', padding: '5px 10px', fontSize: 12, width: 'auto' }} />
           {(['all', 'pending', 'approved'] as const).map(f => (
-            <button type="button" key={f} onClick={() => setApprovedFilter(f)} style={{ padding: '4px 10px', borderRadius: 99, border: 'none', background: approvedFilter === f ? '#06b6d4' : 'rgba(255,255,255,0.06)', color: approvedFilter === f ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: approvedFilter === f ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
+            <button type="button" key={f} onClick={() => setApprovedFilter(f)} style={{ padding: '4px 10px', borderRadius: 99, border: 'none', background: approvedFilter === f ? '#0e7490' : 'rgba(255,255,255,0.06)', color: approvedFilter === f ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: approvedFilter === f ? 700 : 400, cursor: 'pointer', textTransform: 'capitalize' }}>
               {f}
             </button>
           ))}
@@ -222,7 +222,7 @@ export default function MileagePage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcTruck size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No journeys this month</p>
-          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
             Log first journey
           </button>
         </div>
@@ -324,7 +324,7 @@ export default function MileagePage() {
               </div>
             )}
 
-            <button type="button" onClick={create} disabled={saving || !form.fromAddress.trim() || !form.toAddress.trim() || !form.miles} style={{ padding: '14px 0', borderRadius: 14, background: '#06b6d4', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.fromAddress.trim() || !form.toAddress.trim() || !form.miles ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.fromAddress.trim() || !form.toAddress.trim() || !form.miles} style={{ padding: '14px 0', borderRadius: 14, background: '#0e7490', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.fromAddress.trim() || !form.toAddress.trim() || !form.miles ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Log journey</>}
             </button>
           </div>

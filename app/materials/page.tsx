@@ -140,12 +140,12 @@ export default function MaterialsPage() {
           <div style={{ position: 'absolute', top: 12, left: 10, pointerEvents: 'none' }}><IcSearch size={14} color="var(--t3)" /></div>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', alignItems: 'center', paddingBottom: 2 }}>
-          <button type="button" onClick={() => setLowStockOnly(s => !s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: lowStockOnly ? '#ef4444' : 'rgba(239,68,68,0.12)', color: lowStockOnly ? '#fff' : '#ef4444', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
-            <IcAlert size={11} color={lowStockOnly ? '#fff' : '#ef4444'} /> Low stock
+          <button type="button" onClick={() => setLowStockOnly(s => !s)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: lowStockOnly ? '#dc2626' : 'rgba(239,68,68,0.12)', color: lowStockOnly ? '#fff' : '#f87171', fontFamily: SF, fontSize: 11, fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4 }}>
+            <IcAlert size={11} color={lowStockOnly ? '#fff' : '#f87171'} /> Low stock
           </button>
-          <button type="button" onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
+          <button type="button" onClick={() => setActiveCat(null)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: !activeCat ? '#b45309' : 'rgba(255,255,255,0.06)', color: !activeCat ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: !activeCat ? 700 : 400, cursor: 'pointer' }}>All</button>
           {categories.map(c => (
-            <button type="button" key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
+            <button type="button" key={c} onClick={() => setActiveCat(c)} style={{ flexShrink: 0, padding: '4px 10px', borderRadius: 99, border: 'none', background: activeCat === c ? '#b45309' : 'rgba(255,255,255,0.06)', color: activeCat === c ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 11, fontWeight: activeCat === c ? 700 : 400, cursor: 'pointer', whiteSpace: 'nowrap' }}>{c}</button>
           ))}
         </div>
       </div>
@@ -158,7 +158,7 @@ export default function MaterialsPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcWrench size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>No materials</p>
-          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add first</button>
+          <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Add first</button>
         </div>
       ) : (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 6 }}>
@@ -222,7 +222,7 @@ export default function MaterialsPage() {
               <input value={form.location} onChange={e => setForm(p => ({ ...p, location: e.target.value }))} placeholder="Location (yard / van / site)" style={{ ...inputStyle, alignSelf: 'flex-end' }} />
             </div>
             <input value={form.supplier} onChange={e => setForm(p => ({ ...p, supplier: e.target.value }))} placeholder="Supplier" style={inputStyle} />
-            <button type="button" onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={save} disabled={saving || !form.name.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Add</>}
             </button>
           </div>
@@ -261,7 +261,7 @@ export default function MaterialsPage() {
             {adjustingId === activeItem.id ? (
               <div style={{ display: 'flex', gap: 6, alignItems: 'center', background: 'var(--bg3)', padding: '8px 10px', borderRadius: 10 }}>
                 <input type="number" step="0.1" value={adjustDelta} onChange={e => setAdjustDelta(e.target.value)} placeholder="±qty (e.g. -2)" style={{ ...inputStyle, padding: '6px 10px', fontSize: 13 }} />
-                <button type="button" onClick={() => adjustStock(activeItem.id, Number(adjustDelta))} disabled={!adjustDelta} style={{ padding: '6px 10px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Apply</button>
+                <button type="button" onClick={() => adjustStock(activeItem.id, Number(adjustDelta))} disabled={!adjustDelta} style={{ padding: '6px 10px', borderRadius: 8, background: '#047857', border: 'none', color: '#fff', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>Apply</button>
                 <button type="button" onClick={() => { setAdjustingId(null); setAdjustDelta('') }} style={{ padding: '6px 10px', borderRadius: 8, background: 'rgba(255,255,255,0.04)', border: '0.5px solid rgba(255,255,255,0.15)', color: 'var(--t3)', fontFamily: SF, fontSize: 12, cursor: 'pointer' }}>Cancel</button>
               </div>
             ) : (

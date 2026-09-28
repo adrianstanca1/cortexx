@@ -167,7 +167,7 @@ export default function TrainingPage() {
           <IcHardhat size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{certs.length === 0 ? 'No certifications recorded yet' : 'Nothing in this filter'}</p>
           {certs.length === 0 && (
-            <button type="button" onClick={openCreate} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
+            <button type="button" onClick={openCreate} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>
               Add first certification
             </button>
           )}

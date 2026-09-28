@@ -153,7 +153,7 @@ export default function SiteDiaryPage() {
         <div style={{ padding: '60px 40px', textAlign: 'center', color: 'var(--t3)', fontFamily: SF }}>
           <IcDoc size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>Create a project first to start logging site diaries.</p>
-          <Link href="/projects" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#10b981', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Go to projects</Link>
+          <Link href="/projects" style={{ display: 'inline-block', marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#047857', textDecoration: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>Go to projects</Link>
         </div>
       ) : loading ? (
         <div style={{ padding: 40, textAlign: 'center', color: 'var(--t3)', fontFamily: SF, fontSize: 14 }}>Loading…</div>

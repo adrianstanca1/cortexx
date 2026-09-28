@@ -81,7 +81,7 @@ export default function CostCodesPage() {
       <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 9 }}><IcChevL size={18} color="var(--t3)" /><span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span></Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 12 }}>
         <div><h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 800, color: 'var(--t1)' }}>Cost codes</h1><p style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>One coding structure for POs, receipts and subcontract cost.</p></div>
-        <button type="button" onClick={() => setShowAdd(true)} aria-label="Add cost code" style={{ width: 38, height: 38, border: 0, borderRadius: 11, background: '#f59e0b', display: 'grid', placeItems: 'center', cursor: 'pointer' }}><IcPlus size={18} color="#fff" /></button>
+        <button type="button" onClick={() => setShowAdd(true)} aria-label="Add cost code" style={{ width: 38, height: 38, border: 0, borderRadius: 11, background: '#b45309', display: 'grid', placeItems: 'center', cursor: 'pointer' }}><IcPlus size={18} color="#fff" /></button>
       </div>
       <button type="button" onClick={() => { setLoading(true); setShowArchived(v => !v) }} style={{ marginTop: 10, border: '1px solid rgba(255,255,255,0.1)', borderRadius: 99, background: showArchived ? 'rgba(245,158,11,0.12)' : 'transparent', color: showArchived ? '#f59e0b' : 'var(--t2)', padding: '5px 10px', fontFamily: SF, fontSize: 10, fontWeight: 800, cursor: 'pointer' }}>{showArchived ? 'Showing archived' : 'Show archived'}</button>
     </header>
@@ -104,7 +104,7 @@ export default function CostCodesPage() {
         <input value={form.name} onChange={e => setForm(p => ({ ...p, name: e.target.value }))} placeholder="Name, e.g. Materials" style={inputStyle} />
         <input value={form.category} onChange={e => setForm(p => ({ ...p, category: e.target.value }))} placeholder="Category (optional)" style={inputStyle} />
         <textarea rows={3} value={form.description} onChange={e => setForm(p => ({ ...p, description: e.target.value }))} placeholder="Description (optional)" style={{ ...inputStyle, resize: 'vertical' }} />
-        <button type="button" onClick={create} disabled={saving || !form.code.trim() || !form.name.trim()} style={{ minHeight: 44, border: 0, borderRadius: 11, background: '#f59e0b', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: SF, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving || !form.code.trim() || !form.name.trim() ? 0.5 : 1 }}><IcCheck size={14} color="#fff" /> {saving ? 'Saving…' : 'Create code'}</button>
+        <button type="button" onClick={create} disabled={saving || !form.code.trim() || !form.name.trim()} style={{ minHeight: 44, border: 0, borderRadius: 11, background: '#b45309', color: '#fff', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 6, fontFamily: SF, fontSize: 13, fontWeight: 800, cursor: 'pointer', opacity: saving || !form.code.trim() || !form.name.trim() ? 0.5 : 1 }}><IcCheck size={14} color="#fff" /> {saving ? 'Saving…' : 'Create code'}</button>
       </div>
     </div>}
   </div>

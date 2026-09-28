@@ -361,7 +361,7 @@ export default function TasksPage() {
         rightSlot={
           <button type="button"
             onClick={() => { if (selectMode) exitSelectMode(); else setSelectMode(true) }}
-            style={{ background: selectMode ? '#f59e0b' : 'rgba(255,255,255,0.07)', color: selectMode ? '#fff' : 'var(--t2)', border: 'none', borderRadius: 10, padding: '7px 12px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
+            style={{ background: selectMode ? '#b45309' : 'rgba(255,255,255,0.07)', color: selectMode ? '#fff' : 'var(--t2)', border: 'none', borderRadius: 10, padding: '7px 12px', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 600, cursor: 'pointer' }}
           >
             {selectMode ? 'Done' : 'Select'}
           </button>
@@ -523,8 +523,8 @@ export default function TasksPage() {
                     )}
                     {task.dueDate && (
                       <div style={{ display: 'flex', alignItems: 'center', gap: 3 }}>
-                        <IcClock size={11} color={isOverdue ? '#ef4444' : 'var(--t3)'} />
-                        <span style={{ fontSize: 11, color: isOverdue ? '#ef4444' : 'var(--t3)', fontFamily: 'var(--font-system)' }}>
+                        <IcClock size={11} color={isOverdue ? '#f87171' : 'var(--t3)'} />
+                        <span style={{ fontSize: 11, color: isOverdue ? '#f87171' : 'var(--t3)', fontFamily: 'var(--font-system)' }}>
                           {new Date(task.dueDate).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}
                           {task.dueTime && ` · ${task.dueTime}`}
                         </span>
@@ -574,7 +574,7 @@ export default function TasksPage() {
       {selectMode && selectedIds.size > 0 && (
         <div style={{ position: 'fixed', bottom: 76, left: '50%', transform: 'translateX(-50%)', maxWidth: 480, width: 'calc(100% - 24px)', background: 'rgba(12,26,46,0.98)', backdropFilter: 'blur(12px)', borderRadius: 14, padding: '12px 14px', display: 'flex', alignItems: 'center', gap: 8, border: '1px solid rgba(245,158,11,0.3)', zIndex: 90, boxShadow: '0 4px 20px rgba(0,0,0,0.5)' }}>
           <span style={{ flex: 1, fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', fontWeight: 600 }}>{selectedIds.size} selected</span>
-          <button type="button" onClick={() => bulk('complete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: '#10b981', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Done</button>
+          <button type="button" onClick={() => bulk('complete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: '#047857', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Done</button>
           <button type="button" onClick={() => bulk('reopen')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(255,255,255,0.07)', border: 'none', color: 'var(--t1)', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Reopen</button>
           <button type="button" onClick={() => bulk('delete')} disabled={bulkSaving} style={{ padding: '7px 12px', borderRadius: 8, background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer', opacity: bulkSaving ? 0.5 : 1 }}>Delete</button>
         </div>
@@ -675,7 +675,7 @@ export default function TasksPage() {
               </select>
             </div>
 
-            <button type="button" onClick={createTask} disabled={saving || !form.title.trim() || (requiresProject && !form.projectId)} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || (requiresProject && !form.projectId) ? 0.5 : 1 }}>
+            <button type="button" onClick={createTask} disabled={saving || !form.title.trim() || (requiresProject && !form.projectId)} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.title.trim() || (requiresProject && !form.projectId) ? 0.5 : 1 }}>
               {saving ? 'Creating…' : 'Create task'}
             </button>
           </div>
@@ -747,7 +747,7 @@ export default function TasksPage() {
               </select>
             </div>
 
-            <button type="button" onClick={saveEdit} disabled={savingEdit || !editForm.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.title.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={saveEdit} disabled={savingEdit || !editForm.title.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingEdit || !editForm.title.trim() ? 0.5 : 1 }}>
               {savingEdit ? 'Saving…' : 'Save changes'}
             </button>
 

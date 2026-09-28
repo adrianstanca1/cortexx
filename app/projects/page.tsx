@@ -220,7 +220,7 @@ export default function ProjectsPage() {
                 </div>
               ))}
             </div>
-            <button type="button" onClick={createProject} disabled={saving || !form.name.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1 }}>
+            <button type="button" onClick={createProject} disabled={saving || !form.name.trim()} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.name.trim() ? 0.5 : 1 }}>
               {saving ? 'Creating…' : 'Create project'}
             </button>
           </div>

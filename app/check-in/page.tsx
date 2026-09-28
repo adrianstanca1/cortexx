@@ -195,7 +195,7 @@ export default function CheckInPage() {
             const hrs = durationHrs(ci.checkedInAt, ci.checkedOutAt)
             return (
               <div key={ci.id} style={{ background: 'var(--surface-raised)', borderRadius: 12, padding: '12px 14px', border: `0.5px solid ${active ? 'rgba(16,185,129,0.35)' : 'rgba(255,255,255,0.07)'}`, display: 'flex', gap: 12, alignItems: 'center' }}>
-                <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: (ci.member?.avatarColor || '#2563eb') + '22', color: ci.member?.avatarColor || '#2563eb', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>
+                <div style={{ flexShrink: 0, width: 38, height: 38, borderRadius: 10, background: (ci.member?.avatarColor || '#2563eb') + '22', color: '#dbeafe', display: 'flex', alignItems: 'center', justifyContent: 'center', fontFamily: SF, fontSize: 13, fontWeight: 700 }}>
                   {ci.member?.name.slice(0, 2).toUpperCase() || '??'}
                 </div>
                 <div style={{ flex: 1, minWidth: 0 }}>

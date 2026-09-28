@@ -72,7 +72,7 @@ function LoginForm() {
 
         {error && <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>{error}</div>}
 
-        <button type="submit" disabled={loading || !email || !password} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: loading || !email || !password ? 0.5 : 1 }}>
+        <button type="submit" disabled={loading || !email || !password} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: loading || !email || !password ? 0.5 : 1 }}>
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
 

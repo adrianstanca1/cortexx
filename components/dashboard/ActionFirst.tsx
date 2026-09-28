@@ -129,7 +129,7 @@ export default function ActionFirst({ accent = '#f59e0b', data }: ActionFirstPro
                     onClick={handleCheckIn}
                     disabled={checkingIn || !nextTask?.projectId}
                     style={{
-                      flex: 1, background: '#fff', color: accent,
+                      flex: 1, background: '#fff', color: '#111827',
                       border: 'none', borderRadius: 11, padding: '11px 12px',
                       fontFamily: 'var(--font-system)', fontSize: 14, fontWeight: 700,
                       cursor: checkingIn ? 'wait' : 'pointer',

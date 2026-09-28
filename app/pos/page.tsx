@@ -270,11 +270,11 @@ export default function POsPage() {
         <div style={{ display: 'flex', gap: 6, marginBottom: 9 }}>
           <Link href="/requisitions" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: 'var(--surface-raised)', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>Requisitions</Link>
           <Link href="/rfqs" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: 'var(--surface-raised)', color: 'var(--t2)', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>RFQs</Link>
-          <Link href="/pos" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: '#f59e0b', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>POs</Link>
+          <Link href="/pos" style={{ flex: 1, textAlign: 'center', textDecoration: 'none', borderRadius: 8, padding: '6px 8px', background: '#b45309', color: '#fff', fontFamily: SF, fontSize: 11, fontWeight: 700 }}>POs</Link>
         </div>
         <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 2 }}>
           {(['all', 'draft', 'pending_approval', 'approved', 'sent', 'part_received', 'received', 'closed'] as const).map(t => (
-            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#f59e0b' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
+            <button type="button" key={t} onClick={() => setFilter(t)} style={{ flexShrink: 0, padding: '5px 12px', borderRadius: 99, border: 'none', background: filter === t ? '#b45309' : 'rgba(255,255,255,0.06)', color: filter === t ? '#fff' : 'var(--t3)', fontFamily: SF, fontSize: 12, fontWeight: filter === t ? 700 : 400, cursor: 'pointer' }}>
               {t === 'all' ? 'All' : STATUS_LABEL[t]}
             </button>
           ))}
@@ -290,7 +290,7 @@ export default function POsPage() {
           <IcDoc size={32} color="var(--t3)" />
           <p style={{ marginTop: 12, fontSize: 14 }}>{pos.length === 0 ? 'No purchase orders' : 'Nothing in this filter'}</p>
           {pos.length === 0 && (
-            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Raise first PO</button>
+            <button type="button" onClick={() => setShowAdd(true)} style={{ marginTop: 16, padding: '10px 22px', borderRadius: 10, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Raise first PO</button>
           )}
         </div>
       ) : (
@@ -438,7 +438,7 @@ export default function POsPage() {
               <span>Total (inc VAT)</span><span style={{ fontFamily: 'ui-monospace, monospace' }}>£{totals.total.toFixed(2)}</span>
             </div>
 
-            <button type="button" onClick={create} disabled={saving || !form.supplier.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#f59e0b', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.supplier.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
+            <button type="button" onClick={create} disabled={saving || !form.supplier.trim()} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: SF, fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: saving || !form.supplier.trim() ? 0.5 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: 8 }}>
               {saving ? 'Saving…' : <><IcCheck size={16} color="#fff" /> Save draft</>}
             </button>
           </div>

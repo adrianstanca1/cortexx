@@ -125,7 +125,7 @@ export default function VeraAutopilotPage() {
         <div style={{ background: 'rgba(139,92,246,0.08)', border: '0.5px solid rgba(139,92,246,0.2)', borderRadius: 10, padding: 12, marginBottom: 16, display: 'flex', gap: 10, alignItems: 'flex-start', fontFamily: 'var(--font-system)' }}>
           <IcSpark size={14} color="#8b5cf6" />
           <p style={{ fontSize: 12, color: 'var(--t2)', margin: 0, lineHeight: 1.5 }}>
-            Every automation runs as an audited workflow — you&rsquo;ll see exactly what Vera did in <Link href="/activity" style={{ color: '#8b5cf6', textDecoration: 'none' }}>activity</Link> and can revert any action.
+            Every automation runs as an audited workflow — you&rsquo;ll see exactly what Vera did in <Link href="/activity" style={{ color: '#c4b5fd', textDecoration: 'underline', textUnderlineOffset: 2 }}>activity</Link> and can revert any action.
           </p>
         </div>
 

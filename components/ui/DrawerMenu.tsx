@@ -177,7 +177,7 @@ function DrawerLink({ item, onClick, badge, active }: { item: MenuItem; onClick:
       </span>
       <span style={{ flex: 1 }}>{item.label}</span>
       {badge && (
-        <span style={{ background: '#ef4444', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 18, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
+        <span style={{ background: '#dc2626', color: '#fff', fontSize: 10, fontWeight: 700, padding: '2px 6px', borderRadius: 10, minWidth: 18, textAlign: 'center', fontFamily: 'var(--font-system)' }}>
           {badge}
         </span>
       )}

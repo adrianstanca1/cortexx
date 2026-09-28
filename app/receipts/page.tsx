@@ -138,7 +138,7 @@ export default function ReceiptsPage() {
       <Link href="/apps" style={{ display: 'flex', alignItems: 'center', gap: 4, textDecoration: 'none', marginBottom: 9 }}><IcChevL size={18} color="var(--t3)" /><span style={{ fontFamily: SF, fontSize: 13, color: 'var(--t3)' }}>Apps</span></Link>
       <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center' }}>
         <div><h1 style={{ fontFamily: SF, fontSize: 22, fontWeight: 800, color: 'var(--t1)' }}>Receipts</h1><p style={{ fontFamily: SF, fontSize: 12, color: 'var(--t2)', marginTop: 2 }}>AI OCR · review · approve · reconcile</p></div>
-        <Link href="/capture?type=receipt" aria-label="Scan receipt" style={{ width: 38, height: 38, borderRadius: 11, background: '#10b981', display: 'grid', placeItems: 'center' }}><IcCamera size={18} color="#fff" /></Link>
+        <Link href="/capture?type=receipt" aria-label="Scan receipt" style={{ width: 38, height: 38, borderRadius: 11, background: '#047857', display: 'grid', placeItems: 'center' }}><IcCamera size={18} color="#fff" /></Link>
       </div>
     </div>
 
