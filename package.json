@@ -53,7 +53,7 @@
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
     "@aws-sdk/client-s3": "^3.1105.0",
-    "@aws-sdk/s3-request-presigner": "^3.1105.0",
+    "@aws-sdk/s3-request-presigner": "^3.1140.0",
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
     "@capacitor/ios": "^8.5.0",
