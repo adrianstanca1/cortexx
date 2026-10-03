@@ -4,6 +4,7 @@ import { Suspense, useState, useEffect, useRef, useCallback } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { IcCamera, IcMic, IcReceipt, IcAlert, IcCheck, IcX, IcPin } from '@/components/ui/Icons'
 import { uploadFileWithProgress } from '@/lib/client-upload'
+import { submitDocumentUpload } from '@/lib/offline-media-outbox'
 import type { Project } from '@/lib/types'
 
 const actions = [
@@ -96,29 +97,31 @@ function CaptureContent() {
   const onFileSelected = useCallback(async (file: File) => {
     const type = fileTypeRef.current
     if (!type || !file) return
+    setUploadProgress(0)
     try {
       const capturedAt = new Date().toISOString()
-      const [uploaded, location] = await Promise.all([uploadFile(file, file.name), getCapturePosition()])
-      const res = await fetch('/api/documents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: file.name,
-          type,
-          projectId: activeProject?.id || null,
-          url: uploaded.url,
-          size: uploaded.size,
-          mimeType: uploaded.mimeType,
-          capturedAt,
-          latitude: location?.latitude ?? null,
-          longitude: location?.longitude ?? null,
-          accuracyM: location?.accuracyM ?? null,
-          tags: type === 'photo' ? ['progress-photo', ...(location ? ['gps'] : [])] : ['receipt', ...(location ? ['gps'] : [])],
-          metadata: { source: 'capture', captureType: type, originalName: file.name },
-        }),
+      const location = await getCapturePosition()
+      const submission = await submitDocumentUpload(file, file.name, {
+        name: file.name,
+        type,
+        projectId: activeProject?.id || null,
+        capturedAt,
+        latitude: location?.latitude ?? null,
+        longitude: location?.longitude ?? null,
+        accuracyM: location?.accuracyM ?? null,
+        tags: type === 'photo' ? ['progress-photo', ...(location ? ['gps'] : [])] : ['receipt', ...(location ? ['gps'] : [])],
+        metadata: { source: 'capture', captureType: type, originalName: file.name },
+      }, {
+        onProgress: setUploadProgress,
       })
-      const document = await res.json().catch(() => ({})) as { id?: string; error?: string }
-      if (!res.ok || !document.id) throw new Error(document.error || 'Save failed')
+
+      if (submission.queued) {
+        finishWith(type === 'receipt' ? 'Receipt saved offline · sync pending' : 'Photo saved offline · sync pending')
+        return
+      }
+
+      const document = submission.document as { id?: string; error?: string }
+      if (!document.id) throw new Error(document.error || 'Save failed')
 
       const gpsDetail = location
         ? `GPS ${location.latitude.toFixed(5)}, ${location.longitude.toFixed(5)} · ±${Math.round(location.accuracyM)}m`
@@ -155,8 +158,10 @@ function CaptureContent() {
       finishWith(location ? 'Photo logged · GPS tagged' : 'Photo logged')
     } catch (e) {
       failWith(e instanceof Error ? e.message : 'Failed')
+    } finally {
+      setUploadProgress(0)
     }
-  }, [activeProject, logActivity, finishWith, failWith, uploadFile])
+  }, [activeProject, logActivity, finishWith, failWith])
 
   const finishVoiceRfi = useCallback(async (audioUrl: string | null) => {
     const title = `RFI: ${activeProject?.name || 'site'}`

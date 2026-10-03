@@ -17,24 +17,27 @@ export interface UploadRetryInfo {
   reason: string
 }
 
-interface UploadOptions {
+export interface UploadOptions {
   onProgress?: (percent: number) => void
   onRetry?: (info: UploadRetryInfo) => void
   signal?: AbortSignal
   maxAttempts?: number
   retryBaseDelayMs?: number
   timeoutMs?: number
+  uploadId?: string
 }
 
-class UploadAttemptError extends Error {
+export class ClientUploadError extends Error {
   retryable: boolean
   retryAfterMs: number | null
+  status: number | null
 
-  constructor(message: string, retryable: boolean, retryAfterMs: number | null = null) {
+  constructor(message: string, retryable: boolean, retryAfterMs: number | null = null, status: number | null = null) {
     super(message)
-    this.name = 'UploadAttemptError'
+    this.name = 'ClientUploadError'
     this.retryable = retryable
     this.retryAfterMs = retryAfterMs
+    this.status = status
   }
 }
 
@@ -46,7 +49,7 @@ function parseResponse(xhr: XMLHttpRequest): Record<string, unknown> {
   }
 }
 
-function createUploadId(): string {
+export function createUploadId(): string {
   if (typeof crypto !== 'undefined' && typeof crypto.randomUUID === 'function') {
     return crypto.randomUUID()
   }
@@ -123,7 +126,7 @@ function uploadAttempt(
     }
     const onAbort = () => {
       xhr.abort()
-      finishReject(new UploadAttemptError('Upload cancelled', false))
+      finishReject(new ClientUploadError('Upload cancelled', false))
     }
 
     xhr.open('POST', '/api/uploads')
@@ -133,17 +136,18 @@ function uploadAttempt(
       if (!event.lengthComputable || event.total <= 0) return
       options.onProgress?.(Math.min(99, Math.round((event.loaded / event.total) * 100)))
     }
-    xhr.onerror = () => finishReject(new UploadAttemptError('Upload failed. Check your connection and try again.', true))
-    xhr.ontimeout = () => finishReject(new UploadAttemptError('Upload timed out. Check your connection and try again.', true))
-    xhr.onabort = () => finishReject(new UploadAttemptError('Upload cancelled', false))
+    xhr.onerror = () => finishReject(new ClientUploadError('Upload failed. Check your connection and try again.', true))
+    xhr.ontimeout = () => finishReject(new ClientUploadError('Upload timed out. Check your connection and try again.', true))
+    xhr.onabort = () => finishReject(new ClientUploadError('Upload cancelled', false))
     xhr.onload = () => {
       const body = parseResponse(xhr)
       if (xhr.status < 200 || xhr.status >= 300) {
         const message = typeof body.error === 'string' ? body.error : `Upload failed (${xhr.status})`
-        finishReject(new UploadAttemptError(
+        finishReject(new ClientUploadError(
           message,
           isRetryableUploadStatus(xhr.status),
           parseRetryAfter(xhr.getResponseHeader('Retry-After')),
+          xhr.status,
         ))
         return
       }
@@ -169,7 +173,7 @@ export async function uploadFileWithProgress(
   }
 
   const maxAttempts = Math.max(1, Math.min(5, options.maxAttempts ?? 3))
-  const uploadId = createUploadId()
+  const uploadId = options.uploadId || createUploadId()
   options.onProgress?.(0)
 
   for (let attempt = 1; attempt <= maxAttempts; attempt++) {
@@ -179,12 +183,12 @@ export async function uploadFileWithProgress(
       options.onProgress?.(100)
       return result
     } catch (error) {
-      const attemptError = error instanceof UploadAttemptError
+      const attemptError = error instanceof ClientUploadError
         ? error
-        : new UploadAttemptError(error instanceof Error ? error.message : 'Upload failed', false)
+        : new ClientUploadError(error instanceof Error ? error.message : 'Upload failed', false)
       if (!attemptError.retryable || attempt >= maxAttempts) {
         options.onProgress?.(0)
-        throw new Error(attemptError.message)
+        throw attemptError
       }
       const delayMs = uploadRetryDelayMs(attempt, attemptError.retryAfterMs, options.retryBaseDelayMs)
       options.onRetry?.({

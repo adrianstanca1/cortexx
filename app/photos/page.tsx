@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback, useRef } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
-import { uploadFileWithProgress } from '@/lib/client-upload'
+import { submitDocumentUpload, subscribeOfflineUploadOutbox } from '@/lib/offline-media-outbox'
 import { IcCamera, IcChevL, IcPlus, IcSpark } from '@/components/ui/Icons'
 
 interface PhotoTags { tags: string[]; category: string; summary: string; loading?: boolean; error?: string }
@@ -112,30 +112,29 @@ export default function PhotosPage() {
   }, [])
 
   useEffect(() => { load() }, [load])
+  useEffect(() => subscribeOfflineUploadOutbox(() => {
+    if (typeof navigator !== 'undefined' && navigator.onLine) load()
+  }), [load])
 
   const handleFile = useCallback(async (file: File) => {
     setUploading(true)
     setUploadProgress(0)
     try {
-      const uploaded = await uploadFileWithProgress(file, file.name, {
+      const projectId = filter !== 'all' ? filter : null
+      const submission = await submitDocumentUpload(file, file.name, {
+        name: file.name,
+        type: 'photo',
+        projectId,
+        metadata: { source: 'photos', originalName: file.name },
+      }, {
         onProgress: setUploadProgress,
       })
-      const projectId = filter !== 'all' ? filter : null
-      const docRes = await fetch('/api/documents', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          name: file.name,
-          type: 'photo',
-          projectId,
-          url: uploaded.url,
-          size: uploaded.size,
-          mimeType: uploaded.mimeType,
-        }),
-      })
-      if (!docRes.ok) throw new Error('Saved upload but failed to file the document')
-      const newDoc = await docRes.json() as PhotoDoc
-      setPhotos(prev => [newDoc, ...prev])
+      if (submission.queued) {
+        setToast({ msg: 'Photo saved offline · it will sync automatically' })
+        return
+      }
+      const newDoc = submission.document as unknown as PhotoDoc
+      setPhotos(prev => [newDoc, ...prev.filter(photo => photo.id !== newDoc.id)])
       setToast({ msg: 'Photo added' })
     } catch (e) {
       setToast({ msg: e instanceof Error ? e.message : 'Upload failed', type: 'error' })

@@ -10,6 +10,7 @@ import FormField from '@/components/ui/FormField'
 import Button from '@/components/ui/Button'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import { uploadFileWithProgress } from '@/lib/client-upload'
+import { submitDocumentUpload, subscribeOfflineUploadOutbox } from '@/lib/offline-media-outbox'
 import {
   IcChevL,
   IcDoc,
@@ -109,6 +110,7 @@ export default function DocumentsPage() {
   })
   const fileInputRef = useRef<HTMLInputElement>(null)
   const versionInputRef = useRef<HTMLInputElement>(null)
+  const [pendingFile, setPendingFile] = useState<File | null>(null)
   const [tagInput, setTagInput] = useState('')
 
   const [previewUrl, setPreviewUrl] = useState<string | null>(null)
@@ -138,6 +140,9 @@ export default function DocumentsPage() {
   }, [])
 
   useEffect(() => { load() }, [load])
+  useEffect(() => subscribeOfflineUploadOutbox(() => {
+    if (typeof navigator !== 'undefined' && navigator.onLine) load()
+  }), [load])
   useEffect(() => {
     if (typeof window !== 'undefined' && new URLSearchParams(window.location.search).get('new') === '1') {
       setShowModal(true)
@@ -148,6 +153,7 @@ export default function DocumentsPage() {
     setForm({ name: '', type: 'rams', projectId: '', expiresAt: '', url: '', size: null, mimeType: '', originalName: '', tags: [], newVersion: false, version: 1 })
     setModalTab('upload')
     setEditingId(null)
+    setPendingFile(null)
     setTagInput('')
     if (fileInputRef.current) fileInputRef.current.value = ''
     if (versionInputRef.current) versionInputRef.current.value = ''
@@ -166,6 +172,17 @@ export default function DocumentsPage() {
   }
 
   const handleFileSelect = async (file: File, options?: { newVersion?: boolean }) => {
+    if (!editingId) {
+      setPendingFile(file)
+      applyUploadResult({
+        size: file.size,
+        mimeType: file.type,
+        originalName: file.name,
+      })
+      setToast({ msg: typeof navigator !== 'undefined' && !navigator.onLine ? 'File ready · Add document to save it offline' : 'File ready to add', type: 'success' })
+      return
+    }
+
     setUploading(true)
     setUploadProgress(0)
     try {
@@ -193,6 +210,7 @@ export default function DocumentsPage() {
   }
 
   const openEdit = (d: Doc) => {
+    setPendingFile(null)
     setEditingId(d.id)
     setForm({
       name: d.name,
@@ -247,6 +265,25 @@ export default function DocumentsPage() {
         const updated = await res.json()
         setDocs(prev => prev.map(d => d.id === editingId ? updated : d))
         setToast({ msg: 'Document updated' })
+      } else if (pendingFile) {
+        setUploading(true)
+        const submission = await submitDocumentUpload(pendingFile, pendingFile.name, {
+          name: payload.name,
+          type: payload.type,
+          projectId: payload.projectId,
+          expiresAt: payload.expiresAt,
+          tags: payload.tags,
+          metadata: { source: 'documents', originalName: pendingFile.name },
+        }, {
+          onProgress: setUploadProgress,
+        })
+        if (submission.queued) {
+          setToast({ msg: 'Document saved offline · it will sync automatically' })
+        } else {
+          const newDoc = submission.document as unknown as Doc
+          setDocs(prev => [newDoc, ...prev.filter(d => d.id !== newDoc.id)])
+          setToast({ msg: 'Document added' })
+        }
       } else {
         const res = await fetch('/api/documents', {
           method: 'POST',
@@ -260,10 +297,12 @@ export default function DocumentsPage() {
       }
       setShowModal(false)
       resetForm()
-    } catch {
-      setToast({ msg: `Failed to ${editingId ? 'update' : 'add'} document`, type: 'error' })
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : `Failed to ${editingId ? 'update' : 'add'} document`, type: 'error' })
     } finally {
       setSaving(false)
+      setUploading(false)
+      setUploadProgress(0)
     }
   }
 
@@ -499,10 +538,10 @@ export default function DocumentsPage() {
               )}
             </button>
 
-            {form.url && (
+            {(form.url || pendingFile) && (
               <div style={{ padding: 10, borderRadius: 8, background: 'rgba(16,185,129,0.1)', border: '0.5px solid rgba(16,185,129,0.3)' }}>
                 <div style={{ fontFamily: SF, fontSize: 13, color: '#10b981' }}>
-                  Uploaded: {form.originalName || form.name} ({formatBytes(form.size)})
+                  {pendingFile && !editingId ? 'Ready to add' : 'Uploaded'}: {form.originalName || form.name} ({formatBytes(form.size)})
                   {editingId && <> · v{form.version}{form.newVersion && <span style={{ color: '#f59e0b', marginLeft: 6 }}>(will become v{form.version + 1})</span>}</>}
                 </div>
                 {editingId && (

@@ -75,14 +75,19 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
     if (accuracyM !== null && (!Number.isFinite(accuracyM) || accuracyM < 0 || accuracyM > 100000)) {
       return NextResponse.json({ error: 'Invalid GPS accuracy' }, { status: 400 })
     }
-    let metadata: Prisma.InputJsonValue = {}
+    let metadata: Prisma.InputJsonObject = {}
     if (body.metadata !== undefined) {
       if (!body.metadata || typeof body.metadata !== 'object' || Array.isArray(body.metadata)) {
         return NextResponse.json({ error: 'metadata must be an object' }, { status: 400 })
       }
       const serialized = JSON.stringify(body.metadata)
       if (serialized.length > 8192) return NextResponse.json({ error: 'metadata is too large' }, { status: 413 })
-      metadata = body.metadata as Prisma.InputJsonValue
+      metadata = body.metadata as Prisma.InputJsonObject
+    }
+
+    const offlineOutboxId = req.headers.get('x-offline-outbox-id')?.trim() || ''
+    if (offlineOutboxId && !/^[A-Za-z0-9_-]{16,128}$/.test(offlineOutboxId)) {
+      return NextResponse.json({ error: 'Invalid offline outbox id' }, { status: 400 })
     }
 
     if (session.user?.role === 'client') return NextResponse.json({ error: 'Document write permission required' }, { status: 403 })
@@ -92,24 +97,53 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
     if (body.projectId && !await prisma.project.findFirst({ where: programmeProjectWhere(body.projectId, session), select: { id: true } })) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
     }
-    const document = await prisma.document.create({
-      data: {
-        name: body.name.trim(),
-        type: body.type.trim(),
-        projectId: body.projectId || null,
-        expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
-        url: typeof body.url === 'string' && body.url ? body.url : null,
-        size: Number.isFinite(body.size) ? Math.floor(body.size) : null,
-        mimeType: typeof body.mimeType === 'string' && body.mimeType ? body.mimeType : null,
-        tags: tags as Prisma.InputJsonValue,
-        capturedAt,
-        latitude,
-        longitude,
-        accuracyM,
-        metadata,
-      },
-      include: { project: true },
-    })
+
+    if (offlineOutboxId) {
+      const existing = await prisma.document.findFirst({
+        where: {
+          ...fileProjectScope(session),
+          offlineOutboxId,
+        },
+        include: { project: true },
+      })
+      if (existing) return NextResponse.json(existing, { status: 200 })
+      metadata = { ...metadata, offlineOutboxId }
+    }
+
+    let document
+    try {
+      document = await prisma.document.create({
+        data: {
+          name: body.name.trim(),
+          type: body.type.trim(),
+          projectId: body.projectId || null,
+          expiresAt: body.expiresAt ? new Date(body.expiresAt) : null,
+          url: typeof body.url === 'string' && body.url ? body.url : null,
+          size: Number.isFinite(body.size) ? Math.floor(body.size) : null,
+          mimeType: typeof body.mimeType === 'string' && body.mimeType ? body.mimeType : null,
+          tags: tags as Prisma.InputJsonValue,
+          capturedAt,
+          latitude,
+          longitude,
+          accuracyM,
+          metadata,
+          offlineOutboxId: offlineOutboxId || null,
+        },
+        include: { project: true },
+      })
+    } catch (error) {
+      if (offlineOutboxId && error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        const existing = await prisma.document.findFirst({
+          where: {
+            ...fileProjectScope(session),
+            offlineOutboxId,
+          },
+          include: { project: true },
+        })
+        if (existing) return NextResponse.json(existing, { status: 200 })
+      }
+      throw error
+    }
     if (document.projectId) {
       prisma.activity.create({
         data: {

@@ -87,7 +87,7 @@ const FAQ = [
   },
   {
     q: 'Does it work offline?',
-    a: 'The PWA caches the last-viewed pages for offline reading. Capturing on-site work (photos, time, RFIs) requires connectivity for now — full offline-write is on the v2 roadmap.',
+    a: 'Yes. The PWA caches the app for offline use, and photos, receipts, and new document uploads are kept safely on the device and sync automatically when connectivity returns. Some live services and AI actions still require a connection.',
   },
   {
     q: 'Can clients see my project data?',
