@@ -58,7 +58,7 @@ test('more than 1000 offline writes are chunked and none are discarded', async (
     storage: { cortexx_sync_queue: JSON.stringify(ops) },
   });
   h.events.online(); await tick();
-  assert.deepEqual(h.calls.map(c => JSON.parse(c.body).ops.length), [1000, 5]);
+  assert.deepEqual(h.calls.filter(c => c.method === 'POST').map(c => JSON.parse(c.body).ops.length), [1000, 5]);
   assert.equal(h.cloud.status().queued, 0);
 });
 
@@ -74,8 +74,9 @@ test('concurrent flush triggers preserve changes appended while the request is p
   h.events.online();
   assert.equal(h.calls.length, 1);
   finish(); await pending; await tick();
-  assert.equal(h.calls.length, 2);
-  assert.equal(JSON.parse(h.calls[1].body).ops[0].id, 2);
+  const uploads = h.calls.filter(c => c.method === 'POST');
+  assert.equal(uploads.length, 2);
+  assert.equal(JSON.parse(uploads[1].body).ops[0].id, 2);
   assert.equal(h.cloud.status().queued, 0);
 });
 
@@ -193,4 +194,60 @@ test('a pull racing a local edit does not advance its cursor or erase pending wo
   assert.equal(await pending, null);
   assert.equal(h.cloud.status().lastPull, null);
   assert.equal(h.cloud.status().queued, 1);
+});
+
+test('an old 401 cannot expire a new session for the same account and token', async () => {
+  let finish;
+  let requests = 0;
+  const h = setup(() => ++requests === 1
+    ? new Promise(resolve => { finish = resolve; })
+    : response({ collections: {}, at: 'new-session' }));
+  const pending = h.cloud.pull();
+  h.cloud.signOut();
+  h.cloud._authed({ token: token() });
+  await tick();
+  finish(response({}, 401));
+  await pending;
+  assert.equal(h.cloud.status().authed, true);
+  assert.equal(h.cloud.status().lastPull, 'new-session');
+});
+
+test('reconnecting uploads pending edits before refreshing remote records', async () => {
+  const h = setup((url, init) => init.method === 'POST'
+    ? response({ ok: true, applied: JSON.parse(init.body).ops.length })
+    : response({ collections: { tasks: [{ id: 2, t: 'Remote update' }] }, at: 'reconnected', fullSnapshot: true }));
+  await h.cloud.push('tasks', 'delete', 1);
+  h.events.online();
+  await tick();
+  assert.deepEqual(h.calls.map(call => call.method), ['POST', 'GET']);
+  assert.equal(h.cloud.status().queued, 0);
+  assert.equal(h.backend.db.tasks.getSync(2).t, 'Remote update');
+  assert.equal(h.cloud.status().lastPull, 'reconnected');
+});
+
+test('an online restored session downloads changes without requiring live sync', async () => {
+  const h = setup(() => response({ collections: { tasks: [{ id: 3, t: 'Updated elsewhere' }] }, at: 'restored' }), { online: true });
+  await tick();
+  assert.equal(h.calls.length, 1);
+  assert.equal(h.calls[0].method, 'GET');
+  assert.equal(h.backend.db.tasks.getSync(3).t, 'Updated elsewhere');
+  assert.equal(h.cloud.status().lastPull, 'restored');
+});
+
+test('reconnect refresh preserves queued edits when their upload is rejected', async () => {
+  const h = setup((url, init) => init.method === 'POST'
+    ? response({ error: 'Temporary failure' }, 503)
+    : response({ collections: { tasks: [{ id: 1, t: 'Old server value' }] }, at: 'refresh', fullSnapshot: true }));
+  await h.cloud.push('tasks', 'update', 1, { id: 1, t: 'Unsynced field edit' });
+  h.events.online();
+  await tick();
+  assert.equal(h.cloud.status().queued, 1);
+  assert.equal(h.backend.db.tasks.getSync(1).t, 'Unsynced field edit');
+});
+
+test('a current-session 401 still expires authentication', async () => {
+  const h = setup(() => response({}, 401));
+  await h.cloud.pull();
+  assert.equal(h.cloud.status().authed, false);
+  assert.equal(h.data.has('cortexx_token'), false);
 });
