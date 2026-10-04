@@ -12,6 +12,7 @@
     token: 'cortexx_token',
     live: 'cortexx_live_sync',
     queue: 'cortexx_sync_queue',
+    conflicts: 'cortexx_sync_conflicts',
     lastPull: 'cortexx_last_pull',
   };
   // Default the API base to the current origin so the app works out-of-the-box
@@ -76,12 +77,16 @@
       const r = await fetch(base + path, {
         method, headers, body: body == null ? undefined : JSON.stringify(body),
       });
+      let payload = null;
+      if (r.status !== 204) {
+        try { payload = await r.json(); } catch (e) { payload = null; }
+      }
       if (r.status === 401 && useAuth) {
         if (API === base && TOKEN === token && session === sessionRevision) invalidateAuth();
-        return { __error: 401 };
+        return { ...(payload && typeof payload === 'object' ? payload : {}), __error: 401 };
       }
-      if (!r.ok) return { __error: r.status };
-      return r.status === 204 ? { ok: true } : await r.json();
+      if (!r.ok) return { ...(payload && typeof payload === 'object' ? payload : {}), __error: r.status };
+      return r.status === 204 ? { ok: true } : payload;
     } catch (e) { return null; }
   }
 
@@ -103,6 +108,9 @@
   function pullKey() {
     const key = queueKey();
     return key ? LS.lastPull + key.slice(LS.queue.length) : null;
+  }
+  function conflictKey(key = queueKey()) {
+    return key ? LS.conflicts + key.slice(LS.queue.length) : null;
   }
   function lastPull() {
     const key = pullKey();
@@ -126,6 +134,25 @@
       return false;
     }
   };
+  const readConflicts = (key = conflictKey()) => {
+    try {
+      const rows = key ? JSON.parse(localStorage.getItem(key) || '[]') : [];
+      return Array.isArray(rows) ? rows : [];
+    } catch (e) { return []; }
+  };
+  const writeConflicts = (rows, key = conflictKey()) => {
+    if (!key) return false;
+    try {
+      localStorage.setItem(key, JSON.stringify(rows));
+      return true;
+    } catch (e) {
+      toast('Unable to save sync conflicts — free device storage before continuing.', 'error');
+      return false;
+    }
+  };
+  const canonicalCollection = (collection) => collection === 'team_members' ? 'team' : collection;
+  const sameRecord = (op, collection, id) =>
+    canonicalCollection(op.collection) === canonicalCollection(collection) && String(op.id) === String(id);
   // Migrate the old unscoped queue only for the session present at startup.
   // With no known owner, preserve it rather than assigning it to the next login.
   const initialKey = queueKey();
@@ -144,6 +171,40 @@
     pullRequest++; // Invalidate in-flight pulls, including sign-out/sign-in to the same account.
     if (window.Backend && window.Backend.activateScope) window.Backend.activateScope(queueKey());
   }
+  function quarantineConflict(serverConflict, key) {
+    if (!serverConflict || serverConflict.collection == null || serverConflict.id == null) return false;
+    const current = readQueue(key);
+    const matching = current.filter(op => sameRecord(op, serverConflict.collection, serverConflict.id));
+    if (!matching.length) return false;
+    const last = matching[matching.length - 1];
+    const local = last.op === 'delete' ? null : (last.data || null);
+    const cKey = conflictKey(key);
+    if (!cKey) return false;
+    const existing = readConflicts(cKey);
+    const recordKey = `${canonicalCollection(serverConflict.collection)}:${String(serverConflict.id)}`;
+    const entry = {
+      key: recordKey,
+      collection: canonicalCollection(serverConflict.collection),
+      id: String(serverConflict.id),
+      baseVersion: Number(serverConflict.baseVersion) || 0,
+      currentVersion: Number(serverConflict.currentVersion) || 0,
+      local,
+      remote: serverConflict.remote == null ? null : serverConflict.remote,
+      operations: matching,
+      detectedAt: new Date().toISOString(),
+    };
+    const nextConflicts = [...existing.filter(row => row && row.key !== recordKey), entry];
+    if (!writeConflicts(nextConflicts, cKey)) return false;
+    const remaining = current.filter(op => !sameRecord(op, serverConflict.collection, serverConflict.id));
+    if (!writeQueue(remaining, key)) {
+      writeConflicts(existing, cKey);
+      return false;
+    }
+    writeRevision++;
+    toast('Sync conflict needs review — your offline change was kept safely.', 'error');
+    emit(status);
+    return true;
+  }
   activateCache();
   async function flushQueue() {
     if (!API || !TOKEN || !online || !queueKey()) return;
@@ -155,6 +216,11 @@
         const batch = readQueue(key).slice(0, 1000);
         if (!batch.length) return;
         const res = await api('POST', '/api/sync/bulk', { ops: batch });
+        if (TOKEN !== token || queueKey() !== key) return;
+        if (res && res.__error === 409 && res.error === 'sync_conflict' && res.conflict) {
+          if (!quarantineConflict(res.conflict, key)) return;
+          continue;
+        }
         // A count alone cannot identify which operations succeeded on an old
         // server. Only remove a fully acknowledged batch; retries are idempotent.
         if (!res || res.__error || res.ok !== true || res.applied !== batch.length) return;
@@ -212,6 +278,7 @@
       live: localStorage.getItem(LS.live) === '1' && !!es,
       apiUrl: API,
       queued: readQueue().length,
+      conflicts: readConflicts().length,
       lastPull: lastPull() || null,
     };
   }
@@ -288,6 +355,59 @@
       emit(status);
     },
 
+    conflicts() {
+      return readConflicts().map(row => ({ ...row, operations: Array.isArray(row.operations) ? [...row.operations] : [] }));
+    },
+    async resolveConflict(recordKey, strategy) {
+      if (!['mine', 'cloud'].includes(strategy)) return false;
+      const cKey = conflictKey();
+      const qKey = queueKey();
+      if (!cKey || !qKey) return false;
+      const rows = readConflicts(cKey);
+      const conflict = rows.find(row => row && row.key === recordKey);
+      if (!conflict) return false;
+      const remaining = rows.filter(row => !row || row.key !== recordKey);
+      const resolvedId = conflict.local?.id ?? conflict.remote?.id ?? conflict.id;
+
+      if (strategy === 'cloud') {
+        if (!writeConflicts(remaining, cKey)) return false;
+        if (window.Backend && window.Backend.applyConflictResolution) {
+          window.Backend.applyConflictResolution(conflict.collection, resolvedId, conflict.remote || null);
+        }
+        writeRevision++;
+        emit(status);
+        toast('Cloud version kept', 'success');
+        return true;
+      }
+
+      const baseVersion = Number(conflict.currentVersion) || 0;
+      const local = conflict.local == null
+        ? null
+        : { ...conflict.local, id: resolvedId, _syncVersion: baseVersion + 1, _rev: Date.now() };
+      const op = local == null ? 'delete' : (conflict.remote == null ? 'create' : 'update');
+      const q = readQueue(qKey);
+      const next = [...q, {
+        collection: conflict.collection,
+        op,
+        id: resolvedId,
+        ...(local == null ? {} : { data: local }),
+        baseVersion,
+      }];
+      if (!writeQueue(next, qKey)) return false;
+      if (!writeConflicts(remaining, cKey)) {
+        writeQueue(q, qKey);
+        return false;
+      }
+      if (window.Backend && window.Backend.applyConflictResolution) {
+        window.Backend.applyConflictResolution(conflict.collection, resolvedId, local);
+      }
+      writeRevision++;
+      emit(status);
+      toast('Your version queued to sync', 'success');
+      await flushQueue();
+      return true;
+    },
+
     // ── Data ────────────────────────────────────────────────
     async pull() {
       const token = TOKEN;
@@ -301,7 +421,18 @@
       const since = localStorage.getItem(key) || '';
       const r = await api('GET', '/api/sync/pull?since=' + encodeURIComponent(since));
       if (TOKEN === token && API === base && request === pullRequest && revision === writeRevision && r && r.collections) {
-        if (window.Backend && window.Backend.mergeRemote) window.Backend.mergeRemote(r.collections, { fullSnapshot: r.fullSnapshot === true, pending: readQueue() });
+        const conflictOps = readConflicts().map(row => ({
+          collection: row.collection,
+          op: row.local == null ? 'delete' : 'update',
+          id: row.local?.id ?? row.remote?.id ?? row.id,
+          ...(row.local == null ? {} : { data: row.local }),
+        }));
+        if (window.Backend && window.Backend.mergeRemote) {
+          window.Backend.mergeRemote(r.collections, {
+            fullSnapshot: r.fullSnapshot === true,
+            pending: [...readQueue(), ...conflictOps],
+          });
+        }
         if (r.at) localStorage.setItem(key, r.at);
         emit(status);
         return r.collections;
@@ -310,13 +441,19 @@
     },
     // Mirror a single create/update/delete to the cloud (queues when offline
     // OR when an online attempt fails, so writes are never silently dropped).
-    async push(collection, op, id, data) {
+    async push(collection, op, id, data, meta = {}) {
       if (!API || !TOKEN) return;
       const key = queueKey();
       if (!key) { toast('Please sign in again before syncing changes.', 'error'); return; }
       const q = readQueue(key);
       writeRevision++;
-      q.push({ collection, op, id, ...(data == null ? {} : { data }) });
+      q.push({
+        collection,
+        op,
+        id,
+        ...(data == null ? {} : { data }),
+        ...(Number.isInteger(meta.baseVersion) && meta.baseVersion >= 0 ? { baseVersion: meta.baseVersion } : {}),
+      });
       if (!writeQueue(q, key)) return;
       emit(status);
       await flushQueue();
