@@ -108,7 +108,14 @@ jobs:
               echo "Backup marker is outside managed backup directory" >&2
               exit 1
             }
-            tar -C "$root" -czf - "$(basename "$backup")"'             | openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000                 -pass env:BACKUP_ENCRYPTION_KEY -out "$ARCHIVE"
+            APP_DIR=/home/administrator/production/cortexx
+            for secret in .env.construction .owner-credentials; do
+              [[ -s "$APP_DIR/$secret" ]] || { echo "Required recovery secret missing: $secret" >&2; exit 1; }
+              [[ "$(stat -c "%a" "$APP_DIR/$secret")" == 600 ]] || { echo "Recovery secret permissions must be 600: $secret" >&2; exit 1; }
+            done
+            tar -czf - -C "$root" "$(basename "$backup")" -C "$APP_DIR" .env.construction .owner-credentials' \
+            | openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000 \
+                -pass env:BACKUP_ENCRYPTION_KEY -out "$ARCHIVE"
           test -s "$ARCHIVE"
           sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
           echo "OFFSITE_ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
@@ -126,13 +133,26 @@ jobs:
           tar -xzf "$PLAIN" -C "$VERIFY_DIR"
           mapfile -t BACKUPS < <(find "$VERIFY_DIR" -mindepth 1 -maxdepth 1 -type d -name 'construction-*' -print)
           [[ "${#BACKUPS[@]}" -eq 1 ]] || { echo "::error::Encrypted archive must contain exactly one managed backup."; exit 1; }
+          for secret in .env.construction .owner-credentials; do
+            [[ -s "$VERIFY_DIR/$secret" ]] || { echo "::error::Encrypted archive is missing $secret."; exit 1; }
+            [[ "$(stat -c '%a' "$VERIFY_DIR/$secret")" == 600 ]] || { echo "::error::Recovered $secret permissions are not 600."; exit 1; }
+          done
+          grep -q '^DATABASE_URL=' "$VERIFY_DIR/.env.construction"
+          grep -q '^NEXTAUTH_SECRET=' "$VERIFY_DIR/.env.construction"
+          grep -q '^CRON_SECRET=' "$VERIFY_DIR/.env.construction"
+          grep -q '^URL=' "$VERIFY_DIR/.owner-credentials"
+          grep -q '^EMAIL=' "$VERIFY_DIR/.owner-credentials"
+          grep -q '^PASSWORD=' "$VERIFY_DIR/.owner-credentials"
           BACKUP="${BACKUPS[0]}"
           (cd "$BACKUP" && sha256sum -c SHA256SUMS)
           gzip -t "$BACKUP/uploads.tar.gz"
           IMAGE="$(cat "$BACKUP/postgres-image.txt")"
           [[ "$IMAGE" == postgres:* ]] || { echo "::error::Unexpected PostgreSQL image in backup."; exit 1; }
           NAME="cortexx-offsite-restore-${GITHUB_RUN_ID}"
-          cleanup() { docker rm -fv "$NAME" >/dev/null 2>&1 || true; }
+          cleanup() {
+            docker rm -fv "$NAME" >/dev/null 2>&1 || true
+            rm -rf "$VERIFY_DIR" "$PLAIN"
+          }
           trap cleanup EXIT
           docker run -d --name "$NAME" --network none             -e POSTGRES_HOST_AUTH_METHOD=trust "$IMAGE" >/dev/null
           READY=false
@@ -151,6 +171,7 @@ jobs:
             echo "- Restored tables: $TABLES"
             echo '- Encryption: AES-256-CBC + PBKDF2 (200,000 iterations)'
             echo '- Artifact contains ciphertext only; the encryption key remains a GitHub secret.'
+            echo '- Protected recovery payload: database, uploads, .env.construction and owner credentials.'
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Retain encrypted off-site backup

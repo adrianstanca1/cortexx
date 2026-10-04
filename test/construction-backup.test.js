@@ -60,6 +60,12 @@ test('backup verification workflow retains an encrypted off-site artifact and pr
   assert.match(workflow, /retention-days:\s*30/);
   assert.match(workflow, /pg_restore -U postgres -d restore_drill/);
   assert.match(workflow, /compression-level:\s*0/);
+  assert.match(workflow, /\.env\.construction \.owner-credentials/);
+  assert.match(workflow, /Recovered \$secret permissions are not 600/);
+  assert.match(workflow, /grep -q '\^DATABASE_URL=' \"\$VERIFY_DIR\/\.env\.construction\"/);
+  assert.match(workflow, /grep -q '\^PASSWORD=' \"\$VERIFY_DIR\/\.owner-credentials\"/);
+  assert.match(workflow, /rm -rf \"\$VERIFY_DIR\" \"\$PLAIN\"/);
+  assert.doesNotMatch(workflow, /actions\/upload-artifact@v4[\s\S]{0,500}(\.env\.construction|\.owner-credentials)/);
   const keyLine = workflow.split('\n').find(line => line.includes('BACKUP_ENCRYPTION_KEY:'));
   assert.equal(keyLine?.trim(), 'BACKUP_ENCRYPTION_KEY: ${{ secrets.CORTEXX_BACKUP_ENCRYPTION_KEY }}');
 });
