@@ -35,6 +35,34 @@ services:
       interval: 10s
       timeout: 5s
       retries: 12
+  browser-gateway:
+    build:
+      context: ./browser-gateway
+      dockerfile: Dockerfile
+    restart: unless-stopped
+    environment:
+      BROWSER_GATEWAY_INTERNAL_TOKEN: ${BROWSER_GATEWAY_INTERNAL_TOKEN:?Set a generated browser gateway token}
+      PORT: 3002
+      PUPPETEER_EXECUTABLE_PATH: /usr/bin/chromium-browser
+      MAX_BROWSER_SESSIONS: '4'
+      BROWSER_SESSION_IDLE_MS: '900000'
+    expose:
+      - '3002'
+    init: true
+    security_opt:
+      - no-new-privileges:true
+    cap_drop:
+      - ALL
+    tmpfs:
+      - /tmp:size=512m
+    networks:
+      - browser_control
+    healthcheck:
+      test: [CMD, wget, -qO-, http://127.0.0.1:3002/health]
+      interval: 20s
+      timeout: 5s
+      retries: 5
+      start_period: 20s
   app:
     build:
       context: .
@@ -53,6 +81,8 @@ services:
       AUTH_URL: https://cortexbuildpro.tech
       NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.tech
       REDIS_URL: redis://redis:6379
+      BROWSER_GATEWAY_URL: http://browser-gateway:3002
+      BROWSER_GATEWAY_INTERNAL_TOKEN: ${BROWSER_GATEWAY_INTERNAL_TOKEN:?Set a generated browser gateway token}
       OLLAMA_BASE_URL: http://ollama:11434
       UPLOAD_DIR: /app/uploads
       npm_package_version: 1.5.0
@@ -61,12 +91,17 @@ services:
         condition: service_healthy
       redis:
         condition: service_healthy
+      browser-gateway:
+        condition: service_healthy
       ollama:
         condition: service_healthy
     ports:
       - '127.0.0.1:3020:3000'
     volumes:
       - construction_uploads:/app/uploads
+    networks:
+      - default
+      - browser_control
   tools:
     profiles: [tools]
     build:
@@ -77,6 +112,9 @@ services:
     depends_on:
       db:
         condition: service_healthy
+networks:
+  browser_control:
+    driver: bridge
 volumes:
   construction_db:
   construction_redis:
