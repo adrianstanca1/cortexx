@@ -8,6 +8,7 @@ import { reportError } from '@/lib/errors'
 import { canWrite } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
 import safetyWorkflow from '@/lib/safety-workflow'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 
@@ -93,7 +94,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (body.location !== undefined) data.location = clean(body.location, 300)
     if (body.reportedBy !== undefined) data.reportedBy = clean(body.reportedBy, 160)
     if (body.injuredParty !== undefined) data.injuredParty = clean(body.injuredParty, 160)
-    if (body.photoUrl !== undefined) data.photoUrl = clean(body.photoUrl, 1000)
+    if (body.photoUrl !== undefined) {
+      const nextPhotoUrl = clean(body.photoUrl, 1000)
+      if (nextPhotoUrl && nextPhotoUrl !== existing.photoUrl) {
+        const uploadError = await authorizeUploadReference(nextPhotoUrl, {
+          userId: (auth.user as { id?: string }).id,
+          personaRole: (auth.user as { role?: string }).role,
+        })
+        if (uploadError) return uploadError
+      }
+      data.photoUrl = nextPhotoUrl
+    }
     if (body.notes !== undefined) data.notes = clean(body.notes)
     if (body.projectId !== undefined) data.projectId = clean(body.projectId, 200)
     if (body.investigatorName !== undefined) data.investigatorName = clean(body.investigatorName, 160)

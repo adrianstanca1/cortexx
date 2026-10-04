@@ -7,6 +7,7 @@ import { canManageCompanywideFiles, fileProjectScope } from '@/lib/file-access'
 import { programmeProjectWhere } from '@/lib/programme-access'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 
@@ -55,6 +56,10 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       ? body.tags.filter((t: unknown): t is string => typeof t === 'string' && t.trim() !== '').map((t: string) => t.trim())
       : undefined
     const newVersion = body.newVersion === true && typeof body.url === 'string' && body.url
+    if (newVersion) {
+      const uploadError = await authorizeUploadReference(body.url, { userId: auth.userId, personaRole: auth.personaRole })
+      if (uploadError) return uploadError
+    }
     const document = await prisma.document.update({
       where: { id: params.id, ...fileProjectScope(auth.session) },
       data: {

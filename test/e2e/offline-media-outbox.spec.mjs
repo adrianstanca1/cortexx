@@ -75,13 +75,25 @@ test('offline photo capture persists locally and auto-syncs exactly once after r
 test('document outbox replay is idempotent under concurrent requests', async ({ page }) => {
   await signIn(page, email, password, { dashboard: true })
   const outboxId = crypto.randomUUID()
+  const uploadResponse = await page.request.post('/api/uploads', {
+    multipart: {
+      file: {
+        name: 'concurrent-offline-replay.jpg',
+        mimeType: 'image/jpeg',
+        buffer: Buffer.from('concurrent-offline-replay-evidence'),
+      },
+    },
+  })
+  expect(uploadResponse.status()).toBe(201)
+  const upload = await uploadResponse.json()
+
   const body = {
     name: `Concurrent offline doc ${Date.now()}`,
     type: 'photo',
     projectId: null,
-    url: '/api/uploads/example.jpg',
-    size: 123,
-    mimeType: 'image/jpeg',
+    url: upload.url,
+    size: upload.size,
+    mimeType: upload.mimeType,
     metadata: { source: 'e2e-offline-replay' },
   }
   const send = () => page.request.post('/api/documents', {

@@ -5,6 +5,7 @@ import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import { runWithOrg } from '@/lib/tenancy'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 const ALLOWED_STATUS = new Set(['open', 'in_progress', 'closed'])
@@ -35,7 +36,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
   return scope(auth, async () => {
     try {
       const body = await req.json()
-      const existing = await prisma.snag.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true } })
+      const existing = await prisma.snag.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true, photoUrl: true } })
       if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
       const nextStatus = body.status !== undefined ? (ALLOWED_STATUS.has(body.status) ? body.status : existing.status) : existing.status
       const justClosed = existing.status !== 'closed' && nextStatus === 'closed'
@@ -49,6 +50,10 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
         } else dueDateUpdate = { dueDate: null }
       }
       if (body.title !== undefined && !String(body.title).trim()) return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
+      if (body.photoUrl !== undefined && body.photoUrl && body.photoUrl !== existing.photoUrl) {
+        const uploadError = await authorizeUploadReference(body.photoUrl, { userId: auth.userId, personaRole: auth.personaRole })
+        if (uploadError) return uploadError
+      }
       const snag = await prisma.snag.update({
         where: { id: params.id },
         data: {

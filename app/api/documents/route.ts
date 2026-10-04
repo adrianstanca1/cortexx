@@ -9,6 +9,7 @@ import { reportError } from '@/lib/errors'
 import { canManageCompanywideFiles, fileProjectScope } from '@/lib/file-access'
 import { programmeProjectWhere, type ProgrammeActor } from '@/lib/programme-access'
 import { withRoute } from '@/lib/withRoute'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +46,7 @@ async function GET_impl(req: NextRequest, session: ProgrammeActor) {
   }
 }
 
-async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null; role?: string } }) {
+async function POST_impl(req: NextRequest, userId: string, personaRole: string | null, session: { user?: { name?: string | null; email?: string | null; role?: string } }) {
   const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
@@ -96,6 +97,10 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
     }
     if (body.projectId && !await prisma.project.findFirst({ where: programmeProjectWhere(body.projectId, session), select: { id: true } })) {
       return NextResponse.json({ error: 'Project not found' }, { status: 404 })
+    }
+    if (typeof body.url === 'string' && body.url) {
+      const uploadError = await authorizeUploadReference(body.url, { userId, personaRole })
+      if (uploadError) return uploadError
     }
 
     if (offlineOutboxId) {
@@ -163,4 +168,4 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
 }
 
 export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
-export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })
+export const POST = withRoute(({ req, userId, personaRole, session }) => POST_impl(req, userId, personaRole, session), { permission: 'write' })

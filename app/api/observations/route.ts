@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 
@@ -58,6 +59,13 @@ export async function POST(req: NextRequest) {
     if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
 
     const type = ALLOWED_TYPE.has(body.type) ? body.type : 'positive'
+    if (typeof body.photoUrl === 'string' && body.photoUrl) {
+      const uploadError = await authorizeUploadReference(body.photoUrl, {
+        userId: (auth.user as { id?: string }).id,
+        personaRole: (auth.user as { role?: string }).role,
+      })
+      if (uploadError) return uploadError
+    }
 
     const observation = await prisma.observation.create({
       data: {
