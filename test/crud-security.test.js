@@ -56,7 +56,7 @@ test('isRestrictedCollection — matches the minimum required denylist', () => {
 })
 
 test('isRestrictedCollection — also covers integration-secret + audit tables', () => {
-  for (const c of ['bank_connections', 'iap_entitlements', 'hmrc_submissions', 'push_subscriptions', 'sync_log', 'ai_history']) {
+  for (const c of ['bank_connections', 'iap_entitlements', 'hmrc_submissions', 'push_subscriptions', 'sync_log', 'sync_record_versions', 'syncRecordVersions', 'ai_history']) {
     assert.equal(isRestrictedCollection(c), true, `${c} must be restricted`)
   }
 })

@@ -35,6 +35,8 @@ const RESTRICTED_COLLECTIONS = new Set([
   'audit',              // camelCase alias used by the app's audit route
   'sync_log',           // sync bookkeeping (internal)
   'synclog',
+  'sync_record_versions', // optimistic-concurrency tokens (internal)
+  'syncrecordversions',
   // ── Integration secrets (tokens/entitlements at rest) ───────
   'bank_connections',   // OAuth access/refresh tokens (encrypted, still off-limits)
   'bankconnections',

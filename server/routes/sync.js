@@ -5,7 +5,7 @@
 const express = require('express');
 const { NATIVE, tableFor } = require('../collections');
 const { isRestrictedCollection } = require('../security');
-const { validateOperation, applyOperations } = require('../collection-store');
+const { SyncConflictError, validateOperation, applyOperations, canonicalCollection } = require('../collection-store');
 const wrap = fn => (req, res, next) => Promise.resolve(fn(req, res, next)).catch(next);
 
 module.exports = function syncRoutes(pool, auth, bus = { emit() {} }) {
@@ -16,12 +16,23 @@ module.exports = function syncRoutes(pool, auth, bus = { emit() {} }) {
   router.get('/sync/pull', auth, wrap(async (req, res) => {
     const ws = req.user.ws;
     const out = Object.create(null);
+    const versions = await pool.query(
+      'SELECT collection, doc_id, version FROM sync_record_versions WHERE workspace_id=$1', [ws]);
+    const versionMap = new Map(versions.rows.map(row => [
+      `${canonicalCollection(row.collection)}:${String(row.doc_id)}`,
+      Number(row.version) || 0,
+    ]));
+    const stampVersion = (collection, record) => ({
+      ...record,
+      _syncVersion: versionMap.get(`${canonicalCollection(collection)}:${String(record.id)}`) || 0,
+    });
+
     for (const collection of NATIVE) {
       if (collection === 'team_members') continue;
       const r = await pool.query(`SELECT * FROM ${tableFor(collection)} WHERE workspace_id=$1`, [ws]);
       out[collection] = r.rows.map(row => {
         const { data, workspace_id, ...cols } = row;
-        return { ...cols, ...(data || {}), id: row.id };
+        return stampVersion(collection, { ...cols, ...(data || {}), id: row.id });
       });
     }
     const docs = await pool.query(
@@ -29,9 +40,9 @@ module.exports = function syncRoutes(pool, auth, bus = { emit() {} }) {
     for (const row of docs.rows) {
       if (isRestrictedCollection(row.collection) ||
           ['__proto__', 'constructor', 'prototype'].includes(row.collection)) continue;
-      const collection = row.collection === 'team_members' ? 'team' : row.collection;
+      const collection = canonicalCollection(row.collection);
       const arr = (out[collection] ||= []);
-      const rec = { ...row.data, id: row.doc_id };
+      const rec = stampVersion(collection, { ...row.data, id: row.doc_id });
       const idx = arr.findIndex(x => String(x.id) === String(row.doc_id));
       if (idx >= 0) arr[idx] = rec; else arr.push(rec);
     }
@@ -49,9 +60,16 @@ module.exports = function syncRoutes(pool, auth, bus = { emit() {} }) {
       const error = validateOperation(ops[i]);
       if (error) return res.status(error === 'collection_restricted' ? 403 : 400).json({ error, index: i });
     }
-    if (ops.length) await applyOperations(pool, req.user.ws, ops);
-    for (const o of ops) bus.emit(req.user.ws, { type: 'change', collection: o.collection, op: o.op, id: o.id });
-    res.json({ ok: true, applied: ops.length });
+    try {
+      const versions = ops.length ? await applyOperations(pool, req.user.ws, ops) : [];
+      for (const o of ops) bus.emit(req.user.ws, { type: 'change', collection: o.collection, op: o.op, id: o.id });
+      res.json({ ok: true, applied: ops.length, versions });
+    } catch (error) {
+      if (error instanceof SyncConflictError) {
+        return res.status(409).json({ error: 'sync_conflict', conflict: error.conflict });
+      }
+      throw error;
+    }
   }));
 
   // ── Contractor-side portal inbox ──────────────────────────

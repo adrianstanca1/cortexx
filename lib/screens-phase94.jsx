@@ -25,8 +25,14 @@ function CloudSyncScreen({ accent }) {
   const [devLink, setDevLink] = React.useState(null);
   const [busy, setBusy] = React.useState(false);
   const [reach, setReach] = React.useState(null); // null | true | false
+  const [resolving, setResolving] = React.useState(null);
 
   React.useEffect(() => { if (!cloud) return; return cloud.onStatus(setSt); }, []);
+  const conflicts = cloud && cloud.conflicts ? cloud.conflicts() : [];
+  const conflictPreview = value => {
+    if (value == null) return 'Deleted';
+    return String(value.title || value.name || value.t || value.subject || value.reference || `Record ${value.id || ''}`).slice(0, 90);
+  };
 
   if (!cloud) {
     return <ScreenBg accent={accent}><div style={{ padding: 40, textAlign: 'center', fontFamily: SF, color: T.t2 }}>Cloud sync module not loaded.</div></ScreenBg>;
@@ -50,6 +56,11 @@ function CloudSyncScreen({ accent }) {
   const verifyDev = async () => {
     const t = new URL(devLink).searchParams.get('magic');
     setBusy(true); await cloud.verifyMagic(t); setBusy(false); setDevLink(null);
+  };
+  const resolveConflict = async (key, strategy) => {
+    setResolving(key + ':' + strategy);
+    try { await cloud.resolveConflict(key, strategy); }
+    finally { setResolving(null); }
   };
 
   const StatusDot = ({ on, label }) => (
@@ -75,6 +86,7 @@ function CloudSyncScreen({ accent }) {
             <StatusDot on={st.authed} label={st.authed ? 'Signed in' : 'Signed out'}/>
             <StatusDot on={st.live} label={st.live ? 'Live stream on' : 'Live stream off'}/>
             {st.queued > 0 && <div style={{ gridColumn: '1 / -1', fontFamily: SFMono, fontSize: 11, color: T.amber }}>{st.queued} change{st.queued === 1 ? '' : 's'} queued offline</div>}
+            {st.conflicts > 0 && <div style={{ gridColumn: '1 / -1', fontFamily: SFMono, fontSize: 11, color: T.red }}>{st.conflicts} sync conflict{st.conflicts === 1 ? '' : 's'} need review</div>}
             {st.lastPull && <div style={{ gridColumn: '1 / -1', fontFamily: SF, fontSize: 11, color: T.t3 }}>Last pull {new Date(st.lastPull).toLocaleString('en-GB')}</div>}
           </div>
 
@@ -108,6 +120,34 @@ function CloudSyncScreen({ accent }) {
                   <button type="button" onClick={verifyDev} disabled={busy} style={{ width: '100%', background: accent, color: '#fff', border: 'none', borderRadius: 9, padding: '11px', fontFamily: SF, fontSize: 13, fontWeight: 700, cursor: 'pointer' }}>Open magic link & sign in</button>
                 </div>
               )}
+            </>
+          )}
+
+          {st.authed && conflicts.length > 0 && (
+            <>
+              <div style={{ fontFamily: SF, fontSize: 11, fontWeight: 700, color: T.red, textTransform: 'uppercase', letterSpacing: 0.6, margin: '20px 2px 8px' }}>Sync conflicts</div>
+              <div style={{ display: 'flex', flexDirection: 'column', gap: 8 }}>
+                {conflicts.slice(0, 20).map(conflict => (
+                  <div key={conflict.key} style={{ background: T.bg2, border: `0.5px solid ${T.red}66`, borderRadius: 12, padding: 12 }}>
+                    <div style={{ fontFamily: SF, fontSize: 13, fontWeight: 700, color: T.t1, marginBottom: 5, textTransform: 'capitalize' }}>{conflict.collection} · {conflict.id}</div>
+                    <div style={{ fontFamily: SF, fontSize: 11, color: T.t2, lineHeight: 1.45, marginBottom: 8 }}>This record changed in the cloud while this device had an offline edit. Both versions are preserved until you choose.</div>
+                    <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: 8, marginBottom: 10 }}>
+                      <div style={{ padding: 8, borderRadius: 8, background: T.bg3 }}>
+                        <div style={{ fontFamily: SFMono, fontSize: 9, color: T.t3, marginBottom: 3 }}>THIS DEVICE</div>
+                        <div style={{ fontFamily: SF, fontSize: 11, color: T.t1 }}>{conflictPreview(conflict.local)}</div>
+                      </div>
+                      <div style={{ padding: 8, borderRadius: 8, background: T.bg3 }}>
+                        <div style={{ fontFamily: SFMono, fontSize: 9, color: T.t3, marginBottom: 3 }}>CLOUD</div>
+                        <div style={{ fontFamily: SF, fontSize: 11, color: T.t1 }}>{conflictPreview(conflict.remote)}</div>
+                      </div>
+                    </div>
+                    <div style={{ display: 'flex', gap: 8 }}>
+                      <button type="button" onClick={() => resolveConflict(conflict.key, 'cloud')} disabled={!!resolving} style={{ flex: 1, background: T.bg3, color: T.t1, border: `0.5px solid ${T.hairMid}`, borderRadius: 9, padding: '9px 8px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: resolving ? 'default' : 'pointer' }}>{resolving === conflict.key + ':cloud' ? 'Applying…' : 'Use cloud'}</button>
+                      <button type="button" onClick={() => resolveConflict(conflict.key, 'mine')} disabled={!!resolving} style={{ flex: 1, background: accent, color: '#fff', border: 'none', borderRadius: 9, padding: '9px 8px', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: resolving ? 'default' : 'pointer' }}>{resolving === conflict.key + ':mine' ? 'Retrying…' : 'Keep mine'}</button>
+                    </div>
+                  </div>
+                ))}
+              </div>
             </>
           )}
 

@@ -116,6 +116,7 @@ const Backend = (function() {
   // `arr` guarantees state[name] is always an array, even if a table was
   // registered without seed data (prevents "spread of undefined" crashes).
   const arr = (name) => (Array.isArray(state[name]) ? state[name] : (state[name] = []));
+  const syncVersion = (record) => Number.isInteger(record?._syncVersion) && record._syncVersion >= 0 ? record._syncVersion : 0;
   const makeTable = (name) => ({
     list: async () => { await delay(); return [...arr(name)]; },
     listSync: () => [...arr(name)],
@@ -125,31 +126,38 @@ const Backend = (function() {
       await delay();
       const ids = arr(name).map(x => typeof x.id === 'number' ? x.id : 0);
       const id = data.id ?? (Math.max(0, ...ids) + 1);
-      const item = { ...data, id, _rev: Date.now() };
+      const baseVersion = syncVersion(data);
+      const item = { ...data, id, _rev: Date.now(), _syncVersion: baseVersion + 1 };
       state[name] = [item, ...arr(name)];
       persist();
-      if (window.cortexxCloud) window.cortexxCloud.push(name, 'create', id, item);
+      if (window.cortexxCloud) window.cortexxCloud.push(name, 'create', id, item, { baseVersion });
       return item;
     },
     update: async (id, patch) => {
       await delay();
-      state[name] = arr(name).map(x => x.id == id ? { ...x, ...patch, _rev: Date.now() } : x);
+      const current = arr(name).find(x => x.id == id);
+      const baseVersion = syncVersion(current);
+      state[name] = arr(name).map(x => x.id == id ? { ...x, ...patch, _rev: Date.now(), _syncVersion: baseVersion + 1 } : x);
       persist();
       const item = arr(name).find(x => x.id == id);
-      if (window.cortexxCloud) window.cortexxCloud.push(name, 'update', id, item);
+      if (window.cortexxCloud) window.cortexxCloud.push(name, 'update', id, item, { baseVersion });
       return item;
     },
     updateSync: (id, patch) => {
-      state[name] = arr(name).map(x => x.id == id ? { ...x, ...patch, _rev: Date.now() } : x);
+      const current = arr(name).find(x => x.id == id);
+      const baseVersion = syncVersion(current);
+      state[name] = arr(name).map(x => x.id == id ? { ...x, ...patch, _rev: Date.now(), _syncVersion: baseVersion + 1 } : x);
       persist();
       const item = arr(name).find(x => x.id == id);
-      if (window.cortexxCloud) window.cortexxCloud.push(name, 'update', id, item);
+      if (window.cortexxCloud) window.cortexxCloud.push(name, 'update', id, item, { baseVersion });
     },
     remove: async (id) => {
       await delay();
+      const current = arr(name).find(x => x.id == id);
+      const baseVersion = syncVersion(current);
       state[name] = arr(name).filter(x => x.id != id);
       persist();
-      if (window.cortexxCloud) window.cortexxCloud.push(name, 'delete', id);
+      if (window.cortexxCloud) window.cortexxCloud.push(name, 'delete', id, null, { baseVersion });
     },
   });
 
@@ -188,9 +196,21 @@ const Backend = (function() {
     reset: () => { state = JSON.parse(JSON.stringify(SEED)); persist(); },
     subscribe,
     snapshot: () => state,
-    // ── Cloud merge: last-write-wins upsert into local collections ──
-    // Compares _rev (ms clock) per record; the newer side wins, so a stale
-    // remote pull never clobbers a local edit you just made (and vice-versa).
+    // Apply an explicit sync-conflict choice without creating another cloud
+    // mutation. cloud-sync.js queues the chosen write separately when needed.
+    applyConflictResolution: (collection, id, record) => {
+      const MAP = { team_members: 'team' };
+      const local = MAP[collection] || collection;
+      if (!Array.isArray(state[local])) return false;
+      const next = arr(local).filter(x => String(x.id) !== String(id));
+      if (record) next.unshift({ ...record, id });
+      state[local] = next;
+      persist();
+      return true;
+    },
+    // ── Cloud merge: revision-first upsert into local collections ──
+    // _syncVersion is authoritative. _rev remains a same-version tie-breaker
+    // for older records that predate optimistic concurrency.
     mergeRemote: (collections, options = {}) => {
       if (!collections || typeof collections !== 'object') return;
       const MAP = { team_members: 'team' };  // server → local name
@@ -206,10 +226,13 @@ const Backend = (function() {
           if (!rec || rec.id == null) return;
           const key = String(rec.id);
           const cur = byId.get(key);
+          const curVersion = syncVersion(cur);
+          const remVersion = syncVersion(rec);
           const curRev = cur && cur._rev ? cur._rev : 0;
           const remRev = rec._rev || 0;
-          // Last-write-wins: only overwrite if remote is newer (or local has no clock).
-          if (!cur || remRev >= curRev) byId.set(key, { ...cur, ...rec });
+          if (!cur || remVersion > curVersion || (remVersion === curVersion && remRev >= curRev)) {
+            byId.set(key, { ...cur, ...rec });
+          }
         });
         // Pending local operations win over a snapshot, including deletes.
         for (const o of options.pending || []) {
@@ -329,7 +352,7 @@ Task: "${text}"`;
 
   // Expose sync hooks at the top level too — cloud-sync.js calls them as
   // Backend.mergeRemote / Backend.pullRemote (not under .db).
-  return { db, computed, ai, activateScope, mergeRemote: db.mergeRemote, pullRemote: db.pullRemote };
+  return { db, computed, ai, activateScope, mergeRemote: db.mergeRemote, pullRemote: db.pullRemote, applyConflictResolution: db.applyConflictResolution };
 })();
 
 // ── React hooks for the backend ──────────────────────────

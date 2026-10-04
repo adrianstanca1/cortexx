@@ -198,7 +198,7 @@ CREATE TABLE site_maps (
 );
 CREATE UNIQUE INDEX idx_site_maps_project ON site_maps(workspace_id, project_id);
 
--- ── Sync bookkeeping (last-write-wins clock per record) ─────
+-- ── Sync bookkeeping + optimistic concurrency ───────────────
 CREATE TABLE sync_log (
   id           BIGSERIAL PRIMARY KEY,
   workspace_id UUID REFERENCES workspaces(id) ON DELETE CASCADE,
@@ -208,6 +208,18 @@ CREATE TABLE sync_log (
   at           TIMESTAMPTZ DEFAULT now()
 );
 CREATE INDEX idx_sync_ws_at ON sync_log(workspace_id, at);
+
+-- Optimistic-concurrency token for the local-first sync surface. Existing
+-- records intentionally start at version 0 until their first synced mutation.
+CREATE TABLE sync_record_versions (
+  workspace_id UUID NOT NULL REFERENCES workspaces(id) ON DELETE CASCADE,
+  collection   TEXT NOT NULL,
+  doc_id       TEXT NOT NULL,
+  version      BIGINT NOT NULL DEFAULT 0,
+  updated_at   TIMESTAMPTZ NOT NULL DEFAULT now(),
+  PRIMARY KEY (workspace_id, collection, doc_id)
+);
+CREATE INDEX idx_sync_record_versions_ws ON sync_record_versions(workspace_id, collection);
 
 -- ════════════════════════════════════════════════════════════
 -- ── v1.3 sync gap closure: high-traffic collections ────────

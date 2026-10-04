@@ -251,3 +251,192 @@ test('a current-session 401 still expires authentication', async () => {
   assert.equal(h.cloud.status().authed, false);
   assert.equal(h.data.has('cortexx_token'), false);
 });
+
+
+const scopedConflictKey = (ws = 'a', uid = 'user', api = 'https://construction.test') =>
+  `cortexx_sync_conflicts:${encodeURIComponent(api)}:${encodeURIComponent(ws)}:${encodeURIComponent(uid)}`;
+
+test('backend mutations queue the server revision they were based on', async () => {
+  const h = setup(async () => response({}), { online: false });
+  h.backend.mergeRemote({ tasks: [{ id: 77, t: 'Cloud', _syncVersion: 4 }] });
+  await h.backend.db.tasks.update(77, { t: 'Edited offline' });
+  const queueEntry = [...h.data.entries()].find(([key]) => key.startsWith('cortexx_sync_queue:'));
+  assert.ok(queueEntry);
+  const queued = JSON.parse(queueEntry[1]);
+  assert.equal(queued.length, 1);
+  assert.equal(queued[0].baseVersion, 4);
+  assert.equal(queued[0].data._syncVersion, 5);
+});
+
+test('a stale record is quarantined while unrelated queued work continues syncing', async () => {
+  let posts = 0;
+  const postBatches = [];
+  const h = setup(async (url, init) => {
+    if (init.method === 'POST') {
+      const ops = JSON.parse(init.body).ops;
+      postBatches.push(ops);
+      posts++;
+      if (posts === 1) {
+        return response({
+          error: 'sync_conflict',
+          conflict: {
+            collection: 'tasks',
+            id: '1',
+            baseVersion: 0,
+            currentVersion: 2,
+            remote: { id: 1, t: 'Cloud current', _syncVersion: 2 },
+          },
+        }, 409);
+      }
+      return response({ ok: true, applied: ops.length, versions: ops.map(o => ({ collection: o.collection, id: String(o.id), version: 1 })) });
+    }
+    return response({ collections: { tasks: [{ id: 1, t: 'Cloud current', _syncVersion: 2 }] }, at: 'after-conflict', fullSnapshot: true });
+  }, { online: false });
+
+  await h.cloud.push('tasks', 'update', 1, { id: 1, t: 'Local one', _syncVersion: 1 }, { baseVersion: 0 });
+  await h.cloud.push('tasks', 'update', 1, { id: 1, t: 'Local two', _syncVersion: 2 }, { baseVersion: 1 });
+  await h.cloud.push('tasks', 'update', 2, { id: 2, t: 'Independent', _syncVersion: 1 }, { baseVersion: 0 });
+  h.events.online();
+  await tick();
+  await tick();
+
+  assert.equal(h.cloud.status().queued, 0);
+  assert.equal(h.cloud.status().conflicts, 1);
+  assert.equal(postBatches.length, 2);
+  assert.deepEqual(postBatches[1].map(o => String(o.id)), ['2']);
+  const conflict = h.cloud.conflicts()[0];
+  assert.equal(conflict.key, 'tasks:1');
+  assert.equal(conflict.local.t, 'Local two');
+  assert.equal(conflict.remote.t, 'Cloud current');
+  assert.equal(h.backend.db.tasks.getSync(1).t, 'Local two');
+});
+
+test('Use cloud resolves a quarantined conflict without creating another write', async () => {
+  let posts = 0;
+  const h = setup(async (url, init) => {
+    if (init.method === 'POST') {
+      posts++;
+      return response({
+        error: 'sync_conflict',
+        conflict: {
+          collection: 'tasks',
+          id: '1',
+          baseVersion: 0,
+          currentVersion: 3,
+          remote: { id: 1, t: 'Cloud choice', _syncVersion: 3 },
+        },
+      }, 409);
+    }
+    return response({ collections: {}, at: 'pulled' });
+  }, { online: false });
+
+  await h.cloud.push('tasks', 'update', 1, { id: 1, t: 'Mine', _syncVersion: 1 }, { baseVersion: 0 });
+  h.events.online();
+  await tick();
+  assert.equal(h.cloud.status().conflicts, 1);
+
+  assert.equal(await h.cloud.resolveConflict('tasks:1', 'cloud'), true);
+  assert.equal(h.cloud.status().conflicts, 0);
+  assert.equal(h.cloud.status().queued, 0);
+  assert.equal(h.backend.db.tasks.getSync(1).t, 'Cloud choice');
+  assert.equal(h.backend.db.tasks.getSync(1)._syncVersion, 3);
+  assert.equal(posts, 1);
+});
+
+test('Keep mine rebases onto the latest cloud revision before retrying', async () => {
+  let posts = 0;
+  const batches = [];
+  const h = setup(async (url, init) => {
+    if (init.method === 'POST') {
+      posts++;
+      const ops = JSON.parse(init.body).ops;
+      batches.push(ops);
+      if (posts === 1) {
+        return response({
+          error: 'sync_conflict',
+          conflict: {
+            collection: 'tasks',
+            id: '1',
+            baseVersion: 0,
+            currentVersion: 5,
+            remote: { id: 1, t: 'Cloud v5', _syncVersion: 5 },
+          },
+        }, 409);
+      }
+      return response({ ok: true, applied: ops.length, versions: [{ collection: 'tasks', id: '1', version: 6 }] });
+    }
+    return response({ collections: {}, at: 'pulled' });
+  }, { online: false });
+
+  await h.cloud.push('tasks', 'update', 1, { id: 1, t: 'My offline edit', _syncVersion: 1 }, { baseVersion: 0 });
+  h.events.online();
+  await tick();
+  assert.equal(h.cloud.status().conflicts, 1);
+
+  assert.equal(await h.cloud.resolveConflict('tasks:1', 'mine'), true);
+  assert.equal(h.cloud.status().conflicts, 0);
+  assert.equal(h.cloud.status().queued, 0);
+  assert.equal(posts, 2);
+  assert.equal(batches[1][0].baseVersion, 5);
+  assert.equal(batches[1][0].data.t, 'My offline edit');
+  assert.equal(batches[1][0].data._syncVersion, 6);
+  assert.equal(h.backend.db.tasks.getSync(1).t, 'My offline edit');
+  assert.equal(h.backend.db.tasks.getSync(1)._syncVersion, 6);
+});
+
+test('sync conflicts stay isolated by workspace and user on shared devices', () => {
+  const conflict = [{ key: 'tasks:1', collection: 'tasks', id: '1', local: { id: 1 }, remote: { id: 1 } }];
+  const h = setup(async () => response({}), {
+    storage: { [scopedConflictKey('a', 'user')]: JSON.stringify(conflict) },
+  });
+  assert.equal(h.cloud.status().conflicts, 1);
+  h.cloud.signOut();
+  h.cloud._authed({ token: token('b', 'user'), user: {} });
+  assert.equal(h.cloud.status().conflicts, 0);
+  h.cloud.signOut();
+  h.cloud._authed({ token: token('a', 'other'), user: {} });
+  assert.equal(h.cloud.status().conflicts, 0);
+  h.cloud.signOut();
+  h.cloud._authed({ token: token('a', 'user'), user: {} });
+  assert.equal(h.cloud.status().conflicts, 1);
+});
+
+
+test('a delayed conflict response from an old session cannot leak into the next account', async () => {
+  let finish;
+  const h = setup(async (url, init) => {
+    if (url.includes('/sync/bulk')) {
+      return new Promise(resolve => {
+        finish = () => resolve(response({
+          error: 'sync_conflict',
+          conflict: {
+            collection: 'tasks',
+            id: '1',
+            baseVersion: 0,
+            currentVersion: 2,
+            remote: { id: 1, t: 'Account A cloud value', _syncVersion: 2 },
+          },
+        }, 409));
+      });
+    }
+    return response({ collections: {} });
+  }, { online: false });
+
+  await h.cloud.push('tasks', 'update', 1, { id: 1, t: 'Account A offline' }, { baseVersion: 0 });
+  h.events.online();
+  await tick();
+  h.cloud.signOut();
+  h.cloud._authed({ token: token('b', 'user'), user: {} });
+  finish();
+  await tick();
+  await tick();
+
+  assert.equal(h.cloud.status().conflicts, 0);
+  assert.equal(h.cloud.status().queued, 0);
+  assert.equal(h.data.get(scopedConflictKey('b', 'user')), undefined);
+
+  h.cloud.signOut();
+  h.cloud._authed({ token: token('a', 'user'), user: {} });
+  assert.equal(h.cloud.status().conflicts, 0);
+  assert.equal(h.cloud.status().queued, 1);
+});
