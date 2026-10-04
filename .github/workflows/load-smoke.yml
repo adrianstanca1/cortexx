@@ -1,0 +1,42 @@
+name: Staging load smoke
+
+on:
+  workflow_dispatch:
+    inputs:
+      target_url:
+        description: Local/tunnel or staging health URL (production is refused)
+        required: true
+        type: string
+      requests:
+        description: Total requests
+        required: false
+        default: '30'
+        type: string
+      concurrency:
+        description: Concurrent requests
+        required: false
+        default: '5'
+        type: string
+
+permissions:
+  contents: read
+
+concurrency:
+  group: staging-load-smoke
+  cancel-in-progress: false
+
+jobs:
+  load-smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - name: Enforce staging load thresholds
+        env:
+          LOAD_TEST_URL: ${{ inputs.target_url }}
+          LOAD_TEST_REQUESTS: ${{ inputs.requests }}
+          LOAD_TEST_CONCURRENCY: ${{ inputs.concurrency }}
+        run: node scripts/load-smoke.mjs

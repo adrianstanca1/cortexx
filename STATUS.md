@@ -1,23 +1,41 @@
 # CortexBuild Pro — current status
 
-Reviewed 27 September 2026. Canonical repository: `adrianstanca1/cortexx`; production branch: `main`; release line: v1.5.x.
+Reviewed 4 October 2026. Canonical repository: `adrianstanca1/cortexx`; production branch: `main`; release line: v1.5.x.
 
-## Integration review
+## Production baseline
 
-The complete PR inventory at review start contained 237 PRs: 174 merged, 63 closed without merge, and zero open. Four closed PRs contain feature/security work; their replacements are accounted for in [the PR review](docs/reviews/2026-09-26-pr-integration.md). The other 59 are dependency updates; closed historical upgrade proposals must not be applied over the current lockfiles.
+Production is the isolated Next.js Docker Compose stack on the One.com VPS, served at <https://cortexbuildpro.tech>. The authoritative deployment definition is `docker-compose.construction.yml`; operational procedures are in `docs/RUNBOOK.md` and `docs/CONSTRUCTION_RECOVERY.md`. Retired `/opt/cortexx`, static/Express, host-Postgres, nginx and PM2 procedures are not part of the production path.
 
-Main includes procurement/requisitions/RFQs/receipts/matching, commercial and bank reconciliation, read-only Xero integration, role-aware field operations and closeout, drawing distribution/transmittals with recipient acknowledgement, programme baselines/delays/resources, construction innovation pilots/standards, field command briefs and equipment permission fixes through #239, the release/browser/Xero reconciliation in #240, the mobile dependency security patch in #241, public Web Vitals proxy repair in #242, verified construction backup/recovery automation in #243, restored production maintenance jobs in #245, drawing transmittal controls in #246, and the media upload/gallery/download performance release in #248.
+`main` is at `d209642` through PR #263. The public health endpoint reports healthy application, database, disk and memory checks. That establishes service health, but does not by itself prove every authenticated workflow or the exact image provenance.
 
-## Verification and release
+## Integrated work through PR #263
 
-At review start the production checkout was at `384b86f`, and the public health endpoint reported healthy app/database/disk/memory. That proves service health, not every authenticated workflow or exact running-image provenance.
+The release includes the procurement, commercial, programme, drawing, document, field-operation and closeout work recorded in the canonical product audit, plus the following recent reliability and security changes:
 
-Main CI run 36259923225 passed unit/build, shared/native typechecks, integration tests and five browser shards. The mobile-chromium-1 shard failed; deployment run 36260194472 was therefore skipped. iOS run 36258931579 failed because its workflow selected Node 20 while Capacitor requires Node 22.
+- #249–#251: persisted drawing markups, drawing-access regressions, project-file permissions and company-wide document mutation protection;
+- #252: automated accessibility baseline and CI enforcement;
+- #259: retry-safe field uploads;
+- #260: durable offline media outbox and automatic synchronization;
+- #261: per-user/company offline isolation and reconnect recovery;
+- #262: versioned records and explicit offline conflict handling instead of silent overwrites;
+- #263: encrypted off-site construction backup export, restore validation and retained GitHub Actions recovery artifacts.
 
-The review patch normalizes offset-free Xero dates independently of server timezone, aligns the remaining iOS workflow to Node 22, and makes CI browser journeys exercise the production standalone runtime instead of compiling routes lazily during timed tests. It also fixes a first-service-worker-claim race that could reload a fresh session and abort its first navigation, and centralizes E2E authentication through the real Auth.js credentials callback while preserving an explicit UI-login test. PR #240 passed all required GitHub checks and merged at `51bb7c5`; PR #242 then fixed anonymous Web Vitals reporting and also passed the complete build/integration/iOS/security/browser matrix. PR #243 added current-stack backup/recovery automation and merged at `25f7aa1`, with its hosted Backup Verify workflow succeeding on the merged commit. Production currently runs `main` through PR #248 at `6346690` on image `sha256:3e6a459a58bda64e5dffa0e22852fd4b7d923d8793120e1728f0686e827b2d04`, with the public app/database/disk/memory health checks green. PR #248 passed the local quality/build suite and isolated desktop E2E, then the hosted CI matrix passed after rerunning one non-reproducible mobile shard; the One.com deployment and Vercel production artifact both completed successfully. PRs #245 and #246 also passed the required build/typecheck, apps, audit, integration, iOS, GitGuardian, Vercel and every desktop/mobile/PWA browser shard. The installed maintenance schedule has already executed successfully: Sunday push-subscription pruning, daily overdue-invoice processing and daily expiry-warning processing all returned successful zero-work summaries against the current small production dataset. A valid anonymous `/api/metrics` Web Vital returns 200, invalid metrics remain rejected, fresh mobile login sessions complete without 4xx/5xx or page errors, and the production dependency audit reports 0 vulnerabilities.
+The production deployment workflow requires the exact `main` SHA to have passed CI, builds the Next.js standalone app and tools images, applies Prisma migrations, bootstraps the construction tenant, waits for the local health contract, updates maintenance schedules, switches Caddy ingress and verifies the public endpoint.
+
+## Verification and recovery
+
+The hosted matrix covers build/typecheck, integration, browser/PWA, iOS, audit/security and secret scanning. The current stack also has:
+
+- daily database and uploads backups with checksums and atomic publication;
+- a weekly isolated restore drill against a disposable PostgreSQL container;
+- hosted verification of backup freshness and the local restore marker;
+- encrypted off-site export and a second restore validation before artifact retention;
+- automated recovery issue creation when verification fails.
+
+Operational evidence remains time-sensitive. Confirm the latest CI, deploy and Backup Verify runs before a release decision; use `docs/RUNBOOK.md` for the checklist and `docs/CONSTRUCTION_RECOVERY.md` for recovery limits.
 
 ## Remaining completion gates
 
-The [canonical roadmap](docs/CANONICAL_PRODUCT_AUDIT_2026-09-24.md) remains the workflow scope. Outstanding areas include governed accounting write-back, richer supplier quality evidence, comprehensive field offline conflict coverage, governed agent tools/marketplace, physical-device/accessibility/load verification, off-site backup/PITR, and a controlled full-stack rollback/cutover drill. Drawing transmittals, recipient acknowledgement and persisted revision/page markup workflows are now implemented with assignment-scoped drawing access and auditable annotation lifecycle. Local database/upload backup and isolated restore verification are also implemented and verified.
+The [canonical roadmap](docs/CANONICAL_PRODUCT_AUDIT_2026-09-24.md) remains the workflow scope. Material gates still include governed accounting write-back, richer supplier-quality evidence, governed agent tools/marketplace, physical-device/accessibility/performance/load verification, PostgreSQL WAL archiving/PITR for a substantially lower RPO, protected off-box secret recovery, and a controlled full-stack rollback/cutover drill.
 
-Live Xero activation requires a configured authorised organisation. Native store delivery requires successful Apple build/signing/upload evidence. Merged PRs and passing unit tests do not establish complete launch readiness.
+Live Xero activation requires a configured authorised organisation. Native store delivery requires successful Apple build, signing and upload evidence. Encrypted off-site backup artifacts reduce host-loss risk, but they do not provide continuous PITR or archive production secrets. Merged PRs and passing automated tests do not establish complete launch readiness.

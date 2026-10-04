@@ -28,7 +28,13 @@ Restore drills use a disposable PostgreSQL container without external networking
 or published ports. They verify checksums, restore with exit-on-error, check
 that the canonical User/Organization/Project/Task/Document and migration tables are readable, extract uploads and remove the disposable container and its
 volume. No production database is dropped or replaced. Review the weekly log;
-the GitHub Backup Verify workflow now checks the current VPS daily and opens or updates a recovery issue on failure. Its first hosted run still needs verification after merge.
+the daily GitHub Backup Verify workflow checks the current VPS, exports the
+latest successful backup as encrypted ciphertext, validates that archive with a
+second disposable PostgreSQL restore, and opens or updates a recovery issue on
+failure. A successful archive is retained as a private GitHub Actions artifact
+for 30 days. It uses AES-256-CBC with PBKDF2 (200,000 iterations); the key stays
+in the `CORTEXX_BACKUP_ENCRYPTION_KEY` GitHub secret and is not included in the
+artifact.
 
 For disaster recovery, restore into an isolated replacement stack first, verify
 organisation/project/evidence access and migrations, then switch traffic during
@@ -41,9 +47,9 @@ drill script intentionally cannot overwrite production.
 - Live database and uploads backup successfully created.
 - Isolated restore: **109 tables**, uploads extracted, **5 seconds** (small current
   dataset). This is not an end-to-end production recovery-time guarantee.
-- No off-site remote is configured. Set `BACKUP_REMOTE` to an existing rclone
-  destination in the scheduled environment after configuring credentials; the
-  script copies and verifies objects before marking off-site success.
+- Hosted Backup Verify has completed the encrypted off-site export and restore
+  path. Each successful daily workflow retains one ciphertext-only artifact for
+  30 days. Verify the latest workflow run before relying on that evidence.
 
 The scheduled local verifier rejects missing backups, backups older than 36 hours,
 future timestamps and paths outside the managed directory. The restore was repeated
@@ -54,8 +60,12 @@ counts only. Five local regression tests cover the freshness guard.
 ## Remaining limits
 
 Daily scheduling has an up-to-24-hour data-loss window, not the desired five-minute
-RPO. Achieving that requires PostgreSQL WAL archiving/PITR and off-site storage.
+RPO. Achieving that requires PostgreSQL WAL archiving/PITR; a daily encrypted
+artifact is off-site backup, not continuous recovery.
 Uploads are captured while the app is running, so database and file snapshots
 are not transactionally coordinated. Use a maintenance window for a consistent
-cutover snapshot. Host loss still loses local backups. Store environment/secrets
-securely off-box separately; these scripts intentionally do not archive them.
+cutover snapshot. Host loss still loses local backups, although a recent
+successfully retained GitHub artifact can provide an off-site recovery point.
+Artifact retention is only 30 days and recovery also depends on preserving the
+encryption key. Store environment/secrets securely off-box separately; these
+scripts intentionally do not archive them.
