@@ -1,3 +1,4 @@
+import { syncTaskProjectProgress } from '@/lib/task-progress'
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 
@@ -52,7 +53,7 @@ async function GET_impl(req: NextRequest, session: { user?: { email?: string | n
   }
 }
 
-async function POST_impl(req: NextRequest, userId: string, orgRole: string | null, session: { user?: { name?: string | null; email?: string | null; role?: string } }) {
+async function POST_impl(req: NextRequest, userId: string, organizationId: string, orgRole: string | null, session: { user?: { name?: string | null; email?: string | null; role?: string } }) {
   const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
@@ -91,7 +92,8 @@ async function POST_impl(req: NextRequest, userId: string, orgRole: string | nul
       }
     }
 
-    const task = await prisma.task.create({
+    const task = await prisma.$transaction(async tx => {
+    const created = await tx.task.create({
       data: {
         title: body.title.trim(),
         description: body.description?.trim() || null,
@@ -104,6 +106,9 @@ async function POST_impl(req: NextRequest, userId: string, orgRole: string | nul
         assigneeId,
       },
       include: { project: true, assignee: true },
+    })
+    await syncTaskProjectProgress(tx, [created.projectId], organizationId)
+    return created
     })
     if (task.projectId) {
       prisma.activity.create({
@@ -145,4 +150,4 @@ async function POST_impl(req: NextRequest, userId: string, orgRole: string | nul
 }
 
 export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
-export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, role, session), { permission: 'write' })
+export const POST = withRoute(({ req, userId, orgId, role, session }) => POST_impl(req, userId, orgId!, role, session), { permission: 'write' })

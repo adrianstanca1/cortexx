@@ -1,3 +1,4 @@
+import { syncTaskProjectProgress } from '@/lib/task-progress'
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
@@ -92,7 +93,8 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
       if (body.dueDate !== undefined && body.dueDate !== null && isNaN(Date.parse(String(body.dueDate)))) {
         return NextResponse.json({ error: 'dueDate must be a valid date' }, { status: 400 })
       }
-      const task = await prisma.task.update({
+      const task = await prisma.$transaction(async tx => {
+      const updated = await tx.task.update({
         where: { id: params.id },
         data: {
           ...(body.title !== undefined && { title: String(body.title).trim() }),
@@ -108,13 +110,11 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
         include: { project: true, assignee: true },
       })
 
-      if (body.status !== undefined && task.projectId) {
-        const allTasks = await prisma.task.findMany({ where: { projectId: task.projectId }, select: { status: true } })
-        const total = allTasks.length
-        const done = allTasks.filter(t => t.status === 'done').length
-        const progress = total > 0 ? Math.round((done / total) * 100) : 0
-        await prisma.project.update({ where: { id: task.projectId }, data: { progress } })
+      if (body.status !== undefined || body.projectId !== undefined) {
+        await syncTaskProjectProgress(tx, [existing.projectId, updated.projectId], auth.orgId)
       }
+      return updated
+      })
       return NextResponse.json(task)
     } catch (error) {
       reportError(error)
@@ -133,7 +133,10 @@ export async function DELETE(req: NextRequest, { params: paramsP }: RouteParams)
       if (!canManage(auth.role || '') && role !== 'project_manager') return NextResponse.json({ error: 'Company Admin or Project Manager permission required to delete tasks' }, { status: 403 })
       const task = await prisma.task.findFirst({ where: taskAccessWhere(params.id, auth), select: { title: true, projectId: true } })
       if (!task) return NextResponse.json({ error: 'Task not found or not assigned' }, { status: 404 })
-      await prisma.task.delete({ where: { id: params.id } })
+      await prisma.$transaction(async tx => {
+        await tx.task.delete({ where: { id: params.id } })
+        await syncTaskProjectProgress(tx, [task.projectId], auth.orgId)
+      })
       auditLog({ action: 'task.delete', resourceType: 'Task', resourceId: params.id, ...requestMeta(req) })
       prisma.activity.create({
         data: { projectId: task.projectId, actorName: actorName(auth.session), actorType: 'human', action: `deleted task: ${task.title}`, iconType: 'trash' },
