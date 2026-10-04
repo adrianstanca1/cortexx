@@ -67,7 +67,7 @@ const PLANS = [
       'Custom integrations',
     ],
     cta: 'Contact sales',
-    href: 'mailto:sales@cortexbuildpro.com?subject=Enterprise%20plan',
+    href: 'mailto:sales@cortexbuildpro.tech?subject=Enterprise%20plan',
     accent: false,
   },
 ]
@@ -123,7 +123,7 @@ export default function PricingPage() {
             textAlign: 'center',
           }}>
             <strong style={{ color: '#f59e0b' }}>Early access:</strong> self-serve checkout is being polished —
-            during this window please <Link href="mailto:sales@cortexbuildpro.com?subject=Cortexx%20subscription" style={{ color: '#f59e0b', textDecoration: 'underline' }}>email sales</Link> to subscribe.
+            during this window please <Link href="mailto:sales@cortexbuildpro.tech?subject=Cortexx%20subscription" style={{ color: '#f59e0b', textDecoration: 'underline' }}>email sales</Link> to subscribe.
             The 14-day Pro trial is unaffected — sign up and start using the app today.
           </div>
         )}

@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test'
 
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
 const users = {
-  admin: process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com',
-  pm: process.env.E2E_PM_EMAIL || 'pm@cortexbuildpro.com',
+  admin: process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech',
+  pm: process.env.E2E_PM_EMAIL || 'pm@cortexbuildpro.tech',
 }
 
 async function mobileLogin(request, email) {

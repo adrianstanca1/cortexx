@@ -2,7 +2,7 @@ import { test, expect } from '@playwright/test'
 
 test('task mutations update fallback progress without overwriting the programme', async ({ page }) => {
   await page.goto('/login')
-  await page.getByLabel('Email').fill(process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com')
+  await page.getByLabel('Email').fill(process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech')
   await page.getByLabel('Password').fill(process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password')
   await page.getByRole('button', { name: /^sign in$/i }).click()
   await page.waitForURL('**/dashboard')
@@ -37,7 +37,7 @@ test('task mutations update fallback progress without overwriting the programme'
 
 test('bulk task operations refresh fallback progress without clobbering programme progress', async ({ page }) => {
   await page.goto('/login')
-  await page.getByLabel('Email').fill(process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com')
+  await page.getByLabel('Email').fill(process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech')
   await page.getByLabel('Password').fill(process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password')
   await page.getByRole('button', { name: /^sign in$/i }).click()
   await page.waitForURL('**/dashboard')

@@ -377,7 +377,7 @@ Once Redis is in place, switch pm2 from fork (single worker) to cluster mode (4 
 
 ### 5.5 CDN for static assets
 
-- Cloudflare in front of cortexbuildpro.com (free tier)
+- Cloudflare in front of cortexbuildpro.tech (free tier)
 - Cache `/_next/static/*` indefinitely (already immutable)
 - Cache `/icon-*.png`, `/manifest.json` for 30 days
 - Bypass cache for `/api/*` and auth-gated pages
@@ -443,7 +443,7 @@ GitHub Actions workflow `release-ios.yml`:
 
 ### 7.3 Marketing site
 
-Separate Next.js app at `www.cortexbuildpro.com` (or `/` of the same domain with the app moved to `app.cortexbuildpro.com`):
+Separate Next.js app at `www.cortexbuildpro.tech` (or `/` of the same domain with the app moved to `app.cortexbuildpro.tech`):
 - Hero + value prop + screenshots
 - Feature pages
 - Pricing

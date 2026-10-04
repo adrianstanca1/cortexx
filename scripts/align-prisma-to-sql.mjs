@@ -3,7 +3,7 @@
  * align-prisma-to-sql.mjs
  *
  * The Express + raw-SQL schema (server/db/schema.sql) is the CANONICAL
- * production data model for CortexBuild Pro (cortexbuildpro.com serves it via
+ * production data model for CortexBuild Pro (cortexbuildpro.tech serves it via
  * /api/:collection). Prisma's schema.prisma is a parallel, drifted model used
  * only by the Next.js admin stack.
  *

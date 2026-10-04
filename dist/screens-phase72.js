@@ -1012,7 +1012,7 @@ function ProcessLibraryScreen({
     right: React.createElement(HeaderBtn, {
       icon: Ic.plus,
       accent: accent,
-      onClick: () => window.open('mailto:hello@cortexbuildpro.com?subject=Process%20definition%20request', '_blank')
+      onClick: () => window.open('mailto:hello@cortexbuildpro.tech?subject=Process%20definition%20request', '_blank')
     })
   }), React.createElement("div", {
     style: {

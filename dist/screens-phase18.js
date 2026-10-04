@@ -410,7 +410,7 @@ function LaunchScreen({
     icon: Ic.zap,
     iconBg: T.amber,
     title: "Bug bounty",
-    sub: "Report vulnerabilities: security@cortexbuildpro.com",
+    sub: "Report vulnerabilities: security@cortexbuildpro.tech",
     isLast: true
   })))), section === 'press' && React.createElement("div", {
     style: {
@@ -438,9 +438,9 @@ function LaunchScreen({
     icon: Ic.mail,
     iconBg: T.green,
     title: "Press contact",
-    sub: "press@cortexbuildpro.com",
+    sub: "press@cortexbuildpro.tech",
     isLast: true,
-    onClick: () => window.open('mailto:press@cortexbuildpro.com', '_blank')
+    onClick: () => window.open('mailto:press@cortexbuildpro.tech', '_blank')
   }))))));
 }
 Object.assign(window, {

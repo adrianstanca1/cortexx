@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test'
 import { signIn } from './helpers/auth.mjs'
 
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
-const admin = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
-const foreman = process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.com'
+const admin = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech'
+const foreman = process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.tech'
 
 async function createDrawing(request, projectId, suffix) {
   const response = await request.post('/api/drawings', { data: { projectId, number: `TR-${suffix}`, title: `Transmittal ${suffix}` } })

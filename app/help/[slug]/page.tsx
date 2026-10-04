@@ -48,7 +48,7 @@ export default async function HelpArticle({ params }: PageProps) {
         </div>
 
         <div style={{ marginTop: 32, fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t3)', textAlign: 'center' }}>
-          Need more help? Email <a href="mailto:support@cortexbuildpro.com" style={{ color: '#f59e0b', fontWeight: 600 }}>support@cortexbuildpro.com</a>
+          Need more help? Email <a href="mailto:support@cortexbuildpro.tech" style={{ color: '#f59e0b', fontWeight: 600 }}>support@cortexbuildpro.tech</a>
         </div>
       </div>
     </main>

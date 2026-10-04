@@ -7,7 +7,7 @@
 # fighting over :80. One implementation, one source of truth.
 #
 #   bash deploy.sh                         # plain HTTP on the server IP
-#   bash deploy.sh cortexbuildpro.com you@email.com   # + auto-HTTPS
+#   bash deploy.sh cortexbuildpro.tech you@email.com   # + auto-HTTPS
 # ──────────────────────────────────────────────────────────────────
 set -e
 DIR="$(cd "$(dirname "$0")" && pwd)"

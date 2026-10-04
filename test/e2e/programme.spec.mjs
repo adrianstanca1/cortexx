@@ -3,10 +3,10 @@ import { signIn as signInWithPassword } from './helpers/auth.mjs'
 
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
 const users = {
-  admin: process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com',
-  pm: process.env.E2E_PM_EMAIL || 'pm@cortexbuildpro.com',
-  foreman: process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.com',
-  operative: process.env.E2E_OPERATIVE_EMAIL || 'operative@cortexbuildpro.com',
+  admin: process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech',
+  pm: process.env.E2E_PM_EMAIL || 'pm@cortexbuildpro.tech',
+  foreman: process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.tech',
+  operative: process.env.E2E_OPERATIVE_EMAIL || 'operative@cortexbuildpro.tech',
 }
 async function signIn(page, email) {
   return signInWithPassword(page, email, password)

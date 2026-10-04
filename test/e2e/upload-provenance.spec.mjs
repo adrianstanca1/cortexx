@@ -6,9 +6,9 @@ import path from 'node:path'
 import { signIn } from './helpers/auth.mjs'
 
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
-const admin = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
-const pm = process.env.E2E_PM_EMAIL || 'pm@cortexbuildpro.com'
-const foreman = process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.com'
+const admin = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech'
+const pm = process.env.E2E_PM_EMAIL || 'pm@cortexbuildpro.tech'
+const foreman = process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.tech'
 const prisma = new PrismaClient({
   adapter: new PrismaPg({ connectionString: process.env.DATABASE_URL }),
 })

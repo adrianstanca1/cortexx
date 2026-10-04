@@ -112,7 +112,7 @@ I am being explicit about which steps require human input because I cannot do th
 
 ### To go live as a PWA (today, 5 minutes)
 1. Drag the project folder onto **vercel.com/new** OR run `vercel --prod` from the project root.
-2. Add `cortexbuildpro.com` as a custom domain in Vercel's dashboard.
+2. Add `cortexbuildpro.tech` as a custom domain in Vercel's dashboard.
 3. Done. Users can `Add to Home Screen` on any iPhone.
 
 ### To go live on the App Store (1 week from now)
@@ -147,7 +147,7 @@ open "Cortexx Marketing.html"
 open Cortexx-standalone.html
 
 # 4. PWA install on iPhone
-#    Safari → cortexbuildpro.com → Share → Add to Home Screen
+#    Safari → cortexbuildpro.tech → Share → Add to Home Screen
 #    Open from home screen → confirm it's full-screen (no Safari chrome)
 
 # 5. Lighthouse PWA audit

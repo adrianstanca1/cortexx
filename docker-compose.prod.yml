@@ -23,7 +23,7 @@ services:
     - traefik_web
     labels:
     - traefik.enable=true
-    - traefik.http.routers.cortexx-api.rule=Host(`api.cortexbuildpro.com`)
+    - traefik.http.routers.cortexx-api.rule=Host(`api.cortexbuildpro.tech`)
     - traefik.http.routers.cortexx-api.entrypoints=websecure
     - traefik.http.routers.cortexx-api.tls=true
     - traefik.http.routers.cortexx-api.tls.certresolver=letsencrypt
@@ -71,7 +71,7 @@ services:
     - traefik_web
     labels:
     - traefik.enable=true
-    - traefik.http.routers.cortexx-frontend.rule=Host(`cortexbuildpro.com`)
+    - traefik.http.routers.cortexx-frontend.rule=Host(`cortexbuildpro.tech`)
     - traefik.http.routers.cortexx-frontend.entrypoints=websecure
     - traefik.http.routers.cortexx-frontend.tls=true
     - traefik.http.routers.cortexx-frontend.tls.certresolver=letsencrypt

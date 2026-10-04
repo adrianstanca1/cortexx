@@ -112,7 +112,7 @@ TL;DR:
 ```bash
 curl -O https://raw.githubusercontent.com/adrianstanca1/cortexx/main/ops/deploy-cortexx-pwa.sh
 bash deploy-cortexx-pwa.sh
-# Visit: https://app.cortexbuildpro.com
+# Visit: https://app.cortexbuildpro.tech
 ```
 
 ### Next Steps (v1.1.0+)

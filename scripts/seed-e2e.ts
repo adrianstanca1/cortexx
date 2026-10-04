@@ -44,10 +44,10 @@ async function main() {
   })
 
   const personas: PersonaSeed[] = [
-    { email: process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com', name: 'E2E Company Admin', userRole: 'company_admin', orgRole: 'owner', teamRole: 'Company Admin' },
-    { email: process.env.E2E_PM_EMAIL || 'pm@cortexbuildpro.com', name: 'E2E Project Manager', userRole: 'project_manager', orgRole: 'member', teamRole: 'Project Manager' },
-    { email: process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.com', name: 'E2E Foreman', userRole: 'foreman', orgRole: 'member', teamRole: 'Foreman' },
-    { email: process.env.E2E_OPERATIVE_EMAIL || 'operative@cortexbuildpro.com', name: 'E2E Operative', userRole: 'operative', orgRole: 'member', teamRole: 'Operative' },
+    { email: process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech', name: 'E2E Company Admin', userRole: 'company_admin', orgRole: 'owner', teamRole: 'Company Admin' },
+    { email: process.env.E2E_PM_EMAIL || 'pm@cortexbuildpro.tech', name: 'E2E Project Manager', userRole: 'project_manager', orgRole: 'member', teamRole: 'Project Manager' },
+    { email: process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.tech', name: 'E2E Foreman', userRole: 'foreman', orgRole: 'member', teamRole: 'Foreman' },
+    { email: process.env.E2E_OPERATIVE_EMAIL || 'operative@cortexbuildpro.tech', name: 'E2E Operative', userRole: 'operative', orgRole: 'member', teamRole: 'Operative' },
   ]
 
   const seeded = new Map<string, Awaited<ReturnType<typeof upsertPersona>>>()

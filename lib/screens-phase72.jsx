@@ -370,7 +370,7 @@ function ProcessLibraryScreen({ accent }) {
     <ScreenBg accent={accent}>
       <div style={{ flex: 1, overflowY: 'auto', paddingBottom: 30 }}>
         <MobileHeader title="Processes" subtitle={`${processes.length} SOPs · ${processes.filter(p => p.cycleHrs > p.cycleTarget).length} over target`}
-      right={<HeaderBtn icon={Ic.plus} accent={accent} onClick={() => window.open('mailto:hello@cortexbuildpro.com?subject=Process%20definition%20request', '_blank')}/>}/>
+      right={<HeaderBtn icon={Ic.plus} accent={accent} onClick={() => window.open('mailto:hello@cortexbuildpro.tech?subject=Process%20definition%20request', '_blank')}/>}/>
 
         {/* Area chips */}
         <div style={{ padding: '0 16px 14px', display: 'flex', gap: 6, overflowX: 'auto' }}>

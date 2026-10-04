@@ -118,7 +118,7 @@
   </array>
 
   <!-- ── Universal Links (Associated Domains) ────────────────────── -->
-  <!-- Configured in .entitlements; domain: cortexbuildpro.com -->
+  <!-- Configured in .entitlements; domain: cortexbuildpro.tech -->
 
   <!-- ── Encryption export compliance ───────────────────────────── -->
   <key>ITSAppUsesNonExemptEncryption</key>
