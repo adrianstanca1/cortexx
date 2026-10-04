@@ -1,6 +1,6 @@
 'use client'
 
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import Link from 'next/link'
 import TabBar from '@/components/ui/TabBar'
 import { IcChevL, IcCheck, IcClock, IcDoc } from '@/components/ui/Icons'
@@ -38,43 +38,59 @@ export default function FieldHandoverPage() {
   const [showForm, setShowForm] = useState(false)
   const [saving, setSaving] = useState(false)
   const [message, setMessage] = useState('')
+  const [acceptingId, setAcceptingId] = useState<string | null>(null)
+  const requestVersion = useRef(0)
+  const acceptancePending = useRef(false)
   const [form, setForm] = useState({
     shiftType: 'day', incomingBy: '', summary: '', completedWork: '', nextShiftPlan: '',
     safetyNotes: '', qualityNotes: '', materialsNotes: '', plantNotes: '', openItems: '',
   })
 
   const loadProjects = useCallback(async () => {
-    const res = await fetch('/api/projects?status=active', { cache: 'no-store' })
-    const data = res.ok ? await res.json() : { projects: [] }
-    const ps: Project[] = (data.projects || []).map((p: Project) => ({ id: p.id, name: p.name }))
-    setProjects(ps)
-    setProjectId(prev => prev || ps[0]?.id || '')
+    try {
+      const res = await fetch('/api/projects?status=active', { cache: 'no-store' })
+      if (!res.ok) throw new Error('Failed to load projects. Please reload to try again.')
+      const data = await res.json()
+      const ps: Project[] = (data.projects || []).map((p: Project) => ({ id: p.id, name: p.name }))
+      setProjects(ps)
+      setProjectId(prev => prev || ps[0]?.id || '')
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Failed to load projects')
+      setLoading(false)
+    }
   }, [])
 
   const load = useCallback(async () => {
+    const version = ++requestVersion.current
     if (!projectId) { setItems([]); setLoading(false); return }
     setLoading(true)
+    setItems([])
     try {
       const res = await fetch(`/api/field-handovers?projectId=${encodeURIComponent(projectId)}&take=30`, { cache: 'no-store' })
       const data = await res.json().catch(() => ({}))
       if (!res.ok) throw new Error(data?.error || 'Failed to load handovers')
+      if (version !== requestVersion.current) return
       setItems(data.handovers || [])
       setMessage('')
     } catch (e) {
-      setMessage(e instanceof Error ? e.message : 'Failed to load handovers')
+      if (version === requestVersion.current) setMessage(e instanceof Error ? e.message : 'Failed to load handovers')
     } finally {
-      setLoading(false)
+      if (version === requestVersion.current) setLoading(false)
     }
   }, [projectId])
 
   useEffect(() => { void loadProjects() }, [loadProjects])
-  useEffect(() => { void load() }, [load])
+  useEffect(() => {
+    void load()
+    const requests = requestVersion
+    return () => { requests.current++ }
+  }, [load])
 
   const create = async () => {
     if (!projectId || saving) return
     setSaving(true)
     setMessage('')
-    const openItems = form.openItems.split('\n').map((line, index) => line.trim()).filter(Boolean).map((title, index) => ({ id: `line-${index}`, title, status: 'open' }))
+    const openItems = form.openItems.split('\n').map(line => line.trim()).filter(Boolean).map((title, index) => ({ id: `line-${index}`, title, status: 'open' }))
     try {
       const res = await fetch('/api/field-handovers', {
         method: 'POST',
@@ -107,19 +123,27 @@ export default function FieldHandoverPage() {
   }
 
   const accept = async (item: Handover) => {
+    if (acceptancePending.current) return
     const acceptedBy = window.prompt('Accept handover as', item.incomingBy || '')
     if (acceptedBy === null) return
-    const res = await fetch(`/api/field-handovers/${item.id}`, {
-      method: 'PATCH',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ accept: true, acceptedBy }),
-    })
-    const data = await res.json().catch(() => ({}))
-    if (!res.ok) {
-      setMessage(data?.error || 'Failed to accept handover')
-      return
+    acceptancePending.current = true
+    setAcceptingId(item.id)
+    setMessage('')
+    try {
+      const res = await fetch(`/api/field-handovers/${item.id}`, {
+        method: 'PATCH',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ accept: true, acceptedBy }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data?.error || 'Failed to accept handover')
+      await load()
+    } catch (error) {
+      setMessage(error instanceof Error ? error.message : 'Failed to accept handover. Please try again.')
+    } finally {
+      acceptancePending.current = false
+      setAcceptingId(null)
     }
-    await load()
   }
 
   const pending = items.filter(i => !i.acceptedAt).length
@@ -135,7 +159,7 @@ export default function FieldHandoverPage() {
           </div>
           <button type="button" onClick={() => setShowForm(v => !v)} style={primaryBtn}>{showForm ? 'Close' : '+ Handover'}</button>
         </div>
-        <select aria-label="Project" value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
+        <select aria-label="Project" disabled={saving || acceptingId !== null} value={projectId} onChange={e => setProjectId(e.target.value)} style={selectStyle}>
           {!projects.length && <option value="">No active project</option>}
           {projects.map(p => <option key={p.id} value={p.id}>{p.name}</option>)}
         </select>
@@ -165,11 +189,11 @@ export default function FieldHandoverPage() {
               <Area label="Plant / access" value={form.plantNotes} onChange={v => setForm(f => ({ ...f, plantNotes: v }))} placeholder="Plant status, scaffold, access…" compact />
             </div>
             <Area label="Open items — one per line" value={form.openItems} onChange={v => setForm(f => ({ ...f, openItems: v }))} placeholder={'Await scaffold handover\nArchitect response to RFI-014\nReplace damaged panel'} />
-            <button type="button" disabled={saving} onClick={create} style={{ ...primaryBtn, width: '100%', opacity: saving ? .55 : 1 }}>{saving ? 'Saving…' : 'Create handover'}</button>
+            <button type="button" disabled={saving || !projectId} onClick={create} style={{ ...primaryBtn, width: '100%', opacity: saving ? .55 : 1 }}>{saving ? 'Saving…' : 'Create handover'}</button>
           </section>
         )}
 
-        {message && <div style={errorStyle}>{message}</div>}
+        {message && <div role="alert" style={errorStyle}>{message}</div>}
         {loading ? <div style={emptyStyle}>Loading handovers…</div> : items.length === 0 ? <div style={emptyStyle}>No shift handovers recorded yet.</div> : (
           <div style={{ display: 'flex', flexDirection: 'column', gap: 9 }}>
             {items.map(item => (
@@ -192,13 +216,17 @@ export default function FieldHandoverPage() {
                 {item.summary && <FieldBlock label="Summary" text={item.summary} />}
                 {item.completedWork && <FieldBlock label="Completed" text={item.completedWork} />}
                 {item.nextShiftPlan && <FieldBlock label="Next shift" text={item.nextShiftPlan} />}
+                {item.safetyNotes && <FieldBlock label="Safety notes" text={item.safetyNotes} />}
+                {item.qualityNotes && <FieldBlock label="Quality notes" text={item.qualityNotes} />}
+                {item.materialsNotes && <FieldBlock label="Materials / deliveries" text={item.materialsNotes} />}
+                {item.plantNotes && <FieldBlock label="Plant / access" text={item.plantNotes} />}
                 {(item.openItems || []).length > 0 && (
                   <div style={{ marginTop: 9 }}>
                     <div style={sectionLabel}>Open items</div>
                     {(item.openItems || []).map(open => <div key={open.id} style={openItemStyle}>• {open.title}</div>)}
                   </div>
                 )}
-                {!item.acceptedAt && <button type="button" onClick={() => accept(item)} style={{ ...primaryBtn, background: '#10b981', marginTop: 11 }}><IcCheck size={12} color="var(--bg0)" /> Accept handover</button>}
+                {!item.acceptedAt && <button type="button" disabled={acceptingId !== null} onClick={() => accept(item)} style={{ ...primaryBtn, background: '#10b981', marginTop: 11 }}><IcCheck size={12} color="var(--bg0)" /> {acceptingId === item.id ? 'Accepting…' : 'Accept handover'}</button>}
                 {item.acceptedAt && <div style={{ color: '#10b981', fontFamily: SF, fontSize: 10.5, marginTop: 9 }}>Accepted by {item.acceptedBy || 'incoming shift'} · {new Date(item.acceptedAt).toLocaleString('en-GB')}</div>}
               </section>
             ))}
