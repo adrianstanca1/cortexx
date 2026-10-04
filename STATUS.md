@@ -6,9 +6,9 @@ Reviewed 4 October 2026. Canonical repository: `adrianstanca1/cortexx`; producti
 
 Production is the isolated Next.js Docker Compose stack on the One.com VPS, served at <https://cortexbuildpro.tech>. The authoritative deployment definition is `docker-compose.construction.yml`; operational procedures are in `docs/RUNBOOK.md` and `docs/CONSTRUCTION_RECOVERY.md`. Retired `/opt/cortexx`, static/Express, host-Postgres, nginx and PM2 procedures are not part of the production path.
 
-`main` is at `d209642` through PR #263. The public health endpoint reports healthy application, database, disk and memory checks. That establishes service health, but does not by itself prove every authenticated workflow or the exact image provenance.
+The reviewed baseline includes PR #264 (`67ce6e5`) and this readiness-hardening follow-up. The public health endpoint reports healthy application, database, disk and memory checks. That establishes service health, but does not by itself prove every authenticated workflow or the exact image provenance.
 
-## Integrated work through PR #263
+## Integrated work through PR #264
 
 The release includes the procurement, commercial, programme, drawing, document, field-operation and closeout work recorded in the canonical product audit, plus the following recent reliability and security changes:
 
@@ -18,7 +18,8 @@ The release includes the procurement, commercial, programme, drawing, document, 
 - #260: durable offline media outbox and automatic synchronization;
 - #261: per-user/company offline isolation and reconnect recovery;
 - #262: versioned records and explicit offline conflict handling instead of silent overwrites;
-- #263: encrypted off-site construction backup export, restore validation and retained GitHub Actions recovery artifacts.
+- #263: encrypted off-site construction backup export, restore validation and retained GitHub Actions recovery artifacts;
+- #264: complete shift-handover evidence display, stale-request protection and explicit handover request failure handling.
 
 The production deployment workflow requires the exact `main` SHA to have passed CI, builds the Next.js standalone app and tools images, applies Prisma migrations, bootstraps the construction tenant, waits for the local health contract, updates maintenance schedules, switches Caddy ingress and verifies the public endpoint.
 
