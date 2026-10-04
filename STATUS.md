@@ -6,9 +6,9 @@ Reviewed 4 October 2026. Canonical repository: `adrianstanca1/cortexx`; producti
 
 Production is the isolated Next.js Docker Compose stack on the One.com VPS, served at <https://cortexbuildpro.tech>. The authoritative deployment definition is `docker-compose.construction.yml`; operational procedures are in `docs/RUNBOOK.md` and `docs/CONSTRUCTION_RECOVERY.md`. Retired `/opt/cortexx`, static/Express, host-Postgres, nginx and PM2 procedures are not part of the production path.
 
-The reviewed baseline includes PR #264 (`67ce6e5`) and this readiness-hardening follow-up. The public health endpoint reports healthy application, database, disk and memory checks. That establishes service health, but does not by itself prove every authenticated workflow or the exact image provenance.
+The reviewed baseline is PR #269 (`30423c944cb07fdd4baca9d88764ec631d96f8c0`). Its [CI run](https://github.com/adrianstanca1/cortexx/actions/runs/37182408188) and [One.com deployment](https://github.com/adrianstanca1/cortexx/actions/runs/37182670600) succeeded. At 06:27 UTC on 4 October, the public health endpoint reported healthy application, database, disk and memory checks. The endpoint reports version `1.5.0`, not a commit SHA; release attribution comes from the deployment run. See [the session reconciliation](docs/reviews/2026-10-04-session-reconciliation.md) for evidence and limits.
 
-## Integrated work through PR #264
+## Integrated work through PR #269
 
 The release includes the procurement, commercial, programme, drawing, document, field-operation and closeout work recorded in the canonical product audit, plus the following recent reliability and security changes:
 
@@ -19,13 +19,18 @@ The release includes the procurement, commercial, programme, drawing, document, 
 - #261: per-user/company offline isolation and reconnect recovery;
 - #262: versioned records and explicit offline conflict handling instead of silent overwrites;
 - #263: encrypted off-site construction backup export, restore validation and retained GitHub Actions recovery artifacts;
-- #264: complete shift-handover evidence display, stale-request protection and explicit handover request failure handling.
+- #264: complete shift-handover evidence display, stale-request protection and explicit handover request failure handling;
+- #266: tenant-bound upload provenance and recovery coverage;
+- #267: outstanding construction/readiness work, including bounded load-smoke tooling and recovery/deployment guidance;
+- #269: reviewed dependency consolidation.
 
 The production deployment workflow requires the exact `main` SHA to have passed CI, builds the Next.js standalone app and tools images, applies Prisma migrations, bootstraps the construction tenant, waits for the local health contract, updates maintenance schedules, switches Caddy ingress and verifies the public endpoint.
 
 ## Verification and recovery
 
-The hosted matrix covers build/typecheck, integration, browser/PWA, iOS, audit/security and secret scanning. The current stack also has:
+The baseline CI passed 553 unit tests, 61 database integration tests, all six browser/PWA shards, and the desktop/mobile accessibility sweep. Supplier-performance browser journeys ran on both desktop and mobile; the earlier missing-TypeScript handoff came from a separate checkout without installed dependencies. The [iOS run](https://github.com/adrianstanca1/cortexx/actions/runs/37182408075) passed unsigned build/archive checks, but signing, IPA export and TestFlight upload were skipped. The audit job is advisory and its success alone does not establish zero vulnerabilities.
+
+The current stack also has:
 
 - daily database and uploads backups with checksums and atomic publication;
 - a weekly isolated restore drill against a disposable PostgreSQL container;

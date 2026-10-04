@@ -1,5 +1,21 @@
 # VERIFIED.md — Functional Audit & Attestation
 
+## Current verification — 4 October 2026
+
+Baseline: `30423c944cb07fdd4baca9d88764ec631d96f8c0` (PR #269), canonical repository `adrianstanca1/cortexx`. The active production surface is the Next.js construction stack defined by `docker-compose.construction.yml` at `cortexbuildpro.tech`.
+
+- [CI run 37182408188](https://github.com/adrianstanca1/cortexx/actions/runs/37182408188): 553 unit tests and 61 database integration tests passed; build/typecheck, shared/native typechecks, all six browser/PWA shards and the desktop/mobile accessibility sweep passed.
+- Supplier-performance validation is complete for the existing automated coverage: authentication/admin authorization, tenant scoping, inaccessible suppliers, private no-store success responses and the 1,000-order result limit. Desktop/mobile browser journeys exercised delivery evidence and permission-error display. A focused local rerun of both supplier test files also passed in the dependency-equipped current checkout. The prior missing-TypeScript error belonged to the older worktree, not the current CI build.
+- [Deployment run 37182670600](https://github.com/adrianstanca1/cortexx/actions/runs/37182670600): succeeded for the baseline SHA, including public release verification. Public health at 06:27 UTC reported app/database/disk/memory healthy. Health does not expose a SHA or prove every authenticated workflow.
+- [iOS run 37182408075](https://github.com/adrianstanca1/cortexx/actions/runs/37182408075): unsigned build and archive passed. Signing, IPA export and TestFlight upload were skipped; store delivery remains open.
+- [Backup Verify run 37179911236](https://github.com/adrianstanca1/cortexx/actions/runs/37179911236): succeeded on earlier SHA `67ce6e5`, not the current baseline. Recovery verification remains time-sensitive.
+
+The audit workflow tolerates audit findings, so a successful job is not proof of zero vulnerabilities. Browser supplier data is mocked after real sign-in; database-backed supplier behavior is covered here by route query assertions, not an end-to-end supplier database fixture. Physical-device verification, signing/upload, continuous PITR and a full rollback/cutover drill remain separate gates. See [the reconciliation record](docs/reviews/2026-10-04-session-reconciliation.md).
+
+## Historical audit — 26 July 2026
+
+The record below describes the deployment surfaces and checks from July. Its verdict and commands are historical evidence, not the current production architecture or release attestation. Use `STATUS.md` and `docs/RUNBOOK.md` for current operations.
+
 **Date:** 2026-07-26
 **Scope:** Cortexx ("CortexBuild Pro") — SPA (`Cortexx.html` + `lib/`→`dist/`), Next.js 16 admin (`app/`), Express/Postgres backend (`server/`), Expo/React-Native native shell (`expo/`).
 **Verdict:** ✅ All three deploy surfaces are functionally verified, tested, and building. No genuine functional defects found. Public-deployment safety scan clean.
