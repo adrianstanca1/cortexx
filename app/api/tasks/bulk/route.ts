@@ -79,18 +79,29 @@ export async function POST(req: NextRequest) {
         if (row.status === 'done') cur.done += row._count._all
         totals.set(row.projectId, cur)
       }
+      // Programme-owned projects derive progress from their activities, not from
+      // tasks. Excluding them here keeps a bulk task edit from silently zeroing or
+      // otherwise clobbering programme progress — same rule as lib/task-progress.ts.
+      // updateMany is required because the relation filter cannot ride on update's
+      // unique `where`.
+      const taskOwnedProjects = {
+        programmeActivities: { none: {} },
+      }
       await Promise.all(
         Array.from(totals.entries()).map(([projectId, { total, done }]) => {
           const progress = total > 0 ? Math.round((done / total) * 100) : 0
-          return prisma.project.update({ where: { id: projectId }, data: { progress } })
+          return prisma.project.updateMany({
+            where: { id: projectId, ...taskOwnedProjects },
+            data: { progress },
+          })
         }),
       )
       // Projects that had all their tasks deleted disappear from `counts` — zero them out.
-      const updated = new Set(totals.keys())
-      const zeroed = affectedProjectIds.filter(id => !updated.has(id))
+      const updatedIds = new Set(totals.keys())
+      const zeroed = affectedProjectIds.filter(id => !updatedIds.has(id))
       if (zeroed.length > 0) {
         await prisma.project.updateMany({
-          where: { id: { in: zeroed } },
+          where: { id: { in: zeroed }, ...taskOwnedProjects },
           data: { progress: 0 },
         })
       }
