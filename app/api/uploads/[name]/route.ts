@@ -50,9 +50,19 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
   const params = await paramsP
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!auth.orgId) return NextResponse.json({ error: 'Organization required' }, { status: 400 })
 
   const key = safeKey(params.name)
   if (!key) return NextResponse.json({ error: 'Invalid name' }, { status: 400 })
+
+  // Storage ownership is durable and tenant-scoped independently of whatever
+  // business record happens to reference the URL. This prevents a copied URL
+  // from being republished by another tenant and then used to read its bytes.
+  const provenance = await prisma.uploadObject.findFirst({
+    where: { storedName: key, organizationId: auth.orgId },
+    select: { id: true },
+  })
+  if (!provenance) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
   // Project assignment and tenant-scope check: an upload is only readable if it's referenced by
   // a row that belongs to the user's active organization. Each lookup
@@ -68,6 +78,10 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
     prisma.observation.findFirst({ where: { photoUrl: url, project }, select: { id: true } }),
     prisma.drawingRevision.findFirst({ where: { fileUrl: url, drawing: { is: { project } } }, select: { id: true } }),
     prisma.safetyIncident.findFirst({ where: { photoUrl: url, ...optionalProject }, select: { id: true } }),
+    prisma.safetyCorrectiveAction.findFirst({
+      where: { evidenceUrl: url, incident: { is: optionalProject } },
+      select: { id: true },
+    }),
   ])
   if (!owned.some(row => row !== null)) {
     return NextResponse.json({ error: 'Not found' }, { status: 404 })

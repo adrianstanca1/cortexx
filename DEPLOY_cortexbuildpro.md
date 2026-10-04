@@ -1,106 +1,71 @@
-# Cortexx — Paste-Ready Deploy (cortexbuildpro.com)
+# CortexBuild Pro — production deployment
 
-Your box: **`root@72.62.132.43`** · domain **`cortexbuildpro.com`**
+Production is the Next.js 16 standalone application at <https://cortexbuildpro.tech>, running in an isolated Docker Compose stack on the One.com VPS.
 
-> Prereq: point DNS A-records `cortexbuildpro.com` **and** `www` → `72.62.132.43`
-> before step 4 (TLS), or run the cert step again once DNS resolves.
+| Item | Production value |
+|---|---|
+| Repository | `https://github.com/adrianstanca1/cortexx` |
+| Branch | `main` |
+| VPS | `administrator@85.190.100.68` |
+| Checkout | `/home/administrator/production/cortexx` |
+| Compose file | `docker-compose.construction.yml` |
+| Protected environment | `.env.construction` (mode 0600) |
+| Loopback app endpoint | `http://127.0.0.1:3020` |
+| Public health endpoint | `https://cortexbuildpro.tech/api/health` |
 
----
+Do not use the retired `/opt/cortexx`, static HTML/Express, nginx, host-Postgres or PM2 deployment instructions. `docker-compose.yml`, `docker-compose.prod.yml`, `deploy.sh` and `deploy/backup.sh` describe historical stacks and are not the production path.
 
-## 1 · Put the code on the VPS
+## Normal release path
 
-**From your local machine**, in the project folder:
+1. Merge a reviewed PR to `main` only after the complete CI matrix passes.
+2. `.github/workflows/deploy-vps.yml` starts after successful CI and pins the exact successful `main` SHA.
+3. The workflow updates the protected VPS checkout, builds `Dockerfile.construction`, starts PostgreSQL/Redis/Ollama, applies Prisma migrations, runs the construction bootstrap, starts the Next.js app and waits for the health contract.
+4. It installs the reviewed maintenance schedule, validates and reloads the shared Caddy ingress, then checks the public application and health endpoint.
 
-```sh
-ssh root@72.62.132.43 'mkdir -p /opt/cortexx'
-scp -r Cortexx.html portal.html lib dist server docker-compose.yml deploy.sh \
-    root@72.62.132.43:/opt/cortexx/
+Deployment refuses a dirty production checkout, a superseded SHA, an unverified CI commit, an unhealthy app or an unexpected ingress target. Prefer this workflow to an interactive server deployment because these release guards are part of the production contract.
+
+Required GitHub Actions secrets are `VPS_SSH_PRIVATE_KEY` or `VPS_ROOT_PASSWORD`. Runtime secrets stay only in `/home/administrator/production/cortexx/.env.construction`; never copy their values into workflow inputs, issue text, logs or chat.
+
+## Inspect production
+
+Connect to the VPS and run read-only checks from the production checkout:
+
+```bash
+ssh administrator@85.190.100.68
+cd /home/administrator/production/cortexx
+git status --short --branch
+docker compose --env-file .env.construction -f docker-compose.construction.yml ps
+docker logs --since 15m cortexbuild-construction-app-1
+curl -fsS http://127.0.0.1:3020/api/health
+curl -fsS https://cortexbuildpro.tech/api/health
 ```
 
-*(Or `git clone <your-repo> /opt/cortexx` on the box instead.)*
+The public health payload must satisfy `scripts/check-construction-health.cjs`. Also verify login routing and the release checklist in `docs/RUNBOOK.md`; a green health endpoint alone is not full workflow validation.
 
----
+## Manual recovery deployment
 
-## 2 · Run the one-shot deploy
+Use the GitHub deployment workflow whenever it is available. If an authorised operator must recover the stack manually, first confirm that the checkout is clean, the selected SHA is the intended `origin/main` release and that the same SHA has passed CI. Preserve the currently healthy app image before replacement.
 
-```sh
-ssh root@72.62.132.43
-cd /opt/cortexx
-bash deploy.sh
+The deployment sequence used by automation is:
+
+```bash
+cd /home/administrator/production/cortexx
+docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools
+docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama
+docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools
+docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools npx tsx scripts/bootstrap-construction.ts
+docker compose --env-file .env.construction -f docker-compose.construction.yml up -d app
+curl -fsS http://127.0.0.1:3020/api/health | node scripts/check-construction-health.cjs
 ```
 
-`deploy.sh` is idempotent and does everything:
-installs Docker + nginx + certbot · generates secrets into `server/.env` ·
-builds Postgres + API · writes the nginx site (app + `/api` proxy + `/p/<token>`
-portal rewrite + SSE tuning) · gets HTTPS · opens the firewall · prints your
-webhook URLs.
+Do not blindly edit or reload the shared ingress. Follow the guarded ingress and public-verification steps in `.github/workflows/deploy-vps.yml`, or stop and restore service through the documented rollback procedure.
 
----
+## Backups, rollback and troubleshooting
 
-## 3 · Add your AI key, then bounce the API
+- Production backups and restore drills are installed with `bash ops/install-construction-backups.sh` and documented in `docs/CONSTRUCTION_RECOVERY.md`.
+- Application maintenance schedules are installed with `bash ops/install-construction-app-crons.sh`.
+- For an app-only regression, retain the database, restore the previously preserved healthy app image and recreate only the `app` service.
+- For a database-affecting incident, restore into an isolated replacement stack and validate it before any traffic switch. Never overwrite the live database as an initial recovery step.
+- Use the manual `DB Rescue — One.com construction stack` workflow only for its non-destructive `inspect`, `migrate-status` and `migrate-deploy` actions.
 
-```sh
-nano /opt/cortexx/server/.env      # set ANTHROPIC_API_KEY=sk-ant-...
-cd /opt/cortexx && docker compose up -d
-```
-
----
-
-## 4 · Register the webhooks
-
-The script prints these (the secret is auto-generated in `server/.env`):
-
-```
-WhatsApp callback : https://cortexbuildpro.tech/api/webhooks/<SECRET>/whatsapp
-WhatsApp verify   : <WA_VERIFY_TOKEN>
-Email inbound     : https://cortexbuildpro.tech/api/webhooks/<SECRET>/email
-```
-
-- **Meta → WhatsApp → Configuration**: Callback URL = the WhatsApp URL, Verify
-  token = the printed value, subscribe to **messages**.
-- **Email** (Mailgun/SendGrid inbound parse): POST inbound mail to the Email URL.
-
----
-
-## 5 · Point the app at the API
-
-Open `https://cortexbuildpro.tech` → **Settings → Cloud sync**:
-1. API endpoint = `https://cortexbuildpro.tech` → **Test** → ✓ Reachable
-2. Sign in — demo seed: `demo@cortexbuild.app` / `demo1234`
-3. **Live sync** on → inbound WhatsApp/email leads stream in via SSE.
-
----
-
-## 6 · Smoke test (the script prints these too)
-
-```sh
-curl -s https://cortexbuildpro.tech/api/health
-curl -s https://cortexbuildpro.tech/api/portal/demo-brixton | head -c 120
-# WhatsApp verify handshake (use values from server/.env):
-curl "https://cortexbuildpro.tech/api/webhooks/<SECRET>/whatsapp?hub.verify_token=<WA_VERIFY_TOKEN>&hub.challenge=ok123"
-```
-
----
-
-## Redeploy later
-
-```sh
-ssh root@72.62.132.43
-cd /opt/cortexx && git pull          # or re-scp changed files
-bash deploy.sh                       # rebuilds + reloads everything
-```
-
-Frontend-only changes (`lib/`, `Cortexx.html`) need no rebuild — just reload the page.
-
----
-
-## If something's off
-
-```sh
-docker compose logs -f api     # triage / webhook / error logs
-docker compose ps              # container status
-nginx -t && systemctl reload nginx
-certbot renew --dry-run        # TLS
-```
-
-Full reference: [`DEPLOY_VPS.md`](DEPLOY_VPS.md).
+Full operations reference: [`docs/RUNBOOK.md`](docs/RUNBOOK.md). Recovery procedure and current RPO limits: [`docs/CONSTRUCTION_RECOVERY.md`](docs/CONSTRUCTION_RECOVERY.md).

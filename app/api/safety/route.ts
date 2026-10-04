@@ -7,6 +7,7 @@ import { sendPush } from '@/lib/push'
 import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
 import safetyWorkflow from '@/lib/safety-workflow'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 import { withRoute } from '@/lib/withRoute'
 
@@ -63,7 +64,7 @@ async function GET_impl(req: NextRequest) {
   }
 }
 
-async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null } }) {
+async function POST_impl(req: NextRequest, userId: string, personaRole: string | null, session: { user?: { name?: string | null; email?: string | null } }) {
   const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
   try {
@@ -77,6 +78,10 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
     const riddorStatus = initialRiddorStatus(type, severity, body.riddorReportable === true)
     const riddorReportable = riddorStatus === 'reportable' || riddorStatus === 'submitted'
     const needsRiddorReview = riddorReviewRequired(type, severity)
+    if (typeof body.photoUrl === 'string' && body.photoUrl.trim()) {
+      const uploadError = await authorizeUploadReference(body.photoUrl.trim(), { userId, personaRole })
+      if (uploadError) return uploadError
+    }
 
     let occurredAt = new Date()
     if (body.occurredAt) {
@@ -141,4 +146,4 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
 }
 
 export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
-export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })
+export const POST = withRoute(({ req, userId, personaRole, session }) => POST_impl(req, userId, personaRole, session), { permission: 'write' })

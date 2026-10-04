@@ -5,6 +5,7 @@ import { programmeProjectScope } from '@/lib/programme-access'
 import { canWrite } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
@@ -26,6 +27,10 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     if (!drawing) return NextResponse.json({ error: 'Drawing not found' }, { status: 404 })
 
     const fileUrl = typeof body.fileUrl === 'string' && body.fileUrl ? body.fileUrl : null
+    if (fileUrl) {
+      const uploadError = await authorizeUploadReference(fileUrl, { userId: auth.userId, personaRole: auth.personaRole })
+      if (uploadError) return uploadError
+    }
     const fileName = typeof body.fileName === 'string' && body.fileName ? body.fileName : null
     const fileSize = typeof body.fileSize === 'number' && body.fileSize >= 0 ? body.fileSize : null
     const mimeType = typeof body.mimeType === 'string' && body.mimeType ? body.mimeType : null

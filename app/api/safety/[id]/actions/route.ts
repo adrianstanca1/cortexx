@@ -6,6 +6,7 @@ import { canWrite } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,6 +46,14 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
       dueDate = new Date(body.dueDate)
       if (Number.isNaN(dueDate.getTime())) return NextResponse.json({ error: 'Invalid due date' }, { status: 400 })
     }
+    const evidenceUrl = typeof body.evidenceUrl === 'string' && body.evidenceUrl.trim() ? body.evidenceUrl.trim().slice(0, 1000) : null
+    if (evidenceUrl) {
+      const uploadError = await authorizeUploadReference(evidenceUrl, {
+        userId: (auth.user as { id?: string }).id,
+        personaRole: (auth.user as { role?: string }).role,
+      })
+      if (uploadError) return uploadError
+    }
     const action = await prisma.safetyCorrectiveAction.create({
       data: {
         incidentId: id,
@@ -53,7 +62,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
         ownerName: String(body.ownerName || '').trim().slice(0, 160) || null,
         dueDate,
         notes: String(body.notes || '').trim().slice(0, 2000) || null,
-        evidenceUrl: typeof body.evidenceUrl === 'string' && body.evidenceUrl.trim() ? body.evidenceUrl.trim().slice(0, 1000) : null,
+        evidenceUrl,
       },
     })
     if (incident.status === 'open') {

@@ -6,6 +6,7 @@ import { canWrite } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 const STATUSES = new Set(['open', 'in_progress', 'complete'])
@@ -32,7 +33,17 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     if (body.description !== undefined) data.description = String(body.description || '').trim().slice(0, 2000) || null
     if (body.ownerName !== undefined) data.ownerName = String(body.ownerName || '').trim().slice(0, 160) || null
     if (body.notes !== undefined) data.notes = String(body.notes || '').trim().slice(0, 2000) || null
-    if (body.evidenceUrl !== undefined) data.evidenceUrl = String(body.evidenceUrl || '').trim().slice(0, 1000) || null
+    if (body.evidenceUrl !== undefined) {
+      const nextEvidenceUrl = String(body.evidenceUrl || '').trim().slice(0, 1000) || null
+      if (nextEvidenceUrl && nextEvidenceUrl !== existing.evidenceUrl) {
+        const uploadError = await authorizeUploadReference(nextEvidenceUrl, {
+          userId: (auth.user as { id?: string }).id,
+          personaRole: (auth.user as { role?: string }).role,
+        })
+        if (uploadError) return uploadError
+      }
+      data.evidenceUrl = nextEvidenceUrl
+    }
     if (body.dueDate !== undefined) {
       if (!body.dueDate) data.dueDate = null
       else {
