@@ -3,6 +3,8 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { getCurrentOrg } from '@/lib/tenancy'
+import { syncTaskProjectProgress } from '@/lib/task-progress'
 
 export const dynamic = 'force-dynamic'
 
@@ -17,12 +19,19 @@ export const dynamic = 'force-dynamic'
 export async function POST(req: NextRequest) {
   const auth = await requireAuth()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
+  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (limited) return limited
+  // requireAuth() threads the active org into the request-scoped context rather
+  // than the session, so read the org id from there before any progress write.
+  const orgId = getCurrentOrg()?.organizationId
+  if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
+
   try {
     const body = await req.json()
     const action = String(body.action || '')
-    const ids: string[] = Array.isArray(body.ids) ? body.ids.filter((x: unknown) => typeof x === 'string').slice(0, 200) : []
+    const ids: string[] = Array.isArray(body.ids)
+      ? body.ids.filter((x: unknown) => typeof x === 'string').slice(0, 200)
+      : []
 
     if (!['complete', 'reopen', 'delete'].includes(action)) {
       return NextResponse.json({ error: 'action must be complete | reopen | delete' }, { status: 400 })
@@ -31,83 +40,45 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No task ids provided' }, { status: 400 })
     }
 
-    // Get affected project ids before mutation so we can recompute their progress
-    const tasks = await prisma.task.findMany({
-      where: { id: { in: ids } },
-      select: { id: true, projectId: true },
-    })
-    const affectedProjectIds = Array.from(new Set(tasks.map(t => t.projectId).filter((p): p is string => !!p)))
+    const result = await prisma.$transaction(async tx => {
+      // Capture project ownership before delete/move-style mutations so progress
+      // can be recomputed even when the selected tasks disappear.
+      const tasks = await tx.task.findMany({
+        where: { id: { in: ids } },
+        select: { id: true, projectId: true },
+      })
+      const affectedProjectIds = Array.from(
+        new Set(tasks.map(task => task.projectId).filter((projectId): projectId is string => Boolean(projectId))),
+      )
 
-    let updated = 0
+      let updated = 0
+      if (action === 'delete') {
+        updated = (await tx.task.deleteMany({ where: { id: { in: ids } } })).count
+      } else {
+        const status = action === 'complete' ? 'done' : 'todo'
+        updated = (await tx.task.updateMany({
+          where: { id: { in: ids } },
+          data: { status },
+        })).count
+      }
+
+      await syncTaskProjectProgress(tx, affectedProjectIds, orgId)
+      return { updated, affectedProjectIds }
+    })
+
     if (action === 'delete') {
-      const res = await prisma.task.deleteMany({ where: { id: { in: ids } } })
-      updated = res.count
       prisma.activity.create({
         data: {
           projectId: null,
           actorName: actorName(auth),
           actorType: 'human',
-          action: `deleted ${updated} task${updated === 1 ? '' : 's'}`,
+          action: `deleted ${result.updated} task${result.updated === 1 ? '' : 's'}`,
           iconType: 'check',
         },
       }).catch(() => {})
-    } else {
-      const newStatus = action === 'complete' ? 'done' : 'todo'
-      const res = await prisma.task.updateMany({
-        where: { id: { in: ids } },
-        data: { status: newStatus },
-      })
-      updated = res.count
     }
 
-    // Recompute progress for every affected project — single grouped
-    // read instead of N findManys, then per-project update. The prior
-    // version did N×(findMany + update) serially: ~10ms per project,
-    // so a 50-project bulk took 1s+ purely on round-trips. The groupBy
-    // returns all the counts in one DB query.
-    if (affectedProjectIds.length > 0) {
-      const counts = await prisma.task.groupBy({
-        by: ['projectId', 'status'],
-        where: { projectId: { in: affectedProjectIds } },
-        _count: { _all: true },
-      })
-      const totals = new Map<string, { total: number; done: number }>()
-      for (const row of counts) {
-        if (!row.projectId) continue
-        const cur = totals.get(row.projectId) || { total: 0, done: 0 }
-        cur.total += row._count._all
-        if (row.status === 'done') cur.done += row._count._all
-        totals.set(row.projectId, cur)
-      }
-      // Programme-owned projects derive progress from their activities, not from
-      // tasks. Excluding them here keeps a bulk task edit from silently zeroing or
-      // otherwise clobbering programme progress — same rule as lib/task-progress.ts.
-      // updateMany is required because the relation filter cannot ride on update's
-      // unique `where`.
-      const taskOwnedProjects = {
-        programmeActivities: { none: {} },
-      }
-      await Promise.all(
-        Array.from(totals.entries()).map(([projectId, { total, done }]) => {
-          const progress = total > 0 ? Math.round((done / total) * 100) : 0
-          return prisma.project.updateMany({
-            where: { id: projectId, ...taskOwnedProjects },
-            data: { progress },
-          })
-        }),
-      )
-      // Projects that had all their tasks deleted disappear from `counts` — zero them out.
-      const updatedIds = new Set(totals.keys())
-      const zeroed = affectedProjectIds.filter(id => !updatedIds.has(id))
-      if (zeroed.length > 0) {
-        await prisma.project.updateMany({
-          where: { id: { in: zeroed }, ...taskOwnedProjects },
-          data: { progress: 0 },
-        })
-      }
-    }
-
-    return NextResponse.json({ updated, affectedProjectIds })
+    return NextResponse.json(result)
   } catch (error) {
     reportError(error)
     return NextResponse.json({ error: 'Bulk operation failed' }, { status: 500 })
