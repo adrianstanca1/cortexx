@@ -44,7 +44,10 @@ runner. The self-hosted macOS runner only needs to handle `ios:*` and
 ## Current blockers (must be resolved on the Mac before first submission)
 
 - Provisioning profile + distribution cert provisioned in the macOS Keychain.
-- AASA file served from `cortexbuildpro.tech/.well-known/apple-app-site-association`.
+- AASA endpoint served from `cortexbuildpro.tech/.well-known/apple-app-site-association`
+  with `APPLE_APP_IDENTIFIER` configured from the signed app's
+  `application-identifier`. It publishes no app associations until configured;
+  see [the association setup guide](../.well-known/README.md).
 - StoreKit IAP capability enabled and the product registered in App Store Connect.
 - `eas.json` iOS credentials attached to the `com.cortexbuild.app` bundle id.
 
