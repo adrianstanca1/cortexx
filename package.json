@@ -54,14 +54,14 @@
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.11.2",
-    "@aws-sdk/client-s3": "^3.1105.0",
-    "@aws-sdk/s3-request-presigner": "^3.1105.0",
+    "@aws-sdk/client-s3": "^3.1146.0",
+    "@aws-sdk/s3-request-presigner": "^3.1146.0",
     "@capacitor/android": "^8.5.0",
     "@capacitor/core": "^8.5.0",
     "@capacitor/ios": "^8.5.0",
     "@prisma/adapter-pg": "^7.10.0",
     "@prisma/client": "^7.10.0",
-    "@sentry/nextjs": "^10.69.0",
+    "@sentry/nextjs": "^11.4.0",
     "@types/qrcode": "^1.5.6",
     "@types/speakeasy": "^2.0.10",
     "@types/web-push": "^3.6.4",
@@ -70,14 +70,14 @@
     "jose": "^6.2.12",
     "next": "^16.2.11",
     "next-auth": "^5.0.0-beta.32",
-    "pdfkit": "^0.19.1",
+    "pdfkit": "^0.20.2",
     "qrcode": "^1.5.4",
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "speakeasy": "^2.0.0",
     "stripe": "^22.4.0",
     "web-push": "^3.6.7",
-    "web-vitals": "^6.0.1"
+    "web-vitals": "^6.2.2"
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
@@ -107,7 +107,7 @@
     "tailwindcss": "^4.3.2",
     "ts-node": "^10.9.2",
     "tsx": "^4.23.15",
-    "turbo": "^2.11.2",
+    "turbo": "^2.11.7",
     "typescript": "^5.9.3"
   },
   "overrides": {
