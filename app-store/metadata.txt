@@ -161,7 +161,7 @@ YOU MUST DO THESE ON A MAC (cannot be done from the Linux build server):
   [ ] Replace TEAMID in /.well-known/apple-app-site-association with your
       10-char Apple Team ID (find at developer.apple.com → Membership).
   [ ] In Xcode: enable Associated Domains capability + add
-      applinks:cortexbuildpro.com; enable Push capability (aps-environment).
+      applinks:cortexbuildpro.tech; enable Push capability (aps-environment).
       Confirm PrivacyInfo.xcprivacy + App.entitlements are attached to the
       App target (currently NOT embedded in the pbxproj — ITMS upload fails
       without it).

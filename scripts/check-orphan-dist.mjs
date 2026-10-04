@@ -8,7 +8,7 @@
  *
  * An "orphan" is a dist/*.js (or dist/*.ts / dist/*.jsx) that has no matching
  * lib source. Orphans are dangerous because they are served live at
- * cortexbuildpro.com but are not regenerated from any tracked source — a stale
+ * cortexbuildpro.tech but are not regenerated from any tracked source — a stale
  * or accidentally-committed module can shadow the real code.
  *
  * This script mirrors build-dist.js's orphan decision so it can run standalone

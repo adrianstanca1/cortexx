@@ -28,9 +28,9 @@ Subsequent deploys: `vercel --prod` from the project root, that's it.
 
 ---
 
-## Lane 2 · Hostinger VPS (your existing cortexbuildpro.com)
+## Lane 2 · Hostinger VPS (your existing cortexbuildpro.tech)
 
-The `deploy.sh` script is already configured for `cortexbuildpro.com`.
+The `deploy.sh` script is already configured for `cortexbuildpro.tech`.
 
 ```bash
 # From your laptop — package everything except dev cruft
@@ -55,7 +55,7 @@ bash /tmp/cortexx-upload/deploy.sh
 
 The script will:
 - Install Nginx + Certbot
-- Configure HTTPS via Let's Encrypt for `cortexbuildpro.com`
+- Configure HTTPS via Let's Encrypt for `cortexbuildpro.tech`
 - Set up service-worker no-cache headers (critical — wrong here = users stuck on old version)
 - Open firewall
 - Set up auto-renewal
@@ -112,7 +112,7 @@ If any of those fail, check `app-store/SUBMISSION.md` and `SHIP_TO_APP_STORE.md`
 ## Which lane should you actually pick?
 
 - **Just want it on the internet so users can install the PWA today?** → Lane 1 (Vercel drag-drop).
-- **You own `cortexbuildpro.com` and want it on your own infrastructure?** → Lane 2 (Hostinger VPS).
+- **You own `cortexbuildpro.tech` and want it on your own infrastructure?** → Lane 2 (Hostinger VPS).
 - **Need a portable demo file?** → Lane 4 (already built — `Cortexx-standalone.html`).
 - **You're going to iterate hard for the next week?** → Lane 1 with the CLI — `vercel --prod` after every change is ~5 seconds.
 

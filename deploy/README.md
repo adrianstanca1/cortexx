@@ -6,7 +6,7 @@ Production operations for the self-hosted stack. All free, all on your VPS.
 
 ```sh
 git clone <your-repo> cortexx && cd cortexx
-sh deploy-vps.sh cortexbuildpro.com you@email.com
+sh deploy-vps.sh cortexbuildpro.tech you@email.com
 ```
 
 Brings up `db + api + ollama + web` (Postgres, Express, local LLM, Caddy w/ auto-HTTPS).

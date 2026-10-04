@@ -1,7 +1,7 @@
 import { test, expect } from '@playwright/test'
 import { signIn } from './helpers/auth.mjs'
 
-const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
+const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech'
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
 
 test('offline photo capture persists locally and auto-syncs exactly once after reconnect', async ({ page, context }) => {

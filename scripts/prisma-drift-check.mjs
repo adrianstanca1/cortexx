@@ -4,7 +4,7 @@
  *
  * Enforces the CortexBuild Pro canonical-data-model discipline:
  *   - server/db/schema.sql  (raw SQL) IS the source of truth for what the
- *     production Express API persists at cortexbuildpro.com via /api/:collection.
+ *     production Express API persists at cortexbuildpro.tech via /api/:collection.
  *   - prisma/schema.prisma is the Next.js admin's typed client and MUST stay
  *     aligned with that SQL, OR be explicitly justified.
  *

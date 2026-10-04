@@ -12,8 +12,8 @@
   <array>
     <string>applinks:cortexbuildpro.tech</string>
     <string>webcredentials:cortexbuildpro.tech</string>
-    <string>applinks:cortexbuildpro.com</string>
-    <string>webcredentials:cortexbuildpro.com</string>
+    <string>applinks:cortexbuildpro.tech</string>
+    <string>webcredentials:cortexbuildpro.tech</string>
   </array>
 
   <!-- iCloud (for future CloudKit sync) -->

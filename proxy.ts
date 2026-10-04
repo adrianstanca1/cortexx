@@ -112,6 +112,8 @@ const PUBLIC_PATHS = new Set<string>([
   '/privacy',           // GDPR / legal — must be reachable without auth
   '/terms',             // same
   '/status',            // public uptime/health board — no auth needed
+  '/.well-known/security.txt',        // RFC 9116 security contact — crawlers, no auth
+  '/.well-known/apple-app-site-association', // iOS Universal Links / App Clip (docs/IOS_CI.md)
   '/robots.txt',        // SEO crawlers
   '/sitemap.xml',       // SEO crawlers
   '/manifest.json',
@@ -212,13 +214,13 @@ export default auth(req => {
   // Signed-out visitors landing on / get the full standalone designer
   // PWA bundle (the version built in the Claude Design canvas) instead
   // of the thin server-rendered marketing page. Rewrite (not redirect)
-  // so the URL stays clean as `cortexbuildpro.com/`. Authenticated
+  // so the URL stays clean as `cortexbuildpro.tech/`. Authenticated
   // users fall through to app/page.tsx, which bounces to /dashboard.
   //
   // NOTE: the rewrite target MUST be an absolute URL (Next 16 middleware
   // rejects a bare relative path), but its origin must resolve WITHOUT
   // DNS — otherwise the standalone server fetches the public Host header
-  // (e.g. admin.cortexbuildpro.com, which has no A record yet) and 500s
+  // (e.g. admin.cortexbuildpro.tech, which has no A record yet) and 500s
   // with ENOTFOUND. Pointing the origin at the container's own loopback
   // (127.0.0.1:3000) keeps the rewrite internal; the browser URL is
   // unchanged (rewrites don't alter the address bar).

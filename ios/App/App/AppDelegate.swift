@@ -74,7 +74,7 @@ class AppDelegate: UIResponder, UIApplicationDelegate {
         return ApplicationDelegateProxy.shared.application(app, open: url, options: options)
     }
 
-    // MARK: - Universal Links (cortexbuildpro.com)
+    // MARK: - Universal Links (cortexbuildpro.tech)
 
     func application(
         _ application: UIApplication,

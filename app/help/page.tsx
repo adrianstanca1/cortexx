@@ -86,7 +86,7 @@ export default function HelpIndex() {
             Everything you need to know.
           </h1>
           <p style={{ fontSize: 15, color: 'var(--t2)', lineHeight: 1.5, fontFamily: 'var(--font-system)', margin: 0 }}>
-            Five articles cover the 90% of questions. Email <a href="mailto:support@cortexbuildpro.com" style={{ color: '#f59e0b', fontWeight: 600 }}>support@cortexbuildpro.com</a> for anything else.
+            Five articles cover the 90% of questions. Email <a href="mailto:support@cortexbuildpro.tech" style={{ color: '#f59e0b', fontWeight: 600 }}>support@cortexbuildpro.tech</a> for anything else.
           </p>
         </div>
 

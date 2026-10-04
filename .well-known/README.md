@@ -14,7 +14,7 @@ with **no** `.json` extension (Apple fetches it exactly at that path).
    while the native Xcode target was generated with `app.cortexbuild.cortexx`.
    Run `npx cap sync ios` on a Mac to reconcile, then make all three identical.
 3. In Xcode, enable the **Associated Domains** capability and add
-   `applinks:cortexbuildpro.com` to the App target (this is the *client* half
+   `applinks:cortexbuildpro.tech` to the App target (this is the *client* half
    — cannot be done from this Linux VPS).
 
 ## Verification

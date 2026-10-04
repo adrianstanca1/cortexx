@@ -101,15 +101,15 @@ services:
       - api
     # TLS + ports 80/443 are owned by the host-network traefik at /docker/traefik.
     # Caddy serves plain HTTP on :80 inside the compose network; traefik routes
-    # cortexbuildpro.com to it via the docker provider labels below.
+    # cortexbuildpro.tech to it via the docker provider labels below.
     expose:
       - "80"
     labels:
       - traefik.enable=true
-      - traefik.http.routers.cortexx.rule=Host(`cortexbuildpro.com`) || Host(`www.cortexbuildpro.com`)
+      - traefik.http.routers.cortexx.rule=Host(`cortexbuildpro.tech`) || Host(`www.cortexbuildpro.tech`)
       - traefik.http.routers.cortexx.entrypoints=websecure
       - traefik.http.routers.cortexx.tls.certresolver=letsencrypt
-      # Canonical redirect: www.cortexbuildpro.com -> cortexbuildpro.com (308).
+      # Canonical redirect: www.cortexbuildpro.tech -> cortexbuildpro.tech (308).
       # Traefik owns TLS + Host routing, so the redirect lives here (not in
       # Caddy, which only serves plain HTTP behind traefik).
       - traefik.http.middlewares.cortexx-www-redirect.redirectregex.regex=^https?://www\.(.*)
@@ -158,7 +158,7 @@ services:
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
 
   # ── cortexx-admin: Next.js SaaS admin console (app/dashboard + RBAC) ──
-  # Dedicated tenant behind host traefik at admin.cortexbuildpro.com.
+  # Dedicated tenant behind host traefik at admin.cortexbuildpro.tech.
   # Shares the central Postgres `db` (same cortexx database). Traefik runs in
   # host network mode and discovers this container via the docker provider,
   # dialing its cortexx_default IP — same pattern as the working `web` tenant
@@ -176,7 +176,7 @@ services:
       NODE_ENV: production
       PORT: 3000
       ADMIN_TENANT: "true"
-      NEXTAUTH_URL: https://admin.cortexbuildpro.com
+      NEXTAUTH_URL: https://admin.cortexbuildpro.tech
       NEXTAUTH_SECRET: ${ADMIN_NEXTAUTH_SECRET:-change-me-admin-nextauth-secret}
       NEXT_PUBLIC_API_URL: https://cortexbuildpro.tech
       NEXT_PUBLIC_SITE_URL: https://cortexbuildpro.tech
@@ -184,8 +184,8 @@ services:
       - "3000"
     labels:
       - traefik.enable=true
-      # Branded host (needs A record admin.cortexbuildpro.com -> VPS IP).
-      - traefik.http.routers.cortexx-admin.rule=Host(`admin.cortexbuildpro.com`)
+      # Branded host (needs A record admin.cortexbuildpro.tech -> VPS IP).
+      - traefik.http.routers.cortexx-admin.rule=Host(`admin.cortexbuildpro.tech`)
       - traefik.http.routers.cortexx-admin.entrypoints=websecure
       - traefik.http.routers.cortexx-admin.tls.certresolver=letsencrypt
       - traefik.http.services.cortexx-admin.loadbalancer.server.port=3000

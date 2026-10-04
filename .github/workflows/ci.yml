@@ -54,7 +54,7 @@ jobs:
         run: npx tsc --noEmit
       - name: dist/ integrity gate (no server .ts/.jsx shipped, no drift)
         # Enforces the security invariant that server-only .ts/.jsx never ship
-        # to dist/ (which is served live at cortexbuildpro.com), and that dist/
+        # to dist/ (which is served live at cortexbuildpro.tech), and that dist/
         # matches lib/. `postinstall` masks precompile failures locally with
         # `|| true`; this step makes a broken builder fail CI instead of
         # silently publishing stale or over-broad dist/ to production.
@@ -200,9 +200,9 @@ jobs:
       AUTH_URL: http://127.0.0.1:3000
       NEXTAUTH_SECRET: ci-playwright-secret-not-used-outside-ci
       AUTH_SECRET: ci-playwright-secret-not-used-outside-ci
-      ADMIN_EMAIL: admin@cortexbuildpro.com
+      ADMIN_EMAIL: admin@cortexbuildpro.tech
       ADMIN_PASSWORD: changeme-please-1234
-      E2E_ADMIN_EMAIL: admin@cortexbuildpro.com
+      E2E_ADMIN_EMAIL: admin@cortexbuildpro.tech
       E2E_ADMIN_PASSWORD: changeme-please-1234
       DEFAULT_ORG_SLUG: cortexbuildpro
       DEFAULT_ORG_NAME: Cortexbuild Pro
@@ -272,9 +272,9 @@ jobs:
       AUTH_URL: http://127.0.0.1:3000
       NEXTAUTH_SECRET: ci-a11y-secret-not-used-outside-ci
       AUTH_SECRET: ci-a11y-secret-not-used-outside-ci
-      ADMIN_EMAIL: admin@cortexbuildpro.com
+      ADMIN_EMAIL: admin@cortexbuildpro.tech
       ADMIN_PASSWORD: changeme-please-1234
-      E2E_ADMIN_EMAIL: admin@cortexbuildpro.com
+      E2E_ADMIN_EMAIL: admin@cortexbuildpro.tech
       E2E_ADMIN_PASSWORD: changeme-please-1234
       DEFAULT_ORG_SLUG: cortexbuildpro
       DEFAULT_ORG_NAME: Cortexbuild Pro

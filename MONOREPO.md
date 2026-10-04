@@ -1,6 +1,6 @@
 # CortexBuild Pro — Monorepo
 
-One product, three deployment targets, a single shared backend (`/api/*` on `cortexbuildpro.com`):
+One product, three deployment targets, a single shared backend (`/api/*` on `cortexbuildpro.tech`):
 
 | App | Path | Stack | Role |
 |-----|------|-------|------|

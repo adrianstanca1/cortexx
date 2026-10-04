@@ -6,7 +6,7 @@ set -e
 
 REPO="https://github.com/adrianstanca1/cortexx.git"
 APP_DIR="/opt/cortexx-pwa"
-DOMAIN="app.cortexbuildpro.com"
+DOMAIN="app.cortexbuildpro.tech"
 PORT=3011
 
 echo "🚀 Deploying Cortexx PWA to $DOMAIN..."
@@ -88,7 +88,7 @@ systemctl reload nginx
 # 6. SSL (Let's Encrypt)
 if ! [ -f "/etc/letsencrypt/live/$DOMAIN/fullchain.pem" ]; then
   echo "🔒 Setting up SSL..."
-  certbot certonly --webroot -w $WEB_ROOT -d $DOMAIN --agree-tos -m admin@cortexbuildpro.com --non-interactive
+  certbot certonly --webroot -w $WEB_ROOT -d $DOMAIN --agree-tos -m admin@cortexbuildpro.tech --non-interactive
   
   # Update nginx for HTTPS
   sed -i "s/listen 80;/listen 443 ssl http2;\n    listen 80;\n    server_name $DOMAIN;\n\n    # Redirect HTTP to HTTPS\n    if (\$scheme != \"https\") {\n        return 301 https:\/\/\$server_name\$request_uri;\n    }\n\n    ssl_certificate \/etc\/letsencrypt\/live\/$DOMAIN\/fullchain.pem;\n    ssl_certificate_key \/etc\/letsencrypt\/live\/$DOMAIN\/privkey.pem;/" /etc/nginx/sites-available/cortexx-pwa

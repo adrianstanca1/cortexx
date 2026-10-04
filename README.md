@@ -1,6 +1,6 @@
 # Cortexx — The Construction OS that thinks with you
 
-UK SMB contractor management with an autonomous AI CEO (**Vera**). One product, **three deployment targets**, **one shared backend** (`/api/*` on **cortexbuildpro.com**).
+UK SMB contractor management with an autonomous AI CEO (**Vera**). One product, **three deployment targets**, **one shared backend** (`/api/*` on **cortexbuildpro.tech**).
 
 [![Version](https://img.shields.io/badge/version-1.4.0-2563eb)](CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-offline--first-2563eb)](manifest.json)
@@ -14,7 +14,7 @@ UK SMB contractor management with an autonomous AI CEO (**Vera**). One product, 
 
 ## What Cortexx is today
 
-Cortexx (product name **CortexBuild Pro**) is a UK SMB construction-management platform deployed live at **cortexbuildpro.com**. It is a **monorepo** with three client stacks that all talk to one Express + PostgreSQL backend, sharing an API contract via `@cortexbuild/core` (`packages/core`). See [`MONOREPO.md`](MONOREPO.md) for the layout.
+Cortexx (product name **CortexBuild Pro**) is a UK SMB construction-management platform deployed live at **cortexbuildpro.tech**. It is a **monorepo** with three client stacks that all talk to one Express + PostgreSQL backend, sharing an API contract via `@cortexbuild/core` (`packages/core`). See [`MONOREPO.md`](MONOREPO.md) for the layout.
 
 ### Three deployment targets, one backend
 
