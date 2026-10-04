@@ -155,7 +155,7 @@ function GlobalSideMenu({ accent = T.blue }) {
     // ── Hamburger button: top-left, below the status bar. z above content,
     //    below sheets so it never fights a sheet's Back button. ──
     React.createElement('button', {
-      'aria-label': 'Open menu', onClick: () => setOpen(true),
+      type: 'button', 'aria-label': 'Open menu', onClick: () => setOpen(true),
       style: {
         position: 'absolute', top: 49, left: 12, zIndex: 9,
         width: 38, height: 38, borderRadius: 12,
@@ -188,7 +188,7 @@ function GlobalSideMenu({ accent = T.blue }) {
           React.createElement('div', { style: { flex: 1 } },
             React.createElement('div', { style: { fontFamily: SF, fontSize: 16, fontWeight: 750, color: T.t1, letterSpacing: -0.3 } }, 'Cortexx'),
             React.createElement('div', { style: { fontFamily: SF, fontSize: 11, color: T.t3 } }, 'cortexbuildpro.com')),
-          React.createElement('button', { 'aria-label': 'Close', onClick: () => setOpen(false), style: { width: 30, height: 30, borderRadius: 15, background: T.bg2, border: `0.5px solid ${T.hair}`, color: T.t2, cursor: 'pointer', fontSize: 16, lineHeight: 1 } }, '✕')),
+          React.createElement('button', { type: 'button', 'aria-label': 'Close', onClick: () => setOpen(false), style: { width: 30, height: 30, borderRadius: 15, background: T.bg2, border: `0.5px solid ${T.hair}`, color: T.t2, cursor: 'pointer', fontSize: 16, lineHeight: 1 } }, '✕')),
         // Search
         React.createElement('div', { style: { padding: '4px 16px 10px' } },
           React.createElement('input', {
@@ -202,7 +202,7 @@ function GlobalSideMenu({ accent = T.blue }) {
             : filtered.map((s) => React.createElement('div', { key: s.h, style: { marginBottom: 6 } },
                 React.createElement('div', { style: { fontFamily: SF, fontSize: 10.5, fontWeight: 700, color: T.t3, textTransform: 'uppercase', letterSpacing: 0.7, padding: '12px 10px 5px' } }, s.h),
                 s.items.map((it) => React.createElement('button', {
-                  key: it.l, onClick: () => go(it.k, it.p),
+                  type: 'button', key: it.l, onClick: () => go(it.k, it.p),
                   style: {
                     width: '100%', display: 'flex', alignItems: 'center', gap: 12, padding: '10px 10px', borderRadius: 9,
                     background: 'transparent', border: 'none', color: T.t1, cursor: 'pointer', textAlign: 'left',

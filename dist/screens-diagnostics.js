@@ -188,6 +188,7 @@ function BackendDiagnosticsScreen({
       marginBottom: 4
     }
   }, 'No API configured'), 'Open ', React.createElement('strong', null, 'Settings → Cloud sync'), ' to enter your deployed API URL and sign in, then run the diagnostics here.') : React.createElement('button', {
+    type: 'button',
     onClick: runSuite,
     disabled: running,
     style: {

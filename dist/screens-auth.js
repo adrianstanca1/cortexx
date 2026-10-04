@@ -44,6 +44,7 @@
     accent
   }) {
     return React.createElement('button', {
+      type: 'button',
       onClick,
       disabled,
       style: {
@@ -143,6 +144,7 @@
       } else if (live) setErr('That didn\u2019t work — check the details and try again.');
     };
     const tab = (id, label) => React.createElement('button', {
+      type: 'button',
       key: id,
       onClick: () => {
         setMode(id);
@@ -232,6 +234,7 @@
         color: T.t3
       }
     }, session && session.local ? 'Device session' : 'Cloud session')), React.createElement('button', {
+      type: 'button',
       onClick: () => {
         localStorage.removeItem('cortexx_session');
         if (window.cortexxCloud) cortexxCloud.signOut();
@@ -426,6 +429,7 @@
         marginTop: 6
       }
     }, ['member', 'manager', 'admin'].map(r => React.createElement('button', {
+      type: 'button',
       key: r,
       onClick: () => setRole(r),
       style: {
@@ -469,6 +473,7 @@
         marginBottom: 8
       }
     }, result.link), React.createElement('button', {
+      type: 'button',
       onClick: () => {
         navigator.clipboard && navigator.clipboard.writeText(result.link);
         toast('Link copied', 'success');
@@ -519,6 +524,7 @@
         color: T.t3
       }
     }, i.role + ' · expires ' + new Date(i.expires_at).toLocaleDateString('en-GB'))), React.createElement('button', {
+      type: 'button',
       onClick: async () => {
         await cortexxCloud.revokeInvite(i.token);
         setPending(pending.filter(p => p.token !== i.token));

@@ -91,7 +91,7 @@ function BackendDiagnosticsScreen({ onClose, accent = T.blue }) {
         ? React.createElement('div', { style: { background: T.amber + '14', border: `0.5px solid ${T.amber}55`, borderRadius: 12, padding: 16, fontFamily: SF, fontSize: 13, color: T.t1, lineHeight: 1.5 } },
             React.createElement('div', { style: { fontWeight: 700, marginBottom: 4 } }, 'No API configured'),
             'Open ', React.createElement('strong', null, 'Settings → Cloud sync'), ' to enter your deployed API URL and sign in, then run the diagnostics here.')
-        : React.createElement('button', { onClick: runSuite, disabled: running, style: {
+        : React.createElement('button', { type: 'button', onClick: runSuite, disabled: running, style: {
             width: '100%', background: running ? T.bg2 : accent, color: running ? T.t3 : '#fff', border: 'none',
             borderRadius: 12, padding: '13px', fontFamily: SF, fontSize: 15, fontWeight: 700, cursor: running ? 'wait' : 'pointer', marginBottom: 16,
           } }, running ? 'Running…' : 'Run diagnostics'),

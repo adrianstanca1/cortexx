@@ -439,6 +439,7 @@ function GlobalSideMenu({
     size: 18
   }) : null;
   return React.createElement(React.Fragment, null, React.createElement('button', {
+    type: 'button',
     'aria-label': 'Open menu',
     onClick: () => setOpen(true),
     style: {
@@ -546,6 +547,7 @@ function GlobalSideMenu({
       color: T.t3
     }
   }, 'cortexbuildpro.com')), React.createElement('button', {
+    type: 'button',
     'aria-label': 'Close',
     onClick: () => setOpen(false),
     style: {
@@ -609,6 +611,7 @@ function GlobalSideMenu({
       padding: '12px 10px 5px'
     }
   }, s.h), s.items.map(it => React.createElement('button', {
+    type: 'button',
     key: it.l,
     onClick: () => go(it.k, it.p),
     style: {

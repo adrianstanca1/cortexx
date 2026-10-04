@@ -51,9 +51,18 @@ function AdminApp() {
   React.useEffect(() => {
     const onHash = () => setRoute(location.hash.replace('#', '') || 'overview');
     window.addEventListener('hashchange', onHash);
-    return () => window.removeEventListener('hashchange', onHash);
+    window.addEventListener('popstate', onHash);
+    return () => {
+      window.removeEventListener('hashchange', onHash);
+      window.removeEventListener('popstate', onHash);
+    };
   }, []);
-  const go = (id) => { location.hash = id; setRoute(id); };
+  // pushState rather than `location.hash = id`: assigning to location is a
+  // mutation of a value owned outside the component, which the React 19
+  // compiler rules (react-hooks/immutability) reject. pushState also gives
+  // correct Back/Forward behaviour, so we listen for popstate as well as
+  // hashchange — the two fire together for hash navigation.
+  const go = (id) => { window.history.pushState(null, '', '#' + id); setRoute(id); };
 
   if (!authed) return React.createElement(LoginScreen, { onAuthed: (m) => { setMode(m || 'local'); setAuthed(true); } });
 

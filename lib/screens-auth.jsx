@@ -18,7 +18,7 @@
   }
 
   function PrimaryBtn({ children, onClick, disabled, accent }) {
-    return React.createElement('button', { onClick, disabled, style: {
+    return React.createElement('button', { type: 'button', onClick, disabled, style: {
       width: '100%', background: disabled ? T.bg2 : (accent || T.blue), color: disabled ? T.t3 : '#fff',
       border: 'none', borderRadius: 12, padding: '13px', fontFamily: SF, fontSize: 15, fontWeight: 700,
       cursor: disabled ? 'default' : 'pointer', marginTop: 4,
@@ -84,7 +84,7 @@
       } else if (live) setErr('That didn\u2019t work — check the details and try again.');
     };
 
-    const tab = (id, label) => React.createElement('button', { key: id, onClick: () => { setMode(id); setErr(''); }, style: {
+    const tab = (id, label) => React.createElement('button', { type: 'button', key: id, onClick: () => { setMode(id); setErr(''); }, style: {
       flex: 1, background: mode === id ? accent : 'transparent', color: mode === id ? '#fff' : T.t2,
       border: 'none', borderRadius: 9, padding: '9px 0', fontFamily: SF, fontSize: 13, fontWeight: 650, cursor: 'pointer',
     } }, label);
@@ -102,7 +102,7 @@
           React.createElement('div', { style: { flex: 1 } },
             React.createElement('div', { style: { fontFamily: SF, fontSize: 13.5, fontWeight: 650, color: T.t1 } }, (session && (session.name || session.email)) || 'Signed in'),
             React.createElement('div', { style: { fontFamily: SF, fontSize: 11.5, color: T.t3 } }, session && session.local ? 'Device session' : 'Cloud session')),
-          React.createElement('button', { onClick: () => { localStorage.removeItem('cortexx_session'); if (window.cortexxCloud) cortexxCloud.signOut(); toast('Signed out', 'info'); onClose(); }, style: { background: 'transparent', border: `0.5px solid ${T.hairMid}`, borderRadius: 9, color: T.t2, padding: '7px 12px', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer' } }, 'Sign out')),
+          React.createElement('button', { type: 'button', onClick: () => { localStorage.removeItem('cortexx_session'); if (window.cortexxCloud) cortexxCloud.signOut(); toast('Signed out', 'info'); onClose(); }, style: { background: 'transparent', border: `0.5px solid ${T.hairMid}`, borderRadius: 9, color: T.t2, padding: '7px 12px', fontFamily: SF, fontSize: 12, fontWeight: 600, cursor: 'pointer' } }, 'Sign out')),
         // tabs
         React.createElement('div', { style: { display: 'flex', gap: 4, background: T.bg2, borderRadius: 11, padding: 4 } },
           tab('signin', 'Sign in'), tab('register', 'Create account'), tab('invite', 'Join by invite')),
@@ -166,7 +166,7 @@
         React.createElement('div', null,
           React.createElement('div', { style: lbl }, 'Role'),
           React.createElement('div', { style: { display: 'flex', gap: 8, marginTop: 6 } },
-            ['member', 'manager', 'admin'].map((r) => React.createElement('button', { key: r, onClick: () => setRole(r), style: {
+            ['member', 'manager', 'admin'].map((r) => React.createElement('button', { type: 'button', key: r, onClick: () => setRole(r), style: {
               flex: 1, background: role === r ? accent : T.bg2, color: role === r ? '#fff' : T.t2,
               border: `0.5px solid ${role === r ? accent : T.hairMid}`, borderRadius: 10, padding: '9px 0',
               fontFamily: SF, fontSize: 13, fontWeight: 650, cursor: 'pointer', textTransform: 'capitalize',
@@ -175,14 +175,14 @@
         result && result.live && React.createElement('div', { style: { background: T.green + '14', border: `0.5px solid ${T.green}44`, borderRadius: 11, padding: '12px 13px' } },
           React.createElement('div', { style: { fontFamily: SF, fontSize: 12.5, fontWeight: 700, color: T.green, marginBottom: 6 } }, 'Invite link (valid 7 days)'),
           React.createElement('div', { style: { fontFamily: SFMono, fontSize: 11, color: T.t1, wordBreak: 'break-all', marginBottom: 8 } }, result.link),
-          React.createElement('button', { onClick: () => { navigator.clipboard && navigator.clipboard.writeText(result.link); toast('Link copied', 'success'); }, style: { background: T.green, color: '#04140c', border: 'none', borderRadius: 9, padding: '8px 14px', fontFamily: SF, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' } }, 'Copy link')),
+          React.createElement('button', { type: 'button', onClick: () => { navigator.clipboard && navigator.clipboard.writeText(result.link); toast('Link copied', 'success'); }, style: { background: T.green, color: '#04140c', border: 'none', borderRadius: 9, padding: '8px 14px', fontFamily: SF, fontSize: 12.5, fontWeight: 700, cursor: 'pointer' } }, 'Copy link')),
         live && pending.length > 0 && React.createElement('div', null,
           React.createElement('div', { style: { ...lbl, marginBottom: 8 } }, 'PENDING INVITES'),
           pending.map((i) => React.createElement('div', { key: i.token, style: { display: 'flex', alignItems: 'center', gap: 10, background: T.bg2, border: `0.5px solid ${T.hair}`, borderRadius: 10, padding: '10px 12px', marginBottom: 6 } },
             React.createElement('div', { style: { flex: 1 } },
               React.createElement('div', { style: { fontFamily: SF, fontSize: 13, color: T.t1, fontWeight: 600 } }, i.email),
               React.createElement('div', { style: { fontFamily: SF, fontSize: 11, color: T.t3 } }, i.role + ' · expires ' + new Date(i.expires_at).toLocaleDateString('en-GB'))),
-            React.createElement('button', { onClick: async () => { await cortexxCloud.revokeInvite(i.token); setPending(pending.filter(p => p.token !== i.token)); toast('Invite revoked', 'info'); }, style: { background: 'transparent', border: `0.5px solid ${T.hairMid}`, borderRadius: 8, color: T.red, padding: '6px 10px', fontFamily: SF, fontSize: 11.5, fontWeight: 600, cursor: 'pointer' } }, 'Revoke'))))));
+            React.createElement('button', { type: 'button', onClick: async () => { await cortexxCloud.revokeInvite(i.token); setPending(pending.filter(p => p.token !== i.token)); toast('Invite revoked', 'info'); }, style: { background: 'transparent', border: `0.5px solid ${T.hairMid}`, borderRadius: 8, color: T.red, padding: '6px 10px', fontFamily: SF, fontSize: 11.5, fontWeight: 600, cursor: 'pointer' } }, 'Revoke'))))));
   }
 
   Object.assign(window, { AccountSheet, InviteTeammateSheet });
