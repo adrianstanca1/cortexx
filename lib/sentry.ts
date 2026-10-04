@@ -28,8 +28,9 @@ export function initSentry(side: 'server' | 'edge' | 'client'): void {
       environment: ENV,
       release: RELEASE,
       tracesSampleRate: 0.1,
-      // Don't sample profile per-trace — keeps overhead low. Adjust if needed.
-      profilesSampleRate: 0,
+      // Profiling is intentionally disabled. Sentry 11 removed the legacy
+      // profilesSampleRate option; omitting the profiling integration keeps
+      // the same zero-profile behavior without relying on a retired setting.
       // Scrub common PII before send. Server-only beforeSend.
       beforeSend(event) {
         try {
