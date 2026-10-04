@@ -1,5 +1,18 @@
 # VERIFIED.md — Functional Audit & Attestation
 
+## Current verification — 4 October 2026 (post-hardening update)
+
+Current production baseline: `b4b0655eef2445cf5cac02c41a8a7774a16a1e76` (PR #273).
+
+- [CI run 37187339135](https://github.com/adrianstanca1/cortexx/actions/runs/37187339135): full build/typecheck, integration, browser/PWA and accessibility jobs passed.
+- [ci-verify run 37187339150](https://github.com/adrianstanca1/cortexx/actions/runs/37187339150): shared/native verification and unsigned iOS checks passed.
+- [deployment run 37187639371](https://github.com/adrianstanca1/cortexx/actions/runs/37187639371): One.com production deploy and public release verification passed for the exact SHA.
+- [Backup Verify run 37188252961](https://github.com/adrianstanca1/cortexx/actions/runs/37188252961): post-PR-#272 encrypted recovery verification passed on the exact production SHA, including protected `.env.construction` and owner credentials.
+- At 08:10 UTC the VPS checkout was clean at `b4b0655`, the app/PostgreSQL/Redis/Ollama containers were healthy, and the public health contract reported app/database/disk/memory healthy.
+- `main` is now protected: PR-only changes, required status checks, resolved conversations, linear history, administrator enforcement, and no force-push/deletion.
+
+Two high-severity Dependabot alerts remain in the Expo dependency tree (`braces` and `node-forge`). GitHub currently reports no patched version for those alert instances; the root production dependency audit reports zero high/critical findings. Continuous PostgreSQL PITR, physical-device/load validation, signed store delivery and a controlled full rollback/cutover drill remain separate completion gates.
+
 ## Current verification — 4 October 2026
 
 Baseline: `30423c944cb07fdd4baca9d88764ec631d96f8c0` (PR #269), canonical repository `adrianstanca1/cortexx`. The active production surface is the Next.js construction stack defined by `docker-compose.construction.yml` at `cortexbuildpro.tech`.
