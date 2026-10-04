@@ -123,6 +123,7 @@ jobs:
               AUTHSECRET="$(openssl rand -hex 32)"
               JWTSECRET="$(openssl rand -hex 32)"
               CRONSECRET="$(openssl rand -hex 32)"
+              BROWSERSECRET="$(openssl rand -hex 48)"
               ADMINPASS="$(openssl rand -hex 24)"
               printf '%s\n' \
                 "POSTGRES_PASSWORD=$DBPASS" \
@@ -132,6 +133,7 @@ jobs:
                 "AUTH_SECRET=$AUTHSECRET" \
                 "JWT_SECRET=$JWTSECRET" \
                 "CRON_SECRET=$CRONSECRET" \
+                "BROWSER_GATEWAY_INTERNAL_TOKEN=$BROWSERSECRET" \
                 "NEXTAUTH_URL=https://cortexbuildpro.tech" \
                 "AUTH_URL=https://cortexbuildpro.tech" \
                 "APP_URL=https://cortexbuildpro.tech" \
@@ -149,10 +151,13 @@ jobs:
             if ! grep -q '^CRON_SECRET=' .env.construction; then
               printf 'CRON_SECRET=%s\n' "$(openssl rand -hex 32)" >> .env.construction
             fi
+            if ! grep -q '^BROWSER_GATEWAY_INTERNAL_TOKEN=' .env.construction; then
+              printf 'BROWSER_GATEWAY_INTERNAL_TOKEN=%s\n' "$(openssl rand -hex 48)" >> .env.construction
+            fi
             chmod 600 .env.construction
 
-            docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools
-            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama
+            docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools browser-gateway
+            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama browser-gateway
             docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools
             docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools npx tsx scripts/bootstrap-construction.ts
             docker compose --env-file .env.construction -f docker-compose.construction.yml up -d app

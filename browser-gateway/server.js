@@ -1,480 +1,249 @@
-import express from 'express';
-import http from 'http';
-import { Server as SocketIOServer } from 'socket.io';
-import puppeteer from 'puppeteer';
-import Redis from 'ioredis';
-import helmet from 'helmet';
-import cors from 'cors';
-import rateLimit from 'express-rate-limit';
-import bcrypt from 'bcryptjs';
-import jwt from 'jsonwebtoken';
+import crypto from 'node:crypto'
+import dns from 'node:dns/promises'
+import express from 'express'
+import helmet from 'helmet'
+import rateLimit from 'express-rate-limit'
+import Redis from 'ioredis'
+import puppeteer from 'puppeteer-core'
 
-const app = express();
-const server = http.createServer(app);
+const PORT = Number(process.env.PORT || 3002)
+const INTERNAL_TOKEN = process.env.BROWSER_GATEWAY_INTERNAL_TOKEN
+const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6379'
+const CHROMIUM = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser'
+const MAX_SESSIONS = Math.max(1, Number(process.env.MAX_BROWSER_SESSIONS || 4))
+const IDLE_MS = Math.max(60_000, Number(process.env.BROWSER_SESSION_IDLE_MS || 15 * 60_000))
+const EXTRA_PRIVATE_HOSTS = new Set(
+  String(process.env.BROWSER_GATEWAY_ALLOWED_PRIVATE_HOSTS || '')
+    .split(',')
+    .map(value => value.trim().toLowerCase())
+    .filter(Boolean),
+)
 
-// The gateway fronts a Puppeteer browser instance, so an auth bypass here is a
-// full control-plane compromise. Refuse to boot without a real secret rather
-// than falling back to a value that is published in .env.example.
-const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET) {
-  console.error(
-    'FATAL: JWT_SECRET is not set. Generate one with:\n' +
-    '  node -e "console.log(require(\'crypto\').randomBytes(48).toString(\'base64url\'))"\n' +
-    'Then add BROWSER_GATEWAY_JWT_SECRET to the repo-root .env (see VAULT.md).'
-  );
-  process.exit(1);
+if (!INTERNAL_TOKEN || INTERNAL_TOKEN.length < 32) {
+  console.error('FATAL: BROWSER_GATEWAY_INTERNAL_TOKEN must be set to at least 32 characters')
+  process.exit(1)
 }
 
-// Same-origin by default: Caddy serves this service under the main site's
-// origin, so a wildcard is unnecessary and would let any site drive the
-// browser control plane. Override with ALLOWED_ORIGIN for split-host setups.
-const ALLOWED_ORIGIN = process.env.ALLOWED_ORIGIN || 'https://cortexbuildpro.tech';
+const app = express()
+const redis = new Redis(REDIS_URL, {
+  lazyConnect: true,
+  maxRetriesPerRequest: 2,
+  enableOfflineQueue: false,
+})
+const sessions = new Map()
 
-const io = new SocketIOServer(server, {
-  cors: { origin: ALLOWED_ORIGIN, methods: ["GET", "POST"] }
-});
+app.disable('x-powered-by')
+app.use(helmet())
+app.use(express.json({ limit: '256kb' }))
+app.use(rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-7', legacyHeaders: false }))
 
-// Middleware
-app.use(helmet());
-app.use(cors({ origin: ALLOWED_ORIGIN }));
-app.use(express.json({ limit: '2mb' }));
-
-// Rate limiting
-const limiter = rateLimit({ windowMs: 15 * 60 * 1000, max: 100 });
-app.use(limiter);
-
-// Redis connection for state management.
-// Host/port come from the environment so the container resolves the compose
-// service name rather than localhost. Defaults suit `npm run dev` on a host.
-const redis = new Redis({
-  host: process.env.REDIS_HOST || 'localhost',
-  port: Number(process.env.REDIS_PORT || 6379),
-});
-
-// In-memory agent state
-const agentStates = {};
-const browserInstances = new Map();
-
-// JWT authentication middleware
-function authenticateToken(req, res, next) {
-  const authHeader = req.headers['authorization'];
-  const token = authHeader && authHeader.split(' ')[1];
-  
-  if (!token) return res.status(401).json({ error: 'Access denied. No token provided.' });
-  
-  jwt.verify(token, JWT_SECRET, (err, user) => {
-    if (err) return res.status(403).json({ error: 'Invalid or expired token.' });
-    req.user = user;
-    next();
-  });
+function safeEqual(actual, expected) {
+  const a = Buffer.from(String(actual || ''))
+  const b = Buffer.from(String(expected || ''))
+  return a.length === b.length && crypto.timingSafeEqual(a, b)
 }
 
-// Health check
-app.get('/health', (req, res) => {
-  res.json({ status: 'ok', timestamp: new Date().toISOString() });
-});
-
-// Dashboard route - serves the control panel
-app.get('/', (req, res) => {
-  res.send(`
-    <!DOCTYPE html>
-    <html lang="en">
-    <head>
-      <meta charset="UTF-8">
-      <meta name="viewport" content="width=device-width, initial-scale=1.0">
-      <title>Browser Gateway Dashboard</title>
-      <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        :root { --primary: #2563eb; --primary-dark: #1e40af; --bg: #f8fafc; --card: #ffffff; --text: #1e293b; --muted: #64748b; --success: #10b981; --error: #ef4444; --warning: #f59e0b; }
-        body { font-family: system-ui, -apple-system, sans-serif; background: var(--bg); color: var(--text); min-height: 100vh; }
-        .container { max-width: 1200px; margin: 0 auto; padding: 20px; }
-        header { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
-        h1 { font-size: 1.5rem; font-weight: 600; color: var(--text); }
-        .status-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; margin: 20px 0; }
-        .status-card { background: var(--card); padding: 15px; border-radius: 8px; box-shadow: 0 1px 2px 0 rgba(0, 0, 0, 0.05); }
-        .status-card h3 { font-size: 0.875rem; font-weight: 600; margin-bottom: 8px; }
-        .status-card .value { font-size: 1.25rem; color: var(--primary); }
-        .status-card .error { color: var(--error); }
-        .controls { background: var(--card); padding: 20px; border-radius: 12px; margin-bottom: 20px; box-shadow: 0 1px 3px 0 rgba(0, 0, 0, 0.1); }
-        .controls h3 { margin-bottom: 15px; font-size: 1rem; font-weight: 600; }
-        .control-row { display: grid; grid-template-columns: 150px 1fr 120px; gap: 10px; align-items: center; margin-bottom: 10px; }
-        .control-row label { font-size: 0.875rem; color: var(--muted); }
-        .control-row select, .control-row input { padding: 8px; border: 1px solid var(--muted); border-radius: 6px; background: var(--bg); color: var(--text); }
-        .control-row button { padding: 8px 16px; background: var(--primary); color: white; border: none; border-radius: 6px; cursor: pointer; font-size: 0.875rem; transition: background 0.2s; }
-        .control-row button:hover { background: var(--primary-dark); }
-        .control-row button:disabled { background: var(--muted); cursor: not-allowed; }
-        .log-area { background: var(--card); padding: 15px; border-radius: 8px; height: 300px; overflow: auto; margin: 15px 0; font-family: monospace; font-size: 0.75rem; color: var(--muted); }
-        .log-entry { padding: 4px 0; border-bottom: 1px solid var(--muted); }
-        .log-entry.success { color: var(--success); }
-        .log-entry.error { color: var(--error); }
-        .log-entry.info { color: var(--primary); }
-        #connection-status { padding: 8px 16px; background: var(--muted); color: white; border-radius: 20px; font-size: 0.75rem; margin-bottom: 15px; display: inline-block; }
-        .badge { display: inline-block; padding: 3px 8px; background: var(--muted); border-radius: 10px; font-size: 0.65rem; margin-left: 5px; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <header>
-          <h1>🌐 Browser Gateway Dashboard</h1>
-          <div id="connection-status" class="badge">Connecting...</div>
-        </header>
-        
-        <div class="status-grid">
-          <div class="status-card">
-            <h3>Browser Instances</h3>
-            <div class="value" id="browser-count">0</div>
-          </div>
-          <div class="status-card">
-            <h3>Active Agents</h3>
-            <div class="value" id="agent-count">0</div>
-          </div>
-          <div class="status-card">
-            <h3>Redis Status</h3>
-            <div class="value" id="redis-status">Connecting...</div>
-          </div>
-        </div>
-        
-        <div class="controls">
-          <h3>Browser Control</h3>
-          <div class="control-row">
-            <label>Action</label>
-            <select id="action-select">
-              <option value="navigate">Navigate URL</option>
-              <option value="click">Click Element</option>
-              <option value="input">Input Text</option>
-              <option value="screenshot">Take Screenshot</option>
-              <option value="evaluate">Evaluate JS</option>
-              <option value="reload">Reload Page</option>
-            </select>
-            <button onclick="executeAction()">Execute</button>
-          </div>
-          <div class="control-row" id="action-params" style="display: none;">
-            <label>Parameters</label>
-            <input type="text" id="action-param" placeholder="URL or selector">
-            <button onclick="executeAction()">Execute</button>
-          </div>
-          <button onclick="refreshAgents()">Refresh Agents</button>
-        </div>
-        
-        <div class="controls">
-          <h3>Agent Coordination</h3>
-          <div class="control-row">
-            <label>Agent</label>
-            <select id="agent-select">
-              <option value="all">All Agents</option>
-              <!-- Dynamically populated -->
-            </select>
-          </div>
-          <div class="control-row">
-            <label>Command</label>
-            <select id="agent-command">
-              <option value="status">Get Status</option>
-              <option value="restart">Restart</option>
-              <option value="execute">Execute Task</option>
-            </select>
-            <input type="text" id="agent-task" placeholder="Task description" style="width: 300px;">
-            <button onclick="sendAgentCommand()">Send</button>
-          </div>
-        </div>
-        
-        <div class="controls">
-          <h3>System Logs</h3>
-          <div class="log-area" id="log-area">
-            <div class="log-entry info">Dashboard loading...</div>
-          </div>
-        </div>
-      </div>
-
-      <script>
-        const socket = new WebSocket('ws://' + location.host + '/ws');
-        const logArea = document.getElementById('log-area');
-        const browserCount = document.getElementById('browser-count');
-        const agentCount = document.getElementById('agent-count');
-        const redisStatus = document.getElementById('redis-status');
-        const actionSelect = document.getElementById('action-select');
-        const actionParams = document.getElementById('action-params');
-        const agentSelect = document.getElementById('agent-select');
-        const connectionStatus = document.getElementById('connection-status');
-
-        function log(message, type = 'info') {
-          const entry = document.createElement('div');
-          entry.className = 'log-entry ' + type;
-          entry.textContent = '[' + new Date().toLocaleTimeString() + '] ' + message;
-          logArea.appendChild(entry);
-          logArea.scrollTop = logArea.scrollHeight;
-        }
-
-        socket.onopen = () => {
-          connectionStatus.textContent = 'Connected';
-          connectionStatus.className = 'badge success';
-          log('WebSocket connected');
-        };
-
-        socket.onclose = () => {
-          connectionStatus.textContent = 'Disconnected';
-          connectionStatus.className = 'badge error';
-          log('WebSocket disconnected', 'error');
-        };
-
-        socket.onmessage = (event) => {
-          const data = JSON.parse(event.data);
-          
-          if (data.type === 'status') {
-            browserCount.textContent = data.browser_count || 0;
-            agentCount.textContent = data.agent_count || 0;
-            redisStatus.textContent = data.redis_status || 'unknown';
-          } else if (data.type === 'log') {
-            log(data.message, data.type || 'info');
-          } else if (data.type === 'agent_status') {
-            log('Agent ' + data.agent_id + ': ' + data.status, 'info');
-          } else if (data.type === 'browser_action') {
-            log('Browser action: ' + data.action, 'success');
-          }
-        };
-
-        // Execute browser action
-        async function executeAction() {
-          const action = actionSelect.value;
-          const param = document.getElementById('action-param').value || '';
-          
-          if (!param) {
-            alert('Please enter a parameter');
-            return;
-          }
-          
-          log('Executing: ' + action + ' with param: ' + param, 'info');
-          socket.send(JSON.stringify({ type: 'browser_action', action, param }));
-          
-          // Show params form
-          actionParams.style.display = 'block';
-        }
-
-        // Refresh agent list
-        async function refreshAgents() {
-          socket.send(JSON.stringify({ type: 'refresh_agents' }));
-        }
-
-        // Send agent command
-        async function sendAgentCommand() {
-          const agentId = agentSelect.value;
-          const command = agentCommand.value;
-          const task = document.getElementById('agent-task').value;
-          
-          if (!task) {
-            alert('Please enter a task');
-            return;
-          }
-          
-          socket.send(JSON.stringify({ type: 'agent_command', agent_id: agentId, command, task }));
-        }
-
-        // Initial load
-        socket.onopen && refreshAgents();
-      </script>
-    </body>
-    </html>
-  `);
-});
-
-// API: Start browser instance
-app.post('/api/browser/start', authenticateToken, async (req, res) => {
-  try {
-    const key = req.body.key || 'default';
-    
-    if (browserInstances.has(key)) {
-      return res.json({ status: 'already_running', instance: key });
-    }
-    
-    const browser = await puppeteer.launch({
-      headless: true,
-      args: ['--no-sandbox', '--disable-setuid-sandbox']
-    });
-    
-    browserInstances.set(key, browser);
-    
-    logAction(`Browser instance started: ${key}`);
-    res.json({ status: 'started', instance: key });
-  } catch (error) {
-    logAction(`Failed to start browser: ${error.message}`, 'error');
-    res.status(500).json({ error: error.message });
+function requireInternal(req, res, next) {
+  if (!safeEqual(req.get('x-cortexx-gateway-token'), INTERNAL_TOKEN)) {
+    return res.status(401).json({ error: 'Unauthorized' })
   }
-});
-
-// API: Browser action
-app.post('/api/browser/action', authenticateToken, async (req, res) => {
-  try {
-    const { instance, action, param } = req.body;
-    const browser = browserInstances.get(instance);
-    
-    if (!browser) {
-      return res.status(404).json({ error: `Browser instance ${instance} not found` });
-    }
-    
-    const page = await browser.newPage();
-    
-    switch (action) {
-      case 'navigate':
-        await page.goto(param, { waitUntil: 'networkidle0' });
-        break;
-      case 'click':
-        await page.click(param);
-        break;
-      case 'input':
-        await page.type(param.selector, param.text);
-        break;
-      case 'screenshot':
-        const buffer = await page.screenshot();
-        res.writeHead(200, { 'Content-Type': 'image/png' });
-        res.end(buffer);
-        return;
-      case 'evaluate':
-        const result = await page.evaluate(param.code);
-        res.json({ result });
-        return;
-      case 'reload':
-        await page.reload();
-        break;
-    }
-    
-    const url = page.url();
-    await page.close();
-    logAction(`Browser action: ${action} on ${instance}`, 'success');
-    res.json({ status: 'success', url });
-    
-  } catch (error) {
-    logAction(`Browser action error: ${error.message}`, 'error');
-    res.status(500).json({ error: error.message });
+  const actorId = String(req.get('x-cortexx-actor-id') || '')
+  if (!/^[A-Za-z0-9_-]{1,128}$/.test(actorId)) {
+    return res.status(400).json({ error: 'Invalid actor' })
   }
-});
-
-// API: Agent status
-app.get('/api/agents/status', authenticateToken, (req, res) => {
-  res.json({ status: 'ok', agents: agentStates });
-});
-
-// API: Agent command
-app.post('/api/agent/command', authenticateToken, (req, res) => {
-  const { agent_id, command, task } = req.body;
-  
-  // Store the command for agents to pick up
-  redis.set(`agent:${agent_id}:command`, JSON.stringify({ command, task }));
-  
-  logAction(`Agent command sent: ${agent_id} - ${command}: ${task}`);
-  res.json({ status: 'command_queued', agent_id, command, task });
-});
-
-// API: Get all system state
-app.get('/api/system-state', authenticateToken, async (req, res) => {
-  try {
-    const agents = await redis.keys('agent:*:status');
-    const agentDetails = await Promise.all(agents.map(key => redis.get(key)));
-    
-    const browserCount = browserInstances.size;
-    const redisPing = await redis.ping();
-    
-    res.json({
-      status: 'ok',
-      browser_count: browserCount,
-      redis_status: redisPing,
-      agents: agentDetails.reduce((acc, curr) => {
-        if (curr) acc.push(JSON.parse(curr));
-        return acc;
-      }, [])
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
-});
-
-// WebSocket handler
-io.on('connection', (socket) => {
-  logAction(`Client connected: ${socket.id}`);
-  
-  socket.on('browser_action', async (data) => {
-    try {
-      const { instance, action, param } = data;
-      const browser = browserInstances.get(instance);
-      
-      if (!browser) {
-        socket.emit('browser_action_result', { instance, action, success: false, error: 'Browser not found' });
-        return;
-      }
-      
-      const page = await browser.newPage();
-      
-      switch (action) {
-        case 'navigate':
-          await page.goto(param, { waitUntil: 'networkidle0' });
-          break;
-        case 'click':
-          await page.click(param);
-          break;
-        case 'input':
-          await page.type(param.selector, param.text);
-          break;
-        case 'screenshot':
-          const buffer = await page.screenshot();
-          socket.emit('browser_action_result', { instance, action, success: true, data: buffer.toString('base64') });
-          await page.close();
-          return;
-        case 'evaluate':
-          const result = await page.evaluate(param.code);
-          socket.emit('browser_action_result', { instance, action, success: true, data: result });
-          await page.close();
-          return;
-        case 'reload':
-          await page.reload();
-          break;
-      }
-      
-      await page.close();
-      socket.emit('browser_action_result', { instance, action, success: true, url: page.url() });
-    } catch (error) {
-      socket.emit('browser_action_result', { success: false, error: error.message });
-    }
-  });
-  
-  socket.on('agent_command', (data) => {
-    const { agent_id, command, task } = data;
-    redis.set(`agent:${agent_id}:command`, JSON.stringify({ command, task }));
-    socket.emit('agent_command_result', { agent_id, command, task, status: 'queued' });
-  });
-  
-  socket.on('disconnect', () => {
-    logAction(`Client disconnected: ${socket.id}`);
-  });
-});
-
-// Error handler
-app.use((err, req, res, next) => {
-  console.error(err.stack);
-  res.status(500).json({ error: 'Something went wrong!' });
-});
-
-// Start server
-const PORT = process.env.PORT || 3002;
-
-server.listen(PORT, async () => {
-  console.log(`🚀 Browser Gateway running on port ${PORT}`);
-  
-  // Initialize Redis connection status
-  try {
-    await redis.ping();
-    logAction('Redis connected successfully');
-  } catch (error) {
-    logAction(`Redis connection failed: ${error.message}`, 'error');
-  }
-  
-  // Initialize browser instances count
-  logAction(`Browser gateway initialized with ${browserInstances.size} instances`);
-});
-
-function logAction(message, type = 'info') {
-  const timestamp = new Date().toISOString();
-  console.log(`[${timestamp}] ${type.toUpperCase()}: ${message}`);
-  
-  // Broadcast to all connected clients
-  io.emit('log', { type, message, timestamp });
+  req.actorId = actorId
+  next()
 }
 
-export default app;
+function validSessionId(value) {
+  return /^[A-Za-z0-9_-]{8,160}$/.test(String(value || ''))
+}
+
+function isPrivateIp(host) {
+  const h = host.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '')
+  if (h === '::1' || h.startsWith('fc') || h.startsWith('fd') || h.startsWith('fe8') || h.startsWith('fe9') || h.startsWith('fea') || h.startsWith('feb')) return true
+  const parts = h.split('.')
+  if (parts.length !== 4 || parts.some(part => !/^\d+$/.test(part))) return false
+  const octets = parts.map(Number)
+  if (octets.some(n => n < 0 || n > 255)) return false
+  const [a, b] = octets
+  return (
+    a === 0 ||
+    a === 10 ||
+    a === 127 ||
+    (a === 100 && b >= 64 && b <= 127) ||
+    (a === 169 && b === 254) ||
+    (a === 172 && b >= 16 && b <= 31) ||
+    (a === 192 && b === 168) ||
+    a >= 224
+  )
+}
+
+function isPrivateName(host) {
+  const h = host.toLowerCase().replace(/\.$/, '')
+  if (EXTRA_PRIVATE_HOSTS.has(h)) return false
+  return (
+    h === 'localhost' ||
+    h.endsWith('.localhost') ||
+    h.endsWith('.local') ||
+    h.endsWith('.internal') ||
+    ['app', 'db', 'redis', 'ollama', 'browser-gateway'].includes(h) ||
+    isPrivateIp(h)
+  )
+}
+
+async function assertPublicUrl(raw) {
+  let target
+  try {
+    target = new URL(String(raw || ''))
+  } catch {
+    throw new Error('Invalid URL')
+  }
+  if (!['http:', 'https:'].includes(target.protocol)) throw new Error('Only http(s) navigation is allowed')
+  if (isPrivateName(target.hostname)) throw new Error('Private-network navigation is blocked')
+  const addresses = await dns.lookup(target.hostname, { all: true, verbatim: true })
+  if (!addresses.length || addresses.some(item => isPrivateIp(item.address))) {
+    throw new Error('Private-network navigation is blocked')
+  }
+  return target.toString()
+}
+
+async function createSession(id, owner) {
+  if (sessions.size >= MAX_SESSIONS) throw new Error('Browser session limit reached')
+  if (sessions.has(id)) {
+    const current = sessions.get(id)
+    if (current.owner !== owner) throw new Error('Session unavailable')
+    current.lastUsed = Date.now()
+    return current
+  }
+  const browser = await puppeteer.launch({
+    executablePath: CHROMIUM,
+    headless: true,
+    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
+  })
+  const page = await browser.newPage()
+  await page.setUserAgent('Cortexx Browser Gateway/1.0')
+  const session = { id, owner, browser, page, createdAt: Date.now(), lastUsed: Date.now() }
+  sessions.set(id, session)
+  return session
+}
+
+function ownedSession(id, owner) {
+  const session = sessions.get(id)
+  if (!session || session.owner !== owner) return null
+  session.lastUsed = Date.now()
+  return session
+}
+
+async function closeSession(session) {
+  sessions.delete(session.id)
+  await session.browser.close().catch(() => {})
+}
+
+app.get('/health', async (_req, res) => {
+  let redisOk = false
+  try {
+    if (redis.status === 'wait') await redis.connect()
+    redisOk = (await redis.ping()) === 'PONG'
+  } catch {
+    redisOk = false
+  }
+  res.status(redisOk ? 200 : 503).json({
+    status: redisOk ? 'ok' : 'degraded',
+    redis: redisOk,
+    activeSessions: sessions.size,
+  })
+})
+
+app.use('/v1', requireInternal)
+
+app.get('/v1/sessions', (req, res) => {
+  const owned = [...sessions.values()]
+    .filter(session => session.owner === req.actorId)
+    .map(session => ({
+      id: session.id,
+      createdAt: new Date(session.createdAt).toISOString(),
+      lastUsedAt: new Date(session.lastUsed).toISOString(),
+    }))
+  res.json({ sessions: owned })
+})
+
+app.post('/v1/sessions', async (req, res) => {
+  const id = String(req.body?.id || '')
+  if (!validSessionId(id)) return res.status(400).json({ error: 'Invalid session id' })
+  try {
+    const session = await createSession(id, req.actorId)
+    res.status(201).json({ id: session.id, status: 'ready' })
+  } catch (error) {
+    res.status(409).json({ error: error instanceof Error ? error.message : 'Session start failed' })
+  }
+})
+
+app.delete('/v1/sessions/:id', async (req, res) => {
+  const session = ownedSession(req.params.id, req.actorId)
+  if (!session) return res.status(404).json({ error: 'Session not found' })
+  await closeSession(session)
+  res.json({ stopped: true })
+})
+
+app.post('/v1/sessions/:id/actions', async (req, res) => {
+  const session = ownedSession(req.params.id, req.actorId)
+  if (!session) return res.status(404).json({ error: 'Session not found' })
+
+  const action = String(req.body?.action || '')
+  const allowed = new Set(['navigate', 'click', 'input', 'screenshot', 'evaluate', 'reload'])
+  if (!allowed.has(action)) return res.status(400).json({ error: 'Unsupported action' })
+
+  try {
+    const page = session.page
+    let result = null
+    if (action === 'navigate') {
+      const url = await assertPublicUrl(req.body?.url)
+      await page.goto(url, { waitUntil: 'domcontentloaded', timeout: 30_000 })
+      result = { url: page.url(), title: await page.title() }
+    } else if (action === 'click') {
+      const selector = String(req.body?.selector || '')
+      if (!selector || selector.length > 500) throw new Error('Invalid selector')
+      await page.click(selector)
+      result = { url: page.url() }
+    } else if (action === 'input') {
+      const selector = String(req.body?.selector || '')
+      const text = String(req.body?.text ?? '')
+      if (!selector || selector.length > 500 || text.length > 10_000) throw new Error('Invalid input')
+      await page.type(selector, text)
+      result = { ok: true }
+    } else if (action === 'screenshot') {
+      const buffer = await page.screenshot({ type: 'png', fullPage: Boolean(req.body?.fullPage) })
+      result = { mimeType: 'image/png', base64: Buffer.from(buffer).toString('base64') }
+    } else if (action === 'evaluate') {
+      const code = String(req.body?.code || '')
+      if (!code || code.length > 20_000) throw new Error('Invalid evaluation')
+      result = { value: await page.evaluate(source => (0, eval)(source), code) }
+    } else if (action === 'reload') {
+      await page.reload({ waitUntil: 'domcontentloaded', timeout: 30_000 })
+      result = { url: page.url(), title: await page.title() }
+    }
+    res.json({ action, result })
+  } catch (error) {
+    res.status(400).json({ error: error instanceof Error ? error.message : 'Browser action failed' })
+  }
+})
+
+setInterval(() => {
+  const cutoff = Date.now() - IDLE_MS
+  for (const session of sessions.values()) {
+    if (session.lastUsed < cutoff) void closeSession(session)
+  }
+}, 60_000).unref()
+
+async function shutdown() {
+  await Promise.all([...sessions.values()].map(closeSession))
+  await redis.quit().catch(() => {})
+  process.exit(0)
+}
+process.on('SIGTERM', shutdown)
+process.on('SIGINT', shutdown)
+
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`Cortexx browser gateway listening on :${PORT}`)
+})

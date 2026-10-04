@@ -157,48 +157,6 @@ services:
       # Behind traefik this stays ":80" (plain HTTP inside the network).
       SITE_ADDRESS: ${SITE_ADDRESS:-:80}
 
-  # ── redis: shared state backend for the browser-gateway agent queue ──
-  # browser-gateway stores per-agent command queues and status keys here
-  # (agent:<id>:command / agent:<id>:status). Internal only — never published.
-  redis:
-    image: redis:7-alpine
-    restart: unless-stopped
-    command: ["redis-server", "--save", "", "--appendonly", "no"]
-    expose:
-      - "6379"
-    healthcheck:
-      test: ["CMD", "redis-cli", "ping"]
-      interval: 10s
-      timeout: 3s
-      retries: 5
-
-  # ── browser-gateway: Puppeteer + Socket.IO agent control plane ──
-  # Drives headless Chrome for agent browser automation. Reached via Caddy at
-  # /browser-gateway/* (see Caddyfile). JWT_SECRET must be supplied by the
-  # gitignored root .env (decrypted vault) — there is NO safe default, so boot
-  # fails closed if it is absent rather than falling back to a known secret.
-  browser-gateway:
-    build:
-      context: ./browser-gateway
-      dockerfile: Dockerfile
-    restart: unless-stopped
-    environment:
-      JWT_SECRET: ${BROWSER_GATEWAY_JWT_SECRET:?BROWSER_GATEWAY_JWT_SECRET is required}
-      REDIS_HOST: redis
-      REDIS_PORT: "6379"
-      NODE_ENV: production
-      PORT: "3002"
-    expose:
-      - "3002"
-    depends_on:
-      redis:
-        condition: service_started
-    healthcheck:
-      test: ["CMD", "wget", "-qO-", "http://localhost:3002/health"]
-      interval: 30s
-      timeout: 5s
-      retries: 3
-
   # ── cortexx-admin: Next.js SaaS admin console (app/dashboard + RBAC) ──
   # Dedicated tenant behind host traefik at admin.cortexbuildpro.com.
   # Shares the central Postgres `db` (same cortexx database). Traefik runs in
