@@ -1,6 +1,6 @@
 const test = require('node:test');
 const assert = require('node:assert/strict');
-const { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, utimesSync, rmSync } = require('node:fs');
+const { mkdtempSync, mkdirSync, writeFileSync, copyFileSync, utimesSync, rmSync, readFileSync } = require('node:fs');
 const { tmpdir } = require('node:os');
 const { join, resolve, dirname } = require('node:path');
 const { spawnSync } = require('node:child_process');
@@ -48,4 +48,18 @@ test('marker outside managed backups fails before restore', t => {
   mkdirSync(outside); writeFileSync(join(outside, 'database.dump'), 'test');
   writeFileSync(join(f.backups, '.last-local-success'), outside + '\n');
   const r = f.run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /outside the managed/); assert.doesNotMatch(r.stdout, /RESTORE:/);
+});
+
+
+test('backup verification workflow retains an encrypted off-site artifact and proves it can restore', () => {
+  const workflow = readFileSync(resolve('.github/workflows/backup-verify.yml'), 'utf8');
+  assert.match(workflow, /CORTEXX_BACKUP_ENCRYPTION_KEY/);
+  assert.match(workflow, /openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000/);
+  assert.match(workflow, /openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000/);
+  assert.match(workflow, /actions\/upload-artifact@v4/);
+  assert.match(workflow, /retention-days:\s*30/);
+  assert.match(workflow, /pg_restore -U postgres -d restore_drill/);
+  assert.match(workflow, /compression-level:\s*0/);
+  const keyLine = workflow.split('\n').find(line => line.includes('BACKUP_ENCRYPTION_KEY:'));
+  assert.equal(keyLine?.trim(), 'BACKUP_ENCRYPTION_KEY: ${{ secrets.CORTEXX_BACKUP_ENCRYPTION_KEY }}');
 });

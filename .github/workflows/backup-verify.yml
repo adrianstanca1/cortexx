@@ -16,12 +16,13 @@ concurrency:
 jobs:
   verify:
     runs-on: ubuntu-latest
-    timeout-minutes: 15
+    timeout-minutes: 30
     env:
       VPS_HOST: 85.190.100.68
       VPS_USER: administrator
       VPS_SSH_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
       VPS_PASSWORD: ${{ secrets.VPS_ROOT_PASSWORD }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.CORTEXX_BACKUP_ENCRYPTION_KEY }}
     steps:
       - name: Configure SSH client
         run: |
@@ -81,6 +82,88 @@ jobs:
             echo '```'
           } >> "$GITHUB_STEP_SUMMARY"
 
+      - name: Export encrypted off-site backup
+        run: |
+          set -euo pipefail
+          if [[ -z "${BACKUP_ENCRYPTION_KEY:-}" ]]; then
+            echo "::error::CORTEXX_BACKUP_ENCRYPTION_KEY is not configured."
+            exit 1
+          fi
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3)
+          if [[ "$CORTEXX_SSH_MODE" == key ]]; then
+            REMOTE=(ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST")
+          else
+            export SSHPASS="$VPS_PASSWORD"
+            REMOTE=(sshpass -e ssh "${SSH_BASE[@]}" "$VPS_USER@$VPS_HOST")
+          fi
+          mkdir -p /tmp/cortexx-offsite
+          ARCHIVE="/tmp/cortexx-offsite/construction-backup-${GITHUB_RUN_ID}.tar.gz.enc"
+          "${REMOTE[@]}" 'set -euo pipefail
+            BACKUP_DIR="${BACKUP_DIR:-$HOME/backups/construction}"
+            marker="$BACKUP_DIR/.last-local-success"
+            [[ -s "$marker" ]] || { echo "No successful backup marker" >&2; exit 1; }
+            backup="$(realpath "$(cat "$marker")")"
+            root="$(realpath "$BACKUP_DIR")"
+            [[ "$(dirname "$backup")" == "$root" && "$(basename "$backup")" == construction-* ]] || {
+              echo "Backup marker is outside managed backup directory" >&2
+              exit 1
+            }
+            tar -C "$root" -czf - "$(basename "$backup")"'             | openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000                 -pass env:BACKUP_ENCRYPTION_KEY -out "$ARCHIVE"
+          test -s "$ARCHIVE"
+          sha256sum "$ARCHIVE" > "$ARCHIVE.sha256"
+          echo "OFFSITE_ARCHIVE=$ARCHIVE" >> "$GITHUB_ENV"
+
+      - name: Verify encrypted off-site archive
+        run: |
+          set -euo pipefail
+          test -s "$OFFSITE_ARCHIVE"
+          sha256sum -c "$OFFSITE_ARCHIVE.sha256"
+          PLAIN="/tmp/cortexx-offsite/restore.tar.gz"
+          VERIFY_DIR="/tmp/cortexx-offsite/verify"
+          openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000             -pass env:BACKUP_ENCRYPTION_KEY             -in "$OFFSITE_ARCHIVE" -out "$PLAIN"
+          tar -tzf "$PLAIN" >/dev/null
+          mkdir -p "$VERIFY_DIR"
+          tar -xzf "$PLAIN" -C "$VERIFY_DIR"
+          mapfile -t BACKUPS < <(find "$VERIFY_DIR" -mindepth 1 -maxdepth 1 -type d -name 'construction-*' -print)
+          [[ "${#BACKUPS[@]}" -eq 1 ]] || { echo "::error::Encrypted archive must contain exactly one managed backup."; exit 1; }
+          BACKUP="${BACKUPS[0]}"
+          (cd "$BACKUP" && sha256sum -c SHA256SUMS)
+          gzip -t "$BACKUP/uploads.tar.gz"
+          IMAGE="$(cat "$BACKUP/postgres-image.txt")"
+          [[ "$IMAGE" == postgres:* ]] || { echo "::error::Unexpected PostgreSQL image in backup."; exit 1; }
+          NAME="cortexx-offsite-restore-${GITHUB_RUN_ID}"
+          cleanup() { docker rm -fv "$NAME" >/dev/null 2>&1 || true; }
+          trap cleanup EXIT
+          docker run -d --name "$NAME" --network none             -e POSTGRES_HOST_AUTH_METHOD=trust "$IMAGE" >/dev/null
+          READY=false
+          for attempt in {1..60}; do
+            if docker exec "$NAME" pg_isready -h 127.0.0.1 -U postgres >/dev/null 2>&1; then READY=true; break; fi
+            sleep 1
+          done
+          [[ "$READY" == true ]] || { echo "::error::Off-site restore database failed to start."; exit 1; }
+          docker exec "$NAME" createdb -U postgres restore_drill
+          docker exec -i "$NAME" pg_restore -U postgres -d restore_drill --no-owner --no-acl --exit-on-error < "$BACKUP/database.dump"
+          TABLES="$(docker exec "$NAME" psql -U postgres -d restore_drill -Atc "SELECT count(*) FROM information_schema.tables WHERE table_schema='public' AND table_type='BASE TABLE'")"
+          [[ "$TABLES" =~ ^[0-9]+$ && "$TABLES" -gt 0 ]]
+          {
+            echo
+            echo '## Encrypted off-site backup verified'
+            echo "- Restored tables: $TABLES"
+            echo '- Encryption: AES-256-CBC + PBKDF2 (200,000 iterations)'
+            echo '- Artifact contains ciphertext only; the encryption key remains a GitHub secret.'
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Retain encrypted off-site backup
+        uses: actions/upload-artifact@v4
+        with:
+          name: construction-backup-${{ github.run_id }}
+          path: |
+            ${{ env.OFFSITE_ARCHIVE }}
+            ${{ env.OFFSITE_ARCHIVE }}.sha256
+          if-no-files-found: error
+          compression-level: 0
+          retention-days: 30
+
       - name: Report recovery verification failure
         if: failure()
         env:
@@ -92,12 +175,12 @@ jobs:
           # Do not depend on pre-existing labels or include database contents.
           EXISTING=$(gh issue list --state open --search '"[Recovery] Construction backup verification failed" in:title' --json number --jq '.[0].number // empty')
           {
-            echo 'The current construction backup could not be verified. Check SSH access, backup freshness and the isolated restore log before relying on recovery.'
+            echo 'The construction disaster-recovery chain failed. Check SSH access, backup freshness, local restore verification, encrypted off-site export, and artifact restore validation before relying on recovery.'
             echo
             echo "Run: $RUN_URL"
             echo
             echo 'On the One.com VPS, inspect ~/logs/construction-backup.log and run bash ~/bin/construction-verify-latest.sh.'
-            echo 'Off-site replication remains a separate requirement; a successful local restore does not establish disaster recovery.'
+            echo 'A successful run must include both the local isolated restore and the encrypted GitHub Actions backup artifact.'
           } > /tmp/recovery-issue.md
           if [[ -z "$EXISTING" ]]; then
             gh issue create --title '[Recovery] Construction backup verification failed' --body-file /tmp/recovery-issue.md
