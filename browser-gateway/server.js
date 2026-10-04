@@ -1,23 +1,15 @@
 import crypto from 'node:crypto'
-import dns from 'node:dns/promises'
 import express from 'express'
 import helmet from 'helmet'
 import rateLimit from 'express-rate-limit'
-import Redis from 'ioredis'
 import puppeteer from 'puppeteer-core'
+import { assertPublicUrl, createEgressProxy } from './network-policy.js'
 
 const PORT = Number(process.env.PORT || 3002)
 const INTERNAL_TOKEN = process.env.BROWSER_GATEWAY_INTERNAL_TOKEN
-const REDIS_URL = process.env.REDIS_URL || 'redis://redis:6379'
 const CHROMIUM = process.env.PUPPETEER_EXECUTABLE_PATH || '/usr/bin/chromium-browser'
 const MAX_SESSIONS = Math.max(1, Number(process.env.MAX_BROWSER_SESSIONS || 4))
 const IDLE_MS = Math.max(60_000, Number(process.env.BROWSER_SESSION_IDLE_MS || 15 * 60_000))
-const EXTRA_PRIVATE_HOSTS = new Set(
-  String(process.env.BROWSER_GATEWAY_ALLOWED_PRIVATE_HOSTS || '')
-    .split(',')
-    .map(value => value.trim().toLowerCase())
-    .filter(Boolean),
-)
 
 if (!INTERNAL_TOKEN || INTERNAL_TOKEN.length < 32) {
   console.error('FATAL: BROWSER_GATEWAY_INTERNAL_TOKEN must be set to at least 32 characters')
@@ -25,17 +17,22 @@ if (!INTERNAL_TOKEN || INTERNAL_TOKEN.length < 32) {
 }
 
 const app = express()
-const redis = new Redis(REDIS_URL, {
-  lazyConnect: true,
-  maxRetriesPerRequest: 2,
-  enableOfflineQueue: false,
-})
 const sessions = new Map()
+const pendingSessions = new Map()
 
 app.disable('x-powered-by')
 app.use(helmet())
 app.use(express.json({ limit: '256kb' }))
 app.use(rateLimit({ windowMs: 60_000, limit: 120, standardHeaders: 'draft-7', legacyHeaders: false }))
+
+const egressProxy = createEgressProxy()
+await new Promise((resolve, reject) => {
+  egressProxy.once('error', reject)
+  egressProxy.listen(0, '127.0.0.1', resolve)
+})
+const egressAddress = egressProxy.address()
+if (!egressAddress || typeof egressAddress === 'string') throw new Error('Failed to start browser egress proxy')
+const egressProxyUrl = `http://127.0.0.1:${egressAddress.port}`
 
 function safeEqual(actual, expected) {
   const a = Buffer.from(String(actual || ''))
@@ -59,73 +56,66 @@ function validSessionId(value) {
   return /^[A-Za-z0-9_-]{8,160}$/.test(String(value || ''))
 }
 
-function isPrivateIp(host) {
-  const h = host.toLowerCase().replace(/^\[|\]$/g, '').replace(/\.$/, '')
-  if (h === '::1' || h.startsWith('fc') || h.startsWith('fd') || h.startsWith('fe8') || h.startsWith('fe9') || h.startsWith('fea') || h.startsWith('feb')) return true
-  const parts = h.split('.')
-  if (parts.length !== 4 || parts.some(part => !/^\d+$/.test(part))) return false
-  const octets = parts.map(Number)
-  if (octets.some(n => n < 0 || n > 255)) return false
-  const [a, b] = octets
-  return (
-    a === 0 ||
-    a === 10 ||
-    a === 127 ||
-    (a === 100 && b >= 64 && b <= 127) ||
-    (a === 169 && b === 254) ||
-    (a === 172 && b >= 16 && b <= 31) ||
-    (a === 192 && b === 168) ||
-    a >= 224
-  )
-}
-
-function isPrivateName(host) {
-  const h = host.toLowerCase().replace(/\.$/, '')
-  if (EXTRA_PRIVATE_HOSTS.has(h)) return false
-  return (
-    h === 'localhost' ||
-    h.endsWith('.localhost') ||
-    h.endsWith('.local') ||
-    h.endsWith('.internal') ||
-    ['app', 'db', 'redis', 'ollama', 'browser-gateway'].includes(h) ||
-    isPrivateIp(h)
-  )
-}
-
-async function assertPublicUrl(raw) {
-  let target
-  try {
-    target = new URL(String(raw || ''))
-  } catch {
-    throw new Error('Invalid URL')
-  }
-  if (!['http:', 'https:'].includes(target.protocol)) throw new Error('Only http(s) navigation is allowed')
-  if (isPrivateName(target.hostname)) throw new Error('Private-network navigation is blocked')
-  const addresses = await dns.lookup(target.hostname, { all: true, verbatim: true })
-  if (!addresses.length || addresses.some(item => isPrivateIp(item.address))) {
-    throw new Error('Private-network navigation is blocked')
-  }
-  return target.toString()
+async function installRequestPolicy(page) {
+  await page.setRequestInterception(true)
+  page.on('request', request => {
+    const url = request.url()
+    if (url === 'about:blank' || url.startsWith('data:') || url.startsWith('blob:')) {
+      void request.continue()
+      return
+    }
+    void assertPublicUrl(url)
+      .then(() => request.continue())
+      .catch(() => request.abort('blockedbyclient'))
+  })
 }
 
 async function createSession(id, owner) {
-  if (sessions.size >= MAX_SESSIONS) throw new Error('Browser session limit reached')
-  if (sessions.has(id)) {
-    const current = sessions.get(id)
+  const current = sessions.get(id)
+  if (current) {
     if (current.owner !== owner) throw new Error('Session unavailable')
     current.lastUsed = Date.now()
     return current
   }
-  const browser = await puppeteer.launch({
-    executablePath: CHROMIUM,
-    headless: true,
-    args: ['--no-sandbox', '--disable-setuid-sandbox', '--disable-dev-shm-usage'],
-  })
-  const page = await browser.newPage()
-  await page.setUserAgent('Cortexx Browser Gateway/1.0')
-  const session = { id, owner, browser, page, createdAt: Date.now(), lastUsed: Date.now() }
-  sessions.set(id, session)
-  return session
+
+  const pending = pendingSessions.get(id)
+  if (pending) {
+    if (pending.owner !== owner) throw new Error('Session unavailable')
+    return pending.promise
+  }
+
+  if (sessions.size + pendingSessions.size >= MAX_SESSIONS) throw new Error('Browser session limit reached')
+
+  const promise = (async () => {
+    let browser
+    try {
+      browser = await puppeteer.launch({
+        executablePath: CHROMIUM,
+        headless: true,
+        args: [
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-dev-shm-usage',
+          `--proxy-server=${egressProxyUrl}`,
+          '--force-webrtc-ip-handling-policy=disable_non_proxied_udp',
+        ],
+      })
+      const page = await browser.newPage()
+      await page.setUserAgent('Cortexx Browser Gateway/1.0')
+      await installRequestPolicy(page)
+      const session = { id, owner, browser, page, createdAt: Date.now(), lastUsed: Date.now() }
+      sessions.set(id, session)
+      return session
+    } catch (error) {
+      await browser?.close().catch(() => {})
+      throw error
+    } finally {
+      pendingSessions.delete(id)
+    }
+  })()
+
+  pendingSessions.set(id, { owner, promise })
+  return promise
 }
 
 function ownedSession(id, owner) {
@@ -140,19 +130,8 @@ async function closeSession(session) {
   await session.browser.close().catch(() => {})
 }
 
-app.get('/health', async (_req, res) => {
-  let redisOk = false
-  try {
-    if (redis.status === 'wait') await redis.connect()
-    redisOk = (await redis.ping()) === 'PONG'
-  } catch {
-    redisOk = false
-  }
-  res.status(redisOk ? 200 : 503).json({
-    status: redisOk ? 'ok' : 'degraded',
-    redis: redisOk,
-    activeSessions: sessions.size,
-  })
+app.get('/health', (_req, res) => {
+  res.json({ status: 'ok', activeSessions: sessions.size, pendingSessions: pendingSessions.size })
 })
 
 app.use('/v1', requireInternal)
@@ -238,7 +217,7 @@ setInterval(() => {
 
 async function shutdown() {
   await Promise.all([...sessions.values()].map(closeSession))
-  await redis.quit().catch(() => {})
+  await new Promise(resolve => egressProxy.close(resolve))
   process.exit(0)
 }
 process.on('SIGTERM', shutdown)

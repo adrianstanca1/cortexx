@@ -3,9 +3,7 @@
   "version": "1.0.0",
   "private": true,
   "type": "module",
-  "engines": {
-    "node": "22.x"
-  },
+  "engines": { "node": "22.x" },
   "scripts": {
     "start": "node server.js"
   },
@@ -13,7 +11,6 @@
     "express": "^4.21.2",
     "express-rate-limit": "^7.5.1",
     "helmet": "^8.1.0",
-    "ioredis": "^5.8.2",
     "puppeteer-core": "25.12.0"
   }
 }
