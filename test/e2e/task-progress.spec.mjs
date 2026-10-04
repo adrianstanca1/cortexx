@@ -33,3 +33,40 @@ test('task mutations update fallback progress without overwriting the programme'
   await request(`/api/tasks/${open.id}`, 'DELETE')
   expect(await progress()).toBe(37)
 })
+
+
+test('bulk task operations refresh fallback progress without clobbering programme progress', async ({ page }) => {
+  await page.goto('/login')
+  await page.getByLabel('Email').fill(process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com')
+  await page.getByLabel('Password').fill(process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password')
+  await page.getByRole('button', { name: /^sign in$/i }).click()
+  await page.waitForURL('**/dashboard')
+
+  const request = async (path, method = 'GET', data) => {
+    const response = await page.request.fetch(path, { method, data })
+    expect(response.ok(), `${method} ${path}: ${await response.text()}`).toBeTruthy()
+    return response.json()
+  }
+  const project = await request('/api/projects', 'POST', { name: `Bulk progress verification ${Date.now()}` })
+  const path = `/api/projects/${project.id}`
+  const progress = async () => (await request(path)).project.progress
+  const done = await request('/api/tasks', 'POST', { title: 'Bulk done', projectId: project.id, status: 'done' })
+  const open = await request('/api/tasks', 'POST', { title: 'Bulk open', projectId: project.id, status: 'todo' })
+  expect(await progress()).toBe(50)
+
+  await request('/api/tasks/bulk', 'POST', { action: 'complete', ids: [open.id] })
+  expect(await progress()).toBe(100)
+
+  await request(`${path}/programme`, 'POST', {
+    title: 'Bulk programme owner',
+    plannedStart: '2026-09-01',
+    plannedEnd: '2026-09-10',
+    progress: 41,
+  })
+  expect(await progress()).toBe(41)
+
+  await request('/api/tasks/bulk', 'POST', { action: 'reopen', ids: [done.id, open.id] })
+  expect(await progress()).toBe(41)
+  await request('/api/tasks/bulk', 'POST', { action: 'delete', ids: [done.id, open.id] })
+  expect(await progress()).toBe(41)
+})
