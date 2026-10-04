@@ -1,5 +1,8 @@
+import { createHash } from 'node:crypto'
+import { Prisma } from '@prisma/client'
 import { NextRequest, NextResponse } from 'next/server'
 
+import { prisma } from '@/lib/db'
 import { requireOrg } from '@/lib/requireAuth'
 import { canWrite } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
@@ -7,7 +10,6 @@ import {
   extensionFor,
   generateIdempotentStoredName,
   generateStoredName,
-  getObjectMetadata,
   isAllowedMime,
   MAX_UPLOAD_BYTES,
   putObject,
@@ -18,10 +20,6 @@ import {
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
 
-// `req.formData()` resolves to undici's `FormData` global under @types/node,
-// which lacks the DOM `.get()` signature this handler relies on. We model the
-// subset of the Web FormData API we use so the code typechecks under both the
-// DOM and Node global definitions.
 type MultipartForm = {
   get(name: string): File | string | null
 }
@@ -29,17 +27,14 @@ type MultipartForm = {
 export async function POST(req: NextRequest) {
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  if (!canWrite(auth.role || '') || auth.personaRole === 'client') return NextResponse.json({ error: 'Upload permission required' }, { status: 403 })
+  if (!canWrite(auth.role || '') || auth.personaRole === 'client') {
+    return NextResponse.json({ error: 'Upload permission required' }, { status: 403 })
+  }
   const orgId = auth.orgId
   if (!orgId) return NextResponse.json({ error: 'Organization required' }, { status: 400 })
-  const __limited = await enforceRateLimit(req, 'write', auth.userId)
-  if (__limited) return __limited
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
 
-  // Pre-flight size check via Content-Length BEFORE buffering the body
-  // into formData(). Without this, a 5 GB upload would fully buffer in
-  // node heap before the file.size > MAX check below could fire,
-  // OOMing the worker. We allow a small slop (+1KB) for multipart
-  // boundary overhead.
   const contentLength = req.headers.get('content-length')
   if (contentLength) {
     const len = Number(contentLength)
@@ -51,75 +46,111 @@ export async function POST(req: NextRequest) {
     }
   }
 
-  let form = (await req.formData().catch(() => null)) as MultipartForm | null
-  if (!form) {
-    return NextResponse.json({ error: 'Expected multipart/form-data' }, { status: 400 })
-  }
+  const form = (await req.formData().catch(() => null)) as MultipartForm | null
+  if (!form) return NextResponse.json({ error: 'Expected multipart/form-data' }, { status: 400 })
 
   const file = form.get('file')
-  if (!(file instanceof File)) {
-    return NextResponse.json({ error: 'Missing file field' }, { status: 400 })
-  }
-  if (file.size === 0) {
-    return NextResponse.json({ error: 'Empty file' }, { status: 400 })
-  }
-  if (file.size > MAX_UPLOAD_BYTES) {
-    return NextResponse.json({ error: 'File exceeds 25 MB limit' }, { status: 413 })
-  }
+  if (!(file instanceof File)) return NextResponse.json({ error: 'Missing file field' }, { status: 400 })
+  if (file.size === 0) return NextResponse.json({ error: 'Empty file' }, { status: 400 })
+  if (file.size > MAX_UPLOAD_BYTES) return NextResponse.json({ error: 'File exceeds 25 MB limit' }, { status: 413 })
   if (!isAllowedMime(file.type)) {
     return NextResponse.json({ error: `Unsupported type: ${file.type || 'unknown'}` }, { status: 415 })
   }
+
   const ext = extensionFor(file.type, file.name)
-  if (!ext) {
-    return NextResponse.json({ error: 'Could not determine file extension' }, { status: 400 })
-  }
+  if (!ext) return NextResponse.json({ error: 'Could not determine file extension' }, { status: 400 })
 
   const uploadId = req.headers.get('x-upload-id')?.trim() || ''
   const stored = uploadId
     ? generateIdempotentStoredName(ext, orgId, uploadId)
     : generateStoredName(ext)
-  if (!stored) {
-    return NextResponse.json({ error: 'Invalid upload id' }, { status: 400 })
-  }
-  if (!safeKey(stored)) {
-    return NextResponse.json({ error: 'Internal storage error' }, { status: 500 })
+  if (!stored) return NextResponse.json({ error: 'Invalid upload id' }, { status: 400 })
+  if (!safeKey(stored)) return NextResponse.json({ error: 'Internal storage error' }, { status: 500 })
+
+  const buffer = Buffer.from(await file.arrayBuffer())
+  const sha256 = createHash('sha256').update(buffer).digest('hex')
+  const backend = storageBackend()
+  let provenanceId: string
+  let reused = false
+  let reserved = false
+
+  try {
+    const created = await prisma.uploadObject.create({
+      data: {
+        organizationId: orgId,
+        uploadedById: auth.userId || null,
+        uploadId: uploadId || null,
+        storedName: stored,
+        originalName: file.name || null,
+        mimeType: file.type,
+        size: file.size,
+        sha256,
+        backend,
+      },
+      select: { id: true },
+    })
+    provenanceId = created.id
+    reserved = true
+  } catch (error) {
+    if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
+      console.error('upload provenance reservation failed', error)
+      return NextResponse.json({ error: 'Failed to reserve upload' }, { status: 500 })
+    }
+
+    const existing = await prisma.uploadObject.findFirst({
+      where: {
+        organizationId: orgId,
+        OR: [
+          { storedName: stored },
+          ...(uploadId ? [{ uploadId }] : []),
+        ],
+      },
+      select: {
+        id: true,
+        uploadedById: true,
+        storedName: true,
+        mimeType: true,
+        size: true,
+        sha256: true,
+        legacy: true,
+      },
+    })
+    if (
+      !existing
+      || existing.legacy
+      || existing.uploadedById !== (auth.userId || null)
+      || existing.storedName !== stored
+      || existing.size !== file.size
+      || existing.mimeType !== file.type
+      || existing.sha256 !== sha256
+    ) {
+      return NextResponse.json({ error: 'Upload id already used for a different file' }, { status: 409 })
+    }
+    provenanceId = existing.id
+    reused = true
   }
 
   try {
-    if (uploadId) {
-      const existing = await getObjectMetadata(stored)
-      if (existing) {
-        if (existing.size !== file.size) {
-          return NextResponse.json({ error: 'Upload id already used for a different file' }, { status: 409 })
-        }
-        return NextResponse.json({
-          url: `/api/uploads/${stored}`,
-          name: stored,
-          size: file.size,
-          mimeType: file.type,
-          originalName: file.name || null,
-          backend: storageBackend(),
-          reused: true,
-        }, { status: 200 })
-      }
-    }
-    const buffer = Buffer.from(await file.arrayBuffer())
+    // Rewriting on an idempotent retry is intentional: if the first request
+    // reserved provenance but object persistence failed/interrupted, the retry
+    // repairs storage with the exact bytes whose SHA-256 already won the DB race.
     await putObject(stored, buffer, file.type)
-  } catch (err) {
-    console.error('upload write failed', err)
+  } catch (error) {
+    if (reserved) {
+      await prisma.uploadObject.delete({ where: { id: provenanceId } }).catch(() => {})
+    }
+    console.error('upload write failed', error)
     return NextResponse.json({ error: 'Failed to persist upload' }, { status: 500 })
   }
 
-  // The /api/uploads/<name> read route handles BOTH backends — for S3 it
-  // returns a 302 to a presigned URL; for local-disk it streams from disk.
-  // Stored documents reference the in-app URL so toggling between
-  // backends doesn't need a Document.url rewrite.
   return NextResponse.json({
     url: `/api/uploads/${stored}`,
     name: stored,
+    uploadObjectId: provenanceId,
     size: file.size,
     mimeType: file.type,
     originalName: file.name || null,
-    backend: storageBackend(),
-  }, { status: 201 })
+    backend,
+    ...(reused ? { reused: true } : {}),
+  }, { status: reused ? 200 : 201 })
 }

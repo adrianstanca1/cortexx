@@ -6,6 +6,7 @@ import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 
 import { withRoute } from '@/lib/withRoute'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 
@@ -45,7 +46,7 @@ async function GET_impl(req: NextRequest) {
   }
 }
 
-async function POST_impl(req: NextRequest, userId: string, session: { user?: { name?: string | null; email?: string | null } }) {
+async function POST_impl(req: NextRequest, userId: string, personaRole: string | null, session: { user?: { name?: string | null; email?: string | null } }) {
   const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
   try {
@@ -67,6 +68,10 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
 
     const priority = ALLOWED_PRIORITY.has(body.priority) ? body.priority : 'medium'
     const status = ALLOWED_STATUS.has(body.status) ? body.status : 'open'
+    if (typeof body.photoUrl === 'string' && body.photoUrl) {
+      const uploadError = await authorizeUploadReference(body.photoUrl, { userId, personaRole })
+      if (uploadError) return uploadError
+    }
 
     const snag = await prisma.snag.create({
       data: {
@@ -102,4 +107,4 @@ async function POST_impl(req: NextRequest, userId: string, session: { user?: { n
 }
 
 export const GET = withRoute(({ req }) => GET_impl(req), { permission: 'read' })
-export const POST = withRoute(({ req, userId, session }) => POST_impl(req, userId, session), { permission: 'write' })
+export const POST = withRoute(({ req, userId, personaRole, session }) => POST_impl(req, userId, personaRole, session), { permission: 'write' })

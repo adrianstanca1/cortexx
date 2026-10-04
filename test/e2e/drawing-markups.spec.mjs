@@ -11,13 +11,24 @@ async function createDrawing(request, projectId, suffix) {
   })
   expect(response.status()).toBe(201)
   const drawing = await response.json()
+  const uploadResponse = await request.post('/api/uploads', {
+    multipart: {
+      file: {
+        name: 'markup-reference.png',
+        mimeType: 'image/png',
+        buffer: Buffer.from('89504e470d0a1a0a', 'hex'),
+      },
+    },
+  })
+  expect(uploadResponse.status()).toBe(201)
+  const upload = await uploadResponse.json()
   const revisionResponse = await request.post('/api/drawings/' + drawing.id + '/revisions', {
     data: {
       revision: 'M01',
-      fileUrl: '/favicon.ico',
+      fileUrl: upload.url,
       fileName: 'markup-reference.png',
-      fileSize: 1024,
-      mimeType: 'image/png',
+      fileSize: upload.size,
+      mimeType: upload.mimeType,
     },
   })
   expect(revisionResponse.status()).toBe(201)
