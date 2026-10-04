@@ -17,7 +17,7 @@
       "buildNumber": "1",
       "supportsTablet": true,
       "associatedDomains": [
-        "applinks:cortexbuildpro.com"
+        "applinks:cortexbuildpro.tech"
       ],
       "infoPlist": {
         "ITSAppUsesNonExemptEncryption": false

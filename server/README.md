@@ -8,7 +8,7 @@ The frontend works fully **without** this (localStorage + IndexedDB). Add this b
 
 ```sh
 git clone <your-repo> cortexx && cd cortexx
-sh deploy-vps.sh cortexbuildpro.com you@email.com    # domain + email for auto-HTTPS
+sh deploy-vps.sh cortexbuildpro.tech you@email.com    # domain + email for auto-HTTPS
 # …or, no domain (plain HTTP on the server IP):
 sh deploy-vps.sh
 ```

@@ -46,7 +46,7 @@ The record below describes the deployment surfaces and checks from July. Its ver
 
 ## Functional verification (real evidence)
 
-### SPA (the live cortexbuildpro.com app)
+### SPA (the live cortexbuildpro.tech app)
 - Served locally via `python3 -m http.server`; all entry points return HTTP 200 (`Cortexx.html`, `dist/app-main.js`, `lib/app-main.jsx`, `dist/backend.js`, `dist/sheet-registry.js`).
 - Rendered in a real Chromium browser: dashboard shell, site notice, 15 dashboard variations, **28 interactive buttons**, **0 JS console errors** (`backend-v17 registered 10 tables`, `phase 81 ready — realtime via BroadcastChannel`).
 - **Navigation works**: clicking the *Projects* tab changed the rendered view (`changed:true`).

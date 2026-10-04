@@ -28,7 +28,7 @@ This will:
 
 ### 4. Verify
 ```bash
-curl -I https://app.cortexbuildpro.com
+curl -I https://app.cortexbuildpro.tech
 # Should return 200 OK
 ```
 
@@ -63,7 +63,7 @@ This pulls the latest code every day at 3 AM and redeploys.
 ### Check deployment status
 ```bash
 systemctl status nginx
-curl -I https://app.cortexbuildpro.com
+curl -I https://app.cortexbuildpro.tech
 ```
 
 ### View logs
@@ -79,7 +79,7 @@ tail -f /var/log/cortexx-deploy.log
 ```
 
 ### Cold-start metrics
-Visit https://app.cortexbuildpro.com and open DevTools (F12):
+Visit https://app.cortexbuildpro.tech and open DevTools (F12):
 
 ```javascript
 // In console:
@@ -92,13 +92,13 @@ console.log('DB tables:', window.Backend?._repaired);
 
 ### Production (default)
 ```
-https://app.cortexbuildpro.com
+https://app.cortexbuildpro.tech
 ```
 Loads precompiled modules from `dist/`. Fast, no Babel.
 
 ### Development
 ```
-https://app.cortexbuildpro.com?dev=1
+https://app.cortexbuildpro.tech?dev=1
 ```
 Loads JSX from `lib/` and compiles via Babel. For debugging.
 
@@ -147,7 +147,7 @@ performance.getEntriesByType('navigation')[0].loadEventEnd - performance.getEntr
 
 - **Domain issues:** Check A record in DNS, wait 5-10 min
 - **SSL errors:** Run `certbot renew` or check `/var/log/letsencrypt/`
-- **App not loading:** Check `curl -v https://app.cortexbuildpro.com` for 404s or 5xx errors
+- **App not loading:** Check `curl -v https://app.cortexbuildpro.tech` for 404s or 5xx errors
 - **Stuck on loading:** Append `?dev=1` to load from `lib/` (slower but more debuggable)
 
 See main README.md for architecture details.

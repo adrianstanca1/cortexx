@@ -4,7 +4,7 @@ import { signIn } from './helpers/auth.mjs'
 test('supplier performance renders delivery evidence and missing-history state', async ({ page }) => {
   await signIn(
     page,
-    process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com',
+    process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech',
     process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password',
   )
   await page.route('**/api/suppliers/scorecard-fixture/performance', route => route.fulfill({ json: {

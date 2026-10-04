@@ -4,7 +4,7 @@ import { rm } from 'node:fs/promises'
 import path from 'node:path'
 import { signIn } from './helpers/auth.mjs'
 
-const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
+const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech'
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
 
 test('upload retries reuse one persisted object and reject id reuse for a different file', async ({ page }) => {

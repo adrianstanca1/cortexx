@@ -3,7 +3,7 @@ import UIKit
 
 /// Cortexx — Deep link router plugin.
 ///
-/// Intercepts cortexx:// custom scheme URLs and cortexbuildpro.com Universal Links,
+/// Intercepts cortexx:// custom scheme URLs and cortexbuildpro.tech Universal Links,
 /// then forwards them to the web layer as Capacitor events.
 ///
 /// Supported routes:

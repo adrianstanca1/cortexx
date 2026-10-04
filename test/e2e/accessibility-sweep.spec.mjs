@@ -5,7 +5,7 @@ import path from 'node:path'
 import { assertRouteHealth } from './helpers/route-health.mjs'
 import { signIn } from './helpers/auth.mjs'
 
-const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
+const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech'
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
 
 test.skip(process.env.FULL_A11Y_SWEEP !== '1', 'Full accessibility sweep runs in the dedicated CI gate')

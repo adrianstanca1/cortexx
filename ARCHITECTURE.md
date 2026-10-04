@@ -8,7 +8,7 @@ this file is the structural map.
 
 ```
                          ┌─────────────────────────────────────┐
-   Browser (PWA)  ─────▶ │  cortexbuildpro.com  (Caddy static)  │
+   Browser (PWA)  ─────▶ │  cortexbuildpro.tech  (Caddy static)  │
    iOS / Android  ─────▶ │   • Cortexx.html + lib/ + dist/      │
                          │   • proxies /api/* ──┐               │
                          └──────────────────────┼───────────────┘

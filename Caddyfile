@@ -35,12 +35,25 @@
 		respond 404
 	}
 
-	# Apple App Site Association — served at /.well-known/apple-app-site-association
-	# (no .json extension). Apple requires Content-Type application/json. A
-	# dedicated handle placed BEFORE the catch-all wins the route match.
+	# Apple associations come from the Next.js runtime, which validates the
+	# signed app identifier and serves application/json without a login redirect.
 	handle /.well-known/apple-app-site-association {
-		header Content-Type "application/json"
+		reverse_proxy app:3010
+	}
+
+	# security.txt is mounted from public/.well-known. Keep it out of the SPA
+	# fallback so a missing file returns 404 instead of landing-page HTML.
+	handle /.well-known/security.txt {
+		header Content-Type "text/plain; charset=utf-8"
 		file_server
+	}
+	handle /.well-known/* {
+		respond 404
+	}
+
+	# The security contact's policy URL must serve the actual privacy policy.
+	handle /privacy {
+		reverse_proxy app:3010
 	}
 
 	# ── Everything else → landing page (or SPA shell for deep links) ──

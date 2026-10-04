@@ -4,7 +4,7 @@
 # Usage on a fresh Ubuntu/Debian VPS:
 #
 #   git clone <your-repo> cortexx && cd cortexx
-#   sh deploy-vps.sh cortexbuildpro.com you@email.com
+#   sh deploy-vps.sh cortexbuildpro.tech you@email.com
 #
 # (Pass no domain to deploy on plain HTTP against the server IP.)
 # ──────────────────────────────────────────────────────────────────

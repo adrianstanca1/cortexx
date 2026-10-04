@@ -386,7 +386,7 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
             `Workspace id: ${organizationId}\n` +
             `(self-serve checkout was unavailable; please send me a payment link)`,
           )
-          window.location.assign(`mailto:sales@cortexbuildpro.com?subject=${subject}&body=${body}`)
+          window.location.assign(`mailto:sales@cortexbuildpro.tech?subject=${subject}&body=${body}`)
           setMsg('Opening your mail client — sales will send you a payment link.')
         } else {
           setMsg(data.error || 'Checkout failed')

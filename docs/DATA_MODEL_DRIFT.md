@@ -14,7 +14,7 @@ models describe the **same ~34 underlying tables**. The real issue is a
 | | Raw SQL (`server/db/schema.sql`) | Prisma (`prisma/schema.prisma`) |
 |---|---|---|
 | Count | **34 `CREATE TABLE`** | **82 `model` blocks** |
-| Role | ✅ **Source of truth** — Express API persists these at `cortexbuildpro.com` via `/api/:collection` | Next.js 16 admin's typed client |
+| Role | ✅ **Source of truth** — Express API persists these at `cortexbuildpro.tech` via `/api/:collection` | Next.js 16 admin's typed client |
 
 - **79 of the 82 Prisma models map to a real raw-SQL table** (e.g. `actionPlan`
   → `action_plans`, `kaizenCard` → `kaizen_cards`, `serviceCatalogItem` →

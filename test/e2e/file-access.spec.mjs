@@ -2,8 +2,8 @@ import { test, expect } from '@playwright/test'
 import { signIn } from './helpers/auth.mjs'
 
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
-const admin = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
-const foreman = process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.com'
+const admin = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech'
+const foreman = process.env.E2E_FOREMAN_EMAIL || 'foreman@cortexbuildpro.tech'
 
 test('project files and document mutations enforce assignment permissions', async ({ page }) => {
   test.setTimeout(120_000)

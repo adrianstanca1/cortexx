@@ -3,7 +3,7 @@
 Monitoring Agent
 
 This script runs indefinitely, sending an HTTP GET request to
-https://api.cortexbuildpro.com/health every 30 seconds. It logs the ISO
+https://api.cortexbuildpro.tech/health every 30 seconds. It logs the ISO
 timestamp, HTTP status code, and response time (in milliseconds) to
 /workspace/.brain/monitoring.log.
 
@@ -27,7 +27,7 @@ LOG_FILE = "/workspace/.brain/monitoring.log"
 os.makedirs(os.path.dirname(LOG_FILE), exist_ok=True)
 
 # Target URL
-HEALTH_URL = "https://api.cortexbuildpro.com/health"
+HEALTH_URL = "https://api.cortexbuildpro.tech/health"
 
 
 def log(message: str) -> None:

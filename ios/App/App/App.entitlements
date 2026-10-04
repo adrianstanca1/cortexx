@@ -7,13 +7,11 @@
   <key>aps-environment</key>
   <string>production</string>
 
-  <!-- Universal Links for current and legacy production domains -->
+  <!-- Universal Links and shared credentials for the canonical production domain -->
   <key>com.apple.developer.associated-domains</key>
   <array>
     <string>applinks:cortexbuildpro.tech</string>
     <string>webcredentials:cortexbuildpro.tech</string>
-    <string>applinks:cortexbuildpro.com</string>
-    <string>webcredentials:cortexbuildpro.com</string>
   </array>
 
   <!-- iCloud (for future CloudKit sync) -->

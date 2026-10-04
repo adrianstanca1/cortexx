@@ -153,7 +153,7 @@ function LaunchScreen({ accent }) {
               <Row icon={Ic.shield} iconBg={T.green} title="Encryption" sub="AES-256 at rest, TLS 1.3 in transit"/>
               <Row icon={Ic.check} iconBg={T.blue} title="SOC 2 Type II" sub="Audited annually (Pro/Enterprise)"/>
               <Row icon={Ic.archive} iconBg={T.purple} title="GDPR compliant" sub="ICO registered · EU/UK data residency"/>
-              <Row icon={Ic.zap} iconBg={T.amber} title="Bug bounty" sub="Report vulnerabilities: security@cortexbuildpro.com" isLast/>
+              <Row icon={Ic.zap} iconBg={T.amber} title="Bug bounty" sub="Report vulnerabilities: security@cortexbuildpro.tech" isLast/>
             </GroupedList>
           </Section>
         </div>
@@ -166,8 +166,8 @@ function LaunchScreen({ accent }) {
               <Row icon={Ic.download} iconBg={T.blue} title="Logo pack" sub="SVG · light & dark variants" onClick={() => toast('Logo pack downloaded', 'success')}/>
               <Row icon={Ic.camera} iconBg={T.purple} title="Screenshots" sub="High-res for press"/>
               <Row icon={Ic.doc} iconBg={T.cyan} title="One-pager" sub="PDF summary for journalists"/>
-              <Row icon={Ic.mail} iconBg={T.green} title="Press contact" sub="press@cortexbuildpro.com" isLast
-                onClick={() => window.open('mailto:press@cortexbuildpro.com', '_blank')}/>
+              <Row icon={Ic.mail} iconBg={T.green} title="Press contact" sub="press@cortexbuildpro.tech" isLast
+                onClick={() => window.open('mailto:press@cortexbuildpro.tech', '_blank')}/>
             </GroupedList>
           </Section>
         </div>

@@ -5,7 +5,7 @@ const prisma = new PrismaClient()
 
 async function main() {
   // 1. Ensure an admin user exists (idempotent)
-  const adminEmail = process.env.ADMIN_EMAIL || 'admin@cortexbuildpro.com'
+  const adminEmail = process.env.ADMIN_EMAIL || 'admin@cortexbuildpro.tech'
   const adminPass = process.env.ADMIN_PASSWORD || 'changeme-please-1234'
   const adminName = process.env.ADMIN_NAME || 'Admin'
 

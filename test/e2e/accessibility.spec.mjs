@@ -3,7 +3,7 @@ import AxeBuilder from '@axe-core/playwright'
 import { assertRouteHealth } from './helpers/route-health.mjs'
 import { signIn } from './helpers/auth.mjs'
 
-const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.com'
+const email = process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech'
 const password = process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password'
 
 const criticalRoutes = [
