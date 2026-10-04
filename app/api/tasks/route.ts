@@ -93,22 +93,22 @@ async function POST_impl(req: NextRequest, userId: string, organizationId: strin
     }
 
     const task = await prisma.$transaction(async tx => {
-    const created = await tx.task.create({
-      data: {
-        title: body.title.trim(),
-        description: body.description?.trim() || null,
-        dueDate: body.dueDate ? new Date(body.dueDate) : null,
-        dueTime: body.dueTime || null,
-        status: body.status || 'todo',
-        priority: body.priority || 'medium',
-        category: body.category || null,
-        projectId,
-        assigneeId,
-      },
-      include: { project: true, assignee: true },
-    })
-    await syncTaskProjectProgress(tx, [created.projectId], organizationId)
-    return created
+      const created = await tx.task.create({
+        data: {
+          title: body.title.trim(),
+          description: body.description?.trim() || null,
+          dueDate: body.dueDate ? new Date(body.dueDate) : null,
+          dueTime: body.dueTime || null,
+          status: body.status || 'todo',
+          priority: body.priority || 'medium',
+          category: body.category || null,
+          projectId,
+          assigneeId,
+        },
+        include: { project: true, assignee: true },
+      })
+      await syncTaskProjectProgress(tx, [created.projectId], organizationId)
+      return created
     })
     if (task.projectId) {
       prisma.activity.create({

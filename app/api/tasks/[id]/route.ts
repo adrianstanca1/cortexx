@@ -94,26 +94,29 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
         return NextResponse.json({ error: 'dueDate must be a valid date' }, { status: 400 })
       }
       const task = await prisma.$transaction(async tx => {
-      const updated = await tx.task.update({
-        where: { id: params.id },
-        data: {
-          ...(body.title !== undefined && { title: String(body.title).trim() }),
-          ...(body.description !== undefined && { description: body.description ? String(body.description).trim() : null }),
-          ...(body.status !== undefined && { status: body.status }),
-          ...(body.priority !== undefined && { priority: body.priority }),
-          ...(body.dueDate !== undefined && { dueDate: body.dueDate ? new Date(body.dueDate) : null }),
-          ...(body.dueTime !== undefined && { dueTime: body.dueTime }),
-          ...(body.assigneeId !== undefined && { assigneeId: body.assigneeId }),
-          ...(body.projectId !== undefined && { projectId: body.projectId }),
-          ...(body.category !== undefined && { category: body.category }),
-        },
-        include: { project: true, assignee: true },
-      })
+        const updated = await tx.task.update({
+          where: { id: params.id },
+          data: {
+            ...(body.title !== undefined && { title: String(body.title).trim() }),
+            ...(body.description !== undefined && { description: body.description ? String(body.description).trim() : null }),
+            ...(body.status !== undefined && { status: body.status }),
+            ...(body.priority !== undefined && { priority: body.priority }),
+            ...(body.dueDate !== undefined && { dueDate: body.dueDate ? new Date(body.dueDate) : null }),
+            ...(body.dueTime !== undefined && { dueTime: body.dueTime }),
+            ...(body.assigneeId !== undefined && { assigneeId: body.assigneeId }),
+            ...(body.projectId !== undefined && { projectId: body.projectId }),
+            ...(body.category !== undefined && { category: body.category }),
+          },
+          include: { project: true, assignee: true },
+        })
 
-      if (body.status !== undefined || body.projectId !== undefined) {
-        await syncTaskProjectProgress(tx, [existing.projectId, updated.projectId], auth.orgId)
-      }
-      return updated
+        // Task completion is a fallback: only refresh progress for the projects
+        // this mutation actually touched, and only when a field that changes
+        // the done/total ratio moved.
+        if (body.status !== undefined || body.projectId !== undefined) {
+          await syncTaskProjectProgress(tx, [existing.projectId, updated.projectId], auth.orgId)
+        }
+        return updated
       })
       return NextResponse.json(task)
     } catch (error) {
