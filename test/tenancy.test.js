@@ -12,7 +12,7 @@ const assert = require('node:assert/strict')
 // ─── Mirror of the OWNED_MODELS set in lib/tenancy.ts ────────────────
 const OWNED_MODELS = new Set([
   'Project', 'Task', 'TeamMember', 'Assignment', 'Invoice', 'TimeEntry',
-  'Activity', 'Comment', 'Document', 'ExpenseReceipt', 'Snag', 'Certification', 'Valuation', 'ValuationCertificate', 'ValuationPayment', 'ValuationVariation', 'Rfi',
+  'Activity', 'Comment', 'Document', 'UploadObject', 'ExpenseReceipt', 'Snag', 'Certification', 'Valuation', 'ValuationCertificate', 'ValuationPayment', 'ValuationVariation', 'Rfi',
   'Announcement', 'Observation', 'Variation', 'Lead', 'Customer', 'Quote',
   'SiteCheckIn', 'MileageEntry', 'CostCode', 'ProjectCostEntry', 'CostItem', 'Subcontractor', 'Equipment',
   'Material', 'PurchaseOrder', 'GoodsReceipt', 'ProcurementRequisition', 'ProcurementRfq', 'SupplierQuote', 'SubInvoice', 'Drawing', 'DrawingRevision', 'DrawingDistribution', 'DrawingDistributionRecipient',

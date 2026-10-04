@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,7 +16,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
   if (auth instanceof NextResponse) return auth
   try {
     const body = await req.json()
-    const existing = await prisma.observation.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true } })
+    const existing = await prisma.observation.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true, photoUrl: true } })
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     const nextStatus = body.status !== undefined
@@ -26,6 +27,14 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
     if (body.title !== undefined && !String(body.title).trim()) {
       return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
+    }
+
+    if (body.photoUrl !== undefined && body.photoUrl && body.photoUrl !== existing.photoUrl) {
+      const uploadError = await authorizeUploadReference(body.photoUrl, {
+        userId: (auth.user as { id?: string }).id,
+        personaRole: (auth.user as { role?: string }).role,
+      })
+      if (uploadError) return uploadError
     }
 
     const data: Record<string, unknown> = {}

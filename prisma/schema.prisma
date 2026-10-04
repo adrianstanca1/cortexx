@@ -28,6 +28,7 @@ model User {
   notificationPreference NotificationPreference?
   projectBookmarks       ProjectBookmark[]
   aiHistory              AiHistory[]
+  uploads                UploadObject[]
 }
 
 model Account {
@@ -467,6 +468,27 @@ model ExpenseReceipt {
   @@index([vendor])
   @@index([costCodeId])
   @@index([organizationId])
+}
+
+model UploadObject {
+  id             String       @id @default(cuid())
+  organizationId String
+  organization   Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  uploadedById   String?
+  uploadedBy     User?        @relation(fields: [uploadedById], references: [id], onDelete: SetNull)
+  uploadId       String?
+  storedName     String       @unique
+  originalName   String?
+  mimeType       String
+  size           Int
+  sha256         String?
+  backend        String
+  legacy         Boolean      @default(false)
+  createdAt      DateTime     @default(now())
+
+  @@unique([organizationId, uploadId])
+  @@index([uploadedById])
+  @@index([organizationId, createdAt])
 }
 
 model Snag {
@@ -1980,6 +2002,7 @@ model Organization {
   valuationCertificates         ValuationCertificate[]
   valuationPayments             ValuationPayment[]
   valuationVariations           ValuationVariation[]
+  uploads                       UploadObject[]
 
   // ── Legacy-parity v1.1 modules
   payrollRuns                  PayrollRun[]

@@ -83,7 +83,7 @@ export function getCurrentOrg(): OrgRequestContext | null {
 // their routes because they establish or inspect organization context.
 const OWNED_MODELS = new Set<string>([
   'Project', 'Task', 'TeamMember', 'Assignment', 'Invoice', 'TimeEntry',
-  'Activity', 'Comment', 'Document', 'ExpenseReceipt', 'Snag', 'Certification', 'Valuation', 'ValuationCertificate', 'ValuationPayment', 'ValuationVariation', 'Rfi',
+  'Activity', 'Comment', 'Document', 'UploadObject', 'ExpenseReceipt', 'Snag', 'Certification', 'Valuation', 'ValuationCertificate', 'ValuationPayment', 'ValuationVariation', 'Rfi',
   'Announcement', 'Observation', 'Variation', 'Lead', 'Customer', 'Quote',
   'SiteCheckIn', 'MileageEntry', 'CostCode', 'ProjectCostEntry', 'CostItem', 'Subcontractor', 'Equipment',
   'Material', 'PurchaseOrder', 'GoodsReceipt', 'ProcurementRequisition', 'ProcurementRfq', 'SupplierQuote', 'SubInvoice', 'Drawing', 'DrawingRevision', 'DrawingDistribution', 'DrawingDistributionRecipient', 'DrawingMarkup',

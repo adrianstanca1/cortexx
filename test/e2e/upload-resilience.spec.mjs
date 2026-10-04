@@ -44,7 +44,7 @@ test('upload retries reuse one persisted object and reject id reuse for a differ
         file: {
           name: 'different.jpg',
           mimeType: 'image/jpeg',
-          buffer: Buffer.from('different payload'),
+          buffer: Buffer.from('xyz'),
         },
       },
     })

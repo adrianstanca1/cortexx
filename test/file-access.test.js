@@ -35,10 +35,11 @@ function fixture(role, personaRole = 'foreman') {
   let dbCalls = 0
   const auth = { role, personaRole, userId: 'u', session: { user: { role: personaRole } } }
   const mocks = {
-    'next/server': { NextResponse }, '@prisma/client': {},
+    'next/server': { NextResponse }, '@prisma/client': {}, 'node:crypto': { createHash: () => ({ update: () => ({ digest: () => 'unused' }) }) },
     '@/lib/db': { prisma: new Proxy({}, { get() { dbCalls++; throw new Error('Denied call must not query data') } }) },
     '@/lib/requireAuth': { requireOrg: async () => auth },
     '@/lib/rbac': rbac, '@/lib/file-access': scope, '@/lib/programme-access': programme,
+    '@/lib/upload-provenance': { authorizeUploadReference: async () => null },
     '@/lib/audit': {}, '@/lib/errors': { reportError: error => { throw error } },
     '@/lib/rateLimit': { enforceRateLimit: async () => null }, '@/lib/storage': {},
   }
