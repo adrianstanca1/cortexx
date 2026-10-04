@@ -28,4 +28,6 @@ The supplier route reads at most 1,001 orders to detect overflow, computes resul
 
 ## Next session
 
+Two high-severity Dependabot alerts remain open in `expo/package-lock.json`: [#208, braces](https://github.com/adrianstanca1/cortexx/security/dependabot/208) at `3.0.3` (via micromatch), and [#207, node-forge](https://github.com/adrianstanca1/cortexx/security/dependabot/207) at `1.4.0` (referenced by Expo CLI and code-signing certificates). GitHub's alert API reports no first patched version for either at review time. No speculative override, alert dismissal or claim of remediation was made; dependency-path exposure and upstream fixes still need assessment.
+
 Resume task-progress work from its existing worktree after inspecting its current status. Free-model configuration for Hermes/OpenCode/Claude is a separate unfinished session; this review did not change those configurations. Consult current GitHub state before reopening consolidation work, and retain the external product/recovery/store-delivery gates in `STATUS.md`.
