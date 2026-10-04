@@ -18,7 +18,7 @@ export async function syncTaskProjectProgress(
 
   const counts = await tx.task.groupBy({
     by: ['projectId', 'status'],
-    where: { projectId: { in: ids }, organizationId },
+    where: { projectId: { in: ids }, AND: [{ organizationId }] },
     _count: { _all: true },
   })
   const totals = new Map<string, { total: number; done: number }>()
@@ -33,10 +33,10 @@ export async function syncTaskProjectProgress(
   await Promise.all(ids.map(projectId => {
     const current = totals.get(projectId) || { total: 0, done: 0 }
     const progress = current.total ? Math.round(current.done / current.total * 100) : 0
-    // Check programme ownership and tenant scope in the write itself, not only
-    // in an earlier read.
+    // Keep the explicit organization constraint in AND so the tenancy
+    // extension cannot replace it with the active request organization.
     return tx.project.updateMany({
-      where: { id: projectId, organizationId, programmeActivities: { none: {} } },
+      where: { id: projectId, AND: [{ organizationId }], programmeActivities: { none: {} } },
       data: { progress },
     })
   }))
