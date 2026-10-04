@@ -105,6 +105,7 @@ function main() {
   const INTENTIONAL_NO_MODEL = new Set([
     'documents_store', 'documents_meta', 'ai_history', 'audit_log', 'photos',
     'portal_tokens', 'portal_messages', 'magic_links', 'site_maps', 'sync_log',
+    'sync_record_versions', // Express sync internals; deliberately not part of the Next.js Prisma domain.
     'receipts', 'cis_subs', 'cis_payments', 'timesheets', 'diary_entries',
     'change_orders', 'subs', 'notifications', 'activity_log', 'bank_connections',
     'iap_entitlements', 'hmrc_submissions', 'api_connections',
