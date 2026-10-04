@@ -72,7 +72,6 @@ export async function POST(req: NextRequest) {
   const backend = storageBackend()
   let provenanceId: string
   let reused = false
-  let reserved = false
 
   try {
     const created = await prisma.uploadObject.create({
@@ -90,7 +89,6 @@ export async function POST(req: NextRequest) {
       select: { id: true },
     })
     provenanceId = created.id
-    reserved = true
   } catch (error) {
     if (!(error instanceof Prisma.PrismaClientKnownRequestError) || error.code !== 'P2002') {
       console.error('upload provenance reservation failed', error)
@@ -136,9 +134,9 @@ export async function POST(req: NextRequest) {
     // repairs storage with the exact bytes whose SHA-256 already won the DB race.
     await putObject(stored, buffer, file.type)
   } catch (error) {
-    if (reserved) {
-      await prisma.uploadObject.delete({ where: { id: provenanceId } }).catch(() => {})
-    }
+    // Keep the reservation: a concurrent identical retry may already have
+    // persisted the object. Deleting ownership here would orphan its success.
+    // A later retry can repair storage using the reserved hash and owner.
     console.error('upload write failed', error)
     return NextResponse.json({ error: 'Failed to persist upload' }, { status: 500 })
   }

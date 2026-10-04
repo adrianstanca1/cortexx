@@ -2,6 +2,7 @@ import { NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
 import { safeKey } from '@/lib/storage'
+import { getCurrentOrg } from '@/lib/tenancy'
 
 export type UploadReferenceActor = {
   userId?: string | null
@@ -43,8 +44,12 @@ export async function authorizeUploadReference(
     return NextResponse.json({ error: 'Invalid CortexBuild upload URL' }, { status: 400 })
   }
 
+  const organizationId = getCurrentOrg()?.organizationId
+  if (!organizationId) {
+    return NextResponse.json({ error: 'Organization required' }, { status: 403 })
+  }
   const upload = await prisma.uploadObject.findFirst({
-    where: { storedName },
+    where: { storedName, organizationId },
     select: { id: true },
   })
   if (!upload) {

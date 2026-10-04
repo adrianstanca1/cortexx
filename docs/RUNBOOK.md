@@ -87,6 +87,27 @@ $HOME/bin/construction-app-cron.sh prune-push
 
 Logs: `$HOME/logs/construction-app-cron.log`.
 
+### Bounded load smoke gate
+
+Run this against a local server or an approved staging deployment before a release:
+
+```bash
+npm run load:smoke
+LOAD_TEST_URL=https://staging.example.test/api/health npm run load:smoke
+```
+
+The dependency-free runner sends 30 requests with concurrency 5 and fails on a
+p95 latency above 1,000 ms or an error rate above 1%. Configure the bounds with
+`LOAD_TEST_REQUESTS`, `LOAD_TEST_CONCURRENCY`, `LOAD_TEST_TIMEOUT_MS`,
+`LOAD_TEST_MAX_P95_MS`, and `LOAD_TEST_MAX_ERROR_RATE`. It defaults to
+`http://127.0.0.1:3000/api/health` and refuses to target the CortexBuild Pro
+production hostname unless `ALLOW_PRODUCTION_LOAD_TEST=1` is deliberately set
+for an approved run.
+
+For shared staging, run the `Staging load smoke` GitHub Actions workflow and
+provide its health URL. The workflow uses the same thresholds, has a five-minute
+job limit, serializes runs, and retains the production-host safeguard.
+
 ## Backup and restore verification
 
 Install/update:
@@ -101,7 +122,7 @@ Current schedule:
 
 Managed backups are under `$HOME/backups/construction`. The verifier checks checksums, restores into an isolated PostgreSQL container, reads canonical table counts, extracts uploads, then removes the disposable restore resources.
 
-See `docs/CONSTRUCTION_RECOVERY.md` for the tested recovery procedure and current limits. Local restore verification is implemented; off-site backup/PITR remains a separate hardening item.
+See `docs/CONSTRUCTION_RECOVERY.md` for the tested recovery procedure and current limits. Local restore verification and a 30-day encrypted GitHub Actions artifact are implemented; continuous PostgreSQL WAL archiving/PITR remains a separate hardening item.
 
 ## Safe database rescue
 

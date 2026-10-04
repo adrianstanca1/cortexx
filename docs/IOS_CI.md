@@ -13,7 +13,7 @@ Apple toolchain** — it cannot be performed headlessly from this Linux VPS:
 - **EAS Build (`eas build`)** — Expo Application Services sign and archive the
   app on a macOS builder; the `ios:*` + `eas build` steps need macOS runners.
 - **AASA universal links** — `apple-app-site-association` must be hosted at the
-  apex/`.well-known` of `cortexbuildpro.com`; validates App Clip / universal-link
+  apex/`.well-known` of `cortexbuildpro.tech`; validates App Clip / universal-link
   handoff and is an App Store submission requirement.
 - **StoreKit IAP plugin** — in-app purchases require the StoreKit configuration
   and a signed capability; reviewed at submission time by App Store Connect.
@@ -44,7 +44,7 @@ runner. The self-hosted macOS runner only needs to handle `ios:*` and
 ## Current blockers (must be resolved on the Mac before first submission)
 
 - Provisioning profile + distribution cert provisioned in the macOS Keychain.
-- AASA file served from `cortexbuildpro.com/.well-known/apple-app-site-association`.
+- AASA file served from `cortexbuildpro.tech/.well-known/apple-app-site-association`.
 - StoreKit IAP capability enabled and the product registered in App Store Connect.
 - `eas.json` iOS credentials attached to the `com.cortexbuild.app` bundle id.
 

@@ -7,9 +7,11 @@
   <key>aps-environment</key>
   <string>production</string>
 
-  <!-- Universal Links — cortexbuildpro.com/app/* routes open in the app -->
+  <!-- Universal Links for current and legacy production domains -->
   <key>com.apple.developer.associated-domains</key>
   <array>
+    <string>applinks:cortexbuildpro.tech</string>
+    <string>webcredentials:cortexbuildpro.tech</string>
     <string>applinks:cortexbuildpro.com</string>
     <string>webcredentials:cortexbuildpro.com</string>
   </array>
