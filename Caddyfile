@@ -17,9 +17,21 @@
 		reverse_proxy app:3010
 	}
 
+	# ── Agent coordination → Node service ──
+	# MUST be declared BEFORE the /api/* catch-all below, otherwise that block
+	# matches first and this route is unreachable.
+	handle /api/agent/* {
+		reverse_proxy api:3001
+	}
+
 	# ── API + realtime + webhooks → Node service ──
 	handle /api/* {
 		reverse_proxy api:3001
+	}
+
+	# ── Browser Gateway WebSocket + API (Puppeteer agent control plane) ──
+	handle /browser-gateway/* {
+		reverse_proxy browser-gateway:3002
 	}
 
 	# ── Hard-block secrets, server source, and build/config files ──
@@ -30,6 +42,11 @@
 	# alone — keep this deny list explicit. Wrapped in its own handle() and
 	# placed BEFORE the catch-all so it always wins (top-level respond would be
 	# reordered after the catch-all handle by Caddy's default directive order).
+	# NOTE: /browser-gateway/* is intentionally NOT in this deny list. It is
+	# reverse-proxied to the gateway container above (never served from disk),
+	# and denying it here would be redundant at best / self-defeating at worst.
+	# Static copies under /srv/app/browser-gateway/ are still hidden by the
+	# `hide browser-gateway` directive in the catch-all file_server below.
 	@blocked path /.git* /.env* /.env.production /.env.vault /server/* /build-dist.js /proxy.ts /instrumentation.ts /package.json /package-lock.json /tsconfig.json /next.config.* /tailwind.config.* /postcss.config.* /playwright.config.* /eslint.config.* *.ts *.tsx
 	handle @blocked {
 		respond 404
@@ -50,7 +67,7 @@
 			# Belt-and-suspenders: even if a matcher above missed something, never
 			# serve dotfiles, server source, or env/config files. Caddy's file_server
 			# only hides the active Caddyfile by default — it does NOT hide .git/.env.
-			hide .git .env .env.* server *.ts *.tsx build-dist.js proxy.ts instrumentation.ts package.json package-lock.json tsconfig.json next.config.js tailwind.config.js postcss.config.js playwright.config.js eslint.config.js
+			hide .git .env .env.* server browser-gateway *.ts *.tsx build-dist.js proxy.ts instrumentation.ts package.json package-lock.json tsconfig.json next.config.js tailwind.config.js postcss.config.js playwright.config.js eslint.config.js
 		}
 	}
 

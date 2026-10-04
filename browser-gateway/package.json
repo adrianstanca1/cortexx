@@ -1,0 +1,22 @@
+{
+  "name": "browser-gateway",
+  "version": "1.0.0",
+  "description": "Web browser gateway dashboard for full control of VPS resources and agents",
+  "main": "server.js",
+  "type": "module",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "dependencies": {
+    "express": "^4.19.2",
+    "socket.io": "^4.7.5",
+    "puppeteer": "^23.2.0",
+    "ioredis": "^5.4.0",
+    "bcryptjs": "^2.4.3",
+    "jsonwebtoken": "^9.0.2",
+    "cors": "^2.8.5",
+    "helmet": "^7.1.0",
+    "express-rate-limit": "^7.4.0"
+  }
+}
