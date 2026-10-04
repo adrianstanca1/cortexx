@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { syncTaskProjectProgress } from '@/lib/task-progress'
+import { canManage, canWrite } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
@@ -15,14 +18,19 @@ export const dynamic = 'force-dynamic'
  * Returns: { updated: number, affectedProjectIds: string[] }
  */
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
+  if (!auth.orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
+  if (!canWrite(auth.role || '')) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
+
   try {
     const body = await req.json()
     const action = String(body.action || '')
-    const ids: string[] = Array.isArray(body.ids) ? body.ids.filter((x: unknown) => typeof x === 'string').slice(0, 200) : []
+    const ids: string[] = Array.isArray(body.ids)
+      ? body.ids.filter((x: unknown) => typeof x === 'string').slice(0, 200)
+      : []
 
     if (!['complete', 'reopen', 'delete'].includes(action)) {
       return NextResponse.json({ error: 'action must be complete | reopen | delete' }, { status: 400 })
@@ -31,83 +39,71 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'No task ids provided' }, { status: 400 })
     }
 
-    // Get affected project ids before mutation so we can recompute their progress
-    const tasks = await prisma.task.findMany({
-      where: { id: { in: ids } },
-      select: { id: true, projectId: true },
-    })
-    const affectedProjectIds = Array.from(new Set(tasks.map(t => t.projectId).filter((p): p is string => !!p)))
+    const appRole = (auth.session.user as { role?: string })?.role || ''
+    const email = (auth.session.user as { email?: string | null })?.email?.trim() || ''
+    if (action === 'delete' && !canManage(auth.role || '') && appRole !== 'project_manager') {
+      return NextResponse.json({ error: 'Company Admin or Project Manager permission required to delete tasks' }, { status: 403 })
+    }
 
-    let updated = 0
+    const access: Prisma.TaskWhereInput = {
+      id: { in: ids },
+      AND: [{ organizationId: auth.orgId }],
+      ...(!canManage(auth.role || '') && (appRole === 'project_manager' || appRole === 'foreman')
+        ? (email
+          ? { project: { assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } } }
+          : { id: '__no_accessible_task__' })
+        : {}),
+      ...(!canManage(auth.role || '') && appRole === 'operative'
+        ? (email
+          ? { assignee: { email: { equals: email, mode: 'insensitive' } } }
+          : { id: '__no_accessible_task__' })
+        : {}),
+    }
+
+    const result = await prisma.$transaction(async tx => {
+      const tasks = await tx.task.findMany({
+        where: access,
+        select: { id: true, projectId: true },
+      })
+      const accessibleIds = tasks.map(task => task.id)
+      const affectedProjectIds = Array.from(
+        new Set(tasks.map(task => task.projectId).filter((projectId): projectId is string => Boolean(projectId))),
+      )
+
+      let updated = 0
+      if (accessibleIds.length > 0) {
+        const mutationWhere: Prisma.TaskWhereInput = {
+          id: { in: accessibleIds },
+          AND: [{ organizationId: auth.orgId }],
+        }
+        if (action === 'delete') {
+          updated = (await tx.task.deleteMany({ where: mutationWhere })).count
+        } else {
+          const status = action === 'complete' ? 'done' : 'todo'
+          updated = (await tx.task.updateMany({
+            where: mutationWhere,
+            data: { status },
+          })).count
+        }
+      }
+
+      await syncTaskProjectProgress(tx, affectedProjectIds, auth.orgId)
+      return { updated, affectedProjectIds }
+    })
+
     if (action === 'delete') {
-      const res = await prisma.task.deleteMany({ where: { id: { in: ids } } })
-      updated = res.count
       prisma.activity.create({
         data: {
           projectId: null,
-          actorName: actorName(auth),
+          actorName: actorName(auth.session),
           actorType: 'human',
-          action: `deleted ${updated} task${updated === 1 ? '' : 's'}`,
+          action: 'deleted ' + result.updated + ' task' + (result.updated === 1 ? '' : 's'),
           iconType: 'check',
         },
       }).catch(() => {})
-    } else {
-      const newStatus = action === 'complete' ? 'done' : 'todo'
-      const res = await prisma.task.updateMany({
-        where: { id: { in: ids } },
-        data: { status: newStatus },
-      })
-      updated = res.count
     }
 
-    // Recompute progress for every affected project — single grouped
-    // read instead of N findManys, then per-project update. The prior
-    // version did N×(findMany + update) serially: ~10ms per project,
-    // so a 50-project bulk took 1s+ purely on round-trips. The groupBy
-    // returns all the counts in one DB query.
-    if (affectedProjectIds.length > 0) {
-      const counts = await prisma.task.groupBy({
-        by: ['projectId', 'status'],
-        where: { projectId: { in: affectedProjectIds } },
-        _count: { _all: true },
-      })
-      const totals = new Map<string, { total: number; done: number }>()
-      for (const row of counts) {
-        if (!row.projectId) continue
-        const cur = totals.get(row.projectId) || { total: 0, done: 0 }
-        cur.total += row._count._all
-        if (row.status === 'done') cur.done += row._count._all
-        totals.set(row.projectId, cur)
-      }
-      // Programme-owned projects derive progress from their activities, not from
-      // tasks. Excluding them here keeps a bulk task edit from silently zeroing or
-      // otherwise clobbering programme progress — same rule as lib/task-progress.ts.
-      // updateMany is required because the relation filter cannot ride on update's
-      // unique `where`.
-      const taskOwnedProjects = {
-        programmeActivities: { none: {} },
-      }
-      await Promise.all(
-        Array.from(totals.entries()).map(([projectId, { total, done }]) => {
-          const progress = total > 0 ? Math.round((done / total) * 100) : 0
-          return prisma.project.updateMany({
-            where: { id: projectId, ...taskOwnedProjects },
-            data: { progress },
-          })
-        }),
-      )
-      // Projects that had all their tasks deleted disappear from `counts` — zero them out.
-      const updatedIds = new Set(totals.keys())
-      const zeroed = affectedProjectIds.filter(id => !updatedIds.has(id))
-      if (zeroed.length > 0) {
-        await prisma.project.updateMany({
-          where: { id: { in: zeroed }, ...taskOwnedProjects },
-          data: { progress: 0 },
-        })
-      }
-    }
-
-    return NextResponse.json({ updated, affectedProjectIds })
+    return NextResponse.json(result)
   } catch (error) {
     reportError(error)
     return NextResponse.json({ error: 'Bulk operation failed' }, { status: 500 })
