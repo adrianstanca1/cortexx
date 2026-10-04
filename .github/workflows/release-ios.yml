@@ -63,6 +63,21 @@ jobs:
           cache-dependency-path: ios/package-lock.json
 
       # ── Install JS deps ───────────────────────────────────────────
+      - name: Check signing configuration
+        id: signing
+        env:
+          IOS_CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
+          IOS_CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
+          IOS_KEYCHAIN_PASSWORD: ${{ secrets.IOS_KEYCHAIN_PASSWORD }}
+          IOS_PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+          IOS_REQUIRE_ARCHIVE: 'true'
+          IOS_REQUIRE_UPLOAD: ${{ github.event_name != 'workflow_dispatch' || inputs.upload_to_testflight }}
+        run: node scripts/check-ios-signing.mjs
+
       - name: Install JS dependencies
         working-directory: ios
         run: npm ci
@@ -124,6 +139,7 @@ jobs:
       # ── Archive ───────────────────────────────────────────────────
       - name: Archive
         run: |
+          set -o pipefail
           xcodebuild archive \
             -workspace ios/App/App.xcworkspace \
             -scheme "$XCODE_SCHEME" \
@@ -139,6 +155,7 @@ jobs:
       # ── Export IPA ────────────────────────────────────────────────
       - name: Export IPA
         run: |
+          set -o pipefail
           cat > $RUNNER_TEMP/ExportOptions.plist << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
@@ -171,6 +188,17 @@ jobs:
             -exportPath $RUNNER_TEMP/ipa \
             | xcpretty
 
+      - name: Locate exported IPA
+        id: ipa
+        run: |
+          shopt -s nullglob
+          files=("$RUNNER_TEMP"/ipa/*.ipa)
+          if [ "${#files[@]}" -ne 1 ] || [ ! -s "${files[0]}" ]; then
+            echo '::error::Export must produce exactly one non-empty IPA.'
+            exit 1
+          fi
+          echo "path=${files[0]}" >> "$GITHUB_OUTPUT"
+
       # ── Upload to TestFlight ──────────────────────────────────────
       - name: Upload to App Store Connect / TestFlight
         if: ${{ github.event.inputs.upload_to_testflight != 'false' }}
@@ -178,12 +206,13 @@ jobs:
           APP_STORE_CONNECT_KEY_ID:       ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID:    ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_BASE64:   ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+          IPA_PATH: ${{ steps.ipa.outputs.path }}
         run: |
           echo "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > $RUNNER_TEMP/AuthKey.p8
 
           xcrun altool --upload-app \
             --type ios \
-            --file "$RUNNER_TEMP/ipa/Cortexx.ipa" \
+            --file "$IPA_PATH" \
             --apiKey "$APP_STORE_CONNECT_KEY_ID" \
             --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID" \
             --apiKeyPath "$RUNNER_TEMP/AuthKey.p8" \
@@ -194,7 +223,8 @@ jobs:
         uses: actions/upload-artifact@v7
         with:
           name: Cortexx-${{ github.run_number }}.ipa
-          path: ${{ runner.temp }}/ipa/Cortexx.ipa
+          path: ${{ steps.ipa.outputs.path }}
+          if-no-files-found: error
           retention-days: 30
 
       # ── Clean up keychain ─────────────────────────────────────────

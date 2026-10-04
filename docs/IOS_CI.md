@@ -49,3 +49,26 @@ runner. The self-hosted macOS runner only needs to handle `ios:*` and
 - `eas.json` iOS credentials attached to the `com.cortexbuild.app` bundle id.
 
 See `CLAUDE.md` (iOS section) for the canonical bundle id and Capacitor config.
+
+## Signing preflight and delivery status
+
+Both GitHub Actions workflows run `scripts/check-ios-signing.mjs` before
+installing dependencies. Automatic `ios-build.yml` pushes may verify an unsigned
+build when signing is unavailable; that success does not deliver an IPA or upload
+to TestFlight. A manual request with `upload_to_testflight: true` requires all
+signing and App Store Connect secrets and fails early if any are missing.
+
+`release-ios.yml` always requires signing for its archive. Tag releases also
+require upload credentials; a manual archive-only request may omit them. A
+configured secret establishes availability, while the subsequent certificate
+import, profile installation, archive and upload steps establish validity.
+
+Archive secrets: `IOS_CERTIFICATE_BASE64`, `IOS_CERTIFICATE_PASSWORD`,
+`IOS_KEYCHAIN_PASSWORD`, `IOS_PROVISIONING_PROFILE_BASE64`, `APPLE_TEAM_ID`.
+Upload secrets: `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`,
+`APP_STORE_CONNECT_KEY_BASE64`. Diagnostics print missing names only.
+
+The export step must produce exactly one non-empty IPA. Its actual path is used
+for upload and artifact retention, so delivery does not depend on the Xcode
+product being named `Cortexx`. Archive/export pipeline failures propagate even
+when their output is piped through a formatter.
