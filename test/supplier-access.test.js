@@ -3,7 +3,7 @@ const assert = require('node:assert/strict')
 const fs = require('node:fs')
 const vm = require('node:vm')
 const ts = require('typescript')
-function fixture(role, history = 0, invitations = 0) {
+function fixture(role, history = 0, invitations = 0, qualityHistory = 0) {
   const calls = [], audits = []
   class Response { static json(body, options = {}) { return { body, status: options.status || 200 } } }
   const prisma = {
@@ -15,6 +15,7 @@ function fixture(role, history = 0, invitations = 0) {
     },
     purchaseOrder: { count: async () => history }, supplierQuote: { count: async () => 0 },
     procurementRfq: { count: async args => { calls.push(['invitations', args]); return invitations } },
+    supplierQualityEvidence: { count: async args => { calls.push(['quality', args]); return qualityHistory } },
     $transaction: async (fn, opts) => { assert.equal(opts.isolationLevel, 'Serializable'); return fn(prisma) },
   }
   const mocks = {
@@ -70,4 +71,13 @@ test('RFQ invitations preserve supplier history before any quote or order exists
   const query = f.calls.find(c => c[0] === 'invitations')[1]
   assert.equal(query.where.organizationId, 'org-a')
   assert.equal(query.where.supplierIds.array_contains[0], 's1')
+})
+
+test('quality attribution history prevents supplier deletion even with no procurement history', async () => {
+  const f = fixture('owner', 0, 0, 1)
+  assert.equal((await f.DELETE(req, params)).status, 409)
+  assert.equal(f.calls.some(c => c[0] === 'delete'), false)
+  const query = f.calls.find(c => c[0] === 'quality')[1]
+  assert.equal(query.where.organizationId, 'org-a')
+  assert.equal(query.where.supplierId, 's1')
 })

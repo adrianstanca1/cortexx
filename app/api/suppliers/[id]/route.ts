@@ -50,6 +50,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   if (!auth.orgId) return NextResponse.json({ error: 'Active company required' }, { status: 403 })
+  const organizationId = auth.orgId
   if (!canManage(auth.role || '')) return NextResponse.json({ error: 'Company Admin permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', auth.userId)
   if (limited) return limited
@@ -57,12 +58,13 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     await prisma.$transaction(async tx => {
       const s = await tx.supplier.findUnique({ where: { id: params.id, organizationId: auth.orgId } })
       if (!s) throw new Error('SUPPLIER_NOT_FOUND')
-      const [orders, quotes, invitations] = await Promise.all([
+      const [orders, quotes, invitations, qualityEvidence] = await Promise.all([
         tx.purchaseOrder.count({ where: { supplierId: params.id, organizationId: auth.orgId } }),
         tx.supplierQuote.count({ where: { supplierId: params.id, organizationId: auth.orgId } }),
         tx.procurementRfq.count({ where: { organizationId: auth.orgId, supplierIds: { array_contains: [params.id] } } }),
+        tx.supplierQualityEvidence.count({ where: { organizationId, supplierId: params.id } }),
       ])
-      if (orders || quotes || invitations) throw new Error('SUPPLIER_HAS_HISTORY')
+      if (orders || quotes || invitations || qualityEvidence) throw new Error('SUPPLIER_HAS_HISTORY')
       await tx.supplier.delete({ where: { id: params.id, organizationId: auth.orgId } })
     }, { isolationLevel: 'Serializable' })
     auditLog({
@@ -74,7 +76,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     return NextResponse.json({ ok: true })
   } catch (error) {
     if (error instanceof Error && error.message === 'SUPPLIER_NOT_FOUND') return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    if ((error instanceof Error && error.message === 'SUPPLIER_HAS_HISTORY') || (error as { code?: string })?.code === 'P2034') return NextResponse.json({ error: 'This supplier has procurement history or changed concurrently. Archive it instead to preserve the records.' }, { status: 409 })
+    if ((error instanceof Error && error.message === 'SUPPLIER_HAS_HISTORY') || (error as { code?: string })?.code === 'P2034') return NextResponse.json({ error: 'This supplier has procurement or quality history, or changed concurrently. Archive it instead to preserve the records.' }, { status: 409 })
     if ((error as { code?: string })?.code === 'P2003') return NextResponse.json({ error: 'This supplier has linked records. Archive it instead.' }, { status: 409 })
     console.error('[suppliers/:id] DELETE failed:', error)
     return NextResponse.json({ error: 'Failed to delete supplier' }, { status: 500 })

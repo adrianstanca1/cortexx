@@ -4,6 +4,7 @@ import { requireOrg } from '@/lib/requireAuth'
 import { canManage } from '@/lib/rbac'
 import { reportError } from '@/lib/errors'
 import performance from '@/lib/supplier-performance'
+import { loadSupplierQuality } from '@/lib/supplier-quality-server'
 
 export const dynamic = 'force-dynamic'
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
@@ -19,17 +20,18 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
       select: { id: true, name: true, category: true, archivedAt: true },
     })
     if (!supplier) return NextResponse.json({ error: 'Supplier not found' }, { status: 404 })
-    const orders = await prisma.purchaseOrder.findMany({
+    const asOf = new Date()
+    const [orders, quality] = await Promise.all([prisma.purchaseOrder.findMany({
       where: { supplierId: id, organizationId: auth.orgId },
       orderBy: [{ createdAt: 'desc' }, { id: 'desc' }], take: 1001,
       select: {
         id: true, number: true, status: true, subtotal: true, expectedDelivery: true, receivedAt: true,
         goodsReceipts: { where: { organizationId: auth.orgId }, select: { netReceived: true, deliveredAt: true } },
       },
-    })
+    }), loadSupplierQuality(prisma, auth.orgId, id, asOf)])
     return NextResponse.json({
-      supplier, performance: performance.supplierPerformance(orders.slice(0, 1000)),
-      truncated: orders.length > 1000, asOf: new Date().toISOString(),
+      supplier, performance: performance.supplierPerformance(orders.slice(0, 1000), asOf), quality,
+      truncated: orders.length > 1000, asOf: asOf.toISOString(),
     }, { headers: { 'Cache-Control': 'private, no-store' } })
   } catch (error) {
     reportError(error)

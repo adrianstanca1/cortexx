@@ -88,7 +88,7 @@ const OWNED_MODELS = new Set<string>([
   'SiteCheckIn', 'MileageEntry', 'CostCode', 'ProjectCostEntry', 'CostItem', 'Subcontractor', 'Equipment',
   'Material', 'PurchaseOrder', 'GoodsReceipt', 'ProcurementRequisition', 'ProcurementRfq', 'SupplierQuote', 'SubInvoice', 'Drawing', 'DrawingRevision', 'DrawingDistribution', 'DrawingDistributionRecipient', 'DrawingMarkup',
   'ProgrammeActivity', 'ProgrammeResourceAllocation', 'ProgrammeDependency', 'ProgrammeBaselineRevision', 'ProgrammeDelayEvent', 'Milestone', 'Permit', 'Rams', 'Tender', 'Inspection', 'FieldConstraint', 'FieldHandover', 'FieldProductionLog', 'Meeting', 'Risk',
-  'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SafetyIncident', 'SafetyCorrectiveAction', 'TrainingCourse', 'EquipmentCheck',
+  'ToolboxTalk', 'MaintenanceSchedule', 'Supplier', 'SupplierQualityEvidence', 'SafetyIncident', 'SafetyCorrectiveAction', 'TrainingCourse', 'EquipmentCheck',
   // ── Legacy-parity v1.1 modules
   'PayrollRun', 'LeaveRequest', 'BankTransaction', 'BankAllocation', 'CarbonEntry',
   'WasteEntry', 'Appraisal', 'DocumentTemplate', 'FormDefinition',
