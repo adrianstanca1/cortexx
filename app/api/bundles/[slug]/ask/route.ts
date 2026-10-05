@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
-import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit, rateLimit } from '@/lib/rateLimit'
 import { BUNDLES, BUNDLE_SLUGS } from '@/lib/bundles'
-import { chat, buildSystemPrompt, sanitizePromptValue } from '@/lib/llm'
+import { chat, isLlmUnavailable, isLlmEmpty, sanitizePromptValue } from '@/lib/llm'
+import { canManage } from '@/lib/rbac'
+import { auditLog, requestMeta } from '@/lib/audit'
+import { loadProjectKnowledge, buildKnowledgePrompt, citedKnowledgeSources } from '@/lib/project-knowledge'
 
 export const dynamic = 'force-dynamic'
 
@@ -20,9 +22,11 @@ function extractSlug(req: NextRequest): string | null {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!auth.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!auth.orgId) return NextResponse.json({ error: 'No organization', code: 'NO_ORG' }, { status: 403 })
+  const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
 
   const slug = extractSlug(req)
@@ -30,8 +34,11 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ error: 'Unknown bundle' }, { status: 400 })
   }
   const bundle = BUNDLES.find(b => b.slug === slug)!
+  if (slug === 'commercial' && !canManage(auth.role || '')) {
+    return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  }
 
-  const userId = (auth.user as { id?: string } | undefined)?.id || auth.user?.email || 'anon'
+  const userId = auth.userId
   const rl = await rateLimit(`bundle:${slug}:${userId}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)
   if (!rl.ok) {
     return NextResponse.json(
@@ -51,7 +58,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: `Message too long (max ${MAX_MESSAGE_LEN} chars)` }, { status: 400 })
     }
 
-    const history = Array.isArray(body.history)
+    const history = body.contextOrgId === auth.orgId && Array.isArray(body.history)
       ? body.history
           .filter((m: unknown) => {
             if (!m || typeof m !== 'object') return false
@@ -66,45 +73,13 @@ export async function POST(req: NextRequest) {
           .slice(-MAX_HISTORY)
       : []
 
-    // Pull lightweight workspace context relevant to every bundle.
-    const [activeProjects, openSnags, pendingTS, openRfis, openRisks, failedInspections, overdueInvoices] = await Promise.all([
-      prisma.project.count({ where: { status: 'active', archivedAt: null } }).catch(() => 0),
-      prisma.snag.count({ where: { status: { not: 'closed' } } }).catch(() => 0),
-      prisma.timeEntry.count({ where: { approved: false } }).catch(() => 0),
-      prisma.rfi.count({ where: { status: 'open' } }).catch(() => 0),
-      prisma.risk.count({ where: { status: 'open' } }).catch(() => 0),
-      prisma.inspection.count({ where: { status: 'failed' } }).catch(() => 0),
-      prisma.invoice.count({ where: { status: 'overdue' } }).catch(() => 0),
-    ])
-
-    const projectNames = await prisma.project.findMany({
-      where: { status: 'active', archivedAt: null },
-      select: { name: true },
-      orderBy: { updatedAt: 'desc' },
-      take: 10,
-    }).then(rows => rows.map(r => r.name)).catch(() => [])
-
-    const basePrompt = buildSystemPrompt({
-      activeProjectCount: activeProjects,
-      openSnagCount: openSnags,
-      pendingTimesheetCount: pendingTS,
-      recentActivity: [],
-      projectNames,
-    })
+    const knowledge = await loadProjectKnowledge(auth, true)
+    const basePrompt = buildKnowledgePrompt(knowledge)
 
     const bundleContext = [
       '',
       `You are currently serving the **${bundle.title}**.`,
       bundle.subtitle,
-      '',
-      'Relevant live workspace summary:',
-      `- Active projects: ${activeProjects}`,
-      `- Open snags: ${openSnags}`,
-      `- Pending timesheets: ${pendingTS}`,
-      `- Open RFIs: ${openRfis}`,
-      `- Open risks: ${openRisks}`,
-      `- Failed inspections: ${failedInspections}`,
-      `- Overdue invoices: ${overdueInvoices}`,
       '',
       'Useful pages in this bundle:',
       ...bundle.pages.map(p => `- ${p.label}: ${p.href}`),
@@ -120,14 +95,30 @@ export async function POST(req: NextRequest) {
     ]
 
     const response = await chat(messages)
+    const citations = citedKnowledgeSources(response.content, knowledge.sources)
+    auditLog({ organizationId: auth.orgId, userId: auth.userId, action: 'ai.answer', resourceType: 'ProjectKnowledge', resourceId: auth.orgId, metadata: { bundle: bundle.slug, model: response.model, sources: citations.map(source => ({ id: source.id, href: source.href })), observedAt: knowledge.observedAt, mode: 'read_only' }, ...requestMeta(req) })
     return NextResponse.json({
       content: response.content,
       model: response.model,
       tokens: response.evalCount,
       durationMs: response.totalDurationMs,
       bundle: bundle.slug,
+      citations,
+      contextOrgId: auth.orgId,
+      evidenceObservedAt: knowledge.observedAt,
     })
   } catch (error) {
+    if (error instanceof Error && error.name === 'KnowledgeAccessError') {
+      return NextResponse.json({ error: error.message, code: 'KNOWLEDGE_FORBIDDEN' }, { status: 403 })
+    }
+    if (error instanceof Error && error.name === 'KnowledgeUnavailableError') {
+      return NextResponse.json({ error: error.message, code: 'KNOWLEDGE_UNAVAILABLE' }, { status: 503 })
+    }
+    if (error instanceof Error && error.name === 'KnowledgeCitationError') {
+      return NextResponse.json({ error: error.message, code: 'LLM_INVALID_CITATIONS' }, { status: 502 })
+    }
+    if (isLlmUnavailable(error)) return NextResponse.json({ error: error.message, code: 'LLM_UNAVAILABLE' }, { status: 503 })
+    if (isLlmEmpty(error)) return NextResponse.json({ error: error.message, code: 'LLM_EMPTY' }, { status: 502 })
     console.error(`[bundles/${slug}/ask] error:`, error)
     return NextResponse.json({ error: 'Failed to process your message' }, { status: 500 })
   }
