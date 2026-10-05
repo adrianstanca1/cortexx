@@ -1,0 +1,116 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+const os = require('node:os')
+const { spawnSync, spawn } = require('node:child_process')
+
+const script = path.resolve(__dirname, '../ops/construction-pitr-basebackup.sh')
+
+function fixture(t, members = ['backup_label', 'PG_VERSION', 'backup_manifest']) {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'pitr-basebackup-'))
+  t.after(() => fs.rmSync(root, { recursive: true, force: true }))
+  const bin = path.join(root, 'bin')
+  const data = path.join(root, 'data')
+  const backups = path.join(root, 'backups')
+  const archive = path.join(root, 'archive.tar.gz')
+  fs.mkdirSync(bin); fs.mkdirSync(data)
+  for (const member of members) fs.writeFileSync(path.join(data, member), member === 'PG_VERSION' ? '16\n' : 'fixture\n')
+  const tar = spawnSync('tar', ['-czf', archive, '-C', data, ...members])
+  assert.equal(tar.status, 0)
+  fs.writeFileSync(path.join(bin, 'docker'), `#!/usr/bin/env node
+const fs = require('node:fs')
+fs.appendFileSync(process.env.TEST_DOCKER_LOG, JSON.stringify(process.argv.slice(2)) + '\\n')
+if (process.env.TEST_DOCKER_MODE === 'fail') process.exit(2)
+if (process.argv[2] === 'exec') {
+  if (process.env.TEST_DOCKER_MODE !== 'empty') process.stdout.write(fs.readFileSync(process.env.TEST_ARCHIVE))
+} else if (process.argv[2] === 'inspect') console.log('cortexbuild-postgres-pitr:16')
+else process.exit(3)
+`, { mode: 0o700 })
+  const log = path.join(root, 'docker.log')
+  const env = { ...process.env, PITR_BACKUP_DIR: backups, DB_CONTAINER: 'synthetic-fixture', TEST_ARCHIVE: archive, TEST_DOCKER_LOG: log, PATH: bin + ':' + process.env.PATH }
+  const run = extra => spawnSync('/bin/bash', [script], { env: { ...env, ...extra }, encoding: 'utf8' })
+  return { root, backups, archive, log, env, run }
+}
+
+test('valid PostgreSQL tar members publish a private physical backup and complete checksums', t => {
+  const f = fixture(t)
+  const result = f.run()
+  assert.equal(result.status, 0, result.stderr)
+  const destination = fs.readFileSync(path.join(f.backups, '.last-physical-success'), 'utf8').trim()
+  assert.equal(path.dirname(destination), f.backups)
+  assert.equal(fs.statSync(destination).mode & 0o777, 0o700)
+  assert.equal(fs.statSync(path.join(destination, 'base.tar.gz')).mode & 0o777, 0o600)
+  const check = spawnSync('sha256sum', ['-c', 'SHA256SUMS'], { cwd: destination, encoding: 'utf8' })
+  assert.equal(check.status, 0, check.stderr)
+  assert.match(fs.readFileSync(path.join(destination, 'manifest.txt'), 'utf8'), /offsite_wal=unverified/)
+  assert.equal(fs.readdirSync(f.backups).some(name => name.startsWith('.pending-')), false)
+  const calls = fs.readFileSync(f.log, 'utf8').trim().split('\n').map(line => JSON.parse(line))
+  assert.equal(calls[0][1], 'synthetic-fixture')
+  assert.match(calls[0][4], /--wal-method=fetch/)
+  assert.match(calls[0][4], /--checkpoint=spread/)
+})
+
+test('failed command, empty output and missing manifest never publish success', t => {
+  for (const mode of ['fail', 'empty']) {
+    const f = fixture(t)
+    const result = f.run({ TEST_DOCKER_MODE: mode })
+    assert.notEqual(result.status, 0)
+    assert.deepEqual(fs.readdirSync(f.backups), ['.basebackup.lock'])
+  }
+  const f = fixture(t, ['backup_label', 'PG_VERSION'])
+  assert.notEqual(f.run().status, 0)
+  assert.deepEqual(fs.readdirSync(f.backups), ['.basebackup.lock'])
+})
+
+test('unsafe directories and symlink locks fail before Docker', t => {
+  const f = fixture(t)
+  fs.mkdirSync(f.backups, { mode: 0o755 })
+  assert.notEqual(f.run().status, 0)
+  fs.chmodSync(f.backups, 0o700)
+  const link = path.join(f.root, 'link')
+  fs.symlinkSync(f.backups, link)
+  assert.notEqual(f.run({ PITR_BACKUP_DIR: link + '/nested' }).status, 0)
+  assert.equal(fs.existsSync(path.join(f.backups, 'nested')), false)
+  const outside = path.join(f.root, 'outside')
+  fs.writeFileSync(outside, 'preserved')
+  fs.symlinkSync(outside, path.join(f.backups, '.basebackup.lock'))
+  assert.notEqual(f.run().status, 0)
+  assert.equal(fs.readFileSync(outside, 'utf8'), 'preserved')
+  assert.equal(fs.existsSync(f.log), false)
+})
+
+test('success marker publication cannot follow a preexisting symlink', t => {
+  const f = fixture(t)
+  fs.mkdirSync(f.backups, { mode: 0o700 })
+  const outside = path.join(f.root, 'outside')
+  fs.writeFileSync(outside, 'preserved')
+  fs.symlinkSync(outside, path.join(f.backups, '.last-physical-success'))
+  assert.equal(f.run().status, 0)
+  assert.equal(fs.readFileSync(outside, 'utf8'), 'preserved')
+  assert.equal(fs.lstatSync(path.join(f.backups, '.last-physical-success')).isSymbolicLink(), false)
+})
+
+test('nonregular backup locks are rejected without waiting or calling Docker', t => {
+  const f = fixture(t)
+  fs.mkdirSync(f.backups, { mode: 0o700 })
+  assert.equal(spawnSync('mkfifo', [path.join(f.backups, '.basebackup.lock')]).status, 0)
+  const result = spawnSync('/bin/bash', [script], { env: f.env, encoding: 'utf8', timeout: 2000 })
+  assert.equal(result.error, undefined)
+  assert.notEqual(result.status, 0)
+  assert.match(result.stderr, /regular file/)
+  assert.equal(fs.existsSync(f.log), false)
+})
+
+test('concurrent base backups fail before Docker while the private lock is held', async t => {
+  const f = fixture(t)
+  fs.mkdirSync(f.backups, { mode: 0o700 })
+  const holder = spawn('/bin/bash', ['-c', 'exec 9>>"$1"; flock 9; printf ready; read -r release', '--', path.join(f.backups, '.basebackup.lock')], { stdio: ['pipe', 'pipe', 'inherit'] })
+  t.after(() => holder.kill())
+  await new Promise((resolve, reject) => { holder.stdout.once('data', resolve); holder.once('error', reject) })
+  const result = f.run()
+  assert.notEqual(result.status, 0)
+  assert.match(result.stderr, /already running/)
+  assert.equal(fs.existsSync(f.log), false)
+  holder.stdin.end('release\n')
+})

@@ -28,6 +28,8 @@
     "test:nav": "node --test test/nav-registry.test.js",
     "test:integration": "tsx --test --test-concurrency=1 test/integration/*.test.js",
     "test:load-smoke": "node --test test/load-smoke.test.js",
+    "test:pitr": "node --test test/construction-pitr-basebackup.test.js test/construction-pitr-restore.test.js test/construction-wal-archive.test.js",
+    "test:pitr:drill": "bash test/construction-pitr-fixture-drill.sh",
     "load:smoke": "node scripts/load-smoke.mjs",
     "e2e:install": "npm install --no-save --package-lock=false @playwright/test@1.63.0 && npx playwright install chromium",
     "e2e": "playwright test",

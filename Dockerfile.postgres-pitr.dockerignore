@@ -1,0 +1,5 @@
+**
+!Dockerfile.postgres-pitr
+!Dockerfile.postgres-pitr.dockerignore
+!ops/
+!ops/construction-wal-archive.sh

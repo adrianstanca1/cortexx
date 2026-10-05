@@ -122,7 +122,7 @@ Current schedule:
 
 Managed backups are under `$HOME/backups/construction`. The verifier checks checksums, restores into an isolated PostgreSQL container, reads canonical table counts, extracts uploads, then removes the disposable restore resources.
 
-See `docs/CONSTRUCTION_RECOVERY.md` for the tested recovery procedure and current limits. Local restore verification and a 30-day encrypted GitHub Actions artifact are implemented; continuous PostgreSQL WAL archiving/PITR remains a separate hardening item.
+See `docs/CONSTRUCTION_RECOVERY.md` for the tested recovery procedure and current limits. Local restore verification and a 30-day encrypted GitHub Actions artifact are implemented. Optional PostgreSQL WAL archiving and isolated PITR tooling are documented in `docs/CONSTRUCTION_PITR.md`; production activation and encrypted off-site WAL verification remain separate operator work.
 
 ## Safe database rescue
 
