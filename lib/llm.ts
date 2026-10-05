@@ -23,6 +23,24 @@ const REQUEST_TIMEOUT_MS = 60_000
 const VISION_TIMEOUT_MS = 120_000
 const NUM_PREDICT_MAX = 1024
 
+/**
+ * How long Ollama keeps a model resident in memory after a request.
+ *
+ * Ollama's own default is 5m, which is tuned for a laptop running one model
+ * interactively. Here the same behaviour makes every AI request that follows a
+ * quiet period pay a full model load before any tokens are generated —
+ * measured 3.3-5.4s of `load_duration` on top of a ~7s inference on this host
+ * (16 cores, rotational disk). Because inference already dwarfs the load, the
+ * cheapest fix is to keep the model warm and skip the reload entirely.
+ *
+ * 30m comfortably exceeds the gap between requests in a working session while
+ * bounding resident RAM: the two configured models are 2.5GB (qwen3:4b) and
+ * 1.7GB (moondream), against ~27GB free. Override per-deployment with
+ * OLLAMA_KEEP_ALIVE (e.g. "0" to restore Ollama's default, or "-1" for
+ * permanent residency).
+ */
+const OLLAMA_KEEP_ALIVE = process.env.OLLAMA_KEEP_ALIVE ?? '30m'
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
@@ -141,6 +159,7 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
         model,
         messages,
         stream: false,
+        keep_alive: OLLAMA_KEEP_ALIVE,
         ...(opts.json ? { format: 'json' } : {}),
         options: { num_predict: NUM_PREDICT_MAX },
       }
@@ -163,6 +182,7 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
       model,
       messages,
       stream: false,
+      keep_alive: OLLAMA_KEEP_ALIVE,
       ...(opts.json ? { format: 'json' } : {}),
       options: { num_predict: NUM_PREDICT_MAX },
     }
