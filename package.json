@@ -75,7 +75,7 @@
     "react": "^19.3.0",
     "react-dom": "^19.3.0",
     "speakeasy": "^2.0.0",
-    "stripe": "^22.4.0",
+    "stripe": "^23.0.0",
     "web-push": "^3.6.7",
     "web-vitals": "^6.2.2"
   },
