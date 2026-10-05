@@ -7,6 +7,8 @@ services:
       PORT: 4310
       OLLAMA_URL: http://host.docker.internal:11434
       OLLAMA_MODEL: ${OLLAMA_MODEL:-qwen2.5:7b}
+      CORTEX_AGENT_OS_TOKEN: ${CORTEX_AGENT_OS_TOKEN:?Set a generated operator token}
+      CORTEX_AGENT_OS_ORIGIN: ${CORTEX_AGENT_OS_ORIGIN:-http://localhost:4310}
       DATABASE_URL: postgres://cortex:cortex@postgres:5432/cortex_agent_os
       REDIS_URL: redis://redis:6379
     ports: ["4310:4310"]

@@ -98,6 +98,15 @@ jobs:
       - name: Typecheck shared core (@cortexbuild/core)
         working-directory: packages/core
         run: ../../node_modules/.bin/tsc --noEmit -p tsconfig.json
+      - name: Verify Cortex Agent OS runtime
+        run: |
+          npx tsc -p agent-os/tsconfig.json --noEmit
+          rm -rf agent-os/dist
+          npx tsc -p agent-os/tsconfig.json
+          node --test agent-os/dist/tests/*.test.js
+      - name: Typecheck Agent OS mobile control surface
+        working-directory: agent-os/apps/mobile
+        run: npm ci --no-audit --no-fund && npm run typecheck
       - name: Typecheck Expo app (React Native)
         working-directory: expo
         run: npm ci && npm run typecheck

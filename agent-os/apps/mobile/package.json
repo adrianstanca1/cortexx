@@ -1,1 +1,26 @@
-{"name":"cortex-agent-os-mobile","version":"0.1.0","private":true,"main":"expo-router/entry","scripts":{"start":"expo start","ios":"expo start --ios","android":"expo start --android"},"dependencies":{"expo":"~57.0.1","expo-router":"~57.0.20","react":"19.2.3","react-native":"0.86.0"}}
+{
+  "name": "cortex-agent-os-mobile",
+  "version": "0.2.0",
+  "private": true,
+  "main": "index.js",
+  "scripts": {
+    "start": "expo start",
+    "ios": "expo start --ios",
+    "android": "expo start --android",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "expo": "~57.0.25",
+    "expo-secure-store": "~57.0.4",
+    "react": "^19.2.3",
+    "react-native": "0.86.3"
+  },
+  "devDependencies": {
+    "typescript": "~6.0.3",
+    "@types/react": "~19.2.4"
+  },
+  "overrides": {
+    "uuid": "11.1.1",
+    "image-size": "2.0.3"
+  }
+}

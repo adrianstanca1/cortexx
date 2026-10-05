@@ -1,7 +1,43 @@
-<!doctype html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Cortex Agent OS</title><style>
-:root{font-family:Inter,system-ui,sans-serif;color:#eef2ff;background:#070b14}*{box-sizing:border-box}body{margin:0}.shell{max-width:1400px;margin:auto;padding:24px}.hero{display:flex;justify-content:space-between;gap:20px;align-items:center}.brand{font-size:28px;font-weight:800}.muted{color:#93a4bd}.grid{display:grid;grid-template-columns:repeat(12,1fr);gap:16px;margin-top:20px}.card{background:#0e1626;border:1px solid #1e2b44;border-radius:16px;padding:18px}.wide{grid-column:span 8}.side{grid-column:span 4}.full{grid-column:1/-1}textarea{width:100%;min-height:110px;border-radius:12px;border:1px solid #2a3853;background:#09111f;color:#fff;padding:12px}button{border:0;border-radius:10px;padding:11px 16px;font-weight:700;cursor:pointer;background:#5d7cff;color:white}.stats{display:flex;gap:16px;flex-wrap:wrap}.pill{padding:7px 10px;border-radius:999px;background:#18253a}.item{padding:12px 0;border-bottom:1px solid #1a2740}.ok{color:#6ee7b7}.bad{color:#fb7185}@media(max-width:800px){.wide,.side{grid-column:1/-1}.hero{align-items:flex-start;flex-direction:column}}</style></head><body><div class="shell"><div class="hero"><div><div class="brand">Cortex Agent OS</div><div class="muted">Local-first autonomous mission control</div></div><div id="health" class="pill">Checking system…</div></div>
-<div class="grid"><section class="card wide"><h2>New mission</h2><textarea id="goal" placeholder="e.g. Find UK cladding tenders, score them, and prepare a bid shortlist"></textarea><p><button onclick="createMission()">Launch mission</button></p><div id="missions"></div></section><aside class="card side"><h2>System</h2><div id="status"></div><h3>Approvals</h3><div id="approvals"></div></aside><section class="card full"><h2>Live activity</h2><div id="events"></div></section></div></div><script>
-const esc=s=>String(s??'').replace(/[&<>]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[c]));
-async function j(p,o){const r=await fetch(p,o);return r.json()}async function refresh(){const [s,m,a]=await Promise.all([j('/api/status'),j('/api/missions'),j('/api/approvals')]);health.innerHTML=`<span class=${s.models.some(x=>x.healthy)?'ok':'bad'}>●</span> ${s.models.some(x=>x.healthy)?'AI online':'No model online'}`;status.innerHTML=`<div class=stats><span class=pill>${s.agents} agents</span><span class=pill>${s.missions} missions</span><span class=pill>${s.pendingApprovals} pending</span></div>`;missions.innerHTML=m.map(x=>`<div class=item><b>${esc(x.goal)}</b><br><span class=muted>${x.status} · ${new Date(x.createdAt).toLocaleString()}</span></div>`).join('')||'<div class=muted>No missions yet.</div>';approvals.innerHTML=a.filter(x=>x.status==='pending').map(x=>`<div class=item>${esc(x.action)}<br><button onclick="approve('${x.id}')">Approve</button></div>`).join('')||'<div class=muted>Nothing waiting.</div>'}
-async function createMission(){const goal=document.getElementById('goal').value.trim();if(!goal)return;await j('/api/missions',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({goal})});document.getElementById('goal').value='';refresh()}async function approve(id){await j('/api/approvals/'+id,{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({status:'approved'})});refresh()}const es=new EventSource('/api/events/stream');es.onmessage=e=>{const x=JSON.parse(e.data);events.innerHTML=`<div class=item><b>${esc(x.type)}</b> <span class=muted>${new Date(x.at).toLocaleTimeString()}</span></div>`+events.innerHTML;refresh()};refresh();setInterval(refresh,8000);
-</script></body></html>
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Cortex Agent OS</title>
+<style>
+:root{font-family:system-ui,sans-serif;color:#eef3ff;background:#070b14}*{box-sizing:border-box}body{margin:0}.wrap{max-width:1120px;margin:auto;padding:24px}.bar,.grid{display:grid;gap:14px}.bar{grid-template-columns:1fr auto;align-items:end}.grid{grid-template-columns:2fr 1fr}.card{background:#0e1626;border:1px solid #1e2b44;border-radius:16px;padding:18px}.wide{min-height:260px}.full{grid-column:1/-1}input,textarea{width:100%;background:#09111f;border:1px solid #253553;border-radius:10px;color:white;padding:11px}textarea{min-height:90px}button{background:#5d7cff;color:white;border:0;border-radius:9px;padding:9px 12px;font-weight:700;cursor:pointer}.danger{background:#7b2d3a}.muted{color:#93a4bd}.item{padding:10px 0;border-bottom:1px solid #1e2b44}.pill{display:inline-block;padding:4px 8px;background:#17233a;border-radius:99px;margin:2px}.ok{color:#69d7a3}.bad{color:#f17c8f}@media(max-width:760px){.grid,.bar{grid-template-columns:1fr}.full{grid-column:auto}}</style>
+</head>
+<body>
+<div class="wrap">
+  <div class="bar">
+    <div><h1>Cortex Agent OS</h1><p class="muted">Governed multi-agent mission control</p></div>
+    <div><label class="muted">Operator token</label><input id="token" type="password" placeholder="Paste operator token"><button onclick="saveToken()">Use for this session</button></div>
+  </div>
+  <div class="grid">
+    <section class="card wide">
+      <h2>New mission</h2>
+      <textarea id="goal" placeholder="e.g. Find UK cladding tenders, score them, and prepare a bid shortlist"></textarea>
+      <p><button onclick="createMission()">Launch mission</button></p>
+      <div id="missions"></div>
+    </section>
+    <aside class="card">
+      <h2>System</h2><div id="status"></div>
+      <h3>Approvals</h3><div id="approvals"></div>
+    </aside>
+    <section class="card"><h2>Agents</h2><div id="agents"></div></section>
+    <section class="card"><h2>Groups / Skills</h2><div id="extensions"></div></section>
+    <section class="card full"><h2>Recent activity</h2><div id="events"></div></section>
+  </div>
+</div>
+<script>
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+token.value=sessionStorage.getItem('cortexOperatorToken')||'';
+function saveToken(){sessionStorage.setItem('cortexOperatorToken',token.value.trim());refresh()}
+async function j(path,options={}){const t=sessionStorage.getItem('cortexOperatorToken')||'';const r=await fetch(path,{...options,headers:{'content-type':'application/json','authorization':'Bearer '+t,...(options.headers||{})}});const data=await r.json().catch(()=>({}));if(!r.ok)throw new Error(data.error||('HTTP '+r.status));return data}
+async function refresh(){try{const [s,m,a,ag,g,sk,e]=await Promise.all([j('/api/status'),j('/api/missions'),j('/api/approvals'),j('/api/agents'),j('/api/groups'),j('/api/skills/installed'),j('/api/events')]);status.innerHTML='<span class='+(s.models.some(x=>x.healthy)?'ok':'bad')+'>●</span> '+(s.models.some(x=>x.healthy)?'AI online':'No model online')+'<div><span class=pill>'+s.agents+' agents</span><span class=pill>'+s.groups+' groups</span><span class=pill>'+s.delegations+' delegations</span></div>';missions.innerHTML=m.map(x=>'<div class=item><b>'+esc(x.goal)+'</b><br><span class=muted>'+esc(x.status)+'</span></div>').join('')||'<div class=muted>No missions yet.</div>';approvals.innerHTML=a.filter(x=>x.status==='pending').map(x=>'<div class=item>'+esc(x.action)+'<br><button onclick="decide(\\''+x.id+'\\',\\'approved\\')">Approve</button> <button class=danger onclick="decide(\\''+x.id+'\\',\\'rejected\\')">Reject</button></div>').join('')||'<div class=muted>Nothing waiting.</div>';agents.innerHTML=ag.map(x=>'<div class=item><b>'+esc(x.name)+'</b> <span class=pill>'+esc(x.state)+'</span><br><span class=muted>'+esc(x.role)+' · '+esc(x.capabilities.join(', '))+'</span></div>').join('');extensions.innerHTML='<div class=item>'+g.length+' agent groups</div><div class=item>'+sk.length+' installed skill manifests</div>';events.innerHTML=e.slice(-20).reverse().map(x=>'<div class=item><b>'+esc(x.type)+'</b> <span class=muted>'+new Date(x.at).toLocaleTimeString()+'</span></div>').join('')}catch(err){status.innerHTML='<span class=bad>'+esc(err.message)+'</span>'}}
+async function createMission(){const value=goal.value.trim();if(!value)return;await j('/api/missions',{method:'POST',body:JSON.stringify({goal:value})});goal.value='';refresh()}
+async function decide(id,status){await j('/api/approvals/'+id,{method:'POST',body:JSON.stringify({status})});refresh()}
+if(token.value)refresh();setInterval(()=>{if(sessionStorage.getItem('cortexOperatorToken'))refresh()},8000);
+</script>
+</body>
+</html>

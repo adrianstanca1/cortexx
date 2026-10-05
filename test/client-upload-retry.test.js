@@ -6,8 +6,13 @@ let storage
 
 test.before(async () => {
   global.window = { setTimeout, clearTimeout }
-  upload = await import('../lib/client-upload.ts')
-  storage = await import('../lib/storage.ts')
+  const uploadModule = await import('../lib/client-upload.ts')
+  const storageModule = await import('../lib/storage.ts')
+  // tsx exposes TypeScript modules imported from this CommonJS test through
+  // a default interop object, while native ESM loaders expose named exports.
+  // Support both so the exact npm test command is portable across Node builds.
+  upload = uploadModule.default || uploadModule
+  storage = storageModule.default || storageModule
 })
 
 class FakeXHR {
