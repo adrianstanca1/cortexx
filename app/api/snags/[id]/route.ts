@@ -48,6 +48,13 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
       const closeoutEvidence = body.closeoutEvidence && typeof body.closeoutEvidence === 'object'
         ? controls.sanitizeEvidence(body.closeoutEvidence)
         : controls.sanitizeEvidence(existing.closeoutEvidence)
+      if (body.closeoutEvidence !== undefined) {
+        const evidenceUrls = [...closeoutEvidence.photoUrls, closeoutEvidence.signatureUrl].filter(Boolean)
+        for (const evidenceUrl of evidenceUrls) {
+          const uploadError = await authorizeUploadReference(evidenceUrl)
+          if (uploadError) return uploadError
+        }
+      }
       if (justClosed) {
         const readiness = snagCloseoutReadiness({ resolution, closeoutEvidence })
         if (!readiness.ready) return NextResponse.json({ error: 'Snag is not ready for closeout', missing: readiness.missing }, { status: 409 })

@@ -26,7 +26,7 @@ function compile(file, mocks) {
   return exports
 }
 
-function snagHandler(prisma) {
+function snagHandler(prisma, authorizeUploadReference = async () => null) {
   const auth = { orgId: 'org1', userId: 'u1', role: 'member', session: { user: { email: 'pm@example.com', role: 'project_manager' } } }
   return compile('app/api/snags/[id]/route.ts', {
     'next/server': { NextResponse },
@@ -36,18 +36,20 @@ function snagHandler(prisma) {
     '@/lib/audit': { auditLog: () => {}, requestMeta: () => ({}) },
     '@/lib/errors': { reportError: () => {} },
     '@/lib/tenancy': { runWithOrg: (_ctx, fn) => fn() },
+    '@/lib/upload-provenance': { authorizeUploadReference },
     '@/lib/field-controls': controls,
     '@/lib/quality-closeout': qualityCloseout,
   })
 }
 
-function inspectionHandler(prisma) {
+function inspectionHandler(prisma, authorizeUploadReference = async () => null) {
   const auth = { user: { id: 'u1', email: 'pm@example.com', role: 'project_manager' } }
   return compile('app/api/inspections/[id]/route.ts', {
     'next/server': { NextResponse },
     '@/lib/db': { prisma },
     '@/lib/requireAuth': { requireAuth: async () => auth, actorName: () => 'Site PM' },
     '@/lib/audit': { auditLog: () => {}, requestMeta: () => ({}) },
+    '@/lib/upload-provenance': { authorizeUploadReference },
     '@/lib/field-controls': controls,
     '@/lib/quality-closeout': qualityCloseout,
   })
@@ -159,4 +161,29 @@ test('completed inspection is retained for audit', async () => {
   const { DELETE } = inspectionHandler(fx.prisma)
   const response = await DELETE({}, { params: Promise.resolve({ id: 'i1' }) })
   assert.equal(response.status, 409)
+})
+
+
+test('snag closeout rejects local evidence without tenant upload provenance', async () => {
+  const fx = snagFixture()
+  const denied = async () => NextResponse.json({ error: 'Upload provenance not found' }, { status: 400 })
+  const { PUT } = snagHandler(fx.prisma, denied)
+  const response = await PUT({ json: async () => ({
+    resolution: 'Rectification completed',
+    closeoutEvidence: { photoUrls: ['/api/uploads/foreign.jpg'] },
+  }) }, { params: Promise.resolve({ id: 's1' }) })
+  assert.equal(response.status, 400)
+  assert.equal(fx.getUpdated(), null)
+})
+
+test('inspection verification rejects local evidence without tenant upload provenance', async () => {
+  const fx = inspectionFixture()
+  const denied = async () => NextResponse.json({ error: 'Upload provenance not found' }, { status: 400 })
+  const { PATCH } = inspectionHandler(fx.prisma, denied)
+  const response = await PATCH({ json: async () => ({
+    status: 'passed',
+    evidence: { photoUrls: ['/api/uploads/foreign.jpg'] },
+  }) }, { params: Promise.resolve({ id: 'i1' }) })
+  assert.equal(response.status, 400)
+  assert.equal(fx.getUpdated(), null)
 })
