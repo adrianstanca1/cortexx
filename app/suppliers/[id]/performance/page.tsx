@@ -3,8 +3,10 @@
 import { useEffect, useState, use } from 'react'
 import Link from 'next/link'
 import type { SupplierPerformance } from '@/lib/supplier-performance'
+import type { SupplierQuality } from '@/lib/supplier-quality'
+import SupplierQualityPanel from '@/components/suppliers/SupplierQualityPanel'
 
-type Report = { supplier: { name: string; archivedAt: string | null }; performance: SupplierPerformance; truncated: boolean; asOf: string }
+type Report = { supplier: { name: string; archivedAt: string | null }; performance: SupplierPerformance; quality?: SupplierQuality; truncated: boolean; asOf: string }
 const gbp = new Intl.NumberFormat('en-GB', { style: 'currency', currency: 'GBP' })
 const deliveryLabel: Record<string, string> = { on_time: 'On time', late: 'Late', overdue: 'Overdue', not_assessed: 'Not assessed' }
 
@@ -57,6 +59,7 @@ function PerformanceReport({ id }: { id: string }) {
               <tbody>{p.orders.map(order => <tr key={order.id} className="border-t border-slate-800"><td className="p-3"><a className="text-sky-300 underline" href={`/api/pos/${encodeURIComponent(order.id)}/pdf`}>{order.number}</a></td><td className="p-3">{order.status.replaceAll('_', ' ')}</td><td className="p-3 whitespace-nowrap">{order.expectedDelivery || 'Unknown'}</td><td className="p-3 whitespace-nowrap">{order.completedDelivery || 'Unknown'}</td><td className="p-3">{deliveryLabel[order.delivery]}</td><td className="p-3 whitespace-nowrap">{gbp.format(order.orderedNet)}</td></tr>)}</tbody>
             </table>
           </div>}
+          {report.quality ? <SupplierQualityPanel supplierId={id} quality={report.quality} onSaved={() => setRetry(value => value + 1)} /> : <p role="status">Quality evidence is unavailable for this report.</p>}
         </> : null}
       </div>
     </main>

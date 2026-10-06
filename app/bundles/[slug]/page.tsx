@@ -12,6 +12,9 @@ import SegmentedControl from '@/components/ui/SegmentedControl'
 import { BUNDLES, type Bundle, type BundleAction } from '@/lib/bundles'
 import { useDashboardData } from '@/lib/useDashboardData'
 import type { Project } from '@/lib/types'
+import KnowledgeSources from '@/components/ai/KnowledgeSources'
+import { isKnowledgeSource, type KnowledgeSource } from '@/lib/ai-knowledge-types'
+import { knowledgeWorkspaceMatches } from '@/lib/ai-knowledge-client'
 import {
   IcChevL,
   IcSpark,
@@ -47,7 +50,7 @@ const ICON_MAP: Record<string, React.ComponentType<{ size?: number; color?: stri
   bell: IcBell,
 }
 
-interface ChatMessage { role: 'user' | 'assistant'; content: string }
+interface ChatMessage { role: 'user' | 'assistant'; content: string; citations?: KnowledgeSource[] }
 
 const SF = 'var(--font-system)'
 
@@ -57,8 +60,10 @@ export default function BundlePage() {
   const [messages, setMessages] = useState<ChatMessage[]>([])
   const [input, setInput] = useState('')
   const [chatLoading, setChatLoading] = useState(false)
+  const [orgId, setOrgId] = useState<string | null>(null)
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const bottomRef = useRef<HTMLDivElement>(null)
+  const requestVersion = useRef(0)
 
   const [actionOpen, setActionOpen] = useState<string | null>(null)
   const [actionLoading, setActionLoading] = useState(false)
@@ -70,6 +75,18 @@ export default function BundlePage() {
   useEffect(() => {
     const b = BUNDLES.find(x => x.slug === slug)
     if (b) setBundle(b)
+    setMessages([])
+  }, [slug])
+
+  useEffect(() => {
+    let cancelled = false
+    requestVersion.current += 1
+    setOrgId(null)
+    setChatLoading(false)
+    fetch('/api/ask', { cache: 'no-store' }).then(r => r.ok ? r.json() : Promise.reject(new Error('Workspace context unavailable. Reload to try again.')))
+      .then(data => { if (!cancelled && typeof data.orgId === 'string') setOrgId(data.orgId) })
+      .catch(e => { if (!cancelled) setToast({ msg: e.message, type: 'error' }) })
+    return () => { cancelled = true; requestVersion.current += 1 }
   }, [slug])
 
   useEffect(() => {
@@ -85,7 +102,8 @@ export default function BundlePage() {
 
   const send = async () => {
     const text = input.trim()
-    if (!text || chatLoading) return
+    if (!text || chatLoading || !orgId) return
+    const version = requestVersion.current
     const next: ChatMessage[] = [...messages, { role: 'user', content: text }]
     setMessages(next)
     setInput('')
@@ -94,16 +112,26 @@ export default function BundlePage() {
       const res = await fetch(`/api/bundles/${bundle!.slug}/ask`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message: text, history: messages }),
+        body: JSON.stringify({ message: text, history: messages, contextOrgId: orgId }),
       })
       const data = await res.json().catch(() => ({}))
+      if (version !== requestVersion.current) return
       if (!res.ok) throw new Error(data.error || 'Ask failed')
-      setMessages([...next, { role: 'assistant', content: data.content || 'No response' }])
+      const sameWorkspace = data.contextOrgId === orgId && await knowledgeWorkspaceMatches(orgId)
+      if (version !== requestVersion.current) return
+      if (!sameWorkspace) {
+        setOrgId(null)
+        setMessages([])
+        setToast({ msg: 'Your workspace changed. Reload before starting a new conversation.', type: 'error' })
+        return
+      }
+      setMessages([...next, { role: 'assistant', content: data.content || 'No response', citations: Array.isArray(data.citations) ? data.citations.filter(isKnowledgeSource) : [] }])
     } catch (e) {
+      if (version !== requestVersion.current) return
       setToast({ msg: e instanceof Error ? e.message : 'Ask failed', type: 'error' })
       setMessages(messages)
     } finally {
-      setChatLoading(false)
+      if (version === requestVersion.current) setChatLoading(false)
     }
   }
 
@@ -272,6 +300,7 @@ export default function BundlePage() {
                   >
                     {m.content}
                   </div>
+                  {m.role === 'assistant' && <KnowledgeSources sources={m.citations} />}
                 </div>
               ))
             )}
@@ -299,7 +328,7 @@ export default function BundlePage() {
                 minHeight: 40,
               }}
             />
-            <Button variant="primary" loading={chatLoading} onClick={send} style={{ height: 40, padding: '0 14px' }}>
+            <Button variant="primary" loading={chatLoading} disabled={!orgId || !input.trim()} aria-label="Send" onClick={send} style={{ height: 40, padding: '0 14px' }}>
               <IcSend size={16} color="#fff" />
             </Button>
           </div>

@@ -1,8 +1,8 @@
-# Repository retirement and consolidation — 5 October 2026
+# Repository retirement and consolidation — 6 October 2026
 
 ## Decision
 
-adrianstanca1/cortexx is the only active construction-product source of truth. The repositories below were reviewed at their default-branch heads, all refs were captured in full Git mirrors and verified bundles, and reusable product work was either already present in Cortexx history or consolidated here before retirement.
+adrianstanca1/cortexx is the only active construction-product source of truth. The 18 repositories below were reviewed at their default-branch heads, all refs were captured in full Git mirrors and verified bundles, and reusable product work was either already present in Cortexx history or consolidated here before retirement.
 
 No raw production databases, WAL files, Apple certificate material, dependency trees, biometric reference images, CV model weights, or legacy secrets are copied into the canonical working tree.
 
@@ -29,6 +29,9 @@ Each repository has a bare mirror, an all-refs Git bundle, an exported ref list,
 | constructtime_pro | main | d36e6382d0f3 | 60ae81fe939ebf27b798edcae2403baa0b56d29f755f2a30833648203ad2ae12 | Generic Flutter shell with no unique construction capability beyond the canonical mobile clients. |
 | management | main | bf4646bc01d3 | eb48f350bd941d75b3d391ec2a082471220f235255ef313b579ee7cdbc7eedf3 | Older ASAgents React/Node/Java/MySQL construction stack; multi-tenant, finance, safety, documents and AI capabilities are superseded by Cortexx. |
 | openclaw-mobile | claude/create-ios-app-u8vTK | 210de0378419 | 95bb18ac11550c679dad9b634ae1e9a25b28729ace70fd8183e762034ab64be1 | Useful mobile control concepts are consolidated into canonical agent-os in this retirement change. |
+| yes-i3e0 | cortexbuildpro | cf4c4cdbd358 | ed19d6fbd76d92db6eecc6a80d5b9150572c6a14a91ddaf5d94cba624726129e | Archived VibeKit stub containing only a README; no implementation to port. |
+| chat-p3kfyf | cortexbuildpro | 8250e42ce779 | f9cc73e36aae602de9364223846e831a98d9b83d56b9efa3fe7105b0b3987d38 | Archived VibeKit stub containing only a README; no implementation to port. |
+| Buildupdate | main | 8be3ac302d16 | ebe0d9f94e2fa6daceeb5687cb8f04e1ce91e14992c69eea1f1e9b5e7a06e65d | AI Studio README-only scaffold; no construction implementation to port. |
 
 ## Product work retained in Cortexx
 

@@ -161,6 +161,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     })
     return NextResponse.json({ ok: true })
   } catch (error) {
+    if ((error as { code?: string })?.code === 'P2003') return NextResponse.json({ error: 'This inspection has retained evidence links. Keep the source record for its history.' }, { status: 409 })
     console.error('[inspections/:id] DELETE failed:', error)
     return NextResponse.json({ error: 'Failed to delete inspection' }, { status: 500 })
   }

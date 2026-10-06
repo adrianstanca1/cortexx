@@ -243,6 +243,7 @@ export async function PUT(
 
     return NextResponse.json(po)
   } catch (error) {
+    if ((error as { code?: string })?.code === 'P2003') return NextResponse.json({ error: 'This order has retained evidence links. Keep its supplier and project attribution.' }, { status: 409 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to update PO' }, { status: 500 })
   }
@@ -281,6 +282,7 @@ export async function DELETE(
     })
     return NextResponse.json({ success: true })
   } catch (error) {
+    if ((error as { code?: string })?.code === 'P2003') return NextResponse.json({ error: 'This order has retained evidence links. Keep the order for its history.' }, { status: 409 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
   }

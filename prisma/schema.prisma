@@ -133,6 +133,9 @@ model Project {
   conversations   Conversation[]
   equipmentChecks EquipmentCheck[]
 
+  supplierQualityEvidence SupplierQualityEvidence[]
+
+  @@unique([id, organizationId])
   @@index([status])
   @@index([updatedAt])
   @@index([archivedAt])
@@ -509,6 +512,9 @@ model Snag {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  supplierQualityEvidence SupplierQualityEvidence[]
+
+  @@unique([id, organizationId, projectId])
   @@index([projectId, status])
   @@index([status, priority])
   @@index([dueDate])
@@ -1022,6 +1028,9 @@ model PurchaseOrder {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  supplierQualityEvidence SupplierQualityEvidence[]
+
+  @@unique([id, organizationId, supplierId, projectId])
   @@unique([organizationId, number])
   @@index([projectId, status])
   @@index([status])
@@ -1573,6 +1582,9 @@ model Inspection {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  supplierQualityEvidence SupplierQualityEvidence[]
+
+  @@unique([id, organizationId, projectId])
   @@index([projectId, status])
   @@index([projectId, pointType, releaseStatus])
   @@index([scheduledAt])
@@ -1786,10 +1798,44 @@ model Supplier {
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
 
+  qualityEvidence SupplierQualityEvidence[]
+
+  @@unique([id, organizationId])
   @@index([name])
   @@index([category])
   @@index([archivedAt])
   @@index([organizationId])
+}
+
+// Exactly one source is required by a migration CHECK constraint. Composite
+// foreign keys prevent cross-tenant/project attribution, including the order.
+// Withdrawn links retain their source, attribution and audit history.
+model SupplierQualityEvidence {
+  id               String         @id @default(cuid())
+  organizationId   String
+  supplierId       String
+  projectId        String
+  snagId           String?
+  inspectionId     String?
+  purchaseOrderId  String?
+  reason           String
+  createdBy        String
+  createdAt        DateTime       @default(now())
+  withdrawnAt      DateTime?
+  withdrawnBy      String?
+  withdrawalReason String?
+  organization     Organization   @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  supplier         Supplier       @relation(fields: [supplierId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  project          Project        @relation(fields: [projectId, organizationId], references: [id, organizationId], onDelete: NoAction, onUpdate: NoAction)
+  snag             Snag?          @relation(fields: [snagId, organizationId, projectId], references: [id, organizationId, projectId], onDelete: NoAction, onUpdate: NoAction)
+  inspection       Inspection?    @relation(fields: [inspectionId, organizationId, projectId], references: [id, organizationId, projectId], onDelete: NoAction, onUpdate: NoAction)
+  purchaseOrder    PurchaseOrder? @relation(fields: [purchaseOrderId, organizationId, supplierId, projectId], references: [id, organizationId, supplierId, projectId], onDelete: NoAction, onUpdate: NoAction)
+
+  @@unique([supplierId, snagId])
+  @@unique([supplierId, inspectionId])
+  @@index([organizationId, supplierId, createdAt, id])
+  @@index([projectId])
+  @@index([purchaseOrderId])
 }
 
 model SafetyIncident {
@@ -1996,6 +2042,7 @@ model Organization {
   toolboxTalks                  ToolboxTalk[]
   maintenanceSchedules          MaintenanceSchedule[]
   suppliers                     Supplier[]
+  supplierQualityEvidence       SupplierQualityEvidence[]
   safetyIncidents               SafetyIncident[]
   safetyCorrectiveActions       SafetyCorrectiveAction[]
   valuations                    Valuation[]

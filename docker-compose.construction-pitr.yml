@@ -1,0 +1,22 @@
+# Optional overlay. Applying it restarts PostgreSQL; review activation first.
+# WAL is local until the operator configures and verifies encrypted off-site copy.
+services:
+  db:
+    image: cortexbuild-postgres-pitr:16
+    build:
+      context: .
+      dockerfile: Dockerfile.postgres-pitr
+    command:
+      - postgres
+      - -c
+      - wal_level=replica
+      - -c
+      - archive_mode=on
+      - -c
+      - archive_timeout=60s
+      - -c
+      - archive_command=/usr/local/bin/construction-wal-archive "%p" "%f"
+    volumes:
+      - construction_wal_archive:/var/lib/postgresql/wal_archive
+volumes:
+  construction_wal_archive:

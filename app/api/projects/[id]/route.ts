@@ -143,6 +143,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     }).catch(() => {})
     return NextResponse.json({ success: true })
   } catch (error) {
+    if ((error as { code?: string })?.code === 'P2003') return NextResponse.json({ error: 'This project has retained evidence links. Archive it to preserve the source history.' }, { status: 409 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete project' }, { status: 500 })
   }

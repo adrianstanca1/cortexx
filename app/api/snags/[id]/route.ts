@@ -96,6 +96,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: RouteParams)
       }).catch(() => {})
       return NextResponse.json({ success: true })
     } catch (error) {
+      if ((error as { code?: string })?.code === 'P2003') return NextResponse.json({ error: 'This defect has retained evidence links. Keep the source record and close it when resolved.' }, { status: 409 })
       reportError(error)
       return NextResponse.json({ error: 'Failed to delete snag' }, { status: 500 })
     }

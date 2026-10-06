@@ -12,6 +12,12 @@ function fixture(auth, supplier = { id: 's1', name: 'Supplier' }, orders = []) {
     '@/lib/rbac': { canManage: role => ['owner', 'admin'].includes(role) },
     '@/lib/errors': { reportError: () => {} },
     '@/lib/supplier-performance': require('../lib/supplier-performance'),
+    '@/lib/supplier-quality-server': { loadSupplierQuality: async (_db, organizationId, supplierId, asOf) => {
+      assert.equal(organizationId, auth.orgId)
+      assert.equal(supplierId, 's1')
+      assert.ok(asOf instanceof Date)
+      return { inspectionPassPercent: null, rows: [], truncated: false }
+    } },
     '@/lib/db': { prisma: {
       supplier: { findFirst: async args => { calls.push(args); return supplier } },
       purchaseOrder: { findMany: async args => { calls.push(args); return orders } },
@@ -41,6 +47,7 @@ test('supplier, order and receipt queries are explicitly scoped to the active te
   assert.equal(f.calls[1].where.supplierId, 's1')
   assert.equal(f.calls[1].select.goodsReceipts.where.organizationId, 'org-a')
   assert.equal(r.headers['Cache-Control'], 'private, no-store')
+  assert.equal(r.body.quality.inspectionPassPercent, null)
 })
 test('a supplier outside the active tenant returns 404 before reading any orders', async () => {
   const f = fixture({ orgId: 'org-b', role: 'owner' }, null)

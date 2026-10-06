@@ -1,0 +1,6 @@
+FROM postgres:16-alpine
+COPY ops/construction-wal-archive.sh /usr/local/bin/construction-wal-archive
+RUN chmod 755 /usr/local/bin/construction-wal-archive \
+    && mkdir -p /var/lib/postgresql/wal_archive \
+    && chown postgres:postgres /var/lib/postgresql/wal_archive \
+    && chmod 700 /var/lib/postgresql/wal_archive

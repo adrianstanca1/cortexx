@@ -62,6 +62,10 @@ counts only. Five local regression tests cover the freshness guard.
 Daily scheduling has an up-to-24-hour data-loss window, not the desired five-minute
 RPO. Achieving that requires PostgreSQL WAL archiving/PITR; a daily encrypted
 artifact is off-site backup, not continuous recovery.
+The optional [PITR tooling](CONSTRUCTION_PITR.md) provides a WAL archive overlay,
+physical base backups and an isolated named-target restore drill. Its synthetic
+drill is verified; production activation and encrypted off-site WAL coverage
+remain operator work.
 Uploads are captured while the app is running, so database and file snapshots
 are not transactionally coordinated. Use a maintenance window for a consistent
 cutover snapshot. Host loss still loses local backups, although a recent

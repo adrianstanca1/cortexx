@@ -6,6 +6,9 @@ import { useSession } from 'next-auth/react'
 import { useRouter } from 'next/navigation'
 import TabBar from '@/components/ui/TabBar'
 import { IcSpark, IcChevL, IcSend, IcTrash, IcAlert } from '@/components/ui/Icons'
+import KnowledgeSources from '@/components/ai/KnowledgeSources'
+import { isKnowledgeSource, type KnowledgeSource } from '@/lib/ai-knowledge-types'
+import { knowledgeWorkspaceMatches } from '@/lib/ai-knowledge-client'
 
 interface Message {
   role: 'user' | 'assistant'
@@ -13,9 +16,10 @@ interface Message {
   model?: string
   durationMs?: number
   error?: boolean
+  citations?: KnowledgeSource[]
 }
 
-interface LlmInfo { model: string; baseUrl: string }
+interface LlmInfo { model: string; baseUrl: string; orgId: string }
 
 const SF = 'var(--font-system)'
 const STORAGE_PREFIX = 'cortexx-ask-history-v1:'
@@ -49,7 +53,8 @@ export default function AskCortexPage() {
   const userKey = session?.user
     ? (session.user as { id?: string }).id || session.user.email || null
     : null
-  const storageKey = userKey ? `${STORAGE_PREFIX}${userKey}` : null
+  const [orgId, setOrgId] = useState<string | null>(null)
+  const storageKey = userKey && orgId ? `${STORAGE_PREFIX}${userKey}:${orgId}` : null
 
   const [messages, setMessages] = useState<Message[]>([])
   const [input, setInput] = useState('')
@@ -60,6 +65,7 @@ export default function AskCortexPage() {
   const scrollRef = useRef<HTMLDivElement>(null)
   const inputRef = useRef<HTMLTextAreaElement>(null)
   const composingRef = useRef(false)
+  const requestVersion = useRef(0)
 
   // Redirect unauthenticated users — every other authed surface assumes
   // session.user is present.
@@ -67,9 +73,29 @@ export default function AskCortexPage() {
     if (sessionStatus === 'unauthenticated') router.replace('/login?callbackUrl=/ask')
   }, [sessionStatus, router])
 
-  // Restore history once the session resolves, using the per-user key.
+  // Resolve the current tenant on the server before reading browser history.
+  // Legacy history without an org key is deliberately not restored.
+  useEffect(() => {
+    let cancelled = false
+    requestVersion.current += 1
+    setOrgId(null)
+    setMessages([])
+    setRestored(false)
+    setSending(false)
+    if (!userKey) return
+    fetch('/api/ask', { cache: 'no-store' })
+      .then(r => r.ok ? r.json() : Promise.reject(new Error('Workspace context unavailable. Reload to try again.')))
+      .then(d => {
+        if (!cancelled && typeof d?.orgId === 'string') { setLlmInfo(d); setOrgId(d.orgId) }
+      })
+      .catch(e => { if (!cancelled) setUnavailable(e.message) })
+    return () => { cancelled = true; requestVersion.current += 1 }
+  }, [userKey])
+
+  // Restore only the current user's current-tenant thread.
   useEffect(() => {
     if (!storageKey) return
+    setMessages([])
     try {
       const raw = localStorage.getItem(storageKey)
       if (raw) {
@@ -81,10 +107,6 @@ export default function AskCortexPage() {
       }
     } catch {}
     setRestored(true)
-    fetch('/api/ask')
-      .then(r => (r.ok ? r.json() : null))
-      .then(d => { if (d?.model) setLlmInfo(d) })
-      .catch(() => {})
   }, [storageKey])
 
   // Persist only after the initial restore has run, so we never overwrite
@@ -104,7 +126,8 @@ export default function AskCortexPage() {
 
   const send = useCallback(async (text: string) => {
     const message = text.trim()
-    if (!message || sending) return
+    if (!message || sending || !orgId) return
+    const version = requestVersion.current
     setUnavailable(null)
     setInput('')
     setSending(true)
@@ -118,9 +141,10 @@ export default function AskCortexPage() {
       const res = await fetch('/api/ask', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ message, history: historyToSend }),
+        body: JSON.stringify({ message, history: historyToSend, contextOrgId: orgId }),
       })
       const data = await res.json().catch(() => ({} as Record<string, unknown>))
+      if (version !== requestVersion.current) return
       if (!res.ok) {
         const errMsg = typeof data.error === 'string' ? data.error : 'Something went wrong'
         if (res.status === 401) {
@@ -131,6 +155,14 @@ export default function AskCortexPage() {
           setUnavailable(errMsg)
         }
         setMessages(prev => [...prev, { role: 'assistant', content: errMsg, error: true }])
+        return
+      }
+      const sameWorkspace = data.contextOrgId === orgId && await knowledgeWorkspaceMatches(orgId)
+      if (version !== requestVersion.current) return
+      if (!sameWorkspace) {
+        setMessages([])
+        setUnavailable('Your workspace changed. Reload before starting a new conversation.')
+        setOrgId(null)
         return
       }
       const content = typeof data.content === 'string' && data.content.length > 0
@@ -145,14 +177,18 @@ export default function AskCortexPage() {
         content,
         model: typeof data.model === 'string' ? data.model : undefined,
         durationMs: typeof data.durationMs === 'number' ? data.durationMs : undefined,
+        citations: Array.isArray(data.citations) ? data.citations.filter(isKnowledgeSource) : [],
       }])
     } catch (e) {
+      if (version !== requestVersion.current) return
       setMessages(prev => [...prev, { role: 'assistant', content: e instanceof Error ? e.message : 'Network error', error: true }])
     } finally {
-      setSending(false)
-      setTimeout(() => inputRef.current?.focus(), 50)
+      if (version === requestVersion.current) {
+        setSending(false)
+        setTimeout(() => inputRef.current?.focus(), 50)
+      }
     }
-  }, [sending, messages, router])
+  }, [sending, messages, router, orgId])
 
   const clear = () => {
     if (!confirm('Clear conversation history?')) return
@@ -221,7 +257,7 @@ export default function AskCortexPage() {
             </div>
             <div style={{ display: 'flex', flexDirection: 'column', gap: 6, width: '100%', maxWidth: 420 }}>
               {SUGGESTIONS.map(s => (
-                <button type="button" key={s} onClick={() => send(s)} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '10px 14px', textAlign: 'left', fontFamily: SF, fontSize: 13, color: '#c1d2e8', cursor: 'pointer' }}>
+                <button type="button" key={s} disabled={!orgId || sending} onClick={() => send(s)} style={{ background: 'var(--surface-raised)', border: '0.5px solid rgba(255,255,255,0.07)', borderRadius: 10, padding: '10px 14px', textAlign: 'left', fontFamily: SF, fontSize: 13, color: '#c1d2e8', cursor: 'pointer' }}>
                   {s}
                 </button>
               ))}
@@ -250,6 +286,7 @@ export default function AskCortexPage() {
               {m.error && <span aria-label="Error" role="img" style={{ flexShrink: 0, marginTop: 2 }}><IcAlert size={12} color="#ef4444" /></span>}
               <span>{m.content}</span>
             </div>
+            {m.role === 'assistant' && !m.error && <KnowledgeSources sources={m.citations} />}
             {(m.model || m.durationMs !== undefined) && (
               <div style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)' }}>
                 {m.model && <span style={{ fontFamily: 'ui-monospace, monospace' }}>{m.model}</span>}
@@ -284,7 +321,7 @@ export default function AskCortexPage() {
             rows={1}
             style={{ flex: 1, background: 'var(--bg3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: 12, padding: '10px 14px', color: 'var(--t1)', fontFamily: SF, fontSize: 14, outline: 'none', resize: 'none', maxHeight: 140, minHeight: 40 }}
           />
-          <button type="button" onClick={() => send(input)} disabled={sending || !input.trim()} aria-label="Send" style={{ width: 40, height: 40, borderRadius: 12, background: input.trim() && !sending ? '#8b5cf6' : 'rgba(139,92,246,0.3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() && !sending ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
+          <button type="button" onClick={() => send(input)} disabled={sending || !input.trim() || !orgId} aria-label="Send" style={{ width: 40, height: 40, borderRadius: 12, background: input.trim() && !sending ? '#8b5cf6' : 'rgba(139,92,246,0.3)', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: input.trim() && !sending ? 'pointer' : 'not-allowed', flexShrink: 0 }}>
             <IcSend size={18} color="#fff" />
           </button>
         </div>
