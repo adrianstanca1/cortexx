@@ -36,10 +36,28 @@ const NUM_PREDICT_MAX = 1024
  * 30m comfortably exceeds the gap between requests in a working session while
  * bounding resident RAM: the two configured models are 2.5GB (qwen3:4b) and
  * 1.7GB (moondream), against ~27GB free. Override per-deployment with
- * OLLAMA_KEEP_ALIVE (e.g. "0" to restore Ollama's default, or "-1" for
- * permanent residency).
+ * OLLAMA_KEEP_ALIVE: any Ollama duration string ("30m", "2h", "-1" for
+ * permanent residency), or "" to omit the field entirely and fall back to
+ * Ollama's own server default (5m). Note that "0" does NOT mean "use the
+ * default" — Ollama reads it as "unload immediately", which would reload the
+ * model on every single request.
  */
 const OLLAMA_KEEP_ALIVE = process.env.OLLAMA_KEEP_ALIVE ?? '30m'
+
+/**
+ * `keep_alive` payload for Ollama, or undefined to omit the field.
+ *
+ * An explicitly empty OLLAMA_KEEP_ALIVE means "defer to Ollama's own default",
+ * which requires leaving the field out entirely. A bare "0" is NOT that — it
+ * tells Ollama to unload the model as soon as the response is sent, forcing a
+ * full reload on every subsequent request, which is the opposite of the intent
+ * of this setting.
+ */
+function keepAliveField(): { keep_alive?: string } {
+  const v = OLLAMA_KEEP_ALIVE.trim()
+  if (v === '' || v === 'default') return {}
+  return { keep_alive: v }
+}
 
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
@@ -159,7 +177,7 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
         model,
         messages,
         stream: false,
-        keep_alive: OLLAMA_KEEP_ALIVE,
+        ...keepAliveField(),
         ...(opts.json ? { format: 'json' } : {}),
         options: { num_predict: NUM_PREDICT_MAX },
       }
@@ -182,7 +200,7 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
       model,
       messages,
       stream: false,
-      keep_alive: OLLAMA_KEEP_ALIVE,
+      ...keepAliveField(),
       ...(opts.json ? { format: 'json' } : {}),
       options: { num_predict: NUM_PREDICT_MAX },
     }
