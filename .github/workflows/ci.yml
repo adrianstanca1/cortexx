@@ -98,6 +98,15 @@ jobs:
       - name: Typecheck shared core (@cortexbuild/core)
         working-directory: packages/core
         run: ../../node_modules/.bin/tsc --noEmit -p tsconfig.json
+      - name: Verify Cortex Agent OS runtime
+        run: |
+          npx tsc -p agent-os/tsconfig.json --noEmit
+          rm -rf agent-os/dist
+          npx tsc -p agent-os/tsconfig.json
+          node --test agent-os/dist/tests/*.test.js
+      - name: Typecheck Agent OS mobile control surface
+        working-directory: agent-os/apps/mobile
+        run: npm ci --no-audit --no-fund && npm run typecheck
       - name: Typecheck Expo app (React Native)
         working-directory: expo
         run: npm ci && npm run typecheck
@@ -270,8 +279,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:test@localhost:5432/cortexx_a11y
       NEXTAUTH_URL: http://127.0.0.1:3000
       AUTH_URL: http://127.0.0.1:3000
-      NEXTAUTH_SECRET: ci-a11y-secret-not-used-outside-ci
-      AUTH_SECRET: ci-a11y-secret-not-used-outside-ci
+      NEXTAUTH_SECRET: ci-accessibility-secret-not-used-outside-ci
+      AUTH_SECRET: ci-accessibility-secret-not-used-outside-ci
       ADMIN_EMAIL: admin@cortexbuildpro.tech
       ADMIN_PASSWORD: changeme-please-1234
       E2E_ADMIN_EMAIL: admin@cortexbuildpro.tech

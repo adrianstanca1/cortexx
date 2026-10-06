@@ -2,16 +2,71 @@ export type Id = string;
 export type PermissionMode = "ALLOW" | "ASK" | "DENY";
 export type MissionStatus = "queued" | "planning" | "running" | "blocked" | "verifying" | "completed" | "failed" | "cancelled";
 export type TaskStatus = "queued" | "running" | "blocked" | "completed" | "failed";
-export type AgentState = "idle" | "busy" | "offline";
+export type AgentState = "idle" | "busy" | "suspended" | "offline" | "terminated";
 export type ApprovalStatus = "pending" | "approved" | "rejected" | "expired";
 export type MemoryType = "working" | "episodic" | "semantic" | "project" | "preference";
+export type DelegationPriority = "low" | "normal" | "high" | "critical";
+export type DelegationStatus = "pending_approval" | "queued" | "processing" | "completed" | "failed" | "rejected";
 export type EventType =
   | "mission.created" | "mission.started" | "plan.created" | "task.created" | "task.started" | "task.completed" | "task.failed"
-  | "agent.assigned" | "tool.started" | "tool.completed" | "approval.required" | "mission.completed" | "mission.failed" | "memory.created";
+  | "agent.assigned" | "agent.registered" | "agent.state_changed"
+  | "group.created"
+  | "skill.installed" | "skill.enabled" | "skill.disabled" | "skill.uninstalled"
+  | "delegation.created" | "delegation.started" | "delegation.completed" | "delegation.failed"
+  | "tool.started" | "tool.completed" | "approval.required" | "mission.completed" | "mission.failed" | "memory.created";
 
 export interface AgentProfile {
-  id: Id; name: string; role: string; capabilities: string[]; tools: string[]; model?: string;
-  permissions: Record<string, PermissionMode>; state: AgentState; specialist?: string;
+  id: Id;
+  name: string;
+  role: string;
+  capabilities: string[];
+  tools: string[];
+  model?: string;
+  permissions: Record<string, PermissionMode>;
+  state: AgentState;
+  specialist?: string;
+  createdAt?: string;
+  runsCompleted?: number;
+}
+export interface AgentGroup {
+  id: Id;
+  name: string;
+  description: string;
+  members: Id[];
+  coordinator?: Id;
+  sharedMemory: boolean;
+  consensusRequired: boolean;
+  createdAt: string;
+}
+export interface SkillDefinition {
+  id: Id;
+  name: string;
+  description: string;
+  category: "automation" | "communication" | "data" | "integration" | "construction" | "utility";
+  version: string;
+  capabilities: string[];
+  permissions: string[];
+}
+export interface InstalledSkill {
+  instanceId: Id;
+  skillId: Id;
+  installedAt: string;
+  enabledForAgents: Id[];
+  state: "installed" | "enabled";
+}
+export interface Delegation {
+  id: Id;
+  task: string;
+  fromAgent: Id;
+  toAgent: Id;
+  priority: DelegationPriority;
+  requiresApproval: boolean;
+  status: DelegationStatus;
+  createdAt: string;
+  approvalId?: Id;
+  completedAt?: string;
+  result?: string;
+  error?: string;
 }
 export interface Task {
   id: Id; missionId: Id; title: string; description: string; capability: string; status: TaskStatus;

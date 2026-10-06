@@ -24,7 +24,7 @@
     "db:push": "prisma db push",
     "db:seed": "ts-node --compiler-options '{\"module\":\"CommonJS\"}' prisma/seed.ts",
     "db:studio": "prisma studio",
-    "test": "node --test test/*.test.js",
+    "test": "tsx --test test/*.test.js",
     "test:nav": "node --test test/nav-registry.test.js",
     "test:integration": "tsx --test --test-concurrency=1 test/integration/*.test.js",
     "test:load-smoke": "node --test test/load-smoke.test.js",
@@ -115,6 +115,10 @@
     "@hono/node-server": "^2.0.8",
     "mysql2": "3.24.4",
     "deepmerge-ts": "8.0.2",
-    "uuid": "11.1.1"
+    "uuid": "11.1.1",
+    "sharp": "0.35.5",
+    "source-map-js": "1.2.2",
+    "proxy-addr": "2.0.8",
+    "compression": "1.8.2"
   }
 }

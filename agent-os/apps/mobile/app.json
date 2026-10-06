@@ -1,1 +1,16 @@
-{"expo":{"name":"Cortex Agent OS","slug":"cortex-agent-os","scheme":"cortexos","plugins":["expo-router"],"ios":{"bundleIdentifier":"com.cortexbuild.agentos"},"android":{"package":"com.cortexbuild.agentos"}}}
+{
+  "expo": {
+    "name": "Cortex Agent OS",
+    "slug": "cortex-agent-os",
+    "scheme": "cortexos",
+    "plugins": [
+      "expo-secure-store"
+    ],
+    "ios": {
+      "bundleIdentifier": "com.cortexbuild.agentos"
+    },
+    "android": {
+      "package": "com.cortexbuild.agentos"
+    }
+  }
+}

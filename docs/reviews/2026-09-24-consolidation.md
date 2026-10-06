@@ -1,5 +1,7 @@
 # CortexBuild consolidation — 24 September 2026
 
+> Historical review. Repository retirement was completed through the 5 October 2026 consolidation recorded in `docs/reviews/2026-10-05-repository-retirement.md`; that newer record is authoritative for repository disposition.
+
 ## Canonical production line
 
 adrianstanca1/cortexx is the single active source of truth for CortexBuild Pro.

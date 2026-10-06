@@ -5,7 +5,8 @@ test('Xero refresh/access tokens are AES-GCM encrypted at rest and tampering fai
   const old = process.env.XERO_TOKEN_ENCRYPTION_KEY
   process.env.XERO_TOKEN_ENCRYPTION_KEY = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef'
   try {
-    const vault = await import('../lib/xero-token-vault.ts')
+    const vaultModule = await import('../lib/xero-token-vault.ts')
+    const vault = vaultModule.default || vaultModule
     assert.equal(vault.xeroTokenVaultConfigured(), true)
     const cipher = vault.encryptXeroToken('rotating-refresh-token')
     assert.ok(cipher)

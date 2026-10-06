@@ -45,6 +45,22 @@ jobs:
         working-directory: server
         run: npx tsx --test test/*.test.js
 
+      # Cortex Agent OS — runtime + governed Expo mobile control surface
+      - name: Verify Agent OS runtime
+        run: |
+          npx tsc -p agent-os/tsconfig.json --noEmit
+          rm -rf agent-os/dist
+          npx tsc -p agent-os/tsconfig.json
+          node --test agent-os/dist/tests/*.test.js
+
+      - name: Install Agent OS mobile deps
+        working-directory: agent-os/apps/mobile
+        run: npm ci --no-audit --no-fund
+
+      - name: Typecheck Agent OS mobile
+        working-directory: agent-os/apps/mobile
+        run: npm run typecheck
+
       # Expo RN iOS app — its own lockfile + node_modules
       - name: Install Expo deps
         working-directory: expo
