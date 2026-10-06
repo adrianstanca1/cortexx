@@ -26,6 +26,25 @@ const OAI_KEY = () => (getSecret('openai_compat_key') || process.env.OPENAI_COMP
 const OAI_MODEL = process.env.OPENAI_COMPAT_MODEL || 'default';
 const TIMEOUT_MS = parseInt(process.env.LLM_TIMEOUT_MS || '60000', 10);
 
+// Model residency. Ollama unloads a model 5 minutes after the last request, so
+// omitting keep_alive makes every post-idle request pay a full model load
+// (~3.3s measured on qwen3:4b). 30m covers the gaps inside a working session
+// while bounding resident RAM. Override with OLLAMA_KEEP_ALIVE.
+//
+// "" or "default" omits the field so Ollama applies its own 5m default. Note
+// that "0" does NOT mean "use the default" — Ollama reads it as "unload
+// immediately", which reloads the model on every request. Bare numeric values
+// are emitted as JSON numbers because Ollama parses string durations with Go's
+// time.ParseDuration, which rejects a unitless "-1" (HTTP 400).
+const OLLAMA_KEEP_ALIVE = process.env.OLLAMA_KEEP_ALIVE ?? '30m';
+
+function keepAliveField() {
+  const v = String(OLLAMA_KEEP_ALIVE).trim();
+  if (v === '' || v === 'default') return {};
+  if (/^-?\d+(\.\d+)?$/.test(v)) return { keep_alive: Number(v) };
+  return { keep_alive: v };
+}
+
 function abortableFetch(url, opts) {
   const ctrl = new AbortController();
   const timer = setTimeout(() => ctrl.abort(), TIMEOUT_MS);
@@ -41,7 +60,7 @@ async function ollamaChat(messages) {
   const r = await abortableFetch(OLLAMA_BASE() + '/api/chat', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ model, messages, stream: false }),
+    body: JSON.stringify({ model, messages, stream: false, ...keepAliveField() }),
   });
   if (!r.ok) {
     const body = await r.text().catch(() => '');
