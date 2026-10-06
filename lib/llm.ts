@@ -23,6 +23,51 @@ const REQUEST_TIMEOUT_MS = 60_000
 const VISION_TIMEOUT_MS = 120_000
 const NUM_PREDICT_MAX = 1024
 
+/**
+ * How long Ollama keeps a model resident in memory after a request.
+ *
+ * Ollama's own default is 5m, which is tuned for a laptop running one model
+ * interactively. Here the same behaviour makes every AI request that follows a
+ * quiet period pay a full model load before any tokens are generated —
+ * measured 3.3-5.4s of `load_duration` on top of a ~7s inference on this host
+ * (16 cores, rotational disk). Because inference already dwarfs the load, the
+ * cheapest fix is to keep the model warm and skip the reload entirely.
+ *
+ * 30m comfortably exceeds the gap between requests in a working session while
+ * bounding resident RAM: the two configured models are 2.5GB (qwen3:4b) and
+ * 1.7GB (moondream), against ~27GB free. Override per-deployment with
+ * OLLAMA_KEEP_ALIVE: any Ollama duration string ("30m", "2h", "-1m" for
+ * permanent residency), or "" to omit the field entirely and fall back to
+ * Ollama's own server default (5m). Note that "0" does NOT mean "use the
+ * default" — Ollama reads it as "unload immediately", which would reload the
+ * model on every single request.
+ */
+const OLLAMA_KEEP_ALIVE = process.env.OLLAMA_KEEP_ALIVE ?? '30m'
+
+/**
+ * `keep_alive` payload for Ollama, or an empty object to omit the field.
+ *
+ * An explicitly empty OLLAMA_KEEP_ALIVE means "defer to Ollama's own default",
+ * which requires leaving the field out entirely. A bare "0" is NOT that — it
+ * tells Ollama to unload the model as soon as the response is sent, forcing a
+ * full reload on every subsequent request, which is the opposite of the intent
+ * of this setting.
+ *
+ * Bare numeric values are emitted as JSON numbers, not strings. Ollama parses
+ * string durations with Go's time.ParseDuration, which rejects a unitless "-1"
+ * ("missing unit in duration") and returns HTTP 400; only a numeric -1 or a
+ * string with a unit ("-1m") means permanent residency. Sending "-1" as a
+ * string would break every Ollama-backed chat.
+ */
+function keepAliveField(): { keep_alive?: string | number } {
+  const v = OLLAMA_KEEP_ALIVE.trim()
+  if (v === '' || v === 'default') return {}
+  // "0" is a valid immediate-unload choice; emit it as a number too, so it is
+  // unambiguous. Negative values follow Ollama's API convention for permanence.
+  if (/^-?\d+(\.\d+)?$/.test(v)) return { keep_alive: Number(v) }
+  return { keep_alive: v }
+}
+
 export interface ChatMessage {
   role: 'system' | 'user' | 'assistant'
   content: string
@@ -141,6 +186,7 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
         model,
         messages,
         stream: false,
+        ...keepAliveField(),
         ...(opts.json ? { format: 'json' } : {}),
         options: { num_predict: NUM_PREDICT_MAX },
       }
@@ -163,6 +209,7 @@ export async function chat(messages: ChatMessage[], opts: ChatOptions = {}): Pro
       model,
       messages,
       stream: false,
+      ...keepAliveField(),
       ...(opts.json ? { format: 'json' } : {}),
       options: { num_predict: NUM_PREDICT_MAX },
     }
