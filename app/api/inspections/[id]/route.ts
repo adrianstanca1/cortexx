@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 import controls from '@/lib/field-controls'
 import qualityCloseout from '@/lib/quality-closeout'
 
@@ -60,7 +61,14 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     const releaseEvidence = body.evidence && typeof body.evidence === 'object'
       ? controls.sanitizeEvidence(body.evidence)
       : controls.sanitizeEvidence(existing.evidence)
-    if (body.evidence && typeof body.evidence === 'object') data.evidence = releaseEvidence as unknown as object
+    if (body.evidence && typeof body.evidence === 'object') {
+      const evidenceUrls = [...releaseEvidence.photoUrls, releaseEvidence.signatureUrl].filter(Boolean)
+      for (const evidenceUrl of evidenceUrls) {
+        const uploadError = await authorizeUploadReference(evidenceUrl)
+        if (uploadError) return uploadError
+      }
+      data.evidence = releaseEvidence as unknown as object
+    }
 
     let finalReleaseStatus = existing.releaseStatus
     if (typeof body.releaseStatus === 'string' && RELEASE_STATUS.has(body.releaseStatus)) {
