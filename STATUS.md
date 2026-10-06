@@ -1,6 +1,6 @@
 # CortexBuild Pro — current status
 
-Reviewed 4 October 2026. Canonical repository: `adrianstanca1/cortexx`; production branch: `main`; release line: v1.5.x.
+Reviewed 6 October 2026. Canonical repository: `adrianstanca1/cortexx`; production branch: `main`; release line: v1.5.x.
 
 ## Production baseline
 
@@ -8,7 +8,7 @@ Production is the isolated Next.js Docker Compose stack on the One.com VPS, serv
 
 The reviewed baseline is PR #273 (`b4b0655eef2445cf5cac02c41a8a7774a16a1e76`). [CI run 37187339135](https://github.com/adrianstanca1/cortexx/actions/runs/37187339135), [verification run 37187339150](https://github.com/adrianstanca1/cortexx/actions/runs/37187339150) and [One.com deployment 37187639371](https://github.com/adrianstanca1/cortexx/actions/runs/37187639371) all succeeded for that exact SHA. At 08:10 UTC on 4 October, the public health endpoint reported healthy application, database, disk and memory checks; the VPS checkout was clean and matched `origin/main`. The endpoint reports version `1.5.0`, not a commit SHA; release attribution comes from the deployment run. See [the session reconciliation](docs/reviews/2026-10-04-session-reconciliation.md) for evidence and limits.
 
-## Integrated work through PR #273
+## Integrated work through the 6 October consolidation
 
 The release includes the procurement, commercial, programme, drawing, document, field-operation and closeout work recorded in the canonical product audit, plus the following recent reliability and security changes:
 
@@ -48,8 +48,8 @@ Operational evidence remains time-sensitive. Confirm the latest CI, deploy and B
 
 ## Remaining completion gates
 
-The [canonical roadmap](docs/CANONICAL_PRODUCT_AUDIT_2026-09-24.md) remains the workflow scope. Material gates still include governed accounting write-back, richer supplier-quality evidence, governed agent tools/marketplace, physical-device/accessibility/performance/load verification, PostgreSQL WAL archiving/PITR for a substantially lower RPO, and a controlled full-stack rollback/cutover drill. Protected off-box secret recovery is now implemented and post-merge restore-verified; it remains a periodic operational control rather than continuous PITR.
+The [canonical roadmap](docs/CANONICAL_PRODUCT_AUDIT_2026-09-24.md) remains the workflow scope. Material gates still include governed accounting write-back, physical-device/performance/load verification, live Apple store-delivery evidence, operational enablement and timed proof of the PostgreSQL WAL/PITR path, and a controlled full-stack rollback/cutover drill. Richer tenant-scoped supplier-quality evidence, governed read-only AI answers with server-owned citations, and the governed Agent OS control-plane/skill/delegation foundations are implemented in the 6 October consolidation. Protected off-box secret recovery remains a periodic operational control alongside the new opt-in PITR tooling.
 
-Live Xero activation requires a configured authorised organisation. Native store delivery requires successful Apple build, signing and upload evidence. Encrypted off-site backup artifacts now include the protected construction environment and owner credentials, reducing host-loss risk, but they still do not provide continuous PITR. Merged PRs and passing automated tests do not establish complete launch readiness.
+Live Xero activation requires a configured authorised organisation. Native store delivery requires successful Apple signing and TestFlight/App Store upload evidence. Encrypted off-site backup artifacts include the protected construction environment and owner credentials. PITR code now adds WAL archiving, physical base backups and isolated restore drills, but production RPO is not claimed lower until that opt-in path is enabled and timed operationally. Merged PRs and passing automated tests do not by themselves establish complete launch readiness.
 
-GitHub currently reports two high-severity alerts in `expo/package-lock.json`: [braces #208](https://github.com/adrianstanca1/cortexx/security/dependabot/208) (`3.0.3`) and [node-forge #207](https://github.com/adrianstanca1/cortexx/security/dependabot/207) (`1.4.0`). The alert API lists no patched version for either as of this review. They remain open; successful root audit and native typechecks do not resolve them.
+The production/root dependency graph and standalone API are clean at high/critical severity after pinning patched `sharp`, `source-map-js` and `proxy-addr`; the Expo lockfile also pins patched `shell-quote` and `source-map-js`. The remaining high-severity mobile-tooling advisory families are `braces` and `node-forge` inside the current Expo toolchain. GitHub/npm may report those transitively against more than one mobile manifest, but no compatible patched upstream version is available as of this review; forcing npm's suggested Expo/React Native downgrade would be a breaking regression and is intentionally not used.
