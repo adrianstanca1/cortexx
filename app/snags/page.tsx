@@ -433,7 +433,7 @@ export default function SnagsPage() {
                 <h2 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: SF }}>Close snag</h2>
                 <p style={{ fontSize: 12, color: 'var(--t3)', marginTop: 3, fontFamily: SF }}>{closeoutSnag.title}</p>
               </div>
-              <button onClick={() => setCloseoutSnag(null)} aria-label="Cancel closeout" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
+              <button type="button" onClick={() => setCloseoutSnag(null)} aria-label="Cancel closeout" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <div>
               <label style={labelStyle}>Rectification / resolution *</label>
@@ -446,15 +446,15 @@ export default function SnagsPage() {
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
                   <img src={closeoutPhotoUrl} alt="Closeout evidence preview" width={96} height={72} style={{ width: 96, height: 72, objectFit: 'cover', borderRadius: 10 }} />
-                  <button onClick={() => closeoutInputRef.current?.click()} disabled={closeoutUploading} style={{ ...secondaryButtonStyle }}>Replace photo</button>
+                  <button type="button" onClick={() => closeoutInputRef.current?.click()} disabled={closeoutUploading} style={{ ...secondaryButtonStyle }}>Replace photo</button>
                 </div>
               ) : (
-                <button onClick={() => closeoutInputRef.current?.click()} disabled={closeoutUploading} style={{ ...secondaryButtonStyle, display: 'flex', gap: 7, alignItems: 'center', justifyContent: 'center' }}>
+                <button type="button" onClick={() => closeoutInputRef.current?.click()} disabled={closeoutUploading} style={{ ...secondaryButtonStyle, display: 'flex', gap: 7, alignItems: 'center', justifyContent: 'center' }}>
                   <IcCamera size={16} color="var(--t2)" /> {closeoutUploading ? 'Uploading…' : 'Take / choose closeout photo'}
                 </button>
               )}
             </div>
-            <button onClick={closeSnag} disabled={closeoutSaving || closeoutUploading || !closeoutResolution.trim() || !closeoutPhotoUrl} style={{ padding: '13px 16px', borderRadius: 11, border: 'none', background: !closeoutResolution.trim() || !closeoutPhotoUrl ? 'rgba(16,185,129,0.3)' : '#10b981', color: '#fff', fontFamily: SF, fontWeight: 800, cursor: closeoutSaving ? 'wait' : 'pointer' }}>
+            <button type="button" onClick={closeSnag} disabled={closeoutSaving || closeoutUploading || !closeoutResolution.trim() || !closeoutPhotoUrl} style={{ padding: '13px 16px', borderRadius: 11, border: 'none', background: !closeoutResolution.trim() || !closeoutPhotoUrl ? 'rgba(16,185,129,0.3)' : '#10b981', color: '#fff', fontFamily: SF, fontWeight: 800, cursor: closeoutSaving ? 'wait' : 'pointer' }}>
               {closeoutSaving ? 'Closing…' : 'Verify & close snag'}
             </button>
             <p style={{ fontFamily: SF, fontSize: 10, color: 'var(--t3)', lineHeight: 1.45 }}>Closeout stores the resolution, evidence, closer and verification time for audit. Reopening does not delete that history.</p>
