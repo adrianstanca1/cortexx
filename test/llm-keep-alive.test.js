@@ -20,6 +20,7 @@ function keepAliveFieldFor(envVal) {
   const OLLAMA_KEEP_ALIVE = envVal ?? '30m'
   const v = OLLAMA_KEEP_ALIVE.trim()
   if (v === '' || v === 'default') return {}
+  if (/^-?\d+(\.\d+)?$/.test(v)) return { keep_alive: Number(v) }
   return { keep_alive: v }
 }
 
@@ -30,8 +31,19 @@ test('keepAliveField — defaults to 30m when unset', () => {
 
 test('keepAliveField — passes Ollama duration strings through', () => {
   assert.deepEqual(keepAliveFieldFor('2h'), { keep_alive: '2h' })
-  assert.deepEqual(keepAliveFieldFor('-1'), { keep_alive: '-1' })
   assert.deepEqual(keepAliveFieldFor('30m'), { keep_alive: '30m' })
+  assert.deepEqual(keepAliveFieldFor('-1m'), { keep_alive: '-1m' })
+})
+
+test('keepAliveField — bare numeric values become JSON numbers, not strings', () => {
+  // Ollama parses string durations with Go's time.ParseDuration, which rejects a
+  // unitless "-1" and returns HTTP 400 ("missing unit in duration"). Only a
+  // numeric -1 or a string with a unit means permanent residency, so "-1" must
+  // not be sent as a string. Verified against a live Ollama server.
+  assert.deepEqual(keepAliveFieldFor('-1'), { keep_alive: -1 })
+  assert.equal(typeof keepAliveFieldFor('-1').keep_alive, 'number')
+  assert.deepEqual(keepAliveFieldFor('0'), { keep_alive: 0 })
+  assert.deepEqual(keepAliveFieldFor('30'), { keep_alive: 30 })
 })
 
 test('keepAliveField — empty/default OMITS the field so Ollama uses its own default', () => {
@@ -42,11 +54,11 @@ test('keepAliveField — empty/default OMITS the field so Ollama uses its own de
   assert.deepEqual(keepAliveFieldFor('default'), {})
 })
 
-test('keepAliveField — "0" is passed through verbatim, NOT rewritten', () => {
+test('keepAliveField — "0" is passed through, NOT rewritten to omit', () => {
   // Deliberate: "0" is a legitimate (if footgunny) immediate-unload choice, so
   // we surface it as configured rather than silently substituting something the
   // operator did not ask for. See the lib/llm.ts comment warning about it.
-  assert.deepEqual(keepAliveFieldFor('0'), { keep_alive: '0' })
+  assert.deepEqual(keepAliveFieldFor('0'), { keep_alive: 0 })
 })
 
 test('keepAliveField — trimmed before comparison', () => {
