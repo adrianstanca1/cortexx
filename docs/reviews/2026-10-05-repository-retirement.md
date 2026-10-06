@@ -38,6 +38,10 @@ Each repository has a bare mirror, an all-refs Git bundle, an exported ref list,
 - Agent/mobile control: the useful OpenClaw mobile concepts are now native Agent OS capabilities: lifecycle control, groups/coordinators, skill manifests, delegation, approvals and SecureStore-backed connection presets. The canonical API requires an operator bearer token.
 - HORUS site intelligence: PPE detection, asset movement/location and site-intelligence analytics are retained as a research direction. Face-recognition attendance and raw biometric/reference data are not promoted into production; existing GPS/manual/QR-style attendance remains the safer canonical path until a separately governed biometric design is approved.
 
+## Dependency security note
+
+The newly consolidated Agent OS mobile surface is pinned to the latest compatible Expo 57 patch and exact React 19.2.3. Its clean-install production audit still reports upstream Expo/Metro high-severity findings rooted in braces 3.0.3 and node-forge 1.4.0. The npm registry currently exposes no patched release for either package, and npm's forced remediation proposes incompatible Expo/React Native downgrades. These are tracked upstream rather than hidden or force-overridden.
+
 ## Explicitly excluded artifacts
 
 - cortexbuild-pro-2 SQLite database, -wal and -shm files.
