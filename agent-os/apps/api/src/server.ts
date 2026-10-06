@@ -116,13 +116,18 @@ const server = createServer(async (req: any, res: any) => {
 
     if (url.pathname === "/api/agents" && req.method === "POST") {
       const input = await body(req);
-      const agent = agents.spawn({
-        id: input.id ? String(input.id) : undefined,
-        name: String(input.name || ""),
-        role: String(input.role || ""),
-        model: input.model ? String(input.model) : undefined,
-        capabilities: Array.isArray(input.capabilities) ? input.capabilities.map(String) : [],
-      });
+      let agent;
+      try {
+        agent = agents.spawn({
+          id: input.id ? String(input.id) : undefined,
+          name: String(input.name || ""),
+          role: String(input.role || ""),
+          model: input.model ? String(input.model) : undefined,
+          capabilities: Array.isArray(input.capabilities) ? input.capabilities.map(String) : [],
+        });
+      } catch (error) {
+        return json(res, 400, { error: error instanceof Error ? error.message : String(error) });
+      }
       events.publish("agent.registered", { agentId: agent.id, payload: { role: agent.role } });
       return json(res, 201, agent);
     }

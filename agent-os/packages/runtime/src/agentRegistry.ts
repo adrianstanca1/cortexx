@@ -71,8 +71,14 @@ export class AgentRegistry {
     return agent;
   }
 
-  suspend(id:string){ return this.setState(id,"suspended"); }
-  resume(id:string){ const agent=this.get(id); return agent && agent.state!=="terminated" ? this.setState(id,"idle") : undefined; }
+  suspend(id:string){
+    const agent=this.get(id);
+    return agent && agent.state!=="terminated" ? this.setState(id,"suspended") : undefined;
+  }
+  resume(id:string){
+    const agent=this.get(id);
+    return agent && agent.state!=="terminated" ? this.setState(id,"idle") : undefined;
+  }
   terminate(id:string){ return this.setState(id,"terminated"); }
   incrementRuns(id:string){ const agent=this.get(id); if(agent) agent.runsCompleted=(agent.runsCompleted||0)+1; }
 }

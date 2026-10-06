@@ -13,4 +13,4 @@
 - Skill installation in the current registry installs trusted catalog metadata only; it does not execute arbitrary remote packages.
 - Secrets come only from environment or a secret manager and must never be logged.
 - The Expo 57 mobile toolchain currently inherits upstream high-severity npm advisories through Expo/Metro (braces and node-forge). The registry currently publishes no patched braces/node-forge release; npm's suggested forced fix downgrades to incompatible Expo/React Native generations. Keep the SDK on the latest compatible patch and re-audit on dependency updates.
-- Production deployments should use HTTPS, rate limiting and network policy in addition to the operator-token boundary.
+- Production deployments must keep the Agent OS listener loopback/private-only and expose it through an HTTPS reverse proxy with rate limiting and network policy. The mobile client rejects credential-bearing non-loopback HTTP connections.

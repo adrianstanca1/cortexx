@@ -59,7 +59,13 @@ export class DelegationService {
   async execute(id:string){
     const item=this.items.get(id); if(!item) throw new Error("Delegation not found");
     if(item.status==="pending_approval") throw new Error("Delegation requires approval");
-    const target=this.agents.get(item.toAgent); if(!target||target.state==="terminated"||target.state==="suspended") throw new Error("Target agent unavailable");
+    const target=this.agents.get(item.toAgent);
+    if(!target||target.state==="terminated"||target.state==="suspended"){
+      item.status="failed";
+      item.error="Target agent unavailable";
+      this.events.publish("delegation.failed",{agentId:item.toAgent,payload:{delegationId:item.id,error:item.error}});
+      return item;
+    }
     item.status="processing"; this.agents.setState(item.toAgent,"busy");
     this.events.publish("delegation.started",{agentId:item.toAgent,payload:{delegationId:item.id,fromAgent:item.fromAgent}});
     try{
