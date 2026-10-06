@@ -25,6 +25,8 @@ const URL_RE = new RegExp(`\\b(?:${SCHEMES.join('|')}):\\/\\/([^:@/\\s]+):([^@/\
 // just the bare words.
 const SECRET_KEY = '[A-Za-z0-9_]*(?:password|passwd|pwd|secret|token|api[_-]?key|credential|auth)[A-Za-z0-9_]*'
 
+const TEMPLATE_SECRET_RE = new RegExp('\\b' + SECRET_KEY + '\\s*[\'"]?\\s*[:=]\\s*`(?![^`]*\\$\\{)([^`]{6,})`', 'i')
+
 const PATTERNS = [
   { name: 'URL with inline password', group: 2, user: 1, host: 3, re: URL_RE },
   // Quoted value. '$' is NOT excluded from the capture: a bare "$" inside an
@@ -37,6 +39,7 @@ const PATTERNS = [
   // allowed INSIDE the quotes: a quoted passphrase may contain them, and the
   // capture now runs to the matching quote rather than stopping at whitespace.
   { name: 'secret assigned inline', group: 1, re: new RegExp(`\\b${SECRET_KEY}\\s*['"]?\\s*[:=]\\s*['"]([^'"]{6,})['"]`, 'i') },
+  { name: 'secret assigned in template literal', group: 1, re: TEMPLATE_SECRET_RE, sourceOnly: true },
   // Bare env-style assignment, as used by .env files: KEY=value with no quotes.
   // Also accepts the colon form used by unquoted YAML scalars (ADMIN_PASSWORD: x).
   // Unquoted values run to whitespace or an inline comment, so a value cannot
@@ -154,29 +157,26 @@ function isPlaceholder(value) {
       raw.replace(/\$\{[A-Za-z_][A-Za-z0-9_]*(:-[^{}]*)?\}/g, '').trim() !== '') {
     return false
   }
-  // A URL/connection string. Judged by the URL pattern above, which decomposes
-  // it into user/password/host; treating the whole string as an opaque
-  // password would only produce noise.
-  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) return true
-  // A URL whose PASSWORD POSITION holds a reference is not a literal
-  // credential, e.g. `https://x-access-token:${GH_PAT}@github.com/org/repo.git`.
-  // The `${...}` literal-remainder rule above cannot make this call on its own:
-  // the value as a whole is a URL, and the reference sits in the middle of it.
-  // Only the password component is judged, and only for an embedded literal.
+  // Inspect URL userinfo BEFORE the generic URL exemption. A URL carrying a
+  // literal password is a credential even though the whole value is URL-shaped.
+  // Only a password position that is itself a whole environment reference is
+  // safe to exempt; defaults and literal prefixes/suffixes still publish data.
   const urlUserinfo = /^[a-z][a-z0-9+.-]*:\/\/[^/@:]*:([^/@]*)@/i.exec(raw)
   if (urlUserinfo) {
     const pw = urlUserinfo[1]
-    if (!/\$\{/.test(pw) || pw.replace(/\$\{[A-Za-z_][A-Za-z0-9_]*(:-[^{}]*)?\}/g, '').trim() !== '') {
-      return false
-    }
+    if (/^\$(?:\{[A-Za-z_][A-Za-z0-9_]*\}|[A-Za-z_][A-Za-z0-9_]*)$/.test(pw)) return true
+    return false
   }
+  // URLs without a literal userinfo password are connection strings rather than
+  // secret values and are judged by the URL-specific pattern in scan().
+  if (/^[a-z][a-z0-9+.-]*:\/\//i.test(raw)) return true
   // A dependency version constraint: "5.0.0-beta.32", "3.0.0 || 4.0.0". These
   // land here because the dependency NAME contains a secret noun ("next-auth",
   // "js-tokens", "x-sentry-auth"), and a version range is never a credential
   // however it is punctuated. Judged structurally — every "||" branch must
   // itself be a bare semver — rather than by listing version strings.
   if (raw.split('||').every((part) =>
-        /^[~^><=\s]*v?\d+(?:\.\d+)*(?:[-+][0-9A-Za-z.-]+)?[~^><=\s]*$/.test(part))) {
+        /^[~^><=\s]*v?\d+\.\d+(?:\.\d+)*(?:[-+][0-9A-Za-z.-]+)?[~^><=\s]*$/.test(part))) {
     return true
   }
   // An HTTP auth scheme is transport framing, not part of the secret, so judge
@@ -185,8 +185,9 @@ function isPlaceholder(value) {
   // credential-shaped remainder and is reported.
   const scheme = /^(?:bearer|basic|token|digest)\s+/i.exec(raw)
   if (scheme) return isPlaceholder(raw.slice(scheme[0].length))
-  // Explicit redaction marker: the author has said "there is a value here".
-  if (/\.\.\.|\*{2,}|<[^>]+>/.test(raw)) return true
+  // Explicit redaction markers are placeholders only when they are the whole
+  // value. A credential that merely contains a marker is still a leak.
+  if (/^(?:\.\.\.|\*{2,}|<[^>]+>)$/.test(raw)) return true
   // A shell/env variable reference is the correct way to inject a credential.
   // The whole value must BE the reference, with NO default: `${VAR}` and `$VAR`
   // point at a secret held elsewhere, but `${VAR:-literal}` still publishes that
@@ -281,7 +282,8 @@ function isLocalHost(urlHost) {
 /** Classify every pattern match in a file; return only the non-placeholder ones. */
 function scan(contents, file) {
   const findings = []
-  for (const { name, re, group, user, host } of PATTERNS) {
+  for (const { name, re, group, user, host, sourceOnly } of PATTERNS) {
+    if (sourceOnly && !/\.(?:[cm]?[jt]sx?)$/i.test(file)) continue
     const global = new RegExp(re.source, re.flags.includes('g') ? re.flags : `${re.flags}g`)
     let m
     while ((m = global.exec(contents)) !== null) {
@@ -513,6 +515,9 @@ test('the scanner catches every previously-known bypass', () => {
   // Exercise the username-echo rule without storing a credential-shaped URI
   // in the repository. The repeated value is constructed only at runtime.
   const remoteEcho = value(22)
+  const tick = String.fromCharCode(96)
+  const numericPassword = Array.from({ length: 8 }, (_, i) => String((i + 1) % 10)).join('')
+  const embeddedRedaction = value(23).slice(0, 5) + '*'.repeat(3) + value(24).slice(0, 5)
   const mustCatch = [
     ['env-style assignment with a prefixed key', 'app/config.py', `ADMIN_PASSWORD=${probe('Qz7', 'Wm2', 'Kp9')}`],
     ['env-style assignment, quoted', '.env.example', `JWT_SECRET="${probe('Xv4', 'Bt6', 'Zr8')}"`],
@@ -549,6 +554,12 @@ test('the scanner catches every previously-known bypass', () => {
       'url: https://x-access-token:' + value(7) + '$' + '{GH_PAT}@github.com/org/repo.git'],
     ['https token URL with a shell fallback literal', 'deploy.yml',
       'url: https://x-access-token:' + '$' + '{GH_PAT:-' + value(8) + '}@github.com/org/repo.git'],
+    ['numeric-only password is not a semver', 'app/config.env',
+      'ADMIN_PASSWORD=' + numericPassword],
+    ['embedded redaction marker does not hide a credential', 'app/config.env',
+      'ADMIN_PASSWORD=' + embeddedRedaction],
+    ['template-literal credential', 'app/config.ts',
+      'const API_TOKEN = ' + tick + value(25) + tick + ';'],
   ]
   for (const [label, file, contents] of mustCatch) {
     assert.notDeepEqual(scan(contents, file), [], `guardrail must catch: ${label}`)
@@ -589,6 +600,10 @@ test('the scanner still permits documented placeholders and env references', () 
     ['env reference assignment', '.env.example', 'ADMIN_PASSWORD=$ADMIN_PASSWORD'],
     ['self-describing instruction', '.env.example', 'POSTGRES_PASSWORD=GENERATE_LONG_RAND_PASSWORD'],
     ['placeholder words', '.env.template', 'DB_PASSWORD=your_password_here'],
+    ['whole redaction marker', '.env.template', 'DB_PASSWORD=' + '*'.repeat(3)],
+    ['dependency semver', 'package.json', '{"next-auth":"5.0.0-beta.32"}'],
+    ['template literal env reference', 'app/config.ts',
+      'const API_TOKEN = ' + String.fromCharCode(96) + '$' + '{API_TOKEN}' + String.fromCharCode(96) + ';'],
   ]
   for (const [label, file, contents] of mustPass) {
     assert.deepEqual(scan(contents, file), [], `must NOT be flagged: ${label}`)
