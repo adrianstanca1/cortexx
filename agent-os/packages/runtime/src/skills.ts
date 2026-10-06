@@ -13,7 +13,19 @@ const CATALOG:SkillDefinition[]=[
 
 export class SkillRegistry {
   private installed=new Map<string,InstalledSkill>();
-  constructor(private agents:AgentRegistry, private events:EventBus){}
+  private baseCapabilities=new Map<string,string[]>();
+  constructor(private agents:AgentRegistry, private events:EventBus){
+    for(const agent of agents.list()) this.baseCapabilities.set(agent.id,[...agent.capabilities]);
+  }
+  private refreshAgentCapabilities(agentId:string){
+    const agent=this.agents.get(agentId); if(!agent) return;
+    const base=this.baseCapabilities.get(agentId) ?? [...agent.capabilities];
+    if(!this.baseCapabilities.has(agentId)) this.baseCapabilities.set(agentId,[...base]);
+    const granted=[...this.installed.values()]
+      .filter(item=>item.enabledForAgents.includes(agentId))
+      .flatMap(item=>this.definition(item.skillId)?.capabilities ?? []);
+    agent.capabilities=[...new Set([...base,...granted])];
+  }
   catalog(){return CATALOG.map(x=>({...x}));}
   definition(id:string){return CATALOG.find(x=>x.id===id);}
   listInstalled(){return [...this.installed.values()].map(item=>({...item,definition:this.definition(item.skillId)}));}
@@ -31,8 +43,7 @@ export class SkillRegistry {
     const agent=this.agents.get(agentId); if(!agent) throw new Error("Agent not found");
     if(!item.enabledForAgents.includes(agentId)) item.enabledForAgents.push(agentId);
     item.state="enabled";
-    const definition=this.definition(item.skillId);
-    if(definition) agent.capabilities=[...new Set([...agent.capabilities,...definition.capabilities])];
+    this.refreshAgentCapabilities(agentId);
     this.events.publish("skill.enabled",{agentId,payload:{instanceId,skillId:item.skillId}});
     return item;
   }
@@ -40,12 +51,15 @@ export class SkillRegistry {
     const item=this.installed.get(instanceId); if(!item) throw new Error("Installed skill not found");
     item.enabledForAgents=item.enabledForAgents.filter(id=>id!==agentId);
     item.state=item.enabledForAgents.length?"enabled":"installed";
+    this.refreshAgentCapabilities(agentId);
     this.events.publish("skill.disabled",{agentId,payload:{instanceId,skillId:item.skillId}});
     return item;
   }
   uninstall(instanceId:string){
     const item=this.installed.get(instanceId); if(!item) return false;
+    const affected=[...item.enabledForAgents];
     this.installed.delete(instanceId);
+    for(const agentId of affected) this.refreshAgentCapabilities(agentId);
     this.events.publish("skill.uninstalled",{payload:{instanceId,skillId:item.skillId}});
     return true;
   }

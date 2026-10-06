@@ -48,6 +48,9 @@ export class DelegationService {
   async applyApproval(approvalId:string,status:ApprovalStatus){
     const item=this.list().find(x=>x.approvalId===approvalId);
     if(!item) return undefined;
+    // Approval delivery is retryable. Only the original pending state may
+    // transition to execution; completed/processing/rejected retries are no-ops.
+    if(item.status!=="pending_approval") return item;
     if(status==="rejected"){item.status="rejected";return item;}
     if(status==="approved"){item.status="queued";await this.execute(item.id);}
     return item;

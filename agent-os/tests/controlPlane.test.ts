@@ -75,7 +75,11 @@ test("skills install as catalog manifests and enable capabilities", () => {
   assert.equal(skills.listInstalled()[0].state, "enabled");
   skills.disable(installed.instanceId, "researcher");
   assert.equal(skills.listInstalled()[0].state, "installed");
+  assert.ok(!agents.get("researcher")?.capabilities.includes("bid-score"));
+  skills.enable(installed.instanceId, "researcher");
+  assert.ok(agents.get("researcher")?.capabilities.includes("bid-score"));
   assert.equal(skills.uninstall(installed.instanceId), true);
+  assert.ok(!agents.get("researcher")?.capabilities.includes("bid-score"));
 });
 
 test("normal delegations execute and critical delegations require approval", async () => {
@@ -100,6 +104,12 @@ test("normal delegations execute and critical delegations require approval", asy
   assert.ok(critical.approvalId);
   const approval = approvals.decide(critical.approvalId!, "approved");
   assert.ok(approval);
-  await service.applyApproval(critical.approvalId!, "approved");
+  await Promise.all([
+    service.applyApproval(critical.approvalId!, "approved"),
+    service.applyApproval(critical.approvalId!, "approved"),
+  ]);
   assert.equal(critical.status, "completed");
+  assert.equal(agents.get("tender-scout")?.runsCompleted, 1);
+  await service.applyApproval(critical.approvalId!, "approved");
+  assert.equal(agents.get("tender-scout")?.runsCompleted, 1);
 });
