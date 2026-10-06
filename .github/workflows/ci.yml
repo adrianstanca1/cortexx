@@ -270,8 +270,8 @@ jobs:
       DATABASE_URL: postgresql://postgres:test@localhost:5432/cortexx_a11y
       NEXTAUTH_URL: http://127.0.0.1:3000
       AUTH_URL: http://127.0.0.1:3000
-      NEXTAUTH_SECRET: ci-a11y-secret-not-used-outside-ci
-      AUTH_SECRET: ci-a11y-secret-not-used-outside-ci
+      NEXTAUTH_SECRET: ci-accessibility-secret-not-used-outside-ci
+      AUTH_SECRET: ci-accessibility-secret-not-used-outside-ci
       ADMIN_EMAIL: admin@cortexbuildpro.tech
       ADMIN_PASSWORD: changeme-please-1234
       E2E_ADMIN_EMAIL: admin@cortexbuildpro.tech
