@@ -83,8 +83,9 @@ function collectRepoIdentifiers() {
   for (const f of files) {
     let txt;
     try { txt = readFileSync(f, 'utf8'); } catch { continue; }
-    // camelCase references like prisma.serviceCatalogItem / .user, plus model defs
-    const re = /(?:prisma\.|model\s+)([A-Za-z][A-Za-z0-9]*)/g;
+    // Include the database and transaction aliases used by typed helpers and
+    // atomic route writes, e.g. db.supplierQualityEvidence / tx.user.
+    const re = /(?:\b(?:prisma|db|tx)\.|model\s+)([A-Za-z][A-Za-z0-9]*)/g;
     let m;
     while ((m = re.exec(txt)) !== null) bag.add(m[1]);
   }
