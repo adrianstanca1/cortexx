@@ -9,7 +9,7 @@ test('EAS TestFlight workflow requires Expo token and exact production path', ()
   assert.match(workflow, /Require Expo access token/)
   assert.match(workflow, /--platform ios/)
   assert.match(workflow, /--profile production/)
-  assert.match(workflow, /--freeze-credentials/)
+  assert.doesNotMatch(workflow, /--freeze-credentials/)
   assert.match(workflow, /--non-interactive/)
 })
 
@@ -46,4 +46,15 @@ test('workflow relies on eas submit --wait as the authoritative TestFlight deliv
   assert.doesNotMatch(workflow, /submit:status/)
   assert.match(workflow, /npx eas-cli@21\.0\.1 submit \\/)
   assert.match(workflow, /--id "\$BUILD_ID"[\s\S]*--wait/)
+})
+
+
+test('EAS TestFlight workflow can use an ASC API key to repair Apple credentials in CI', () => {
+  assert.match(workflow, /APP_STORE_CONNECT_KEY_ID: \$\{\{ secrets\.APP_STORE_CONNECT_KEY_ID \}\}/)
+  assert.match(workflow, /APP_STORE_CONNECT_ISSUER_ID: \$\{\{ secrets\.APP_STORE_CONNECT_ISSUER_ID \}\}/)
+  assert.match(workflow, /APP_STORE_CONNECT_KEY_BASE64: \$\{\{ secrets\.APP_STORE_CONNECT_KEY_BASE64 \}\}/)
+  assert.match(workflow, /EXPO_ASC_API_KEY_PATH=/)
+  assert.match(workflow, /EXPO_ASC_KEY_ID=/)
+  assert.match(workflow, /EXPO_ASC_ISSUER_ID=/)
+  assert.match(workflow, /Clean up App Store Connect key/)
 })
