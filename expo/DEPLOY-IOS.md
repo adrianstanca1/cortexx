@@ -28,7 +28,7 @@ End-to-end build + submit for the Expo iOS app. Run from a Mac with Xcode + EAS 
 cd cortexx-review/expo
 npx eas build --platform ios --profile production
 ```
-- `autoIncrement: true` bumps build number each run (no manual bump).
+- `cli.appVersionSource: "remote"` + `autoIncrement: true` makes EAS persist and increment the iOS build number across CI runs (no manual commit bump).
 - Cloud build on EAS (no Mac needed for compilation). ~15–25 min.
 
 ## Submit to TestFlight

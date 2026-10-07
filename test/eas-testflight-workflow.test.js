@@ -25,3 +25,10 @@ test('EAS TestFlight workflow keeps release concurrency serialized', () => {
   assert.match(workflow, /group: cortexx-eas-testflight/)
   assert.match(workflow, /cancel-in-progress: false/)
 })
+
+
+test('EAS production versioning persists remotely across CI releases', () => {
+  const eas = JSON.parse(fs.readFileSync('expo/eas.json', 'utf8'))
+  assert.equal(eas.cli.appVersionSource, 'remote')
+  assert.equal(eas.build.production.autoIncrement, true)
+})
