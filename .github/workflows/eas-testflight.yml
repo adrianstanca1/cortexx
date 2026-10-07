@@ -99,4 +99,3 @@ jobs:
             --wait \
             --non-interactive \
             --what-to-test "$WHAT_TO_TEST"
-
