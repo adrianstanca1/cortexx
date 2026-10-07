@@ -1,0 +1,101 @@
+name: EAS iOS — Build & TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      what_to_test:
+        description: TestFlight "What to Test" note
+        required: false
+        default: Cortexx release candidate
+
+permissions:
+  contents: read
+
+concurrency:
+  group: cortexx-eas-testflight
+  cancel-in-progress: false
+
+jobs:
+  build-and-submit:
+    name: EAS build and TestFlight submit
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    defaults:
+      run:
+        working-directory: expo
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      CI: "1"
+
+    steps:
+      - name: Checkout exact release
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: expo/package-lock.json
+
+      - name: Require Expo access token
+        shell: bash
+        run: |
+          if [ -z "$EXPO_TOKEN" ]; then
+            echo "::error::EXPO_TOKEN is not configured. Add an Expo personal access token as the repository secret EXPO_TOKEN."
+            exit 1
+          fi
+
+      - name: Install native dependencies
+        run: npm ci --ignore-scripts
+
+      - name: Verify Expo TypeScript
+        run: npx tsc --noEmit
+
+      - name: Verify EAS account and project
+        run: |
+          npx eas-cli@21.0.1 whoami
+          npx eas-cli@21.0.1 project:info
+
+      - name: Build signed iOS app
+        id: build
+        run: |
+          set -euo pipefail
+          BUILD_JSON="$RUNNER_TEMP/eas-build.json"
+          npx eas-cli@21.0.1 build \
+            --platform ios \
+            --profile production \
+            --wait \
+            --non-interactive \
+            --freeze-credentials \
+            --message "GitHub release ${GITHUB_SHA}" \
+            --json > "$BUILD_JSON"
+
+          BUILD_ID="$(node -e '
+            const fs = require("fs");
+            const parsed = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const build = Array.isArray(parsed) ? parsed[0] : parsed;
+            if (!build || !build.id) {
+              console.error("EAS build output did not contain a build id");
+              process.exit(1);
+            }
+            process.stdout.write(build.id);
+          ' "$BUILD_JSON")"
+
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Submit exact build to TestFlight and wait for Apple
+        env:
+          WHAT_TO_TEST: ${{ inputs.what_to_test }}
+          BUILD_ID: ${{ steps.build.outputs.build_id }}
+        run: |
+          set -euo pipefail
+          npx eas-cli@21.0.1 submit \
+            --platform ios \
+            --profile production \
+            --id "$BUILD_ID" \
+            --wait \
+            --non-interactive \
+            --what-to-test "$WHAT_TO_TEST"
