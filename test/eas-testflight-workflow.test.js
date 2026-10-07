@@ -42,6 +42,8 @@ test('workflow waits for the exact TestFlight submission, not only the build', (
   assert.match(workflow, /--what-to-test "\$WHAT_TO_TEST"/)
 })
 
-test('workflow verifies TestFlight status after submission success', () => {
-  assert.match(workflow, /npx eas-cli@21\.0\.1 submit:status --platform ios --profile production --json --non-interactive/)
+test('workflow relies on eas submit --wait as the authoritative TestFlight delivery result', () => {
+  assert.doesNotMatch(workflow, /submit:status/)
+  assert.match(workflow, /npx eas-cli@21\.0\.1 submit \\/)
+  assert.match(workflow, /--id "\$BUILD_ID"[\s\S]*--wait/)
 })

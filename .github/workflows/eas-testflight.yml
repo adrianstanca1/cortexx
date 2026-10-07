@@ -100,6 +100,3 @@ jobs:
             --non-interactive \
             --what-to-test "$WHAT_TO_TEST"
 
-      - name: Verify TestFlight status
-        if: success()
-        run: npx eas-cli@21.0.1 submit:status --platform ios --profile production --json --non-interactive
