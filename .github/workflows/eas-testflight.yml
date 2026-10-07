@@ -25,6 +25,8 @@ jobs:
         working-directory: expo
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_APPLE_TEAM_ID: "4G3G5MX9BH"
+      EXPO_APPLE_TEAM_TYPE: "INDIVIDUAL"
       CI: "1"
 
     steps:

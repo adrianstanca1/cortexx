@@ -56,5 +56,7 @@ test('EAS TestFlight workflow can use an ASC API key to repair Apple credentials
   assert.match(workflow, /EXPO_ASC_API_KEY_PATH=/)
   assert.match(workflow, /EXPO_ASC_KEY_ID=/)
   assert.match(workflow, /EXPO_ASC_ISSUER_ID=/)
+  assert.match(workflow, /EXPO_APPLE_TEAM_ID: "4G3G5MX9BH"/)
+  assert.match(workflow, /EXPO_APPLE_TEAM_TYPE: "INDIVIDUAL"/)
   assert.match(workflow, /Clean up App Store Connect key/)
 })
