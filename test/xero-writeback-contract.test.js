@@ -12,9 +12,9 @@ test('Xero write-back retries adopt only Cortexx-owned remote invoice numbers', 
 })
 
 test('Xero write-back blocks automatic overwrite when a synced payload changes', () => {
-  assert.match(route, /existing\?\.externalId && existing\.payloadHash && existing\.payloadHash !== hash/)
+  assert.match(route, /existing\?\.payloadHash && existing\.payloadHash !== hash/)
   assert.match(route, /Automatic overwrite is blocked/)
-  assert.match(route, /priorPayment\.payloadHash && priorPayment\.payloadHash !== paymentHash/)
+  assert.match(route, /priorPayment\?\.payloadHash && priorPayment\.payloadHash !== paymentHash/)
 })
 
 test('paid local invoices require mapped governed payment sync', () => {
@@ -32,6 +32,6 @@ test('mapping updates validate live Xero accounts and tax rates before enablemen
 
 test('payment retry recovers an already-applied remote payment before creating another', () => {
   assert.match(route, /recoverRemotePayment/)
-  assert.match(route, /Multiple matching Xero payments found; manual reconciliation required/)
+  assert.match(route, /recoverPaymentId\(payments, expected\)/)
   assert.match(route, /if \(recoveredPaymentId\)/)
 })

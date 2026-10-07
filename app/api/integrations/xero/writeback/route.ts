@@ -17,6 +17,9 @@ const {
   paymentPayload,
   contactNumber,
   payloadHash,
+  idempotencyKey,
+  recoverPaymentId,
+  money,
   missingWriteScopes,
   writebackMapping,
 } = xeroWriteback
@@ -55,6 +58,7 @@ async function contactIdFor(
 
   const created = await xeroApiRequest(connection, '/Contacts', {
     method: 'POST',
+    headers: { 'Idempotency-Key': idempotencyKey(connection.id, 'contact', number) },
     body: JSON.stringify({
       Contacts: [{
         Name: name.slice(0, 255),
@@ -69,32 +73,36 @@ async function contactIdFor(
   return String(id)
 }
 
-async function remoteInvoiceByNumber(connection: AccountingConnection, number: string) {
-  const where = encodeURIComponent(`InvoiceNumber=="${xeroWhereLiteral(number)}"`)
+async function remoteInvoiceByNumber(connection: AccountingConnection, number: string, entityType: EntityType) {
+  const type = entityType === 'client_invoice' ? 'ACCREC' : 'ACCPAY'
+  const where = encodeURIComponent(`InvoiceNumber=="${xeroWhereLiteral(number)}" AND Type=="${type}"`)
   const body = await xeroApiRequest(connection, `/Invoices?where=${where}`)
   const rows = Array.isArray(body.Invoices) ? body.Invoices as Array<Record<string, unknown>> : []
+  if (rows.length > 1) throw new Error('Multiple Xero invoices share this number; manual reconciliation required')
   return rows.find(row => row.InvoiceID) || null
 }
 
-async function recoverRemotePayment(connection: AccountingConnection, invoiceId: string, amount: number, paidAt: Date | string | null) {
+async function recoverRemotePayment(connection: AccountingConnection, invoiceId: string, expected: ReturnType<typeof paymentPayload>) {
   const body = await xeroApiRequest(connection, `/Invoices/${encodeURIComponent(invoiceId)}`)
   const rows = Array.isArray(body.Invoices) ? body.Invoices as Array<Record<string, unknown>> : []
   const invoice = rows[0]
-  const payments = invoice && Array.isArray(invoice.Payments) ? invoice.Payments as Array<Record<string, unknown>> : []
-  const targetAmount = Math.round(Number(amount) * 100) / 100
-  const targetDate = paidAt ? new Date(paidAt).toISOString().slice(0, 10) : null
-  const matching = payments.filter(payment => {
-    const paymentAmount = Math.round(Number(payment.Amount || 0) * 100) / 100
-    if (paymentAmount !== targetAmount) return false
-    if (!targetDate) return true
-    const rawDate = payment.DateString || payment.Date
-    if (!rawDate) return false
-    const legacy = String(rawDate).match(/^\/Date\((-?\d+)/)
-    const parsed = legacy ? new Date(Number(legacy[1])) : new Date(String(rawDate))
-    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === targetDate
-  })
-  if (matching.length > 1) throw new Error('Multiple matching Xero payments found; manual reconciliation required')
-  return matching[0]?.PaymentID ? String(matching[0].PaymentID) : null
+  if (!invoice || invoice.InvoiceID !== invoiceId) throw new Error('Xero invoice details unavailable; manual reconciliation required')
+  if (!Array.isArray(invoice.Payments) && money(invoice.AmountPaid) !== 0) {
+    throw new Error('Xero payment history unavailable; manual reconciliation required')
+  }
+  const summaries = invoice && Array.isArray(invoice.Payments) ? invoice.Payments as Array<Record<string, unknown>> : []
+  const candidates = summaries.filter(payment => money(payment.Amount) === expected.Amount && payment.Status !== 'DELETED')
+  if (candidates.length > 10) throw new Error('Too many candidate Xero payments; manual reconciliation required')
+  const payments = []
+  for (const summary of candidates) {
+    if (!summary.PaymentID) throw new Error('Xero payment is missing its identity; manual reconciliation required')
+    const detail = await xeroApiRequest(connection, `/Payments/${encodeURIComponent(String(summary.PaymentID))}`)
+    const records = Array.isArray(detail.Payments) ? detail.Payments as Array<Record<string, unknown>> : []
+    const payment = records.find(row => row.PaymentID === summary.PaymentID)
+    if (!payment) throw new Error('Xero payment details unavailable; manual reconciliation required')
+    payments.push(payment)
+  }
+  return recoverPaymentId(payments, expected)
 }
 
 async function entityData(entityType: EntityType, entityId: string) {
@@ -232,6 +240,15 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'Map a Xero payment account before syncing a paid invoice' }, { status: 409 })
     }
 
+    // Validate all payment data before any external contact or invoice mutation.
+    if (syncPayment && data.paid) {
+      try {
+        paymentPayload({ invoiceId: 'PREVIEW_INVOICE_ID', amount: data.paymentAmount, paidAt: data.paidAt, reference: data.reference, accountCode: mapping.paymentAccountCode })
+      } catch (error) {
+        return NextResponse.json({ error: error instanceof Error ? error.message : 'Invalid local payment' }, { status: 409 })
+      }
+    }
+
     if (dryRun) {
       auditLog({
         action: 'accounting.xero.writeback_preview',
@@ -260,16 +277,16 @@ export async function POST(req: NextRequest) {
     const existing = await prisma.accountingWriteback.findUnique({
       where: { connectionId_entityType_entityId: key },
     })
-    if (existing?.externalId && existing.payloadHash && existing.payloadHash !== hash) {
+    if (existing?.payloadHash && existing.payloadHash !== hash) {
       return NextResponse.json({
-        error: 'This record changed after it was written to Xero. Automatic overwrite is blocked; reconcile the Xero record before retrying.',
+        error: 'This record changed since its Xero write was attempted. Automatic overwrite is blocked; reconcile the Xero record before retrying.',
         externalId: existing.externalId,
       }, { status: 409 })
     }
 
     let xeroInvoiceId = existing?.externalId || null
     if (!xeroInvoiceId) {
-      const remote = await remoteInvoiceByNumber(connection, String(data.entity.number))
+      const remote = await remoteInvoiceByNumber(connection, String(data.entity.number), entityType)
       if (remote?.InvoiceID) {
         const expectedReference = `Cortexx:${entityId}`
         if (String(remote.Reference || '') !== expectedReference) {
@@ -306,7 +323,7 @@ export async function POST(req: NextRequest) {
 
     if (!xeroInvoiceId) {
       try {
-        const created = await xeroApiRequest(connection, '/Invoices', { method: 'POST', body: JSON.stringify({ Invoices: [payload] }) })
+        const created = await xeroApiRequest(connection, '/Invoices', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey(connection.id, entityType, entityId) }, body: JSON.stringify({ Invoices: [payload] }) })
         const rows = Array.isArray(created.Invoices) ? created.Invoices as Array<Record<string, unknown>> : []
         const createdId = rows[0]?.InvoiceID
         if (!createdId) throw new Error('Xero invoice creation returned no InvoiceID')
@@ -341,16 +358,17 @@ export async function POST(req: NextRequest) {
         where: { connectionId_entityType_entityId: paymentKey },
       })
 
+      if (priorPayment?.payloadHash && priorPayment.payloadHash !== paymentHash) {
+        return NextResponse.json({
+          error: 'The local payment changed since its Xero write was attempted. Automatic overwrite is blocked.',
+          externalId: priorPayment.externalId,
+        }, { status: 409 })
+      }
       if (priorPayment?.status === 'synced') {
-        if (priorPayment.payloadHash && priorPayment.payloadHash !== paymentHash) {
-          return NextResponse.json({
-            error: 'The local payment changed after it was written to Xero. Automatic overwrite is blocked.',
-            externalId: priorPayment.externalId,
-          }, { status: 409 })
-        }
+        if (!priorPayment.externalId) throw new Error('Synced Xero payment has no PaymentID; manual reconciliation required')
         payment = priorPayment
       } else {
-        const recoveredPaymentId = await recoverRemotePayment(connection, xeroInvoiceId, data.paymentAmount, data.paidAt)
+        const recoveredPaymentId = await recoverRemotePayment(connection, xeroInvoiceId, paymentBody)
         if (recoveredPaymentId) {
           payment = await prisma.accountingWriteback.upsert({
             where: { connectionId_entityType_entityId: paymentKey },
@@ -375,42 +393,43 @@ export async function POST(req: NextRequest) {
             },
           })
         } else {
-        await prisma.accountingWriteback.upsert({
-          where: { connectionId_entityType_entityId: paymentKey },
-          create: {
-            organizationId: auth.orgId,
-            connectionId: connection.id,
-            entityType: paymentType,
-            entityId,
-            payloadHash: paymentHash,
-            status: 'pending',
-            lastAttemptAt: new Date(),
-          },
-          update: { payloadHash: paymentHash, status: 'pending', lastError: null, lastAttemptAt: new Date() },
-        })
-
-        try {
-          const response = await xeroApiRequest(connection, '/Payments', { method: 'POST', body: JSON.stringify({ Payments: [paymentBody] }) })
-          const payments = Array.isArray(response.Payments) ? response.Payments as Array<Record<string, unknown>> : []
-          const externalPaymentId = payments[0]?.PaymentID ? String(payments[0].PaymentID) : null
-          payment = await prisma.accountingWriteback.update({
+          await prisma.accountingWriteback.upsert({
             where: { connectionId_entityType_entityId: paymentKey },
-            data: {
-              externalId: externalPaymentId,
-              status: 'synced',
-              lastError: null,
+            create: {
+              organizationId: auth.orgId,
+              connectionId: connection.id,
+              entityType: paymentType,
+              entityId,
+              payloadHash: paymentHash,
+              status: 'pending',
               lastAttemptAt: new Date(),
-              syncedAt: new Date(),
             },
+            update: { payloadHash: paymentHash, status: 'pending', lastError: null, lastAttemptAt: new Date() },
           })
-        } catch (error) {
-          const message = error instanceof Error ? error.message.slice(0, 1800) : 'Xero payment write-back failed'
-          await prisma.accountingWriteback.update({
-            where: { connectionId_entityType_entityId: paymentKey },
-            data: { status: 'error', lastError: message, lastAttemptAt: new Date() },
-          }).catch(() => undefined)
-          throw error
-        }
+
+          try {
+            const response = await xeroApiRequest(connection, '/Payments', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey(connection.id, paymentType, entityId) }, body: JSON.stringify({ Payments: [paymentBody] }) })
+            const payments = Array.isArray(response.Payments) ? response.Payments as Array<Record<string, unknown>> : []
+            const externalPaymentId = payments[0]?.PaymentID ? String(payments[0].PaymentID) : null
+            if (!externalPaymentId) throw new Error('Xero payment creation returned no PaymentID')
+            payment = await prisma.accountingWriteback.update({
+              where: { connectionId_entityType_entityId: paymentKey },
+              data: {
+                externalId: externalPaymentId,
+                status: 'synced',
+                lastError: null,
+                lastAttemptAt: new Date(),
+                syncedAt: new Date(),
+              },
+            })
+          } catch (error) {
+            const message = error instanceof Error ? error.message.slice(0, 1800) : 'Xero payment write-back failed'
+            await prisma.accountingWriteback.update({
+              where: { connectionId_entityType_entityId: paymentKey },
+              data: { status: 'error', lastError: message, lastAttemptAt: new Date() },
+            }).catch(() => undefined)
+            throw error
+          }
         }
       }
     }

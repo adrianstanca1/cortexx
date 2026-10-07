@@ -5,6 +5,7 @@ const crypto = require('node:crypto')
 const WRITE_SCOPES = Object.freeze(['accounting.invoices', 'accounting.payments', 'accounting.contacts'])
 
 function money(value) {
+  if ((typeof value !== 'number' && typeof value !== 'string') || (typeof value === 'string' && !value.trim())) return null
   const n = Number(value)
   return Number.isFinite(n) ? Math.round((n + Number.EPSILON) * 100) / 100 : null
 }
@@ -115,10 +116,13 @@ function paymentPayload({ invoiceId, amount, paidAt, reference, accountCode }) {
   if (!invoiceId) throw new Error('Xero InvoiceID is required')
   if (!accountCode) throw new Error('Payment account mapping is required')
   if (total == null || total <= 0) throw new Error('Payment amount must be positive')
+  if (!paidAt) throw new Error('An explicit payment date is required')
+  const date = new Date(paidAt)
+  if (Number.isNaN(date.getTime())) throw new Error('Payment date is invalid')
   return {
     Invoice: { InvoiceID: invoiceId },
     Account: { Code: accountCode },
-    Date: new Date(paidAt || Date.now()).toISOString().slice(0, 10),
+    Date: date.toISOString().slice(0, 10),
     Amount: total,
     Reference: reference || 'Cortexx payment',
   }
@@ -132,6 +136,30 @@ function payloadHash(payload) {
   return crypto.createHash('sha256').update(JSON.stringify(payload)).digest('hex')
 }
 
+function idempotencyKey(connectionId, entityType, entityId) {
+  // One creation per local identity. Concurrent edits must conflict at Xero,
+  // rather than obtain a new key that could create a second payment.
+  return `Cortexx-${payloadHash({ connectionId, entityType, entityId })}`
+}
+
+function recoverPaymentId(payments, expected) {
+  const candidates = payments.filter(payment => {
+    if (payment.Status === 'DELETED' || money(payment.Amount) !== expected.Amount) return false
+    const raw = payment.DateString || payment.Date
+    const legacy = String(raw || '').match(/^\/Date\((-?\d+)/)
+    const date = legacy ? new Date(Number(legacy[1])) : new Date(raw || '')
+    if (Number.isNaN(date.getTime())) throw new Error('Existing Xero payment has no valid date; manual reconciliation required')
+    return date.toISOString().slice(0, 10) === expected.Date
+  })
+  if (candidates.length > 1) throw new Error('Multiple matching Xero payments found; manual reconciliation required')
+  if (!candidates.length) return null
+  const payment = candidates[0]
+  if (!payment.PaymentID || payment.Reference !== expected.Reference || payment.Account?.Code !== expected.Account.Code) {
+    throw new Error('Existing Xero payment has a different reference or account; manual reconciliation required')
+  }
+  return String(payment.PaymentID)
+}
+
 module.exports = {
   WRITE_SCOPES,
   money,
@@ -143,4 +171,6 @@ module.exports = {
   paymentPayload,
   contactNumber,
   payloadHash,
+  idempotencyKey,
+  recoverPaymentId,
 }

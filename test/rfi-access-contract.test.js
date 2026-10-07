@@ -36,12 +36,11 @@ test('native RFIs create and update through the offline queue-aware collection c
   assert.match(rfiMobile, /Reopen/)
 })
 
-test('native drawings expose register, revisions and relative or absolute file opening', () => {
+test('native drawings expose register, revisions and authenticated file opening', () => {
   assert.match(drawingMobile, /getCollection\('drawings'/)
   assert.match(drawingMobile, /\/api\/drawings\/\$\{item\.id\}/)
   assert.match(drawingMobile, /REV \{item\.revision\}/)
-  assert.match(drawingMobile, /API_URL/)
-  assert.match(drawingMobile, /Linking\.openURL/)
+  assert.match(drawingMobile, /openDrawingFile\(revision\.fileUrl,revision\.fileName\)/)
 })
 
 test('field navigation makes RFIs and drawings first-class native workflows', () => {

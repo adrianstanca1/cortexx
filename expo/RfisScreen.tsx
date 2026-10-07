@@ -1,4 +1,4 @@
-import React,{useEffect,useMemo,useState}from'react';
+import React,{useEffect,useState}from'react';
 import{View,Text,FlatList,TouchableOpacity,StyleSheet,RefreshControl,ActivityIndicator,Modal,TextInput,Alert,ScrollView}from'react-native';
 import{Colors}from'./theme';
 import{getCollection,getProjects,postCollection,putCollection,type AuthUser}from'./api';
@@ -11,14 +11,16 @@ export default function RfisScreen({user,onLogout}:{user:AuthUser;onLogout:()=>v
   const[modal,setModal]=useState(false),[saving,setSaving]=useState(false),[active,setActive]=useState<Rfi|null>(null);
   const[form,setForm]=useState({projectId:'',subject:'',body:'',priority:'medium',assignee:'',dueDate:''});
   const[response,setResponse]=useState('');
+  const[now,setNow]=useState(()=>Date.now());
   const canManage=['company_admin','project_manager','foreman'].includes(String(user.role||'').toLowerCase());
   const load=async()=>{setLoading(true);setErr('');try{const[r,p]=await Promise.all([getCollection('rfis',200),getProjects()]);setItems((r||[])as Rfi[]);setProjects(p||[]);if(!form.projectId&&p?.[0]?.id)setForm(f=>({...f,projectId:p[0].id}));}catch(e:any){setErr(e?.message||'Failed to load RFIs');if(e?.message==='unauthorized')onLogout();}finally{setLoading(false)}};
   useEffect(()=>{void load()},[]);// eslint-disable-line react-hooks/exhaustive-deps
+  useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer)},[]);
   const open=()=>{setForm({projectId:projects[0]?.id||'',subject:'',body:'',priority:'medium',assignee:'',dueDate:''});setModal(true)};
   const save=async()=>{if(!form.projectId||!form.subject.trim()||!form.body.trim()){Alert.alert('Missing information','Project, subject and question are required.');return}setSaving(true);try{const r=await postCollection('rfis',{...form,subject:form.subject.trim(),body:form.body.trim(),assignee:form.assignee.trim()||null,dueDate:form.dueDate||null});setModal(false);if(r?._queued)Alert.alert('Queued offline','RFI will sync when connection returns.');await load()}catch(e:any){Alert.alert('Save failed',e?.message||'Please retry.')}finally{setSaving(false)}};
   const update=async(item:Rfi,body:any)=>{setSaving(true);try{const r=await putCollection('rfis',item.id,body);if(r?._queued)Alert.alert('Queued offline','Update will sync when connection returns.');setActive(null);setResponse('');await load()}catch(e:any){Alert.alert('Update failed',e?.message||'Please retry.')}finally{setSaving(false)}};
-  const overdue=(item:Rfi)=>item.status!=='closed'&&!!item.dueDate&&new Date(item.dueDate).getTime()<Date.now();
-  const stats=useMemo(()=>({open:items.filter(i=>i.status!=='closed').length,overdue:items.filter(overdue).length}),[items]);
+  const overdue=(item:Rfi)=>item.status!=='closed'&&!!item.dueDate&&new Date(item.dueDate).getTime()<now;
+  const stats={open:items.filter(i=>i.status!=='closed').length,overdue:items.filter(overdue).length};
 
   if(loading)return<View style={s.center}><ActivityIndicator color={Colors.amber}/></View>;
   return<View style={s.wrap}>
@@ -34,7 +36,7 @@ export default function RfisScreen({user,onLogout}:{user:AuthUser;onLogout:()=>v
       </TouchableOpacity>}
       ListEmptyComponent={<Text style={s.empty}>No RFIs.</Text>}/>
 
-    <Modal visible={modal} transparent animationType="slide"><View style={s.back}><View style={s.modal}><Text style={s.modalTitle}>New RFI</Text><ScrollView>
+    <Modal visible={modal} transparent animationType="slide" onRequestClose={()=>setModal(false)}><View style={s.back}><View style={s.modal}><Text style={s.modalTitle}>New RFI</Text><ScrollView>
       <Label text="Project"><View style={s.chips}>{projects.map(p=><Chip key={p.id} text={p.name} on={form.projectId===p.id} press={()=>setForm({...form,projectId:p.id})}/>)}</View></Label>
       <Label text="Subject *"><TextInput style={s.input} value={form.subject} onChangeText={v=>setForm({...form,subject:v})} placeholder="Clarify bracket fixing detail" placeholderTextColor={Colors.t3}/></Label>
       <Label text="Question *"><TextInput multiline style={[s.input,s.multi]} value={form.body} onChangeText={v=>setForm({...form,body:v})} placeholder="State the issue, location and information required…" placeholderTextColor={Colors.t3}/></Label>
@@ -43,7 +45,7 @@ export default function RfisScreen({user,onLogout}:{user:AuthUser;onLogout:()=>v
       <Label text="Due date"><TextInput style={s.input} value={form.dueDate} onChangeText={v=>setForm({...form,dueDate:v})} placeholder="YYYY-MM-DD" placeholderTextColor={Colors.t3}/></Label>
     </ScrollView><Actions cancel={()=>setModal(false)} save={save} saving={saving} label="Raise RFI"/></View></View></Modal>
 
-    <Modal visible={!!active} transparent animationType="slide"><View style={s.back}><View style={s.modal}>{active&&<><Text style={s.modalTitle}>{active.number} · {active.subject}</Text><ScrollView>
+    <Modal visible={!!active} transparent animationType="slide" onRequestClose={()=>{setActive(null);setResponse('')}}><View style={s.back}><View style={s.modal}>{active&&<><Text style={s.modalTitle}>{active.number} · {active.subject}</Text><ScrollView>
       <Text style={s.detail}>{active.body}</Text>
       <Text style={s.meta}>{active.assignee||'Unassigned'}{active.dueDate?` · due ${new Date(active.dueDate).toLocaleDateString('en-GB')}`:''}</Text>
       <Label text="Response"><TextInput editable={canManage} multiline style={[s.input,s.multi,!canManage&&{opacity:.65}]} value={response} onChangeText={setResponse} placeholder={canManage?'Record the formal response…':'Read-only for your role'} placeholderTextColor={Colors.t3}/></Label>

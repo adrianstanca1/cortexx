@@ -65,3 +65,38 @@ test('VAT amount must match explicit rate when supplied', () => {
     /does not match/,
   )
 })
+
+test('missing or nonnumeric VAT amounts cannot silently become zero', () => {
+  for (const value of [null, undefined, '', '  ', false, [], {}]) {
+    assert.equal(xero.validateGrossBreakdown({ amount: 100, netAmount: 100, vatAmount: value }).ok, false)
+    assert.equal(xero.validateGrossBreakdown({ amount: 100, netAmount: value, vatAmount: 100 }).ok, false)
+  }
+  assert.equal(xero.validateGrossBreakdown({ amount: 100, netAmount: 100, vatAmount: 0 }).ok, true)
+})
+
+test('payment retries require an explicit valid date rather than changing with the clock', () => {
+  const input = { invoiceId: 'invoice-1', accountCode: '090', amount: 120 }
+  assert.throws(() => xero.paymentPayload(input), /explicit payment date/)
+  assert.throws(() => xero.paymentPayload({ ...input, paidAt: 'invalid' }), /date is invalid/)
+})
+
+test('external idempotency identity is stable and isolated by company and operation', () => {
+  const key = xero.idempotencyKey('company-a', 'payment', 'invoice-1')
+  assert.equal(key, xero.idempotencyKey('company-a', 'payment', 'invoice-1'))
+  assert.notEqual(key, xero.idempotencyKey('company-b', 'payment', 'invoice-1'))
+  assert.notEqual(key, xero.idempotencyKey('company-a', 'invoice', 'invoice-1'))
+  assert.ok(key.length <= 128)
+})
+
+test('payment recovery verifies reference and bank account as well as date and amount', () => {
+  const expected = xero.paymentPayload({ invoiceId: 'invoice-1', amount: 120, paidAt: '2026-10-02', accountCode: '090', reference: 'INV-1' })
+  const payment = { PaymentID: 'payment-1', Amount: 120, Date: '2026-10-02T00:00:00Z', Reference: 'INV-1', Account: { Code: '090' } }
+  assert.equal(xero.recoverPaymentId([payment], expected), 'payment-1')
+  assert.equal(xero.recoverPaymentId([{ ...payment, Date: `/Date(${Date.parse('2026-10-02T00:00:00Z')}+0000)/` }], expected), 'payment-1')
+  assert.throws(() => xero.recoverPaymentId([{ ...payment, Reference: 'MANUAL' }], expected), /manual reconciliation/)
+  assert.throws(() => xero.recoverPaymentId([{ ...payment, Account: { Code: '091' } }], expected), /manual reconciliation/)
+  assert.throws(() => xero.recoverPaymentId([{ ...payment, Account: undefined }], expected), /manual reconciliation/)
+  assert.throws(() => xero.recoverPaymentId([{ ...payment, Date: undefined }], expected), /manual reconciliation/)
+  assert.throws(() => xero.recoverPaymentId([payment, { ...payment, PaymentID: 'another' }], expected), /Multiple matching/)
+  assert.equal(xero.recoverPaymentId([{ ...payment, Status: 'DELETED' }], expected), null)
+})

@@ -1,16 +1,22 @@
-import React,{useEffect,useMemo,useState}from'react';
-import{View,Text,FlatList,TouchableOpacity,StyleSheet,RefreshControl,ActivityIndicator,Modal,Alert,Linking}from'react-native';
-import{Colors,API_URL}from'./theme';
+import React,{useEffect,useMemo,useRef,useState}from'react';
+import{View,Text,FlatList,TouchableOpacity,StyleSheet,RefreshControl,ActivityIndicator,Modal,Alert}from'react-native';
+import{Colors}from'./theme';
 import{getCollection,apiGet}from'./api';
+import{openDrawingFile}from'./drawing-files';
 
 type Revision={id:string;revision:string;fileUrl?:string|null;fileName?:string|null;uploadedAt:string;notes?:string|null;_count?:{markups:number}};
 type Drawing={id:string;projectId:string;number:string;title:string;discipline?:string|null;status:string;project?:{id:string;name:string}|null;revisions?:Revision[];_count?:{revisions:number}};
 
 export default function DrawingsScreen({onLogout}:{onLogout:()=>void}){
   const[items,setItems]=useState<Drawing[]>([]),[loading,setLoading]=useState(true),[err,setErr]=useState(''),[active,setActive]=useState<Drawing|null>(null),[detailLoading,setDetailLoading]=useState(false);
+  const[openingFile,setOpeningFile]=useState(false);
+  const detailRequest=useRef(0);
   const load=async()=>{setLoading(true);setErr('');try{const d=await getCollection('drawings',200);setItems((d||[])as Drawing[])}catch(e:any){setErr(e?.message||'Failed to load drawings');if(e?.message==='unauthorized')onLogout()}finally{setLoading(false)}};
   useEffect(()=>{void load()},[]);// eslint-disable-line react-hooks/exhaustive-deps
-  const open=async(item:Drawing)=>{setActive(item);setDetailLoading(true);try{const d=await apiGet(`/api/drawings/${item.id}`);setActive(d?.drawing||item)}catch(e:any){Alert.alert('Drawing',e?.message||'Failed to load revisions')}finally{setDetailLoading(false)}};
+  useEffect(()=>()=>{detailRequest.current++},[]);
+  const close=()=>{detailRequest.current++;setActive(null);setDetailLoading(false)};
+  const open=async(item:Drawing)=>{const request=++detailRequest.current;setActive(item);setDetailLoading(true);try{const d=await apiGet(`/api/drawings/${item.id}`);if(request===detailRequest.current)setActive(d?.drawing||item)}catch(e:any){if(request===detailRequest.current){if(e?.message==='unauthorized')onLogout();else Alert.alert('Drawing',e?.message||'Failed to load revisions')}}finally{if(request===detailRequest.current)setDetailLoading(false)}};
+  const openFile=async(revision:Revision)=>{if(!revision.fileUrl||openingFile)return;setOpeningFile(true);try{await openDrawingFile(revision.fileUrl,revision.fileName)}catch(e:any){if(e?.message==='unauthorized')onLogout();else Alert.alert('File',e?.message||'Unable to open drawing file.')}finally{setOpeningFile(false)}};
   const current=(d:Drawing)=>d.revisions?.[0];
   const approved=useMemo(()=>items.filter(x=>x.status==='approved').length,[items]);
   if(loading)return<View style={s.center}><ActivityIndicator color={Colors.amber}/></View>;
@@ -25,16 +31,16 @@ export default function DrawingsScreen({onLogout}:{onLogout:()=>void}){
         <View style={s.revRow}><Text style={s.rev}>{rev?`REV ${rev.revision}`:'NO REVISION'}</Text><Text style={s.meta}>{item._count?.revisions??item.revisions?.length??0} rev · {rev?._count?.markups||0} markups</Text></View>
       </TouchableOpacity>}}
       ListEmptyComponent={<Text style={s.empty}>No drawings available for your assigned projects.</Text>}/>
-    <Modal visible={!!active} transparent animationType="slide"><View style={s.back}><View style={s.modal}>{active&&<>
+    <Modal visible={!!active} transparent animationType="slide" onRequestClose={close}><View style={s.back}><View style={s.modal}>{active&&<>
       <Text style={s.modalTitle}>{active.number} · {active.title}</Text><Text style={s.meta}>{active.project?.name||'Project'} · {active.status}</Text>
       {detailLoading?<ActivityIndicator style={{margin:24}} color={Colors.amber}/>:<FlatList data={active.revisions||[]} keyExtractor={r=>r.id} style={{marginTop:12}} renderItem={({item,index})=><View style={s.revisionCard}>
         <View style={s.between}><Text style={s.rev}>REV {item.revision}</Text>{index===0?<Text style={s.current}>CURRENT</Text>:null}</View>
         <Text style={s.meta}>{new Date(item.uploadedAt).toLocaleString('en-GB')}{item.fileName?` · ${item.fileName}`:''}</Text>
         {item.notes?<Text style={s.note}>{item.notes}</Text>:null}
         <Text style={s.meta}>{item._count?.markups||0} annotations</Text>
-        {item.fileUrl?<TouchableOpacity style={s.openBtn} onPress={()=>{const url=/^https?:\/\//i.test(item.fileUrl!)?item.fileUrl!:`${API_URL}${item.fileUrl!.startsWith('/')?'':'/'}${item.fileUrl!}`;Linking.openURL(url).catch(()=>Alert.alert('File','Unable to open drawing file.'))}}><Text style={s.openText}>Open revision file</Text></TouchableOpacity>:<Text style={s.noFile}>No file attached</Text>}
+        {item.fileUrl?<TouchableOpacity style={s.openBtn} disabled={openingFile} onPress={()=>void openFile(item)}><Text style={s.openText}>{openingFile?'Opening…':'Open revision file'}</Text></TouchableOpacity>:<Text style={s.noFile}>No file attached</Text>}
       </View>} ListEmptyComponent={<Text style={s.empty}>No revisions uploaded.</Text>}/>}
-      <TouchableOpacity style={s.close} onPress={()=>setActive(null)}><Text style={s.closeText}>Close</Text></TouchableOpacity>
+      <TouchableOpacity style={s.close} onPress={close}><Text style={s.closeText}>Close</Text></TouchableOpacity>
     </>}</View></View></Modal>
   </View>
 }

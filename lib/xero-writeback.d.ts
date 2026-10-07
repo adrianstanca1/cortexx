@@ -15,6 +15,8 @@ export function subInvoicePayload(invoice: any, mapping: any, contactId: string)
 export function paymentPayload(input: { invoiceId: string; amount: unknown; paidAt?: string | Date | null; reference?: string; accountCode: string }): any
 export function contactNumber(entityType: string, entityId: string): string
 export function payloadHash(payload: unknown): string
+export function idempotencyKey(connectionId: string, entityType: string, entityId: string): string
+export function recoverPaymentId(payments: Array<Record<string, any>>, expected: any): string | null
 declare const api: {
   WRITE_SCOPES: typeof WRITE_SCOPES
   money: typeof money
@@ -26,5 +28,7 @@ declare const api: {
   paymentPayload: typeof paymentPayload
   contactNumber: typeof contactNumber
   payloadHash: typeof payloadHash
+  idempotencyKey: typeof idempotencyKey
+  recoverPaymentId: typeof recoverPaymentId
 }
 export default api
