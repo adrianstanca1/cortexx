@@ -90,13 +90,21 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     y += 30
     const description = inv.project?.name ? `${inv.project.name} — services rendered` : `${inv.clientName} — services rendered`
     doc.fillColor(TEXT).font('Helvetica').fontSize(11).text(description, 56, y, { width: doc.page.width - 96 - 90 })
-    doc.font('Helvetica-Bold').text(gbp(inv.amount), doc.page.width - 48 - 80, y, { width: 72, align: 'right' })
+    doc.font('Helvetica-Bold').text(gbp(inv.netAmount ?? inv.amount), doc.page.width - 48 - 80, y, { width: 72, align: 'right' })
     y += 24
     doc.strokeColor('#e2e8f0').lineWidth(0.5).moveTo(48, y).lineTo(doc.page.width - 48, y).stroke()
 
     // ─── Total ────────────────────────────────────────────────
     y += 24
     const totalLabel = inv.status === 'paid' ? 'AMOUNT PAID' : 'TOTAL DUE'
+    if (inv.netAmount !== null && inv.vatAmount !== null) {
+      doc.fillColor(MUTED).font('Helvetica').fontSize(9).text('NET', doc.page.width - 48 - 200, y, { width: 110, align: 'right' })
+      doc.fillColor(TEXT).font('Helvetica').fontSize(10).text(gbp(inv.netAmount), doc.page.width - 48 - 90, y, { width: 90, align: 'right' })
+      y += 16
+      doc.fillColor(MUTED).font('Helvetica').fontSize(9).text(`VAT${inv.vatRate !== null ? ` ${inv.vatRate}%` : ''}`, doc.page.width - 48 - 200, y, { width: 110, align: 'right' })
+      doc.fillColor(TEXT).font('Helvetica').fontSize(10).text(gbp(inv.vatAmount), doc.page.width - 48 - 90, y, { width: 90, align: 'right' })
+      y += 20
+    }
     doc.fillColor(MUTED).font('Helvetica-Bold').fontSize(10).text(totalLabel, doc.page.width - 48 - 200, y, { width: 110, align: 'right' })
     doc.fillColor(sc).font('Helvetica-Bold').fontSize(22).text(gbp(inv.amount), doc.page.width - 48 - 90, y - 4, { width: 90, align: 'right' })
 

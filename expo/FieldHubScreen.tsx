@@ -18,6 +18,8 @@ const SECONDARY: Array<{ route: AppRoute; title: string; sub: string; tone: stri
   { route: 'diary', title: 'Site diary', sub: 'Daily record', tone: Colors.amber },
   { route: 'snags', title: 'Snags', sub: 'Defects + photos', tone: Colors.orange },
   { route: 'safety', title: 'Safety', sub: 'Incidents + actions', tone: Colors.red },
+  { route: 'rfis', title: 'RFIs', sub: 'Questions + responses', tone: Colors.blue },
+  { route: 'drawings', title: 'Drawings', sub: 'Current revisions', tone: Colors.purple },
 ];
 
 export default function FieldHubScreen({ user, onNavigate }: { user: AuthUser; onNavigate: (route: AppRoute) => void }) {

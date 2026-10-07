@@ -19,6 +19,8 @@ import DeliveriesScreen from './DeliveriesScreen';
 import FieldControlsScreen from './FieldControlsScreen';
 import FieldCloseoutScreen from './FieldCloseoutScreen';
 import SafetyScreen from './SafetyScreen';
+import RfisScreen from './RfisScreen';
+import DrawingsScreen from './DrawingsScreen';
 import FieldHubScreen from './FieldHubScreen';
 import MoreScreen from './MoreScreen';
 import type { AuthUser } from './api';
@@ -32,7 +34,7 @@ const MAIN_TABS: Array<{ key: AppRoute; label: string; glyph: string }> = [
   { key: 'field', label: 'Field', glyph: 'FD' },
   { key: 'more', label: 'More', glyph: '•••' },
 ];
-const FIELD_ROUTES = new Set<AppRoute>(['field', 'checkin', 'readiness', 'deliveries', 'controls', 'closeout', 'timesheets', 'diary', 'snags', 'safety']);
+const FIELD_ROUTES = new Set<AppRoute>(['field', 'checkin', 'readiness', 'deliveries', 'controls', 'closeout', 'timesheets', 'diary', 'snags', 'safety', 'rfis', 'drawings']);
 const MORE_ROUTES = new Set<AppRoute>(['more', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile']);
 
 function rootFor(route: AppRoute): AppRoute {
@@ -109,6 +111,10 @@ export default function Tabs({ user, onLogout }: { user: AuthUser; onLogout: () 
     <SnagsScreen onLogout={onLogout} />
   ) : tab === 'safety' ? (
     <SafetyScreen onLogout={onLogout} />
+  ) : tab === 'rfis' ? (
+    <RfisScreen user={user} onLogout={onLogout} />
+  ) : tab === 'drawings' ? (
+    <DrawingsScreen onLogout={onLogout} />
   ) : tab === 'invoices' ? (
     <CollectionScreen name="invoices" title="Invoices" readOnly fields={[
       { key: 'invoiceNo', label: 'Invoice No', required: true }, { key: 'client', label: 'Client' },

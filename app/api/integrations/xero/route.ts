@@ -1,10 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { requireOrg } from '@/lib/requireAuth'
 import { canManage } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
-import { ensureXeroAccessToken, removeXeroConnection, safeXeroConnection, xeroPlatformConfig } from '@/lib/xero-server'
+import { ensureXeroAccessToken, removeXeroConnection, safeXeroConnection, xeroApiRequest, xeroPlatformConfig } from '@/lib/xero-server'
+import xeroWriteback from '@/lib/xero-writeback'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
@@ -40,16 +42,68 @@ export async function PATCH(req: NextRequest) {
   if (limited) return limited
   try {
     const body = await req.json() as Record<string, unknown>
-    if (body.maxPages === undefined) return NextResponse.json({ error: 'maxPages is required' }, { status: 400 })
-    const maxPages = Math.trunc(Number(body.maxPages))
-    if (!Number.isFinite(maxPages) || maxPages < 1 || maxPages > 10) return NextResponse.json({ error: 'maxPages must be between 1 and 10' }, { status: 400 })
     const existing = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
     const current = existing?.settings && typeof existing.settings === 'object' && !Array.isArray(existing.settings) ? existing.settings as Record<string, unknown> : {}
-    const settings = { ...current, maxPages }
+    const settings: Record<string, unknown> = { ...current }
+    const changed: Record<string, unknown> = {}
+
+    if (body.maxPages !== undefined) {
+      const maxPages = Math.trunc(Number(body.maxPages))
+      if (!Number.isFinite(maxPages) || maxPages < 1 || maxPages > 10) return NextResponse.json({ error: 'maxPages must be between 1 and 10' }, { status: 400 })
+      settings.maxPages = maxPages
+      changed.maxPages = maxPages
+    }
+
+    const mappingKeys = ['salesAccountCode', 'salesTaxType', 'purchaseAccountCode', 'purchaseTaxType', 'paymentAccountCode'] as const
+    const mappingRequested = mappingKeys.some(key => body[key] !== undefined) || body.writebackEnabled !== undefined
+    if (mappingRequested) {
+      if (!existing || existing.status !== 'connected' || !existing.externalTenantId) {
+        return NextResponse.json({ error: 'Connect Xero before configuring write-back' }, { status: 409 })
+      }
+      const missingScopes = xeroWriteback.missingWriteScopes(existing.scopes)
+      if (missingScopes.length) return NextResponse.json({ error: 'Reconnect Xero to grant write-back permissions', missingScopes }, { status: 409 })
+
+      const [accountsBody, taxRatesBody] = await Promise.all([
+        xeroApiRequest(existing, '/Accounts'),
+        xeroApiRequest(existing, '/TaxRates'),
+      ])
+      const accounts = Array.isArray(accountsBody.Accounts) ? accountsBody.Accounts as Array<Record<string, unknown>> : []
+      const taxRates = Array.isArray(taxRatesBody.TaxRates) ? taxRatesBody.TaxRates as Array<Record<string, unknown>> : []
+      const activeAccounts = accounts.filter(row => !row.Status || row.Status === 'ACTIVE')
+      const activeTaxTypes = new Set(taxRates.filter(row => !row.Status || row.Status === 'ACTIVE').map(row => String(row.TaxType || '')).filter(Boolean))
+      const byCode = new Map(activeAccounts.map(row => [String(row.Code || ''), row]))
+
+      for (const key of mappingKeys) {
+        if (body[key] === undefined) continue
+        const value = String(body[key] || '').trim()
+        if (key.endsWith('TaxType')) {
+          if (value && !activeTaxTypes.has(value)) return NextResponse.json({ error: `Unknown or inactive Xero tax rate for ${key}` }, { status: 400 })
+        } else if (value) {
+          const account = byCode.get(value)
+          if (!account) return NextResponse.json({ error: `Unknown or inactive Xero account for ${key}` }, { status: 400 })
+          if (key === 'paymentAccountCode' && String(account.Type || '').toUpperCase() !== 'BANK' && account.EnablePaymentsToAccount !== true) {
+            return NextResponse.json({ error: 'Payment account must be a Xero bank/payment-enabled account' }, { status: 400 })
+          }
+        }
+        settings[key] = value
+        changed[key] = value
+      }
+      if (body.writebackEnabled !== undefined) {
+        const enabled = body.writebackEnabled === true
+        const candidate = xeroWriteback.writebackMapping({ ...settings, writebackEnabled: enabled })
+        if (enabled && (!candidate.salesAccountCode || !candidate.salesTaxType) && (!candidate.purchaseAccountCode || !candidate.purchaseTaxType)) {
+          return NextResponse.json({ error: 'Configure at least one complete sales or purchase mapping before enabling write-back' }, { status: 400 })
+        }
+        settings.writebackEnabled = enabled
+        changed.writebackEnabled = enabled
+      }
+    }
+
+    if (Object.keys(changed).length === 0) return NextResponse.json({ error: 'No recognised settings supplied' }, { status: 400 })
     const connection = existing
-      ? await prisma.accountingConnection.update({ where: { id: existing.id }, data: { settings } })
-      : await prisma.accountingConnection.create({ data: { organizationId: auth.orgId, provider: 'xero', status: 'disconnected', settings } })
-    auditLog({ action: 'accounting.xero.configure', resourceType: 'AccountingConnection', resourceId: connection.id, metadata: { maxPages }, ...requestMeta(req) })
+      ? await prisma.accountingConnection.update({ where: { id: existing.id }, data: { settings: settings as Prisma.InputJsonValue } })
+      : await prisma.accountingConnection.create({ data: { organizationId: auth.orgId, provider: 'xero', status: 'disconnected', settings: settings as Prisma.InputJsonValue } })
+    auditLog({ action: 'accounting.xero.configure', resourceType: 'AccountingConnection', resourceId: connection.id, metadata: changed as Prisma.InputJsonValue, ...requestMeta(req) })
     return NextResponse.json({ connection: safeXeroConnection(connection) })
   } catch (error) {
     reportError(error)

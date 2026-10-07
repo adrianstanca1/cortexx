@@ -1,21 +1,32 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { canWrite } from '@/lib/rbac'
+import { programmeProjectScope } from '@/lib/programme-access'
 
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_STATUS = new Set(['open', 'answered', 'closed'])
 const ALLOWED_PRIORITY = new Set(['low', 'medium', 'high'])
 
+function canManageRfi(auth: { role: string | null; personaRole?: string | null }) {
+  return !!auth.role && canWrite(auth.role) && ['company_admin', 'project_manager', 'foreman'].includes(auth.personaRole || '')
+}
+
+function canDeleteRfi(auth: { role: string | null; personaRole?: string | null }) {
+  return !!auth.role && canWrite(auth.role) && ['company_admin', 'project_manager'].includes(auth.personaRole || '')
+}
+
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const rfi = await prisma.rfi.findUnique({
-    where: { id: params.id },
+
+  const rfi = await prisma.rfi.findFirst({
+    where: { id: params.id, project: { is: programmeProjectScope(auth.session) } },
     include: { project: { select: { id: true, name: true } } },
   })
   if (!rfi) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -24,14 +35,16 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 
 export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!canManageRfi(auth)) return NextResponse.json({ error: 'Company Admin, Project Manager or Foreman permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
   if (limited) return limited
+
   try {
     const body = await req.json()
-    const existing = await prisma.rfi.findUnique({
-      where: { id: params.id },
+    const existing = await prisma.rfi.findFirst({
+      where: { id: params.id, project: { is: programmeProjectScope(auth.session) } },
       select: { status: true, projectId: true, number: true, subject: true, response: true },
     })
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -45,6 +58,9 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
     if (body.subject !== undefined && !String(body.subject).trim()) {
       return NextResponse.json({ error: 'Subject cannot be empty' }, { status: 400 })
+    }
+    if (body.body !== undefined && !String(body.body).trim()) {
+      return NextResponse.json({ error: 'Body cannot be empty' }, { status: 400 })
     }
 
     const data: Record<string, unknown> = {}
@@ -75,7 +91,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       prisma.activity.create({
         data: {
           projectId: rfi.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(auth.session),
           actorType: 'human',
           action: justAnswered
             ? `answered ${rfi.number}: ${rfi.subject}`
@@ -84,7 +100,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
               : `reopened ${rfi.number}: ${rfi.subject}`,
           iconType: 'check',
         },
-      }).catch(() => {})
+      }).catch(() => undefined)
     }
 
     return NextResponse.json(rfi)
@@ -96,11 +112,19 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!canDeleteRfi(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
+
   try {
-    const rfi = await prisma.rfi.findUnique({ where: { id: params.id }, select: { projectId: true, number: true, subject: true } })
+    const rfi = await prisma.rfi.findFirst({
+      where: { id: params.id, project: { is: programmeProjectScope(auth.session) } },
+      select: { projectId: true, number: true, subject: true },
+    })
     if (!rfi) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+
     await prisma.rfi.delete({ where: { id: params.id } })
     auditLog({
       action: 'rfi.delete',
@@ -111,12 +135,13 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     prisma.activity.create({
       data: {
         projectId: rfi.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(auth.session),
         actorType: 'human',
         action: `deleted ${rfi.number}: ${rfi.subject}`,
         iconType: 'trash',
       },
-    }).catch(() => {})
+    }).catch(() => undefined)
+
     return NextResponse.json({ success: true })
   } catch (error) {
     reportError(error)

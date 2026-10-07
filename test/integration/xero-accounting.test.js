@@ -18,6 +18,19 @@ suite('Xero accounting connection tenant isolation', async t => {
     assert.deepEqual(foreign, [])
   })
 
+  await t.test('write-back idempotency records are tenant-owned', async () => {
+    const connection = await tenancy.runWithOrg({ organizationId: orgA.id, userId: userA.id, role: 'owner' }, () =>
+      prisma.accountingConnection.findFirstOrThrow({ where: { provider: 'xero' } }),
+    )
+    await tenancy.runWithOrg({ organizationId: orgA.id, userId: userA.id, role: 'owner' }, () => prisma.accountingWriteback.create({
+      data: { connectionId: connection.id, entityType: 'client_invoice', entityId: 'invoice-a', status: 'synced', externalId: 'xero-a' },
+    }))
+    const own = await tenancy.runWithOrg({ organizationId: orgA.id, userId: userA.id, role: 'owner' }, () => prisma.accountingWriteback.findMany())
+    const foreign = await tenancy.runWithOrg({ organizationId: orgB.id, userId: userB.id, role: 'owner' }, () => prisma.accountingWriteback.findMany())
+    assert.equal(own.length, 1)
+    assert.deepEqual(foreign, [])
+  })
+
   await t.test('OAuth state is tenant-owned and cannot be read from another company context', async () => {
     await tenancy.runWithOrg({ organizationId: orgA.id, userId: userA.id, role: 'owner' }, () => prisma.accountingOAuthState.create({ data: { provider: 'xero', stateHash: 'state-a', expiresAt: new Date(Date.now() + 60000) } }))
     const foreign = await tenancy.runWithOrg({ organizationId: orgB.id, userId: userB.id, role: 'owner' }, () => prisma.accountingOAuthState.findMany({}))
