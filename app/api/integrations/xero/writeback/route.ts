@@ -76,6 +76,27 @@ async function remoteInvoiceByNumber(connection: AccountingConnection, number: s
   return rows.find(row => row.InvoiceID) || null
 }
 
+async function recoverRemotePayment(connection: AccountingConnection, invoiceId: string, amount: number, paidAt: Date | string | null) {
+  const body = await xeroApiRequest(connection, `/Invoices/${encodeURIComponent(invoiceId)}`)
+  const rows = Array.isArray(body.Invoices) ? body.Invoices as Array<Record<string, unknown>> : []
+  const invoice = rows[0]
+  const payments = invoice && Array.isArray(invoice.Payments) ? invoice.Payments as Array<Record<string, unknown>> : []
+  const targetAmount = Math.round(Number(amount) * 100) / 100
+  const targetDate = paidAt ? new Date(paidAt).toISOString().slice(0, 10) : null
+  const matching = payments.filter(payment => {
+    const paymentAmount = Math.round(Number(payment.Amount || 0) * 100) / 100
+    if (paymentAmount !== targetAmount) return false
+    if (!targetDate) return true
+    const rawDate = payment.DateString || payment.Date
+    if (!rawDate) return false
+    const legacy = String(rawDate).match(/^\/Date\((-?\d+)/)
+    const parsed = legacy ? new Date(Number(legacy[1])) : new Date(String(rawDate))
+    return !Number.isNaN(parsed.getTime()) && parsed.toISOString().slice(0, 10) === targetDate
+  })
+  if (matching.length > 1) throw new Error('Multiple matching Xero payments found; manual reconciliation required')
+  return matching[0]?.PaymentID ? String(matching[0].PaymentID) : null
+}
+
 async function entityData(entityType: EntityType, entityId: string) {
   if (entityType === 'client_invoice') {
     const invoice = await prisma.invoice.findUnique({
@@ -329,6 +350,31 @@ export async function POST(req: NextRequest) {
         }
         payment = priorPayment
       } else {
+        const recoveredPaymentId = await recoverRemotePayment(connection, xeroInvoiceId, data.paymentAmount, data.paidAt)
+        if (recoveredPaymentId) {
+          payment = await prisma.accountingWriteback.upsert({
+            where: { connectionId_entityType_entityId: paymentKey },
+            create: {
+              organizationId: auth.orgId,
+              connectionId: connection.id,
+              entityType: paymentType,
+              entityId,
+              externalId: recoveredPaymentId,
+              payloadHash: paymentHash,
+              status: 'synced',
+              lastAttemptAt: new Date(),
+              syncedAt: new Date(),
+            },
+            update: {
+              externalId: recoveredPaymentId,
+              payloadHash: paymentHash,
+              status: 'synced',
+              lastError: null,
+              lastAttemptAt: new Date(),
+              syncedAt: new Date(),
+            },
+          })
+        } else {
         await prisma.accountingWriteback.upsert({
           where: { connectionId_entityType_entityId: paymentKey },
           create: {
@@ -364,6 +410,7 @@ export async function POST(req: NextRequest) {
             data: { status: 'error', lastError: message, lastAttemptAt: new Date() },
           }).catch(() => undefined)
           throw error
+        }
         }
       }
     }

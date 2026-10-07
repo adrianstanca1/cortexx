@@ -29,3 +29,9 @@ test('mapping updates validate live Xero accounts and tax rates before enablemen
   assert.match(settings, /Payment account must be a Xero bank\/payment-enabled account/)
   assert.match(settings, /Configure at least one complete sales or purchase mapping/)
 })
+
+test('payment retry recovers an already-applied remote payment before creating another', () => {
+  assert.match(route, /recoverRemotePayment/)
+  assert.match(route, /Multiple matching Xero payments found; manual reconciliation required/)
+  assert.match(route, /if \(recoveredPaymentId\)/)
+})
