@@ -72,6 +72,7 @@ export async function PATCH(req: NextRequest) {
       const activeAccounts = accounts.filter(row => !row.Status || row.Status === 'ACTIVE')
       const activeTaxRates = taxRates.filter(row => !row.Status || row.Status === 'ACTIVE')
       const activeTaxTypes = new Set(activeTaxRates.map(row => String(row.TaxType || '')).filter(Boolean))
+      const taxRateRecordByType = new Map(activeTaxRates.map(row => [String(row.TaxType || ''), row]))
       const taxRateByType = new Map(activeTaxRates.map(row => {
         const raw = row.EffectiveRate ?? row.DisplayTaxRate
         const rate = Number(raw)
@@ -86,6 +87,13 @@ export async function PATCH(req: NextRequest) {
         const value = String(body[key] || '').trim()
         if (key.endsWith('TaxType')) {
           if (value && !activeTaxTypes.has(value)) return NextResponse.json({ error: `Unknown or inactive Xero tax rate for ${key}` }, { status: 400 })
+          const taxRate = value ? taxRateRecordByType.get(value) : undefined
+          if (key === 'salesTaxType' && value && taxRate?.CanApplyToRevenue !== true) {
+            return NextResponse.json({ error: 'Sales tax rate must be applicable to Xero revenue accounts' }, { status: 400 })
+          }
+          if (key === 'purchaseTaxType' && value && taxRate?.CanApplyToExpenses !== true) {
+            return NextResponse.json({ error: 'Purchase tax rate must be applicable to Xero expense accounts' }, { status: 400 })
+          }
         } else if (value) {
           const account = byCode.get(value)
           if (!account) return NextResponse.json({ error: `Unknown or inactive Xero account for ${key}` }, { status: 400 })

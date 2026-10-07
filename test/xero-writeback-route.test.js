@@ -9,7 +9,7 @@ const helpers = require('../lib/xero-writeback')
 const code = transformSync(fs.readFileSync('app/api/integrations/xero/writeback/route.ts', 'utf8'), { loader: 'ts', format: 'cjs' }).code
 
 function harness({ missingPaymentId = false, missingInvoiceDetails = false, paidDate = '2026-10-02', priorInvoice, remotePayments = [] } = {}) {
-  const invoice = { id: 'inv-1', number: 'INV-1', clientName: 'Client', amount: 120, netAmount: 100, vatAmount: 20, vatRate: 20, issuedDate: '2026-10-01', dueDate: '2026-10-31', status: 'paid', paidDate }
+  const invoice = { id: 'inv-1', organizationId: 'org-1', number: 'INV-1', clientName: 'Client', amount: 120, netAmount: 100, vatAmount: 20, vatRate: 20, issuedDate: '2026-10-01', dueDate: '2026-10-31', status: 'paid', paidDate }
   const connection = { id: 'connection-1', status: 'connected', externalTenantId: 'tenant-1', scopes: helpers.WRITE_SCOPES.join(' '), settings: { writebackEnabled: true, salesAccountCode: '200', salesTaxType: 'OUTPUT2', salesTaxRate: 20, paymentAccountCode: '090' } }
   const records = new Map(priorInvoice ? [['client_invoice', priorInvoice]] : [])
   const calls = []
@@ -56,7 +56,12 @@ function harness({ missingPaymentId = false, missingInvoiceDetails = false, paid
   }
   const mocks = {
     'next/server': { NextRequest, NextResponse },
-    '@/lib/db': { prisma: { accountingConnection: { findFirst: async () => connection }, invoice: { findUnique: async () => invoice }, accountingWriteback: model } },
+    '@/lib/db': { prisma: {
+      accountingConnection: { findFirst: async ({ where }) => where.organizationId === 'org-1' ? connection : null },
+      invoice: { findFirst: async ({ where }) => where.id === invoice.id && where.organizationId === invoice.organizationId ? invoice : null },
+      subInvoice: { findFirst: async () => null },
+      accountingWriteback: model,
+    } },
     '@/lib/requireAuth': { requireOrg: async () => ({ orgId: 'org-1', role: 'admin', userId: 'user-1' }) },
     '@/lib/rbac': { canManage: () => true },
     '@/lib/rateLimit': { enforceRateLimit: async () => null },

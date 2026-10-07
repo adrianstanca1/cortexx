@@ -120,3 +120,21 @@ test('invoice creation rejects null or blank VAT rates before numeric coercion',
   assert.match(invoicesRoute, /VAT rate is required when invoice tax breakdown is supplied/)
   assert.match(invoicesRoute, /vatRate = Number\(body\.vatRate\)/)
 })
+
+
+test('write-back invoice candidates and export-by-id are explicitly tenant scoped', () => {
+  assert.match(route, /entityData\(entityType: EntityType, entityId: string, organizationId: string\)/)
+  assert.match(route, /where: \{ id: entityId, organizationId \}/)
+  assert.match(route, /invoice\.findMany\(\{ where: \{ organizationId: auth\.orgId \}/)
+  assert.match(route, /subInvoice\.findMany\(\{\s*where: \{ organizationId: auth\.orgId \}/)
+  assert.match(route, /invoice\.count\(\{ where: \{ organizationId: auth\.orgId \} \}\)/)
+  assert.match(route, /subInvoice\.count\(\{ where: \{ organizationId: auth\.orgId \} \}\)/)
+  assert.match(route, /entityData\(entityType, entityId, auth\.orgId\)/)
+})
+
+test('saved Xero tax mappings enforce document-direction applicability', () => {
+  assert.match(settings, /CanApplyToRevenue !== true/)
+  assert.match(settings, /CanApplyToExpenses !== true/)
+  assert.match(settings, /Sales tax rate must be applicable to Xero revenue accounts/)
+  assert.match(settings, /Purchase tax rate must be applicable to Xero expense accounts/)
+})

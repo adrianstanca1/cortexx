@@ -105,10 +105,10 @@ async function recoverRemotePayment(connection: AccountingConnection, invoiceId:
   return recoverPaymentId(payments, expected)
 }
 
-async function entityData(entityType: EntityType, entityId: string) {
+async function entityData(entityType: EntityType, entityId: string, organizationId: string) {
   if (entityType === 'client_invoice') {
-    const invoice = await prisma.invoice.findUnique({
-      where: { id: entityId },
+    const invoice = await prisma.invoice.findFirst({
+      where: { id: entityId, organizationId },
       include: { project: { select: { name: true } } },
     })
     if (!invoice) throw new Error('Client invoice not found')
@@ -125,8 +125,8 @@ async function entityData(entityType: EntityType, entityId: string) {
     }
   }
 
-  const invoice = await prisma.subInvoice.findUnique({
-    where: { id: entityId },
+  const invoice = await prisma.subInvoice.findFirst({
+    where: { id: entityId, organizationId },
     include: {
       project: { select: { name: true } },
       subcontractor: { select: { id: true, name: true, contactEmail: true } },
@@ -169,15 +169,16 @@ export async function GET(req: NextRequest) {
     const mapping = writebackMapping(connection.settings)
     const missingScopes = missingWriteScopes(connection.scopes)
     const [clientInvoices, subInvoices, clientTotal, subTotal] = await Promise.all([
-      prisma.invoice.findMany({ orderBy: { issuedDate: 'desc' }, take, skip: clientSkip, include: { project: { select: { name: true } } } }),
+      prisma.invoice.findMany({ where: { organizationId: auth.orgId }, orderBy: { issuedDate: 'desc' }, take, skip: clientSkip, include: { project: { select: { name: true } } } }),
       prisma.subInvoice.findMany({
+        where: { organizationId: auth.orgId },
         orderBy: { invoiceDate: 'desc' },
         take,
         skip: subSkip,
         include: { project: { select: { name: true } }, subcontractor: { select: { name: true } } },
       }),
-      prisma.invoice.count(),
-      prisma.subInvoice.count(),
+      prisma.invoice.count({ where: { organizationId: auth.orgId } }),
+      prisma.subInvoice.count({ where: { organizationId: auth.orgId } }),
     ])
     const clientIds = clientInvoices.map(row => row.id)
     const subIds = subInvoices.map(row => row.id)
@@ -272,7 +273,7 @@ export async function POST(req: NextRequest) {
 
     const connection = await connectedXero(auth.orgId)
     const mapping = writebackMapping(connection.settings)
-    const data = await entityData(entityType, entityId)
+    const data = await entityData(entityType, entityId, auth.orgId)
     const preview = previewPayload(entityType, data.entity, mapping)
 
     if (data.paid && !syncPayment && !dryRun) {
