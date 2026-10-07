@@ -6,18 +6,19 @@ const os = require('node:os')
 const path = require('node:path')
 
 const script = path.resolve(__dirname, '../scripts/check-ios-signing.mjs')
-const archive = {
+const manualArchive = {
   IOS_CERTIFICATE_BASE64: 'secret-certificate',
   IOS_CERTIFICATE_PASSWORD: 'secret-password',
   IOS_KEYCHAIN_PASSWORD: 'secret-keychain',
   IOS_PROVISIONING_PROFILE_BASE64: 'secret-profile',
   APPLE_TEAM_ID: 'secret-team',
 }
-const upload = {
+const api = {
   APP_STORE_CONNECT_KEY_ID: 'secret-key-id',
   APP_STORE_CONNECT_ISSUER_ID: 'secret-issuer',
   APP_STORE_CONNECT_KEY_BASE64: 'secret-api-key',
 }
+const automaticArchive = { APPLE_TEAM_ID: 'secret-team', ...api }
 
 function run(env) {
   const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'ios-preflight-'))
@@ -36,40 +37,48 @@ function run(env) {
 test('automatic unsigned verification succeeds and reports no delivery', () => {
   const result = run({})
   assert.equal(result.status, 0)
-  assert.equal(result.outputs, 'archive_ready=false\nupload_ready=false\n')
+  assert.equal(result.outputs, 'signing_mode=none\narchive_ready=false\nupload_ready=false\n')
   assert.match(result.stdout, /No IPA or TestFlight delivery/)
 })
 
-test('explicit TestFlight request fails before build when credentials are missing', () => {
+test('explicit TestFlight request reports the smaller automatic-signing prerequisite set', () => {
   const result = run({ IOS_REQUIRE_UPLOAD: 'true' })
   assert.equal(result.status, 1)
-  assert.match(result.stderr, /IOS_CERTIFICATE_BASE64/)
+  assert.match(result.stderr, /APPLE_TEAM_ID/)
   assert.match(result.stderr, /APP_STORE_CONNECT_KEY_BASE64/)
+  assert.doesNotMatch(result.stderr, /IOS_CERTIFICATE_BASE64/)
 })
 
-test('signed archive can be requested without upload credentials', () => {
-  const result = run({ ...archive, IOS_REQUIRE_ARCHIVE: 'true' })
+test('manual signed archive can still be requested without upload credentials', () => {
+  const result = run({ ...manualArchive, IOS_REQUIRE_ARCHIVE: 'true' })
   assert.equal(result.status, 0)
-  assert.equal(result.outputs, 'archive_ready=true\nupload_ready=false\n')
+  assert.equal(result.outputs, 'signing_mode=manual\narchive_ready=true\nupload_ready=false\n')
 })
 
-test('TestFlight needs both archive and upload credentials without leaking values', () => {
-  const missing = run({ ...archive, IOS_REQUIRE_UPLOAD: 'true' })
+test('App Store Connect Team API credentials can satisfy archive and TestFlight signing', () => {
+  const result = run({ ...automaticArchive, IOS_REQUIRE_UPLOAD: 'true' })
+  assert.equal(result.status, 0)
+  assert.equal(result.outputs, 'signing_mode=automatic\narchive_ready=true\nupload_ready=true\n')
+  assert.doesNotMatch(result.stdout + result.stderr, /secret-/)
+})
+
+test('automatic signing is preferred when both automatic and manual credentials are available', () => {
+  const missing = run({ ...manualArchive, IOS_REQUIRE_UPLOAD: 'true' })
   assert.equal(missing.status, 1)
   assert.doesNotMatch(missing.stderr, /IOS_CERTIFICATE_BASE64/)
-  const ready = run({ ...archive, ...upload, IOS_REQUIRE_UPLOAD: 'true' })
+  const ready = run({ ...manualArchive, ...api, IOS_REQUIRE_UPLOAD: 'true' })
   assert.equal(ready.status, 0)
-  assert.equal(ready.outputs, 'archive_ready=true\nupload_ready=true\n')
+  assert.equal(ready.outputs, 'signing_mode=automatic\narchive_ready=true\nupload_ready=true\n')
   for (const result of [missing, ready]) {
     assert.doesNotMatch(result.stdout + result.stderr, /secret-/)
   }
 })
 
-test('upload credentials alone cannot satisfy signing and whitespace is missing', () => {
-  const result = run({ ...upload, ...archive, IOS_CERTIFICATE_PASSWORD: '  ', IOS_REQUIRE_UPLOAD: 'true' })
+test('whitespace-only Team ID is missing for automatic signing', () => {
+  const result = run({ ...api, APPLE_TEAM_ID: '  ', IOS_REQUIRE_UPLOAD: 'true' })
   assert.equal(result.status, 1)
-  assert.equal(result.outputs, 'archive_ready=false\nupload_ready=false\n')
-  assert.match(result.stderr, /IOS_CERTIFICATE_PASSWORD/)
+  assert.equal(result.outputs, 'signing_mode=none\narchive_ready=false\nupload_ready=false\n')
+  assert.match(result.stderr, /APPLE_TEAM_ID/)
 })
 
 for (const filename of ['ios-build.yml', 'release-ios.yml']) {
@@ -79,19 +88,31 @@ for (const filename of ['ios-build.yml', 'release-ios.yml']) {
   test(`${filename} checks signing before installation and uses the verified IPA path`, () => {
     assert.ok(workflow.indexOf('id: signing') < workflow.indexOf('name: Install JS dependencies'))
     assert.match(workflow, /run: node scripts\/check-ios-signing\.mjs/)
+    assert.match(workflow, /steps\.signing\.outputs\.signing_mode == 'automatic'/)
+    assert.match(workflow, /steps\.signing\.outputs\.signing_mode == 'manual'/)
+    assert.match(workflow, /Prepare App Store Connect API key/)
+    assert.match(workflow, /-allowProvisioningUpdates/)
+    assert.match(workflow, /-authenticationKeyPath "\$RUNNER_TEMP\/AuthKey\.p8"/)
+    assert.match(workflow, /CODE_SIGN_STYLE=Automatic/)
+    assert.match(workflow, /<string>automatic<\/string>/)
     assert.match(workflow, /IPA_PATH: \$\{\{ steps\.ipa\.outputs\.path \}\}/)
     assert.match(workflow, /--file "\$IPA_PATH"/)
     assert.match(workflow, /path: \$\{\{ steps\.ipa\.outputs\.path \}\}/)
     assert.match(workflow, /if-no-files-found: error/)
+    assert.match(workflow, /rm -f "\$RUNNER_TEMP\/certificate\.p12" "\$RUNNER_TEMP\/AuthKey\.p8"/)
     if (filename === 'release-ios.yml') {
       assert.match(workflow, /IOS_REQUIRE_ARCHIVE: 'true'/)
       assert.match(workflow, /github.event_name != 'workflow_dispatch' \|\| inputs.upload_to_testflight/)
-      for (const step of ['Archive', 'Export IPA']) {
-        assert.match(workflow, new RegExp(`name: ${step}\\n        run: \\|\\n          set -o pipefail`))
-      }
+      assert.match(workflow, /name: Archive \(manual signing\)/)
+      assert.match(workflow, /name: Archive \(automatic API-key signing\)/)
+      assert.match(workflow, /name: Export IPA \(manual signing\)/)
+      assert.match(workflow, /name: Export IPA \(automatic API-key signing\)/)
     } else {
       assert.match(workflow, /github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight/)
-      assert.match(workflow, /'scripts\/check-ios-signing\.mjs'/)
+      assert.match(workflow, /name: Archive signed app \(manual\)/)
+      assert.match(workflow, /name: Archive signed app \(automatic API-key signing\)/)
+      assert.match(workflow, /name: Export IPA \(manual\)/)
+      assert.match(workflow, /name: Export IPA \(automatic API-key signing\)/)
     }
   })
 
