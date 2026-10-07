@@ -11,15 +11,17 @@ name: Release iOS — Build & TestFlight
 # Both produce: signed Release IPA + dSYM, uploaded as a workflow
 # artifact, optionally pushed to TestFlight via altool.
 #
-# Required GitHub secrets (one-time setup):
+# Preferred GitHub secrets (automatic signing; one-time setup):
 #   APPLE_TEAM_ID                       e.g. ABCDE12345
+#   APP_STORE_CONNECT_KEY_ID            Team API key from App Store Connect
+#   APP_STORE_CONNECT_ISSUER_ID         Team API key issuer
+#   APP_STORE_CONNECT_KEY_BASE64        .p8 private key, base64-encoded
+#
+# Manual-signing fallback (archive-only or legacy teams):
 #   IOS_CERTIFICATE_BASE64              .p12 contents, base64-encoded
 #   IOS_CERTIFICATE_PASSWORD            export password for the .p12
 #   IOS_KEYCHAIN_PASSWORD               throwaway password for the CI keychain
 #   IOS_PROVISIONING_PROFILE_BASE64     App Store distribution profile
-#   APP_STORE_CONNECT_KEY_ID            from App Store Connect → Users & Access → Keys
-#   APP_STORE_CONNECT_ISSUER_ID         from App Store Connect → Users & Access → Keys
-#   APP_STORE_CONNECT_KEY_BASE64        .p8 private key, base64-encoded
 on:
   push:
     tags:
@@ -101,6 +103,7 @@ jobs:
 
       # ── Code signing ──────────────────────────────────────────────
       - name: Import signing certificate
+        if: steps.signing.outputs.signing_mode == 'manual'
         env:
           CERTIFICATE_BASE64:     ${{ secrets.IOS_CERTIFICATE_BASE64 }}
           CERTIFICATE_PASSWORD:   ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
@@ -121,6 +124,7 @@ jobs:
             -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
       - name: Install provisioning profile
+        if: steps.signing.outputs.signing_mode == 'manual'
         env:
           PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
         run: |
@@ -129,6 +133,13 @@ jobs:
           mkdir -p ~/Library/MobileDevice/Provisioning\ Profiles
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
+      - name: Prepare App Store Connect API key
+        if: steps.signing.outputs.signing_mode == 'automatic'
+        env:
+          APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+        run: |
+          printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+          chmod 600 "$RUNNER_TEMP/AuthKey.p8"
       # ── Increment build number ────────────────────────────────────
       - name: Set build number
         run: |
@@ -137,14 +148,15 @@ jobs:
         working-directory: ios/App
 
       # ── Archive ───────────────────────────────────────────────────
-      - name: Archive
+      - name: Archive (manual signing)
+        if: steps.signing.outputs.signing_mode == 'manual'
         run: |
           set -o pipefail
           xcodebuild archive \
             -workspace ios/App/App.xcworkspace \
             -scheme "$XCODE_SCHEME" \
             -configuration Release \
-            -archivePath $RUNNER_TEMP/Cortexx.xcarchive \
+            -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
             -destination "generic/platform=iOS" \
             CODE_SIGN_STYLE=Manual \
             CODE_SIGN_IDENTITY="iPhone Distribution" \
@@ -152,11 +164,33 @@ jobs:
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
             | xcpretty
 
-      # ── Export IPA ────────────────────────────────────────────────
-      - name: Export IPA
+      - name: Archive (automatic API-key signing)
+        if: steps.signing.outputs.signing_mode == 'automatic'
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
         run: |
           set -o pipefail
-          cat > $RUNNER_TEMP/ExportOptions.plist << EOF
+          xcodebuild archive \
+            -workspace ios/App/App.xcworkspace \
+            -scheme "$XCODE_SCHEME" \
+            -configuration Release \
+            -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
+            -destination "generic/platform=iOS" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
+            CODE_SIGN_STYLE=Automatic \
+            DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
+            | xcpretty
+
+      # ── Export IPA ────────────────────────────────────────────────
+      - name: Export IPA (manual signing)
+        if: steps.signing.outputs.signing_mode == 'manual'
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" << EOF
           <?xml version="1.0" encoding="UTF-8"?>
           <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
           <plist version="1.0">
@@ -183,9 +217,43 @@ jobs:
           EOF
 
           xcodebuild -exportArchive \
-            -archivePath $RUNNER_TEMP/Cortexx.xcarchive \
-            -exportOptionsPlist $RUNNER_TEMP/ExportOptions.plist \
-            -exportPath $RUNNER_TEMP/ipa \
+            -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/ipa" \
+            | xcpretty
+
+      - name: Export IPA (automatic API-key signing)
+        if: steps.signing.outputs.signing_mode == 'automatic'
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+        run: |
+          set -o pipefail
+          cat > "$RUNNER_TEMP/ExportOptions.plist" << EOF
+          <?xml version="1.0" encoding="UTF-8"?>
+          <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+          <plist version="1.0">
+          <dict>
+            <key>method</key>
+            <string>${{ env.EXPORT_METHOD }}</string>
+            <key>teamID</key>
+            <string>${{ secrets.APPLE_TEAM_ID }}</string>
+            <key>uploadSymbols</key>
+            <true/>
+            <key>signingStyle</key>
+            <string>automatic</string>
+          </dict>
+          </plist>
+          EOF
+
+          xcodebuild -exportArchive \
+            -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
+            -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
+            -exportPath "$RUNNER_TEMP/ipa" \
+            -allowProvisioningUpdates \
+            -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
+            -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
+            -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
             | xcpretty
 
       - name: Locate exported IPA
@@ -208,7 +276,8 @@ jobs:
           APP_STORE_CONNECT_KEY_BASE64:   ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
           IPA_PATH: ${{ steps.ipa.outputs.path }}
         run: |
-          echo "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > $RUNNER_TEMP/AuthKey.p8
+          printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+          chmod 600 "$RUNNER_TEMP/AuthKey.p8"
 
           xcrun altool --upload-app \
             --type ios \
@@ -228,6 +297,8 @@ jobs:
           retention-days: 30
 
       # ── Clean up keychain ─────────────────────────────────────────
-      - name: Clean up keychain
+      - name: Clean up signing material
         if: always()
-        run: security delete-keychain $RUNNER_TEMP/build.keychain || true
+        run: |
+          security delete-keychain "$RUNNER_TEMP/build.keychain" 2>/dev/null || true
+          rm -f "$RUNNER_TEMP/certificate.p12" "$RUNNER_TEMP/AuthKey.p8" "$RUNNER_TEMP/build.mobileprovision"
