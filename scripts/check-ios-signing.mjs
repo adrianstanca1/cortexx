@@ -34,7 +34,7 @@ export function checkIosSigning(env) {
 
   const manualReady = missingManualArchive.length === 0
   const automaticReady = missingAutomaticArchive.length === 0
-  const signingMode = manualReady ? 'manual' : automaticReady ? 'automatic' : 'none'
+  const signingMode = automaticReady ? 'automatic' : manualReady ? 'manual' : 'none'
   const archiveReady = signingMode !== 'none'
   const uploadReady = archiveReady && missingUpload.length === 0
 

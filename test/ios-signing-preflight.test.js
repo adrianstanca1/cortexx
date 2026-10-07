@@ -62,13 +62,13 @@ test('App Store Connect Team API credentials can satisfy archive and TestFlight 
   assert.doesNotMatch(result.stdout + result.stderr, /secret-/)
 })
 
-test('manual signing plus API credentials remains a supported TestFlight fallback', () => {
+test('automatic signing is preferred when both automatic and manual credentials are available', () => {
   const missing = run({ ...manualArchive, IOS_REQUIRE_UPLOAD: 'true' })
   assert.equal(missing.status, 1)
   assert.doesNotMatch(missing.stderr, /IOS_CERTIFICATE_BASE64/)
   const ready = run({ ...manualArchive, ...api, IOS_REQUIRE_UPLOAD: 'true' })
   assert.equal(ready.status, 0)
-  assert.equal(ready.outputs, 'signing_mode=manual\narchive_ready=true\nupload_ready=true\n')
+  assert.equal(ready.outputs, 'signing_mode=automatic\narchive_ready=true\nupload_ready=true\n')
   for (const result of [missing, ready]) {
     assert.doesNotMatch(result.stdout + result.stderr, /secret-/)
   }
