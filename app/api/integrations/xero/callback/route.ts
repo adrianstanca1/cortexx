@@ -65,33 +65,37 @@ export async function GET(req: NextRequest) {
         const maxPages = Number(raw.maxPages)
         if (Number.isFinite(maxPages) && maxPages >= 1 && maxPages <= 10) preserved.maxPages = Math.trunc(maxPages)
         resetSettings = preserved as Prisma.InputJsonValue
-        await prisma.accountingWriteback.deleteMany({ where: { connectionId: existing.id } })
       }
-      const connection = await prisma.accountingConnection.upsert({
-        where: { organizationId_provider: { organizationId: pending.organizationId, provider: 'xero' } },
-        create: {
-          organizationId: pending.organizationId,
-          provider: 'xero',
-          externalConnectionId: selected.id,
-          externalTenantId: selected.tenantId,
-          externalTenantName: selected.tenantName || selected.tenantId,
-          ...tokenData,
-          status: 'connected',
-          lastConnectedAt: new Date(),
-          disconnectedAt: null,
-          settings: {},
-        },
-        update: {
-          externalConnectionId: selected.id,
-          externalTenantId: selected.tenantId,
-          externalTenantName: selected.tenantName || selected.tenantId,
-          ...tokenData,
-          status: 'connected',
-          lastConnectedAt: new Date(),
-          disconnectedAt: null,
-          lastSyncError: null,
-          ...(tenantChanged ? { settings: resetSettings, lastSyncAt: null, lastSyncStatus: null, lastHealthAt: null, lastHealthError: null } : {}),
-        },
+      const connection = await prisma.$transaction(async tx => {
+        if (tenantChanged && existing) {
+          await tx.accountingWriteback.deleteMany({ where: { connectionId: existing.id } })
+        }
+        return tx.accountingConnection.upsert({
+          where: { organizationId_provider: { organizationId: pending.organizationId, provider: 'xero' } },
+          create: {
+            organizationId: pending.organizationId,
+            provider: 'xero',
+            externalConnectionId: selected.id,
+            externalTenantId: selected.tenantId,
+            externalTenantName: selected.tenantName || selected.tenantId,
+            ...tokenData,
+            status: 'connected',
+            lastConnectedAt: new Date(),
+            disconnectedAt: null,
+            settings: {},
+          },
+          update: {
+            externalConnectionId: selected.id,
+            externalTenantId: selected.tenantId,
+            externalTenantName: selected.tenantName || selected.tenantId,
+            ...tokenData,
+            status: 'connected',
+            lastConnectedAt: new Date(),
+            disconnectedAt: null,
+            lastSyncError: null,
+            ...(tenantChanged ? { settings: resetSettings, lastSyncAt: null, lastSyncStatus: null, lastHealthAt: null, lastHealthError: null } : {}),
+          },
+        })
       })
       auditLog({ organizationId: pending.organizationId, userId: pending.requestedById, action: 'accounting.xero.connect', resourceType: 'AccountingConnection', resourceId: connection.id, metadata: { tenantId: selected.tenantId, tenantName: selected.tenantName || null, tenantChanged } })
       return redirect(req, { connected: '1' })

@@ -77,10 +77,13 @@ export async function POST(req: NextRequest) {
     let vatAmount: number | null = null
     let vatRate: number | null = null
     if (hasBreakdown) {
-      const totals = xeroWriteback.validateGrossBreakdown({ amount: body.amount, netAmount: body.netAmount, vatAmount: body.vatAmount, vatRate: body.vatRate })
-      if (!totals.ok) return NextResponse.json({ error: totals.error }, { status: 400 })
+      if (body.vatRate === null || body.vatRate === undefined || String(body.vatRate).trim() === '') {
+        return NextResponse.json({ error: 'VAT rate is required when invoice tax breakdown is supplied' }, { status: 400 })
+      }
       vatRate = Number(body.vatRate)
       if (!Number.isFinite(vatRate) || vatRate < 0 || vatRate > 100) return NextResponse.json({ error: 'VAT rate must be between 0 and 100' }, { status: 400 })
+      const totals = xeroWriteback.validateGrossBreakdown({ amount: body.amount, netAmount: body.netAmount, vatAmount: body.vatAmount, vatRate })
+      if (!totals.ok) return NextResponse.json({ error: totals.error }, { status: 400 })
       netAmount = totals.net!
       vatAmount = totals.vat!
     }

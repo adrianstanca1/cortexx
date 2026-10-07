@@ -84,3 +84,39 @@ test('write-back queue is paginated without silently slicing older documents', (
   assert.match(page, /loadMoreQueue/)
   assert.match(page, /Load more/)
 })
+
+
+test('tenant switch cleanup and connection update are atomic', () => {
+  assert.match(callback, /prisma\.\$transaction\(async tx =>/)
+  assert.match(callback, /tx\.accountingWriteback\.deleteMany/)
+  assert.match(callback, /tx\.accountingConnection\.upsert/)
+})
+
+test('all authenticated Xero connection reads are explicitly tenant scoped', () => {
+  const files = [
+    'app/api/integrations/xero/route.ts',
+    'app/api/integrations/xero/mappings/route.ts',
+    'app/api/integrations/xero/sync/route.ts',
+    'app/api/integrations/xero/test/route.ts',
+    'app/api/integrations/xero/writeback/route.ts',
+  ]
+  for (const file of files) {
+    const source = fs.readFileSync(file, 'utf8')
+    assert.doesNotMatch(source, /accountingConnection\.findFirst\(\{ where: \{ provider: 'xero' \}/)
+  }
+  assert.match(route, /connectedXero\(auth\.orgId\)/)
+})
+
+test('mapping writes reject directionally invalid Xero account types', () => {
+  assert.match(settings, /Sales account must be a Xero revenue\/sales account/)
+  assert.match(settings, /Purchase account must be a Xero expense\/direct-cost account/)
+  assert.match(settings, /const salesTypes = new Set/)
+  assert.match(settings, /const purchaseTypes = new Set/)
+})
+
+test('invoice creation rejects null or blank VAT rates before numeric coercion', () => {
+  const invoicesRoute = fs.readFileSync('app/api/invoices/route.ts', 'utf8')
+  assert.match(invoicesRoute, /body\.vatRate === null/)
+  assert.match(invoicesRoute, /VAT rate is required when invoice tax breakdown is supplied/)
+  assert.match(invoicesRoute, /vatRate = Number\(body\.vatRate\)/)
+})

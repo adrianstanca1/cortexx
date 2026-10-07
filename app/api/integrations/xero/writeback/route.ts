@@ -34,8 +34,8 @@ function xeroWhereLiteral(value: string) {
   return value.replaceAll('\\', '\\\\').replaceAll('"', '\\"')
 }
 
-async function connectedXero() {
-  const connection = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
+async function connectedXero(organizationId: string) {
+  const connection = await prisma.accountingConnection.findFirst({ where: { organizationId, provider: 'xero' } })
   if (!connection || connection.status !== 'connected' || !connection.externalTenantId) throw new Error('Xero is not connected')
   const missingScopes = missingWriteScopes(connection.scopes)
   if (missingScopes.length) throw new Error(`Reconnect Xero to grant: ${missingScopes.join(', ')}`)
@@ -154,6 +154,7 @@ function previewPayload(entityType: EntityType, entity: unknown, mapping: Return
 export async function GET(req: NextRequest) {
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!auth.orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
   if (!admin(auth)) return NextResponse.json({ error: 'Company Admin permission required' }, { status: 403 })
 
   try {
@@ -162,7 +163,7 @@ export async function GET(req: NextRequest) {
     const take = Math.max(1, Math.min(Number.isNaN(parsedTake) ? 30 : parsedTake, 100))
     const clientSkip = Math.max(0, Number.parseInt(searchParams.get('clientSkip') || '0', 10) || 0)
     const subSkip = Math.max(0, Number.parseInt(searchParams.get('subSkip') || '0', 10) || 0)
-    const connection = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
+    const connection = await prisma.accountingConnection.findFirst({ where: { organizationId: auth.orgId, provider: 'xero' } })
     if (!connection) return NextResponse.json({ connection: null, items: [], pagination: { take, clientSkip: 0, subSkip: 0, hasMore: false, total: 0 } })
 
     const mapping = writebackMapping(connection.settings)
@@ -269,7 +270,7 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'entityType and entityId are required' }, { status: 400 })
     }
 
-    const connection = await connectedXero()
+    const connection = await connectedXero(auth.orgId)
     const mapping = writebackMapping(connection.settings)
     const data = await entityData(entityType, entityId)
     const preview = previewPayload(entityType, data.entity, mapping)

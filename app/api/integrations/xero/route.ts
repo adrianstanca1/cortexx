@@ -22,7 +22,7 @@ export async function GET(req: NextRequest) {
   const forbidden = guard(auth.role)
   if (forbidden) return forbidden
   try {
-    const connection = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
+    const connection = await prisma.accountingConnection.findFirst({ where: { organizationId: auth.orgId, provider: 'xero' } })
     const importedCount = connection ? await prisma.bankTransaction.count({ where: { source: 'xero', connectionId: connection.id } }) : 0
     const cfg = xeroPlatformConfig(req.nextUrl.origin)
     return NextResponse.json({ platformConfigured: cfg.configured, missingPlatformConfig: cfg.missing, connection: safeXeroConnection(connection, importedCount) })
@@ -42,7 +42,7 @@ export async function PATCH(req: NextRequest) {
   if (limited) return limited
   try {
     const body = await req.json() as Record<string, unknown>
-    const existing = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
+    const existing = await prisma.accountingConnection.findFirst({ where: { organizationId: auth.orgId, provider: 'xero' } })
     const current = existing?.settings && typeof existing.settings === 'object' && !Array.isArray(existing.settings) ? existing.settings as Record<string, unknown> : {}
     const settings: Record<string, unknown> = { ...current }
     const changed: Record<string, unknown> = {}
@@ -78,6 +78,8 @@ export async function PATCH(req: NextRequest) {
         return [String(row.TaxType || ''), Number.isFinite(rate) ? rate : null]
       }))
       const byCode = new Map(activeAccounts.map(row => [String(row.Code || ''), row]))
+      const salesTypes = new Set(['REVENUE', 'SALES', 'OTHERINCOME'])
+      const purchaseTypes = new Set(['EXPENSE', 'DIRECTCOSTS', 'OVERHEADS', 'CISLABOUREXPENSE', 'CISMATERIALS'])
 
       for (const key of mappingKeys) {
         if (body[key] === undefined) continue
@@ -87,7 +89,14 @@ export async function PATCH(req: NextRequest) {
         } else if (value) {
           const account = byCode.get(value)
           if (!account) return NextResponse.json({ error: `Unknown or inactive Xero account for ${key}` }, { status: 400 })
-          if (key === 'paymentAccountCode' && String(account.Type || '').toUpperCase() !== 'BANK' && account.EnablePaymentsToAccount !== true) {
+          const accountType = String(account.Type || '').toUpperCase()
+          if (key === 'salesAccountCode' && !salesTypes.has(accountType)) {
+            return NextResponse.json({ error: 'Sales account must be a Xero revenue/sales account' }, { status: 400 })
+          }
+          if (key === 'purchaseAccountCode' && !purchaseTypes.has(accountType)) {
+            return NextResponse.json({ error: 'Purchase account must be a Xero expense/direct-cost account' }, { status: 400 })
+          }
+          if (key === 'paymentAccountCode' && accountType !== 'BANK' && account.EnablePaymentsToAccount !== true) {
             return NextResponse.json({ error: 'Payment account must be a Xero bank/payment-enabled account' }, { status: 400 })
           }
         }
@@ -134,7 +143,7 @@ export async function DELETE(req: NextRequest) {
   const limited = await enforceRateLimit(req, 'write', auth.userId)
   if (limited) return limited
   try {
-    const connection = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
+    const connection = await prisma.accountingConnection.findFirst({ where: { organizationId: auth.orgId, provider: 'xero' } })
     if (!connection) return NextResponse.json({ ok: true, warning: null })
     let warning: string | null = null
     if (connection.externalConnectionId && (connection.accessTokenCipher || connection.refreshTokenCipher)) {
