@@ -59,20 +59,47 @@ jobs:
           npx eas-cli@21.0.1 whoami
           npx eas-cli@21.0.1 project:info
 
-      - name: Build signed iOS app and auto-submit to TestFlight
-        env:
-          WHAT_TO_TEST: ${{ inputs.what_to_test }}
+      - name: Build signed iOS app
+        id: build
         run: |
+          set -euo pipefail
+          BUILD_JSON="$RUNNER_TEMP/eas-build.json"
           npx eas-cli@21.0.1 build \
             --platform ios \
             --profile production \
-            --auto-submit-with-profile production \
             --wait \
             --non-interactive \
             --freeze-credentials \
             --message "GitHub release ${GITHUB_SHA}" \
+            --json > "$BUILD_JSON"
+
+          BUILD_ID="$(node -e '
+            const fs = require("fs");
+            const parsed = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const build = Array.isArray(parsed) ? parsed[0] : parsed;
+            if (!build || !build.id) {
+              console.error("EAS build output did not contain a build id");
+              process.exit(1);
+            }
+            process.stdout.write(build.id);
+          ' "$BUILD_JSON")"
+
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Submit exact build to TestFlight and wait for Apple
+        env:
+          WHAT_TO_TEST: ${{ inputs.what_to_test }}
+          BUILD_ID: ${{ steps.build.outputs.build_id }}
+        run: |
+          set -euo pipefail
+          npx eas-cli@21.0.1 submit \
+            --platform ios \
+            --profile production \
+            --id "$BUILD_ID" \
+            --wait \
+            --non-interactive \
             --what-to-test "$WHAT_TO_TEST"
 
-      - name: Show submitted build
+      - name: Verify TestFlight status
         if: success()
-        run: npx eas-cli@21.0.1 build:list --platform ios --status finished --limit 1 --json --non-interactive
+        run: npx eas-cli@21.0.1 submit:status --platform ios --profile production --json --non-interactive
