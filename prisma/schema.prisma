@@ -495,19 +495,23 @@ model UploadObject {
 }
 
 model Snag {
-  id          String    @id @default(cuid())
-  projectId   String
-  title       String
-  description String?
-  location    String?
-  status      String    @default("open") // open, in_progress, closed
-  priority    String    @default("medium") // low, medium, high, critical
-  photoUrl    String?
-  dueDate     DateTime?
-  closedAt    DateTime?
-  createdAt   DateTime  @default(now())
-  updatedAt   DateTime  @updatedAt
-  project     Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  id                 String    @id @default(cuid())
+  projectId          String
+  title              String
+  description        String?
+  location           String?
+  status             String    @default("open") // open, in_progress, closed
+  priority           String    @default("medium") // low, medium, high, critical
+  photoUrl           String?
+  dueDate            DateTime?
+  resolution         String?
+  closeoutEvidence   Json      @default("{}")
+  closedBy           String?
+  closeoutVerifiedAt DateTime?
+  closedAt           DateTime?
+  createdAt          DateTime  @default(now())
+  updatedAt          DateTime  @updatedAt
+  project            Project   @relation(fields: [projectId], references: [id], onDelete: Cascade)
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)
@@ -1552,32 +1556,34 @@ model Tender {
 }
 
 model Inspection {
-  id                String           @id @default(cuid())
-  projectId         String
-  title             String
-  type              String           @default("general") // general, safety, quality, scaffold, electrical
-  pointType         String           @default("inspection") // inspection, hold, witness
-  status            String           @default("draft") // draft, in_progress, passed, failed
-  checklistItems    Json             @default("[]") // [{ id, label, result: 'pass'|'fail'|'na', note? }]
-  overallResult     String? // pass, fail
-  conductedBy       String?
-  scheduledAt       DateTime?
-  completedAt       DateTime?
-  location          String?
-  drawingId         String?
-  drawingRevisionId String?
-  releaseStatus     String           @default("not_required") // not_required, pending, released, rejected
-  releasedBy        String?
-  releasedAt        DateTime?
-  witnessedBy       String?
-  witnessedAt       DateTime?
-  evidence          Json             @default("{}")
-  notes             String?
-  createdAt         DateTime         @default(now())
-  updatedAt         DateTime         @updatedAt
-  project           Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
-  drawing           Drawing?         @relation(fields: [drawingId], references: [id], onDelete: SetNull)
-  drawingRevision   DrawingRevision? @relation(fields: [drawingRevisionId], references: [id], onDelete: SetNull)
+  id                 String           @id @default(cuid())
+  projectId          String
+  title              String
+  type               String           @default("general") // general, safety, quality, scaffold, electrical
+  pointType          String           @default("inspection") // inspection, hold, witness
+  status             String           @default("draft") // draft, in_progress, passed, failed
+  checklistItems     Json             @default("[]") // [{ id, label, result: 'pass'|'fail'|'na', note? }]
+  overallResult      String? // pass, fail
+  conductedBy        String?
+  scheduledAt        DateTime?
+  completedAt        DateTime?
+  location           String?
+  drawingId          String?
+  drawingRevisionId  String?
+  releaseStatus      String           @default("not_required") // not_required, pending, released, rejected
+  releasedBy         String?
+  releasedAt         DateTime?
+  witnessedBy        String?
+  witnessedAt        DateTime?
+  evidence           Json             @default("{}")
+  closeoutVerifiedBy String?
+  closeoutVerifiedAt DateTime?
+  notes              String?
+  createdAt          DateTime         @default(now())
+  updatedAt          DateTime         @updatedAt
+  project            Project          @relation(fields: [projectId], references: [id], onDelete: Cascade)
+  drawing            Drawing?         @relation(fields: [drawingId], references: [id], onDelete: SetNull)
+  drawingRevision    DrawingRevision? @relation(fields: [drawingRevisionId], references: [id], onDelete: SetNull)
 
   organizationId String?
   organization   Organization? @relation(fields: [organizationId], references: [id], onDelete: Cascade)

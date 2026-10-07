@@ -3,7 +3,9 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth, actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { authorizeUploadReference } from '@/lib/upload-provenance'
 import controls from '@/lib/field-controls'
+import qualityCloseout from '@/lib/quality-closeout'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,6 +13,7 @@ const ALLOWED_TYPE = new Set(['general', 'safety', 'quality', 'scaffold', 'elect
 const ALLOWED_STATUS = new Set(['draft', 'in_progress', 'passed', 'failed'])
 const RELEASE_STATUS = new Set(['pending', 'released', 'rejected', 'not_required'])
 const ITEM_RESULT = new Set(['pass', 'fail', 'na'])
+const { inspectionPassReadiness } = qualityCloseout
 
 interface ChecklistItem { id: string; label: string; result?: 'pass' | 'fail' | 'na'; note?: string }
 
@@ -58,7 +61,14 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     const releaseEvidence = body.evidence && typeof body.evidence === 'object'
       ? controls.sanitizeEvidence(body.evidence)
       : controls.sanitizeEvidence(existing.evidence)
-    if (body.evidence && typeof body.evidence === 'object') data.evidence = releaseEvidence as unknown as object
+    if (body.evidence && typeof body.evidence === 'object') {
+      const evidenceUrls = [...releaseEvidence.photoUrls, releaseEvidence.signatureUrl].filter(Boolean)
+      for (const evidenceUrl of evidenceUrls) {
+        const uploadError = await authorizeUploadReference(evidenceUrl)
+        if (uploadError) return uploadError
+      }
+      data.evidence = releaseEvidence as unknown as object
+    }
 
     let finalReleaseStatus = existing.releaseStatus
     if (typeof body.releaseStatus === 'string' && RELEASE_STATUS.has(body.releaseStatus)) {
@@ -90,6 +100,15 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       if (body.status === 'passed' && !controls.canCompletePoint(existing.pointType, finalReleaseStatus)) {
         return NextResponse.json({ error: `${existing.pointType} point must be released before it can pass` }, { status: 409 })
       }
+      if (body.status === 'passed') {
+        const checklistItems = Array.isArray(data.checklistItems) ? data.checklistItems : existing.checklistItems
+        const readiness = inspectionPassReadiness({ previousStatus: existing.status, checklistItems, evidence: releaseEvidence })
+        if (!readiness.ready) return NextResponse.json({ error: 'Inspection is not ready to pass', missing: readiness.missing }, { status: 409 })
+        if (readiness.isFailureCloseout) {
+          data.closeoutVerifiedBy = actorName(auth)
+          data.closeoutVerifiedAt = new Date()
+        }
+      }
       data.status = body.status
       if (body.status === 'passed' || body.status === 'failed') {
         data.overallResult = body.status === 'passed' ? 'pass' : 'fail'
@@ -101,6 +120,8 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       ) {
         data.overallResult = null
         data.completedAt = null
+        data.closeoutVerifiedBy = null
+        data.closeoutVerifiedAt = null
       }
     }
 
@@ -152,6 +173,9 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
   try {
     const i = await prisma.inspection.findUnique({ where: { id: params.id } })
     if (!i) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    if (i.status === 'passed' || i.status === 'failed' || i.completedAt) {
+      return NextResponse.json({ error: 'Completed inspection records are retained for audit; reopen the inspection instead of deleting it' }, { status: 409 })
+    }
     await prisma.inspection.delete({ where: { id: params.id } })
     auditLog({
       action: 'inspection.delete',

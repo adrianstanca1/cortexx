@@ -6,10 +6,13 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import { runWithOrg } from '@/lib/tenancy'
 import { authorizeUploadReference } from '@/lib/upload-provenance'
+import controls from '@/lib/field-controls'
+import qualityCloseout from '@/lib/quality-closeout'
 
 export const dynamic = 'force-dynamic'
 const ALLOWED_STATUS = new Set(['open', 'in_progress', 'closed'])
 const ALLOWED_PRIORITY = new Set(['low', 'medium', 'high', 'critical'])
+const { snagCloseoutReadiness } = qualityCloseout
 type RouteParams = { params: Promise<{ id: string }> }
 
 async function scope<T>(auth: Exclude<Awaited<ReturnType<typeof requireOrg>>, NextResponse>, fn: () => Promise<T>) {
@@ -36,11 +39,26 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
   return scope(auth, async () => {
     try {
       const body = await req.json()
-      const existing = await prisma.snag.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true, photoUrl: true } })
+      const existing = await prisma.snag.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true, photoUrl: true, resolution: true, closeoutEvidence: true, closedAt: true, closedBy: true, closeoutVerifiedAt: true } })
       if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
       const nextStatus = body.status !== undefined ? (ALLOWED_STATUS.has(body.status) ? body.status : existing.status) : existing.status
       const justClosed = existing.status !== 'closed' && nextStatus === 'closed'
       const reopened = existing.status === 'closed' && nextStatus !== 'closed'
+      const resolution = body.resolution !== undefined ? controls.cleanText(body.resolution, 2000) : (existing.resolution || '')
+      const closeoutEvidence = body.closeoutEvidence && typeof body.closeoutEvidence === 'object'
+        ? controls.sanitizeEvidence(body.closeoutEvidence)
+        : controls.sanitizeEvidence(existing.closeoutEvidence)
+      if (body.closeoutEvidence !== undefined) {
+        const evidenceUrls = [...closeoutEvidence.photoUrls, closeoutEvidence.signatureUrl].filter(Boolean)
+        for (const evidenceUrl of evidenceUrls) {
+          const uploadError = await authorizeUploadReference(evidenceUrl)
+          if (uploadError) return uploadError
+        }
+      }
+      if (justClosed) {
+        const readiness = snagCloseoutReadiness({ resolution, closeoutEvidence })
+        if (!readiness.ready) return NextResponse.json({ error: 'Snag is not ready for closeout', missing: readiness.missing }, { status: 409 })
+      }
       let dueDateUpdate: { dueDate: Date | null } | Record<string, never> = {}
       if (body.dueDate !== undefined) {
         if (body.dueDate) {
@@ -63,14 +81,18 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
           ...(body.priority !== undefined && ALLOWED_PRIORITY.has(body.priority) && { priority: body.priority }),
           ...(body.status !== undefined && { status: nextStatus }),
           ...(body.photoUrl !== undefined && { photoUrl: body.photoUrl || null }),
+          ...(body.resolution !== undefined && { resolution: resolution || null }),
+          ...(body.closeoutEvidence !== undefined && { closeoutEvidence: closeoutEvidence as unknown as object }),
           ...dueDateUpdate,
           closedAt: justClosed ? new Date() : reopened ? null : undefined,
+          closedBy: justClosed ? actorName(auth.session) : reopened ? null : undefined,
+          closeoutVerifiedAt: justClosed ? new Date() : reopened ? null : undefined,
         },
         include: { project: { select: { id: true, name: true } } },
       })
       if (justClosed || reopened) {
         prisma.activity.create({
-          data: { projectId: snag.projectId, actorName: actorName(auth.session), actorType: 'human', action: justClosed ? `closed snag: ${snag.title}` : `reopened snag: ${snag.title}`, iconType: 'alert' },
+          data: { projectId: snag.projectId, actorName: actorName(auth.session), actorType: 'human', action: justClosed ? `closed snag: ${snag.title}` : `reopened snag: ${snag.title}`, detail: justClosed ? resolution : undefined, iconType: 'alert' },
         }).catch(() => {})
       }
       return NextResponse.json(snag)
@@ -87,8 +109,9 @@ export async function DELETE(req: NextRequest, { params: paramsP }: RouteParams)
   const params = await paramsP
   return scope(auth, async () => {
     try {
-      const snag = await prisma.snag.findUnique({ where: { id: params.id }, select: { projectId: true, title: true } })
+      const snag = await prisma.snag.findUnique({ where: { id: params.id }, select: { projectId: true, title: true, status: true, closeoutVerifiedAt: true } })
       if (!snag) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+      if (snag.status === 'closed' || snag.closeoutVerifiedAt) return NextResponse.json({ error: 'Closed snags are retained for audit; reopen before editing rather than deleting the closeout record' }, { status: 409 })
       await prisma.snag.delete({ where: { id: params.id } })
       auditLog({ action: 'snag.delete', resourceType: 'Snag', resourceId: params.id, ...requestMeta(req) })
       prisma.activity.create({

@@ -31,7 +31,7 @@
     "test:pitr": "node --test test/construction-pitr-basebackup.test.js test/construction-pitr-restore.test.js test/construction-wal-archive.test.js",
     "test:pitr:drill": "bash test/construction-pitr-fixture-drill.sh",
     "load:smoke": "node scripts/load-smoke.mjs",
-    "e2e:install": "npm install --no-save --package-lock=false @playwright/test@1.63.0 && npx playwright install chromium",
+    "e2e:install": "npx playwright install chromium",
     "e2e": "playwright test",
     "e2e:desktop": "playwright test --project=desktop-chromium",
     "e2e:mobile": "playwright test --project=mobile-chromium",
