@@ -25,6 +25,8 @@ jobs:
         working-directory: expo
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      EXPO_APPLE_TEAM_ID: "4G3G5MX9BH"
+      EXPO_APPLE_TEAM_TYPE: "INDIVIDUAL"
       CI: "1"
 
     steps:
@@ -59,6 +61,24 @@ jobs:
           npx eas-cli@21.0.1 whoami
           npx eas-cli@21.0.1 project:info
 
+      - name: Prepare optional App Store Connect API key
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -n "$APP_STORE_CONNECT_KEY_ID" ] && [ -n "$APP_STORE_CONNECT_ISSUER_ID" ] && [ -n "$APP_STORE_CONNECT_KEY_BASE64" ]; then
+            printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
+            chmod 600 "$RUNNER_TEMP/AuthKey.p8"
+            echo "EXPO_ASC_API_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
+            echo "EXPO_ASC_KEY_ID=$APP_STORE_CONNECT_KEY_ID" >> "$GITHUB_ENV"
+            echo "EXPO_ASC_ISSUER_ID=$APP_STORE_CONNECT_ISSUER_ID" >> "$GITHUB_ENV"
+            echo "App Store Connect API key is available for EAS credential validation/repair."
+          else
+            echo "::notice::No App Store Connect API key secrets found. EAS will reuse existing remote iOS credentials if they are already valid."
+          fi
+
       - name: Build signed iOS app
         id: build
         run: |
@@ -69,7 +89,6 @@ jobs:
             --profile production \
             --wait \
             --non-interactive \
-            --freeze-credentials \
             --message "GitHub release ${GITHUB_SHA}" \
             --json > "$BUILD_JSON"
 
@@ -99,3 +118,7 @@ jobs:
             --wait \
             --non-interactive \
             --what-to-test "$WHAT_TO_TEST"
+
+      - name: Clean up App Store Connect key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
