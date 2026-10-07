@@ -23,10 +23,11 @@ function settingsOf(connection: { settings: unknown }) {
 export async function POST(req: NextRequest) {
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!auth.orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
   if (!auth.role || !canManage(auth.role)) return NextResponse.json({ error: 'Company Admin permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', auth.userId)
   if (limited) return limited
-  const connection = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
+  const connection = await prisma.accountingConnection.findFirst({ where: { organizationId: auth.orgId, provider: 'xero' } })
   if (!connection || connection.status === 'disconnected' || !connection.externalTenantId) {
     return NextResponse.json({ error: 'Xero is not connected' }, { status: 409 })
   }

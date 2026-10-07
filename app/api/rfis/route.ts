@@ -1,8 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { canWrite } from '@/lib/rbac'
+import { programmeProjectScope, programmeProjectWhere } from '@/lib/programme-access'
 
 export const dynamic = 'force-dynamic'
 
@@ -10,8 +13,12 @@ const MAX_TAKE = 100
 const ALLOWED_STATUS = new Set(['open', 'answered', 'closed'])
 const ALLOWED_PRIORITY = new Set(['low', 'medium', 'high'])
 
+function canManageRfi(auth: { role: string | null; personaRole?: string | null }) {
+  return !!auth.role && canWrite(auth.role) && ['company_admin', 'project_manager', 'foreman'].includes(auth.personaRole || '')
+}
+
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   try {
     const { searchParams } = new URL(req.url)
@@ -19,9 +26,11 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const priority = searchParams.get('priority')
     const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
+    const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
 
-    const where = {
+    const where: Prisma.RfiWhereInput = {
       ...(projectId && { projectId }),
+      project: { is: programmeProjectScope(auth.session) },
       ...(status && ALLOWED_STATUS.has(status) && { status }),
       ...(priority && ALLOWED_PRIORITY.has(priority) && { priority }),
     }
@@ -32,11 +41,13 @@ export async function GET(req: NextRequest) {
         include: { project: { select: { id: true, name: true } } },
         orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
         take,
+        skip,
       }),
       prisma.rfi.count({ where: { ...where, status: { not: 'closed' } } }),
       prisma.rfi.count({ where: { ...where, status: { not: 'closed' }, dueDate: { lt: new Date() } } }),
     ])
-    return NextResponse.json({ rfis, openCount, overdueCount })
+    const totalCount = await prisma.rfi.count({ where })
+    return NextResponse.json({ rfis, openCount, overdueCount, totalCount, hasMore: skip + rfis.length < totalCount })
   } catch (error) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to fetch RFIs' }, { status: 500 })
@@ -44,10 +55,12 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
+  if (!canManageRfi(auth)) return NextResponse.json({ error: 'Company Admin, Project Manager or Foreman permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
+
   try {
     const body = await req.json()
     const subject = String(body.subject || '').trim()
@@ -57,8 +70,8 @@ export async function POST(req: NextRequest) {
     const projectId = String(body.projectId || '').trim()
     if (!projectId) return NextResponse.json({ error: 'Project is required' }, { status: 400 })
 
-    const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } })
-    if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(projectId, auth.session), select: { id: true } })
+    if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
 
     let dueDate: Date | null = null
     if (body.dueDate) {
@@ -67,11 +80,6 @@ export async function POST(req: NextRequest) {
       dueDate = d
     }
 
-    // Per-project sequential RFI number: RFI-001. Two concurrent POSTs
-    // on the same project would otherwise generate the same number and
-    // the second would 500 on the unique constraint. Retry up to 5
-    // times on P2002, refetching the latest number each time — bounded
-    // and almost always succeeds on the second try in practice.
     let rfi: Awaited<ReturnType<typeof prisma.rfi.create>> | null = null
     let lastError: unknown = null
     for (let attempt = 0; attempt < 5; attempt++) {
@@ -92,34 +100,33 @@ export async function POST(req: NextRequest) {
             projectId,
             status: ALLOWED_STATUS.has(body.status) ? body.status : 'open',
             priority: ALLOWED_PRIORITY.has(body.priority) ? body.priority : 'medium',
-            raisedBy: body.raisedBy?.toString().trim() || actorName(auth),
+            raisedBy: body.raisedBy?.toString().trim() || actorName(auth.session),
             assignee: body.assignee?.toString().trim() || null,
             dueDate,
           },
           include: { project: { select: { id: true, name: true } } },
         })
         break
-      } catch (e) {
-        lastError = e
-        const code = (e as { code?: string })?.code
-        if (code !== 'P2002') throw e   // not a uniqueness collision — re-raise
-        // P2002 — racy peer also picked this number; retry with the next
+      } catch (error) {
+        lastError = error
+        if ((error as { code?: string })?.code !== 'P2002') throw error
       }
     }
+
     if (!rfi) {
-      console.error('rfi create exhausted retries', lastError)
+      reportError(lastError, { context: 'rfi.number-allocation', projectId })
       return NextResponse.json({ error: 'Could not allocate a unique RFI number — try again', code: 'NUMBER_RACE' }, { status: 503 })
     }
 
     prisma.activity.create({
       data: {
         projectId: rfi.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(auth.session),
         actorType: 'human',
         action: `raised ${rfi.number}: ${rfi.subject}`,
         iconType: 'alert',
       },
-    }).catch(() => {})
+    }).catch(() => undefined)
 
     return NextResponse.json(rfi, { status: 201 })
   } catch (error) {

@@ -88,6 +88,16 @@ export function startStream(opts: { apiUrl: string; token: string }) {
 }
 export function stopStream() { try { _streamController?.abort(); } catch { /* ignore */ } _streamController = null; if (_streamTimer) clearTimeout(_streamTimer); _streamTimer = null; }
 
+function httpFailure(message: string, status: number) {
+  const error = new Error(message) as Error & { httpStatus?: number };
+  error.httpStatus = status;
+  return error;
+}
+
+function isHttpFailure(error: any) {
+  return Number.isInteger(error?.httpStatus);
+}
+
 export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
   const API_URL = opts.apiUrl || API_URL_FALLBACK; const store = opts.tokenStorage || _store;
   const token = async () => await store.get();
@@ -99,7 +109,7 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
   async function apiPost(path: string, body: any): Promise<any> {
     const t = await token(); const r = await fetch(`${API_URL}${path}`, { method: 'POST', headers: { 'content-type': 'application/json', ...(t ? { authorization: `Bearer ${t}` } : {}) }, body: JSON.stringify(body) });
     if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); }
-    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error((e as any).error || 'Create failed'); }
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw httpFailure((e as any).error || 'Create failed', r.status); }
     return r.json();
   }
   return {
@@ -125,11 +135,11 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
       }
       catch (e: any) { if (e?.message === 'unauthorized') throw e; const cached = await cacheGet(name); if (cached) return cached; throw e; }
     },
-    postCollection(name: string, body: any): Promise<any> { return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized') throw e; const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body }); return { id, _queued: true, ...body }; }); },
+    postCollection(name: string, body: any): Promise<any> { return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body }); return { id, _queued: true, ...body }; }); },
     async putCollection(name: string, id: string, body: any): Promise<any> {
       const t = await token(); const headers: Record<string, string> = { 'content-type': 'application/json' }; if (t) headers.authorization = `Bearer ${t}`;
-      try { const r = await fetch(`${API_URL}/api/${name}/${id}`, { method: 'PUT', headers, body: JSON.stringify(body) }); if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); } if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error((e as any).error || 'Update failed'); } return r.json(); }
-      catch (e: any) { if (e?.message === 'unauthorized') throw e; const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body }); return { id, _queued: true, ...body }; }
+      try { const r = await fetch(`${API_URL}/api/${name}/${id}`, { method: 'PUT', headers, body: JSON.stringify(body) }); if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); } if (!r.ok) { const e = await r.json().catch(() => ({})); throw httpFailure((e as any).error || 'Update failed', r.status); } return r.json(); }
+      catch (e: any) { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body }); return { id, _queued: true, ...body }; }
     },
     apiGet, apiPost, onQueueChange, pendingWrites, flushQueue, startStream, stopStream, onStreamEvent,
   };

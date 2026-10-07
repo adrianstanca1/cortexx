@@ -13,6 +13,8 @@ export type AppRoute =
   | 'diary'
   | 'snags'
   | 'safety'
+  | 'rfis'
+  | 'drawings'
   | 'invoices'
   | 'cis'
   | 'quotes'

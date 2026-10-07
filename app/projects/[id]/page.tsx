@@ -57,7 +57,7 @@ export default function ProjectDetailPage() {
   // Invoice modal
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [savingInvoice, setSavingInvoice] = useState(false)
-  const [invoiceForm, setInvoiceForm] = useState({ number: '', clientName: '', amount: '', dueDate: '', status: 'draft' })
+  const [invoiceForm, setInvoiceForm] = useState({ number: '', clientName: '', netAmount: '', vatRate: '20', dueDate: '', paidDate: '', status: 'draft' })
 
   // Edit project modal
   const [showEditModal, setShowEditModal] = useState(false)
@@ -68,7 +68,7 @@ export default function ProjectDetailPage() {
   // Edit invoice modal
   const [showEditInvoiceModal, setShowEditInvoiceModal] = useState(false)
   const [editInvoice, setEditInvoice] = useState<Invoice | null>(null)
-  const [editInvoiceForm, setEditInvoiceForm] = useState({ amount: '', dueDate: '', clientName: '', notes: '' })
+  const [editInvoiceForm, setEditInvoiceForm] = useState({ amount: '', netAmount: '', vatRate: '', dueDate: '', clientName: '', notes: '' })
   const [savingEditInvoice, setSavingEditInvoice] = useState(false)
 
   // Document modal
@@ -244,6 +244,8 @@ export default function ProjectDetailPage() {
     setEditInvoice(inv)
     setEditInvoiceForm({
       amount: inv.amount.toString(),
+      netAmount: inv.netAmount?.toString() || '',
+      vatRate: inv.vatRate?.toString() || '',
       dueDate: inv.dueDate ? new Date(inv.dueDate).toISOString().split('T')[0] : '',
       clientName: inv.clientName || '',
       notes: inv.notes || '',
@@ -253,8 +255,17 @@ export default function ProjectDetailPage() {
 
   const saveEditInvoice = async () => {
     if (!editInvoice) return
-    const amt = parseFloat(editInvoiceForm.amount)
-    if (isNaN(amt) || amt <= 0) {
+    const legacyAmount = parseFloat(editInvoiceForm.amount)
+    const hasBreakdown = Boolean(editInvoiceForm.netAmount || editInvoiceForm.vatRate)
+    const net = parseFloat(editInvoiceForm.netAmount)
+    const rate = parseFloat(editInvoiceForm.vatRate)
+    if (hasBreakdown && (!Number.isFinite(net) || net < 0 || !Number.isFinite(rate) || rate < 0 || rate > 100)) {
+      showToast('Enter a valid net amount and VAT rate (0–100%)', 'error')
+      return
+    }
+    const vat = hasBreakdown ? Math.round(net * rate) / 100 : null
+    const amt = hasBreakdown ? Math.round((net + (vat || 0)) * 100) / 100 : legacyAmount
+    if (!Number.isFinite(amt) || amt <= 0) {
       showToast('Amount must be a positive number', 'error')
       return
     }
@@ -265,6 +276,7 @@ export default function ProjectDetailPage() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           amount: amt,
+          ...(hasBreakdown ? { netAmount: net, vatAmount: vat, vatRate: rate } : {}),
           dueDate: editInvoiceForm.dueDate || null,
           clientName: editInvoiceForm.clientName || null,
           notes: editInvoiceForm.notes || null,
@@ -289,12 +301,15 @@ export default function ProjectDetailPage() {
   }
 
   const createInvoice = async () => {
-    if (!invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate) return
-    const amt = parseFloat(invoiceForm.amount)
-    if (isNaN(amt) || amt <= 0) {
-      showToast('Amount must be a positive number', 'error')
+    if (!invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate || (invoiceForm.status === 'paid' && !invoiceForm.paidDate)) return
+    const net = parseFloat(invoiceForm.netAmount)
+    const rate = parseFloat(invoiceForm.vatRate)
+    if (!Number.isFinite(net) || net <= 0 || !Number.isFinite(rate) || rate < 0 || rate > 100) {
+      showToast('Enter a valid net amount and VAT rate (0–100%)', 'error')
       return
     }
+    const vat = Math.round(net * rate) / 100
+    const amt = Math.round((net + vat) * 100) / 100
     setSavingInvoice(true)
     try {
       const res = await fetch('/api/invoices', {
@@ -304,8 +319,12 @@ export default function ProjectDetailPage() {
           number: invoiceForm.number.trim(),
           clientName: invoiceForm.clientName.trim() || project.clientName,
           amount: amt,
+          netAmount: net,
+          vatAmount: vat,
+          vatRate: rate,
           dueDate: invoiceForm.dueDate,
           status: invoiceForm.status,
+          ...(invoiceForm.status === 'paid' ? { paidDate: invoiceForm.paidDate } : {}),
           projectId: id,
         }),
       })
@@ -316,7 +335,7 @@ export default function ProjectDetailPage() {
       const newInvoice = await res.json()
       setProject(prev => prev ? { ...prev, invoices: [...(prev.invoices || []), newInvoice] } : prev)
       setShowInvoiceModal(false)
-      setInvoiceForm({ number: '', clientName: '', amount: '', dueDate: '', status: 'draft' })
+      setInvoiceForm({ number: '', clientName: '', netAmount: '', vatRate: '20', dueDate: '', paidDate: '', status: 'draft' })
       showToast('Invoice created')
       logActivity(`created invoice ${invoiceForm.number.trim()}`, 'receipt')
     } catch (e) { showToast(e instanceof Error ? e.message : 'Failed to create invoice', 'error') }
@@ -775,7 +794,7 @@ export default function ProjectDetailPage() {
               <p style={{ ...labelStyle, marginBottom: 0 }}>Invoices</p>
               <button type="button" onClick={() => {
                 const nextNum = (project.invoices?.length || 0) + 1
-                setInvoiceForm({ number: `INV-${String(nextNum).padStart(3, '0')}`, clientName: project.clientName, amount: '', dueDate: '', status: 'draft' })
+                setInvoiceForm({ number: `INV-${String(nextNum).padStart(3, '0')}`, clientName: project.clientName, netAmount: '', vatRate: '20', dueDate: '', paidDate: '', status: 'draft' })
                 setShowInvoiceModal(true)
               }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={12} color="#fff" /> Add invoice
@@ -877,11 +896,12 @@ export default function ProjectDetailPage() {
             {[
               { key: 'number', label: 'Invoice number *', placeholder: 'INV-001' },
               { key: 'clientName', label: 'Client name', placeholder: project.clientName },
-              { key: 'amount', label: 'Amount (£) *', placeholder: '5000', type: 'number', min: '0' },
+              { key: 'netAmount', label: 'Net amount (£) *', placeholder: '5000', type: 'number', min: '0' },
+              { key: 'vatRate', label: 'VAT rate (%) *', placeholder: '20', type: 'number', min: '0' },
             ].map(f => (
               <div key={f.key}>
-                <label htmlFor="field-883" style={labelStyle}>{f.label}</label>
-                <input id="field-883" value={invoiceForm[f.key as keyof typeof invoiceForm]} onChange={e => setInvoiceForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={(f as { type?: string }).type || 'text'} min={(f as { min?: string }).min} style={inputStyle} />
+                <label htmlFor={`invoice-${f.key}`} style={labelStyle}>{f.label}</label>
+                <input id={`invoice-${f.key}`} value={invoiceForm[f.key as keyof typeof invoiceForm]} onChange={e => setInvoiceForm(p => ({ ...p, [f.key]: e.target.value }))} placeholder={f.placeholder} type={(f as { type?: string }).type || 'text'} min={(f as { min?: string }).min} style={inputStyle} />
               </div>
             ))}
             <div>
@@ -892,11 +912,17 @@ export default function ProjectDetailPage() {
               <div style={labelStyle}>Status</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['draft', 'sent', 'paid'] as const).map(s => (
-                  <button type="button" key={s} onClick={() => setInvoiceForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: invoiceForm.status === s ? `${invoiceStatusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${invoiceForm.status === s ? invoiceStatusColor[s] : 'rgba(255,255,255,0.1)'}`, color: invoiceForm.status === s ? invoiceStatusColor[s] : 'var(--t2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{s}</button>
+                  <button type="button" key={s} onClick={() => setInvoiceForm(p => ({ ...p, status: s, paidDate: s === 'paid' ? (p.paidDate || new Date().toISOString().slice(0, 10)) : p.paidDate }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: invoiceForm.status === s ? `${invoiceStatusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${invoiceForm.status === s ? invoiceStatusColor[s] : 'rgba(255,255,255,0.1)'}`, color: invoiceForm.status === s ? invoiceStatusColor[s] : 'var(--t2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{s}</button>
                 ))}
               </div>
             </div>
-            <button type="button" onClick={createInvoice} disabled={savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingInvoice || !invoiceForm.number.trim() || !invoiceForm.amount || !invoiceForm.dueDate ? 0.5 : 1 }}>
+            {invoiceForm.status === 'paid' && (
+              <div>
+                <label htmlFor="invoice-paid-date" style={labelStyle}>Paid date *</label>
+                <input id="invoice-paid-date" type="date" value={invoiceForm.paidDate} onChange={e => setInvoiceForm(p => ({ ...p, paidDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              </div>
+            )}
+            <button type="button" onClick={createInvoice} disabled={savingInvoice || !invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate || (invoiceForm.status === 'paid' && !invoiceForm.paidDate)} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingInvoice || !invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate || (invoiceForm.status === 'paid' && !invoiceForm.paidDate) ? 0.5 : 1 }}>
               {savingInvoice ? 'Creating…' : 'Create invoice'}
             </button>
           </div>
@@ -1014,8 +1040,24 @@ export default function ProjectDetailPage() {
               <button type="button" onClick={() => setShowEditInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
-              <label htmlFor="field-1017" style={labelStyle}>Amount (£) *</label>
-              <input id="field-1017" type="number" min="0" value={editInvoiceForm.amount} onChange={e => setEditInvoiceForm(p => ({ ...p, amount: e.target.value }))} placeholder="5000" style={inputStyle} />
+              <label htmlFor="field-1017" style={labelStyle}>{editInvoiceForm.netAmount || editInvoiceForm.vatRate ? 'Gross amount (£) — calculated from net + VAT' : 'Amount (£) *'}</label>
+              <input id="field-1017" type="number" min="0" value={editInvoiceForm.amount} disabled={Boolean(editInvoiceForm.netAmount || editInvoiceForm.vatRate)} onChange={e => setEditInvoiceForm(p => ({ ...p, amount: e.target.value }))} placeholder="5000" style={{ ...inputStyle, opacity: editInvoiceForm.netAmount || editInvoiceForm.vatRate ? 0.65 : 1 }} />
+            </div>
+            <div>
+              <label htmlFor="field-1019-net" style={labelStyle}>Net amount (£) — required for Xero</label>
+              <input id="field-1019-net" type="number" min="0" value={editInvoiceForm.netAmount} onChange={e => setEditInvoiceForm(p => {
+                const net = Number(e.target.value); const rate = Number(p.vatRate)
+                const gross = Number.isFinite(net) && Number.isFinite(rate) ? Math.round((net + net * rate / 100) * 100) / 100 : Number(p.amount)
+                return { ...p, netAmount: e.target.value, amount: Number.isFinite(gross) ? String(gross) : p.amount }
+              })} placeholder="Enter net value" style={inputStyle} />
+            </div>
+            <div>
+              <label htmlFor="field-1019-vat" style={labelStyle}>VAT rate (%) — required for Xero</label>
+              <input id="field-1019-vat" type="number" min="0" max="100" value={editInvoiceForm.vatRate} onChange={e => setEditInvoiceForm(p => {
+                const net = Number(p.netAmount); const rate = Number(e.target.value)
+                const gross = Number.isFinite(net) && Number.isFinite(rate) ? Math.round((net + net * rate / 100) * 100) / 100 : Number(p.amount)
+                return { ...p, vatRate: e.target.value, amount: Number.isFinite(gross) ? String(gross) : p.amount }
+              })} placeholder="20" style={inputStyle} />
             </div>
             <div>
               <label htmlFor="field-1021" style={labelStyle}>Client name</label>

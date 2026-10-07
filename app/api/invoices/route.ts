@@ -6,6 +6,7 @@ import { requireOrg } from '@/lib/requireAuth'
 import { canManage } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import xeroWriteback from '@/lib/xero-writeback'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,6 +65,28 @@ export async function POST(req: NextRequest) {
     if (!body.dueDate) {
       return NextResponse.json({ error: 'Due date is required' }, { status: 400 })
     }
+    const status = body.status || 'draft'
+    let paidDate: Date | null = null
+    if (status === 'paid') {
+      if (!body.paidDate) return NextResponse.json({ error: 'Paid date is required when creating a paid invoice' }, { status: 400 })
+      paidDate = new Date(body.paidDate)
+      if (Number.isNaN(paidDate.getTime())) return NextResponse.json({ error: 'Paid date is invalid' }, { status: 400 })
+    }
+    const hasBreakdown = body.netAmount !== undefined || body.vatAmount !== undefined || body.vatRate !== undefined
+    let netAmount: number | null = null
+    let vatAmount: number | null = null
+    let vatRate: number | null = null
+    if (hasBreakdown) {
+      if (body.vatRate === null || body.vatRate === undefined || String(body.vatRate).trim() === '') {
+        return NextResponse.json({ error: 'VAT rate is required when invoice tax breakdown is supplied' }, { status: 400 })
+      }
+      vatRate = Number(body.vatRate)
+      if (!Number.isFinite(vatRate) || vatRate < 0 || vatRate > 100) return NextResponse.json({ error: 'VAT rate must be between 0 and 100' }, { status: 400 })
+      const totals = xeroWriteback.validateGrossBreakdown({ amount: body.amount, netAmount: body.netAmount, vatAmount: body.vatAmount, vatRate })
+      if (!totals.ok) return NextResponse.json({ error: totals.error }, { status: 400 })
+      netAmount = totals.net!
+      vatAmount = totals.vat!
+    }
     try {
       const invoice = await prisma.invoice.create({
         data: {
@@ -71,7 +94,11 @@ export async function POST(req: NextRequest) {
           projectId: body.projectId || null,
           clientName: body.clientName.trim(),
           amount: Number(body.amount),
-          status: body.status || 'draft',
+          netAmount,
+          vatAmount,
+          vatRate,
+          status,
+          paidDate,
           issuedDate: body.issuedDate ? new Date(body.issuedDate) : new Date(),
           dueDate: new Date(body.dueDate),
           notes: body.notes || null,

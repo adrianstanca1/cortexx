@@ -1,0 +1,140 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+
+const route = fs.readFileSync('app/api/integrations/xero/writeback/route.ts', 'utf8')
+const settings = fs.readFileSync('app/api/integrations/xero/route.ts', 'utf8')
+const callback = fs.readFileSync('app/api/integrations/xero/callback/route.ts', 'utf8')
+const page = fs.readFileSync('app/settings/integrations/xero/page.tsx', 'utf8')
+
+test('Xero write-back retries adopt only Cortexx-owned remote invoice numbers', () => {
+  assert.match(route, /remoteInvoiceByNumber/)
+  assert.match(route, /Reference \|\| ''\) !== expectedReference/)
+  assert.match(route, /different origin/)
+})
+
+test('Xero write-back blocks automatic overwrite when a synced payload changes', () => {
+  assert.match(route, /existing\?\.payloadHash && existing\.payloadHash !== hash/)
+  assert.match(route, /Automatic overwrite is blocked/)
+  assert.match(route, /priorPayment\?\.payloadHash && priorPayment\.payloadHash !== paymentHash/)
+})
+
+test('paid local invoices require mapped governed payment sync', () => {
+  assert.match(route, /Paid local invoices must sync their Xero payment/)
+  assert.match(route, /Map a Xero payment account/)
+  assert.match(route, /entityType: paymentType/)
+})
+
+test('mapping updates validate live Xero accounts and tax rates before enablement', () => {
+  assert.match(settings, /xeroApiRequest\(existing, '\/Accounts'\)/)
+  assert.match(settings, /xeroApiRequest\(existing, '\/TaxRates'\)/)
+  assert.match(settings, /Payment account must be a Xero bank\/payment-enabled account/)
+  assert.match(settings, /Configure at least one complete sales or purchase mapping/)
+})
+
+test('payment retry recovers an already-applied remote payment before creating another', () => {
+  assert.match(route, /recoverRemotePayment/)
+  assert.match(route, /recoverPaymentId\(payments, expected\)/)
+  assert.match(route, /if \(recoveredPaymentId\)/)
+})
+
+test('external accounting mutations use atomic in-flight claims', () => {
+  assert.match(route, /status: 'in_flight'/)
+  assert.match(route, /status: \{ in: \['pending', 'error'\] \}/)
+  assert.match(route, /already in progress/)
+})
+
+test('tenant disconnect and tenant switches clear tenant-specific writeback identity', () => {
+  assert.match(settings, /accountingWriteback\.deleteMany/)
+  assert.match(callback, /tenantChanged/)
+  assert.match(callback, /accountingWriteback\.deleteMany/)
+  assert.match(callback, /resetSettings/)
+})
+
+test('writeback queue surfaces changed-since-sync records instead of reporting them current', () => {
+  assert.match(route, /changedSinceSync/)
+  assert.match(route, /Changed since last Xero sync/)
+  assert.match(page, /!item\.changedSinceSync/)
+})
+
+test('saved Xero tax mappings retain the live numeric rate used for document validation', () => {
+  assert.match(settings, /salesTaxRate/)
+  assert.match(settings, /purchaseTaxRate/)
+  assert.match(settings, /taxRateByType/)
+})
+
+test('invoice write-back claims release to error when contact resolution fails', () => {
+  assert.match(route, /try\s*\{\s*const contactId = await contactIdFor/)
+  assert.match(route, /data: \{ status: 'error', lastError: message/)
+})
+
+test('paid invoices require a payment date before Xero sync and creation UI captures it', () => {
+  const invoicesRoute = fs.readFileSync('app/api/invoices/route.ts', 'utf8')
+  const projectPage = fs.readFileSync('app/projects/[id]/page.tsx', 'utf8')
+  assert.match(invoicesRoute, /Paid date is required when creating a paid invoice/)
+  assert.match(projectPage, /invoice-paid-date/)
+  assert.match(route, /Record the paid date before syncing this paid invoice/)
+})
+
+test('write-back queue is paginated without silently slicing older documents', () => {
+  assert.match(route, /clientSkip/)
+  assert.match(route, /subSkip/)
+  assert.match(route, /hasMore:/)
+  assert.doesNotMatch(page, /queue\.items\.slice\(0, 30\)/)
+  assert.match(page, /loadMoreQueue/)
+  assert.match(page, /Load more/)
+})
+
+
+test('tenant switch cleanup and connection update are atomic', () => {
+  assert.match(callback, /prisma\.\$transaction\(async tx =>/)
+  assert.match(callback, /tx\.accountingWriteback\.deleteMany/)
+  assert.match(callback, /tx\.accountingConnection\.upsert/)
+})
+
+test('all authenticated Xero connection reads are explicitly tenant scoped', () => {
+  const files = [
+    'app/api/integrations/xero/route.ts',
+    'app/api/integrations/xero/mappings/route.ts',
+    'app/api/integrations/xero/sync/route.ts',
+    'app/api/integrations/xero/test/route.ts',
+    'app/api/integrations/xero/writeback/route.ts',
+  ]
+  for (const file of files) {
+    const source = fs.readFileSync(file, 'utf8')
+    assert.doesNotMatch(source, /accountingConnection\.findFirst\(\{ where: \{ provider: 'xero' \}/)
+  }
+  assert.match(route, /connectedXero\(auth\.orgId\)/)
+})
+
+test('mapping writes reject directionally invalid Xero account types', () => {
+  assert.match(settings, /Sales account must be a Xero revenue\/sales account/)
+  assert.match(settings, /Purchase account must be a Xero expense\/direct-cost account/)
+  assert.match(settings, /const salesTypes = new Set/)
+  assert.match(settings, /const purchaseTypes = new Set/)
+})
+
+test('invoice creation rejects null or blank VAT rates before numeric coercion', () => {
+  const invoicesRoute = fs.readFileSync('app/api/invoices/route.ts', 'utf8')
+  assert.match(invoicesRoute, /body\.vatRate === null/)
+  assert.match(invoicesRoute, /VAT rate is required when invoice tax breakdown is supplied/)
+  assert.match(invoicesRoute, /vatRate = Number\(body\.vatRate\)/)
+})
+
+
+test('write-back invoice candidates and export-by-id are explicitly tenant scoped', () => {
+  assert.match(route, /entityData\(entityType: EntityType, entityId: string, organizationId: string\)/)
+  assert.match(route, /where: \{ id: entityId, organizationId \}/)
+  assert.match(route, /invoice\.findMany\(\{ where: \{ organizationId: auth\.orgId \}/)
+  assert.match(route, /subInvoice\.findMany\(\{\s*where: \{ organizationId: auth\.orgId \}/)
+  assert.match(route, /invoice\.count\(\{ where: \{ organizationId: auth\.orgId \} \}\)/)
+  assert.match(route, /subInvoice\.count\(\{ where: \{ organizationId: auth\.orgId \} \}\)/)
+  assert.match(route, /entityData\(entityType, entityId, auth\.orgId\)/)
+})
+
+test('saved Xero tax mappings enforce document-direction applicability', () => {
+  assert.match(settings, /CanApplyToRevenue !== true/)
+  assert.match(settings, /CanApplyToExpenses !== true/)
+  assert.match(settings, /Sales tax rate must be applicable to Xero revenue accounts/)
+  assert.match(settings, /Purchase tax rate must be applicable to Xero expense accounts/)
+})

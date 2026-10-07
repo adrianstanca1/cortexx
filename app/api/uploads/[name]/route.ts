@@ -98,7 +98,9 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
   // browser fetches bytes directly from object storage — no Node process
   // streaming overhead, no app bandwidth bill. The browser caches the
   // redirect target normally.
-  if (isS3Configured()) {
+  // Native clients stream through this authorized endpoint so their bearer
+  // credential is never forwarded while following an object-store redirect.
+  if (isS3Configured() && req.nextUrl.searchParams.get('stream') !== '1') {
     const url = await getObjectUrl(key, downloadName ? { downloadName } : undefined)
     if (!url) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     const response = NextResponse.redirect(url, 302)

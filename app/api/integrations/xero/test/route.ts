@@ -10,8 +10,9 @@ export const dynamic = 'force-dynamic'
 export async function POST(_req: NextRequest) {
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!auth.orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
   if (!auth.role || !canManage(auth.role)) return NextResponse.json({ error: 'Company Admin permission required' }, { status: 403 })
-  const connection = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
+  const connection = await prisma.accountingConnection.findFirst({ where: { organizationId: auth.orgId, provider: 'xero' } })
   if (!connection || connection.status === 'disconnected') return NextResponse.json({ error: 'Xero is not connected' }, { status: 409 })
   const checkedAt = new Date()
   try {
