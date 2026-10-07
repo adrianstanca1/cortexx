@@ -1,7 +1,7 @@
 import React,{useEffect,useState}from'react';
 import{View,Text,FlatList,TouchableOpacity,StyleSheet,RefreshControl,ActivityIndicator,Modal,TextInput,Alert,ScrollView}from'react-native';
 import{Colors}from'./theme';
-import{getCollection,getProjects,postCollection,putCollection,type AuthUser}from'./api';
+import{apiGet,getProjects,postCollection,putCollection,type AuthUser}from'./api';
 
 type Rfi={id:string;number:string;subject:string;body:string;projectId:string;status:string;priority:string;assignee?:string|null;dueDate?:string|null;response?:string|null;project?:{id:string;name:string}|null};
 const priorities=['low','medium','high'] as const;
@@ -13,7 +13,11 @@ export default function RfisScreen({user,onLogout}:{user:AuthUser;onLogout:()=>v
   const[response,setResponse]=useState('');
   const[now,setNow]=useState(()=>Date.now());
   const canManage=['company_admin','project_manager','foreman'].includes(String(user.role||'').toLowerCase());
-  const load=async()=>{setLoading(true);setErr('');try{const[r,p]=await Promise.all([getCollection('rfis',200),getProjects()]);setItems((r||[])as Rfi[]);setProjects(p||[]);if(!form.projectId&&p?.[0]?.id)setForm(f=>({...f,projectId:p[0].id}));}catch(e:any){setErr(e?.message||'Failed to load RFIs');if(e?.message==='unauthorized')onLogout();}finally{setLoading(false)}};
+  const load=async()=>{setLoading(true);setErr('');try{
+    const p=await getProjects();const all:Rfi[]=[];let skip=0;
+    for(let page=0;page<50;page++){const d=await apiGet(`/api/rfis?take=100&skip=${skip}`);const rows=(d?.rfis||[])as Rfi[];all.push(...rows);if(!d?.hasMore||rows.length===0)break;skip+=rows.length}
+    setItems(all);setProjects(p||[]);if(!form.projectId&&p?.[0]?.id)setForm(f=>({...f,projectId:p[0].id}));
+  }catch(e:any){setErr(e?.message||'Failed to load RFIs');if(e?.message==='unauthorized')onLogout();}finally{setLoading(false)}};
   useEffect(()=>{void load()},[]);// eslint-disable-line react-hooks/exhaustive-deps
   useEffect(()=>{const timer=setInterval(()=>setNow(Date.now()),60000);return()=>clearInterval(timer)},[]);
   const open=()=>{setForm({projectId:projects[0]?.id||'',subject:'',body:'',priority:'medium',assignee:'',dueDate:''});setModal(true)};

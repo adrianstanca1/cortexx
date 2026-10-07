@@ -44,6 +44,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     const existing = await prisma.invoice.findUnique({ where: { id: params.id } })
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     const breakdownTouched = body.netAmount !== undefined || body.vatAmount !== undefined || body.vatRate !== undefined
+      || (body.amount !== undefined && existing.netAmount !== null)
     let netAmount = existing.netAmount
     let vatAmount = existing.vatAmount
     let vatRate = existing.vatRate

@@ -341,6 +341,14 @@ var CortexCore = (() => {
     if (_streamTimer) clearTimeout(_streamTimer);
     _streamTimer = null;
   }
+  function httpFailure(message, status) {
+    const error = new Error(message);
+    error.httpStatus = status;
+    return error;
+  }
+  function isHttpFailure(error) {
+    return Number.isInteger(error == null ? void 0 : error.httpStatus);
+  }
   function createApiClient(opts = {}) {
     const API_URL = opts.apiUrl || API_URL_FALLBACK;
     const store = opts.tokenStorage || _store;
@@ -364,7 +372,7 @@ var CortexCore = (() => {
       }
       if (!r.ok) {
         const e = await r.json().catch(() => ({}));
-        throw new Error(e.error || "Create failed");
+        throw httpFailure(e.error || "Create failed", r.status);
       }
       return r.json();
     }
@@ -427,7 +435,7 @@ var CortexCore = (() => {
       },
       postCollection(name, body) {
         return apiPost(`/api/${name}`, body).catch(async (e) => {
-          if ((e == null ? void 0 : e.message) === "unauthorized") throw e;
+          if ((e == null ? void 0 : e.message) === "unauthorized" || isHttpFailure(e)) throw e;
           const id = "cw_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
           await enqueue({ id, method: "POST", collection: name, body });
           return { id, _queued: true, ...body };
@@ -445,11 +453,11 @@ var CortexCore = (() => {
           }
           if (!r.ok) {
             const e = await r.json().catch(() => ({}));
-            throw new Error(e.error || "Update failed");
+            throw httpFailure(e.error || "Update failed", r.status);
           }
           return r.json();
         } catch (e) {
-          if ((e == null ? void 0 : e.message) === "unauthorized") throw e;
+          if ((e == null ? void 0 : e.message) === "unauthorized" || isHttpFailure(e)) throw e;
           const qid = "cw_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
           await enqueue({ id: qid, method: "PUT", collection: name, rowId: id, body });
           return { id, _queued: true, ...body };

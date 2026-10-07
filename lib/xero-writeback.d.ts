@@ -4,8 +4,10 @@ export function writebackMapping(settings: unknown): {
   enabled: boolean
   salesAccountCode: string
   salesTaxType: string
+  salesTaxRate: number | null
   purchaseAccountCode: string
   purchaseTaxType: string
+  purchaseTaxRate: number | null
   paymentAccountCode: string
 }
 export function missingWriteScopes(scopes: string | null | undefined): string[]

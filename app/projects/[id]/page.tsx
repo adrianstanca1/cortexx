@@ -1033,16 +1033,24 @@ export default function ProjectDetailPage() {
               <button type="button" onClick={() => setShowEditInvoiceModal(false)} style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /><span style={{ position: 'absolute', clip: 'rect(0 0 0 0)', clipPath: 'inset(50%)', height: 1, overflow: 'hidden', whiteSpace: 'nowrap', width: 1 }}>Close</span></button>
             </div>
             <div>
-              <label htmlFor="field-1017" style={labelStyle}>Amount (£) *</label>
-              <input id="field-1017" type="number" min="0" value={editInvoiceForm.amount} onChange={e => setEditInvoiceForm(p => ({ ...p, amount: e.target.value }))} placeholder="5000" style={inputStyle} />
+              <label htmlFor="field-1017" style={labelStyle}>{editInvoiceForm.netAmount || editInvoiceForm.vatRate ? 'Gross amount (£) — calculated from net + VAT' : 'Amount (£) *'}</label>
+              <input id="field-1017" type="number" min="0" value={editInvoiceForm.amount} disabled={Boolean(editInvoiceForm.netAmount || editInvoiceForm.vatRate)} onChange={e => setEditInvoiceForm(p => ({ ...p, amount: e.target.value }))} placeholder="5000" style={{ ...inputStyle, opacity: editInvoiceForm.netAmount || editInvoiceForm.vatRate ? 0.65 : 1 }} />
             </div>
             <div>
               <label htmlFor="field-1019-net" style={labelStyle}>Net amount (£) — required for Xero</label>
-              <input id="field-1019-net" type="number" min="0" value={editInvoiceForm.netAmount} onChange={e => setEditInvoiceForm(p => ({ ...p, netAmount: e.target.value }))} placeholder="Enter net value" style={inputStyle} />
+              <input id="field-1019-net" type="number" min="0" value={editInvoiceForm.netAmount} onChange={e => setEditInvoiceForm(p => {
+                const net = Number(e.target.value); const rate = Number(p.vatRate)
+                const gross = Number.isFinite(net) && Number.isFinite(rate) ? Math.round((net + net * rate / 100) * 100) / 100 : Number(p.amount)
+                return { ...p, netAmount: e.target.value, amount: Number.isFinite(gross) ? String(gross) : p.amount }
+              })} placeholder="Enter net value" style={inputStyle} />
             </div>
             <div>
               <label htmlFor="field-1019-vat" style={labelStyle}>VAT rate (%) — required for Xero</label>
-              <input id="field-1019-vat" type="number" min="0" max="100" value={editInvoiceForm.vatRate} onChange={e => setEditInvoiceForm(p => ({ ...p, vatRate: e.target.value }))} placeholder="20" style={inputStyle} />
+              <input id="field-1019-vat" type="number" min="0" max="100" value={editInvoiceForm.vatRate} onChange={e => setEditInvoiceForm(p => {
+                const net = Number(p.netAmount); const rate = Number(e.target.value)
+                const gross = Number.isFinite(net) && Number.isFinite(rate) ? Math.round((net + net * rate / 100) * 100) / 100 : Number(p.amount)
+                return { ...p, vatRate: e.target.value, amount: Number.isFinite(gross) ? String(gross) : p.amount }
+              })} placeholder="20" style={inputStyle} />
             </div>
             <div>
               <label htmlFor="field-1021" style={labelStyle}>Client name</label>

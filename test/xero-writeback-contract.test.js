@@ -4,6 +4,8 @@ const fs = require('node:fs')
 
 const route = fs.readFileSync('app/api/integrations/xero/writeback/route.ts', 'utf8')
 const settings = fs.readFileSync('app/api/integrations/xero/route.ts', 'utf8')
+const callback = fs.readFileSync('app/api/integrations/xero/callback/route.ts', 'utf8')
+const page = fs.readFileSync('app/settings/integrations/xero/page.tsx', 'utf8')
 
 test('Xero write-back retries adopt only Cortexx-owned remote invoice numbers', () => {
   assert.match(route, /remoteInvoiceByNumber/)
@@ -34,4 +36,29 @@ test('payment retry recovers an already-applied remote payment before creating a
   assert.match(route, /recoverRemotePayment/)
   assert.match(route, /recoverPaymentId\(payments, expected\)/)
   assert.match(route, /if \(recoveredPaymentId\)/)
+})
+
+test('external accounting mutations use atomic in-flight claims', () => {
+  assert.match(route, /status: 'in_flight'/)
+  assert.match(route, /status: \{ in: \['pending', 'error'\] \}/)
+  assert.match(route, /already in progress/)
+})
+
+test('tenant disconnect and tenant switches clear tenant-specific writeback identity', () => {
+  assert.match(settings, /accountingWriteback\.deleteMany/)
+  assert.match(callback, /tenantChanged/)
+  assert.match(callback, /accountingWriteback\.deleteMany/)
+  assert.match(callback, /resetSettings/)
+})
+
+test('writeback queue surfaces changed-since-sync records instead of reporting them current', () => {
+  assert.match(route, /changedSinceSync/)
+  assert.match(route, /Changed since last Xero sync/)
+  assert.match(page, /!item\.changedSinceSync/)
+})
+
+test('saved Xero tax mappings retain the live numeric rate used for document validation', () => {
+  assert.match(settings, /salesTaxRate/)
+  assert.match(settings, /purchaseTaxRate/)
+  assert.match(settings, /taxRateByType/)
 })

@@ -45,11 +45,11 @@ async function connectedXero() {
 async function contactIdFor(
   connection: AccountingConnection,
   entityType: EntityType,
-  entityId: string,
+  contactKey: string,
   name: string,
   email?: string | null,
 ) {
-  const number = contactNumber(entityType, entityId)
+  const number = contactNumber(entityType, contactKey)
   const where = encodeURIComponent(`ContactNumber=="${xeroWhereLiteral(number)}"`)
   const existing = await xeroApiRequest(connection, `/Contacts?where=${where}`)
   const contacts = Array.isArray(existing.Contacts) ? existing.Contacts as Array<Record<string, unknown>> : []
@@ -112,8 +112,10 @@ async function entityData(entityType: EntityType, entityId: string) {
       include: { project: { select: { name: true } } },
     })
     if (!invoice) throw new Error('Client invoice not found')
+    const normalizedClient = invoice.clientName.trim().toLowerCase().replace(/\s+/g, ' ')
     return {
       entity: invoice,
+      contactKey: 'client:' + normalizedClient,
       contactName: invoice.clientName,
       contactEmail: null,
       paid: invoice.status === 'paid',
@@ -127,12 +129,13 @@ async function entityData(entityType: EntityType, entityId: string) {
     where: { id: entityId },
     include: {
       project: { select: { name: true } },
-      subcontractor: { select: { name: true, contactEmail: true } },
+      subcontractor: { select: { id: true, name: true, contactEmail: true } },
     },
   })
   if (!invoice) throw new Error('Subcontract invoice not found')
   return {
     entity: invoice,
+    contactKey: 'subcontractor:' + invoice.subcontractor.id,
     contactName: invoice.subcontractor.name,
     contactEmail: invoice.subcontractor.contactEmail,
     paid: invoice.status === 'paid',
@@ -172,8 +175,12 @@ export async function GET(_req: NextRequest) {
     const byKey = new Map(writebacks.map(row => [`${row.entityType}:${row.entityId}`, row]))
     const item = (entityType: EntityType, row: any) => {
       let blocker: string | null = null
-      try { previewPayload(entityType, row, mapping) } catch (error) { blocker = error instanceof Error ? error.message : 'Not ready' }
-      const paid = entityType === 'client_invoice' ? row.status === 'paid' : row.status === 'paid'
+      let currentHash: string | null = null
+      try { currentHash = payloadHash(previewPayload(entityType, row, mapping)) } catch (error) { blocker = error instanceof Error ? error.message : 'Not ready' }
+      const writeback = byKey.get(entityType + ':' + row.id) || null
+      const changedSinceSync = Boolean(writeback?.status === 'synced' && writeback.payloadHash && currentHash && writeback.payloadHash !== currentHash)
+      if (changedSinceSync && !blocker) blocker = 'Changed since last Xero sync; reconcile the existing Xero document before another export'
+      const paid = row.status === 'paid'
       const paymentBlocker = paid && !mapping.paymentAccountCode ? 'Map a Xero payment account before syncing a paid invoice' : null
       return {
         entityType,
@@ -186,7 +193,8 @@ export async function GET(_req: NextRequest) {
         localStatus: row.status,
         blocker,
         paymentBlocker,
-        writeback: byKey.get(`${entityType}:${row.id}`) || null,
+        writeback,
+        changedSinceSync,
         paymentWriteback: byKey.get(`${entityType}_payment:${row.id}`) || null,
       }
     }
@@ -267,11 +275,7 @@ export async function POST(req: NextRequest) {
 
     if (!mapping.enabled) return NextResponse.json({ error: 'Xero write-back is not enabled for this company' }, { status: 409 })
 
-    const contactId = await contactIdFor(connection, entityType, entityId, data.contactName, data.contactEmail)
-    const payload = entityType === 'client_invoice'
-      ? clientInvoicePayload(data.entity, mapping, contactId)
-      : subInvoicePayload(data.entity, mapping, contactId)
-    const hash = payloadHash(payload)
+    const hash = payloadHash(previewPayload(entityType, data.entity, mapping))
     const key = { connectionId: connection.id, entityType, entityId }
 
     const existing = await prisma.accountingWriteback.findUnique({
@@ -298,7 +302,7 @@ export async function POST(req: NextRequest) {
       }
     }
 
-    await prisma.accountingWriteback.upsert({
+    const invoiceWriteback = await prisma.accountingWriteback.upsert({
       where: { connectionId_entityType_entityId: key },
       create: {
         organizationId: auth.orgId,
@@ -311,17 +315,21 @@ export async function POST(req: NextRequest) {
         lastAttemptAt: new Date(),
         ...(xeroInvoiceId ? { syncedAt: new Date() } : {}),
       },
-      update: {
-        externalId: xeroInvoiceId,
-        payloadHash: hash,
-        status: xeroInvoiceId ? 'synced' : 'pending',
-        lastError: null,
-        lastAttemptAt: new Date(),
-        ...(xeroInvoiceId ? { syncedAt: new Date() } : {}),
-      },
+      update: xeroInvoiceId
+        ? { externalId: xeroInvoiceId, payloadHash: hash, status: 'synced', lastError: null, lastAttemptAt: new Date(), syncedAt: new Date() }
+        : { payloadHash: hash, lastError: null },
     })
 
     if (!xeroInvoiceId) {
+      const claim = await prisma.accountingWriteback.updateMany({
+        where: { id: invoiceWriteback.id, status: { in: ['pending', 'error'] } },
+        data: { status: 'in_flight', lastError: null, lastAttemptAt: new Date() },
+      })
+      if (claim.count !== 1) return NextResponse.json({ error: 'This Xero write-back is already in progress; retry after it completes' }, { status: 409 })
+      const contactId = await contactIdFor(connection, entityType, data.contactKey, data.contactName, data.contactEmail)
+      const payload = entityType === 'client_invoice'
+        ? clientInvoicePayload(data.entity, mapping, contactId)
+        : subInvoicePayload(data.entity, mapping, contactId)
       try {
         const created = await xeroApiRequest(connection, '/Invoices', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey(connection.id, entityType, entityId) }, body: JSON.stringify({ Invoices: [payload] }) })
         const rows = Array.isArray(created.Invoices) ? created.Invoices as Array<Record<string, unknown>> : []
@@ -393,7 +401,7 @@ export async function POST(req: NextRequest) {
             },
           })
         } else {
-          await prisma.accountingWriteback.upsert({
+          const paymentWriteback = await prisma.accountingWriteback.upsert({
             where: { connectionId_entityType_entityId: paymentKey },
             create: {
               organizationId: auth.orgId,
@@ -404,8 +412,13 @@ export async function POST(req: NextRequest) {
               status: 'pending',
               lastAttemptAt: new Date(),
             },
-            update: { payloadHash: paymentHash, status: 'pending', lastError: null, lastAttemptAt: new Date() },
+            update: { payloadHash: paymentHash, lastError: null },
           })
+          const paymentClaim = await prisma.accountingWriteback.updateMany({
+            where: { id: paymentWriteback.id, status: { in: ['pending', 'error'] } },
+            data: { status: 'in_flight', lastError: null, lastAttemptAt: new Date() },
+          })
+          if (paymentClaim.count !== 1) return NextResponse.json({ error: 'This Xero payment write-back is already in progress; retry after it completes' }, { status: 409 })
 
           try {
             const response = await xeroApiRequest(connection, '/Payments', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey(connection.id, paymentType, entityId) }, body: JSON.stringify({ Payments: [paymentBody] }) })

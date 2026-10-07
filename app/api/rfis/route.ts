@@ -26,6 +26,7 @@ export async function GET(req: NextRequest) {
     const status = searchParams.get('status')
     const priority = searchParams.get('priority')
     const take = Math.min(parseInt(searchParams.get('take') || '50') || 50, MAX_TAKE)
+    const skip = Math.max(0, parseInt(searchParams.get('skip') || '0') || 0)
 
     const where: Prisma.RfiWhereInput = {
       ...(projectId && { projectId }),
@@ -40,11 +41,13 @@ export async function GET(req: NextRequest) {
         include: { project: { select: { id: true, name: true } } },
         orderBy: [{ status: 'asc' }, { dueDate: 'asc' }, { createdAt: 'desc' }],
         take,
+        skip,
       }),
       prisma.rfi.count({ where: { ...where, status: { not: 'closed' } } }),
       prisma.rfi.count({ where: { ...where, status: { not: 'closed' }, dueDate: { lt: new Date() } } }),
     ])
-    return NextResponse.json({ rfis, openCount, overdueCount })
+    const totalCount = await prisma.rfi.count({ where })
+    return NextResponse.json({ rfis, openCount, overdueCount, totalCount, hasMore: skip + rfis.length < totalCount })
   } catch (error) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to fetch RFIs' }, { status: 500 })

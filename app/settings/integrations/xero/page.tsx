@@ -42,6 +42,7 @@ type QueueItem = {
   localStatus: string
   blocker: string | null
   paymentBlocker?: string | null
+  changedSinceSync?: boolean
   writeback: { status: string; externalId?: string | null; lastError?: string | null } | null
   paymentWriteback?: { status: string; externalId?: string | null; lastError?: string | null } | null
 }
@@ -244,7 +245,7 @@ export default function XeroIntegrationPage() {
                   const key = `${item.entityType}:${item.entityId}`
                   const invoiceSynced = item.writeback?.status === 'synced'
                   const paymentSynced = item.localStatus !== 'paid' || item.paymentWriteback?.status === 'synced'
-                  const synced = invoiceSynced && paymentSynced
+                  const synced = invoiceSynced && paymentSynced && !item.changedSinceSync
                   const effectiveBlocker = item.blocker || item.paymentBlocker || null
                   return <div key={key} style={{ border: '1px solid rgba(255,255,255,.08)', borderRadius: 10, padding: 11, display: 'grid', gap: 6 }}>
                     <div style={{ display: 'flex', justifyContent: 'space-between', gap: 10, flexWrap: 'wrap' }}>

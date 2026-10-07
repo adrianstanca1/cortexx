@@ -70,7 +70,13 @@ export async function PATCH(req: NextRequest) {
       const accounts = Array.isArray(accountsBody.Accounts) ? accountsBody.Accounts as Array<Record<string, unknown>> : []
       const taxRates = Array.isArray(taxRatesBody.TaxRates) ? taxRatesBody.TaxRates as Array<Record<string, unknown>> : []
       const activeAccounts = accounts.filter(row => !row.Status || row.Status === 'ACTIVE')
-      const activeTaxTypes = new Set(taxRates.filter(row => !row.Status || row.Status === 'ACTIVE').map(row => String(row.TaxType || '')).filter(Boolean))
+      const activeTaxRates = taxRates.filter(row => !row.Status || row.Status === 'ACTIVE')
+      const activeTaxTypes = new Set(activeTaxRates.map(row => String(row.TaxType || '')).filter(Boolean))
+      const taxRateByType = new Map(activeTaxRates.map(row => {
+        const raw = row.EffectiveRate ?? row.DisplayTaxRate
+        const rate = Number(raw)
+        return [String(row.TaxType || ''), Number.isFinite(rate) ? rate : null]
+      }))
       const byCode = new Map(activeAccounts.map(row => [String(row.Code || ''), row]))
 
       for (const key of mappingKeys) {
@@ -87,6 +93,14 @@ export async function PATCH(req: NextRequest) {
         }
         settings[key] = value
         changed[key] = value
+        if (key === 'salesTaxType') {
+          settings.salesTaxRate = value ? (taxRateByType.get(value) ?? null) : null
+          changed.salesTaxRate = settings.salesTaxRate
+        }
+        if (key === 'purchaseTaxType') {
+          settings.purchaseTaxRate = value ? (taxRateByType.get(value) ?? null) : null
+          changed.purchaseTaxRate = settings.purchaseTaxRate
+        }
       }
       if (body.writebackEnabled !== undefined) {
         const enabled = body.writebackEnabled === true
@@ -131,13 +145,23 @@ export async function DELETE(req: NextRequest) {
         warning = error instanceof Error ? error.message.slice(0, 500) : 'Remote Xero disconnect failed'
       }
     }
-    const updated = await prisma.accountingConnection.update({
-      where: { id: connection.id },
-      data: {
-        status: 'disconnected', accessTokenCipher: null, refreshTokenCipher: null, accessTokenExpiresAt: null,
-        externalConnectionId: null, externalTenantId: null, externalTenantName: null,
-        disconnectedAt: new Date(), lastSyncError: warning, lastHealthError: null,
-      },
+    const rawSettings = connection.settings && typeof connection.settings === 'object' && !Array.isArray(connection.settings)
+      ? connection.settings as Record<string, unknown>
+      : {}
+    const preservedSettings: Record<string, unknown> = {}
+    const maxPages = Number(rawSettings.maxPages)
+    if (Number.isFinite(maxPages) && maxPages >= 1 && maxPages <= 10) preservedSettings.maxPages = Math.trunc(maxPages)
+    const updated = await prisma.$transaction(async tx => {
+      await tx.accountingWriteback.deleteMany({ where: { connectionId: connection.id } })
+      return tx.accountingConnection.update({
+        where: { id: connection.id },
+        data: {
+          status: 'disconnected', accessTokenCipher: null, refreshTokenCipher: null, accessTokenExpiresAt: null,
+          externalConnectionId: null, externalTenantId: null, externalTenantName: null,
+          settings: preservedSettings as Prisma.InputJsonValue,
+          disconnectedAt: new Date(), lastSyncError: warning, lastHealthError: null,
+        },
+      })
     })
     auditLog({ action: 'accounting.xero.disconnect', resourceType: 'AccountingConnection', resourceId: updated.id, metadata: { warning }, ...requestMeta(req) })
     return NextResponse.json({ ok: true, warning })

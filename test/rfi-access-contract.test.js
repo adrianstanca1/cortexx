@@ -9,6 +9,7 @@ const drawingMobile = fs.readFileSync('expo/DrawingsScreen.tsx', 'utf8')
 const tabs = fs.readFileSync('expo/Tabs.tsx', 'utf8')
 const routes = fs.readFileSync('expo/routes.ts', 'utf8')
 const hub = fs.readFileSync('expo/FieldHubScreen.tsx', 'utf8')
+const core = fs.readFileSync('packages/core/src/index.ts', 'utf8')
 
 test('RFI routes use organisation context and assignment project scope', () => {
   assert.match(list, /requireOrg\(\)/)
@@ -27,7 +28,8 @@ test('RFI mutations expose the intended construction persona boundary', () => {
 })
 
 test('native RFIs create and update through the offline queue-aware collection client', () => {
-  assert.match(rfiMobile, /getCollection\('rfis'/)
+  assert.match(rfiMobile, /apiGet\(`\/api\/rfis\?take=100&skip=\$\{skip\}`\)/)
+  assert.match(rfiMobile, /hasMore/)
   assert.match(rfiMobile, /postCollection\('rfis'/)
   assert.match(rfiMobile, /putCollection\('rfis'/)
   assert.match(rfiMobile, /Queued offline/)
@@ -50,4 +52,9 @@ test('field navigation makes RFIs and drawings first-class native workflows', ()
   assert.match(tabs, /DrawingsScreen/)
   assert.match(hub, /title: 'RFIs'/)
   assert.match(hub, /title: 'Drawings'/)
+})
+
+test('server-rejected writes are surfaced instead of queued as offline work', () => {
+  assert.match(core, /httpFailure\(/)
+  assert.match(core, /isHttpFailure\(e\)\) throw e/)
 })

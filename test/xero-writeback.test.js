@@ -19,8 +19,8 @@ test('client invoice write-back refuses inconsistent gross totals', () => {
 test('client invoice payload uses governed mappings and local idempotency reference', () => {
   const payload = xero.clientInvoicePayload({
     id: 'inv-1', number: 'INV-1', clientName: 'Client', amount: 120, netAmount: 100, vatAmount: 20,
-    issuedDate: '2026-10-01', dueDate: '2026-10-31', status: 'sent', project: { name: 'North Elevation' },
-  }, { salesAccountCode: '200', salesTaxType: 'OUTPUT2' }, 'contact-1')
+    issuedDate: '2026-10-01', dueDate: '2026-10-31', status: 'sent', vatRate: 20, project: { name: 'North Elevation' },
+  }, { salesAccountCode: '200', salesTaxType: 'OUTPUT2', salesTaxRate: 20 }, 'contact-1')
   assert.equal(payload.Type, 'ACCREC')
   assert.equal(payload.Status, 'AUTHORISED')
   assert.equal(payload.Reference, 'Cortexx:inv-1')
@@ -99,4 +99,16 @@ test('payment recovery verifies reference and bank account as well as date and a
   assert.throws(() => xero.recoverPaymentId([{ ...payment, Date: undefined }], expected), /manual reconciliation/)
   assert.throws(() => xero.recoverPaymentId([payment, { ...payment, PaymentID: 'another' }], expected), /Multiple matching/)
   assert.equal(xero.recoverPaymentId([{ ...payment, Status: 'DELETED' }], expected), null)
+})
+
+test('sales tax type must match the invoice VAT rate', () => {
+  assert.throws(() => xero.clientInvoicePayload({
+    id: 'inv-5', number: 'INV-5', clientName: 'Client', amount: 105, netAmount: 100, vatAmount: 5, vatRate: 5,
+    issuedDate: '2026-10-01', dueDate: '2026-10-31', status: 'sent',
+  }, { salesAccountCode: '200', salesTaxType: 'OUTPUT2', salesTaxRate: 20 }, 'contact-1'), /does not match mapped Xero tax rate/)
+})
+
+test('contact identity is stable for a counterparty and distinct across counterparties', () => {
+  assert.equal(xero.contactNumber('client_invoice', 'client:acme ltd'), xero.contactNumber('client_invoice', 'client:acme ltd'))
+  assert.notEqual(xero.contactNumber('client_invoice', 'client:acme ltd'), xero.contactNumber('client_invoice', 'client:other ltd'))
 })

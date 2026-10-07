@@ -20,8 +20,10 @@ function writebackMapping(settings) {
     enabled: s.writebackEnabled === true,
     salesAccountCode: String(s.salesAccountCode || '').trim(),
     salesTaxType: String(s.salesTaxType || '').trim(),
+    salesTaxRate: money(s.salesTaxRate),
     purchaseAccountCode: String(s.purchaseAccountCode || '').trim(),
     purchaseTaxType: String(s.purchaseTaxType || '').trim(),
+    purchaseTaxRate: money(s.purchaseTaxRate),
     paymentAccountCode: String(s.paymentAccountCode || '').trim(),
   }
 }
@@ -53,10 +55,21 @@ function validateGrossBreakdown({ amount, netAmount, vatAmount, vatRate }) {
   return { ok: true, gross, net, vat }
 }
 
+function validateMappedTaxRate(label, mappedRate, documentRate) {
+  const mapped = money(mappedRate)
+  const document = money(documentRate)
+  if (mapped == null) throw new Error(label + ' tax mapping is missing its Xero rate')
+  if (document == null) throw new Error(label + ' document VAT rate is missing')
+  if (Math.abs(mapped - document) > 0.02) {
+    throw new Error(label + ' VAT rate ' + document + '% does not match mapped Xero tax rate ' + mapped + '%')
+  }
+}
+
 function clientInvoicePayload(invoice, mapping, contactId) {
   const totals = validateGrossBreakdown(invoice)
   if (!totals.ok) throw new Error(totals.error)
   if (!mapping.salesAccountCode || !mapping.salesTaxType) throw new Error('Sales account and tax mappings are required')
+  validateMappedTaxRate('Sales', mapping.salesTaxRate, invoice.vatRate)
   if (!contactId) throw new Error('Xero ContactID is required')
   const status = String(invoice.status || '').toLowerCase() === 'draft' ? 'DRAFT' : 'AUTHORISED'
   return {
@@ -89,6 +102,8 @@ function subInvoicePayload(invoice, mapping, contactId) {
   const totals = validateGrossBreakdown({ amount: invoice.grossAmount, netAmount: invoice.netAmount, vatAmount: invoice.vatAmount })
   if (!totals.ok) throw new Error(totals.error)
   if (!mapping.purchaseAccountCode || !mapping.purchaseTaxType) throw new Error('Purchase account and tax mappings are required')
+  const effectivePurchaseRate = totals.net === 0 ? (totals.vat === 0 ? 0 : null) : money(totals.vat / totals.net * 100)
+  validateMappedTaxRate('Purchase', mapping.purchaseTaxRate, effectivePurchaseRate)
   if (!contactId) throw new Error('Xero ContactID is required')
   return {
     Type: 'ACCPAY',
@@ -129,7 +144,9 @@ function paymentPayload({ invoiceId, amount, paidAt, reference, accountCode }) {
 }
 
 function contactNumber(entityType, entityId) {
-  return `CB-${String(entityType).replace(/[^a-z0-9]/gi, '').slice(0, 12)}-${String(entityId).replace(/[^a-z0-9]/gi, '').slice(-28)}`
+  const type = String(entityType).replace(/[^a-z0-9]/gi, '').slice(0, 12) || 'contact'
+  const digest = crypto.createHash('sha256').update(String(entityId)).digest('hex').slice(0, 20)
+  return 'CB-' + type + '-' + digest
 }
 
 function payloadHash(payload) {

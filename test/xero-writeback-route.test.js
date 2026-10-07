@@ -9,8 +9,8 @@ const helpers = require('../lib/xero-writeback')
 const code = transformSync(fs.readFileSync('app/api/integrations/xero/writeback/route.ts', 'utf8'), { loader: 'ts', format: 'cjs' }).code
 
 function harness({ missingPaymentId = false, missingInvoiceDetails = false, paidDate = '2026-10-02', priorInvoice, remotePayments = [] } = {}) {
-  const invoice = { id: 'inv-1', number: 'INV-1', clientName: 'Client', amount: 120, netAmount: 100, vatAmount: 20, issuedDate: '2026-10-01', dueDate: '2026-10-31', status: 'paid', paidDate }
-  const connection = { id: 'connection-1', status: 'connected', externalTenantId: 'tenant-1', scopes: helpers.WRITE_SCOPES.join(' '), settings: { writebackEnabled: true, salesAccountCode: '200', salesTaxType: 'OUTPUT2', paymentAccountCode: '090' } }
+  const invoice = { id: 'inv-1', number: 'INV-1', clientName: 'Client', amount: 120, netAmount: 100, vatAmount: 20, vatRate: 20, issuedDate: '2026-10-01', dueDate: '2026-10-31', status: 'paid', paidDate }
+  const connection = { id: 'connection-1', status: 'connected', externalTenantId: 'tenant-1', scopes: helpers.WRITE_SCOPES.join(' '), settings: { writebackEnabled: true, salesAccountCode: '200', salesTaxType: 'OUTPUT2', salesTaxRate: 20, paymentAccountCode: '090' } }
   const records = new Map(priorInvoice ? [['client_invoice', priorInvoice]] : [])
   const calls = []
   const accepted = new Map()
@@ -18,7 +18,7 @@ function harness({ missingPaymentId = false, missingInvoiceDetails = false, paid
     findUnique: async ({ where }) => records.get(where.connectionId_entityType_entityId.entityType) || null,
     upsert: async ({ where, create, update }) => {
       const key = where.connectionId_entityType_entityId.entityType
-      const row = records.has(key) ? { ...records.get(key), ...update } : { ...create }
+      const row = records.has(key) ? { ...records.get(key), ...update } : { id: `wb-${key}`, ...create }
       records.set(key, row)
       return row
     },
@@ -27,6 +27,15 @@ function harness({ missingPaymentId = false, missingInvoiceDetails = false, paid
       const row = { ...records.get(key), ...data }
       records.set(key, row)
       return row
+    },
+    updateMany: async ({ where, data }) => {
+      for (const [key, row] of records) {
+        const idMatches = !where.id || row.id === where.id
+        const allowed = where.status?.in || []
+        const statusMatches = !where.status || allowed.includes(row.status)
+        if (idMatches && statusMatches) { records.set(key, { ...row, ...data }); return { count: 1 } }
+      }
+      return { count: 0 }
     },
   }
   const api = async (_connection, path, init = {}) => {
@@ -104,7 +113,7 @@ test('missing remote invoice details cannot be treated as an empty payment histo
 test('concurrent write-back requests reuse identical provider keys for one invoice and payment', async () => {
   const h = harness()
   const responses = await Promise.all([h.post(), h.post()])
-  assert.deepEqual(responses.map(response => response.status), [200, 200])
+  assert.deepEqual(responses.map(response => response.status).sort(), [200, 409])
   assert.equal(h.accepted.size, 2)
   for (const path of ['/Invoices', '/Payments']) {
     const keys = h.calls.filter(call => call.path === path).map(call => call.headers['Idempotency-Key'])
