@@ -4,14 +4,16 @@ const xero = require('../lib/xero-adapter')
 
 function jwt(payload) { return ['e30', Buffer.from(JSON.stringify(payload)).toString('base64url'), 'sig'].join('.') }
 
-test('Xero adapter requests read-only granular banking scopes with offline access', () => {
+test('Xero adapter requests banking read scopes plus governed invoice/contact write scopes', () => {
   assert.ok(xero.XERO_SCOPES.includes('offline_access'))
   assert.ok(xero.XERO_SCOPES.includes('accounting.banktransactions.read'))
   assert.ok(xero.XERO_SCOPES.includes('accounting.settings.read'))
-  assert.equal(xero.XERO_SCOPES.some(scope => scope === 'accounting.transactions' || scope === 'accounting.invoices' || scope === 'accounting.payments'), false)
+  assert.ok(xero.XERO_SCOPES.includes('accounting.invoices'))
+  assert.ok(xero.XERO_SCOPES.includes('accounting.payments'))
+  assert.ok(xero.XERO_SCOPES.includes('accounting.contacts'))
 })
 
-test('Xero authorize URL preserves redirect, state and read-only scopes', () => {
+test('Xero authorize URL preserves redirect, state and accounting scopes', () => {
   const url = new URL(xero.buildAuthorizeUrl({ clientId: 'client-1', redirectUri: 'https://app.test/api/integrations/xero/callback', state: 'secret-state' }))
   assert.equal(url.origin, 'https://login.xero.com')
   assert.equal(url.pathname, '/identity/connect/authorize')

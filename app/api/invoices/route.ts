@@ -6,6 +6,7 @@ import { requireOrg } from '@/lib/requireAuth'
 import { canManage } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import xeroWriteback from '@/lib/xero-writeback'
 
 export const dynamic = 'force-dynamic'
 
@@ -64,6 +65,18 @@ export async function POST(req: NextRequest) {
     if (!body.dueDate) {
       return NextResponse.json({ error: 'Due date is required' }, { status: 400 })
     }
+    const hasBreakdown = body.netAmount !== undefined || body.vatAmount !== undefined || body.vatRate !== undefined
+    let netAmount: number | null = null
+    let vatAmount: number | null = null
+    let vatRate: number | null = null
+    if (hasBreakdown) {
+      const totals = xeroWriteback.validateGrossBreakdown({ amount: body.amount, netAmount: body.netAmount, vatAmount: body.vatAmount, vatRate: body.vatRate })
+      if (!totals.ok) return NextResponse.json({ error: totals.error }, { status: 400 })
+      vatRate = Number(body.vatRate)
+      if (!Number.isFinite(vatRate) || vatRate < 0 || vatRate > 100) return NextResponse.json({ error: 'VAT rate must be between 0 and 100' }, { status: 400 })
+      netAmount = totals.net!
+      vatAmount = totals.vat!
+    }
     try {
       const invoice = await prisma.invoice.create({
         data: {
@@ -71,6 +84,9 @@ export async function POST(req: NextRequest) {
           projectId: body.projectId || null,
           clientName: body.clientName.trim(),
           amount: Number(body.amount),
+          netAmount,
+          vatAmount,
+          vatRate,
           status: body.status || 'draft',
           issuedDate: body.issuedDate ? new Date(body.issuedDate) : new Date(),
           dueDate: new Date(body.dueDate),

@@ -5,6 +5,7 @@ import { canManage } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import xeroWriteback from '@/lib/xero-writeback'
 
 export const dynamic = 'force-dynamic'
 
@@ -40,6 +41,24 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     if (body.amount !== undefined && (!Number.isFinite(Number(body.amount)) || Number(body.amount) <= 0)) {
       return NextResponse.json({ error: 'Amount must be a positive number' }, { status: 400 })
     }
+    const existing = await prisma.invoice.findUnique({ where: { id: params.id } })
+    if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
+    const breakdownTouched = body.netAmount !== undefined || body.vatAmount !== undefined || body.vatRate !== undefined
+    let netAmount = existing.netAmount
+    let vatAmount = existing.vatAmount
+    let vatRate = existing.vatRate
+    if (breakdownTouched) {
+      const nextGross = body.amount !== undefined ? Number(body.amount) : existing.amount
+      const nextNet = body.netAmount !== undefined ? body.netAmount : existing.netAmount
+      const nextVat = body.vatAmount !== undefined ? body.vatAmount : existing.vatAmount
+      const nextRate = body.vatRate !== undefined ? Number(body.vatRate) : existing.vatRate
+      const totals = xeroWriteback.validateGrossBreakdown({ amount: nextGross, netAmount: nextNet, vatAmount: nextVat, vatRate: nextRate })
+      if (!totals.ok) return NextResponse.json({ error: totals.error }, { status: 400 })
+      if (!Number.isFinite(nextRate) || Number(nextRate) < 0 || Number(nextRate) > 100) return NextResponse.json({ error: 'VAT rate must be between 0 and 100' }, { status: 400 })
+      netAmount = totals.net!
+      vatAmount = totals.vat!
+      vatRate = Number(nextRate)
+    }
     // Client invoices are revenue. Never write them into Project.spent, which
     // is a cost-side field used by project margin/commercial reporting.
     const invoice = await prisma.invoice.update({
@@ -47,6 +66,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       data: {
         ...(body.status !== undefined && { status: body.status }),
         ...(body.amount !== undefined && { amount: Number(body.amount) }),
+        ...(breakdownTouched && { netAmount, vatAmount, vatRate }),
         ...(body.clientName !== undefined && { clientName: body.clientName }),
         ...(body.notes !== undefined && { notes: body.notes }),
         ...(body.dueDate && { dueDate: new Date(body.dueDate) }),

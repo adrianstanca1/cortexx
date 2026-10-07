@@ -76,6 +76,9 @@ export interface Invoice {
   projectId: string | null
   clientName: string
   amount: number
+  netAmount?: number | null
+  vatAmount?: number | null
+  vatRate?: number | null
   status: string
   issuedDate: string
   dueDate: string

@@ -327,6 +327,9 @@ model Invoice {
   projectId        String?
   clientName       String
   amount           Float
+  netAmount        Float?
+  vatAmount        Float?
+  vatRate          Float?
   status           String    @default("sent") // draft, sent, paid, overdue
   issuedDate       DateTime  @default(now())
   dueDate          DateTime
@@ -1932,10 +1935,10 @@ model PushSubscription {
 // follow-up migration. See docs/v1-completion-plan.md.
 
 model AccountingConnection {
-  id                   String       @id @default(cuid())
+  id                   String                @id @default(cuid())
   organizationId       String
-  organization         Organization @relation(fields: [organizationId], references: [id], onDelete: Cascade)
-  provider             String       @default("xero")
+  organization         Organization          @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  provider             String                @default("xero")
   externalConnectionId String?
   externalTenantId     String?
   externalTenantName   String?
@@ -1943,8 +1946,8 @@ model AccountingConnection {
   refreshTokenCipher   String?
   accessTokenExpiresAt DateTime?
   scopes               String?
-  status               String       @default("disconnected") // disconnected, connected, error, reauth_required
-  settings             Json         @default("{}")
+  status               String                @default("disconnected") // disconnected, connected, error, reauth_required
+  settings             Json                  @default("{}")
   lastConnectedAt      DateTime?
   disconnectedAt       DateTime?
   lastHealthAt         DateTime?
@@ -1952,12 +1955,35 @@ model AccountingConnection {
   lastSyncAt           DateTime?
   lastSyncStatus       String?
   lastSyncError        String?
-  createdAt            DateTime     @default(now())
-  updatedAt            DateTime     @updatedAt
+  createdAt            DateTime              @default(now())
+  updatedAt            DateTime              @updatedAt
+  writebacks           AccountingWriteback[]
 
   @@unique([organizationId, provider])
   @@unique([provider, externalTenantId])
   @@index([organizationId, status])
+}
+
+model AccountingWriteback {
+  id             String               @id @default(cuid())
+  organizationId String
+  organization   Organization         @relation(fields: [organizationId], references: [id], onDelete: Cascade)
+  connectionId   String
+  connection     AccountingConnection @relation(fields: [connectionId], references: [id], onDelete: Cascade)
+  entityType     String
+  entityId       String
+  externalId     String?
+  payloadHash    String?
+  status         String               @default("pending") // pending, synced, error
+  lastError      String?
+  lastAttemptAt  DateTime?
+  syncedAt       DateTime?
+  createdAt      DateTime             @default(now())
+  updatedAt      DateTime             @updatedAt
+
+  @@unique([connectionId, entityType, entityId])
+  @@index([organizationId, status])
+  @@index([externalId])
 }
 
 model AccountingOAuthState {
@@ -1991,6 +2017,7 @@ model Organization {
   invites                       OrganizationInvite[]
   auditEvents                   AuditEvent[]
   accountingConnections         AccountingConnection[]
+  accountingWritebacks          AccountingWriteback[]
   accountingOAuthStates         AccountingOAuthState[]
   projects                      Project[]
   tasks                         Task[]

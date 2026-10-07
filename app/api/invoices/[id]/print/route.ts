@@ -109,12 +109,13 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     <tbody>
       <tr>
         <td>${esc(inv.project?.name || inv.clientName)} — services rendered</td>
-        <td class="right">£${amount}</td>
+        <td class="right">£${(inv.netAmount ?? inv.amount).toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</td>
       </tr>
     </tbody>
   </table>
 
   <div class="total">
+    ${inv.netAmount !== null && inv.vatAmount !== null ? `<div style="font-size:13px;color:#52749a;margin-bottom:4px">Net £${inv.netAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div><div style="font-size:13px;color:#52749a;margin-bottom:8px">VAT${inv.vatRate !== null ? ' ' + inv.vatRate + '%' : ''} £${inv.vatAmount.toLocaleString('en-GB', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</div>` : ''}
     <div class="label">Total due</div>
     <div class="amt">£${amount}</div>
   </div>
