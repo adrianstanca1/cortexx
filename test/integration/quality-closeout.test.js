@@ -11,7 +11,7 @@ suite('quality closeout evidence', async (t) => {
   const { userA, userB, orgA, orgB } = await seedTwoOrgs(prisma)
   let projectA, snagA, inspectionA
   await tenancy.bypassTenancy(async () => {
-    projectA = await prisma.project.create({ data: { organizationId: orgA.id, name: 'Quality Site' } })
+    projectA = await prisma.project.create({ data: { organizationId: orgA.id, name: 'Quality Site', address: '1 Quality Way', postcode: 'E1 1AA' } })
     snagA = await prisma.snag.create({
       data: {
         organizationId: orgA.id,

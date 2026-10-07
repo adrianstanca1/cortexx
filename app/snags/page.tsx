@@ -426,7 +426,7 @@ export default function SnagsPage() {
 
       {closeoutSnag && (
         <div style={{ position: 'fixed', inset: 0, zIndex: 210, display: 'flex', flexDirection: 'column', justifyContent: 'flex-end' }}>
-          <div onClick={() => setCloseoutSnag(null)} style={{ position: 'absolute', inset: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)' }} />
+          <button type="button" aria-label="Cancel closeout" onClick={() => setCloseoutSnag(null)} style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', border: 'none', padding: 0, background: 'rgba(0,0,0,0.65)', backdropFilter: 'blur(4px)', cursor: 'default' }} />
           <div className="module-sheet" style={{ position: 'relative', background: 'var(--surface-raised)', borderRadius: '20px 20px 0 0', padding: '24px 20px 40px', display: 'flex', flexDirection: 'column', gap: 14, maxHeight: '90dvh', overflowY: 'auto' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
               <div>
@@ -436,12 +436,12 @@ export default function SnagsPage() {
               <button type="button" onClick={() => setCloseoutSnag(null)} aria-label="Cancel closeout" style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 4 }}><IcX size={20} color="var(--t3)" /></button>
             </div>
             <div>
-              <label style={labelStyle}>Rectification / resolution *</label>
-              <textarea value={closeoutResolution} onChange={e => setCloseoutResolution(e.target.value)} rows={4} placeholder="What was corrected, replaced or verified?" style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
+              <label htmlFor="snag-closeout-resolution" style={labelStyle}>Rectification / resolution *</label>
+              <textarea id="snag-closeout-resolution" value={closeoutResolution} onChange={e => setCloseoutResolution(e.target.value)} rows={4} placeholder="What was corrected, replaced or verified?" style={{ ...inputStyle, resize: 'vertical', fontFamily: SF }} />
             </div>
             <div>
-              <label style={labelStyle}>Closeout evidence photo *</label>
-              <input ref={closeoutInputRef} type="file" accept="image/*" capture="environment" onChange={e => { const f = e.target.files?.[0]; if (f) void uploadCloseoutPhoto(f); e.target.value = '' }} style={{ display: 'none' }} />
+              <label htmlFor="snag-closeout-photo" style={labelStyle}>Closeout evidence photo *</label>
+              <input id="snag-closeout-photo" ref={closeoutInputRef} type="file" accept="image/*" capture="environment" onChange={e => { const f = e.target.files?.[0]; if (f) void uploadCloseoutPhoto(f); e.target.value = '' }} style={{ display: 'none' }} />
               {closeoutPhotoUrl ? (
                 <div style={{ display: 'flex', gap: 12, alignItems: 'center' }}>
                   {/* eslint-disable-next-line @next/next/no-img-element */}
