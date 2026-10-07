@@ -46,7 +46,7 @@ type QueueItem = {
   writeback: { status: string; externalId?: string | null; lastError?: string | null } | null
   paymentWriteback?: { status: string; externalId?: string | null; lastError?: string | null } | null
 }
-type QueueData = { connection: { writebackEnabled: boolean; missingScopes: string[] } | null; mapping?: Mapping; items: QueueItem[] }
+type QueueData = { connection: { writebackEnabled: boolean; missingScopes: string[] } | null; mapping?: Mapping; items: QueueItem[]; pagination?: { take: number; clientSkip: number; subSkip: number; clientHasMore?: boolean; subHasMore?: boolean; hasMore: boolean; total: number } }
 
 const card: React.CSSProperties = { background: 'var(--surface-raised)', border: '1px solid rgba(255,255,255,.08)', borderRadius: 14, padding: 16 }
 const input: React.CSSProperties = { background: '#071525', color: 'var(--t1)', border: '1px solid rgba(255,255,255,.12)', borderRadius: 9, padding: '9px 10px', fontSize: 13 }
@@ -67,7 +67,7 @@ export default function XeroIntegrationPage() {
     if (connection?.status !== 'connected') { setMappings(null); setQueue(null); return }
     const [mappingRes, queueRes] = await Promise.all([
       fetch('/api/integrations/xero/mappings', { cache: 'no-store' }),
-      fetch('/api/integrations/xero/writeback', { cache: 'no-store' }),
+      fetch('/api/integrations/xero/writeback?take=30', { cache: 'no-store' }),
     ])
     const mappingBody = await mappingRes.json().catch(() => ({}))
     const queueBody = await queueRes.json().catch(() => ({}))
@@ -116,6 +116,34 @@ export default function XeroIntegrationPage() {
     const data = await res.json()
     if (!res.ok) throw new Error(data.error || 'Connect failed')
     window.location.assign(data.authorizeUrl)
+  }
+
+  async function loadMoreQueue() {
+    const page = queue?.pagination
+    if (!page?.hasMore) return
+    setBusy('queue-more')
+    setMessage(null)
+    try {
+      const params = new URLSearchParams({
+        take: String(page.take || 30),
+        clientSkip: String(page.clientSkip || 0),
+        subSkip: String(page.subSkip || 0),
+      })
+      const res = await fetch('/api/integrations/xero/writeback?' + params.toString(), { cache: 'no-store' })
+      const data = await res.json().catch(() => ({})) as QueueData & { error?: string }
+      if (!res.ok) throw new Error(data.error || 'Failed to load more write-back candidates')
+      setQueue(prev => {
+        if (!prev) return data
+        const merged = new Map(prev.items.map(item => [item.entityType + ':' + item.entityId, item]))
+        for (const item of data.items || []) merged.set(item.entityType + ':' + item.entityId, item)
+        return {
+          ...data,
+          items: [...merged.values()].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+        }
+      })
+    } catch (error) {
+      setMessage({ kind: 'err', text: error instanceof Error ? error.message : 'Failed to load more write-back candidates' })
+    } finally { setBusy('') }
   }
 
   async function writeback(item: QueueItem, dryRun: boolean) {
@@ -241,7 +269,7 @@ export default function XeroIntegrationPage() {
             <p style={{ color: 'var(--t2)', fontSize: 13 }}>Preview the exact accounting payload first. Export is idempotent; a successfully synced local record will not create another Xero invoice.</p>
             {!queue?.items?.length ? <p style={{ color: 'var(--t3)', fontSize: 13 }}>No invoices or subcontract bills to display.</p> : (
               <div style={{ display: 'grid', gap: 8 }}>
-                {queue.items.slice(0, 30).map(item => {
+                {queue.items.map(item => {
                   const key = `${item.entityType}:${item.entityId}`
                   const invoiceSynced = item.writeback?.status === 'synced'
                   const paymentSynced = item.localStatus !== 'paid' || item.paymentWriteback?.status === 'synced'
@@ -263,6 +291,14 @@ export default function XeroIntegrationPage() {
                     </div>
                   </div>
                 })}
+                {queue.pagination?.hasMore && (
+                  <button type="button" style={{ ...button, background: '#334155', justifySelf: 'start' }} disabled={!!busy} onClick={() => void loadMoreQueue()}>
+                    {busy === 'queue-more' ? 'Loading…' : 'Load more · ' + queue.items.length + ' of ' + queue.pagination.total}
+                  </button>
+                )}
+                {queue.pagination && !queue.pagination.hasMore && queue.pagination.total > 0 && (
+                  <div style={{ color: 'var(--t3)', fontSize: 11 }}>Showing all {queue.pagination.total} accounting documents.</div>
+                )}
               </div>
             )}
           </section>

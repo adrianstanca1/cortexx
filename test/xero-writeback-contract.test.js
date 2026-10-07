@@ -62,3 +62,25 @@ test('saved Xero tax mappings retain the live numeric rate used for document val
   assert.match(settings, /purchaseTaxRate/)
   assert.match(settings, /taxRateByType/)
 })
+
+test('invoice write-back claims release to error when contact resolution fails', () => {
+  assert.match(route, /try\s*\{\s*const contactId = await contactIdFor/)
+  assert.match(route, /data: \{ status: 'error', lastError: message/)
+})
+
+test('paid invoices require a payment date before Xero sync and creation UI captures it', () => {
+  const invoicesRoute = fs.readFileSync('app/api/invoices/route.ts', 'utf8')
+  const projectPage = fs.readFileSync('app/projects/[id]/page.tsx', 'utf8')
+  assert.match(invoicesRoute, /Paid date is required when creating a paid invoice/)
+  assert.match(projectPage, /invoice-paid-date/)
+  assert.match(route, /Record the paid date before syncing this paid invoice/)
+})
+
+test('write-back queue is paginated without silently slicing older documents', () => {
+  assert.match(route, /clientSkip/)
+  assert.match(route, /subSkip/)
+  assert.match(route, /hasMore:/)
+  assert.doesNotMatch(page, /queue\.items\.slice\(0, 30\)/)
+  assert.match(page, /loadMoreQueue/)
+  assert.match(page, /Load more/)
+})

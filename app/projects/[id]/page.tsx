@@ -57,7 +57,7 @@ export default function ProjectDetailPage() {
   // Invoice modal
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [savingInvoice, setSavingInvoice] = useState(false)
-  const [invoiceForm, setInvoiceForm] = useState({ number: '', clientName: '', netAmount: '', vatRate: '20', dueDate: '', status: 'draft' })
+  const [invoiceForm, setInvoiceForm] = useState({ number: '', clientName: '', netAmount: '', vatRate: '20', dueDate: '', paidDate: '', status: 'draft' })
 
   // Edit project modal
   const [showEditModal, setShowEditModal] = useState(false)
@@ -301,7 +301,7 @@ export default function ProjectDetailPage() {
   }
 
   const createInvoice = async () => {
-    if (!invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate) return
+    if (!invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate || (invoiceForm.status === 'paid' && !invoiceForm.paidDate)) return
     const net = parseFloat(invoiceForm.netAmount)
     const rate = parseFloat(invoiceForm.vatRate)
     if (!Number.isFinite(net) || net <= 0 || !Number.isFinite(rate) || rate < 0 || rate > 100) {
@@ -324,6 +324,7 @@ export default function ProjectDetailPage() {
           vatRate: rate,
           dueDate: invoiceForm.dueDate,
           status: invoiceForm.status,
+          ...(invoiceForm.status === 'paid' ? { paidDate: invoiceForm.paidDate } : {}),
           projectId: id,
         }),
       })
@@ -334,7 +335,7 @@ export default function ProjectDetailPage() {
       const newInvoice = await res.json()
       setProject(prev => prev ? { ...prev, invoices: [...(prev.invoices || []), newInvoice] } : prev)
       setShowInvoiceModal(false)
-      setInvoiceForm({ number: '', clientName: '', netAmount: '', vatRate: '20', dueDate: '', status: 'draft' })
+      setInvoiceForm({ number: '', clientName: '', netAmount: '', vatRate: '20', dueDate: '', paidDate: '', status: 'draft' })
       showToast('Invoice created')
       logActivity(`created invoice ${invoiceForm.number.trim()}`, 'receipt')
     } catch (e) { showToast(e instanceof Error ? e.message : 'Failed to create invoice', 'error') }
@@ -793,7 +794,7 @@ export default function ProjectDetailPage() {
               <p style={{ ...labelStyle, marginBottom: 0 }}>Invoices</p>
               <button type="button" onClick={() => {
                 const nextNum = (project.invoices?.length || 0) + 1
-                setInvoiceForm({ number: `INV-${String(nextNum).padStart(3, '0')}`, clientName: project.clientName, netAmount: '', vatRate: '20', dueDate: '', status: 'draft' })
+                setInvoiceForm({ number: `INV-${String(nextNum).padStart(3, '0')}`, clientName: project.clientName, netAmount: '', vatRate: '20', dueDate: '', paidDate: '', status: 'draft' })
                 setShowInvoiceModal(true)
               }} style={{ display: 'flex', alignItems: 'center', gap: 6, padding: '6px 12px', borderRadius: 8, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 12, fontWeight: 700, cursor: 'pointer' }}>
                 <IcPlus size={12} color="#fff" /> Add invoice
@@ -911,11 +912,17 @@ export default function ProjectDetailPage() {
               <div style={labelStyle}>Status</div>
               <div style={{ display: 'flex', gap: 8 }}>
                 {(['draft', 'sent', 'paid'] as const).map(s => (
-                  <button type="button" key={s} onClick={() => setInvoiceForm(p => ({ ...p, status: s }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: invoiceForm.status === s ? `${invoiceStatusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${invoiceForm.status === s ? invoiceStatusColor[s] : 'rgba(255,255,255,0.1)'}`, color: invoiceForm.status === s ? invoiceStatusColor[s] : 'var(--t2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{s}</button>
+                  <button type="button" key={s} onClick={() => setInvoiceForm(p => ({ ...p, status: s, paidDate: s === 'paid' ? (p.paidDate || new Date().toISOString().slice(0, 10)) : p.paidDate }))} style={{ flex: 1, padding: '8px 4px', borderRadius: 10, background: invoiceForm.status === s ? `${invoiceStatusColor[s]}22` : 'rgba(255,255,255,0.05)', border: `1px solid ${invoiceForm.status === s ? invoiceStatusColor[s] : 'rgba(255,255,255,0.1)'}`, color: invoiceForm.status === s ? invoiceStatusColor[s] : 'var(--t2)', fontSize: 12, fontWeight: 600, cursor: 'pointer', fontFamily: 'var(--font-system)', textTransform: 'capitalize' }}>{s}</button>
                 ))}
               </div>
             </div>
-            <button type="button" onClick={createInvoice} disabled={savingInvoice || !invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingInvoice || !invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate ? 0.5 : 1 }}>
+            {invoiceForm.status === 'paid' && (
+              <div>
+                <label htmlFor="invoice-paid-date" style={labelStyle}>Paid date *</label>
+                <input id="invoice-paid-date" type="date" value={invoiceForm.paidDate} onChange={e => setInvoiceForm(p => ({ ...p, paidDate: e.target.value }))} style={{ ...inputStyle, colorScheme: 'dark' }} />
+              </div>
+            )}
+            <button type="button" onClick={createInvoice} disabled={savingInvoice || !invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate || (invoiceForm.status === 'paid' && !invoiceForm.paidDate)} style={{ padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: savingInvoice || !invoiceForm.number.trim() || !invoiceForm.netAmount || !invoiceForm.dueDate || (invoiceForm.status === 'paid' && !invoiceForm.paidDate) ? 0.5 : 1 }}>
               {savingInvoice ? 'Creating…' : 'Create invoice'}
             </button>
           </div>

@@ -151,28 +151,47 @@ function previewPayload(entityType: EntityType, entity: unknown, mapping: Return
     : subInvoicePayload(entity, mapping, 'PREVIEW_CONTACT_ID')
 }
 
-export async function GET(_req: NextRequest) {
+export async function GET(req: NextRequest) {
   const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
   if (!admin(auth)) return NextResponse.json({ error: 'Company Admin permission required' }, { status: 403 })
 
   try {
+    const { searchParams } = new URL(req.url)
+    const parsedTake = Number.parseInt(searchParams.get('take') || '30', 10)
+    const take = Math.max(1, Math.min(Number.isNaN(parsedTake) ? 30 : parsedTake, 100))
+    const clientSkip = Math.max(0, Number.parseInt(searchParams.get('clientSkip') || '0', 10) || 0)
+    const subSkip = Math.max(0, Number.parseInt(searchParams.get('subSkip') || '0', 10) || 0)
     const connection = await prisma.accountingConnection.findFirst({ where: { provider: 'xero' } })
-    if (!connection) return NextResponse.json({ connection: null, items: [] })
+    if (!connection) return NextResponse.json({ connection: null, items: [], pagination: { take, clientSkip: 0, subSkip: 0, hasMore: false, total: 0 } })
 
     const mapping = writebackMapping(connection.settings)
     const missingScopes = missingWriteScopes(connection.scopes)
-    const [clientInvoices, subInvoices, writebacks] = await Promise.all([
-      prisma.invoice.findMany({ orderBy: { issuedDate: 'desc' }, take: 50, include: { project: { select: { name: true } } } }),
+    const [clientInvoices, subInvoices, clientTotal, subTotal] = await Promise.all([
+      prisma.invoice.findMany({ orderBy: { issuedDate: 'desc' }, take, skip: clientSkip, include: { project: { select: { name: true } } } }),
       prisma.subInvoice.findMany({
         orderBy: { invoiceDate: 'desc' },
-        take: 50,
+        take,
+        skip: subSkip,
         include: { project: { select: { name: true } }, subcontractor: { select: { name: true } } },
       }),
-      prisma.accountingWriteback.findMany({ where: { connectionId: connection.id } }),
+      prisma.invoice.count(),
+      prisma.subInvoice.count(),
     ])
-
-    const byKey = new Map(writebacks.map(row => [`${row.entityType}:${row.entityId}`, row]))
+    const clientIds = clientInvoices.map(row => row.id)
+    const subIds = subInvoices.map(row => row.id)
+    const writebacks = clientIds.length || subIds.length
+      ? await prisma.accountingWriteback.findMany({
+          where: {
+            connectionId: connection.id,
+            OR: [
+              ...(clientIds.length ? [{ entityType: { in: ['client_invoice', 'client_invoice_payment'] }, entityId: { in: clientIds } }] : []),
+              ...(subIds.length ? [{ entityType: { in: ['sub_invoice', 'sub_invoice_payment'] }, entityId: { in: subIds } }] : []),
+            ],
+          },
+        })
+      : []
+    const byKey = new Map(writebacks.map(row => [row.entityType + ':' + row.entityId, row]))
     const item = (entityType: EntityType, row: any) => {
       let blocker: string | null = null
       let currentHash: string | null = null
@@ -181,7 +200,12 @@ export async function GET(_req: NextRequest) {
       const changedSinceSync = Boolean(writeback?.status === 'synced' && writeback.payloadHash && currentHash && writeback.payloadHash !== currentHash)
       if (changedSinceSync && !blocker) blocker = 'Changed since last Xero sync; reconcile the existing Xero document before another export'
       const paid = row.status === 'paid'
-      const paymentBlocker = paid && !mapping.paymentAccountCode ? 'Map a Xero payment account before syncing a paid invoice' : null
+      const paidAt = entityType === 'client_invoice' ? row.paidDate : row.paidAt
+      const paymentBlocker = paid && !paidAt
+        ? 'Record the paid date before syncing this paid invoice'
+        : paid && !mapping.paymentAccountCode
+          ? 'Map a Xero payment account before syncing a paid invoice'
+          : null
       return {
         entityType,
         entityId: row.id,
@@ -211,6 +235,15 @@ export async function GET(_req: NextRequest) {
         ...clientInvoices.map(row => item('client_invoice', row)),
         ...subInvoices.map(row => item('sub_invoice', row)),
       ].sort((a, b) => new Date(b.date).getTime() - new Date(a.date).getTime()),
+      pagination: {
+        take,
+        clientSkip: clientSkip + clientInvoices.length,
+        subSkip: subSkip + subInvoices.length,
+        clientHasMore: clientSkip + clientInvoices.length < clientTotal,
+        subHasMore: subSkip + subInvoices.length < subTotal,
+        hasMore: clientSkip + clientInvoices.length < clientTotal || subSkip + subInvoices.length < subTotal,
+        total: clientTotal + subTotal,
+      },
     })
   } catch (error) {
     reportError(error, { context: 'xero.writeback.queue' })
@@ -326,11 +359,11 @@ export async function POST(req: NextRequest) {
         data: { status: 'in_flight', lastError: null, lastAttemptAt: new Date() },
       })
       if (claim.count !== 1) return NextResponse.json({ error: 'This Xero write-back is already in progress; retry after it completes' }, { status: 409 })
-      const contactId = await contactIdFor(connection, entityType, data.contactKey, data.contactName, data.contactEmail)
-      const payload = entityType === 'client_invoice'
-        ? clientInvoicePayload(data.entity, mapping, contactId)
-        : subInvoicePayload(data.entity, mapping, contactId)
       try {
+        const contactId = await contactIdFor(connection, entityType, data.contactKey, data.contactName, data.contactEmail)
+        const payload = entityType === 'client_invoice'
+          ? clientInvoicePayload(data.entity, mapping, contactId)
+          : subInvoicePayload(data.entity, mapping, contactId)
         const created = await xeroApiRequest(connection, '/Invoices', { method: 'POST', headers: { 'Idempotency-Key': idempotencyKey(connection.id, entityType, entityId) }, body: JSON.stringify({ Invoices: [payload] }) })
         const rows = Array.isArray(created.Invoices) ? created.Invoices as Array<Record<string, unknown>> : []
         const createdId = rows[0]?.InvoiceID

@@ -65,6 +65,13 @@ export async function POST(req: NextRequest) {
     if (!body.dueDate) {
       return NextResponse.json({ error: 'Due date is required' }, { status: 400 })
     }
+    const status = body.status || 'draft'
+    let paidDate: Date | null = null
+    if (status === 'paid') {
+      if (!body.paidDate) return NextResponse.json({ error: 'Paid date is required when creating a paid invoice' }, { status: 400 })
+      paidDate = new Date(body.paidDate)
+      if (Number.isNaN(paidDate.getTime())) return NextResponse.json({ error: 'Paid date is invalid' }, { status: 400 })
+    }
     const hasBreakdown = body.netAmount !== undefined || body.vatAmount !== undefined || body.vatRate !== undefined
     let netAmount: number | null = null
     let vatAmount: number | null = null
@@ -87,7 +94,8 @@ export async function POST(req: NextRequest) {
           netAmount,
           vatAmount,
           vatRate,
-          status: body.status || 'draft',
+          status,
+          paidDate,
           issuedDate: body.issuedDate ? new Date(body.issuedDate) : new Date(),
           dueDate: new Date(body.dueDate),
           notes: body.notes || null,
