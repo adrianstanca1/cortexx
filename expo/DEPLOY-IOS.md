@@ -18,10 +18,13 @@ End-to-end build + submit for the Expo iOS app. Run from a Mac with Xcode + EAS 
 | API endpoint | `https://cortexbuildpro.tech` |
 | Submit Apple ID | `Adrian.stanca1@icloud.com` |
 
-## Credentials status (as of 2026-07-16)
-- Distribution cert: serial `0`, expires **2027-06-03**, team `4G3G5MX9BH` ✅
-- Provisioning profile `43UY65JXM2`: **active**, expires **2027-06-03** ✅
-- These are already registered in EAS for `com.cortexbuild.app`. No renewal needed until 2027.
+## Credentials status (verified 2026-10-07)
+- EAS recognizes remote iOS credential records for `com.cortexbuild.app`, but the production Distribution Certificate / provisioning setup is **not currently validated for non-interactive builds**.
+- GitHub Actions run `37693994309` confirmed the production build stops at EAS credential setup with: `Distribution Certificate is not validated for non-interactive builds`.
+- One-time repair options:
+  1. Run `eas credentials --platform ios` interactively as the Apple Developer account holder, select the `production` profile, and repair/generate the Distribution Certificate and App Store provisioning profile; or
+  2. Configure the GitHub secrets `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, and `APP_STORE_CONNECT_KEY_BASE64` with an App Store Connect Team API key that has permission to manage signing. CI maps these to EAS ASC authentication automatically.
+- After credentials are valid, dispatch **EAS iOS — Build & TestFlight**. It builds the exact release, then submits that build to TestFlight with `--wait`.
 
 ## Build (production IPA)
 ```bash
