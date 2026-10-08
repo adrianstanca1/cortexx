@@ -2,6 +2,7 @@
 
 import { useState, useEffect, useCallback } from 'react'
 import Link from 'next/link'
+import { formatSiteDiarySummary } from '@/lib/siteDiarySummary'
 import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
 import { IcDoc, IcChevL, IcChevR, IcCamera, IcAlert, IcCheck, IcClock, IcTeam, IcSend } from '@/components/ui/Icons'
@@ -41,6 +42,7 @@ export default function SiteDiaryPage() {
   const [toast, setToast] = useState<{ msg: string; type?: 'success' | 'error' } | null>(null)
   const [weather, setWeather] = useState<{ icon: string; tempC: number; condition: string; windKph: number; windDir: string; precipMm: number } | null>(null)
   const [weatherLoading, setWeatherLoading] = useState(false)
+  const [reportVisible, setReportVisible] = useState(false)
 
   useEffect(() => {
     fetch('/api/projects').then(r => r.ok ? r.json() : null).then(d => {
@@ -93,23 +95,23 @@ export default function SiteDiaryPage() {
     ? `${dateParts.weekday} ${dateParts.day} ${dateParts.month} ${dateParts.year}`
     : 'Choose a date'
 
+  const reportText = data ? formatSiteDiarySummary(data, niceDate, isToday ? weather : null) : ''
+  useEffect(() => { setReportVisible(false) }, [projectId, date])
+
   const shareReport = () => {
     if (!data) return
-    const sum = data.summary
-    const text = [
-      `Site Diary — ${data.project.name}`,
-      `${niceDate}`,
-      ...(weather && isToday ? [`Weather: ${weather.icon} ${Math.round(weather.tempC)}°C · ${weather.condition} · wind ${Math.round(weather.windKph)} km/h ${weather.windDir}${weather.precipMm > 0 ? ` · ${weather.precipMm.toFixed(1)}mm rain` : ''}`] : []),
-      ``,
-      `${sum.hoursTotal.toFixed(1)} hours · ${sum.peopleOnSite} people on site`,
-      `${sum.snagsRaised} snag${sum.snagsRaised === 1 ? '' : 's'} raised · ${sum.snagsClosed} closed`,
-      `${sum.photosTaken} photos · ${sum.documentsFiled} documents filed`,
-      ``,
-      data.activities.length ? `Activity log:` : `No activity logged.`,
-      ...data.activities.map(a => `  • ${a.actorName} ${a.action}`),
-    ].join('\n')
     const subject = `Site Diary — ${data.project.name} — ${niceDate}`
-    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(text)}`, '_self')
+    window.open(`mailto:?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(reportText)}`, '_self')
+  }
+
+  const copyReport = async () => {
+    if (!reportText) return
+    try {
+      await navigator.clipboard.writeText(reportText)
+      setToast({ msg: 'Daily report copied from project records', type: 'success' })
+    } catch {
+      setToast({ msg: 'Clipboard unavailable. Select and copy the report instead.', type: 'error' })
+    }
   }
 
   return (
@@ -161,6 +163,22 @@ export default function SiteDiaryPage() {
         <div style={{ padding: 40, textAlign: 'center', color: '#ef4444', fontFamily: SF, fontSize: 14 }}>{error}</div>
       ) : data ? (
         <div style={{ padding: '12px 16px', display: 'flex', flexDirection: 'column', gap: 12 }}>
+          <section aria-label="Daily summary from project records" style={{ background: 'var(--bg1)', border: '1px solid var(--border)', borderRadius: 12, padding: 12 }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', gap: 12, alignItems: 'center', flexWrap: 'wrap' }}>
+              <div>
+                <strong style={{ fontFamily: SF, fontSize: 14, color: 'var(--t1)' }}>Daily progress summary</strong>
+                <p style={{ marginTop: 3, fontFamily: SF, fontSize: 11, color: 'var(--t3)' }}>Generated from recorded project activities, timesheets and evidence. No invented AI data.</p>
+              </div>
+              <button type="button" onClick={() => setReportVisible(v => !v)} style={{ borderRadius: 9, border: '1px solid var(--border)', background: 'var(--bg2)', color: 'var(--t1)', padding: '8px 12px', cursor: 'pointer' }}>
+                {reportVisible ? 'Hide summary' : 'Generate summary'}
+              </button>
+            </div>
+            {reportVisible && <div style={{ marginTop: 12 }}>
+              <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere', fontFamily: SF, color: 'var(--t2)', fontSize: 12, lineHeight: 1.5 }}>{reportText}</pre>
+              <button type="button" onClick={() => void copyReport()} style={{ marginTop: 12, borderRadius: 9, background: '#047857', color: '#fff', border: 0, padding: '9px 14px', fontWeight: 700, cursor: 'pointer' }}>Copy summary</button>
+            </div>}
+          </section>
+
           {/* Weather card — today only. Hidden silently for past days (wttr.in has no free history). */}
           {(weather || weatherLoading) && isToday && (
             <div style={{ background: 'linear-gradient(135deg, #1e3a5f, #152641)', borderRadius: 14, padding: '12px 16px', display: 'flex', alignItems: 'center', gap: 14, border: '0.5px solid rgba(96,165,250,0.18)' }}>
