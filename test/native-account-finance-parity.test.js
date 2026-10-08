@@ -6,9 +6,12 @@ const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8')
 
 test('financial API routes accept valid native Bearer tokens for authorized company admins', () => {
   const proxy = read('proxy.ts')
-  const list = proxy.match(/const MOBILE_BEARER_API_PREFIXES = \[[\s\S]*?\]/)?.[0] || ''
-  assert.match(list, /'\/api\/quotes'/)
-  assert.match(list, /'\/api\/invoices'/)
+  const prefixes = proxy.match(/const MOBILE_BEARER_API_PREFIXES = \[[\s\S]*?\]/)?.[0] || ''
+  const exact = proxy.match(/const MOBILE_BEARER_EXACT_API_PATHS = new Set\([\s\S]*?\)/)?.[0] || ''
+  assert.match(exact, /'\/api\/quotes'/)
+  assert.match(exact, /'\/api\/invoices'/)
+  assert.doesNotMatch(prefixes, /'\/api\/quotes'/)
+  assert.doesNotMatch(prefixes, /'\/api\/invoices'/)
   for (const file of ['app/api/quotes/route.ts', 'app/api/invoices/route.ts']) {
     const route = read(file)
     assert.match(route, /await requireOrg\(\)/)
