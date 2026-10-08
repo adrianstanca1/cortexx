@@ -142,3 +142,18 @@ for (const filename of ['ios-build.yml', 'release-ios.yml']) {
     })
   }
 }
+
+for (const filename of ['ios-build.yml', 'release-ios.yml']) {
+  test(`${filename} does not force Apple Distribution identity during automatic signing`, () => {
+    const workflow = fs.readFileSync(path.resolve(__dirname, '../.github/workflows', filename), 'utf8')
+    const automatic = workflow.split('Archive signed app (automatic API-key signing)').pop().split('Export IPA')[0]
+    const archive = filename === 'release-ios.yml' ? workflow.split('Archive (automatic API-key signing)').pop().split('Export IPA')[0] : automatic
+    assert.doesNotMatch(archive, /CODE_SIGN_IDENTITY=/)
+    assert.match(archive, /CODE_SIGN_STYLE=Automatic/)
+  })
+}
+
+test("Xcode automatic Release configuration does not force a distribution signing identity", () => {
+  const project = fs.readFileSync(path.resolve(__dirname, "../ios/App/App.xcodeproj/project.pbxproj"), "utf8")
+  assert.doesNotMatch(project, /CODE_SIGN_IDENTITY = "Apple Distribution";/)
+})
