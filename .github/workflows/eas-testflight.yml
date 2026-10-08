@@ -209,13 +209,15 @@ jobs:
     name: Upload existing signed IPA directly to Apple
     runs-on: macos-latest
     timeout-minutes: 60
+    defaults:
+      run:
+        working-directory: expo
     env:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
       APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
       BUILD_ID: ${{ inputs.build_id }}
-      CORTEXX_SIGNED_IPA_URL: ${{ secrets.CORTEXX_SIGNED_IPA_URL }}
 
     steps:
       - name: Checkout release for Expo config
@@ -237,15 +239,47 @@ jobs:
             exit 1
           fi
 
-      - name: Download exact signed production IPA
+      - name: Resolve signed production IPA URL from EAS
+        id: artifact
         shell: bash
         run: |
           set -euo pipefail
-          if [ -z "$CORTEXX_SIGNED_IPA_URL" ]; then
-            echo "::error::Missing temporary signed IPA download secret."
+          BUILD_JSON="$RUNNER_TEMP/eas-build.json"
+          npx eas-cli@21.0.1 build:view "$BUILD_ID" --json > "$BUILD_JSON"
+          IPA_URL="$(node -e '
+            const fs = require("fs");
+            const build = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            if (build.status !== "FINISHED") {
+              console.error("EAS build " + build.id + " is " + build.status + ", so it has no uploadable IPA.");
+              process.exit(1);
+            }
+            if (build.expirationDate && Date.parse(build.expirationDate) <= Date.now()) {
+              console.error("EAS build " + build.id + " artifact expired on " + build.expirationDate + "; rebuild before uploading.");
+              process.exit(1);
+            }
+            const artifacts = build.artifacts || {};
+            // The artifact path is a per-build token, NOT the build id, so it can only be read from EAS.
+            const url = artifacts.buildUrl || artifacts.applicationArchiveUrl;
+            if (!url) {
+              console.error("EAS build " + build.id + " exposes no downloadable IPA artifact.");
+              process.exit(1);
+            }
+            process.stdout.write(url);
+          ' "$BUILD_JSON")"
+          echo "ipa_url=$IPA_URL" >> "$GITHUB_OUTPUT"
+          echo "Resolved signed IPA for EAS build $BUILD_ID."
+
+      - name: Download exact signed production IPA
+        shell: bash
+        env:
+          IPA_URL: ${{ steps.artifact.outputs.ipa_url }}
+        run: |
+          set -euo pipefail
+          if [ -z "$IPA_URL" ]; then
+            echo "::error::EAS did not return a signed IPA URL for build $BUILD_ID."
             exit 1
           fi
-          curl --fail --location --silent --show-error --retry 3 --output "$RUNNER_TEMP/Cortexx.ipa" "$CORTEXX_SIGNED_IPA_URL"
+          curl --fail --location --silent --show-error --retry 3 --output "$RUNNER_TEMP/Cortexx.ipa" "$IPA_URL"
           unzip -t "$RUNNER_TEMP/Cortexx.ipa" > /dev/null
           unzip -Z -1 "$RUNNER_TEMP/Cortexx.ipa" > "$RUNNER_TEMP/ipa-entries.txt"
           grep -Eq "^Payload/[^/]+\\.app/Info\\.plist$" "$RUNNER_TEMP/ipa-entries.txt"
@@ -276,7 +310,22 @@ jobs:
         shell: bash
         run: |
           set -euo pipefail
-          xcrun altool --upload-app --type ios --file "$RUNNER_TEMP/Cortexx.ipa" --apiKey "$APP_STORE_CONNECT_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+          # eas submit --local-path uses the same ASC delivery path as the expo mode, so the
+          # direct route no longer depends on xcrun altool, which Xcode 15 removed.
+          npx eas-cli@21.0.1 submit --platform ios \
+            --local-path "$RUNNER_TEMP/Cortexx.ipa" \
+            --wait \
+            --json > "$RUNNER_TEMP/direct-submit.json"
+          node -e '
+            const fs = require("fs");
+            const submission = JSON.parse(fs.readFileSync(process.env.RUNNER_TEMP + "/direct-submit.json", "utf8"));
+            const requestId = submission.requestSubmissionRequestId || submission.requestId;
+            if (!requestId) {
+              console.error("EAS submit did not return a submission request ID: " + JSON.stringify(submission).slice(0, 400));
+              process.exit(1);
+            }
+            console.log("Submitted signed IPA to App Store Connect as submission request " + requestId + ".");
+          '
 
       - name: Remove ephemeral Apple key and IPA
         if: always()

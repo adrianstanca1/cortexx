@@ -51,6 +51,31 @@ test('workflow relies on eas submit --wait as the authoritative TestFlight deliv
 })
 
 
+test('direct upload resolves the signed IPA from EAS instead of a manual artifact secret', () => {
+  assert.doesNotMatch(workflow, /CORTEXX_SIGNED_IPA_URL/)
+  assert.match(workflow, /build:view "\$BUILD_ID" --json/)
+  assert.ok(workflow.includes('id: artifact'))
+  assert.ok(workflow.includes('IPA_URL: ${{ steps.artifact.outputs.ipa_url }}'))
+  // The artifact path is a per-build token, so it must never be built from the build id.
+  assert.ok(workflow.includes('// The artifact path is a per-build token, NOT the build id'))
+  assert.doesNotMatch(workflow, /artifacts\/eas\/\$\{?BUILD_ID/)
+  // An expired or unfinished build must fail loudly instead of uploading nothing.
+  assert.match(workflow, /build\.status !== "FINISHED"/)
+  assert.match(workflow, /expired on/)
+})
+
+test('direct upload uses the maintained ASC delivery path, not the removed altool binary', () => {
+  // Comments may still explain the migration, but no step may actually invoke altool.
+  const commands = workflow
+    .split('\n')
+    .filter(line => !/^\s*#/.test(line))
+    .join('\n')
+  assert.doesNotMatch(commands, /xcrun altool/)
+  assert.match(workflow, /npx eas-cli@21\.0\.1 submit --platform ios/)
+  assert.match(workflow, /--local-path "\$RUNNER_TEMP\/Cortexx\.ipa"/)
+  assert.ok(workflow.includes('requestSubmissionRequestId'))
+})
+
 test('EAS TestFlight workflow can use an ASC API key to repair Apple credentials in CI', () => {
   assert.match(workflow, /APP_STORE_CONNECT_KEY_ID: \$\{\{ secrets\.APP_STORE_CONNECT_KEY_ID \}\}/)
   assert.match(workflow, /APP_STORE_CONNECT_ISSUER_ID: \$\{\{ secrets\.APP_STORE_CONNECT_ISSUER_ID \}\}/)
