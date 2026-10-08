@@ -127,6 +127,7 @@ const PUBLIC_API_PREFIXES = [
   '/api/auth/',
   '/api/mobile/auth/login',
   '/api/mobile/auth/register',
+  '/api/mobile/web-session/consume', // POST-only one-use native session exchange
   '/api/health',
   '/api/metrics',    // public Web Vitals sink; route-level rate limit validates payload
   '/api/webhooks/',  // Stripe et al; signature-verified inside the handlers
@@ -144,6 +145,7 @@ const NO_ORG_ALLOWED = new Set<string>([
 const MOBILE_BEARER_API_PREFIXES = [
   '/api/mobile/auth/me',
   '/api/mobile/auth/switch',
+  '/api/mobile/auth/web-session',
   '/api/dashboard',
   '/api/inbox',
   '/api/projects',

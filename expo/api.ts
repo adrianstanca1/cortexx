@@ -130,6 +130,14 @@ export const postCollection = (name: string, body: any) => api.postCollection(na
 export const putCollection = (name: string, id: string, body: any) => api.putCollection(name, id, body);
 export const apiGet = (path: string) => api.apiGet(path);
 export const apiPost = (path: string, body: any) => api.apiPost(path, body);
+// A short-lived, single-use ticket lets the embedded web module use the exact
+// existing web account and active company without copying passwords or JWTs.
+export async function requestWebWorkspaceTicket(): Promise<string> {
+  const result = await api.apiPost('/api/mobile/auth/web-session', {});
+  if (!result?.ticket) throw new Error('Web workspace sign-in unavailable');
+  return String(result.ticket);
+}
+
 export async function apiPatch(path: string, body: any) {
   const token = await getToken();
   const res = await fetch(`${API_URL}${path}`, {

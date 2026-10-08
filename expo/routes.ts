@@ -4,6 +4,7 @@ export type AppRoute =
   | 'tasks'
   | 'field'
   | 'more'
+  | 'web'
   | 'checkin'
   | 'readiness'
   | 'deliveries'
