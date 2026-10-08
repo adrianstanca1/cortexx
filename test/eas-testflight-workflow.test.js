@@ -21,6 +21,7 @@ test('EAS TestFlight workflow validates native TypeScript before release', () =>
 
 test('EAS TestFlight workflow keeps release concurrency serialized', () => {
   assert.match(workflow, /group: cortexx-eas-testflight/)
+  assert.ok(workflow.includes("inputs.upload_method == 'status' && 'status' || 'release'"))
   assert.match(workflow, /cancel-in-progress: false/)
 })
 
