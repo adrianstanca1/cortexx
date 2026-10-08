@@ -69,7 +69,12 @@ services:
       dockerfile: Dockerfile.construction
       target: runtime
     restart: unless-stopped
-    env_file: .env.construction
+    # Credentials remain outside the repository and Docker build context.
+    # The optional secret file is managed on the host and never committed.
+    env_file:
+      - .env.construction
+      - path: ${CORTEXX_EMAIL_ENV_FILE:-/home/administrator/.cortexx-resend-secret}
+        required: false
     environment:
       NODE_ENV: production
       PORT: 3000
