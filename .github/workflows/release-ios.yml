@@ -162,7 +162,7 @@ jobs:
             CODE_SIGN_IDENTITY="iPhone Distribution" \
             PROVISIONING_PROFILE_SPECIFIER="Cortexx App Store" \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            | xcpretty
+            | tee "$RUNNER_TEMP/xcodebuild.log"
 
       - name: Archive (automatic API-key signing)
         if: steps.signing.outputs.signing_mode == 'automatic'
@@ -183,7 +183,7 @@ jobs:
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
             CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM="${{ secrets.APPLE_TEAM_ID }}" \
-            | xcpretty
+            | tee "$RUNNER_TEMP/xcodebuild.log"
 
       # ── Export IPA ────────────────────────────────────────────────
       - name: Export IPA (manual signing)
@@ -220,7 +220,7 @@ jobs:
             -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
             -exportPath "$RUNNER_TEMP/ipa" \
-            | xcpretty
+            | tee "$RUNNER_TEMP/xcodebuild.log"
 
       - name: Export IPA (automatic API-key signing)
         if: steps.signing.outputs.signing_mode == 'automatic'
@@ -254,7 +254,7 @@ jobs:
             -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
-            | xcpretty
+            | tee "$RUNNER_TEMP/xcodebuild.log"
 
       - name: Locate exported IPA
         id: ipa
