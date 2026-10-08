@@ -12,26 +12,26 @@ const DESCRIPTION = 'Mobile-first construction management for UK SMEs — projec
 
 export const metadata: Metadata = {
   metadataBase: new URL(SITE_URL),
-  title: { default: 'Cortexx — CortexBuild', template: '%s · Cortexx' },
+  title: { default: 'Cortex Construct', template: '%s · Cortex Construct' },
   description: DESCRIPTION,
   manifest: '/manifest.json',
-  applicationName: 'Cortexx',
+  applicationName: 'Cortex Construct',
   appleWebApp: {
     capable: true,
-    title: 'Cortexx',
+    title: 'Cortex Construct',
     statusBarStyle: 'black-translucent',
   },
   openGraph: {
     type: 'website',
-    siteName: 'Cortexx',
-    title: 'Cortexx — CortexBuild',
+    siteName: 'Cortex Construct',
+    title: 'Cortex Construct',
     description: DESCRIPTION,
     url: SITE_URL,
-    images: [{ url: '/icon-512.png', width: 512, height: 512, alt: 'Cortexx' }],
+    images: [{ url: '/icon-512.png', width: 512, height: 512, alt: 'Cortex Construct' }],
   },
   twitter: {
     card: 'summary',
-    title: 'Cortexx — CortexBuild',
+    title: 'Cortex Construct',
     description: DESCRIPTION,
     images: ['/icon-512.png'],
   },

@@ -7,7 +7,7 @@
 | GitHub | `adrianstanca1/cortexx` |
 | Expo / EAS | [`@adrianstanca/cortexx`](https://expo.dev/accounts/adrianstanca/projects/cortexx) |
 | Expo project UUID | `76a768f6-ab7d-4c25-b71d-4b978a32ef61` |
-| iPhone app name | `Cortexx` |
+| iPhone app name | `Cortex Construct` |
 | Apple bundle identifier | `com.cortexbuild.app` |
 | App Store Connect app ID | `6820322670` |
 | Apple Developer team | `4G3G5MX9BH` |

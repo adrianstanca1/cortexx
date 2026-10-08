@@ -66,11 +66,11 @@ export default function LoginScreen({ onAuthed }: { onAuthed: (user: AuthUser) =
     <KeyboardAvoidingView style={styles.wrap} behavior={Platform.OS === 'ios' ? 'padding' : undefined}>
       <ScrollView keyboardShouldPersistTaps="handled" contentContainerStyle={styles.content}>
         <View style={styles.logo}><Text style={styles.logoMark}>CX</Text></View>
-        <Text style={styles.title}>Cortexx</Text>
+        <Text style={styles.title}>Cortex Construct</Text>
         <Text style={styles.subtitle}>Construction management, simplified.</Text>
         <Text style={styles.heading}>{heading}</Text>
         {mode === 'reset' && <Text style={styles.hint}>A secure password reset link will be emailed to you. It expires in 30 minutes.</Text>}
-        {mode === 'workspace' && <Text style={styles.hint}>Your account needs a company workspace to use Cortexx.</Text>}
+        {mode === 'workspace' && <Text style={styles.hint}>Your account needs a company workspace to use Cortex Construct.</Text>}
         {mode === 'register' && <TextInput style={styles.input} accessibilityLabel="Your name"
           placeholder="Full name (optional)" placeholderTextColor={Colors.t3}
           autoComplete="name" value={name} onChangeText={setName} editable={!working} />}
@@ -103,7 +103,7 @@ export default function LoginScreen({ onAuthed }: { onAuthed: (user: AuthUser) =
             <Text style={styles.linkText}>Forgot password?</Text>
           </TouchableOpacity>
           <TouchableOpacity accessibilityRole="button" style={styles.link} onPress={() => go('register')}>
-            <Text style={styles.linkText}>New to Cortexx? Create an account</Text>
+            <Text style={styles.linkText}>New to Cortex Construct? Create an account</Text>
           </TouchableOpacity>
         </> : <TouchableOpacity accessibilityRole="button" style={styles.link} onPress={() => go('login')}>
           <Text style={styles.linkText}>Back to sign in</Text>

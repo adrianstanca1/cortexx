@@ -42,7 +42,7 @@ export default function FirstRunBanner({ data }: Props) {
         fontFamily: 'var(--font-system)',
       }}>
         <h2 style={{ fontSize: 18, fontWeight: 700, color: 'var(--t1)', margin: '0 0 6px', letterSpacing: '-0.02em' }}>
-          Welcome to Cortexx
+          Welcome to Cortex Construct
         </h2>
         <p style={{ fontSize: 13, color: 'var(--t2)', margin: '0 0 16px' }}>
           Your workspace is empty. Three things to get going:

@@ -42,7 +42,7 @@ function LoginForm() {
   return (
     <div style={{ background: 'var(--bg0)', minHeight: '100dvh', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', padding: 24 }}>
       <form onSubmit={onSubmit} style={{ width: '100%', maxWidth: 360, display: 'flex', flexDirection: 'column', gap: 14 }}>
-        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>Sign in to Cortexx</h1>
+        <h1 style={{ fontSize: 28, fontWeight: 700, color: 'var(--t1)', letterSpacing: '-0.03em', fontFamily: 'var(--font-system)', marginBottom: 4 }}>Sign in to Cortex Construct</h1>
         <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 8, fontFamily: 'var(--font-system)' }}>Mobile-first construction management</p>
 
         <label htmlFor="email" style={labelStyle}>Email</label>

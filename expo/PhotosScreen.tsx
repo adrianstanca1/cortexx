@@ -101,7 +101,7 @@ export default function PhotosScreen({ onLogout }: { onLogout: () => void }) {
     <View style={s.header}>
       <Text style={s.kicker}>SHARED SITE EVIDENCE</Text>
       <Text style={s.h1}>Site photos</Text>
-      <Text style={s.sub}>Same images and projects as Cortexx on the web.</Text>
+      <Text style={s.sub}>Same images and projects as Cortex Construct on the web.</Text>
     </View>
     <View style={s.projects}>
       <TouchableOpacity style={[s.chip, !projectId && s.selected]} onPress={() => setProjectId('')}>

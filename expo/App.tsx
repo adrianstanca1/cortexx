@@ -17,7 +17,7 @@ export default function App() {
     try {
       setUser(await getMe());
     } catch (error: any) {
-      setLoadError(error?.message || 'Unable to reach Cortexx. Please retry.');
+      setLoadError(error?.message || 'Unable to reach Cortex Construct. Please retry.');
     } finally {
       setChecking(false);
     }
