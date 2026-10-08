@@ -53,6 +53,7 @@ jobs:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+          IOS_REQUIRE_NATIVE_DISTRIBUTION: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight }}
           IOS_REQUIRE_ARCHIVE: 'false'
           IOS_REQUIRE_UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight }}
         run: node scripts/check-ios-signing.mjs
