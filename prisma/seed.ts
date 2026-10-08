@@ -1,6 +1,11 @@
 import { PrismaClient } from '@prisma/client'
 import bcrypt from 'bcryptjs'
 
+// Legacy fake-project demo seeding is strictly opt-in and never safe on live data.
+if (process.env.CORTEX_ALLOW_LEGACY_DEMO_SEED !== 'true' || process.env.NODE_ENV === 'production') {
+  throw new Error('Legacy demo seeding is disabled. Use scripts/seed-shared-users.ts for production-safe user reconciliation.')
+}
+
 const prisma = new PrismaClient()
 
 async function main() {
