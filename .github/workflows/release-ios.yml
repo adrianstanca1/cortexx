@@ -35,7 +35,7 @@ on:
         type: boolean
 
 concurrency:
-  group: ios-build-${{ github.ref }}
+  group: ios-release-${{ github.ref }}
   cancel-in-progress: true
 
 jobs:
