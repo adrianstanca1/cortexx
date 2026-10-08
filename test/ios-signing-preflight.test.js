@@ -221,3 +221,24 @@ test('both native iOS release workflows require distribution certificate preflig
     assert.ok(workflow.includes(mode), file + ' must require manual native signing when releasing')
   }
 })
+
+test('manual distribution identity is scoped to the App Release target, not CocoaPods', () => {
+  const scriptContent = fs.readFileSync(path.resolve(__dirname, '../scripts/configure-ios-manual-signing.rb'), 'utf8')
+  assert.match(scriptContent, /project\\.targets\\.find.*target\\.name == 'App'/)
+  assert.match(scriptContent, /build_configurations\\.find.*config\\.name == 'Release'/)
+  assert.ok(scriptContent.includes("release_config.build_settings['CODE_SIGN_IDENTITY'] = 'Apple Distribution'"))
+  assert.ok(scriptContent.includes("release_config.build_settings['PROVISIONING_PROFILE_SPECIFIER'] = 'Cortexx App Store'"))
+  for (const [filename, archiveName] of [
+    ['ios-build.yml', 'Archive signed app (manual)'],
+    ['release-ios.yml', 'Archive (manual signing)'],
+  ]) {
+    const workflow = fs.readFileSync(path.resolve(__dirname, '../.github/workflows', filename), 'utf8')
+    assert.match(workflow, /name: Configure manual signing for the App target/)
+    assert.match(workflow, /run: ruby scripts\\/configure-ios-manual-signing\\.rb/)
+    const step = workflow.split('      - name: ' + archiveName)[1]?.split('      - name: ')[0]
+    assert.ok(step)
+    assert.doesNotMatch(step, /CODE_SIGN_IDENTITY=/)
+    assert.doesNotMatch(step, /PROVISIONING_PROFILE_SPECIFIER=/)
+    assert.doesNotMatch(step, /CODE_SIGN_STYLE=Manual/)
+  }
+})
