@@ -196,3 +196,28 @@ test('ordinary iOS pushes never provision Apple certificates or attempt a signed
   }
   assert.match(workflow, /name: Verify unsigned iOS archive/)
 })
+
+test('native distribution archive requires imported Apple Distribution certificate and profile even with a valid Team API key', () => {
+  const result = run({ ...automaticArchive, IOS_REQUIRE_ARCHIVE: 'true', IOS_REQUIRE_NATIVE_DISTRIBUTION: 'true' })
+  assert.equal(result.status, 1)
+  assert.match(result.stderr, /IOS_CERTIFICATE_BASE64/)
+  assert.match(result.stderr, /IOS_PROVISIONING_PROFILE_BASE64/)
+  assert.match(result.stderr, /EAS TestFlight workflow/)
+  assert.equal(result.outputs, 'signing_mode=none\\narchive_ready=false\\nupload_ready=false\\n')
+})
+
+test('native release preflight permits imported distribution signing material', () => {
+  const result = run({ ...manualArchive, ...api, IOS_REQUIRE_UPLOAD: 'true', IOS_REQUIRE_NATIVE_DISTRIBUTION: 'true' })
+  assert.equal(result.status, 0)
+  assert.equal(result.outputs, 'signing_mode=manual\\narchive_ready=true\\nupload_ready=true\\n')
+})
+
+test('both native iOS release workflows require distribution certificate preflight', () => {
+  for (const [file, mode] of [
+    ['release-ios.yml', "IOS_REQUIRE_NATIVE_DISTRIBUTION: 'true'"],
+    ['ios-build.yml', "IOS_REQUIRE_NATIVE_DISTRIBUTION: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight }}"],
+  ]) {
+    const workflow = fs.readFileSync(path.resolve(__dirname, '../.github/workflows', file), 'utf8')
+    assert.ok(workflow.includes(mode), file + ' must require manual native signing when releasing')
+  }
+})
