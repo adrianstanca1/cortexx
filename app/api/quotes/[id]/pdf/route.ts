@@ -2,7 +2,8 @@ import { NextRequest, NextResponse } from 'next/server'
 // pdfkit ships its own CJS entry; importing the default works with esModuleInterop.
 import PDFDocument from 'pdfkit'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
+import { canManage } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,11 +26,13 @@ function gbp(n: number): string {
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!auth.role || !canManage(auth.role))
+    return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
 
-  const quote = await prisma.quote.findUnique({
-    where: { id: params.id },
+  const quote = await prisma.quote.findFirst({
+    where: { id: params.id, organizationId: auth.orgId! },
     include: { customer: true },
   })
   if (!quote) return NextResponse.json({ error: 'Quote not found' }, { status: 404 })
@@ -49,7 +52,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     doc.rect(0, 0, doc.page.width, 90).fill(SLATE)
     doc.fillColor('#eef3fa').font('Helvetica-Bold').fontSize(22).text('QUOTE', 48, 30)
     doc.font('Helvetica').fontSize(11).fillColor('#8ea8c5').text(quote.number, 48, 60)
-    doc.fontSize(10).fillColor('#8ea8c5').text('Cortexx', doc.page.width - 48 - 80, 36, { width: 80, align: 'right' })
+    doc.fontSize(10).fillColor('#8ea8c5').text('Cortex Construct', doc.page.width - 48 - 80, 36, { width: 80, align: 'right' })
     doc.fontSize(9).fillColor('#8ea8c5').text('cortexbuildpro.tech', doc.page.width - 48 - 120, 52, { width: 120, align: 'right' })
 
     // ─── Meta block ───────────────────────────────────────────
