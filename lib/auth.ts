@@ -36,16 +36,16 @@ export const authConfig: NextAuthConfig = {
         const email = typeof credentials?.email === 'string' ? credentials.email.trim().toLowerCase() : ''
         const password = typeof credentials?.password === 'string' ? credentials.password : ''
         if (!email || !password) return null
-        // Throttle credentials attempts before account lookup, including MFA guesses.
-        // Use a per-account key so distributed IPs cannot bypass the MFA limit.
-        const limit = await rateLimit(`web-credentials:${email}`, RATE_PROFILES.auth.max, RATE_PROFILES.auth.windowMs)
-        if (!limit.ok) return null
         const user = await prisma.user.findUnique({ where: { email } })
         if (!user || !user.passwordHash) return null
         const ok = await bcrypt.compare(password, user.passwordHash)
         if (!ok) return null
         // The web and mobile routes must enforce the same account MFA policy.
         if (user.totpEnabledAt && user.totpSecret) {
+          // Limit MFA guesses per account across IPs, without locking ordinary
+          // non-MFA E2E sessions out during parallel browser test runs.
+          const limit = await rateLimit(`web-mfa:${user.id}`, RATE_PROFILES.auth.max, RATE_PROFILES.auth.windowMs)
+          if (!limit.ok) return null
           const code = typeof credentials?.totp === 'string' ? credentials.totp : ''
           if (!verifyTotp(user.totpSecret, code) &&
               !(await consumeBackupCode(user.id, user.totpBackupCodes, code))) return null
