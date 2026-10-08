@@ -2,7 +2,7 @@ const test = require('node:test')
 const assert = require('node:assert/strict')
 const bcrypt = require('bcryptjs')
 const { randomBytes } = require('node:crypto')
-const { generateSecret } = require('speakeasy')
+const speakeasy = require('speakeasy')
 const testPassword = randomBytes(24).toString('hex')
 
 // Exercise the real login handler with a transactional database double.
@@ -45,7 +45,7 @@ test.beforeEach(async () => {
   reset(); failCreate = false; creates = 0
   user = { id: 'user-test', email: 'test@example.com', name: 'Test', role: 'member',
     passwordHash: await bcrypt.hash(testPassword, 4), organizations: [],
-    totpEnabledAt: new Date(), totpSecret: generateSecret().base32,
+    totpEnabledAt: new Date(), totpSecret: speakeasy.generateSecret().base32,
     totpBackupCodes: [await bcrypt.hash(code, 4)] }
 })
 const login = extra => POST(new NextRequest('https://example.test/api/mobile/auth/login', {
