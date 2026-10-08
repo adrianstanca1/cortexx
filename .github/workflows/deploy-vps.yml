@@ -17,6 +17,7 @@ jobs:
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
+    timeout-minutes: 45
     permissions:
       contents: read
       actions: read
@@ -45,6 +46,7 @@ jobs:
           fi
 
       - name: Configure SSH client
+        timeout-minutes: 5
         run: |
           set -euo pipefail
           if [[ -z "${VPS_SSH_KEY:-}" && -z "${VPS_PASSWORD:-}" ]]; then
@@ -53,7 +55,7 @@ jobs:
           fi
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
+          timeout 30s ssh-keyscan -T 5 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 600 ~/.ssh/known_hosts
           if [[ -n "${VPS_SSH_KEY:-}" ]]; then
             printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/cortexx_deploy
