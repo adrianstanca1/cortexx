@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { reportError } from './errors'
 import { resolvePersona } from './persona'
-import { verifyTotp } from './totp'
+import { verifyTotp, consumeBackupCode } from './totp'
 
 export interface SessionOrgMembership {
   id: string
@@ -42,7 +42,8 @@ export const authConfig: NextAuthConfig = {
         // The web and mobile routes must enforce the same account MFA policy.
         if (user.totpEnabledAt && user.totpSecret) {
           const code = typeof credentials?.totp === 'string' ? credentials.totp : ''
-          if (!verifyTotp(user.totpSecret, code)) return null
+          if (!verifyTotp(user.totpSecret, code) &&
+              !(await consumeBackupCode(user.id, user.totpBackupCodes, code))) return null
         }
         return { id: user.id, email: user.email, name: user.name ?? undefined, role: user.role, passwordVersion: user.passwordChangedAt?.getTime() ?? null }
       },

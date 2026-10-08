@@ -43,7 +43,7 @@ export async function POST(req: NextRequest) {
     const result = await sendEmail({
       to: email, subject: 'Reset your Cortex Construct password',
       text: 'Reset your Cortex Construct password using this link (valid for 30 minutes):\n' + url + '\n\nIf you did not request this, ignore the message.',
-      html: '<p>We received a request to reset your Cortexx password.</p>' +
+      html: '<p>We received a request to reset your Cortex Construct password.</p>' +
         '<p><a href="' + url + '">Reset your password</a> (expires in 30 minutes).</p>' +
         '<p>If you did not request this, you can safely ignore this message.</p>',
     })

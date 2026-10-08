@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
-import { verifyTotp, verifyBackupCode } from '@/lib/totp'
+import { verifyTotp, consumeBackupCode } from '@/lib/totp'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,16 +39,9 @@ export async function POST(req: NextRequest) {
     return NextResponse.json({ ok: true, method: 'totp' })
   }
 
-  // Try as backup code. Each one is single-use.
-  const backupCodes = Array.isArray(user.totpBackupCodes) ? (user.totpBackupCodes as string[]) : []
-  const idx = await verifyBackupCode(backupCodes, code)
-  if (idx >= 0) {
-    const remaining = backupCodes.slice(0, idx).concat(backupCodes.slice(idx + 1))
-    await prisma.user.update({
-      where: { id: userId },
-      data: { totpBackupCodes: remaining },
-    })
-    return NextResponse.json({ ok: true, method: 'backup', backupCodesRemaining: remaining.length })
+  // The same atomic one-time code consumption used by both login routes.
+  if (await consumeBackupCode(userId, user.totpBackupCodes, code)) {
+    return NextResponse.json({ ok: true, method: 'backup' })
   }
 
   return NextResponse.json({ ok: false, error: 'Invalid code', code: 'INVALID_CODE' }, { status: 401 })

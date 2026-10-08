@@ -72,11 +72,11 @@ function LoginForm() {
         />
 
         <label htmlFor="totp" style={labelStyle}>Authenticator code (if enabled)</label>
-        <input id="totp" name="totp" type="text" inputMode="numeric" pattern="[0-9]{6}"
-          autoComplete="one-time-code" maxLength={6} value={totp}
-          onChange={e => setTotp(e.target.value.replace(/[^0-9]/g, ''))}
-          style={inputStyle} placeholder="6-digit code" />
-        <p style={{ fontSize: 12, color: 'var(--t3)', lineHeight: 1.5 }}>If two-factor authentication is enabled, enter your 6-digit code. An incorrect code will also prevent sign-in.</p>
+        <input id="totp" name="totp" type="text" inputMode="text"
+          autoComplete="one-time-code" maxLength={11} value={totp}
+          onChange={e => setTotp(e.target.value.toUpperCase().replace(/[^A-F0-9-]/g, ''))}
+          style={inputStyle} placeholder="6-digit or backup code" />
+        <p style={{ fontSize: 12, color: 'var(--t3)', lineHeight: 1.5 }}>If two-factor authentication is enabled, enter your 6-digit code or a saved one-time backup code. An incorrect code will also prevent sign-in.</p>
 
         {error && <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>{error}</div>}
 

@@ -6,7 +6,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { issueMobileToken } from '@/lib/mobileAuth'
-import { verifyTotp } from '@/lib/totp'
+import { verifyTotp, consumeBackupCode } from '@/lib/totp'
 import { resolvePersona } from '@/lib/persona'
 
 export const dynamic = 'force-dynamic'
@@ -39,7 +39,9 @@ export async function POST(req: NextRequest) {
   if (user.totpEnabledAt && user.totpSecret) {
     const code = typeof body.totp === 'string' ? body.totp.replace(/\s+/g, '') : ''
     if (!code) return NextResponse.json({ error: 'Two-factor code required', code: 'TOTP_REQUIRED' }, { status: 401 })
-    if (!verifyTotp(user.totpSecret, code)) return NextResponse.json({ error: 'Invalid two-factor code', code: 'TOTP_INVALID' }, { status: 401 })
+    if (!verifyTotp(user.totpSecret, code) &&
+        !(await consumeBackupCode(user.id, user.totpBackupCodes, code)))
+      return NextResponse.json({ error: 'Invalid two-factor or backup code', code: 'TOTP_INVALID' }, { status: 401 })
   }
 
   if (user.organizations.length === 0) {

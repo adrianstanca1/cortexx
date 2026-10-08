@@ -14,6 +14,7 @@
  *   4. /api/auth/2fa/disable   → POST { password } turns it off
  */
 import speakeasy from 'speakeasy'
+import { prisma } from './db'
 import { randomBytes } from 'node:crypto'
 import bcrypt from 'bcryptjs'
 import QRCode from 'qrcode'
@@ -77,4 +78,23 @@ export async function verifyBackupCode(hashedCodes: string[], submitted: string)
     if (await bcrypt.compare(normalized, hashedCodes[i])) return i
   }
   return -1
+}
+
+/** Consume a recovery code exactly once, even with concurrent login requests.
+ * Compares the complete hashed-code JSON list before updating; only the first
+ * successful request can delete this code and authenticate. */
+export async function consumeBackupCode(
+  userId: string,
+  saved: unknown,
+  entered: string,
+): Promise<boolean> {
+  if (!Array.isArray(saved) || !saved.every((c): c is string => typeof c === 'string')) return false
+  const matching = await verifyBackupCode(saved, entered)
+  if (matching < 0) return false
+  const remaining = saved.filter((_, index) => index !== matching)
+  const result = await prisma.user.updateMany({
+    where: { id: userId, totpBackupCodes: { equals: saved } },
+    data: { totpBackupCodes: remaining },
+  })
+  return result.count === 1
 }
