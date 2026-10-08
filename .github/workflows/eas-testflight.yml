@@ -11,6 +11,11 @@ on:
         description: "Apple build number to verify (blank checks newest available build)"
         required: false
         default: ""
+      sync_app_name:
+        description: "Explicitly rename existing App Store Connect app metadata to Cortexx (status mode only)"
+        required: false
+        type: boolean
+        default: false
       upload_method:
         description: "Submission path (direct sends the signed IPA to Apple from macOS)"
         required: false
@@ -292,6 +297,7 @@ jobs:
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
       APPLE_BUILD_NUMBER: ${{ inputs.apple_build_number }}
+      SYNC_APP_NAME: ${{ inputs.sync_app_name }}
     steps:
       - name: Verify Cortexx build and testing groups in Apple
         run: |
@@ -313,6 +319,49 @@ jobs:
             };
             const app = "6820322670";
             const appRecord = await request("/v1/apps/" + app);
+            if (appRecord.data?.id !== app || appRecord.data?.attributes?.bundleId !== "com.cortexbuild.app") {
+              throw Error("Existing TestFlight Apple app identity does not match Cortexx.");
+            }
+            if (process.env.SYNC_APP_NAME === "true") {
+              const appInfos = await request("/v1/apps/" + app + "/appInfos?limit=20");
+              const primaryLocale = appRecord.data?.attributes?.primaryLocale;
+              const info = (appInfos.data || [])[0];
+              if (!info) throw Error("Apple app information is unavailable; no metadata changed.");
+              const localizations = await request("/v1/appInfos/" + info.id + "/appInfoLocalizations?limit=200");
+              const current = (localizations.data || []).find(x => x.attributes?.locale === primaryLocale)
+                || (localizations.data || [])[0];
+              if (!current) throw Error("Apple app has no localization to rename; no metadata changed.");
+              console.log("Existing Apple app localization: " + current.attributes.locale + " / " + current.attributes.name);
+              if (current.attributes.name !== "Cortexx") {
+                const response = await fetch(
+                  "https://api.appstoreconnect.apple.com/v1/appInfoLocalizations/" + current.id,
+                  {
+                    method: "PATCH",
+                    headers: { ...headers, "content-type": "application/json" },
+                    body: JSON.stringify({
+                      data: {
+                        type: "appInfoLocalizations",
+                        id: current.id,
+                        attributes: { name: "Cortexx" }
+                      }
+                    })
+                  }
+                );
+                if (!response.ok) {
+                  const details = await response.json().catch(() => ({}));
+                  const error = (details.errors || [])[0] || {};
+                  console.error("Apple app rename rejected: HTTP " + response.status + " / " +
+                    (error.code || "unknown") + " / " + (error.detail || "").slice(0, 300));
+                  process.exitCode = 1;
+                } else {
+                  const confirmed = await response.json();
+                  console.log("Apple primary app localization renamed to: " + confirmed.data?.attributes?.name);
+                  if (confirmed.data?.attributes?.name !== "Cortexx") process.exitCode = 1;
+                }
+              } else {
+                console.log("Apple app name already Cortexx; no change required.");
+              }
+            }
             console.log("TestFlight target App Store Connect name: " + appRecord.data?.attributes?.name);
             console.log("TestFlight target Apple app ID: " + appRecord.data?.id);
             console.log("TestFlight target bundle identifier: " + appRecord.data?.attributes?.bundleId);
