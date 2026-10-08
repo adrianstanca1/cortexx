@@ -29,9 +29,14 @@ export async function signIn(page, email, password, { dashboard = false } = {}) 
   // Persona switches use a fresh API cookie jar, then copy only the resulting
   // Auth.js cookies into the browser context. This prevents stale session
   // cookies from a previous user contaminating RBAC journeys on mobile.
-  await page.context().clearCookies()
+  // Stop the previous persona's React/NextAuth background requests before
+  // replacing the browser cookie jar. On mobile Chromium, an in-flight session
+  // refresh can otherwise restore the previous user's cookie after clearCookies
+  // and defeat the isolated Auth.js login below.
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
   const origin = new URL(page.url()).origin
+  await page.goto('about:blank', { waitUntil: 'commit' })
+  await page.context().clearCookies()
   const authRequest = await playwrightRequest.newContext({ baseURL: origin })
   try {
     const csrfResponse = await authRequest.get('/api/auth/csrf')
