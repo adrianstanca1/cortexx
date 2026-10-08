@@ -175,7 +175,7 @@ for (const filename of ['ios-build.yml', 'release-ios.yml']) {
 
 test('ordinary iOS pushes never provision Apple certificates or attempt a signed archive', () => {
   const workflow = fs.readFileSync(path.resolve(__dirname, '../.github/workflows/ios-build.yml'), 'utf8')
-  assert.match(workflow, /upload_to_testflight:[\\s\\S]*?default: false/)
+  assert.ok(workflow.split('upload_to_testflight:')[1]?.split('concurrency:')[0].includes('default: false'))
   assert.match(workflow, /name: Note verification-only push/)
   for (const name of [
     'Import signing certificate',
