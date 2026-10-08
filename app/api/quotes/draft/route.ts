@@ -1,5 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
+import { canManage } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { isLlmUnavailable, isLlmEmpty, sanitizePromptValue, LLM_CONFIG } from '@/lib/llm'
 import { draftLineItems, checkDraftRateLimit, COMMON_UNITS, MAX_ITEMS, MAX_BRIEF_LEN } from '@/lib/llmDrafts'
@@ -7,11 +8,13 @@ import { draftLineItems, checkDraftRateLimit, COMMON_UNITS, MAX_ITEMS, MAX_BRIEF
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
-  const userId = (auth.user as { id?: string } | undefined)?.id || 'anon'
+  if (!auth.role || !canManage(auth.role))
+    return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
+  const userId = auth.userId || 'anon'
 
   const rl = checkDraftRateLimit(userId)
   if (!rl.ok) {
