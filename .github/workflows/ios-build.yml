@@ -11,6 +11,7 @@ on:
       - 'manifest.json'
       - 'sw.js'
       - 'scripts/check-ios-signing.mjs'
+      - 'scripts/configure-ios-manual-signing.rb'
       - '.github/workflows/ios-build.yml'
   workflow_dispatch:
     inputs:
@@ -57,6 +58,9 @@ jobs:
           IOS_REQUIRE_ARCHIVE: 'false'
           IOS_REQUIRE_UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight }}
         run: node scripts/check-ios-signing.mjs
+
+      - name: Validate manual distribution signing helper
+        run: ruby -c scripts/configure-ios-manual-signing.rb
 
       - name: Install JS dependencies
         working-directory: ios
