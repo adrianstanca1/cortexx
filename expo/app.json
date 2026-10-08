@@ -1,7 +1,7 @@
 {
   "expo": {
     "name": "Cortexx",
-    "slug": "cortexbuild-pro",
+    "slug": "cortexx",
     "version": "1.0.0",
     "sdkVersion": "57.0.0",
     "runtimeVersion": "1.0.0",
@@ -45,7 +45,7 @@
     "extra": {
       "apiUrl": "https://cortexbuildpro.tech",
       "eas": {
-        "projectId": "3b86383b-6d52-4ec4-afae-c8583b49f3d6"
+        "projectId": "76a768f6-ab7d-4c25-b71d-4b978a32ef61"
       }
     },
     "owner": "adrianstanca"

@@ -11,6 +11,11 @@ on:
         description: "Apple build number to verify (blank checks newest available build)"
         required: false
         default: ""
+      sync_app_name:
+        description: "Explicitly rename existing App Store Connect app metadata to Cortexx (status mode only)"
+        required: false
+        type: boolean
+        default: false
       upload_method:
         description: "Submission path (direct sends the signed IPA to Apple from macOS)"
         required: false
@@ -20,6 +25,8 @@ on:
           - expo
           - direct
           - status
+          - initialize
+          - link-signing
       what_to_test:
         description: Legacy release note (not sent to Expo Submit on non-Enterprise plans)
         required: false
@@ -292,6 +299,7 @@ jobs:
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
       APPLE_BUILD_NUMBER: ${{ inputs.apple_build_number }}
+      SYNC_APP_NAME: ${{ inputs.sync_app_name }}
     steps:
       - name: Verify Cortexx build and testing groups in Apple
         run: |
@@ -312,6 +320,58 @@ jobs:
               return response.json();
             };
             const app = "6820322670";
+            const appRecord = await request("/v1/apps/" + app);
+            if (appRecord.data?.id !== app || appRecord.data?.attributes?.bundleId !== "com.cortexbuild.app") {
+              throw Error("Existing TestFlight Apple app identity does not match Cortexx.");
+            }
+            if (process.env.SYNC_APP_NAME === "true") {
+              const appInfos = await request("/v1/apps/" + app + "/appInfos?limit=20");
+              const primaryLocale = appRecord.data?.attributes?.primaryLocale;
+              const info = (appInfos.data || [])[0];
+              if (!info) throw Error("Apple app information is unavailable; no metadata changed.");
+              const localizations = await request("/v1/appInfos/" + info.id + "/appInfoLocalizations?limit=200");
+              const current = (localizations.data || []).find(x => x.attributes?.locale === primaryLocale)
+                || (localizations.data || [])[0];
+              if (!current) throw Error("Apple app has no localization to rename; no metadata changed.");
+              console.log("Existing Apple app localization: " + current.attributes.locale + " / " + current.attributes.name);
+              if (current.attributes.name !== "Cortexx") {
+                const response = await fetch(
+                  "https://api.appstoreconnect.apple.com/v1/appInfoLocalizations/" + current.id,
+                  {
+                    method: "PATCH",
+                    headers: { ...headers, "content-type": "application/json" },
+                    body: JSON.stringify({
+                      data: {
+                        type: "appInfoLocalizations",
+                        id: current.id,
+                        attributes: { name: "Cortexx" }
+                      }
+                    })
+                  }
+                );
+                if (!response.ok) {
+                  const details = await response.json().catch(() => ({}));
+                  const error = (details.errors || [])[0] || {};
+                  console.error("Apple app rename rejected: HTTP " + response.status + " / " +
+                    (error.code || "unknown") + " / " + (error.detail || "").slice(0, 300));
+                  process.exitCode = 1;
+                } else {
+                  const confirmed = await response.json();
+                  console.log("Apple primary app localization renamed to: " + confirmed.data?.attributes?.name);
+                  if (confirmed.data?.attributes?.name !== "Cortexx") process.exitCode = 1;
+                }
+              } else {
+                console.log("Apple app name already Cortexx; no change required.");
+              }
+            }
+            console.log("TestFlight target App Store Connect name: " + appRecord.data?.attributes?.name);
+            console.log("TestFlight target Apple app ID: " + appRecord.data?.id);
+            console.log("TestFlight target bundle identifier: " + appRecord.data?.attributes?.bundleId);
+            const availableApps = await request("/v1/apps?limit=200");
+            const cortexxApps = (availableApps.data || []).filter(x => /cortexx/i.test(x.attributes?.name || ""));
+            console.log("Existing Apple records named Cortexx: " + JSON.stringify(cortexxApps.map(x => ({
+              id: x.id, name: x.attributes.name, bundleId: x.attributes.bundleId
+            }))));
             const builds = await request("/v1/builds?filter%5Bapp%5D=" + app + "&limit=100&sort=-uploadedDate");
             const latest = (builds.data || []).find(x => !process.env.APPLE_BUILD_NUMBER || x.attributes?.version === process.env.APPLE_BUILD_NUMBER);
             if (!latest) {
@@ -347,4 +407,137 @@ jobs:
             }
           }
           main().catch(error => { console.error("Apple verification failed: " + error.message); process.exitCode = 1; });
+          NODE
+
+  initialize-cortexx-eas:
+    if: ${{ inputs.upload_method == 'initialize' }}
+    name: Initialize Cortexx EAS iOS build version
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - name: Safely initialize version after previous Apple build 19
+        run: |
+          node <<'NODE'
+          const appId = '76a768f6-ab7d-4c25-b71d-4b978a32ef61';
+          const bundleId = 'com.cortexbuild.app';
+          const lastAppleBuild = 19;
+          if (!process.env.EXPO_TOKEN) throw Error('Expo API token is not configured.');
+          async function api(query, variables) {
+            const response = await fetch('https://api.expo.dev/graphql', {
+              method: 'POST',
+              headers: { authorization: 'Bearer ' + process.env.EXPO_TOKEN, 'content-type': 'application/json' },
+              body: JSON.stringify({ query, variables })
+            });
+            if (!response.ok) throw Error('Expo GraphQL HTTP ' + response.status);
+            const result = await response.json();
+            if (result.errors?.length) throw Error('Expo GraphQL: ' + result.errors.map(e => e.message).join('; ').slice(0, 350));
+            return result.data;
+          }
+          async function main() {
+            const query = `query LatestAppVersion($appId: String!, $platform: AppPlatform!, $applicationIdentifier: String!) { app { byId(appId: $appId) { id latestAppVersionByPlatformAndApplicationIdentifier(platform: $platform, applicationIdentifier: $applicationIdentifier) { buildVersion storeVersion } } } }`;
+            const variables = { appId, platform: 'IOS', applicationIdentifier: bundleId };
+            const first = (await api(query, variables)).app.byId;
+            if (first.id !== appId) throw Error('Expo project ID mismatch');
+            const previous = first.latestAppVersionByPlatformAndApplicationIdentifier?.buildVersion;
+            if (previous) {
+              if (!/^\d+$/.test(previous)) throw Error('Unexpected non-numeric iOS build number');
+              if (Number(previous) >= lastAppleBuild) {
+                console.log('Cortexx iOS remote version already initialized at ' + previous + ', leaving it unchanged.');
+                return;
+              }
+            }
+            const mutation = `mutation CreateAppVersionMutation($appVersionInput: AppVersionInput!) { appVersion { createAppVersion(appVersionInput: $appVersionInput) { id buildVersion } } }`;
+            const created = await api(mutation, { appVersionInput: { appId, platform: 'IOS', applicationIdentifier: bundleId, storeVersion: '1.0.0', buildVersion: String(lastAppleBuild), runtimeVersion: '1.0.0' } });
+            console.log('Cortexx remote iOS build number initialized to ' + created.appVersion.createAppVersion.buildVersion + '; next production build auto-increments.');
+          }
+          main().catch(error => { console.error(error.message); process.exitCode = 1; });
+          NODE
+
+  link-cortexx-signing:
+    if: ${{ inputs.upload_method == 'link-signing' }}
+    name: Reuse legacy Apple signing references for Cortexx EAS
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+    steps:
+      - name: Reuse existing Expo signing certificate and provisioning profile by ID
+        run: |
+          node <<'NODE'
+          const legacyId = "3b86383b-6d52-4ec4-afae-c8583b49f3d6";
+          const cortexxId = "76a768f6-ab7d-4c25-b71d-4b978a32ef61";
+          const bundle = "com.cortexbuild.app";
+          if (!process.env.EXPO_TOKEN) throw Error("EXPO_TOKEN secret is missing");
+          async function gql(query, variables) {
+            const response = await fetch("https://api.expo.dev/graphql", {
+              method: "POST",
+              headers: { authorization: "Bearer " + process.env.EXPO_TOKEN, "content-type": "application/json" },
+              body: JSON.stringify({ query, variables })
+            });
+            if (!response.ok) throw Error("Expo API returned HTTP " + response.status);
+            const result = await response.json();
+            if (result.errors?.length) throw Error(result.errors.map(e => e.message).join("; ").slice(0, 350));
+            return result.data;
+          }
+          const credFields = "id appleTeam { id } appleAppIdentifier { id bundleIdentifier } iosAppBuildCredentialsList { id iosDistributionType distributionCertificate { id } provisioningProfile { id } }";
+          async function credentials() {
+            const query = "query CortexxSigning($legacyId: String!, $cortexxId: String!) { app { legacy: byId(appId: $legacyId) { id iosAppCredentials { " + credFields + " } } cortexx: byId(appId: $cortexxId) { id iosAppCredentials { " + credFields + " } } } }";
+            const data = await gql(query, { legacyId, cortexxId });
+            if (data.app.legacy?.id !== legacyId || data.app.cortexx?.id !== cortexxId) throw Error("Expo project IDs do not match expected apps");
+            return data.app;
+          }
+          async function main() {
+            let data = await credentials();
+            console.log("Legacy signing record overview: " + JSON.stringify((data.legacy.iosAppCredentials || []).map(c => ({
+              bundle: c.appleAppIdentifier?.bundleIdentifier || "unspecified",
+              teamLinked: !!c.appleTeam?.id,
+              buildTypes: (c.iosAppBuildCredentialsList || []).map(v => ({
+                type: v.iosDistributionType, certificateLinked: !!v.distributionCertificate?.id,
+                profileLinked: !!v.provisioningProfile?.id
+              }))
+            }))));
+            const source = (data.legacy.iosAppCredentials || []).find(c => c.appleAppIdentifier?.bundleIdentifier === bundle);
+            const release = (source?.iosAppBuildCredentialsList || []).find(c => c.iosDistributionType === "APP_STORE");
+            if (!source.appleAppIdentifier?.id ||
+                !release?.distributionCertificate?.id || !release?.provisioningProfile?.id) {
+              throw Error("Legacy project has no complete App Store signing association. No changes made.");
+            }
+            let target = (data.cortexx.iosAppCredentials || []).find(c => c.appleAppIdentifier?.id === source.appleAppIdentifier.id);
+            if (!target) {
+              const mutation = "mutation CreateIosAppCredentialsMutation($iosAppCredentialsInput: IosAppCredentialsInput!, $appId: ID!, $appleAppIdentifierId: ID!) { iosAppCredentials { createIosAppCredentials(iosAppCredentialsInput: $iosAppCredentialsInput, appId: $appId, appleAppIdentifierId: $appleAppIdentifierId) { id } } }";
+              const created = await gql(mutation, { iosAppCredentialsInput: source.appleTeam?.id ? { appleTeamId: source.appleTeam.id } : {}, appId: cortexxId, appleAppIdentifierId: source.appleAppIdentifier.id });
+              if (!created.iosAppCredentials?.createIosAppCredentials?.id) throw Error("Cannot create Cortexx signing association");
+              console.log("Cortexx linked to existing Apple team and bundle identifier.");
+              data = await credentials();
+              target = (data.cortexx.iosAppCredentials || []).find(c => c.appleAppIdentifier?.id === source.appleAppIdentifier.id);
+            }
+            if (!target) throw Error("Cortexx iOS app credentials are missing after linking");
+            const existing = (target.iosAppBuildCredentialsList || []).find(c => c.iosDistributionType === "APP_STORE");
+            if (existing) {
+              if (existing.distributionCertificate?.id !== release.distributionCertificate.id ||
+                  existing.provisioningProfile?.id !== release.provisioningProfile.id) {
+                throw Error("Cortexx has different signing credentials; leaving them unchanged for manual review.");
+              }
+              console.log("Cortexx already uses the matching App Store signing credentials.");
+              return;
+            }
+            const mutation = "mutation CreateIosAppBuildCredentialsMutation($iosAppBuildCredentialsInput: IosAppBuildCredentialsInput!, $iosAppCredentialsId: ID!) { iosAppBuildCredentials { createIosAppBuildCredentials(iosAppBuildCredentialsInput: $iosAppBuildCredentialsInput, iosAppCredentialsId: $iosAppCredentialsId) { id } } }";
+            const created = await gql(mutation, { iosAppBuildCredentialsInput: { iosDistributionType: "APP_STORE", distributionCertificateId: release.distributionCertificate.id, provisioningProfileId: release.provisioningProfile.id }, iosAppCredentialsId: target.id });
+            if (!created.iosAppBuildCredentials?.createIosAppBuildCredentials?.id) throw Error("Unable to link the existing signing assets");
+            data = await credentials();
+            const linked = (data.cortexx.iosAppCredentials || []).find(c => c.appleAppIdentifier?.id === source.appleAppIdentifier.id);
+            const linkedRelease = (linked?.iosAppBuildCredentialsList || []).find(c => c.iosDistributionType === "APP_STORE");
+            if (linkedRelease?.distributionCertificate?.id !== release.distributionCertificate.id ||
+                linkedRelease?.provisioningProfile?.id !== release.provisioningProfile.id) {
+              throw Error("Signed credential linkage could not be verified");
+            }
+            console.log("Cortexx now reuses the existing Apple Distribution certificate and App Store provisioning profile without replacing or exporting private keys.");
+          }
+          main().catch(error => { console.error(error.message); process.exitCode = 1; });
           NODE

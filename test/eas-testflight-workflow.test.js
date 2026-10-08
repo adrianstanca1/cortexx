@@ -74,3 +74,42 @@ test('Apple TestFlight status check verifies requested build and tester distribu
   assert.ok(workflow.includes('if (state !== "IN_BETA_TESTING") process.exitCode = 1;'))
   assert.doesNotMatch(workflow, /const latest = .*version === "15"/)
 })
+
+test('Cortexx Expo project keeps the existing App Store Connect app and logs target app identity', () => {
+  const app = JSON.parse(fs.readFileSync('expo/app.json', 'utf8')).expo
+  const eas = JSON.parse(fs.readFileSync('expo/eas.json', 'utf8'))
+  assert.equal(app.slug, 'cortexx')
+  assert.equal(app.extra.eas.projectId, '76a768f6-ab7d-4c25-b71d-4b978a32ef61')
+  assert.equal(app.ios.bundleIdentifier, 'com.cortexbuild.app')
+  assert.equal(eas.submit.production.ios.ascAppId, '6820322670')
+  assert.ok(workflow.includes('TestFlight target App Store Connect name:'))
+  assert.ok(workflow.includes('Existing Apple records named Cortexx:'))
+})
+
+test('Apple app name change is explicit, bundle guarded, and scoped to an app info localization', () => {
+  assert.match(workflow, /sync_app_name:/)
+  assert.ok(workflow.includes('SYNC_APP_NAME: ${{ inputs.sync_app_name }}'))
+  assert.ok(workflow.includes('if (process.env.SYNC_APP_NAME === "true")'))
+  assert.ok(workflow.includes('appInfoLocalizations/'))
+  assert.ok(workflow.includes('attributes: { name: "Cortexx" }'))
+  assert.ok(workflow.includes('appRecord.data?.attributes?.bundleId !== "com.cortexbuild.app"'))
+})
+
+test('new Cortexx EAS initializes iOS build numbers at the prior Apple build, never decrements them', () => {
+  assert.match(workflow, /initialize-cortexx-eas:/)
+  assert.match(workflow, /lastAppleBuild = 19;/)
+  assert.match(workflow, /Number\(previous\) >= lastAppleBuild/)
+  assert.match(workflow, /createAppVersion\(appVersionInput:/)
+  assert.match(workflow, /buildVersion: String\(lastAppleBuild\)/)
+  assert.ok(workflow.includes("appId = '76a768f6-ab7d-4c25-b71d-4b978a32ef61'"))
+})
+
+test('new Cortexx EAS signing links existing certificate and provisioning profile IDs only', () => {
+  assert.match(workflow, /link-cortexx-signing:/)
+  assert.ok(workflow.includes('const legacyId = "3b86383b-6d52-4ec4-afae-c8583b49f3d6"'))
+  assert.ok(workflow.includes('source.appleAppIdentifier.id'))
+  assert.ok(workflow.includes('distributionCertificateId: release.distributionCertificate.id'))
+  assert.ok(workflow.includes('provisioningProfileId: release.provisioningProfile.id'))
+  assert.ok(workflow.includes('without replacing or exporting private keys'))
+  assert.doesNotMatch(workflow, /deleteDistributionCertificate/)
+})
