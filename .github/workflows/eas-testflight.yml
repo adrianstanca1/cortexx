@@ -7,6 +7,14 @@ on:
         description: "Existing successful Expo iOS build ID (skips rebuilding)"
         required: false
         default: ""
+      upload_method:
+        description: "Submission path (direct sends the signed IPA to Apple from macOS)"
+        required: false
+        type: choice
+        default: expo
+        options:
+          - expo
+          - direct
       what_to_test:
         description: TestFlight "What to Test" note
         required: false
@@ -21,6 +29,7 @@ concurrency:
 
 jobs:
   build-and-submit:
+    if: ${{ inputs.upload_method != 'direct' }}
     name: EAS build and TestFlight submit
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -189,3 +198,81 @@ jobs:
       - name: Clean up App Store Connect key
         if: always()
         run: rm -f "$RUNNER_TEMP/AuthKey.p8"
+
+  direct-apple-upload:
+    if: ${{ inputs.upload_method == 'direct' }}
+    name: Upload existing signed IPA directly to Apple
+    runs-on: macos-latest
+    timeout-minutes: 60
+    env:
+      EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+      BUILD_ID: ${{ inputs.build_id }}
+
+    steps:
+      - name: Checkout release for Expo config
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Set up Node for Expo CLI
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Validate direct upload inputs
+        shell: bash
+        run: |
+          set -euo pipefail
+          if [ -z "$EXPO_TOKEN" ] || [ -z "$APP_STORE_CONNECT_KEY_ID" ] || [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] || [ -z "$APP_STORE_CONNECT_KEY_BASE64" ] || [ -z "$BUILD_ID" ]; then
+            echo "::error::Direct Apple upload requires Expo token, App Store Connect team credentials, and an existing EAS build ID."
+            exit 1
+          fi
+
+      - name: Download exact signed production IPA
+        working-directory: expo
+        shell: bash
+        run: |
+          set -euo pipefail
+          npx --yes eas-cli@24.11.0 build:view "$BUILD_ID" --json > "$RUNNER_TEMP/eas-build.json"
+          node -e '
+            const fs = require("node:fs");
+            const build = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            if (build.id !== process.env.BUILD_ID || build.platform !== "IOS" || build.status !== "FINISHED" || !build.artifacts?.buildUrl?.startsWith("https://")) {
+              throw new Error("EAS build is not a finished iOS build with a signed IPA artifact");
+            }
+            console.log("Verified signed EAS iOS build " + build.id);
+          ' "$RUNNER_TEMP/eas-build.json"
+          IPA_URL="$(node -e 'const b=require(process.argv[1]);process.stdout.write(b.artifacts.buildUrl)' "$RUNNER_TEMP/eas-build.json")"
+          curl --fail --location --silent --show-error --retry 3 --output "$RUNNER_TEMP/Cortexx.ipa" "$IPA_URL"
+          unzip -t "$RUNNER_TEMP/Cortexx.ipa" > /dev/null
+          unzip -Z -1 "$RUNNER_TEMP/Cortexx.ipa" | grep -Eq "^Payload/[^/]+\.app/Info\.plist$"
+          echo "Signed IPA downloaded and archive validated."
+
+      - name: Install Apple-issued API key in ephemeral macOS runner
+        shell: bash
+        run: |
+          set -euo pipefail
+          umask 077
+          mkdir -p "$HOME/.appstoreconnect/private_keys"
+          KEY_PATH="$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8"
+          printf "%s" "$APP_STORE_CONNECT_KEY_BASE64" | base64 -D > "$KEY_PATH"
+          chmod 600 "$KEY_PATH"
+          if ! openssl pkey -in "$KEY_PATH" -noout >/dev/null 2>&1; then
+            echo "::error::GitHub secret does not decode to a valid Apple PKCS#8 private key."
+            exit 1
+          fi
+
+      - name: Upload signed IPA directly to App Store Connect
+        shell: bash
+        run: |
+          set -euo pipefail
+          xcrun altool --upload-app --type ios --file "$RUNNER_TEMP/Cortexx.ipa" --apiKey "$APP_STORE_CONNECT_KEY_ID" --apiIssuer "$APP_STORE_CONNECT_ISSUER_ID"
+
+      - name: Remove ephemeral Apple key and IPA
+        if: always()
+        shell: bash
+        run: |
+          rm -f "$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8" "$RUNNER_TEMP/Cortexx.ipa" "$RUNNER_TEMP/eas-build.json"
