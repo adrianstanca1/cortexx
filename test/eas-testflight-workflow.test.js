@@ -106,7 +106,7 @@ test('new Cortexx EAS initializes iOS build numbers at the prior Apple build, ne
 
 test('new Cortexx EAS signing links existing certificate and provisioning profile IDs only', () => {
   assert.match(workflow, /link-cortexx-signing:/)
-  assert.match(workflow, /credentials.*legacy/)
+  assert.ok(workflow.includes('const legacyId = "3b86383b-6d52-4ec4-afae-c8583b49f3d6"'))
   assert.ok(workflow.includes('source.appleAppIdentifier.id'))
   assert.ok(workflow.includes('distributionCertificateId: release.distributionCertificate.id'))
   assert.ok(workflow.includes('provisioningProfileId: release.provisioningProfile.id'))
