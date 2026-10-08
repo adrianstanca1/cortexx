@@ -2,7 +2,7 @@ import { expect, request as playwrightRequest } from '@playwright/test'
 
 export async function openLogin(page) {
   await page.goto('/login', { waitUntil: 'domcontentloaded' })
-  await expect(page.getByRole('heading', { name: /sign in to cortexx/i })).toBeVisible({ timeout: 15_000 })
+  await expect(page.getByRole('heading', { name: /sign in to cortex construct/i })).toBeVisible({ timeout: 15_000 })
 }
 
 export async function enterCredentials(page, email, password) {

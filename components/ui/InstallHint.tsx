@@ -68,7 +68,7 @@ export default function InstallHint() {
   return (
     <div
       role="dialog"
-      aria-label="Install Cortexx"
+      aria-label="Install Cortex Construct"
       style={{
         position: 'fixed',
         left: 12,
@@ -87,7 +87,7 @@ export default function InstallHint() {
       }}
     >
       <div style={{ flex: 1, fontFamily: 'var(--font-system)' }}>
-        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>Install Cortexx</div>
+        <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>Install Cortex Construct</div>
         <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>
           {hint === 'ios'
             ? <>Tap <span aria-label="share">⬆</span> then <strong>Add to Home Screen</strong></>

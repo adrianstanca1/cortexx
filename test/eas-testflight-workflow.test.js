@@ -84,7 +84,7 @@ test('Cortexx Expo project keeps the existing App Store Connect app and logs tar
   assert.equal(app.ios.bundleIdentifier, 'com.cortexbuild.app')
   assert.equal(eas.submit.production.ios.ascAppId, '6820322670')
   assert.ok(workflow.includes('TestFlight target App Store Connect name:'))
-  assert.ok(workflow.includes('Existing Apple records named Cortexx:'))
+  assert.ok(workflow.includes('Existing Apple records named Cortex Construct:'))
 })
 
 test('Apple app name change is explicit, bundle guarded, and scoped to an app info localization', () => {
@@ -92,7 +92,7 @@ test('Apple app name change is explicit, bundle guarded, and scoped to an app in
   assert.ok(workflow.includes('SYNC_APP_NAME: ${{ inputs.sync_app_name }}'))
   assert.ok(workflow.includes('if (process.env.SYNC_APP_NAME === "true")'))
   assert.ok(workflow.includes('appInfoLocalizations/'))
-  assert.ok(workflow.includes('attributes: { name: "Cortexx" }'))
+  assert.ok(workflow.includes('attributes: { name: "Cortex Construct" }'))
   assert.ok(workflow.includes('appRecord.data?.attributes?.bundleId !== "com.cortexbuild.app"'))
 })
 

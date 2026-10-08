@@ -101,7 +101,7 @@ export default function SWRegister() {
     >
       <div style={{ flex: 1, fontFamily: 'var(--font-system)' }}>
         <div style={{ fontSize: 13, fontWeight: 700, color: 'var(--t1)' }}>New version available</div>
-        <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>Reload to get the latest Cortexx</div>
+        <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>Reload to get the latest Cortex Construct</div>
       </div>
       <button type="button"
         onClick={apply}

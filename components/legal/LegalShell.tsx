@@ -52,7 +52,7 @@ export default function LegalShell({ title, updated, children }: LegalShellProps
         .legal-wrap .sub { color: #7a9cc0; font-size: 15px; margin: 0 0 16px; }
       `}</style>
       <div className="legal-wrap">
-        <Link href="/" className="back">← Back to Cortexx</Link>
+        <Link href="/" className="back">← Back to Cortex Construct</Link>
         <h1>{title}</h1>
         {updated && <p className="updated">{updated}</p>}
         {children}

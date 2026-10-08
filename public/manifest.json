@@ -1,24 +1,62 @@
 {
-  "name": "CortexBuild Pro",
-  "short_name": "CortexBuild",
-  "description": "The construction OS for UK SMB contractors — AI estimating, CIS/HMRC compliance, RAMS & CSCS tracking, and live site capture. Built for builders, not bureaucrats.",
+  "name": "Cortex Construct",
+  "short_name": "Cortex Construct",
+  "description": "The construction OS for UK SMB contractors \u2014 AI estimating, CIS/HMRC compliance, RAMS & CSCS tracking, and live site capture. Built for builders, not bureaucrats.",
   "start_url": "/Cortexx.html",
   "scope": "/",
   "display": "standalone",
   "background_color": "#0a0f1a",
   "theme_color": "#0a0f1a",
   "orientation": "portrait",
-  "categories": ["business", "productivity"],
+  "categories": [
+    "business",
+    "productivity"
+  ],
   "icons": [
-    { "src": "/icon-192.png",          "sizes": "192x192", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-512.png",          "sizes": "512x512", "type": "image/png", "purpose": "any" },
-    { "src": "/icon-192-maskable.png", "sizes": "192x192", "type": "image/png", "purpose": "maskable" },
-    { "src": "/icon-512-maskable.png", "sizes": "512x512", "type": "image/png", "purpose": "maskable" }
+    {
+      "src": "/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any"
+    },
+    {
+      "src": "/icon-192-maskable.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "maskable"
+    },
+    {
+      "src": "/icon-512-maskable.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
   ],
   "shortcuts": [
-    { "name": "Capture",  "short_name": "Capture",  "url": "/capture",   "description": "Open the capture screen" },
-    { "name": "Tasks",    "short_name": "Tasks",    "url": "/tasks",     "description": "View open tasks" },
-    { "name": "Projects", "short_name": "Projects", "url": "/projects",  "description": "View all projects" }
+    {
+      "name": "Capture",
+      "short_name": "Capture",
+      "url": "/capture",
+      "description": "Open the capture screen"
+    },
+    {
+      "name": "Tasks",
+      "short_name": "Tasks",
+      "url": "/tasks",
+      "description": "View open tasks"
+    },
+    {
+      "name": "Projects",
+      "short_name": "Projects",
+      "url": "/projects",
+      "description": "View all projects"
+    }
   ],
   "screenshots": [
     {
@@ -26,14 +64,14 @@
       "sizes": "750x1334",
       "type": "image/png",
       "form_factor": "narrow",
-      "label": "CortexBuild Pro mobile dashboard"
+      "label": "Cortex Construct mobile dashboard"
     },
     {
       "src": "/screenshot-wide.png",
       "sizes": "1280x800",
       "type": "image/png",
       "form_factor": "wide",
-      "label": "CortexBuild Pro web dashboard"
+      "label": "Cortex Construct web dashboard"
     }
   ],
   "related_applications": [

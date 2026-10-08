@@ -52,7 +52,7 @@ export default function RegisterPage() {
           Create your account
         </h1>
         <p style={{ fontSize: 13, color: 'var(--t2)', marginBottom: 8, fontFamily: 'var(--font-system)' }}>
-          Cortexx construction management
+          Cortex Construct construction management
         </p>
 
         <label htmlFor="field-58" style={labelStyle}>Name (optional)</label>
