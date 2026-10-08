@@ -1,4 +1,5 @@
 import { SignJWT, jwtVerify, type JWTPayload } from 'jose'
+import { createHash } from 'node:crypto'
 
 const ISSUER = 'cortexbuild-mobile'
 const AUDIENCE = 'cortexbuild-api'
@@ -11,6 +12,7 @@ export interface MobileTokenClaims extends JWTPayload {
   email: string
   name?: string
   appRole?: string
+  pwd?: string
 }
 
 function secretBytes(): Uint8Array {
@@ -27,6 +29,7 @@ export async function issueMobileToken(input: {
   email: string
   name?: string | null
   appRole?: string | null
+  passwordHash?: string | null
 }): Promise<string> {
   return new SignJWT({
     orgId: input.organizationId,
@@ -34,6 +37,7 @@ export async function issueMobileToken(input: {
     email: input.email,
     name: input.name || undefined,
     appRole: input.appRole || undefined,
+    pwd: input.passwordHash ? createHash('sha256').update(input.passwordHash).digest('hex') : undefined,
   })
     .setProtectedHeader({ alg: 'HS256', typ: 'JWT' })
     .setSubject(input.userId)

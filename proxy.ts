@@ -100,6 +100,7 @@ const PUBLIC_PATHS = new Set<string>([
   '/',                  // root — page handler decides marketing-vs-dashboard by auth
   '/login',
   '/register',
+  '/reset-password',
   '/pricing',
   '/marketing',
   '/marketing.html',
@@ -124,6 +125,7 @@ const PUBLIC_PATHS = new Set<string>([
 const PUBLIC_API_PREFIXES = [
   '/api/auth/',
   '/api/mobile/auth/login',
+  '/api/mobile/auth/register',
   '/api/health',
   '/api/metrics',    // public Web Vitals sink; route-level rate limit validates payload
   '/api/webhooks/',  // Stripe et al; signature-verified inside the handlers

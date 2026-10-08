@@ -13,6 +13,7 @@ model User {
   name                   String?
   email                  String                  @unique
   passwordHash           String?
+  passwordChangedAt      DateTime?
   emailVerified          DateTime?
   image                  String?
   role                   String                  @default("member") // legacy app-level role; per-org role lives on UserOrganization

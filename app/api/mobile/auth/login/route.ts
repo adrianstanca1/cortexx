@@ -1,4 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
+import { Prisma } from '@prisma/client'
+import { findAvailableSlug } from '@/lib/org'
+import { reportError } from '@/lib/errors'
 import bcrypt from 'bcryptjs'
 import { prisma } from '@/lib/db'
 import { enforceRateLimit } from '@/lib/rateLimit'
@@ -13,7 +16,7 @@ export async function POST(req: NextRequest) {
   const limited = await enforceRateLimit(req, 'auth')
   if (limited) return limited
 
-  let body: { email?: unknown; password?: unknown; organizationId?: unknown; totp?: unknown }
+  let body: { email?: unknown; password?: unknown; organizationId?: unknown; totp?: unknown; workspaceName?: unknown }
   try { body = await req.json() } catch { return NextResponse.json({ error: 'Invalid JSON body' }, { status: 400 }) }
 
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
@@ -40,7 +43,43 @@ export async function POST(req: NextRequest) {
   }
 
   if (user.organizations.length === 0) {
-    return NextResponse.json({ error: 'No organization assigned', code: 'NO_ORG' }, { status: 403 })
+    const workspaceName = typeof body.workspaceName === 'string' ? body.workspaceName.trim() : ''
+    if (!workspaceName) {
+      return NextResponse.json({
+        error: 'Your account needs a workspace. Create a company workspace to continue.',
+        code: 'NO_ORG',
+      }, { status: 403 })
+    }
+    if (workspaceName.length > 100) return NextResponse.json({ error: 'Company name is too long' }, { status: 400 })
+    try {
+      const slug = await findAvailableSlug(workspaceName)
+      const trialEndsAt = new Date(Date.now() + 14 * 86400000)
+      const organization = await prisma.$transaction(async tx => {
+        const created = await tx.organization.create({ data: { name: workspaceName, slug, plan: 'trial', trialEndsAt } })
+        await tx.userOrganization.create({
+          data: { userId: user.id, organizationId: created.id, role: 'owner', personaRole: 'company_admin' },
+        })
+        return created
+      })
+      const token = await issueMobileToken({
+        userId: user.id, organizationId: organization.id, organizationRole: 'owner',
+        email: user.email, name: user.name, appRole: 'company_admin', passwordHash: user.passwordHash,
+      })
+      const summary = { id: organization.id, slug: organization.slug, name: organization.name }
+      return NextResponse.json({
+        token,
+        user: { id: user.id, email: user.email, name: user.name, role: 'company_admin',
+          organizationRole: 'owner', organization: summary,
+          organizations: [{ ...summary, role: 'owner', personaRole: 'company_admin' }],
+        },
+      })
+    } catch (error) {
+      if (error instanceof Prisma.PrismaClientKnownRequestError && error.code === 'P2002') {
+        return NextResponse.json({ error: 'Company name is already in use. Choose another name.' }, { status: 409 })
+      }
+      reportError(error, { context: 'mobile.auth.onboard' })
+      return NextResponse.json({ error: 'Unable to create workspace' }, { status: 500 })
+    }
   }
 
   const requestedOrgId = typeof body.organizationId === 'string' ? body.organizationId : ''
@@ -55,6 +94,7 @@ export async function POST(req: NextRequest) {
     email: user.email,
     name: user.name,
     appRole: personaRole,
+    passwordHash: user.passwordHash,
   })
 
   return NextResponse.json({

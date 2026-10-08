@@ -28,7 +28,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: 'New password must be different from current' }, { status: 400 })
     }
 
-    const userId = (auth.user as { id?: string }).id
     if (!userId) {
       return NextResponse.json({ error: 'Session missing user id' }, { status: 401 })
     }
@@ -42,7 +41,7 @@ export async function POST(req: NextRequest) {
     }
 
     const passwordHash = await bcrypt.hash(next, 12)
-    await prisma.user.update({ where: { id: userId }, data: { passwordHash } })
+    await prisma.user.update({ where: { id: userId }, data: { passwordHash, passwordChangedAt: new Date() } })
     return NextResponse.json({ success: true })
   } catch (error) {
     reportError(error)

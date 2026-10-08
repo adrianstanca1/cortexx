@@ -26,24 +26,50 @@ export type AuthUser = {
   organizations?: Array<{ id: string; slug: string; name: string; role: string; personaRole?: string }>;
 };
 
-export async function login(email: string, password: string, totp?: string): Promise<{ token: string; user: AuthUser }> {
-  const res = await fetch(`${API_URL}/api/mobile/auth/login`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ email, password, ...(totp ? { totp } : {}) }),
-  });
-  const body = await res.json().catch(() => ({}));
+type AuthResponse = { token: string; user: AuthUser };
+
+async function publicPost(path: string, payload: Record<string, unknown>): Promise<any> {
+  let res: Response;
+  try {
+    res = await fetch(`${API_URL}${path}`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', accept: 'application/json' },
+      body: JSON.stringify(payload),
+    });
+  } catch {
+    throw new Error('Could not reach Cortexx. Check your connection and try again.');
+  }
+  const body = await res.json().catch(() => null);
   if (!res.ok) {
-    const err = new Error(body?.error || 'Login failed') as Error & { code?: string };
+    const err = new Error(body?.error || (res.status === 429 ? 'Too many attempts. Please try again shortly.' : 'Server unavailable. Please try again.')) as Error & { code?: string };
     err.code = body?.code;
     throw err;
   }
-  if (!body?.token) throw new Error('No token returned');
-  await api.setToken(body.token);
+  if (!body) throw new Error('Unexpected response from server.');
   return body;
 }
 
+async function persistSession(body: AuthResponse): Promise<AuthResponse> {
+  if (!body?.token || !body?.user?.id) throw new Error('Invalid sign-in response.');
+  await api.setToken(body.token);
+  if ((await api.getToken()) !== body.token) throw new Error('Unable to save your secure session. Please try again.');
+  return body;
+}
+
+export async function login(email: string, password: string, totp?: string, workspaceName?: string): Promise<AuthResponse> {
+  return persistSession(await publicPost('/api/mobile/auth/login', { email: email.trim().toLowerCase(), password, ...(totp ? { totp } : {}), ...(workspaceName ? { workspaceName } : {}) }));
+}
+
+export async function registerAccount(data: { name: string; email: string; password: string; workspaceName: string }): Promise<AuthResponse> {
+  return persistSession(await publicPost('/api/mobile/auth/register', data));
+}
+
+export async function requestPasswordReset(email: string): Promise<{ message: string }> {
+  return publicPost('/api/auth/password-reset/request', { email: email.trim().toLowerCase() });
+}
+
 export async function getMe(): Promise<AuthUser | null> {
+  if (!(await getToken())) return null;
   try {
     const body = await api.apiGet('/api/mobile/auth/me');
     const user = (body?.user || null) as AuthUser | null;
@@ -54,9 +80,11 @@ export async function getMe(): Promise<AuthUser | null> {
       organizationRole: user.organizationRole || active?.role,
       organization: user.organization || (active ? { id: active.id, slug: active.slug, name: active.name } : undefined),
     };
-  } catch {
-    await api.clearToken();
-    return null;
+  } catch (error: any) {
+    // Only a rejected credential should log out an existing device.
+    // Mobile networks frequently drop requests; preserve the session for retry.
+    if (error?.message === 'unauthorized') return null;
+    throw new Error('Cannot verify your session. Check your connection and retry.');
   }
 }
 
