@@ -152,3 +152,8 @@ for (const filename of ['ios-build.yml', 'release-ios.yml']) {
     assert.match(archive, /CODE_SIGN_STYLE=Automatic/)
   })
 }
+
+test("Xcode automatic Release configuration does not force a distribution signing identity", () => {
+  const project = fs.readFileSync(path.resolve(__dirname, "../ios/App/App.xcodeproj/project.pbxproj"), "utf8")
+  assert.doesNotMatch(project, /CODE_SIGN_IDENTITY = "Apple Distribution";/)
+})
