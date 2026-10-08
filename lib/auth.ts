@@ -7,6 +7,7 @@ import { prisma } from './db'
 import { reportError } from './errors'
 import { resolvePersona } from './persona'
 import { verifyTotp, consumeBackupCode } from './totp'
+import { rateLimit, RATE_PROFILES } from './rateLimit'
 
 export interface SessionOrgMembership {
   id: string
@@ -35,6 +36,10 @@ export const authConfig: NextAuthConfig = {
         const email = typeof credentials?.email === 'string' ? credentials.email.trim().toLowerCase() : ''
         const password = typeof credentials?.password === 'string' ? credentials.password : ''
         if (!email || !password) return null
+        // Throttle credentials attempts before account lookup, including MFA guesses.
+        // Use a per-account key so distributed IPs cannot bypass the MFA limit.
+        const limit = await rateLimit(`web-credentials:${email}`, RATE_PROFILES.auth.max, RATE_PROFILES.auth.windowMs)
+        if (!limit.ok) return null
         const user = await prisma.user.findUnique({ where: { email } })
         if (!user || !user.passwordHash) return null
         const ok = await bcrypt.compare(password, user.passwordHash)
