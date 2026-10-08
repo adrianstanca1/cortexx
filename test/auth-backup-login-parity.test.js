@@ -9,7 +9,7 @@ test('web and mobile login accept a valid one-use 2FA recovery code', () => {
   const mobile = read('app/api/mobile/auth/login/route.ts')
   for (const src of [web, mobile]) {
     assert.match(src, /verifyTotp\(user\.totpSecret, code\)/)
-    assert.match(src, /consumeBackupCode\(user\.id, user\.totpBackupCodes, code\)/)
+    assert.match(src, /consumeBackupCode\(user\.id, user\.totpBackupCodes, (?:code|backupCode)\)/)
   }
   assert.match(read('app/(auth)/login/page.tsx'), /maxLength=\{11\}/)
   assert.match(read('expo/LoginScreen.tsx'), /maxLength=\{11\}/)
@@ -19,12 +19,12 @@ test('web and mobile login accept a valid one-use 2FA recovery code', () => {
 test('backup code is hashed and removed atomically rather than just checked', () => {
   const totp = read('lib/totp.ts')
   assert.match(totp, /const matching = await verifyBackupCode\(saved, entered\)/)
-  assert.match(totp, /prisma\.user\.updateMany\(/)
+  assert.match(totp, /client\.user\.updateMany\(/)
   assert.match(totp, /totpBackupCodes: \{ equals: saved \}/)
   assert.match(totp, /totpBackupCodes: remaining/)
   assert.match(totp, /return result\.count === 1/)
   const verify = read('app/api/auth/2fa/verify/route.ts')
-  assert.match(verify, /consumeBackupCode\(userId, user\.totpBackupCodes, code\)/)
+  assert.match(verify, /consumeBackupCode\(userId, user\.totpBackupCodes, (?:code|backupCode)\)/)
   assert.doesNotMatch(verify, /prisma\.user\.update\(\{[\s\S]*totpBackupCodes: remaining/)
 })
 

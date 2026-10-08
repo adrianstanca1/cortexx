@@ -87,12 +87,13 @@ export async function consumeBackupCode(
   userId: string,
   saved: unknown,
   entered: string,
+  client: Pick<typeof prisma, 'user'> = prisma,
 ): Promise<boolean> {
   if (!Array.isArray(saved) || !saved.every((c): c is string => typeof c === 'string')) return false
   const matching = await verifyBackupCode(saved, entered)
   if (matching < 0) return false
   const remaining = saved.filter((_, index) => index !== matching)
-  const result = await prisma.user.updateMany({
+  const result = await client.user.updateMany({
     where: { id: userId, totpBackupCodes: { equals: saved } },
     data: { totpBackupCodes: remaining },
   })

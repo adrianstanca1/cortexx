@@ -169,8 +169,13 @@ const MOBILE_BEARER_API_PREFIXES = [
   '/api/events/stream',
 ]
 
+// Financial list views need native access, but their descendants include
+// LLM drafting, private PDF exports and mutations with distinct permissions.
+// Authorize only the exact collection endpoints; do not prefix-allow them.
+const MOBILE_BEARER_EXACT_API_PATHS = new Set(['/api/quotes', '/api/invoices'])
 function isMobileBearerApi(pathname: string): boolean {
-  return MOBILE_BEARER_API_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
+  return MOBILE_BEARER_EXACT_API_PATHS.has(pathname) ||
+    MOBILE_BEARER_API_PREFIXES.some(p => pathname === p || pathname.startsWith(p + '/'))
 }
 
 const NO_ORG_ALLOWED_API_PREFIXES = [
