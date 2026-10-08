@@ -89,6 +89,48 @@ jobs:
           echo "EXPO_ASC_KEY_ID=$APP_STORE_CONNECT_KEY_ID" >> "$GITHUB_ENV"
           echo "EXPO_ASC_ISSUER_ID=$APP_STORE_CONNECT_ISSUER_ID" >> "$GITHUB_ENV"
 
+      - name: Verify Apple Team Key against App Store Connect
+        run: |
+          node <<'NODE'
+          const { readFileSync } = require('node:fs');
+          const { sign } = require('node:crypto');
+          const encode = (value) => Buffer.from(JSON.stringify(value)).toString('base64url');
+          const now = Math.floor(Date.now() / 1000);
+          const header = encode({ alg: 'ES256', kid: process.env.EXPO_ASC_KEY_ID, typ: 'JWT' });
+          const payload = encode({
+            iss: process.env.EXPO_ASC_ISSUER_ID,
+            iat: now,
+            exp: now + 300,
+            aud: 'appstoreconnect-v1',
+          });
+          const data = header + '.' + payload;
+          const signature = sign('sha256', Buffer.from(data), {
+            key: readFileSync(process.env.EXPO_ASC_API_KEY_PATH),
+            dsaEncoding: 'ieee-p1363',
+          }).toString('base64url');
+          const token = data + '.' + signature;
+          const url = 'https://api.appstoreconnect.apple.com/v1/apps/6820322670';
+          fetch(url, { headers: { authorization: 'Bearer ' + token } })
+            .then(async (response) => {
+              if (!response.ok) {
+                console.error('Apple App Store Connect API authentication/authorization failed (HTTP ' + response.status + '). Verify matching Team Key ID, issuer ID and .p8.');
+                process.exitCode = 1;
+                return;
+              }
+              const parsed = await response.json();
+              if (parsed.data?.id !== '6820322670' || parsed.data?.attributes?.bundleId !== 'com.cortexbuild.app') {
+                console.error('Apple API key is valid but does not see the expected Cortexx App Store Connect app.');
+                process.exitCode = 1;
+                return;
+              }
+              console.log('Apple Team Key authenticated; Cortexx app record verified.');
+            })
+            .catch(() => {
+              console.error('Apple App Store Connect API preflight network request failed.');
+              process.exitCode = 1;
+            });
+          NODE
+
       - name: Build signed iOS app
         if: ${{ inputs.build_id == '' }}
         id: build
