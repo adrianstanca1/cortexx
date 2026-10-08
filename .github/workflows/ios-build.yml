@@ -98,8 +98,12 @@ jobs:
             -destination 'generic/platform=iOS' CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO \
             | tail -80
 
+      - name: Note verification-only push
+        if: github.event_name == 'push' || !inputs.upload_to_testflight
+        run: echo "Unsigned iOS build and archive verified. Native signing requires an explicit release request; use the EAS TestFlight workflow for the validated Apple upload path."
+
       - name: Import signing certificate
-        if: steps.signing.outputs.signing_mode == 'manual'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'manual'
         env:
           CERTIFICATE_BASE64: ${{ secrets.IOS_CERTIFICATE_BASE64 }}
           CERTIFICATE_PASSWORD: ${{ secrets.IOS_CERTIFICATE_PASSWORD }}
@@ -115,7 +119,7 @@ jobs:
           security set-key-partition-list -S apple-tool:,apple: -s -k "$KEYCHAIN_PASSWORD" "$KEYCHAIN_PATH"
 
       - name: Install provisioning profile
-        if: steps.signing.outputs.signing_mode == 'manual'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'manual'
         env:
           PROVISIONING_PROFILE_BASE64: ${{ secrets.IOS_PROVISIONING_PROFILE_BASE64 }}
         run: |
@@ -125,19 +129,19 @@ jobs:
           cp "$PP_PATH" ~/Library/MobileDevice/Provisioning\ Profiles/
 
       - name: Prepare App Store Connect API key
-        if: steps.signing.outputs.signing_mode == 'automatic'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'automatic'
         env:
           APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
         run: |
           printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
           chmod 600 "$RUNNER_TEMP/AuthKey.p8"
       - name: Set build number
-        if: steps.signing.outputs.archive_ready == 'true'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.archive_ready == 'true'
         working-directory: ios/App
         run: xcrun agvtool new-version -all "${{ github.run_number }}"
 
       - name: Archive signed app (manual)
-        if: steps.signing.outputs.signing_mode == 'manual'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'manual'
         run: |
           set -o pipefail
           xcodebuild archive \
@@ -153,7 +157,7 @@ jobs:
             | tee "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Archive signed app (automatic API-key signing)
-        if: steps.signing.outputs.signing_mode == 'automatic'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'automatic'
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -174,7 +178,7 @@ jobs:
             | tee "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Export IPA (manual)
-        if: steps.signing.outputs.signing_mode == 'manual'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'manual'
         run: |
           cat > "$RUNNER_TEMP/ExportOptions.plist" <<EOF
           <?xml version="1.0" encoding="UTF-8"?>
@@ -193,7 +197,7 @@ jobs:
             -exportPath "$RUNNER_TEMP/ipa" | tee -a "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Export IPA (automatic API-key signing)
-        if: steps.signing.outputs.signing_mode == 'automatic'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'automatic'
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -221,7 +225,7 @@ jobs:
 
       - name: Locate exported IPA
         id: ipa
-        if: steps.signing.outputs.archive_ready == 'true'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.archive_ready == 'true'
         run: |
           shopt -s nullglob
           files=("$RUNNER_TEMP"/ipa/*.ipa)
@@ -232,7 +236,7 @@ jobs:
           echo "path=${files[0]}" >> "$GITHUB_OUTPUT"
 
       - name: Upload to TestFlight
-        if: steps.signing.outputs.upload_ready == 'true' && github.event.inputs.upload_to_testflight != 'false'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.upload_ready == 'true'
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
@@ -245,7 +249,7 @@ jobs:
             --apiKeyPath "$RUNNER_TEMP/AuthKey.p8" --verbose
 
       - name: Upload IPA artifact
-        if: steps.signing.outputs.archive_ready == 'true'
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.archive_ready == 'true'
         uses: actions/upload-artifact@v7
         with:
           name: Cortexx-${{ github.run_number }}.ipa
