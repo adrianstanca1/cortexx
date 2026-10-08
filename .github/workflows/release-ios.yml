@@ -11,7 +11,10 @@ name: Release iOS — Build & TestFlight
 # Both produce: signed Release IPA + dSYM, uploaded as a workflow
 # artifact, optionally pushed to TestFlight via altool.
 #
-# Preferred GitHub secrets (automatic signing; one-time setup):
+# Native Xcode signing needs the Apple Distribution P12/private key and provisioning profile.
+# App Store Connect API credentials alone cannot generate a private key for a GitHub runner.
+# Use .github/workflows/eas-testflight.yml for the verified Expo-to-Apple release path.
+# App Store Connect API secrets for upload:
 #   APPLE_TEAM_ID                       e.g. ABCDE12345
 #   APP_STORE_CONNECT_KEY_ID            Team API key from App Store Connect
 #   APP_STORE_CONNECT_ISSUER_ID         Team API key issuer
@@ -76,6 +79,7 @@ jobs:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+          IOS_REQUIRE_NATIVE_DISTRIBUTION: 'true'
           IOS_REQUIRE_ARCHIVE: 'true'
           IOS_REQUIRE_UPLOAD: ${{ github.event_name != 'workflow_dispatch' || inputs.upload_to_testflight }}
         run: node scripts/check-ios-signing.mjs
