@@ -1,11 +1,14 @@
 const test = require('node:test')
 const assert = require('node:assert/strict')
 const bcrypt = require('bcryptjs')
+const { randomBytes } = require('node:crypto')
+const { generateSecret } = require('speakeasy')
+const testPassword = randomBytes(24).toString('hex')
 
 // Exercise the real login handler with a transactional database double.
 // No live user accounts or database are touched.
 process.env.NODE_ENV = 'test'
-process.env.MOBILE_AUTH_SECRET = 'test-mobile-backup-secret-which-is-long-enough'
+process.env.MOBILE_AUTH_SECRET = randomBytes(32).toString('hex')
 delete process.env.REDIS_URL
 let user, failCreate, creates
 const updateMany = async ({ where, data }) => {
@@ -41,13 +44,13 @@ test.before(async () => {
 test.beforeEach(async () => {
   reset(); failCreate = false; creates = 0
   user = { id: 'user-test', email: 'test@example.com', name: 'Test', role: 'member',
-    passwordHash: await bcrypt.hash('Test-password', 4), organizations: [],
-    totpEnabledAt: new Date(), totpSecret: 'JBSWY3DPEHPK3PXP',
+    passwordHash: await bcrypt.hash(testPassword, 4), organizations: [],
+    totpEnabledAt: new Date(), totpSecret: generateSecret().base32,
     totpBackupCodes: [await bcrypt.hash(code, 4)] }
 })
 const login = extra => POST(new NextRequest('https://example.test/api/mobile/auth/login', {
   method: 'POST', headers: { 'content-type': 'application/json' },
-  body: JSON.stringify({ email: user.email, password: 'Test-password', totp: code, ...extra }),
+  body: JSON.stringify({ email: user.email, password: testPassword, totp: code, ...extra }),
 }))
 test('workspace prompt and invalid name preserve the recovery code', async () => {
   const saved = [...user.totpBackupCodes]
