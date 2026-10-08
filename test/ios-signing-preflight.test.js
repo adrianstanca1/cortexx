@@ -203,13 +203,13 @@ test('native distribution archive requires imported Apple Distribution certifica
   assert.match(result.stderr, /IOS_CERTIFICATE_BASE64/)
   assert.match(result.stderr, /IOS_PROVISIONING_PROFILE_BASE64/)
   assert.match(result.stderr, /EAS TestFlight workflow/)
-  assert.equal(result.outputs, 'signing_mode=none\\narchive_ready=false\\nupload_ready=false\\n')
+  assert.equal(result.outputs, 'signing_mode=none\narchive_ready=false\nupload_ready=false\n')
 })
 
 test('native release preflight permits imported distribution signing material', () => {
   const result = run({ ...manualArchive, ...api, IOS_REQUIRE_UPLOAD: 'true', IOS_REQUIRE_NATIVE_DISTRIBUTION: 'true' })
   assert.equal(result.status, 0)
-  assert.equal(result.outputs, 'signing_mode=manual\\narchive_ready=true\\nupload_ready=true\\n')
+  assert.equal(result.outputs, 'signing_mode=manual\narchive_ready=true\nupload_ready=true\n')
 })
 
 test('both native iOS release workflows require distribution certificate preflight', () => {
