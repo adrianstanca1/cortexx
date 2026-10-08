@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { resolvePersona } from '@/lib/persona'
 import { rateLimit } from '@/lib/rateLimit'
-import { hashMobileWebTicket, mobileWebCookieName, parseTicketIdentifier, safeMobileWebPath, issueWebSessionJwt, isTrustedHandoffRequest, webSessionCookieParts } from '@/lib/mobileWebHandoff'
+import { hashMobileWebTicket, mobileWebCookieName, parseTicketIdentifier, safeMobileWebPath, issueWebSessionJwt, isTrustedHandoffRequest, webSessionCookieParts, secureWebCookie } from '@/lib/mobileWebHandoff'
 
 export const runtime = 'nodejs'
 export const dynamic = 'force-dynamic'
@@ -56,7 +56,7 @@ export async function POST(req: NextRequest) {
     orderBy: { joinedAt: 'asc' },
   })
   if (!orgs.some(org => org.organizationId === membership.organizationId)) return denied()
-  const secure = process.env.NODE_ENV === 'production'
+  const secure = secureWebCookie(process.env.AUTH_URL || process.env.NEXTAUTH_URL || req.nextUrl.origin)
   const jwt = await issueWebSessionJwt({
     userId: membership.user.id, email: membership.user.email,
     name: membership.user.name, role: membership.user.role,

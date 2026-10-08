@@ -99,3 +99,10 @@ export function webSessionCookieParts(name: string, jwt: string): Array<{ name: 
   }
   return result
 }
+
+/** Auth.js bases its cookie prefix on the configured public auth URL, not
+ * NODE_ENV. CI runs a production build on HTTP; forcing Secure there would
+ * create a cookie which browser E2E sessions cannot send. */
+export function secureWebCookie(authUrl: string): boolean {
+  return /^https:\/\//i.test(authUrl)
+}

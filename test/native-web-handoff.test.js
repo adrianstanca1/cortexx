@@ -4,7 +4,7 @@ import { readFileSync } from 'node:fs'
 import { decode, getToken } from 'next-auth/jwt'
 import {
   createMobileWebTicket, hashMobileWebTicket, parseTicketIdentifier, ticketIdentifier,
-  safeMobileWebPath, mobileWebCookieName, issueWebSessionJwt, isTrustedHandoffRequest, webSessionCookieParts,
+  safeMobileWebPath, mobileWebCookieName, issueWebSessionJwt, isTrustedHandoffRequest, webSessionCookieParts, secureWebCookie,
 } from '../lib/mobileWebHandoff.ts'
 
 test('handoff ticket is random and only its SHA-256 digest is stored', () => {
@@ -86,4 +86,9 @@ test('web session survives Auth.js chunked cookies when account belongs to many 
   const restored = await getToken({ req: { headers: { cookie: cookieHeader } }, secret, cookieName: mobileWebCookieName(true) })
   assert.equal(restored?.sub, 'u1')
   assert.equal(restored?.orgs?.length, 40)
+})
+
+test('Auth.js cookie prefix uses public auth scheme even with production HTTP test runner', () => {
+  assert.equal(secureWebCookie('https://cortexbuildpro.tech'), true)
+  assert.equal(secureWebCookie('http://127.0.0.1:3000'), false)
 })
