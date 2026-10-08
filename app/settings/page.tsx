@@ -185,8 +185,9 @@ export default function SettingsPage() {
         const data = await res.json().catch(() => ({}))
         throw new Error(data.error || 'Failed')
       }
-      setSuccess('Password updated')
-      setCurrent(''); setNext(''); setConfirm('')
+      // Password changes revoke every prior JWT, including this browser session.
+      // Explicit sign-out avoids leaving the user on a page with an invalid token.
+      await signOut({ callbackUrl: '/login?passwordChanged=1' })
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Failed')
     } finally {

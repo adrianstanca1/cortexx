@@ -31,7 +31,7 @@ function ResetForm() {
       setDone(true)
       setPassword(''); setConfirm('')
     } catch {
-      setError('Could not reach Cortexx. Try again.')
+      setError('Could not reach Cortex Construct. Try again.')
     } finally { setBusy(false) }
   }
 
@@ -39,13 +39,13 @@ function ResetForm() {
     <main style={{ background: '#090B0D', minHeight: '100dvh', color: '#F5F7F2',
       display: 'grid', placeItems: 'center', padding: 24, fontFamily: 'system-ui, sans-serif' }}>
       <section style={{ width: '100%', maxWidth: 380 }}>
-        <h1 style={{ fontSize: 28, marginBottom: 8 }}>Reset your Cortexx password</h1>
+        <h1 style={{ fontSize: 28, marginBottom: 8 }}>Reset your Cortex Construct password</h1>
         {done ? <>
-          <p>Your password has been changed. Return to Cortexx on your phone and sign in.</p>
+          <p>Your password has been changed. Return to Cortex Construct on your phone and sign in.</p>
           <Link href="/login" style={{ color: '#D7FF3F' }}>Go to sign in</Link>
         </> : !/^[a-f0-9]{64}$/.test(token) ? <>
-          <p>This reset link is invalid or incomplete. Request another from the Cortexx app.</p>
-          <Link href="/login" style={{ color: '#D7FF3F' }}>Back to sign in</Link>
+          <p>This reset link is invalid or incomplete. Request another from the Cortex Construct app.</p>
+          <Link href="/forgot-password" style={{ color: '#D7FF3F' }}>Request a new reset link</Link>
         </> : <form onSubmit={submit} style={{ display: 'grid', gap: 14, marginTop: 24 }}>
           <label htmlFor="new-password">New password (8+ characters)</label>
           <input id="new-password" type="password" autoComplete="new-password"

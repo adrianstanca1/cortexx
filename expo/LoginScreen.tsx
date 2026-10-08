@@ -51,7 +51,7 @@ export default function LoginScreen({ onAuthed }: { onAuthed: (user: AuthUser) =
       if (e?.code === 'NO_ORG') {
         setMode('workspace'); setError('Your credentials are correct. Create a company workspace to continue.');
       } else if (e?.code === 'TOTP_REQUIRED' || e?.code === 'TOTP_INVALID') {
-        setTotpRequired(true); setError(e.message || 'Enter your 6-digit authenticator code.');
+        setTotpRequired(true); setError(e.message || 'Enter your authenticator or saved backup code.');
       } else {
         setError(e?.message || 'Unable to continue. Please try again.');
       }
@@ -90,8 +90,8 @@ export default function LoginScreen({ onAuthed }: { onAuthed: (user: AuthUser) =
           placeholderTextColor={Colors.t3} maxLength={100} value={workspace}
           onChangeText={setWorkspace} editable={!working} />}
         {totpRequired && mode !== 'reset' && <TextInput style={styles.input}
-          accessibilityLabel="Authenticator code" placeholder="6-digit authenticator code"
-          placeholderTextColor={Colors.t3} keyboardType="number-pad" maxLength={6}
+          accessibilityLabel="Authenticator or backup code" placeholder="6-digit or backup code"
+          placeholderTextColor={Colors.t3} keyboardType="default" maxLength={11}
           autoComplete="one-time-code" value={totp} onChangeText={setTotp} editable={!working} />}
         {!!error && <Text accessibilityRole="alert" style={styles.error}>{error}</Text>}
         <TouchableOpacity accessibilityRole="button" accessibilityLabel={action}

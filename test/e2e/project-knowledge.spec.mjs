@@ -1,12 +1,11 @@
-import { test, expect } from '@playwright/test'
-import { encode } from 'next-auth/jwt'
+import { test, expect, request as playwrightRequest } from '@playwright/test'
 
-// These journeys exercise rendering, storage and request boundaries with a
-// synthetic signed session. Real evidence authorization is covered separately
-// by project-knowledge.test.js and the PostgreSQL integration suite.
-const userId = 'knowledge-browser-user'
+// Browser knowledge tests require a real *seeded E2E account*. Fabricating a
+// signed JWT for a nonexistent user no longer passes account revocation checks
+// (and must not be allowed to). API evidence below remains fixture-isolated.
+let userId = ''
+let storageKey = ''
 const orgId = 'knowledge-browser-org'
-const storageKey = `cortexx-ask-history-v1:${userId}:${orgId}`
 const source = {
   id: 'K1', label: 'Active projects', href: '/projects',
   summary: 'One active project in your permitted project scope.',
@@ -14,17 +13,32 @@ const source = {
 }
 
 test.beforeEach(async ({ context, baseURL }) => {
-  const secure = new URL(baseURL).protocol === 'https:'
-  const name = `${secure ? '__Secure-' : ''}authjs.session-token`
-  const token = await encode({
-    secret: process.env.AUTH_SECRET || process.env.NEXTAUTH_SECRET || 'local-playwright-secret-change-me',
-    salt: name,
-    token: {
-      sub: userId, name: 'Knowledge Browser', email: 'knowledge-browser@example.test', role: 'company_admin',
-      orgs: [{ id: orgId, slug: 'knowledge-browser', name: 'Knowledge Browser', role: 'owner', personaRole: 'company_admin' }],
-    },
-  })
-  await context.addCookies([{ name, value: token, url: baseURL, httpOnly: true, sameSite: 'Lax', secure }])
+  const authRequest = await playwrightRequest.newContext({ baseURL })
+  try {
+    const csrf = await authRequest.get('/api/auth/csrf')
+    expect(csrf.ok()).toBe(true)
+    const { csrfToken } = await csrf.json()
+    const response = await authRequest.post('/api/auth/callback/credentials', {
+      headers: { 'X-Auth-Return-Redirect': '1' },
+      form: {
+        csrfToken,
+        email: process.env.E2E_ADMIN_EMAIL || 'admin@cortexbuildpro.tech',
+        password: process.env.E2E_ADMIN_PASSWORD || 'e2e-local-role-password',
+        callbackUrl: baseURL + '/dashboard',
+      },
+    })
+    expect(response.ok()).toBe(true)
+    const result = await response.json()
+    expect(new URL(result.url).searchParams.get('error')).toBeNull()
+    const sessionResponse = await authRequest.get('/api/auth/session')
+    expect(sessionResponse.ok()).toBe(true)
+    const session = await sessionResponse.json()
+    expect(session.user?.id).toEqual(expect.any(String))
+    userId = session.user.id
+    storageKey = `cortexx-ask-history-v1:${userId}:${orgId}`
+    const state = await authRequest.storageState()
+    await context.addCookies(state.cookies)
+  } finally { await authRequest.dispose() }
   await context.route('**/api/**', async route => {
     const path = new URL(route.request().url()).pathname
     if (path.startsWith('/api/auth/')) return route.continue()

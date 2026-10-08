@@ -1,0 +1,58 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+const read = file => fs.readFileSync(path.join(__dirname, '..', file), 'utf8')
+
+test('web and mobile authenticate from the same Prisma user, bcrypt hash and TOTP provider', () => {
+  const web = read('lib/auth.ts')
+  const mobile = read('app/api/mobile/auth/login/route.ts')
+  assert.match(web, /prisma\.user\.findUnique/)
+  assert.match(mobile, /prisma\.user\.findUnique/)
+  for (const src of [web, mobile]) {
+    assert.match(src, /bcrypt\.compare\(password, user\.passwordHash\)/)
+    assert.match(src, /user\.totpEnabledAt && user\.totpSecret/)
+    assert.match(src, /verifyTotp\(user\.totpSecret, code\)/)
+  }
+  const login = read('app/(auth)/login/page.tsx')
+  assert.match(login, /autoComplete="one-time-code"/)
+  assert.match(login, /totp: totp\.trim\(\)/)
+  assert.match(read('expo/LoginScreen.tsx'), /TOTP_REQUIRED/)
+})
+
+test('both clients provide password reset with the same server endpoints', () => {
+  const web = read('app/(auth)/login/page.tsx')
+  const recovery = read('app/(auth)/forgot-password/page.tsx')
+  const native = read('expo/api.ts')
+  const proxy = read('proxy.ts')
+  assert.match(web, /href="\/forgot-password"/)
+  assert.match(recovery, /\/api\/auth\/password-reset\/request/)
+  assert.match(native, /\/api\/auth\/password-reset\/request/)
+  assert.match(proxy, /'\/forgot-password'/)
+  assert.match(proxy, /'\/reset-password'/)
+  assert.match(read('app/reset-password/page.tsx'), /\/api\/auth\/password-reset\/confirm/)
+})
+
+test('missing provider DNS fails before user lookup for every email (no account enumeration)', () => {
+  const request = read('app/api/auth/password-reset/request/route.ts')
+  const readyAt = request.indexOf('await passwordResetEmailReady()')
+  const userAt = request.indexOf('prisma.user.findUnique')
+  assert.ok(readyAt > 0 && userAt > readyAt)
+  assert.match(request, /RESET_EMAIL_UNAVAILABLE/)
+  assert.match(request, /status: 503/)
+  assert.match(request, /createHash\('sha256'\)/)
+  assert.match(request, /verificationToken\.create/)
+  assert.match(request, /Reset your Cortex Construct password/)
+})
+
+test('password reset invalidates both web sessions and signed mobile tokens', () => {
+  const web = read('lib/auth.ts')
+  const native = read('lib/requireAuth.ts')
+  const reset = read('app/api/auth/password-reset/confirm/route.ts')
+  assert.match(web, /token\.passwordVersion/)
+  assert.match(web, /token\.passwordVersion !== current\.passwordChangedAt\.getTime\(\)/)
+  assert.match(web, /return null/)
+  assert.match(native, /membership\.user\.passwordChangedAt/)
+  assert.match(native, /claims\.pwd/)
+  assert.match(reset, /passwordChangedAt: new Date\(\)/)
+})

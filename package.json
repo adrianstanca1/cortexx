@@ -26,7 +26,7 @@
     "db:seed:users": "tsx scripts/seed-shared-users.ts",
     "db:seed:legacy-demo": "tsx prisma/seed.ts",
     "db:studio": "prisma studio",
-    "test": "tsx --test test/*.test.js test/mobile-photo-source.test.ts",
+    "test": "tsx --test test/*.test.js test/mobile-photo-source.test.ts test/password-reset-readiness.test.ts",
     "test:nav": "node --test test/nav-registry.test.js",
     "test:integration": "tsx --test --test-concurrency=1 test/integration/*.test.js",
     "test:load-smoke": "node --test test/load-smoke.test.js",

@@ -2,7 +2,8 @@ import { randomBytes, createHash } from 'node:crypto'
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { enforceRateLimit } from '@/lib/rateLimit'
-import { isEmailConfigured, sendEmail } from '@/lib/email'
+import { sendEmail } from '@/lib/email'
+import { passwordResetEmailReady } from '@/lib/passwordResetReadiness'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
@@ -18,8 +19,10 @@ export async function POST(req: NextRequest) {
   const email = typeof body.email === 'string' ? body.email.trim().toLowerCase() : ''
   if (email.length > 254 || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email))
     return NextResponse.json({ error: 'Enter a valid email address' }, { status: 400 })
-  if (!isEmailConfigured()) {
-    return NextResponse.json({ error: 'Password reset email is temporarily unavailable. Contact support.' }, { status: 503 })
+  if (!(await passwordResetEmailReady())) {
+    // The same provider-ready result for every email avoids account discovery.
+    return NextResponse.json({ error: 'Password reset email is not available yet. Please contact support.', code: 'RESET_EMAIL_UNAVAILABLE' },
+      { status: 503, headers: { 'Cache-Control': 'no-store' } })
   }
   try {
     const user = await prisma.user.findUnique({ where: { email }, select: { id: true, passwordHash: true } })
@@ -38,9 +41,9 @@ export async function POST(req: NextRequest) {
     resetUrl.searchParams.set('token', token)
     const url = resetUrl.toString()
     const result = await sendEmail({
-      to: email, subject: 'Reset your Cortexx password',
-      text: 'Reset your Cortexx password using this link (valid for 30 minutes):\n' + url + '\n\nIf you did not request this, ignore the message.',
-      html: '<p>We received a request to reset your Cortexx password.</p>' +
+      to: email, subject: 'Reset your Cortex Construct password',
+      text: 'Reset your Cortex Construct password using this link (valid for 30 minutes):\n' + url + '\n\nIf you did not request this, ignore the message.',
+      html: '<p>We received a request to reset your Cortex Construct password.</p>' +
         '<p><a href="' + url + '">Reset your password</a> (expires in 30 minutes).</p>' +
         '<p>If you did not request this, you can safely ignore this message.</p>',
     })
