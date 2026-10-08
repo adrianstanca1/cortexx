@@ -22,18 +22,21 @@ function defaultTokenStorage(): ApiClientOptions['tokenStorage'] {
 let _store: ApiClientOptions['tokenStorage'] = defaultTokenStorage();
 export function setTokenStorage(store: ApiClientOptions['tokenStorage']) { _store = store; }
 
+// Offline data must never be shared between accounts or company workspaces.
+let _offlineScope: string | null = null;
+export function setOfflineScope(scope: string | null) { _offlineScope = scope; }
 let _cache: { get: (k: string) => Promise<string | null>; set: (k: string, v: string) => Promise<void> } | null = null;
 export function setOfflineCache(c: typeof _cache) { _cache = c; }
 async function cacheGet(name: string): Promise<any[] | null> {
-  if (!_cache) return null;
-  try { const v = await _cache.get('cb_cache_' + name); return v ? JSON.parse(v) : null; } catch { return null; }
+  if (!_cache || !_offlineScope) return null;
+  try { const v = await _cache.get('cb_cache_' + _offlineScope + '_' + name); return v ? JSON.parse(v) : null; } catch { return null; }
 }
 async function cacheSet(name: string, rows: any[]): Promise<void> {
-  if (!_cache) return;
-  try { await _cache.set('cb_cache_' + name, JSON.stringify(rows)); } catch { /* ignore */ }
+  if (!_cache || !_offlineScope) return;
+  try { await _cache.set('cb_cache_' + _offlineScope + '_' + name, JSON.stringify(rows)); } catch { /* ignore */ }
 }
 
-export type QueuedWrite = { id: string; method: 'POST' | 'PUT'; collection: string; body: any; rowId?: string };
+export type QueuedWrite = { id: string; method: 'POST' | 'PUT'; collection: string; body: any; rowId?: string; scope?: string };
 let _queue: QueuedWrite[] = [];
 let _queueStore: { get: (k: string) => Promise<string | null>; set: (k: string, v: string) => Promise<void> } | null = null;
 let _queueListeners: (() => void)[] = [];
@@ -49,6 +52,9 @@ export async function flushQueue(opts?: { apiUrl?: string; token?: string | null
   const snapshot = [..._queue]; let ok = 0; let failed = 0;
   const API_URL = opts?.apiUrl || API_URL_FALLBACK;
   for (const w of snapshot) try {
+    // Legacy unscoped writes cannot be replayed safely across users; retain
+    // them for manual recovery rather than injecting into another tenant.
+    if (!_offlineScope || !w.scope || w.scope !== _offlineScope) { failed++; continue; }
     const headers: Record<string, string> = { 'content-type': 'application/json' };
     const t = opts?.token ?? await _store.get(); if (t) headers.authorization = `Bearer ${t}`;
     const r = await fetch(`${API_URL}/api/${w.collection}${w.rowId ? '/' + w.rowId : ''}`, { method: w.method, headers, body: JSON.stringify(w.body) });
@@ -135,11 +141,11 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
       }
       catch (e: any) { if (e?.message === 'unauthorized') throw e; const cached = await cacheGet(name); if (cached) return cached; throw e; }
     },
-    postCollection(name: string, body: any): Promise<any> { return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body }); return { id, _queued: true, ...body }; }); },
+    postCollection(name: string, body: any): Promise<any> { return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body, scope: _offlineScope || undefined }); return { id, _queued: true, ...body }; }); },
     async putCollection(name: string, id: string, body: any): Promise<any> {
       const t = await token(); const headers: Record<string, string> = { 'content-type': 'application/json' }; if (t) headers.authorization = `Bearer ${t}`;
       try { const r = await fetch(`${API_URL}/api/${name}/${id}`, { method: 'PUT', headers, body: JSON.stringify(body) }); if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); } if (!r.ok) { const e = await r.json().catch(() => ({})); throw httpFailure((e as any).error || 'Update failed', r.status); } return r.json(); }
-      catch (e: any) { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body }); return { id, _queued: true, ...body }; }
+      catch (e: any) { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body, scope: _offlineScope || undefined }); return { id, _queued: true, ...body }; }
     },
     apiGet, apiPost, onQueueChange, pendingWrites, flushQueue, startStream, stopStream, onStreamEvent,
   };

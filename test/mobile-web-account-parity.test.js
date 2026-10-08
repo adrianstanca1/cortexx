@@ -1,0 +1,57 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const fs = require('node:fs')
+const path = require('node:path')
+const read = p => fs.readFileSync(path.join(__dirname, '..', p), 'utf8')
+
+test('native and browser credentials authenticate the same Prisma User password hash', () => {
+  const web = read('lib/auth.ts')
+  const mobile = read('app/api/mobile/auth/login/route.ts')
+  for (const src of [web, mobile]) {
+    assert.match(src, /prisma\.user\.findUnique\(\{[\s\S]*?where: \{ email \}/)
+    assert.match(src, /bcrypt\.compare\(password, user\.passwordHash\)/)
+  }
+  assert.match(mobile, /user\.organizations/)
+  assert.match(mobile, /resolvePersona\(membership\.personaRole, user\.role, membership\.role\)/)
+  assert.match(mobile, /verifyTotp\(user\.totpSecret, code\)/)
+})
+
+test('a native bearer selects exactly its authorized tenant across route wrappers and SSE', () => {
+  const verify = read('lib/requireAuth.ts')
+  const wrap = read('lib/withRoute.ts')
+  const stream = read('app/api/events/stream/route.ts')
+  assert.match(verify, /bearerOrgId = mobile/)
+  assert.match(verify, /orgs\.find\(o => o\.id === bearerOrgId\)/)
+  assert.match(verify, /if \(!selected\) return NextResponse\.json/)
+  assert.match(wrap, /getCurrentOrg\(\)\?\.organizationId/)
+  assert.match(stream, /getCurrentOrg\(\)\?\.organizationId/)
+  const login = read('app/api/mobile/auth/login/route.ts')
+  assert.match(login, /requestedOrgId\s*\?\s*user\.organizations\.find/)
+  assert.doesNotMatch(login, /\(requestedOrgId && user\.organizations\.find/)
+})
+
+test('mobile profile can select all existing web memberships without another account', () => {
+  const me = read('app/api/mobile/auth/me/route.ts')
+  const change = read('app/api/mobile/auth/switch/route.ts')
+  const native = read('expo/ProfileScreen.tsx')
+  const proxy = read('proxy.ts')
+  assert.match(me, /prisma\.userOrganization\.findMany/)
+  assert.match(me, /organizations,/)
+  assert.match(me, /getCurrentOrg\(\)/)
+  assert.match(change, /bearerToken\(req\.headers\.get\('authorization'\)\)/)
+  assert.match(change, /userId_organizationId: \{ userId, organizationId \}/)
+  assert.match(change, /issueMobileToken\(/)
+  assert.match(native, /switchWorkspace\(organizationId\)/)
+  assert.match(native, /pendingWrites\(\) > 0/)
+  assert.match(proxy, /'\/api\/mobile\/auth\/switch'/)
+})
+
+test('native offline cache cannot return another user or company data', () => {
+  const core = read('packages/core/src/index.ts')
+  const client = read('expo/api.ts')
+  assert.match(core, /export function setOfflineScope\(/)
+  assert.match(core, /'_cache_' \+ _offlineScope|cb_cache_' \+ _offlineScope/)
+  assert.match(core, /w\.scope !== _offlineScope/)
+  assert.match(client, /setOfflineScope\(body\.user\.id \+ '_' \+ /)
+  assert.match(client, /setOfflineScope\(user\.id \+ '_' \+ /)
+})

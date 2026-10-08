@@ -142,6 +142,7 @@ const NO_ORG_ALLOWED = new Set<string>([
 ])
 const MOBILE_BEARER_API_PREFIXES = [
   '/api/mobile/auth/me',
+  '/api/mobile/auth/switch',
   '/api/dashboard',
   '/api/inbox',
   '/api/projects',

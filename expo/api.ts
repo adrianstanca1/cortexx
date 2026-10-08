@@ -3,7 +3,7 @@
 // the web app. SecureStore remains the device-specific token backend.
 import * as SecureStore from 'expo-secure-store';
 import { API_URL } from './theme';
-import { createApiClient } from '@cortexbuild/core';
+import { createApiClient, setOfflineScope, stopStream as stopRealtimeStream } from '@cortexbuild/core';
 
 const TOKEN_KEY = 'cb_token';
 
@@ -53,11 +53,19 @@ async function persistSession(body: AuthResponse): Promise<AuthResponse> {
   if (!body?.token || !body?.user?.id) throw new Error('Invalid sign-in response.');
   await api.setToken(body.token);
   if ((await api.getToken()) !== body.token) throw new Error('Unable to save your secure session. Please try again.');
+  setOfflineScope(body.user.id + '_' + (body.user.organization?.id || ''));
   return body;
 }
 
 export async function login(email: string, password: string, totp?: string, workspaceName?: string): Promise<AuthResponse> {
   return persistSession(await publicPost('/api/mobile/auth/login', { email: email.trim().toLowerCase(), password, ...(totp ? { totp } : {}), ...(workspaceName ? { workspaceName } : {}) }));
+}
+
+export async function switchWorkspace(organizationId: string): Promise<AuthResponse> {
+  if (api.pendingWrites() > 0) throw new Error('Sync your pending offline changes before switching companies.');
+  const result = await api.apiPost('/api/mobile/auth/switch', { organizationId }) as AuthResponse;
+  stopRealtimeStream();
+  return persistSession(result);
 }
 
 export async function registerAccount(data: { name: string; email: string; password: string; workspaceName: string }): Promise<AuthResponse> {
@@ -69,11 +77,12 @@ export async function requestPasswordReset(email: string): Promise<{ message: st
 }
 
 export async function getMe(): Promise<AuthUser | null> {
-  if (!(await getToken())) return null;
+  if (!(await getToken())) { setOfflineScope(null); return null; }
   try {
     const body = await api.apiGet('/api/mobile/auth/me');
     const user = (body?.user || null) as AuthUser | null;
     if (!user) return null;
+    setOfflineScope(user.id + '_' + (user.organization?.id || user.organizations?.[0]?.id || ''));
     const active = user.organizations?.[0];
     return {
       ...user,
@@ -83,7 +92,7 @@ export async function getMe(): Promise<AuthUser | null> {
   } catch (error: any) {
     // Only a rejected credential should log out an existing device.
     // Mobile networks frequently drop requests; preserve the session for retry.
-    if (error?.message === 'unauthorized') return null;
+    if (error?.message === 'unauthorized') { setOfflineScope(null); return null; }
     throw new Error('Cannot verify your session. Check your connection and retry.');
   }
 }
@@ -114,7 +123,7 @@ export const stopStream = api.stopStream;
 export const onStreamEvent = api.onStreamEvent;
 export const getToken = api.getToken;
 export const setToken = api.setToken;
-export const clearToken = api.clearToken;
+export const clearToken = async () => { setOfflineScope(null); await api.clearToken(); };
 
 export const postCisSub = (body: any): Promise<any> => api.postCollection('cisSubs', body);
 

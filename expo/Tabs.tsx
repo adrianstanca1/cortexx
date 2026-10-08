@@ -43,7 +43,7 @@ function rootFor(route: AppRoute): AppRoute {
   return route;
 }
 
-export default function Tabs({ user, onLogout }: { user: AuthUser; onLogout: () => void }) {
+export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: AuthUser; onLogout: () => void; onWorkspaceChanged: (user: AuthUser) => void }) {
   const [tab, setTab] = React.useState<AppRoute>('overview');
   const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(0);
@@ -132,7 +132,7 @@ export default function Tabs({ user, onLogout }: { user: AuthUser; onLogout: () 
   ) : tab === 'notifications' ? (
     <NotificationsScreen onLogout={onLogout} />
   ) : tab === 'profile' ? (
-    <ProfileScreen onLogout={onLogout} />
+    <ProfileScreen onLogout={onLogout} onWorkspaceChanged={onWorkspaceChanged} />
   ) : (
     <MoreScreen user={user} onNavigate={setTab} />
   );

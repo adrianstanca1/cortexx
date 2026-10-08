@@ -1,9 +1,8 @@
 import { NextRequest } from 'next/server'
-import { cookies } from 'next/headers'
 import { prisma } from '@/lib/db'
 import type { SessionOrgMembership } from '@/lib/auth'
 import { requireAuth } from '@/lib/requireAuth'
-import { setOrgContext, runWithOrg, type OrgRequestContext } from '@/lib/tenancy'
+import { getCurrentOrg, setOrgContext, runWithOrg, type OrgRequestContext } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -13,7 +12,6 @@ export const runtime = 'nodejs'
 const MAX_CONCURRENT = 100
 let active = 0
 
-const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
 
 export async function GET(req: NextRequest) {
   const session = await requireAuth()
@@ -34,15 +32,10 @@ export async function GET(req: NextRequest) {
   let orgCtx: OrgRequestContext | null = null
   if (orgs.length > 0) {
     const userId = (session.user as { id?: string }).id || null
-    let activeOrg = orgs[0]
-    try {
-      const store = await cookies()
-      const cookieValue = store.get(ACTIVE_ORG_COOKIE)?.value
-      if (cookieValue) {
-        const match = orgs.find(o => o.id === cookieValue)
-        if (match) activeOrg = match
-      }
-    } catch { /* fine — Next still calling this server-side without a request store */ }
+    // The authenticated request already resolved its active tenant; reuse it
+    // for every SSE polling tick rather than trusting a cookie from the web.
+    const verifiedOrgId = getCurrentOrg()?.organizationId
+    const activeOrg = (verifiedOrgId ? orgs.find(o => o.id === verifiedOrgId) : null) || orgs[0]
     orgCtx = { organizationId: activeOrg.id, userId, role: activeOrg.role }
     // Also set for any synchronous work in this handler before the
     // stream takes over (defensive — currently nothing depends on it).

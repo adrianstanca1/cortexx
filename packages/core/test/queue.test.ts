@@ -1,6 +1,6 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import { createApiClient, flushQueue, setQueueStore, pendingWrites, onQueueChange, setOfflineCache } from '../src/index.ts';
+import { createApiClient, flushQueue, setQueueStore, pendingWrites, onQueueChange, setOfflineCache, setOfflineScope } from '../src/index.ts';
 
 // In-memory fakes standing in for expo-secure-store + AsyncStorage.
 function memStore(map = new Map<string, string>()) {
@@ -12,7 +12,7 @@ function memStore(map = new Map<string, string>()) {
 }
 
 describe('offline write queue', () => {
-  beforeEach(() => { setQueueStore(null); setOfflineCache(null); });
+  beforeEach(() => { setQueueStore(null, []); setOfflineCache(null); setOfflineScope('userA_orgA'); });
 
   test('postCollection queues on network failure and flushQueue replays', async () => {
     const calls: any[] = [];
@@ -53,4 +53,47 @@ describe('offline write queue', () => {
     (globalThis as any).fetch = (globalThis as any)._origFetch;
     assert.strictEqual(fired, 1, 'listener should fire on enqueue');
   });
+});
+
+
+test('offline writes cannot replay under another company or account', async () => {
+  const oldFetch = globalThis.fetch;
+  const api = createApiClient({ apiUrl: 'https://example.com', tokenStorage: memStore() });
+  try {
+    setQueueStore(null, []);
+    setOfflineScope('userA_orgA');
+    globalThis.fetch = async () => { throw new Error('offline'); };
+    await api.postCollection('snags', { title: 'Private tenant A snag' });
+    assert.strictEqual(pendingWrites(), 1);
+    setOfflineScope('userA_orgB');
+    let calls = 0;
+    globalThis.fetch = async () => { calls++; return new Response('{}', { status: 200 }); };
+    const blocked = await flushQueue({ token: 'tenantB', apiUrl: 'https://example.com' });
+    assert.strictEqual(blocked.ok, 0);
+    assert.strictEqual(calls, 0, 'must never POST another company offline data');
+    setOfflineScope('userA_orgA');
+    const recovered = await flushQueue({ token: 'tenantA', apiUrl: 'https://example.com' });
+    assert.strictEqual(recovered.ok, 1);
+  } finally {
+    globalThis.fetch = oldFetch;
+    setQueueStore(null, []);
+    setOfflineScope(null);
+  }
+});
+
+test('legacy offline writes without tenant context are not silently replayed', async () => {
+  setQueueStore(null, [{ id: 'old', method: 'POST', collection: 'snags', body: { title: 'old' } }]);
+  setOfflineScope('newUser_newOrg');
+  const oldFetch = globalThis.fetch;
+  try {
+    globalThis.fetch = async () => { throw new Error('legacy write should not send'); };
+    const res = await flushQueue({ token: 'PLACEHOLDER_TOKEN', apiUrl: 'https://example.com' });
+    assert.strictEqual(res.ok, 0);
+    assert.strictEqual(res.failed, 1);
+    assert.strictEqual(pendingWrites(), 1);
+  } finally {
+    globalThis.fetch = oldFetch;
+    setQueueStore(null, []);
+    setOfflineScope(null);
+  }
 });

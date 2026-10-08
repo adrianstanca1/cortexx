@@ -149,6 +149,9 @@ export async function requireOrg() {
   const mobile = await mobileBearerSession(orgContext)
   let session
 
+  // A mobile JWT selects an exact tenant; never override it with the first
+  // membership or with a browser cookie after refreshing the membership list.
+  const bearerOrgId = mobile && !(mobile instanceof NextResponse) ? orgContext.organizationId : null
   if (mobile) {
     if (mobile instanceof NextResponse) return mobile
     session = mobile
@@ -175,14 +178,20 @@ export async function requireOrg() {
   }
 
   let active = orgs[0]
-  try {
-    const store = await cookies()
-    const cookieValue = store.get(ACTIVE_ORG_COOKIE)?.value
-    if (cookieValue) {
-      const match = orgs.find(o => o.id === cookieValue)
-      if (match) active = match
-    }
-  } catch { /* native bearer requests have no cookie requirement */ }
+  if (bearerOrgId) {
+    const selected = orgs.find(o => o.id === bearerOrgId)
+    if (!selected) return NextResponse.json({ error: 'Organization access denied' }, { status: 403 })
+    active = selected
+  } else {
+    try {
+      const store = await cookies()
+      const cookieValue = store.get(ACTIVE_ORG_COOKIE)?.value
+      if (cookieValue) {
+        const match = orgs.find(o => o.id === cookieValue)
+        if (match) active = match
+      }
+    } catch { /* no browser cookie available */ }
+  }
 
   const personaRole = resolvePersona(active.personaRole, (session.user as { role?: string }).role, active.role)
   ;(session.user as { role?: string }).role = personaRole
