@@ -172,3 +172,26 @@ for (const filename of ['ios-build.yml', 'release-ios.yml']) {
     }
   })
 }
+
+test('ordinary iOS pushes never provision Apple certificates or attempt a signed archive', () => {
+  const workflow = fs.readFileSync(path.resolve(__dirname, '../.github/workflows/ios-build.yml'), 'utf8')
+  assert.match(workflow, /name: Note verification-only push/)
+  for (const name of [
+    'Import signing certificate',
+    'Install provisioning profile',
+    'Prepare App Store Connect API key',
+    'Set build number',
+    'Archive signed app (manual)',
+    'Archive signed app (automatic API-key signing)',
+    'Export IPA (manual)',
+    'Export IPA (automatic API-key signing)',
+    'Locate exported IPA',
+    'Upload to TestFlight',
+    'Upload IPA artifact',
+  ]) {
+    const section = workflow.split('      - name: ' + name + '\\n')[1]?.split('      - name: ')[0]
+    assert.ok(section, 'Missing release-only step: ' + name)
+    assert.ok(section.includes("if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs."), 'Ungated signing step: ' + name)
+  }
+  assert.match(workflow, /name: Verify unsigned iOS archive/)
+})
