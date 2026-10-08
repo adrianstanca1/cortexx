@@ -161,6 +161,8 @@ const MOBILE_BEARER_API_PREFIXES = [
   '/api/rfis',
   '/api/equipment-checks',
   '/api/pos',
+  '/api/quotes',
+  '/api/invoices',
   '/api/field-constraints',
   '/api/field-handovers',
   '/api/field-production',

@@ -120,16 +120,16 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
     <PhotosScreen onLogout={onLogout} />
   ) : tab === 'invoices' ? (
     <CollectionScreen name="invoices" title="Invoices" readOnly fields={[
-      { key: 'invoiceNo', label: 'Invoice No', required: true }, { key: 'client', label: 'Client' },
-      { key: 'amount', label: 'Amount (£)', type: 'number', required: true }, { key: 'status', label: 'Status' }, { key: 'due', label: 'Due date' },
-    ]} rowTitle={(i) => i.invoiceNo || i.invoice_no || 'Invoice'} rowSub={(i) => `£${i.amount ?? '—'} · ${i.status || 'draft'}`} onLogout={onLogout} />
+      { key: 'number', label: 'Invoice number', required: true }, { key: 'clientName', label: 'Client' },
+      { key: 'amount', label: 'Amount (£)', type: 'number', required: true }, { key: 'status', label: 'Status' }, { key: 'dueDate', label: 'Due date' },
+    ]} rowTitle={(i) => i.number || 'Invoice'} rowSub={(i) => `${i.clientName || 'Client'} · £${i.amount ?? '—'} · ${i.status || 'draft'}`} onLogout={onLogout} />
   ) : tab === 'cis' ? (
     <CisPaymentsScreen onLogout={onLogout} />
   ) : tab === 'quotes' ? (
     <CollectionScreen name="quotes" title="Quotes" readOnly fields={[
-      { key: 'ref', label: 'Quote ref', required: true }, { key: 'client', label: 'Client' },
-      { key: 'value', label: 'Value (£)', type: 'number' }, { key: 'status', label: 'Status' },
-    ]} rowTitle={(i) => i.ref || 'Quote'} rowSub={(i) => `£${i.value ?? '—'} · ${i.status || 'draft'}`} onLogout={onLogout} />
+      { key: 'number', label: 'Quote number', required: true }, { key: 'customerName', label: 'Customer' },
+      { key: 'total', label: 'Total (£)', type: 'number' }, { key: 'status', label: 'Status' },
+    ]} rowTitle={(i) => i.number || i.title || 'Quote'} rowSub={(i) => `${i.customerName || 'Customer'} · £${i.total ?? '—'} · ${i.status || 'draft'}`} onLogout={onLogout} />
   ) : tab === 'tickets' ? (
     <TicketsScreen />
   ) : tab === 'notifications' ? (
