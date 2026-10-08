@@ -3,6 +3,10 @@ name: EAS iOS — Build & TestFlight
 on:
   workflow_dispatch:
     inputs:
+      build_id:
+        description: "Existing successful Expo iOS build ID (skips rebuilding)"
+        required: false
+        default: ""
       what_to_test:
         description: TestFlight "What to Test" note
         required: false
@@ -61,25 +65,32 @@ jobs:
           npx eas-cli@21.0.1 whoami
           npx eas-cli@21.0.1 project:info
 
-      - name: Prepare optional App Store Connect API key
+      - name: Validate Apple-issued App Store Connect team key
         env:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
         run: |
           set -euo pipefail
-          if [ -n "$APP_STORE_CONNECT_KEY_ID" ] && [ -n "$APP_STORE_CONNECT_ISSUER_ID" ] && [ -n "$APP_STORE_CONNECT_KEY_BASE64" ]; then
-            printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
-            chmod 600 "$RUNNER_TEMP/AuthKey.p8"
-            echo "EXPO_ASC_API_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
-            echo "EXPO_ASC_KEY_ID=$APP_STORE_CONNECT_KEY_ID" >> "$GITHUB_ENV"
-            echo "EXPO_ASC_ISSUER_ID=$APP_STORE_CONNECT_ISSUER_ID" >> "$GITHUB_ENV"
-            echo "App Store Connect API key is available for EAS credential validation/repair."
-          else
-            echo "::notice::No App Store Connect API key secrets found. EAS will reuse existing remote iOS credentials if they are already valid."
+          if [ -z "$APP_STORE_CONNECT_KEY_ID" ] || [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] || [ -z "$APP_STORE_CONNECT_KEY_BASE64" ]; then
+            echo "::error::Configure the Apple Team Key ID, Issuer ID, and base64-encoded .p8 private key as repository secrets."
+            exit 1
           fi
+          if ! printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"; then
+            echo "::error::APP_STORE_CONNECT_KEY_BASE64 is not valid base64."
+            exit 1
+          fi
+          chmod 600 "$RUNNER_TEMP/AuthKey.p8"
+          if ! grep -Fxq -- '-----BEGIN PRIVATE KEY-----' "$RUNNER_TEMP/AuthKey.p8" || ! openssl pkey -in "$RUNNER_TEMP/AuthKey.p8" -noout >/dev/null 2>&1; then
+            echo "::error::The Apple key must decode to an unencrypted PKCS#8 PEM (.p8); upload an original Apple-issued team key."
+            exit 1
+          fi
+          echo "EXPO_ASC_API_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
+          echo "EXPO_ASC_KEY_ID=$APP_STORE_CONNECT_KEY_ID" >> "$GITHUB_ENV"
+          echo "EXPO_ASC_ISSUER_ID=$APP_STORE_CONNECT_ISSUER_ID" >> "$GITHUB_ENV"
 
       - name: Build signed iOS app
+        if: ${{ inputs.build_id == '' }}
         id: build
         run: |
           set -euo pipefail
@@ -108,9 +119,23 @@ jobs:
       - name: Submit exact build to TestFlight and wait for Apple
         env:
           WHAT_TO_TEST: ${{ inputs.what_to_test }}
-          BUILD_ID: ${{ steps.build.outputs.build_id }}
+          BUILD_ID: ${{ inputs.build_id || steps.build.outputs.build_id }}
         run: |
           set -euo pipefail
+          if [ -z "$BUILD_ID" ]; then
+            echo "::error::No EAS build ID provided or generated."
+            exit 1
+          fi
+          node -e '
+            const fs = require("fs");
+            const config = JSON.parse(fs.readFileSync("eas.json", "utf8"));
+            const ios = config.submit.production.ios;
+            if (!ios.ascAppId) throw new Error("Missing App Store Connect app ID in eas.json");
+            ios.ascApiKeyPath = process.env.EXPO_ASC_API_KEY_PATH;
+            ios.ascApiKeyId = process.env.EXPO_ASC_KEY_ID;
+            ios.ascApiKeyIssuerId = process.env.EXPO_ASC_ISSUER_ID;
+            fs.writeFileSync("eas.json", JSON.stringify(config, null, 2) + "\\n");
+          '
           npx eas-cli@21.0.1 submit \
             --platform ios \
             --profile production \
