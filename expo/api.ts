@@ -37,7 +37,7 @@ async function publicPost(path: string, payload: Record<string, unknown>): Promi
       body: JSON.stringify(payload),
     });
   } catch {
-    throw new Error('Could not reach Cortexx. Check your connection and try again.');
+    throw new Error('Could not reach Cortex Construct. Check your connection and try again.');
   }
   const body = await res.json().catch(() => null);
   if (!res.ok) {

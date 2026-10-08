@@ -12,7 +12,7 @@ on:
         required: false
         default: ""
       sync_app_name:
-        description: "Explicitly rename existing App Store Connect app metadata to Cortexx (status mode only)"
+        description: "Synchronize existing App Store Connect app metadata to Cortex Construct (status mode only)"
         required: false
         type: boolean
         default: false
@@ -336,7 +336,7 @@ jobs:
                 || (localizations.data || [])[0];
               if (!current) throw Error("Apple app has no localization to rename; no metadata changed.");
               console.log("Existing Apple app localization: " + current.attributes.locale + " / " + current.attributes.name);
-              if (current.attributes.name !== "Cortexx") {
+              if (current.attributes.name !== "Cortex Construct") {
                 const response = await fetch(
                   "https://api.appstoreconnect.apple.com/v1/appInfoLocalizations/" + current.id,
                   {
@@ -346,7 +346,7 @@ jobs:
                       data: {
                         type: "appInfoLocalizations",
                         id: current.id,
-                        attributes: { name: "Cortexx" }
+                        attributes: { name: "Cortex Construct" }
                       }
                     })
                   }
@@ -360,18 +360,18 @@ jobs:
                 } else {
                   const confirmed = await response.json();
                   console.log("Apple primary app localization renamed to: " + confirmed.data?.attributes?.name);
-                  if (confirmed.data?.attributes?.name !== "Cortexx") process.exitCode = 1;
+                  if (confirmed.data?.attributes?.name !== "Cortex Construct") process.exitCode = 1;
                 }
               } else {
-                console.log("Apple app name already Cortexx; no change required.");
+                console.log("Apple app name already Cortex Construct; no change required.");
               }
             }
             console.log("TestFlight target App Store Connect name: " + appRecord.data?.attributes?.name);
             console.log("TestFlight target Apple app ID: " + appRecord.data?.id);
             console.log("TestFlight target bundle identifier: " + appRecord.data?.attributes?.bundleId);
             const availableApps = await request("/v1/apps?limit=200");
-            const cortexxApps = (availableApps.data || []).filter(x => /cortexx/i.test(x.attributes?.name || ""));
-            console.log("Existing Apple records named Cortexx: " + JSON.stringify(cortexxApps.map(x => ({
+            const cortexxApps = (availableApps.data || []).filter(x => /cortex construct/i.test(x.attributes?.name || ""));
+            console.log("Existing Apple records named Cortex Construct: " + JSON.stringify(cortexxApps.map(x => ({
               id: x.id, name: x.attributes.name, bundleId: x.attributes.bundleId
             }))));
             const builds = await request("/v1/builds?filter%5Bapp%5D=" + app + "&limit=100&sort=-uploadedDate");

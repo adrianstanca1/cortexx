@@ -105,7 +105,7 @@ export default function Broadsheet({ data }: BroadsheetProps) {
           {/* Masthead */}
           <div style={{ borderBottom: `2px solid ${V14.ink}`, paddingTop: 6, paddingBottom: 2 }}>
             <h1 style={{ fontFamily: DISPLAY, fontWeight: 900, fontSize: 52, letterSpacing: -2.5, lineHeight: 0.9, margin: 0, color: V14.ink }}>
-              The <span style={{ fontStyle: 'italic', fontWeight: 700 }}>Cortexx</span> Daily
+              The <span style={{ fontStyle: 'italic', fontWeight: 700 }}>Cortex Construct</span> Daily
             </h1>
           </div>
 
