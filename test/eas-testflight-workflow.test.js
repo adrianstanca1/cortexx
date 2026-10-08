@@ -41,7 +41,9 @@ test('workflow waits for the exact TestFlight submission, not only the build', (
   assert.match(workflow, /npx eas-cli@21\.0\.1 submit \\/)
   assert.match(workflow, /--id "\$BUILD_ID"/)
   assert.match(workflow, /--wait/)
-  assert.match(workflow, /--what-to-test "\$WHAT_TO_TEST"/)
+  // --what-to-test is the Enterprise-only changelog field, not a standard TestFlight note.
+  assert.doesNotMatch(workflow, /--what-to-test/)
+  assert.doesNotMatch(workflow, /WHAT_TO_TEST: \$\{\{ inputs\.what_to_test \}\}/)
 })
 
 test('workflow relies on eas submit --wait as the authoritative TestFlight delivery result', () => {

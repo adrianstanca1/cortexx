@@ -21,7 +21,7 @@ on:
           - direct
           - status
       what_to_test:
-        description: TestFlight "What to Test" note
+        description: Legacy release note (not sent to Expo Submit on non-Enterprise plans)
         required: false
         default: Cortexx release candidate
 
@@ -174,7 +174,6 @@ jobs:
 
       - name: Submit exact build to TestFlight and wait for Apple
         env:
-          WHAT_TO_TEST: ${{ inputs.what_to_test }}
           BUILD_ID: ${{ inputs.build_id || steps.build.outputs.build_id }}
         run: |
           set -euo pipefail
@@ -197,8 +196,7 @@ jobs:
             --profile production \
             --id "$BUILD_ID" \
             --wait \
-            --non-interactive \
-            --what-to-test "$WHAT_TO_TEST"
+            --non-interactive
 
       - name: Clean up App Store Connect key
         if: always()
