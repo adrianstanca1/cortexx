@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
+import { canManageTenders, tenderWhere } from '@/lib/tenderAccess'
+import { enforceRateLimit } from '@/lib/rateLimit'
+import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
@@ -17,11 +20,16 @@ function parseDate(v: unknown): Date | null | undefined {
 
 export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!canManageTenders(auth)) return NextResponse.json({ error: 'Company commercial admin required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
   try {
     const body = await req.json()
-    const existing = await prisma.tender.findUnique({ where: { id: params.id } })
+    if (!body || typeof body !== 'object' || Array.isArray(body))
+      return NextResponse.json({ error: 'Invalid tender input' }, { status: 400 })
+    const existing = await prisma.tender.findFirst({ where: { id: params.id, ...tenderWhere(auth) } })
     if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
     const data: Record<string, unknown> = {}
@@ -47,7 +55,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     }
 
     const tender = await prisma.tender.update({
-      where: { id: params.id },
+      where: { id: params.id, organizationId: auth.orgId! },
       data,
       include: { project: { select: { id: true, name: true } } },
     })
@@ -56,37 +64,42 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       prisma.activity.create({
         data: {
           projectId: tender.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(auth.session),
           actorType: 'human',
           action: `tender ${tender.title}: ${existing.status} → ${data.status}`,
           iconType: 'doc',
         },
       }).catch(() => {})
     }
+    auditLog({ action: 'tender.update', resourceType: 'Tender', resourceId: tender.id, userId: auth.userId, ...requestMeta(req) })
     return NextResponse.json(tender)
   } catch (error) {
-    console.error('[tenders/:id] PATCH failed:', error)
+    reportError(error, { context: 'tenders.update' })
     return NextResponse.json({ error: 'Failed to update tender' }, { status: 500 })
   }
 }
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!canManageTenders(auth)) return NextResponse.json({ error: 'Company commercial admin required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
   try {
-    const tender = await prisma.tender.findUnique({ where: { id: params.id } })
+    const tender = await prisma.tender.findFirst({ where: { id: params.id, ...tenderWhere(auth) } })
     if (!tender) return NextResponse.json({ error: 'Not found' }, { status: 404 })
-    await prisma.tender.delete({ where: { id: params.id } })
+    await prisma.tender.delete({ where: { id: params.id, organizationId: auth.orgId! } })
     auditLog({
       action: 'tender.delete',
       resourceType: 'Tender',
       resourceId: params.id,
+      userId: auth.userId,
       ...requestMeta(req),
     })
     return NextResponse.json({ ok: true })
   } catch (error) {
-    console.error('[tenders/:id] DELETE failed:', error)
+    reportError(error, { context: 'tenders.delete' })
     return NextResponse.json({ error: 'Failed to delete tender' }, { status: 500 })
   }
 }
