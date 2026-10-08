@@ -7,6 +7,10 @@ on:
         description: "Existing successful Expo iOS build ID (skips rebuilding)"
         required: false
         default: ""
+      apple_build_number:
+        description: "Apple build number to verify (blank checks newest available build)"
+        required: false
+        default: ""
       upload_method:
         description: "Submission path (direct sends the signed IPA to Apple from macOS)"
         required: false
@@ -289,6 +293,7 @@ jobs:
       APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+      APPLE_BUILD_NUMBER: ${{ inputs.apple_build_number }}
     steps:
       - name: Verify Cortexx build and testing groups in Apple
         run: |
@@ -310,17 +315,22 @@ jobs:
             };
             const app = "6820322670";
             const builds = await request("/v1/builds?filter%5Bapp%5D=" + app + "&limit=100&sort=-uploadedDate");
-            const latest = (builds.data || []).find(x => x.attributes?.version === "15");
+            const latest = (builds.data || []).find(x => !process.env.APPLE_BUILD_NUMBER || x.attributes?.version === process.env.APPLE_BUILD_NUMBER);
             if (!latest) {
-              console.log("Cortexx build 15: not yet visible in Apple builds (upload succeeded; processing may be pending).");
+              console.error("Cortexx build " + (process.env.APPLE_BUILD_NUMBER || "latest") + " is not yet visible in Apple builds.");
+              process.exitCode = 1;
             } else {
               console.log("Cortexx Apple build ID: " + latest.id);
               console.log("Cortexx build number: " + latest.attributes.version);
               console.log("Apple processing state: " + latest.attributes.processingState);
-              if (["FAILED", "INVALID"].includes(latest.attributes.processingState)) process.exitCode = 1;
+              if (latest.attributes.processingState !== "VALID") {
+                console.error("Cortexx is not ready for TestFlight: Apple processing state is " + latest.attributes.processingState);
+                process.exitCode = 1;
+              }
             }
             const groups = await request("/v1/betaGroups?filter%5Bapp%5D=" + app + "&limit=100");
             const internal = (groups.data || []).filter(g => g.attributes?.isInternalGroup);
+            if (internal.length === 0) process.exitCode = 1;
             console.log("Internal TestFlight groups: " + internal.length);
             for (const g of internal) {
               console.log("Group: " + g.attributes.name + "; auto-distribute: " + !!g.attributes.hasAccessToAllBuilds);
@@ -328,12 +338,14 @@ jobs:
               const assigned = await request("/v1/betaGroups/" + encodeURIComponent(g.id) + "/builds?limit=200");
               const included = (assigned.data || []).some(x => x.id === latest?.id);
               console.log("Internal group tester count: " + (members.data || []).length);
-              console.log("Cortexx build 15 assigned to internal group: " + included);
+              console.log("Cortexx build " + (latest?.attributes?.version || "unknown") + " assigned to internal group: " + included);
+              if (latest && !included) process.exitCode = 1;
             }
             if (latest) {
               const details = await request("/v1/buildBetaDetails?filter%5Bbuild%5D=" + encodeURIComponent(latest.id));
               const state = (details.data || [])[0]?.attributes?.internalBuildState || "PENDING";
               console.log("Apple internal TestFlight state: " + state);
+              if (state !== "IN_BETA_TESTING") process.exitCode = 1;
             }
           }
           main().catch(error => { console.error("Apple verification failed: " + error.message); process.exitCode = 1; });
