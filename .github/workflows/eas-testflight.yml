@@ -210,6 +210,7 @@ jobs:
       APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
       APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
       BUILD_ID: ${{ inputs.build_id }}
+      CORTEXX_SIGNED_IPA_URL: ${{ secrets.CORTEXX_SIGNED_IPA_URL }}
 
     steps:
       - name: Checkout release for Expo config
@@ -232,24 +233,25 @@ jobs:
           fi
 
       - name: Download exact signed production IPA
-        working-directory: expo
         shell: bash
         run: |
           set -euo pipefail
-          npx --yes eas-cli@24.11.0 build:view "$BUILD_ID" --json > "$RUNNER_TEMP/eas-build.json"
-          node -e '
-            const fs = require("node:fs");
-            const build = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
-            if (build.id !== process.env.BUILD_ID || build.platform !== "IOS" || build.status !== "FINISHED" || !build.artifacts?.buildUrl?.startsWith("https://")) {
-              throw new Error("EAS build is not a finished iOS build with a signed IPA artifact");
-            }
-            console.log("Verified signed EAS iOS build " + build.id);
-          ' "$RUNNER_TEMP/eas-build.json"
-          IPA_URL="$(node -e 'const b=require(process.argv[1]);process.stdout.write(b.artifacts.buildUrl)' "$RUNNER_TEMP/eas-build.json")"
-          curl --fail --location --silent --show-error --retry 3 --output "$RUNNER_TEMP/Cortexx.ipa" "$IPA_URL"
+          if [ -z "$CORTEXX_SIGNED_IPA_URL" ]; then
+            echo "::error::Missing temporary signed IPA download secret."
+            exit 1
+          fi
+          curl --fail --location --silent --show-error --retry 3 --output "$RUNNER_TEMP/Cortexx.ipa" "$CORTEXX_SIGNED_IPA_URL"
           unzip -t "$RUNNER_TEMP/Cortexx.ipa" > /dev/null
-          unzip -Z -1 "$RUNNER_TEMP/Cortexx.ipa" | grep -Eq "^Payload/[^/]+\.app/Info\.plist$"
-          echo "Signed IPA downloaded and archive validated."
+          unzip -Z -1 "$RUNNER_TEMP/Cortexx.ipa" > "$RUNNER_TEMP/ipa-entries.txt"
+          grep -Eq "^Payload/[^/]+\\.app/Info\\.plist$" "$RUNNER_TEMP/ipa-entries.txt"
+          unzip -oq "$RUNNER_TEMP/Cortexx.ipa" "Payload/*.app/Info.plist" -d "$RUNNER_TEMP/verify"
+          INFO_FILE="$(find "$RUNNER_TEMP/verify" -name Info.plist -print -quit)"
+          BUNDLE_ID="$(/usr/libexec/PlistBuddy -c "Print :CFBundleIdentifier" "$INFO_FILE")"
+          if [ "$BUNDLE_ID" != "com.cortexbuild.app" ]; then
+            echo "::error::Downloaded IPA does not match the Cortexx production bundle ID."
+            exit 1
+          fi
+          echo "Signed Cortexx IPA downloaded, archive validated and bundle ID verified."
 
       - name: Install Apple-issued API key in ephemeral macOS runner
         shell: bash
