@@ -38,7 +38,7 @@ permissions:
 concurrency:
   # App metadata/status operations can safely run beside a remote build.
   # Signed builds, uploads and credential linking remain serialized.
-  group: cortexx-eas-testflight-${{ inputs.upload_method == 'status' && 'status' || 'release' }}
+  group: cortexx-eas-testflight${{ inputs.upload_method == 'status' && '-status' || '' }}
   cancel-in-progress: false
 
 jobs:
