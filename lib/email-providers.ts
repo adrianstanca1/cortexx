@@ -34,7 +34,7 @@ export function resolveEmailKey(
 }
 
 export function fromAddress(): string {
-  return process.env.EMAIL_FROM || 'Cortexx <no-reply@cortexbuildpro.tech>'
+  return process.env.EMAIL_FROM || 'Cortex Construct <no-reply@cortexbuildpro.tech>'
 }
 
 export function replyToAddress(): string | undefined {

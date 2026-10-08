@@ -101,6 +101,7 @@ const PUBLIC_PATHS = new Set<string>([
   '/login',
   '/register',
   '/reset-password',
+  '/forgot-password',
   '/pricing',
   '/marketing',
   '/marketing.html',

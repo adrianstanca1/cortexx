@@ -17,6 +17,7 @@ function LoginForm() {
   const callbackUrl = safeCallback(search.get('callbackUrl'))
   const [email, setEmail] = useState('')
   const [password, setPassword] = useState('')
+  const [totp, setTotp] = useState('')
   const [error, setError] = useState<string | null>(null)
   const [loading, setLoading] = useState(false)
 
@@ -25,9 +26,9 @@ function LoginForm() {
     setError(null)
     setLoading(true)
     try {
-      const res = await signIn('credentials', { email, password, redirect: false, callbackUrl })
+      const res = await signIn('credentials', { email: email.trim().toLowerCase(), password, totp: totp.trim(), redirect: false, callbackUrl })
       if (res?.error) {
-        setError('Invalid email or password')
+        setError('Invalid email, password or authenticator code. If two-factor authentication is enabled, enter your 6-digit code.')
         return
       }
       router.push(callbackUrl)
@@ -70,11 +71,19 @@ function LoginForm() {
           style={inputStyle}
         />
 
+        <label htmlFor="totp" style={labelStyle}>Authenticator code (if enabled)</label>
+        <input id="totp" name="totp" type="text" inputMode="numeric" pattern="[0-9]{6}"
+          autoComplete="one-time-code" maxLength={6} value={totp}
+          onChange={e => setTotp(e.target.value.replace(/[^0-9]/g, ''))}
+          style={inputStyle} placeholder="6-digit code" />
+
         {error && <div role="alert" style={{ background: 'rgba(239,68,68,0.15)', border: '1px solid rgba(239,68,68,0.3)', color: '#ef4444', borderRadius: 10, padding: '10px 14px', fontFamily: 'var(--font-system)', fontSize: 13 }}>{error}</div>}
 
         <button type="submit" disabled={loading || !email || !password} style={{ marginTop: 4, padding: '14px 0', borderRadius: 14, background: '#b45309', border: 'none', color: '#fff', fontFamily: 'var(--font-system)', fontSize: 16, fontWeight: 700, cursor: 'pointer', opacity: loading || !email || !password ? 0.5 : 1 }}>
           {loading ? 'Signing in…' : 'Sign in'}
         </button>
+
+        <p style={{ textAlign: 'center', fontSize: 13, marginTop: 4 }}><Link href="/forgot-password" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 600 }}>Forgot password?</Link></p>
 
         <p style={{ textAlign: 'center', fontSize: 13, color: 'var(--t2)', fontFamily: 'var(--font-system)', marginTop: 12 }}>New? <Link href="/register" style={{ color: '#f59e0b', textDecoration: 'none', fontWeight: 600 }}>Create an account</Link></p>
       </form>

@@ -6,6 +6,7 @@ import bcrypt from 'bcryptjs'
 import { prisma } from './db'
 import { reportError } from './errors'
 import { resolvePersona } from './persona'
+import { verifyTotp } from './totp'
 
 export interface SessionOrgMembership {
   id: string
@@ -28,6 +29,7 @@ export const authConfig: NextAuthConfig = {
       credentials: {
         email: { label: 'Email', type: 'email' },
         password: { label: 'Password', type: 'password' },
+        totp: { label: 'Authenticator code (if enabled)', type: 'text' },
       },
       async authorize(credentials) {
         const email = typeof credentials?.email === 'string' ? credentials.email.trim().toLowerCase() : ''
@@ -37,7 +39,12 @@ export const authConfig: NextAuthConfig = {
         if (!user || !user.passwordHash) return null
         const ok = await bcrypt.compare(password, user.passwordHash)
         if (!ok) return null
-        return { id: user.id, email: user.email, name: user.name ?? undefined, role: user.role }
+        // The web and mobile routes must enforce the same account MFA policy.
+        if (user.totpEnabledAt && user.totpSecret) {
+          const code = typeof credentials?.totp === 'string' ? credentials.totp : ''
+          if (!verifyTotp(user.totpSecret, code)) return null
+        }
+        return { id: user.id, email: user.email, name: user.name ?? undefined, role: user.role, passwordVersion: user.passwordChangedAt?.getTime() ?? null }
       },
     }),
   ],
@@ -46,6 +53,17 @@ export const authConfig: NextAuthConfig = {
       if (user) {
         token.sub = user.id
         token.role = (user as { role?: string }).role ?? 'member'
+        token.passwordVersion = (user as { passwordVersion?: number | null }).passwordVersion ?? null
+      }
+      // A successful password reset revokes old browser sessions as well as
+      // mobile bearer tokens. Legacy JWTs remain valid only until the account
+      // changes its password; new sessions remember the reset timestamp.
+      if (!user && token.sub) {
+        const current = await prisma.user.findUnique({
+          where: { id: token.sub }, select: { passwordChangedAt: true },
+        })
+        if (!current || (current.passwordChangedAt &&
+            token.passwordVersion !== current.passwordChangedAt.getTime())) return null
       }
       // Refresh org memberships on sign-in, on explicit session update
       // (e.g. after accepting an invite or finishing onboarding), and on
