@@ -94,3 +94,12 @@ test('Apple app name change is explicit, bundle guarded, and scoped to an app in
   assert.ok(workflow.includes('attributes: { name: "Cortexx" }'))
   assert.ok(workflow.includes('appRecord.data?.attributes?.bundleId !== "com.cortexbuild.app"'))
 })
+
+test('new Cortexx EAS initializes iOS build numbers at the prior Apple build, never decrements them', () => {
+  assert.match(workflow, /initialize-cortexx-eas:/)
+  assert.match(workflow, /lastAppleBuild = 19;/)
+  assert.match(workflow, /Number\(previous\) >= lastAppleBuild/)
+  assert.match(workflow, /createAppVersion\(appVersionInput:/)
+  assert.match(workflow, /buildVersion: String\(lastAppleBuild\)/)
+  assert.ok(workflow.includes("appId = '76a768f6-ab7d-4c25-b71d-4b978a32ef61'"))
+})
