@@ -52,7 +52,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
     doc.rect(0, 0, doc.page.width, 90).fill(SLATE)
     doc.fillColor('#eef3fa').font('Helvetica-Bold').fontSize(22).text('QUOTE', 48, 30)
     doc.font('Helvetica').fontSize(11).fillColor('#8ea8c5').text(quote.number, 48, 60)
-    doc.fontSize(10).fillColor('#8ea8c5').text('Cortex Construct', doc.page.width - 48 - 80, 36, { width: 80, align: 'right' })
+    doc.fontSize(10).fillColor('#8ea8c5').text('Cortex Construct', doc.page.width - 48 - 145, 36, { width: 145, align: 'right' })
     doc.fontSize(9).fillColor('#8ea8c5').text('cortexbuildpro.tech', doc.page.width - 48 - 120, 52, { width: 120, align: 'right' })
 
     // ─── Meta block ───────────────────────────────────────────
