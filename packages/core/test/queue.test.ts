@@ -97,3 +97,59 @@ test('legacy offline writes without tenant context are not silently replayed', a
     setOfflineScope(null);
   }
 });
+
+test('simultaneous manual and background sync never double-submit a queued write', async () => {
+  const originalFetch = globalThis.fetch;
+  const api = createApiClient({ apiUrl: 'https://example.com', tokenStorage: memStore() });
+  let release: (() => void) | undefined;
+  let sent = 0;
+  try {
+    setQueueStore(null, []);
+    setOfflineScope('userA_orgA');
+    globalThis.fetch = async () => { throw new Error('offline'); };
+    await api.postCollection('field-events', { title: 'Site safety note' });
+    assert.strictEqual(pendingWrites(), 1);
+
+    globalThis.fetch = async () => {
+      sent++;
+      await new Promise<void>((resolve) => { release = resolve; });
+      return new Response('{}', { status: 200 });
+    };
+    const foreground = flushQueue({ token: 'tenant-A', apiUrl: 'https://example.com' });
+    const background = flushQueue({ token: 'tenant-A', apiUrl: 'https://example.com' });
+    assert.strictEqual(sent, 1, 'one write request while both sync calls overlap');
+    release?.();
+    const [a, b] = await Promise.all([foreground, background]);
+    assert.deepStrictEqual(a, { ok: 1, failed: 0 });
+    assert.deepStrictEqual(b, a);
+    assert.strictEqual(sent, 1, 'single server write after replay completes');
+    assert.strictEqual(pendingWrites(), 0);
+  } finally {
+    release?.();
+    globalThis.fetch = originalFetch;
+    setQueueStore(null, []);
+    setOfflineScope(null);
+  }
+});
+
+test('a failed shared replay unlocks later retries', async () => {
+  const originalFetch = globalThis.fetch;
+  const api = createApiClient({ apiUrl: 'https://example.com', tokenStorage: memStore() });
+  try {
+    setQueueStore(null, []);
+    setOfflineScope('userA_orgA');
+    globalThis.fetch = async () => { throw new Error('offline'); };
+    await api.postCollection('snags', { title: 'Re-test retry' });
+    const missed = await flushQueue({ token: 'tenant-A', apiUrl: 'https://example.com' });
+    assert.deepStrictEqual(missed, { ok: 0, failed: 1 });
+    assert.strictEqual(pendingWrites(), 1);
+    globalThis.fetch = async () => new Response('{}', { status: 200 });
+    const recovered = await flushQueue({ token: 'tenant-A', apiUrl: 'https://example.com' });
+    assert.deepStrictEqual(recovered, { ok: 1, failed: 0 });
+    assert.strictEqual(pendingWrites(), 0);
+  } finally {
+    globalThis.fetch = originalFetch;
+    setQueueStore(null, []);
+    setOfflineScope(null);
+  }
+});

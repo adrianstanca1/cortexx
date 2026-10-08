@@ -48,7 +48,17 @@ async function queuePersist() { if (_queueStore) try { await _queueStore.set('cb
 async function enqueue(w: QueuedWrite) { _queue.push(w); await queuePersist(); notifyQueue(); }
 async function dequeue(id: string) { _queue = _queue.filter((w) => w.id !== id); await queuePersist(); notifyQueue(); }
 
-export async function flushQueue(opts?: { apiUrl?: string; token?: string | null }): Promise<{ ok: number; failed: number }> {
+// An auto-sync tick and a manual retry must not replay the same queued POST
+// simultaneously. Keep one shared replay promise until it settles.
+let _flushInFlight: Promise<{ ok: number; failed: number }> | null = null;
+export function flushQueue(opts?: { apiUrl?: string; token?: string | null }): Promise<{ ok: number; failed: number }> {
+  if (_flushInFlight) return _flushInFlight;
+  const run = replayQueue(opts).finally(() => { if (_flushInFlight === run) _flushInFlight = null; });
+  _flushInFlight = run;
+  return run;
+}
+
+async function replayQueue(opts?: { apiUrl?: string; token?: string | null }): Promise<{ ok: number; failed: number }> {
   const snapshot = [..._queue]; let ok = 0; let failed = 0;
   const API_URL = opts?.apiUrl || API_URL_FALLBACK;
   for (const w of snapshot) try {
