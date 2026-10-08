@@ -74,3 +74,14 @@ test('Apple TestFlight status check verifies requested build and tester distribu
   assert.ok(workflow.includes('if (state !== "IN_BETA_TESTING") process.exitCode = 1;'))
   assert.doesNotMatch(workflow, /const latest = .*version === "15"/)
 })
+
+test('Cortexx Expo project keeps the existing App Store Connect app and logs target app identity', () => {
+  const app = JSON.parse(fs.readFileSync('expo/app.json', 'utf8')).expo
+  const eas = JSON.parse(fs.readFileSync('expo/eas.json', 'utf8'))
+  assert.equal(app.slug, 'cortexx')
+  assert.equal(app.extra.eas.projectId, '76a768f6-ab7d-4c25-b71d-4b978a32ef61')
+  assert.equal(app.ios.bundleIdentifier, 'com.cortexbuild.app')
+  assert.equal(eas.submit.production.ios.ascAppId, '6820322670')
+  assert.ok(workflow.includes('TestFlight target App Store Connect name:'))
+  assert.ok(workflow.includes('Existing Apple records named Cortexx:'))
+})
