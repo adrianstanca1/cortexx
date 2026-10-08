@@ -322,7 +322,19 @@ jobs:
             const groups = await request("/v1/betaGroups?filter%5Bapp%5D=" + app + "&limit=100");
             const internal = (groups.data || []).filter(g => g.attributes?.isInternalGroup);
             console.log("Internal TestFlight groups: " + internal.length);
-            for (const g of internal) console.log("Group: " + g.attributes.name + "; auto-distribute: " + !!g.attributes.hasAccessToAllBuilds);
+            for (const g of internal) {
+              console.log("Group: " + g.attributes.name + "; auto-distribute: " + !!g.attributes.hasAccessToAllBuilds);
+              const members = await request("/v1/betaGroups/" + encodeURIComponent(g.id) + "/betaTesters?limit=200");
+              const assigned = await request("/v1/betaGroups/" + encodeURIComponent(g.id) + "/builds?limit=200");
+              const included = (assigned.data || []).some(x => x.id === latest?.id);
+              console.log("Internal group tester count: " + (members.data || []).length);
+              console.log("Cortexx build 15 assigned to internal group: " + included);
+            }
+            if (latest) {
+              const details = await request("/v1/buildBetaDetails?filter%5Bbuild%5D=" + encodeURIComponent(latest.id));
+              const state = (details.data || [])[0]?.attributes?.internalBuildState || "PENDING";
+              console.log("Apple internal TestFlight state: " + state);
+            }
           }
           main().catch(error => { console.error("Apple verification failed: " + error.message); process.exitCode = 1; });
           NODE
