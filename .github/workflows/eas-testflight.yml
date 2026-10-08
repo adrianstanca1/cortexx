@@ -71,6 +71,77 @@ jobs:
           if [ -n "$APP_STORE_CONNECT_KEY_ID" ] && [ -n "$APP_STORE_CONNECT_ISSUER_ID" ] && [ -n "$APP_STORE_CONNECT_KEY_BASE64" ]; then
             printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 --decode > "$RUNNER_TEMP/AuthKey.p8"
             chmod 600 "$RUNNER_TEMP/AuthKey.p8"
+            if ! grep -q -- '^-----BEGIN PRIVATE KEY-----
+            echo "EXPO_ASC_API_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
+            echo "EXPO_ASC_KEY_ID=$APP_STORE_CONNECT_KEY_ID" >> "$GITHUB_ENV"
+            echo "EXPO_ASC_ISSUER_ID=$APP_STORE_CONNECT_ISSUER_ID" >> "$GITHUB_ENV"
+            echo "App Store Connect API key is available for EAS credential validation/repair."
+          else
+            echo "::notice::No App Store Connect API key secrets found. EAS will reuse existing remote iOS credentials if they are already valid."
+          fi
+
+      - name: Build signed iOS app
+        id: build
+        run: |
+          set -euo pipefail
+          BUILD_JSON="$RUNNER_TEMP/eas-build.json"
+          npx eas-cli@21.0.1 build \
+            --platform ios \
+            --profile production \
+            --wait \
+            --non-interactive \
+            --message "GitHub release ${GITHUB_SHA}" \
+            --json > "$BUILD_JSON"
+
+          BUILD_ID="$(node -e '
+            const fs = require("fs");
+            const parsed = JSON.parse(fs.readFileSync(process.argv[1], "utf8"));
+            const build = Array.isArray(parsed) ? parsed[0] : parsed;
+            if (!build || !build.id) {
+              console.error("EAS build output did not contain a build id");
+              process.exit(1);
+            }
+            process.stdout.write(build.id);
+          ' "$BUILD_JSON")"
+
+          echo "build_id=$BUILD_ID" >> "$GITHUB_OUTPUT"
+
+      - name: Submit exact build to TestFlight and wait for Apple
+        env:
+          WHAT_TO_TEST: ${{ inputs.what_to_test }}
+          BUILD_ID: ${{ steps.build.outputs.build_id }}
+        run: |
+          set -euo pipefail
+          if [ -z "${EXPO_ASC_API_KEY_PATH:-}" ]; then
+            echo "::error::A valid App Store Connect PKCS#8 key is required for unattended submission."
+            exit 1
+          fi
+          node -e '
+            const fs = require("fs");
+            const path = "eas.json";
+            const config = JSON.parse(fs.readFileSync(path, "utf8"));
+            const ios = config.submit.production.ios;
+            if (!ios.ascAppId) throw new Error("Missing App Store Connect ascAppId");
+            ios.ascApiKeyPath = process.env.EXPO_ASC_API_KEY_PATH;
+            ios.ascApiKeyId = process.env.EXPO_ASC_KEY_ID;
+            ios.ascApiKeyIssuerId = process.env.EXPO_ASC_ISSUER_ID;
+            fs.writeFileSync(path, JSON.stringify(config, null, 2) + "\n");
+          '
+          npx eas-cli@21.0.1 submit \
+            --platform ios \
+            --profile production \
+            --id "$BUILD_ID" \
+            --wait \
+            --non-interactive \
+            --what-to-test "$WHAT_TO_TEST"
+
+      - name: Clean up App Store Connect key
+        if: always()
+        run: rm -f "$RUNNER_TEMP/AuthKey.p8"
+ "$RUNNER_TEMP/AuthKey.p8" || ! openssl pkey -in "$RUNNER_TEMP/AuthKey.p8" -noout >/dev/null 2>&1; then
+              echo "::error::APP_STORE_CONNECT_KEY_BASE64 must decode to a valid PKCS#8 .p8 private key. Replace the secret with the base64-encoded original Apple .p8 file."
+              exit 1
+            fi
             echo "EXPO_ASC_API_KEY_PATH=$RUNNER_TEMP/AuthKey.p8" >> "$GITHUB_ENV"
             echo "EXPO_ASC_KEY_ID=$APP_STORE_CONNECT_KEY_ID" >> "$GITHUB_ENV"
             echo "EXPO_ASC_ISSUER_ID=$APP_STORE_CONNECT_ISSUER_ID" >> "$GITHUB_ENV"
