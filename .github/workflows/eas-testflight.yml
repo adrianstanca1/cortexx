@@ -494,6 +494,14 @@ jobs:
           }
           async function main() {
             let data = await credentials();
+            console.log("Legacy signing record overview: " + JSON.stringify((data.legacy.iosAppCredentials || []).map(c => ({
+              bundle: c.appleAppIdentifier?.bundleIdentifier || "unspecified",
+              teamLinked: !!c.appleTeam?.id,
+              buildTypes: (c.iosAppBuildCredentialsList || []).map(v => ({
+                type: v.iosDistributionType, certificateLinked: !!v.distributionCertificate?.id,
+                profileLinked: !!v.provisioningProfile?.id
+              }))
+            }))));
             const source = (data.legacy.iosAppCredentials || []).find(c => c.appleAppIdentifier?.bundleIdentifier === bundle);
             const release = (source?.iosAppBuildCredentialsList || []).find(c => c.iosDistributionType === "APP_STORE");
             if (!source?.appleTeam?.id || !source.appleAppIdentifier?.id ||
