@@ -189,7 +189,7 @@ test('ordinary iOS pushes never provision Apple certificates or attempt a signed
     'Upload to TestFlight',
     'Upload IPA artifact',
   ]) {
-    const section = workflow.split('      - name: ' + name + '\\n')[1]?.split('      - name: ')[0]
+    const section = workflow.split('      - name: ' + name)[1]?.split('      - name: ')[0]
     assert.ok(section, 'Missing release-only step: ' + name)
     assert.ok(section.includes("if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs."), 'Ungated signing step: ' + name)
   }
