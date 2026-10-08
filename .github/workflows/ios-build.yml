@@ -141,6 +141,12 @@ jobs:
         working-directory: ios/App
         run: xcrun agvtool new-version -all "${{ github.run_number }}"
 
+      - name: Configure manual signing for the App target
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'manual'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: ruby scripts/configure-ios-manual-signing.rb
+
       - name: Archive signed app (manual)
         if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'manual'
         run: |
@@ -151,10 +157,6 @@ jobs:
             -configuration Release \
             -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
             -destination 'generic/platform=iOS' \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY='iPhone Distribution' \
-            PROVISIONING_PROFILE_SPECIFIER='Cortexx App Store' \
-            DEVELOPMENT_TEAM='${{ secrets.APPLE_TEAM_ID }}' \
             | tee "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Archive signed app (automatic API-key signing)
