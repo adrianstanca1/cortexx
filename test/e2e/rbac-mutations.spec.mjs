@@ -236,3 +236,20 @@ test('company commercial admin can list tenders but field roles cannot read or m
     expect(remove.status).toBe(403)
   }
 })
+
+
+test('financial AI drafting and PDF export reject non-company-admin roles', async ({ page }) => {
+  for (const email of [users.pm, users.foreman, users.operative]) {
+    await signIn(page, email)
+    const draft = await api(page, '/api/quotes/draft', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ brief: 'Please draft this large sample building quotation' }),
+    })
+    expect(draft.status).toBe(403)
+    const pdf = await page.evaluate(async () => {
+      const res = await fetch('/api/quotes/nonexistent-quote/pdf')
+      return res.status
+    })
+    expect(pdf).toBe(403)
+  }
+})
