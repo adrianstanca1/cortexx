@@ -260,6 +260,7 @@ export default function TeamPage() {
     <div className="module-page" style={{ background: 'var(--bg0)', minHeight: '100dvh', paddingBottom: 100 }}>
       {toast && <Toast message={toast.msg} type={toast.type} onDone={() => setToast(null)} />}
       <MobileHeader title="Team" subtitle={`${team.length} members · ${onSiteCount} on site`} notifCount={0} />
+      <Link href="/workforce" style={{ display: 'block', margin: '10px 16px', color: 'var(--t1)', background: 'var(--bg2)', padding: '12px 14px', borderRadius: 12, fontWeight: 700, textDecoration: 'none' }}>Workforce planner →</Link>
 
       {/* Tab switch */}
       <div style={{ display: 'flex', padding: '10px 16px 0', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>

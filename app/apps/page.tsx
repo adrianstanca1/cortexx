@@ -68,6 +68,7 @@ const SECTIONS: { title: string; items: ModuleItem[] }[] = [
       { href: '/innovation',         label: 'Innovation OS', Icon: IcSpark, color: '#48d8ff' },
       { href: '/projects',           label: 'Timeline',   Icon: IcLayers,   color: '#2563eb' },
       { href: '/schedule',           label: 'Schedule',   Icon: IcClock,    color: '#06b6d4' },
+      { href: '/workforce',          label: 'Workforce planner', Icon: IcTeam, color: '#10b981' },
       { href: '/site-diary',         label: 'Site diary', Icon: IcDoc,      color: '#10b981' },
       { href: '/photos',             label: 'Photos',     Icon: IcCamera,   color: '#8b5cf6' },
       { href: '/drawings',           label: 'Drawings',   Icon: IcLayers,   color: '#2563eb' },
