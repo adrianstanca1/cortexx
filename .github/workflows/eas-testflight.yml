@@ -134,7 +134,7 @@ jobs:
             ios.ascApiKeyPath = process.env.EXPO_ASC_API_KEY_PATH;
             ios.ascApiKeyId = process.env.EXPO_ASC_KEY_ID;
             ios.ascApiKeyIssuerId = process.env.EXPO_ASC_ISSUER_ID;
-            fs.writeFileSync("eas.json", JSON.stringify(config, null, 2) + "\\n");
+            fs.writeFileSync("eas.json", JSON.stringify(config, null, 2));
           '
           npx eas-cli@21.0.1 submit \
             --platform ios \
