@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { cookies } from 'next/headers'
 import { requireAuth } from './requireAuth'
 import { canWrite, canManage } from './rbac'
-import { runWithOrg } from './tenancy'
+import { runWithOrg, getCurrentOrg } from './tenancy'
 import { resolvePersona } from './persona'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
@@ -54,16 +54,16 @@ export function withRoute(
     }
 
     const orgs = (session as RouteSession).user?.organizations || []
-    let active = orgs[0] || null
-    try {
-      const store = await cookies()
-      const cookieValue = store.get(ACTIVE_ORG_COOKIE)?.value
-      if (cookieValue) {
-        const match = orgs.find(o => o.id === cookieValue)
-        if (match) active = match
-      }
-    } catch {
-      // Not in a request context — fall through.
+    // requireAuth has already verified the active workspace. In particular,
+    // its mobile bearer org must not be replaced by the first membership or
+    // by a stale web cookie on a shared device.
+    const verifiedOrgId = getCurrentOrg()?.organizationId
+    let active = (verifiedOrgId ? orgs.find(o => o.id === verifiedOrgId) : null) || orgs[0] || null
+    if (!verifiedOrgId) {
+      try {
+        const cookieValue = (await cookies()).get(ACTIVE_ORG_COOKIE)?.value
+        if (cookieValue) active = orgs.find(o => o.id === cookieValue) || active
+      } catch { /* no browser cookie available */ }
     }
     const orgId = active?.id || null
     const orgSlug = active?.slug || null

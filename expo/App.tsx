@@ -1,8 +1,8 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaView, StyleSheet, View, Text, TouchableOpacity, ActivityIndicator } from 'react-native';
+import { SafeAreaView, StyleSheet, View, Text, TouchableOpacity, ActivityIndicator, Alert } from 'react-native';
 import { Colors } from './theme';
-import { getMe, clearToken, stopStream, type AuthUser } from './api';
+import { getMe, clearToken, stopStream, pendingWrites, type AuthUser } from './api';
 import LoginScreen from './LoginScreen';
 import Tabs from './Tabs';
 
@@ -26,6 +26,10 @@ export default function App() {
   useEffect(() => { void restore(); }, [restore]);
 
   const logout = async () => {
+    if (pendingWrites() > 0) {
+      Alert.alert('Unsynced work', 'Sync pending offline changes before signing out to protect company data.');
+      return;
+    }
     stopStream();
     await clearToken();
     setUser(null);
@@ -46,7 +50,7 @@ export default function App() {
             </View>
           : !user
             ? <LoginScreen onAuthed={setUser} />
-            : <Tabs user={user} onLogout={logout} />}
+            : <Tabs key={`${user.id}:${user.organization?.id || ''}`} user={user} onLogout={logout} onWorkspaceChanged={setUser} />}
     </SafeAreaView>
   );
 }

@@ -3,8 +3,8 @@ import {
   View, Text, TouchableOpacity, StyleSheet, ScrollView, Alert, Linking,
 } from 'react-native';
 import * as Constants from 'expo-constants';
-import { Colors } from './theme';
-import { getMe, clearToken, type AuthUser } from './api';
+import { Colors, API_URL } from './theme';
+import { getMe, switchWorkspace, getToken, startStream, pendingWrites, type AuthUser } from './api';
 
 const LINKS = [
   { key: 'privacy', label: 'Privacy Policy', url: 'https://cortexbuildpro.tech/privacy' },
@@ -12,9 +12,10 @@ const LINKS = [
   { key: 'site', label: 'Web app', url: 'https://cortexbuildpro.tech' },
 ];
 
-export default function ProfileScreen({ onLogout }: { onLogout: () => void }) {
+export default function ProfileScreen({ onLogout, onWorkspaceChanged }: { onLogout: () => void; onWorkspaceChanged: (user: AuthUser) => void }) {
   const [me, setMe] = useState<AuthUser | null>(null);
   const [loading, setLoading] = useState(true);
+  const [switching, setSwitching] = useState<string | null>(null);
 
   useEffect(() => {
     (async () => {
@@ -24,9 +25,24 @@ export default function ProfileScreen({ onLogout }: { onLogout: () => void }) {
     })();
   }, []);
 
-  const signOut = async () => {
-    await clearToken();
-    onLogout();
+  const signOut = () => onLogout();
+
+  const chooseWorkspace = async (organizationId: string) => {
+    if (organizationId === me?.organization?.id || switching) return;
+    if (pendingWrites() > 0) {
+      Alert.alert('Unsynced work', 'Sync offline changes in the current company before switching.');
+      return;
+    }
+    setSwitching(organizationId);
+    try {
+      const result = await switchWorkspace(organizationId);
+      const token = await getToken();
+      if (token) startStream({ apiUrl: API_URL, token });
+      setMe(result.user);
+      onWorkspaceChanged(result.user);
+    } catch (err: any) {
+      Alert.alert('Unable to change workspace', err?.message || 'Please try again.');
+    } finally { setSwitching(null); }
   };
 
   const openLink = (url: string) => {
@@ -60,6 +76,24 @@ export default function ProfileScreen({ onLogout }: { onLogout: () => void }) {
           <Text style={styles.sub}>Not signed in</Text>
         )}
       </View>
+
+      <Text style={styles.section}>Company workspace</Text>
+      <Text style={styles.sub}>Your web and mobile accounts share these company memberships and permissions.</Text>
+      {(me?.organizations || []).map(org => {
+        const selected = org.id === me?.organization?.id;
+        return (
+          <TouchableOpacity key={org.id} accessibilityRole="button"
+            accessibilityLabel={`${selected ? 'Current company' : 'Switch to company'} ${org.name}`}
+            disabled={selected || !!switching} style={[styles.rowBtn, selected && styles.activeWorkspace]}
+            onPress={() => void chooseWorkspace(org.id)}>
+            <View style={{ flex: 1 }}>
+              <Text style={styles.rowLabel}>{org.name}{selected ? '  ✓' : ''}</Text>
+              <Text style={styles.sub}>{org.personaRole?.replaceAll('_', ' ') || org.role}</Text>
+            </View>
+            <Text style={styles.rowArrow}>{switching === org.id ? '…' : selected ? '✓' : '›'}</Text>
+          </TouchableOpacity>
+        );
+      })}
 
       <Text style={styles.section}>Quick links</Text>
       {LINKS.map((l) => (
@@ -95,6 +129,7 @@ function Row({ label, value }: { label: string; value: string }) {
 const styles = StyleSheet.create({
   wrap: { flex: 1, backgroundColor: Colors.ink, padding: 20 },
   h1: { color: Colors.t1, fontSize: 26, fontWeight: '700', marginBottom: 16 },
+  activeWorkspace: { borderColor: Colors.amber },
   card: { backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 14, padding: 16, marginBottom: 8 },
   label: { color: Colors.t3, fontSize: 12, textTransform: 'uppercase', letterSpacing: 0.4 },
   value: { color: Colors.t1, fontSize: 18, fontWeight: '700', marginTop: 4 },

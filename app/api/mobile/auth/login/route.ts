@@ -83,7 +83,11 @@ export async function POST(req: NextRequest) {
   }
 
   const requestedOrgId = typeof body.organizationId === 'string' ? body.organizationId : ''
-  const membership = (requestedOrgId && user.organizations.find(m => m.organizationId === requestedOrgId)) || user.organizations[0]
+  // An explicit workspace choice must never silently fall back to another
+  // tenant, even if this user is legitimately a member of both.
+  const membership = requestedOrgId
+    ? user.organizations.find(m => m.organizationId === requestedOrgId)
+    : user.organizations[0]
   if (!membership) return NextResponse.json({ error: 'Organization access denied' }, { status: 403 })
   const personaRole = resolvePersona(membership.personaRole, user.role, membership.role)
 
