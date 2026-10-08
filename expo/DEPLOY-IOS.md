@@ -1,60 +1,47 @@
-# Deploy CortexBuild Pro to iOS (TestFlight)
+# Cortexx — iOS / Expo / TestFlight release
 
-End-to-end build + submit for the Expo iOS app. Run from a Mac with Xcode + EAS CLI.
+## Canonical application identities (8 October 2026)
 
-## Prerequisites (one-time)
-- Apple Developer account: **Adrian Stanca (Individual)**, team `4G3G5MX9BH`
-- EAS CLI: `npm install -g eas-cli` (or use repo-pinned `eas-cli@21.0.1`)
-- Authenticate: `eas login` (account `adrianstanca1`)
-- `eas device:create` not needed for production/TestFlight (internal distribution only)
+| Service | Canonical Cortexx record |
+| --- | --- |
+| GitHub | `adrianstanca1/cortexx` |
+| Expo / EAS | [`@adrianstanca/cortexx`](https://expo.dev/accounts/adrianstanca/projects/cortexx) |
+| Expo project UUID | `76a768f6-ab7d-4c25-b71d-4b978a32ef61` |
+| iPhone app name | `Cortexx` |
+| Apple bundle identifier | `com.cortexbuild.app` |
+| App Store Connect app ID | `6820322670` |
+| Apple Developer team | `4G3G5MX9BH` |
+| Backend | `https://cortexbuildpro.tech` |
 
-## Project identity (verified)
-| Field | Value |
-|-------|-------|
-| Expo owner | `adrianstanca` |
-| Slug | `cortexbuild-pro` |
-| Bundle ID | `com.cortexbuild.app` |
-| EAS projectId | `3b86383b-6d52-4ec4-afae-c8583b49f3d6` |
-| API endpoint | `https://cortexbuildpro.tech` |
-| Submit Apple ID | `Adrian.stanca1@icloud.com` |
+**Do not change the bundle identifier or the existing App Store Connect app ID.** Retaining those values keeps current TestFlight testers and Apple's build history under one application.
 
-## Credentials status (verified 2026-10-07)
-- EAS recognizes remote iOS credential records for `com.cortexbuild.app`, but the production Distribution Certificate / provisioning setup is **not currently validated for non-interactive builds**.
-- GitHub Actions run `37693994309` confirmed the production build stops at EAS credential setup with: `Distribution Certificate is not validated for non-interactive builds`.
-- One-time repair options:
-  1. Run `eas credentials --platform ios` interactively as the Apple Developer account holder, select the `production` profile, and repair/generate the Distribution Certificate and App Store provisioning profile; or
-  2. Configure the GitHub secrets `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, and `APP_STORE_CONNECT_KEY_BASE64` with an App Store Connect Team API key that has permission to manage signing. CI maps these to EAS ASC authentication automatically.
-- After credentials are valid, dispatch **EAS iOS — Build & TestFlight**. It builds the exact release, then submits that build to TestFlight with `--wait`.
+The legacy EAS project `@adrianstanca/cortexbuild-pro` (UUID `3b86383b-6d52-4ec4-afae-c8583b49f3d6`) holds historical production builds including 18 and 19. This is **not** the Expo project used by new Cortexx source builds. Existing Expo build records and remotely managed credentials are project-specific and are not automatically transferred to the new project.
 
-## Build (production IPA)
-```bash
-cd cortexx-review/expo
-npx eas build --platform ios --profile production
+## Build from Cortexx
+
+The GitHub workflow `.github/workflows/eas-testflight.yml` runs the release with GitHub-managed `EXPO_TOKEN` and Apple Team API key secrets:
+
+1. Verify `expo/app.json` has slug `cortexx` and EAS project UUID `76a768f6-ab7d-4c25-b71d-4b978a32ef61`.
+2. Verify iOS signing credentials are configured **for the new EAS project**, not merely for the legacy project.
+3. Run the EAS production build (remote iOS build-number auto-increment):
+   ```sh
+   cd expo
+   npx eas-cli@24.11.0 build --platform ios --profile production --non-interactive --wait --json
+   ```
+4. Submit the finished signed IPA to the **existing** App Store Connect app, ID `6820322670`, and confirm Apple processing and internal TestFlight distribution.
+
+Because signing credentials are isolated by EAS project, a successful legacy EAS build does **not** prove a new-project production build can sign. If signing preflight requests setup, provision or securely import an Apple Distribution certificate and provisioning profile into the Cortexx project without deleting or revoking the credentials for the legacy app.
+
+The direct-Apple-upload fallback uses a completed signed IPA and Apple Team API key in an ephemeral macOS GitHub runner. Do not commit `.p8` files, P12 certificates, provisioning profiles or IPA download URLs; remove temporary artifact URL secrets after uploads.
+
+## Validation
+
+```sh
+cd expo
+npx eas-cli@24.11.0 project:info
+npx tsc --noEmit
 ```
-- `cli.appVersionSource: "remote"` + `autoIncrement: true` makes EAS persist and increment the iOS build number across CI runs (no manual commit bump).
-- Cloud build on EAS (no Mac needed for compilation). ~15–25 min.
 
-## Submit to TestFlight
-```bash
-npx eas submit --platform ios --profile production
-```
-- Uses `eas.json` → `submit.production.ios.appleId`.
-- Walks through asc-auth; uploads IPA to App Store Connect → TestFlight.
-- After processing, add internal testers in App Store Connect.
+The project info must show `@adrianstanca/cortexx`. Apple TestFlight must report the newly uploaded build as `VALID`, associated with an internal beta group and `IN_BETA_TESTING` before considering the release complete.
 
-## Verify before building (local typecheck)
-```bash
-cd cortexx-review/expo
-npx tsc --noEmit   # must exit 0
-```
-Last verified: **2026-07-16 — tsc --noEmit exit 0, no errors.**
-
-## Gotchas
-- Do NOT build `@adrianstanca1/root` / `com.adrianstanca1.root` — that is a placeholder
-  project, NOT CortexBuild. Always confirm `bundleIdentifier: com.cortexbuild.app` in app.json.
-- `dist/`, `node_modules/`, `*.p8`, `*.p12`, `*.mobileprovision` are gitignored — never commit certs.
-- `eas.json` pins `cli.version: 21.0.1` for reproducible builds. Don't bump casually.
-- App Store Connect requires `ITSAppUsesNonExemptEncryption: false` (set in app.json infoPlist) — already done.
-
-## Rollback
-EAS keeps build history; redeploy a prior build number from App Store Connect if a release regresses.
+Older build links under `@adrianstanca/cortexbuild-pro` remain valid for historical reference; they are not evidence that the new Expo project contains those builds.
