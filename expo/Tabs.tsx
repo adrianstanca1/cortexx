@@ -24,6 +24,7 @@ import DrawingsScreen from './DrawingsScreen';
 import PhotosScreen from './PhotosScreen';
 import FieldHubScreen from './FieldHubScreen';
 import MoreScreen from './MoreScreen';
+import WebWorkspaceScreen from './WebWorkspaceScreen';
 import type { AuthUser } from './api';
 import type { AppRoute } from './routes';
 import { pendingWrites, onQueueChange, flushQueue, getToken } from './api';
@@ -33,10 +34,10 @@ const MAIN_TABS: Array<{ key: AppRoute; label: string; glyph: string }> = [
   { key: 'projects', label: 'Projects', glyph: 'PJ' },
   { key: 'tasks', label: 'Work', glyph: 'TK' },
   { key: 'field', label: 'Field', glyph: 'FD' },
-  { key: 'more', label: 'More', glyph: '•••' },
+  { key: 'more', label: 'Modules', glyph: 'MOD' },
 ];
 const FIELD_ROUTES = new Set<AppRoute>(['field', 'checkin', 'readiness', 'deliveries', 'controls', 'closeout', 'timesheets', 'diary', 'snags', 'safety', 'rfis', 'drawings', 'photos']);
-const MORE_ROUTES = new Set<AppRoute>(['more', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile']);
+const MORE_ROUTES = new Set<AppRoute>(['more', 'web', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile']);
 
 function rootFor(route: AppRoute): AppRoute {
   if (FIELD_ROUTES.has(route)) return 'field';
@@ -48,6 +49,8 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   const [tab, setTab] = React.useState<AppRoute>('overview');
   const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(0);
+  const [webPath, setWebPath] = React.useState('/apps');
+  const onOpenWeb = (path: string) => { setSelectedProject(null); setWebPath(path); setTab('web'); };
 
   React.useEffect(() => {
     setPending(pendingWrites());
@@ -87,7 +90,7 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   const content = selectedProject ? (
     <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} />
   ) : tab === 'overview' ? (
-    <OverviewScreen user={user} onNavigate={setTab} onLogout={onLogout} />
+    <OverviewScreen user={user} onNavigate={setTab} onOpenWeb={onOpenWeb} onLogout={onLogout} />
   ) : tab === 'projects' ? (
     <ProjectsScreen onLogout={onLogout} onSelect={setSelectedProject} />
   ) : tab === 'tasks' ? (
@@ -118,6 +121,8 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
     <DrawingsScreen onLogout={onLogout} />
   ) : tab === 'photos' ? (
     <PhotosScreen onLogout={onLogout} />
+  ) : tab === 'web' ? (
+    <WebWorkspaceScreen path={webPath} onBack={() => setTab('more')} onLogout={onLogout} />
   ) : tab === 'invoices' ? (
     <CollectionScreen name="invoices" title="Invoices" readOnly fields={[
       { key: 'number', label: 'Invoice number', required: true }, { key: 'clientName', label: 'Client' },
@@ -137,7 +142,7 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   ) : tab === 'profile' ? (
     <ProfileScreen onLogout={onLogout} onWorkspaceChanged={onWorkspaceChanged} />
   ) : (
-    <MoreScreen user={user} onNavigate={setTab} />
+    <MoreScreen user={user} onNavigate={setTab} onOpenWeb={onOpenWeb} />
   );
 
   const activeRoot = rootFor(tab);

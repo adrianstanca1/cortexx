@@ -16,7 +16,7 @@ function isFinanceAdmin(user: AuthUser): boolean {
 const toneColor = (tone?: Tone) =>
   tone === 'red' ? Colors.red : tone === 'green' ? Colors.green : tone === 'blue' ? Colors.blue : Colors.amber;
 
-export default function OverviewScreen({ user, onNavigate, onLogout }: { user: AuthUser; onNavigate: (k: AppRoute) => void; onLogout: () => void }) {
+export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }: { user: AuthUser; onNavigate: (k: AppRoute) => void; onOpenWeb: (path: string) => void; onLogout: () => void }) {
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
   const [stats, setStats] = useState<Stat[]>([]);
@@ -121,7 +121,9 @@ export default function OverviewScreen({ user, onNavigate, onLogout }: { user: A
 
     <Text style={styles.section}>FAST ACTIONS</Text>
     <View style={styles.actions}>
-      <TouchableOpacity style={styles.cta} onPress={() => onNavigate('field')}><Text style={styles.ctaText}>Open field command</Text><Text style={styles.ctaArrow}>→</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.cta} onPress={() => onOpenWeb('/dashboard')}><Text style={styles.ctaText}>Open full web dashboard</Text><Text style={styles.ctaArrow}>→</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.ctaGhost} onPress={() => onNavigate('field')}><Text style={styles.ghostText}>Open native field command</Text><Text style={styles.ghostText}>→</Text></TouchableOpacity>
+      <TouchableOpacity style={styles.ctaGhost} onPress={() => onNavigate('more')}><Text style={styles.ghostText}>All web modules and services</Text><Text style={styles.ghostText}>→</Text></TouchableOpacity>
       <TouchableOpacity style={styles.ctaGhost} onPress={() => onNavigate('tasks')}><Text style={styles.ghostText}>Review work queue</Text><Text style={styles.ghostText}>→</Text></TouchableOpacity>
     </View>
   </ScrollView>;
