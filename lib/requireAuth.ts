@@ -9,8 +9,14 @@ import { beginOrgContext } from './tenancy'
 import type { SessionOrgMembership } from './auth'
 import { bearerToken, verifyMobileToken } from './mobileAuth'
 import { resolvePersona } from './persona'
+import { refreshedMemberships } from './membershipRefresh'
 
 const ACTIVE_ORG_COOKIE = 'cortexx_active_org'
+
+function permissionRefreshUnavailable() {
+  return NextResponse.json({ error: 'Unable to verify organization access', code: 'ORG_MEMBERSHIP_UNAVAILABLE' },
+    { status: 503, headers: { 'Cache-Control': 'no-store' } })
+}
 
 async function mobileBearerSession(orgContext: { organizationId: string | null; userId: string | null; role: string | null }) {
   let token: string | null = null
@@ -65,7 +71,7 @@ async function mobileBearerSession(orgContext: { organizationId: string | null; 
  * Load current memberships from the DB for route authorization. JWT org data
  * remains useful to clients, but server routes must see role/persona changes and
  * removals immediately rather than waiting for a new 30-day token. Null means
- * the refresh itself failed, in which case callers may retain cached metadata.
+ * the refresh itself failed; authorization MUST fail closed instead of trusting a stale JWT.
  */
 async function refetchOrgsFromDb(userId: string): Promise<SessionOrgMembership[] | null> {
   try {
@@ -115,8 +121,9 @@ export async function requireAuth() {
   const userId = (session.user as { id?: string }).id || null
   let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
   if (userId) {
-    const freshOrgs = await refetchOrgsFromDb(userId)
-    if (freshOrgs !== null) orgs = freshOrgs
+    const membershipLookup = refreshedMemberships(await refetchOrgsFromDb(userId))
+    if (!membershipLookup.available) return permissionRefreshUnavailable()
+    orgs = membershipLookup.rows
   }
   ;(session.user as { organizations?: SessionOrgMembership[] }).organizations = orgs
 
@@ -165,8 +172,9 @@ export async function requireOrg() {
   const userId = (session.user as { id?: string }).id
   let orgs = ((session.user as { organizations?: SessionOrgMembership[] }).organizations) || []
   if (userId) {
-    const freshOrgs = await refetchOrgsFromDb(userId)
-    if (freshOrgs !== null) orgs = freshOrgs
+    const membershipLookup = refreshedMemberships(await refetchOrgsFromDb(userId))
+    if (!membershipLookup.available) return permissionRefreshUnavailable()
+    orgs = membershipLookup.rows
   }
   ;(session.user as { organizations?: SessionOrgMembership[] }).organizations = orgs
 
