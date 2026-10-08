@@ -72,6 +72,33 @@ export async function registerAccount(data: { name: string; email: string; passw
   return persistSession(await publicPost('/api/mobile/auth/register', data));
 }
 
+/** Change the existing web/mobile user's password through the same backend.
+ * Do not use generic apiPost: a wrong *current password* returns HTTP 401,
+ * which must not be confused with an expired bearer session. */
+export async function changePassword(currentPassword: string, newPassword: string): Promise<void> {
+  const token = await getToken();
+  if (!token) throw new Error('Session expired. Sign in again.');
+  let response: Response;
+  try {
+    response = await fetch(`${API_URL}/api/auth/password`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', Authorization: `Bearer ${token}` },
+      body: JSON.stringify({ currentPassword, newPassword }),
+    });
+  } catch { throw new Error('Cannot connect to Cortex Construct. Try again online.'); }
+  const result = await response.json().catch(() => ({}));
+  if (response.status === 401 && result?.error !== 'Current password is incorrect') {
+    stopRealtimeStream();
+    await clearToken();
+    throw new Error('Session expired. Sign in again.');
+  }
+  if (!response.ok) throw new Error(result?.error || 'Unable to change password.');
+  // PasswordChangedAt revokes the prior bearer immediately. Clearing locally
+  // avoids leaking a stale token to background sync and prompts re-auth.
+  stopRealtimeStream();
+  await clearToken();
+}
+
 export async function requestPasswordReset(email: string): Promise<{ message: string }> {
   return publicPost('/api/auth/password-reset/request', { email: email.trim().toLowerCase() });
 }
