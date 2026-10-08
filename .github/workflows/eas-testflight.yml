@@ -504,14 +504,14 @@ jobs:
             }))));
             const source = (data.legacy.iosAppCredentials || []).find(c => c.appleAppIdentifier?.bundleIdentifier === bundle);
             const release = (source?.iosAppBuildCredentialsList || []).find(c => c.iosDistributionType === "APP_STORE");
-            if (!source?.appleTeam?.id || !source.appleAppIdentifier?.id ||
+            if (!source.appleAppIdentifier?.id ||
                 !release?.distributionCertificate?.id || !release?.provisioningProfile?.id) {
               throw Error("Legacy project has no complete App Store signing association. No changes made.");
             }
             let target = (data.cortexx.iosAppCredentials || []).find(c => c.appleAppIdentifier?.id === source.appleAppIdentifier.id);
             if (!target) {
               const mutation = "mutation CreateIosAppCredentialsMutation($iosAppCredentialsInput: IosAppCredentialsInput!, $appId: ID!, $appleAppIdentifierId: ID!) { iosAppCredentials { createIosAppCredentials(iosAppCredentialsInput: $iosAppCredentialsInput, appId: $appId, appleAppIdentifierId: $appleAppIdentifierId) { id } } }";
-              const created = await gql(mutation, { iosAppCredentialsInput: { appleTeamId: source.appleTeam.id }, appId: cortexxId, appleAppIdentifierId: source.appleAppIdentifier.id });
+              const created = await gql(mutation, { iosAppCredentialsInput: source.appleTeam?.id ? { appleTeamId: source.appleTeam.id } : {}, appId: cortexxId, appleAppIdentifierId: source.appleAppIdentifier.id });
               if (!created.iosAppCredentials?.createIosAppCredentials?.id) throw Error("Cannot create Cortexx signing association");
               console.log("Cortexx linked to existing Apple team and bundle identifier.");
               data = await credentials();
