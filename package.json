@@ -86,7 +86,6 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@babel/cli": "^7.24.0",
     "@babel/core": "^7.29.7",
     "@babel/preset-react": "^7.29.7",
     "@babel/standalone": "^7.29.10",
