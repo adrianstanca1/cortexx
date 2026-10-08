@@ -15,6 +15,7 @@ on:
         options:
           - expo
           - direct
+          - status
       what_to_test:
         description: TestFlight "What to Test" note
         required: false
@@ -29,7 +30,7 @@ concurrency:
 
 jobs:
   build-and-submit:
-    if: ${{ inputs.upload_method != 'direct' }}
+    if: ${{ inputs.upload_method == 'expo' }}
     name: EAS build and TestFlight submit
     runs-on: ubuntu-latest
     timeout-minutes: 90
@@ -278,3 +279,50 @@ jobs:
         shell: bash
         run: |
           rm -f "$HOME/.appstoreconnect/private_keys/AuthKey_${APP_STORE_CONNECT_KEY_ID}.p8" "$RUNNER_TEMP/Cortexx.ipa" "$RUNNER_TEMP/eas-build.json"
+
+  check-apple-testflight:
+    if: ${{ inputs.upload_method == 'status' }}
+    name: Check Apple TestFlight processing
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+    steps:
+      - name: Verify Cortexx build and testing groups in Apple
+        run: |
+          node <<'NODE'
+          const { sign } = require("node:crypto");
+          const base = value => Buffer.from(JSON.stringify(value)).toString("base64url");
+          async function main() {
+            const now = Math.floor(Date.now() / 1000);
+            const head = base({ alg: "ES256", kid: process.env.APP_STORE_CONNECT_KEY_ID, typ: "JWT" });
+            const body = base({ iss: process.env.APP_STORE_CONNECT_ISSUER_ID, iat: now, exp: now + 300, aud: "appstoreconnect-v1" });
+            const data = head + "." + body;
+            const key = Buffer.from(process.env.APP_STORE_CONNECT_KEY_BASE64, "base64").toString("utf8");
+            const signature = sign("sha256", Buffer.from(data), { key, dsaEncoding: "ieee-p1363" }).toString("base64url");
+            const headers = { authorization: "Bearer " + data + "." + signature };
+            const request = async path => {
+              const response = await fetch("https://api.appstoreconnect.apple.com" + path, { headers });
+              if (!response.ok) throw Error("Apple API returned HTTP " + response.status);
+              return response.json();
+            };
+            const app = "6820322670";
+            const builds = await request("/v1/builds?filter%5Bapp%5D=" + app + "&limit=100&sort=-uploadedDate");
+            const latest = (builds.data || []).find(x => x.attributes?.version === "15");
+            if (!latest) {
+              console.log("Cortexx build 15: not yet visible in Apple builds (upload succeeded; processing may be pending).");
+            } else {
+              console.log("Cortexx Apple build ID: " + latest.id);
+              console.log("Cortexx build number: " + latest.attributes.version);
+              console.log("Apple processing state: " + latest.attributes.processingState);
+              if (["FAILED", "INVALID"].includes(latest.attributes.processingState)) process.exitCode = 1;
+            }
+            const groups = await request("/v1/betaGroups?filter%5Bapp%5D=" + app + "&limit=100");
+            const internal = (groups.data || []).filter(g => g.attributes?.isInternalGroup);
+            console.log("Internal TestFlight groups: " + internal.length);
+            for (const g of internal) console.log("Group: " + g.attributes.name + "; auto-distribute: " + !!g.attributes.hasAccessToAllBuilds);
+          }
+          main().catch(error => { console.error("Apple verification failed: " + error.message); process.exitCode = 1; });
+          NODE
