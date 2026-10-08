@@ -1,0 +1,28 @@
+const test = require('node:test')
+const assert = require('node:assert/strict')
+const { readFileSync } = require('node:fs')
+const { join } = require('node:path')
+const { execFileSync } = require('node:child_process')
+const read = name => readFileSync(join(__dirname, '..', name), 'utf8')
+
+test('native photo gallery uses the same tenant-scoped document API as web', () => {
+  const web = read('app/photos/page.tsx')
+  const native = read('expo/PhotosScreen.tsx')
+  const documents = read('app/api/documents/route.ts')
+  for (const text of [web, native]) assert.match(text, /\/api\/documents\?type=photo&take=100/)
+  assert.match(native, /apiPost\('\/api\/documents'/)
+  assert.match(native, /uploadNativeFile\(/)
+  assert.match(native, /projectId/)
+  assert.match(documents, /fileProjectScope\(session\)/)
+  assert.match(documents, /authorizeUploadReference/)
+  assert.match(read('expo/FieldHubScreen.tsx'), /route: 'photos'/)
+  assert.match(read('expo/Tabs.tsx'), /<PhotosScreen onLogout=\{onLogout\} \/>/)
+})
+
+test('native photo URL builder never forwards auth bearer to an external host', () => {
+  const file = read('expo/photo-media.ts')
+  assert.match(file, /Authorization: `Bearer \$\{token\}`/)
+  assert.match(file, /candidate\.username \|\| candidate\.password/)
+  assert.match(file, /candidate\.protocol !== 'https:'/)
+  assert.match(file, /\/api\\\/uploads/)
+})

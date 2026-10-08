@@ -15,6 +15,7 @@ export type AppRoute =
   | 'safety'
   | 'rfis'
   | 'drawings'
+  | 'photos'
   | 'invoices'
   | 'cis'
   | 'quotes'
