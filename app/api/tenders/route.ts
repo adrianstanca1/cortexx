@@ -1,7 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
+import { canManageTenders, tenderWhere } from '@/lib/tenderAccess'
+import { auditLog, requestMeta } from '@/lib/audit'
+import { reportError } from '@/lib/errors'
 import { enforceRateLimit } from '@/lib/rateLimit'
 
 export const dynamic = 'force-dynamic'
@@ -16,13 +19,15 @@ function parseDate(v: unknown): Date | null | undefined {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!canManageTenders(auth)) return NextResponse.json({ error: 'Company commercial admin required' }, { status: 403 })
   try {
     const { searchParams } = new URL(req.url)
     const status = searchParams.get('status')
 
     const where = {
+      ...tenderWhere(auth),
       ...(status && ALLOWED_STATUS.has(status) && { status }),
     }
     const [tenders, draftCount, openValueAgg] = await Promise.all([
@@ -32,10 +37,10 @@ export async function GET(req: NextRequest) {
         orderBy: [{ status: 'asc' }, { deadline: 'asc' }, { updatedAt: 'desc' }],
         take: 200,
       }),
-      prisma.tender.count({ where: { status: 'draft' } }),
+      prisma.tender.count({ where: { ...tenderWhere(auth), status: 'draft' } }),
       prisma.tender.aggregate({
         _sum: { totalValue: true },
-        where: { status: { in: ['draft', 'submitted'] } },
+        where: { ...tenderWhere(auth), status: { in: ['draft', 'submitted'] } },
       }),
     ])
     return NextResponse.json({
@@ -44,18 +49,21 @@ export async function GET(req: NextRequest) {
       pipelineValue: openValueAgg._sum.totalValue ?? 0,
     })
   } catch (error) {
-    console.error('[tenders] GET failed:', error)
+    reportError(error, { context: 'tenders.list' })
     return NextResponse.json({ error: 'Failed to fetch tenders' }, { status: 500 })
   }
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
-  if (__limited) return __limited
+  if (!canManageTenders(auth)) return NextResponse.json({ error: 'Company commercial admin required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', auth.userId)
+  if (limited) return limited
   try {
     const body = await req.json()
+    if (!body || typeof body !== 'object' || Array.isArray(body))
+      return NextResponse.json({ error: 'Invalid tender input' }, { status: 400 })
     const title = String(body.title || '').trim()
     if (!title) return NextResponse.json({ error: 'Title is required' }, { status: 400 })
 
@@ -63,7 +71,7 @@ export async function POST(req: NextRequest) {
     if (body.projectId) {
       projectId = String(body.projectId).trim() || null
       if (projectId) {
-        const project = await prisma.project.findUnique({ where: { id: projectId }, select: { id: true } })
+        const project = await prisma.project.findFirst({ where: { id: projectId, organizationId: auth.orgId! }, select: { id: true } })
         if (!project) return NextResponse.json({ error: 'Project not found' }, { status: 400 })
       }
     }
@@ -80,6 +88,7 @@ export async function POST(req: NextRequest) {
     const tender = await prisma.tender.create({
       data: {
         projectId,
+        organizationId: auth.orgId!,
         title: title.slice(0, 200),
         clientName: typeof body.clientName === 'string' && body.clientName ? body.clientName.slice(0, 200) : null,
         status,
@@ -96,7 +105,7 @@ export async function POST(req: NextRequest) {
       prisma.activity.create({
         data: {
           projectId,
-          actorName: actorName(auth),
+          actorName: actorName(auth.session),
           actorType: 'human',
           action: `added tender: ${tender.title}`,
           iconType: 'doc',
@@ -104,9 +113,11 @@ export async function POST(req: NextRequest) {
       }).catch(() => {})
     }
 
+    auditLog({ action: 'tender.create', resourceType: 'Tender', resourceId: tender.id,
+      userId: auth.userId, ...requestMeta(req) })
     return NextResponse.json(tender, { status: 201 })
   } catch (error) {
-    console.error('[tenders] POST failed:', error)
+    reportError(error, { context: 'tenders.create' })
     return NextResponse.json({ error: 'Failed to create tender' }, { status: 500 })
   }
 }

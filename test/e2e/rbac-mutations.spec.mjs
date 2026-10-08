@@ -44,6 +44,7 @@ async function expectCompanyMutationDenied(page) {
     ['/api/team', { name: 'Blocked Person', role: 'Operative' }],
     ['/api/invoices', { number: `BLOCK-${Date.now()}`, clientName: 'Blocked', amount: 10, dueDate: '2026-10-01' }],
     ['/api/quotes', { title: 'Blocked quote', customerName: 'Blocked Client', lineItems: [] }],
+    ['/api/tenders', { title: 'Blocked confidential tender', totalValue: 10 }],
     ['/api/valuations', { projectId: 'blocked' }],
   ]
   for (const [path, body] of attempts) {
@@ -217,4 +218,21 @@ test('project manager workforce edits require a project actually assigned to the
   expect(denied.status).toBe(404)
   const deniedDelete = await api(page, '/api/assignments/not-an-assignment', { method: 'DELETE' })
   expect(deniedDelete.status).toBe(404)
+})
+
+test('company commercial admin can list tenders but field roles cannot read or mutate them', async ({ page }) => {
+  await signIn(page, users.admin)
+  const adminList = await api(page, '/api/tenders')
+  expect(adminList.status).toBe(200)
+  for (const email of [users.pm, users.foreman, users.operative]) {
+    await signIn(page, email)
+    const list = await api(page, '/api/tenders')
+    expect(list.status).toBe(403)
+    const mutate = await api(page, '/api/tenders/nonexistent-id', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ status: 'won' }),
+    })
+    expect(mutate.status).toBe(403)
+    const remove = await api(page, '/api/tenders/nonexistent-id', { method: 'DELETE' })
+    expect(remove.status).toBe(403)
+  }
 })
