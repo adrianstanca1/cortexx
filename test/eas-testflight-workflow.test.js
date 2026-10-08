@@ -62,3 +62,13 @@ test('EAS TestFlight workflow can use an ASC API key to repair Apple credentials
   assert.match(workflow, /EXPO_APPLE_TEAM_TYPE: "INDIVIDUAL"/)
   assert.match(workflow, /Clean up App Store Connect key/)
 })
+
+test('Apple TestFlight status check verifies requested build and tester distribution', () => {
+  assert.match(workflow, /apple_build_number:/)
+  assert.ok(workflow.includes('APPLE_BUILD_NUMBER: ${{ inputs.apple_build_number }}'))
+  assert.ok(workflow.includes('!process.env.APPLE_BUILD_NUMBER || x.attributes?.version === process.env.APPLE_BUILD_NUMBER'))
+  assert.ok(workflow.includes('if (internal.length === 0) process.exitCode = 1;'))
+  assert.ok(workflow.includes('if (latest && !included) process.exitCode = 1;'))
+  assert.ok(workflow.includes('if (state !== "IN_BETA_TESTING") process.exitCode = 1;'))
+  assert.doesNotMatch(workflow, /const latest = .*version === "15"/)
+})
