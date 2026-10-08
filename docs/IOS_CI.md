@@ -1,77 +1,49 @@
-# iOS CI & Release Pipeline
+# Cortexx iOS CI and TestFlight releases
 
-## Why iOS builds cannot run on this Linux VPS
+Cortexx has **two separate iOS applications and build paths**. Do not assume an Expo build and a Capacitor native build are interchangeable.
 
-Cortexx ships a Capacitor 8 iOS shell (`ios/`, bundle id `com.cortexbuild.app`).
-Every iOS distribution step requires an **interactive macOS environment with the
-Apple toolchain** — it cannot be performed headlessly from this Linux VPS:
+| Workflow | Application | Build runner | Apple signing |
+| --- | --- | --- | --- |
+| `.github/workflows/eas-testflight.yml` | Expo / React Native in `expo/` | EAS cloud macOS build workers; GitHub runners for submission | Expo-managed distribution certificate and profile |
+| `.github/workflows/ios-build.yml` | Capacitor shell in `ios/` | GitHub-hosted macOS | Unsigned verification on pushes; optional manual native distribution signing |
+| `.github/workflows/release-ios.yml` | Capacitor shell in `ios/` | GitHub-hosted macOS | Manual Apple Distribution certificate and matching App Store provisioning profile required |
 
-- **Apple Distribution certificate + private key** — must live in a macOS
-  Keychain; there is no Linux equivalent for code-signing an `.ipa`.
-- **Provisioning profile** — issued by the Apple Developer portal against a
-  specific cert + device UDIDs; managed by Xcode/`fastlane` on macOS.
-- **EAS Build (`eas build`)** — Expo Application Services sign and archive the
-  app on a macOS builder; the `ios:*` + `eas build` steps need macOS runners.
-- **AASA universal links** — `apple-app-site-association` must be hosted at the
-  apex/`.well-known` of `cortexbuildpro.tech`; validates App Clip / universal-link
-  handoff and is an App Store submission requirement.
-- **StoreKit IAP plugin** — in-app purchases require the StoreKit configuration
-  and a signed capability; reviewed at submission time by App Store Connect.
-- **TestFlight + App Store submission** — `xcrun altool` / Transporter and the
-  App Store Connect API calls are macOS-only and expect Xcode present.
+Both applications use the `com.cortexbuild.app` bundle identifier. The production App Store Connect app ID is `6820322670`. Only one build may be uploaded for a given bundle identifier and build number.
 
-## Recommendation
+## Verified TestFlight path
 
-Run the iOS-specific stages on a **macOS GitHub Actions self-hosted runner**
-(running macOS with Xcode + the Apple dist cert in its Keychain), while the
-Linux VPS continues to own web/API builds and tests.
+On 8 October 2026, Expo iOS release **1.0.0 (15)** (EAS build ID `11704305-db82-4ff0-95ae-fe67861c41e6`) was uploaded to Apple using `xcrun altool` from a temporary macOS GitHub Actions runner. Apple's API subsequently reported build 15 as `VALID`, assigned to the `Team (Expo)` internal group and `IN_BETA_TESTING`.
 
-Wire the split in CI:
+To inspect the current release, open `.github/workflows/eas-testflight.yml` with `workflow_dispatch` and choose `upload_method: status`; optionally supply `apple_build_number`. The status job fails unless the selected build is valid, assigned to internal testers, and actively in beta testing. It uses the App Store Connect Team API key stored in GitHub Secrets, without printing the private key.
 
-```yaml
-ios-build:
-  runs-on: [self-hosted, macos]   # NOT ubuntu-latest
-  steps:
-    - run: npm run ios:sync        # cap copy && cap sync ios
-    - run: npx eas build --platform ios --non-interactive
-    - run: npx eas submit --platform ios --non-interactive   # TestFlight / App Store
-```
+The EAS workflow supports `expo`, `direct`, and `status` modes. The direct mode uploads a **previously signed EAS IPA** from a temporary protected artifact URL (`CORTEXX_SIGNED_IPA_URL` GitHub secret), validates that the IPA contains bundle ID `com.cortexbuild.app`, and uses Apple's Transporter via `xcrun altool`. **The artifact URL is temporary and must be removed after use.** Direct mode is not yet an unattended build-and-upload flow, because the GitHub runner cannot reliably fetch the old build URL through `eas build:view`. The standard EAS submit mode may also fail within Expo before upload; check the submission run rather than treating a successful EAS build as delivery.
 
-Keep `node build-dist.js` (the SPA precompile) and `npm test` on the Linux
-runner. The self-hosted macOS runner only needs to handle `ios:*` and
-`eas build`/`eas submit`.
+EAS builds may be **started on Linux**, because compilation and signing occur on Expo's remote macOS infrastructure. Local Xcode archives, however, require a macOS runner.
 
-## Current blockers (must be resolved on the Mac before first submission)
+## Native Capacitor verification and release
 
-- Provisioning profile + distribution cert provisioned in the macOS Keychain.
-- AASA endpoint served from `cortexbuildpro.tech/.well-known/apple-app-site-association`
-  with `APPLE_APP_IDENTIFIER` configured from the signed app's
-  `application-identifier`. It publishes no app associations until configured;
-  see [the association setup guide](../.well-known/README.md).
-- StoreKit IAP capability enabled and the product registered in App Store Connect.
-- `eas.json` iOS credentials attached to the `com.cortexbuild.app` bundle id.
+On pushes to `main`, `ios-build.yml` builds the web assets, synchronizes Capacitor, installs CocoaPods, and verifies **unsigned** iOS build and archive outputs. It must not import certificates, provision profiles, export a signed IPA, or upload to Apple on ordinary pushes.
 
-See `CLAUDE.md` (iOS section) for the canonical bundle id and Capacitor config.
+For a **native Capacitor signed IPA**, explicitly dispatch a release with signing enabled. The native release preflight sets `IOS_REQUIRE_NATIVE_DISTRIBUTION=true` and requires the following GitHub secrets:
 
-## Signing preflight and delivery status
+- `IOS_CERTIFICATE_BASE64`: Apple Distribution `.p12` containing the certificate **and private key**.
+- `IOS_CERTIFICATE_PASSWORD`, `IOS_KEYCHAIN_PASSWORD`: the P12 and temporary keychain passwords.
+- `IOS_PROVISIONING_PROFILE_BASE64`: an App Store distribution provisioning profile for `com.cortexbuild.app`.
+- `APPLE_TEAM_ID`: Apple Developer team identifier.
+- For TestFlight upload, also provide `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`, and `APP_STORE_CONNECT_KEY_BASE64`.
 
-Both GitHub Actions workflows run `scripts/check-ios-signing.mjs` before
-installing dependencies. Automatic `ios-build.yml` pushes may verify an unsigned
-build when signing is unavailable; that success does not deliver an IPA or upload
-to TestFlight. A manual request with `upload_to_testflight: true` requires all
-signing and App Store Connect secrets and fails early if any are missing.
+**An App Store Connect API key is not a replacement for a distribution certificate and its private key on an ephemeral GitHub macOS runner.** If the manual signing secrets are missing, the release stops at preflight before contacting Xcode's certificate management system. Do not revoke existing Apple Development or Distribution certificates to fix a CI signing conflict.
 
-`release-ios.yml` always requires signing for its archive. Tag releases also
-require upload credentials; a manual archive-only request may omit them. A
-configured secret establishes availability, while the subsequent certificate
-import, profile installation, archive and upload steps establish validity.
+When manual credentials are available, `scripts/configure-ios-manual-signing.rb` configures **only the App Release target** with the Apple Distribution identity, team, and provisioning profile. It does not impose signing overrides globally on CocoaPods targets. The workflow checks the Ruby script syntax on macOS.
 
-Archive secrets: `IOS_CERTIFICATE_BASE64`, `IOS_CERTIFICATE_PASSWORD`,
-`IOS_KEYCHAIN_PASSWORD`, `IOS_PROVISIONING_PROFILE_BASE64`, `APPLE_TEAM_ID`.
-Upload secrets: `APP_STORE_CONNECT_KEY_ID`, `APP_STORE_CONNECT_ISSUER_ID`,
-`APP_STORE_CONNECT_KEY_BASE64`. Diagnostics print missing names only.
+Native iOS failures save the Xcode diagnostic output as an Actions artifact, without persisting the private P12 or `.p8` key. Xcode's signing identity and provisioning profile must be verified on the signing runner before any real native release can be declared successful.
 
-The export step must produce exactly one non-empty IPA. Its actual path is used
-for upload and artifact retention, so delivery does not depend on the Xcode
-product being named `Cortexx`. Archive/export pipeline failures propagate even
-when their output is piped through a formatter.
+## Distribution and security checks
+
+- A successful unsigned build is **not** a deployable IPA.
+- A successful EAS build is **not** an Apple upload.
+- A successful upload must still finish Apple processing and internal TestFlight assignment.
+- Never commit Apple API private keys, P12 archives, provisioning profiles, tokens, or signed artifact download URLs to source control.
+- Additional capabilities such as Associated Domains / AASA and StoreKit should be verified separately for App Store publication. They are not grounds to revoke a working TestFlight signing certificate.
+
+See `test/ios-signing-preflight.test.js` and `test/eas-testflight-workflow.test.js` for regression coverage.

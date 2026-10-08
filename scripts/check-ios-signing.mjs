@@ -34,12 +34,23 @@ export function checkIosSigning(env) {
 
   const manualReady = missingManualArchive.length === 0
   const automaticReady = missingAutomaticArchive.length === 0
-  const signingMode = automaticReady ? 'automatic' : manualReady ? 'manual' : 'none'
+  // Ephemeral macOS runners cannot recover an existing distribution private key.
+  // Native Xcode archives require imported Apple Distribution P12 + profile.
+  // App Store Connect API credentials alone are sufficient for EAS, not native signing.
+  const nativeDistributionRequired = env.IOS_REQUIRE_NATIVE_DISTRIBUTION === 'true'
+  const signingMode = nativeDistributionRequired
+    ? (manualReady ? 'manual' : 'none')
+    : (automaticReady ? 'automatic' : manualReady ? 'manual' : 'none')
   const archiveReady = signingMode !== 'none'
   const uploadReady = archiveReady && missingUpload.length === 0
 
   const required = new Set()
-  if (env.IOS_REQUIRE_UPLOAD === 'true') {
+  if (nativeDistributionRequired) {
+    if (env.IOS_REQUIRE_ARCHIVE === 'true' || env.IOS_REQUIRE_UPLOAD === 'true') {
+      missingManualArchive.forEach(name => required.add(name))
+      if (env.IOS_REQUIRE_UPLOAD === 'true') missingUpload.forEach(name => required.add(name))
+    }
+  } else if (env.IOS_REQUIRE_UPLOAD === 'true') {
     const manualUploadMissing = [...new Set([...missingManualArchive, ...missingUpload])]
     smallerMissing(missingAutomaticArchive, manualUploadMissing).forEach(name => required.add(name))
   } else if (env.IOS_REQUIRE_ARCHIVE === 'true') {
@@ -52,6 +63,7 @@ export function checkIosSigning(env) {
     uploadReady,
     manualReady,
     automaticReady,
+    nativeDistributionRequired,
     missingRequired: [...required],
   }
 }
@@ -67,6 +79,9 @@ if (process.argv[1] && path.resolve(process.argv[1]) === fileURLToPath(import.me
   if (process.env.GITHUB_OUTPUT) fs.appendFileSync(process.env.GITHUB_OUTPUT, outputs)
 
   if (result.missingRequired.length) {
+    if (result.nativeDistributionRequired) {
+      console.error('::error::Native Xcode IPA signing needs an Apple Distribution .p12 with its private key and App Store provisioning profile in GitHub secrets. App Store Connect API-key-only automatic signing is not supported for this runner; use the EAS TestFlight workflow instead.')
+    }
     console.error(`::error::Requested iOS release cannot proceed. Configure repository signing secrets: ${result.missingRequired.join(', ')}.`)
     process.exitCode = 1
   } else if (!result.archiveReady) {

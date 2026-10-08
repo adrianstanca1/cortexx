@@ -11,6 +11,7 @@ on:
       - 'manifest.json'
       - 'sw.js'
       - 'scripts/check-ios-signing.mjs'
+      - 'scripts/configure-ios-manual-signing.rb'
       - '.github/workflows/ios-build.yml'
   workflow_dispatch:
     inputs:
@@ -53,9 +54,13 @@ jobs:
           APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
           APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
           APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+          IOS_REQUIRE_NATIVE_DISTRIBUTION: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight }}
           IOS_REQUIRE_ARCHIVE: 'false'
           IOS_REQUIRE_UPLOAD: ${{ github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight }}
         run: node scripts/check-ios-signing.mjs
+
+      - name: Validate manual distribution signing helper
+        run: ruby -c scripts/configure-ios-manual-signing.rb
 
       - name: Install JS dependencies
         working-directory: ios
@@ -140,6 +145,12 @@ jobs:
         working-directory: ios/App
         run: xcrun agvtool new-version -all "${{ github.run_number }}"
 
+      - name: Configure manual signing for the App target
+        if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'manual'
+        env:
+          APPLE_TEAM_ID: ${{ secrets.APPLE_TEAM_ID }}
+        run: ruby scripts/configure-ios-manual-signing.rb
+
       - name: Archive signed app (manual)
         if: github.event_name == 'workflow_dispatch' && inputs.upload_to_testflight && steps.signing.outputs.signing_mode == 'manual'
         run: |
@@ -150,10 +161,6 @@ jobs:
             -configuration Release \
             -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
             -destination 'generic/platform=iOS' \
-            CODE_SIGN_STYLE=Manual \
-            CODE_SIGN_IDENTITY='iPhone Distribution' \
-            PROVISIONING_PROFILE_SPECIFIER='Cortexx App Store' \
-            DEVELOPMENT_TEAM='${{ secrets.APPLE_TEAM_ID }}' \
             | tee "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Archive signed app (automatic API-key signing)
