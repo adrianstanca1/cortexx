@@ -1,10 +1,11 @@
-import React, { useEffect, useMemo, useState } from 'react';
+import React, { useEffect, useMemo, useRef, useState } from 'react';
 import {
   ActivityIndicator, Alert, RefreshControl, ScrollView, StyleSheet, Text,
   TextInput, TouchableOpacity, View,
 } from 'react-native';
 import { Colors } from './theme';
 import { apiGet, getCollection, getProjects, postCollection } from './api';
+import { readinessState } from './field-readiness-state';
 
 type Project = { id: string; name: string };
 type ProjectLinked = { projectId?: string | null; project?: { id?: string; name?: string } | null };
@@ -51,6 +52,8 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
   const [eventType, setEventType] = useState<(typeof EVENT_TYPES)[number]>('progress');
   const [eventSeverity, setEventSeverity] = useState('info');
   const [saving, setSaving] = useState(false);
+  const [dataIncomplete, setDataIncomplete] = useState(true);
+  const loadSequence = useRef(0);
 
   const projectName = useMemo(
     () => projects.find(p => p.id === projectId)?.name || 'Select project',
@@ -58,9 +61,12 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
   );
 
   const load = async (preferredProjectId?: string) => {
+    const sequence = ++loadSequence.current;
     setLoading(true);
+    setDataIncomplete(true);
     try {
       const list = (await getProjects()) as Project[];
+      if (sequence !== loadSequence.current) return;
       setProjects(list || []);
       const nextProjectId = preferredProjectId || projectId || list?.[0]?.id || '';
       setProjectId(nextProjectId);
@@ -71,16 +77,27 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
       }
 
       const q = encodeURIComponent(nextProjectId);
+      let liveFeedFailed = false;
+      const liveGet = async (path: string, fallback: unknown) => {
+        try { return await apiGet(path); }
+        catch (error: any) {
+          if (error?.message === 'unauthorized') throw error;
+          liveFeedFailed = true;
+          return fallback;
+        }
+      };
       const [allPermits, allInspections, allSnags, allRfis, allChecks, constraintData, handoverData, productionData] = await Promise.all([
         getCollection('permits', 200),
         getCollection('inspections', 200),
         getCollection('snags', 200),
         getCollection('rfis', 200),
         getCollection('equipment-checks', 200),
-        apiGet(`/api/field-constraints?projectId=${q}`).catch(() => ({ constraints: [], openCount: 0, criticalCount: 0 })),
-        apiGet(`/api/field-handovers?projectId=${q}&take=20`).catch(() => ({ handovers: [], pendingAcceptance: 0 })),
-        apiGet(`/api/field-production?projectId=${q}`).catch(() => ({ summary: null })),
+        liveGet(`/api/field-constraints?projectId=${q}`, { constraints: [], openCount: 0, criticalCount: 0 }),
+        liveGet(`/api/field-handovers?projectId=${q}&take=20`, { handovers: [], pendingAcceptance: 0 }),
+        liveGet(`/api/field-production?projectId=${q}`, { summary: null }),
       ]);
+      if (sequence !== loadSequence.current) return;
+      setDataIncomplete(liveFeedFailed);
 
       const belongs = (item: ProjectLinked) => item.projectId === nextProjectId || item.project?.id === nextProjectId;
       const permits = (allPermits as Permit[]).filter(belongs);
@@ -148,10 +165,12 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
       ];
       setBlockers(nextBlockers.slice(0, 10));
     } catch (e: any) {
+      if (sequence !== loadSequence.current) return;
+      setDataIncomplete(true);
       if (e?.message === 'unauthorized') onLogout();
       else Alert.alert('Field readiness', e?.message || 'Could not load site readiness.');
     } finally {
-      setLoading(false);
+      if (sequence === loadSequence.current) setLoading(false);
     }
   };
 
@@ -161,6 +180,8 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
     setProjectId(id);
     void load(id);
   };
+
+  const status = readinessState({ projectId, feedsComplete: !dataIncomplete && !loading, blockerCount: blockers.length });
 
   const saveNote = async () => {
     const detail = note.trim();
@@ -213,19 +234,23 @@ export default function FieldReadinessScreen({ onLogout }: { onLogout: () => voi
         <Metric label="Open snags" value={pulse.openSnags} alert={pulse.openSnags > 0} sub="outstanding" />
         <Metric label="Overdue RFIs" value={pulse.overdueRfis} alert={pulse.overdueRfis > 0} sub="needs answer" />
         <Metric label="Checks overdue" value={pulse.overdueChecks} alert={pulse.overdueChecks > 0} sub="plant / equipment" />
-        <Metric label="Constraints" value={pulse.openConstraints} alert={pulse.criticalConstraints > 0} sub={pulse.criticalConstraints ? `${pulse.criticalConstraints} critical` : 'no critical'} />
+        <Metric label="Constraints" value={dataIncomplete ? '—' : pulse.openConstraints} alert={dataIncomplete || pulse.criticalConstraints > 0} sub={dataIncomplete ? 'not verified' : pulse.criticalConstraints ? `${pulse.criticalConstraints} critical` : 'no critical'} />
         <Metric label="QA release" value={pulse.pendingQa} alert={pulse.pendingQa > 0} sub="hold / witness" />
-        <Metric label="Handover" value={pulse.pendingHandovers} alert={pulse.pendingHandovers > 0} sub="awaiting acceptance" />
-        <Metric label="Plan hit" value={pulse.planHit == null ? '—' : `${Math.round(pulse.planHit)}%`} alert={pulse.planHit != null && pulse.planHit < 80} sub={pulse.planHit == null ? 'no output logged' : 'installed vs planned'} />
+        <Metric label="Handover" value={dataIncomplete ? '—' : pulse.pendingHandovers} alert={dataIncomplete || pulse.pendingHandovers > 0} sub={dataIncomplete ? 'not verified' : 'awaiting acceptance'} />
+        <Metric label="Plan hit" value={dataIncomplete || pulse.planHit == null ? '—' : `${Math.round(pulse.planHit)}%`} alert={dataIncomplete || (pulse.planHit != null && pulse.planHit < 80)} sub={dataIncomplete ? 'not verified' : pulse.planHit == null ? 'no output logged' : 'installed vs planned'} />
       </View>
 
       <Text style={styles.section}>BLOCKERS · {projectName}</Text>
+      {status === 'unverified' && <View style={styles.warningCard}>
+        <Text accessibilityRole="alert" style={styles.warningTitle}>Site readiness not verified</Text>
+        <Text style={styles.clearSub}>{projectId ? 'One or more live safety, handover or production feeds could not be checked. Confirm permits, RAMS and site conditions before starting work.' : 'Select a project and check the live safety feeds before starting work.'}</Text>
+      </View>}
       {blockers.length ? blockers.map(b => (
         <View key={b.id} style={[styles.blocker, { borderLeftColor: b.tone }]}>
           <Text style={styles.blockerTitle}>{b.title}</Text>
           <Text style={[styles.blockerSub, { color: b.tone }]}>{b.sub}</Text>
         </View>
-      )) : <View style={styles.clearCard}><Text style={styles.clearTitle}>✓ No critical blockers detected</Text><Text style={styles.clearSub}>Continue with the normal RAMS, permit and pre-use checks.</Text></View>}
+      )) : status === 'clear' ? <View style={styles.clearCard}><Text style={styles.clearTitle}>✓ No critical blockers detected in the available feeds</Text><Text style={styles.clearSub}>Continue with the normal RAMS, permit and pre-use checks. This is not a substitute for on-site verification.</Text></View> : null}
 
       <Text style={styles.section}>LOG FIELD EVENT</Text>
       <View style={styles.noteCard}>
@@ -299,6 +324,8 @@ const styles = StyleSheet.create({
   blocker: { backgroundColor: Colors.ink3, borderRadius: 10, borderLeftWidth: 4, padding: 12, marginBottom: 8 },
   blockerTitle: { color: Colors.t1, fontSize: 13, fontWeight: '800' },
   blockerSub: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase', marginTop: 4 },
+  warningCard: { backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.amber, borderRadius: 12, padding: 14, marginBottom: 8 },
+  warningTitle: { color: Colors.amber, fontSize: 13, fontWeight: '800', marginBottom: 5 },
   clearCard: { backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 12, padding: 14 },
   clearTitle: { color: Colors.green, fontSize: 13, fontWeight: '800' },
   clearSub: { color: Colors.t2, fontSize: 11, lineHeight: 16, marginTop: 4 },
