@@ -312,6 +312,15 @@ jobs:
               return response.json();
             };
             const app = "6820322670";
+            const appRecord = await request("/v1/apps/" + app);
+            console.log("TestFlight target App Store Connect name: " + appRecord.data?.attributes?.name);
+            console.log("TestFlight target Apple app ID: " + appRecord.data?.id);
+            console.log("TestFlight target bundle identifier: " + appRecord.data?.attributes?.bundleId);
+            const availableApps = await request("/v1/apps?limit=200");
+            const cortexxApps = (availableApps.data || []).filter(x => /cortexx/i.test(x.attributes?.name || ""));
+            console.log("Existing Apple records named Cortexx: " + JSON.stringify(cortexxApps.map(x => ({
+              id: x.id, name: x.attributes.name, bundleId: x.attributes.bundleId
+            }))));
             const builds = await request("/v1/builds?filter%5Bapp%5D=" + app + "&limit=100&sort=-uploadedDate");
             const latest = (builds.data || []).find(x => !process.env.APPLE_BUILD_NUMBER || x.attributes?.version === process.env.APPLE_BUILD_NUMBER);
             if (!latest) {
