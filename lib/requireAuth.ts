@@ -1,4 +1,5 @@
 import { NextResponse } from 'next/server'
+import { createHash } from 'node:crypto'
 import { cookies, headers } from 'next/headers'
 import { auth } from './auth'
 import { prisma } from './db'
@@ -21,12 +22,20 @@ async function mobileBearerSession(orgContext: { organizationId: string | null; 
     const membership = await prisma.userOrganization.findUnique({
       where: { userId_organizationId: { userId: claims.sub, organizationId: claims.orgId } },
       include: {
-        user: { select: { id: true, email: true, name: true, role: true } },
+        user: { select: { id: true, email: true, name: true, role: true, passwordHash: true, passwordChangedAt: true } },
         organization: { select: { id: true, slug: true, name: true } },
       },
     })
     if (!membership || membership.user.email.toLowerCase() !== claims.email.toLowerCase()) {
       return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+    }
+    // A reset revokes every older mobile bearer token, including pre-upgrade JWTs.
+    const latestHash = membership.user.passwordHash
+    if (membership.user.passwordChangedAt) {
+      if (!claims.pwd || !latestHash ||
+        claims.pwd !== createHash('sha256').update(latestHash).digest('hex')) {
+        return NextResponse.json({ error: 'Session expired. Sign in again.' }, { status: 401 })
+      }
     }
     const org = {
       id: membership.organization.id,
