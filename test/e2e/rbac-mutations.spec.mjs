@@ -177,3 +177,44 @@ test('Operative sees only self task/time context and cannot approve or mutate ot
   const foreman = await api(page, '/api/team')
   expect(foreman.body?.team?.some(m => m.email === users.foreman)).toBe(false)
 })
+
+test('field users cannot change workforce assignments, but can only view assigned projects', async ({ page }) => {
+  for (const email of [users.foreman, users.operative]) {
+    await signIn(page, email)
+    const projects = await getProjects(page)
+    const allowed = new Set(projects.map(p => p.id))
+    const visible = await api(page, '/api/assignments')
+    expect(visible.status).toBe(200)
+    for (const assignment of visible.body?.assignments || []) {
+      expect(allowed.has(assignment.projectId)).toBe(true)
+      expect(assignment.project?.name).not.toBe('E2E Admin Only Project')
+    }
+    const forbiddenCreate = await api(page, '/api/assignments', {
+      method: 'POST', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ projectId: projects[0]?.id || 'not-a-project', memberId: 'not-a-member' }),
+    })
+    expect(forbiddenCreate.status).toBe(403)
+    const forbiddenEdit = await api(page, '/api/assignments/not-a-real-assignment', {
+      method: 'PATCH', headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ onSite: true }),
+    })
+    expect(forbiddenEdit.status).toBe(403)
+    const forbiddenDelete = await api(page, '/api/assignments/not-a-real-assignment', { method: 'DELETE' })
+    expect(forbiddenDelete.status).toBe(403)
+  }
+})
+
+test('project manager workforce edits require a project actually assigned to them', async ({ page }) => {
+  await signIn(page, users.pm)
+  const assignments = await api(page, '/api/assignments')
+  expect(assignments.status).toBe(200)
+  expect((assignments.body?.assignments || []).some(a => a.project?.name === 'E2E Admin Only Project')).toBe(false)
+  // A manager may edit workforce only on the projects granted to them.
+  const denied = await api(page, '/api/assignments', {
+    method: 'POST', headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ projectId: 'not-an-assigned-project', memberId: 'not-a-member' }),
+  })
+  expect(denied.status).toBe(404)
+  const deniedDelete = await api(page, '/api/assignments/not-an-assignment', { method: 'DELETE' })
+  expect(deniedDelete.status).toBe(404)
+})
