@@ -34,7 +34,9 @@ export async function POST(req: NextRequest) {
         data: { identifier, token: digest, expires: new Date(Date.now() + 30 * 60 * 1000) },
       })
     })
-    const url = 'https://cortexbuildpro.tech/reset-password?token=' + encodeURIComponent(token)
+    const resetUrl = new URL('/reset-password', 'https://cortexbuildpro.tech')
+    resetUrl.searchParams.set('token', token)
+    const url = resetUrl.toString()
     const result = await sendEmail({
       to: email, subject: 'Reset your Cortexx password',
       text: 'Reset your Cortexx password using this link (valid for 30 minutes):\n' + url + '\n\nIf you did not request this, ignore the message.',
