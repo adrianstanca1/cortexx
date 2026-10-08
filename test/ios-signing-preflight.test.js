@@ -157,3 +157,18 @@ test("Xcode automatic Release configuration does not force a distribution signin
   const project = fs.readFileSync(path.resolve(__dirname, "../ios/App/App.xcodeproj/project.pbxproj"), "utf8")
   assert.doesNotMatch(project, /CODE_SIGN_IDENTITY = "Apple Distribution";/)
 })
+
+for (const filename of ['ios-build.yml', 'release-ios.yml']) {
+  test(`${filename} preserves the original Xcode archive diagnostics`, () => {
+    const workflow = fs.readFileSync(path.resolve(__dirname, '../.github/workflows', filename), 'utf8')
+    const archiveSection = workflow.split('      - name: Archive signed app').pop().split('      - name: Export IPA')[0]
+    assert.match(archiveSection, /tee "\$RUNNER_TEMP\/xcodebuild\.log"/)
+    assert.match(workflow, /set -o pipefail/)
+    if (filename === 'ios-build.yml') {
+      assert.match(workflow, /Preserve Xcode diagnostics on failure/)
+      assert.match(workflow, /if: failure\(\)/)
+      assert.match(workflow, /runner\.temp \}\}\/xcodebuild\.log/)
+      assert.match(workflow, /if-no-files-found: ignore/)
+    }
+  })
+}

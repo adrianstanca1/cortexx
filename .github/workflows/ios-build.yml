@@ -150,7 +150,7 @@ jobs:
             CODE_SIGN_IDENTITY='iPhone Distribution' \
             PROVISIONING_PROFILE_SPECIFIER='Cortexx App Store' \
             DEVELOPMENT_TEAM='${{ secrets.APPLE_TEAM_ID }}' \
-            | xcpretty
+            | tee "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Archive signed app (automatic API-key signing)
         if: steps.signing.outputs.signing_mode == 'automatic'
@@ -171,7 +171,7 @@ jobs:
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
             CODE_SIGN_STYLE=Automatic \
             DEVELOPMENT_TEAM='${{ secrets.APPLE_TEAM_ID }}' \
-            | xcpretty
+            | tee "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Export IPA (manual)
         if: steps.signing.outputs.signing_mode == 'manual'
@@ -190,7 +190,7 @@ jobs:
           xcodebuild -exportArchive \
             -archivePath "$RUNNER_TEMP/Cortexx.xcarchive" \
             -exportOptionsPlist "$RUNNER_TEMP/ExportOptions.plist" \
-            -exportPath "$RUNNER_TEMP/ipa" | xcpretty
+            -exportPath "$RUNNER_TEMP/ipa" | tee -a "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Export IPA (automatic API-key signing)
         if: steps.signing.outputs.signing_mode == 'automatic'
@@ -217,7 +217,7 @@ jobs:
             -authenticationKeyPath "$RUNNER_TEMP/AuthKey.p8" \
             -authenticationKeyID "$APP_STORE_CONNECT_KEY_ID" \
             -authenticationKeyIssuerID "$APP_STORE_CONNECT_ISSUER_ID" \
-            | xcpretty
+            | tee -a "$RUNNER_TEMP/xcodebuild.log" | xcpretty
 
       - name: Locate exported IPA
         id: ipa
@@ -252,6 +252,15 @@ jobs:
           path: ${{ steps.ipa.outputs.path }}
           if-no-files-found: error
           retention-days: 30
+
+      - name: Preserve Xcode diagnostics on failure
+        if: failure()
+        uses: actions/upload-artifact@v7
+        with:
+          name: Cortexx-xcode-diagnostics-${{ github.run_number }}
+          path: ${{ runner.temp }}/xcodebuild.log
+          if-no-files-found: ignore
+          retention-days: 14
 
       - name: Clean up signing material
         if: always()
