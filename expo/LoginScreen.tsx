@@ -69,7 +69,7 @@ export default function LoginScreen({ onAuthed }: { onAuthed: (user: AuthUser) =
         <Text style={styles.title}>Cortexx</Text>
         <Text style={styles.subtitle}>Construction management, simplified.</Text>
         <Text style={styles.heading}>{heading}</Text>
-        {mode === 'reset' && <Text style={styles.hint}>We'll email you a secure password reset link valid for 30 minutes.</Text>}
+        {mode === 'reset' && <Text style={styles.hint}>A secure password reset link will be emailed to you. It expires in 30 minutes.</Text>}
         {mode === 'workspace' && <Text style={styles.hint}>Your account needs a company workspace to use Cortexx.</Text>}
         {mode === 'register' && <TextInput style={styles.input} accessibilityLabel="Your name"
           placeholder="Full name (optional)" placeholderTextColor={Colors.t3}
