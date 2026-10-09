@@ -112,7 +112,7 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Document templates', path: '/tpl-library', description: 'Reusable construction documents' },
     { title: 'Tags', path: '/tags', description: 'Organize and classify records' },
     { title: 'Personas', path: '/personas', description: 'Team personas and access settings' },
-    { title: 'Developer API', path: '/developer-api', description: 'Developer integrations and keys', role: 'finance' },
+    { title: 'Developer API', path: '/developer-api', description: 'Integration overview; key changes require company admin' },
     { title: 'Currency', path: '/currency', description: 'Currencies and exchange management' },
     { title: 'Help centre', path: '/help', description: 'Help articles and platform guidance' },
     { title: 'System status', path: '/status', description: 'Published service status' },

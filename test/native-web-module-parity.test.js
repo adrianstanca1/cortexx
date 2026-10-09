@@ -133,7 +133,7 @@ test('employee-accessible web modules remain discoverable in mobile across membe
     '/innovation', '/valuations', '/requisitions', '/rfqs', '/pos',
     '/suppliers', '/customers', '/receipts', '/cost-codes', '/cost-catalog',
     '/payroll', '/cis300', '/sub-portal', '/claims', '/leads',
-    '/personas', '/currency', '/performance', '/ask', '/smart-parse', '/ai-history',
+    '/personas', '/currency', '/performance', '/ask', '/smart-parse', '/ai-history', '/developer-api',
   ]
   for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
     const routes = new Set(visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' })
