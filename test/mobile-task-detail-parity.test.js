@@ -1,7 +1,7 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { taskVisibilityWhere, visibleTaskById } from '../lib/task-visibility.ts'
+import { fieldTaskMutationError, taskVisibilityWhere, visibleTaskById } from '../lib/task-visibility.ts'
 
 const read = path => readFileSync(new URL(`../${path}`, import.meta.url), 'utf8')
 
@@ -53,9 +53,9 @@ test('task list and per-task endpoints use identical predicates and active organ
 
 test('field leaders can update status but cannot edit or delete outside their assigned projects', () => {
   const details = read('app/api/tasks/[id]/route.ts')
-  assert.match(details, /if \(!hasAssignedProject\) \{/)
-  assert.match(details, /keys\.length !== 1 \|\| keys\[0\] !== 'status'/)
-  assert.match(details, /Only task status can be changed outside assigned projects/)
+  assert.match(details, /const sourceProjectAssigned = !!existing\.projectId \&\& await assignedProject\(existing\.projectId, auth\)/)
+  assert.match(details, /fieldTaskMutationError\(\{/)
+  assert.match(read('lib/task-visibility.ts'), /Only task status can be changed outside assigned projects/)
   assert.match(details, /Only tasks in assigned projects can be deleted/)
 })
 
@@ -65,4 +65,25 @@ test('navigating to global Tasks clears previous project filter and company swit
   assert.match(tabs, /setTaskProjectId\(null\);\s*setWebPath\('\/apps'\);\s*setTab\('overview'\)/)
   assert.match(tabs, /\}, \[user\.organization\?\.id\]\)/)
   assert.match(tabs, /<MoreScreen user=\{user\} onNavigate=\{onNavigate\}/)
+})
+
+
+test('direct assignee outside project cannot move task to their project to escalate edit privileges', () => {
+  const base = { personaRole: 'project_manager', sourceProjectId: 'foreign-project', sourceProjectAssigned: false, targetProjectAssigned: true }
+  assert.match(fieldTaskMutationError({ ...base, body: { title: 'Hijacked', projectId: 'own-project' } }), /Only task status/)
+  assert.match(fieldTaskMutationError({ ...base, body: { projectId: 'own-project' } }), /Only task status/)
+  assert.equal(fieldTaskMutationError({ ...base, body: { status: 'done' } }), null)
+  assert.match(fieldTaskMutationError({ ...base, body: { status: 'done', assigneeId: 'other' } }), /Only task status/)
+})
+
+test('manager can move only between assigned projects; foreman cannot move projects', () => {
+  const base = { sourceProjectId: 'assigned1', sourceProjectAssigned: true }
+  assert.equal(fieldTaskMutationError({ ...base, personaRole: 'project_manager', targetProjectAssigned: true, body: { title: 'Updated', projectId: 'assigned2' } }), null)
+  assert.match(fieldTaskMutationError({ ...base, personaRole: 'project_manager', targetProjectAssigned: false, body: { projectId: 'foreign-project' } }), /Target project must be assigned/)
+  assert.match(fieldTaskMutationError({ ...base, personaRole: 'foreman', targetProjectAssigned: true, body: { projectId: 'assigned2' } }), /Foremen cannot move/)
+  assert.equal(fieldTaskMutationError({ ...base, personaRole: 'foreman', targetProjectAssigned: true, body: { title: 'Correct typo' } }), null)
+})
+
+test('manager has no full edit permission on task without an assigned source project', () => {
+  assert.match(fieldTaskMutationError({ personaRole: 'project_manager', sourceProjectId: null, sourceProjectAssigned: false, targetProjectAssigned: true, body: { title: 'Updated', projectId: 'assigned2' } }), /Only task status/)
 })

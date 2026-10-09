@@ -8,7 +8,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import { canManage, canWrite } from '@/lib/rbac'
 import { runWithOrg } from '@/lib/tenancy'
-import { visibleTaskById } from '@/lib/task-visibility'
+import { fieldTaskMutationError, visibleTaskById } from '@/lib/task-visibility'
 
 export const dynamic = 'force-dynamic'
 
@@ -75,18 +75,23 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
       }
       const targetProjectId = body.projectId !== undefined ? body.projectId : existing.projectId
       if (!canManage(auth.role || '') && (role === 'project_manager' || role === 'foreman')) {
-        const hasAssignedProject = !!targetProjectId && await assignedProject(String(targetProjectId), auth)
-        if (!hasAssignedProject) {
-          // The list also shows tasks individually assigned to a field leader
-          // outside their assigned projects. They may update only status there,
-          // never reassign, relocate or alter another project's task metadata.
-          const keys = Object.keys(body).filter(key => body[key] !== undefined)
-          if (keys.length !== 1 || keys[0] !== 'status') {
-            return NextResponse.json({ error: 'Only task status can be changed outside assigned projects' }, { status: 403 })
-          }
-        } else {
-          if (role === 'foreman' && body.projectId !== undefined && body.projectId !== existing.projectId) return NextResponse.json({ error: 'Foremen cannot move tasks between projects' }, { status: 403 })
-          if (body.assigneeId && !(await assigneeBelongsToProject(String(body.assigneeId), String(targetProjectId)))) return NextResponse.json({ error: 'Assignee must belong to the selected project' }, { status: 400 })
+        // Authorization to edit belongs to the ORIGINAL project, never to the
+        // target project supplied by an untrusted mutation body.
+        const sourceProjectAssigned = !!existing.projectId && await assignedProject(existing.projectId, auth)
+        const requestedMove = body.projectId !== undefined && body.projectId !== existing.projectId
+        const targetProjectAssigned = requestedMove
+          ? !!targetProjectId && await assignedProject(String(targetProjectId), auth)
+          : sourceProjectAssigned
+        const denied = fieldTaskMutationError({
+          personaRole: role,
+          sourceProjectId: existing.projectId,
+          sourceProjectAssigned,
+          targetProjectAssigned,
+          body,
+        })
+        if (denied) return NextResponse.json({ error: denied }, { status: 403 })
+        if (body.assigneeId && !(await assigneeBelongsToProject(String(body.assigneeId), String(targetProjectId)))) {
+          return NextResponse.json({ error: 'Assignee must belong to the selected project' }, { status: 400 })
         }
       }
       if (body.title !== undefined && !String(body.title).trim()) return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })

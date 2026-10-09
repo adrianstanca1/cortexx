@@ -35,3 +35,26 @@ export function visibleTaskById(
 ): Prisma.TaskWhereInput {
   return { id, ...taskVisibilityWhere(orgRole, personaRole, email) }
 }
+
+/** Server-side field-leader authorization for task mutations. A directly
+ * assigned task outside the leader's assigned projects is status-only: never
+ * allow a project move to bootstrap edit or delete permission. */
+export function fieldTaskMutationError(input: {
+  personaRole: string
+  sourceProjectId: string | null
+  sourceProjectAssigned: boolean
+  targetProjectAssigned: boolean
+  body: Record<string, unknown>
+}): string | null {
+  const { personaRole, sourceProjectId, sourceProjectAssigned, targetProjectAssigned, body } = input
+  const keys = Object.keys(body).filter(key => body[key] !== undefined)
+  if (!sourceProjectAssigned) {
+    return keys.length === 1 && keys[0] === 'status'
+      ? null : 'Only task status can be changed outside assigned projects'
+  }
+  if (body.projectId !== undefined && body.projectId !== sourceProjectId) {
+    if (personaRole === 'foreman') return 'Foremen cannot move tasks between projects'
+    if (!targetProjectAssigned) return 'Target project must be assigned'
+  }
+  return null
+}
