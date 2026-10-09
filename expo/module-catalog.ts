@@ -84,7 +84,7 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Subcontractor portal', path: '/sub-portal', description: 'Subcontractor access and updates', role: 'finance' },
     { title: 'Claims', path: '/claims', description: 'Payment and commercial claims', role: 'finance' },
     { title: 'Leads', path: '/leads', description: 'Business development leads', role: 'finance' },
-    { title: 'Mileage', path: '/mileage', description: 'Travel expenses and mileage', role: 'finance' },
+    { title: 'Mileage', path: '/mileage', description: 'Travel expenses and mileage' },
     { title: 'Carbon accounting', path: '/carbon', description: 'Carbon and sustainability reporting', role: 'manager' },
   ]},
   { heading: 'AI and innovation', items: [

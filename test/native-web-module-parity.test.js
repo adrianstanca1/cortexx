@@ -90,3 +90,17 @@ test('overview safety caveat is shown after live updates as well as before any u
   const caveat = 'Confirm site readiness separately before starting work.'
   assert.equal(overview.split(caveat).length - 1, 2)
 })
+
+test('mileage access matches web workspace visibility for field operatives and managers', () => {
+  for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
+    const modules = visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' }).flatMap(section => section.items)
+    assert.ok(modules.some(item => item.path === '/mileage'), `Mileage missing for ${role}`)
+  }
+})
+
+test('stream events do not claim displayed metrics were refreshed without refetch', () => {
+  const overview = readFileSync(new URL('../expo/OverviewScreen.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(overview, /● UPDATED/)
+  assert.match(overview, /● NEW EVENT/)
+  assert.match(overview, /Pull to refresh displayed counts/)
+})

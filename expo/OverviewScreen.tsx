@@ -87,14 +87,14 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
         <Text style={styles.h1}>Today</Text>
         <Text style={styles.persona}>{user.name || user.email} · {persona}</Text>
       </View>
-      <View style={styles.liveDot}><Text style={[styles.liveText, err ? { color: Colors.orange } : null]}>{err ? '⚠ CHECK DATA' : live > 0 ? '● UPDATED' : '● DATA LOADED'}</Text></View>
+      <View style={styles.liveDot}><Text style={[styles.liveText, err ? { color: Colors.orange } : null]}>{err ? '⚠ CHECK DATA' : live > 0 ? '● NEW EVENT' : '● DATA LOADED'}</Text></View>
     </View>
 
     <View style={styles.hero}>
       <View style={{ flex: 1 }}>
         <Text style={styles.heroLabel}>WORKSPACE STATUS</Text>
         <Text style={styles.heroTitle}>{err ? 'Needs attention' : 'Operational'}</Text>
-        <Text style={styles.heroSub}>{live > 0 ? `${live} live update${live > 1 ? 's' : ''} received since open. Confirm site readiness separately before starting work.` : 'Last retrieved records are shown. Confirm site readiness separately before starting work.'}</Text>
+        <Text style={styles.heroSub}>{live > 0 ? `${live} live event${live > 1 ? 's' : ''} received. Pull to refresh displayed counts. Confirm site readiness separately before starting work.` : 'Last retrieved records are shown. Confirm site readiness separately before starting work.'}</Text>
       </View>
       <TouchableOpacity style={styles.heroAction} onPress={() => onNavigate('field')}>
         <Text style={styles.heroActionText}>FIELD</Text>
