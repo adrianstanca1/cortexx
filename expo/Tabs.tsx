@@ -47,9 +47,12 @@ function rootFor(route: AppRoute): AppRoute {
 export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: AuthUser; onLogout: () => void; onWorkspaceChanged: (user: AuthUser) => void }) {
   const [tab, setTab] = React.useState<AppRoute>('overview');
   const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
+  const [taskProjectId, setTaskProjectId] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(0);
   const [webPath, setWebPath] = React.useState('/apps');
   const onOpenWeb = (path: string) => { setSelectedProject(null); setWebPath(path); setTab('web'); };
+  const openProjectTasks = (id: string) => { setTaskProjectId(id); setSelectedProject(null); setTab('tasks'); };
+  const onTabPress = (next: AppRoute) => { if (next === 'tasks') setTaskProjectId(null); setTab(next); };
 
   React.useEffect(() => {
     setPending(pendingWrites());
@@ -87,13 +90,13 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   }, [selectedProject, tab]);
 
   const content = selectedProject ? (
-    <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} onOpenWeb={onOpenWeb} />
+    <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} onOpenWeb={onOpenWeb} onOpenTasks={openProjectTasks} />
   ) : tab === 'overview' ? (
     <OverviewScreen user={user} onNavigate={setTab} onOpenWeb={onOpenWeb} onLogout={onLogout} />
   ) : tab === 'projects' ? (
     <ProjectsScreen user={user} onLogout={onLogout} onSelect={setSelectedProject} onOpenWeb={onOpenWeb} />
   ) : tab === 'tasks' ? (
-    <TasksScreen onLogout={onLogout} />
+    <TasksScreen user={user} onLogout={onLogout} projectId={taskProjectId} />
   ) : tab === 'field' ? (
     <FieldHubScreen user={user} onNavigate={setTab} />
   ) : tab === 'checkin' ? (
@@ -152,7 +155,7 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
     {!selectedProject && <View style={styles.tabBar}>
       {MAIN_TABS.map(t => {
         const active = activeRoot === t.key;
-        return <TouchableOpacity key={t.key} style={[styles.tabBtn, active && styles.tabBtnActive]} onPress={() => setTab(t.key)}>
+        return <TouchableOpacity key={t.key} style={[styles.tabBtn, active && styles.tabBtnActive]} onPress={() => onTabPress(t.key)}>
           <View style={[styles.glyphBox, active && styles.glyphBoxActive]}><Text style={[styles.glyph, active && styles.tabActive]}>{t.glyph}</Text></View>
           <Text style={[styles.tabLabel, active && styles.tabActive]}>{t.label}</Text>
         </TouchableOpacity>;

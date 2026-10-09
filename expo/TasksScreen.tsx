@@ -4,7 +4,8 @@ import {
   ActivityIndicator, Modal, TextInput, ScrollView, Alert,
 } from 'react-native';
 import { Colors } from './theme';
-import { getCollection, postCollection, putCollection, getProjects } from './api';
+import { apiDelete, apiGet, getCollection, postCollection, putCollection, getProjects, type AuthUser } from './api';
+import { eligibleAssignees, emptyTaskForm, formFromTask, taskFormError, taskPayload, taskPermissions } from './task-management';
 
 const PRIO: Record<string,string> = {
   low: Colors.green,
@@ -28,7 +29,8 @@ type Task = {
 
 type Filter = 'open' | 'today' | 'done' | 'all';
 
-export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
+export default function TasksScreen({ user, onLogout, projectId }: { user: AuthUser; onLogout: () => void; projectId?: string | null }) {
+  const permissions = taskPermissions(user);
   const [items, setItems] = useState<Task[]>([]);
   const [projects, setProjects] = useState<any[]>([]);
   const [team, setTeam] = useState<any[]>([]);
@@ -36,17 +38,18 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
   const [err, setErr] = useState('');
   const [modal, setModal] = useState(false);
   const [saving, setSaving] = useState(false);
+  const [editingTask, setEditingTask] = useState<Task | null>(null);
+  const [fetchingTask, setFetchingTask] = useState<string | null>(null);
+  const [assigneeSearch, setAssigneeSearch] = useState('');
   const [filter, setFilter] = useState<Filter>('open');
-  const [form, setForm] = useState({
-    title: '', description: '', dueDate: '', priority: 'medium', projectId: '', assigneeId: '',
-  });
+  const [form, setForm] = useState(() => emptyTaskForm(projectId || ''));
 
   const load = async () => {
     setLoading(true); setErr('');
     try {
       // A restricted/unavailable team lookup must not hide tasks the user can access.
       const results = await Promise.allSettled([
-        getCollection('tasks', 200),
+        getCollection('tasks', 1000),
         getProjects(),
         getCollection('team', 500),
       ]);
@@ -69,25 +72,28 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
   useEffect(() => { void load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const todayKey = new Date().toISOString().slice(0, 10);
-  const visible = useMemo(() => items.filter(task => {
+  const scoped = useMemo(() => projectId ? items.filter(task => task.projectId === projectId) : items, [items, projectId]);
+  const visible = useMemo(() => scoped.filter(task => {
     const done = ['done','closed','complete'].includes(String(task.status || '').toLowerCase());
     if (filter === 'done') return done;
     if (filter === 'open') return !done;
     if (filter === 'today') return !done && !!task.dueDate && String(task.dueDate).slice(0,10) === todayKey;
     return true;
-  }), [items, filter, todayKey]);
+  }), [scoped, filter, todayKey]);
 
   const counts = useMemo(() => ({
-    open: items.filter(t => !['done','closed','complete'].includes(String(t.status || '').toLowerCase())).length,
-    urgent: items.filter(t => !['done','closed','complete'].includes(String(t.status || '').toLowerCase()) && ['high','critical'].includes(String(t.priority || '').toLowerCase())).length,
-    today: items.filter(t => !!t.dueDate && String(t.dueDate).slice(0,10) === todayKey && !['done','closed','complete'].includes(String(t.status || '').toLowerCase())).length,
-  }), [items, todayKey]);
+    open: scoped.filter(t => !['done','closed','complete'].includes(String(t.status || '').toLowerCase())).length,
+    urgent: scoped.filter(t => !['done','closed','complete'].includes(String(t.status || '').toLowerCase()) && ['high','critical'].includes(String(t.priority || '').toLowerCase())).length,
+    today: scoped.filter(t => !!t.dueDate && String(t.dueDate).slice(0,10) === todayKey && !['done','closed','complete'].includes(String(t.status || '').toLowerCase())).length,
+  }), [scoped, todayKey]);
 
   const toggle = async (task: Task) => {
-    const next = task.status === 'done' ? 'todo' : 'done';
+    if (!permissions.canChangeStatus) return;
+    const next = ['done', 'closed', 'complete'].includes(String(task.status).toLowerCase()) ? 'todo' : 'done';
     setItems(cur => cur.map(x => x.id === task.id ? { ...x, status: next } : x));
     try {
-      await putCollection('tasks', task.id, { status: next });
+      const outcome = await putCollection('tasks', task.id, { status: next });
+      if (outcome?._queued) Alert.alert('Queued offline', 'Your status change will sync when online.');
     } catch (e: any) {
       Alert.alert('Update failed', e?.message || '');
       void load();
@@ -95,33 +101,77 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
   };
 
   const openAdd = () => {
-    setForm({ title: '', description: '', dueDate: '', priority: 'medium', projectId: projects[0]?.id || '', assigneeId: '' });
+    if (!permissions.canCreate) return;
+    setEditingTask(null);
+    setAssigneeSearch('');
+    setForm(emptyTaskForm(projectId || projects[0]?.id || ''));
     setModal(true);
   };
 
+  const openEdit = async (task: Task) => {
+    if (fetchingTask) return;
+    setFetchingTask(task.id);
+    try {
+      // Fetch a fresh server-authorized record before editing. This catches
+      // reassignment/revocation instead of silently editing a stale cache row.
+      const fresh = await apiGet(`/api/tasks/${encodeURIComponent(task.id)}`) as Task;
+      setEditingTask(fresh);
+      setForm(formFromTask(fresh));
+      setAssigneeSearch('');
+      setModal(true);
+    } catch (e: any) {
+      if (e?.message === 'unauthorized') onLogout();
+      else Alert.alert('Unable to open task', e?.message || 'Connect to the internet and retry.');
+    } finally { setFetchingTask(null); }
+  };
+
+  const removeTask = () => {
+    if (!editingTask || !permissions.canDelete || saving) return;
+    const task = editingTask;
+    Alert.alert('Delete task?', `Delete “${task.title}”? This cannot be undone.`, [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Delete', style: 'destructive', onPress: () => {
+        void (async () => {
+          setSaving(true);
+          try {
+            await apiDelete(`/api/tasks/${encodeURIComponent(task.id)}`);
+            setModal(false); setEditingTask(null);
+            setItems(old => old.filter(x => x.id !== task.id));
+            await load();
+          } catch (e: any) {
+            if (e?.message === 'unauthorized') onLogout();
+            else Alert.alert('Delete failed', e?.message || 'You must be online to delete a task.');
+          } finally { setSaving(false); }
+        })();
+      } },
+    ]);
+  };
+
   const save = async () => {
-    if (!form.title.trim()) {
-      Alert.alert('Missing', 'Title is required.');
-      return;
-    }
+    if (saving) return;
+    const statusOnly = !!editingTask && permissions.statusOnly;
+    if ((!editingTask && !permissions.canCreate) || (editingTask && !permissions.canEdit && !statusOnly)) return;
+    const problem = taskFormError(form, statusOnly);
+    if (problem) { Alert.alert('Check task', problem); return; }
     setSaving(true);
     try {
-      const result = await postCollection('tasks', {
-        title: form.title.trim(),
-        description: form.description.trim() || null,
-        dueDate: form.dueDate || null,
-        priority: form.priority,
-        projectId: form.projectId || null,
-        assigneeId: form.assigneeId || null,
-      });
+      const body = taskPayload(form, statusOnly);
+      const result = editingTask
+        ? await putCollection('tasks', editingTask.id, body)
+        : await postCollection('tasks', body);
+      const savedId = editingTask?.id;
       setModal(false);
-      if (result?._queued) Alert.alert('Queued offline', 'Task will sync when connection returns.');
-      await load();
+      setEditingTask(null);
+      if (result?._queued) {
+        Alert.alert('Queued offline', 'Your changes will sync when the connection returns.');
+        if (savedId) setItems(current => current.map(t => t.id === savedId ? { ...t, ...body } : t));
+      } else {
+        await load();
+      }
     } catch (e: any) {
-      Alert.alert('Error', e?.message || 'Save failed');
-    } finally {
-      setSaving(false);
-    }
+      if (e?.message === 'unauthorized') onLogout();
+      else Alert.alert('Save failed', e?.message || 'Please retry.');
+    } finally { setSaving(false); }
   };
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.amber} /></View>;
@@ -130,10 +180,10 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
     <View style={styles.header}>
       <View style={{ flex: 1 }}>
         <Text style={styles.kicker}>WORK CONTROL</Text>
-        <Text style={styles.h1}>Tasks</Text>
+        <Text style={styles.h1}>{projectId ? 'Project tasks' : 'Tasks'}</Text>
         <Text style={styles.sub}>{counts.open} open · {counts.today} due today · {counts.urgent} urgent</Text>
       </View>
-      <TouchableOpacity style={styles.addBtn} onPress={openAdd}><Text style={styles.addText}>＋</Text></TouchableOpacity>
+      {permissions.canCreate && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Create task" style={styles.addBtn} onPress={openAdd}><Text style={styles.addText}>＋</Text></TouchableOpacity>}
     </View>
 
     <View style={styles.metrics}>
@@ -161,10 +211,10 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
         const done = ['done','closed','complete'].includes(String(item.status || '').toLowerCase());
         const tone = PRIO[item.priority] || Colors.t3;
         return <View style={[styles.card, { borderLeftColor: done ? Colors.green : tone }]}>
-          <TouchableOpacity onPress={() => toggle(item)} style={[styles.box, done && styles.boxOn]}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`${done ? 'Reopen' : 'Complete'} ${item.title}`} disabled={!permissions.canChangeStatus} onPress={() => void toggle(item)} style={[styles.box, done && styles.boxOn, !permissions.canChangeStatus && { opacity: 0.4 }]}>
             {done ? <Text style={styles.check}>✓</Text> : null}
           </TouchableOpacity>
-          <View style={{ flex: 1, marginLeft: 12 }}>
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`View or edit task ${item.title}`} onPress={() => void openEdit(item)} style={{ flex: 1, marginLeft: 12 }}>
             <View style={styles.cardTop}>
               <Text style={[styles.name, done && styles.done]} numberOfLines={2}>{item.title}</Text>
               <Text style={[styles.priority, { color: tone }]}>{item.priority}</Text>
@@ -175,7 +225,8 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
               {item.dueDate ? ` · ${new Date(item.dueDate).toLocaleDateString('en-GB')}` : ''}
             </Text>
             {item.description ? <Text style={styles.desc} numberOfLines={2}>{item.description}</Text> : null}
-          </View>
+            <Text style={styles.openHint}>{fetchingTask === item.id ? 'Opening…' : 'View details / edit →'}</Text>
+          </TouchableOpacity>
         </View>;
       }}
       ListEmptyComponent={<Text style={styles.empty}>No tasks in this view.</Text>}
@@ -186,23 +237,37 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
         <View style={styles.modal}>
           <View style={styles.modalHead}>
             <View>
-              <Text style={styles.modalKicker}>NEW WORK ITEM</Text>
-              <Text style={styles.modalTitle}>Create task</Text>
+              <Text style={styles.modalKicker}>{editingTask ? 'WORK ITEM DETAILS' : 'NEW WORK ITEM'}</Text>
+              <Text style={styles.modalTitle}>{editingTask ? 'Task details' : 'Create task'}</Text>
             </View>
             <TouchableOpacity onPress={() => setModal(false)} style={styles.close}><Text style={styles.closeText}>×</Text></TouchableOpacity>
           </View>
           <ScrollView>
-            <Field label="Title *"><Input value={form.title} onChange={v => setForm({ ...form, title: v })} placeholder="Install east elevation panel" /></Field>
-            <Field label="Description"><Input value={form.description} onChange={v => setForm({ ...form, description: v })} placeholder="Details / location" /></Field>
-            <Field label="Priority"><Chips values={['low','medium','high','critical']} value={form.priority} onPick={v => setForm({ ...form, priority: v })} /></Field>
-            <Field label="Project"><Chips values={projects.map(p => p.id)} label={id => projects.find(p => p.id === id)?.name || id} value={form.projectId} onPick={v => setForm({ ...form, projectId: v })} /></Field>
-            <Field label="Assignee"><Chips values={team.slice(0,30).map(m => m.id)} label={id => team.find(m => m.id === id)?.name || id} value={form.assigneeId} onPick={v => setForm({ ...form, assigneeId: form.assigneeId === v ? '' : v })} /></Field>
-            <Field label="Due date"><Input value={form.dueDate} onChange={v => setForm({ ...form, dueDate: v })} placeholder="YYYY-MM-DD" /></Field>
+            <Field label="Status"><Chips values={['todo','in_progress','blocked','done']} value={form.status} onPick={v => { if (permissions.canChangeStatus) setForm(old => ({ ...old, status: v })); }} /></Field>
+            {!editingTask || permissions.canEdit ? <>
+              <Field label="Title *"><Input value={form.title} onChange={v => setForm(old => ({ ...old, title: v }))} placeholder="Install east elevation panel" /></Field>
+              <Field label="Description"><Input value={form.description} onChange={v => setForm(old => ({ ...old, description: v }))} placeholder="Details / location" /></Field>
+              <Field label="Priority"><Chips values={['low','medium','high','critical']} value={form.priority} onPick={v => setForm(old => ({ ...old, priority: v }))} /></Field>
+              {!editingTask || permissions.canMoveProject ? <Field label="Project"><Chips values={projects.map(p => p.id)} label={id => projects.find(p => p.id === id)?.name || id} value={form.projectId} onPick={v => setForm(old => ({ ...old, projectId: v, assigneeId: old.projectId === v ? old.assigneeId : '' }))} /></Field> : <Text style={styles.meta}>Project: {projects.find(p => p.id === form.projectId)?.name || 'Unassigned'} · cannot move tasks between projects</Text>}
+              <Field label="Assignee">
+                <TextInput accessibilityLabel="Find team member" style={styles.input} value={assigneeSearch} placeholder="Search team by name" placeholderTextColor={Colors.t3} onChangeText={setAssigneeSearch} />
+                <Chips values={eligibleAssignees(team, form.projectId, user).filter(m => String(m.name || '').toLowerCase().includes(assigneeSearch.toLowerCase()) || m.id === form.assigneeId).slice(0,50).map(m => m.id)} label={id => team.find(m => m.id === id)?.name || id} value={form.assigneeId} onPick={v => setForm(old => ({ ...old, assigneeId: old.assigneeId === v ? '' : v }))} />
+                {form.assigneeId ? <TouchableOpacity accessibilityRole="button" onPress={() => setForm(old => ({ ...old, assigneeId: '' }))}><Text style={styles.openHint}>Clear assignee</Text></TouchableOpacity> : null}
+              </Field>
+              <Field label="Due date"><Input value={form.dueDate} onChange={v => setForm(old => ({ ...old, dueDate: v }))} placeholder="YYYY-MM-DD" /></Field>
+            </> : <>
+              <Text style={styles.meta}>Title: {form.title}</Text>
+              <Text style={styles.meta}>Project: {projects.find(p => p.id === form.projectId)?.name || 'Unassigned'}</Text>
+              <Text style={styles.meta}>Description: {form.description || '—'}</Text>
+              <Text style={styles.meta}>Only task status can be changed for this role.</Text>
+            </>}
           </ScrollView>
           <View style={styles.actions}>
-            <TouchableOpacity style={styles.cancel} onPress={() => setModal(false)}><Text style={{ color: Colors.t2, fontWeight: '800' }}>Cancel</Text></TouchableOpacity>
-            <TouchableOpacity style={styles.save} onPress={save} disabled={saving}><Text style={{ color: Colors.ink, fontWeight: '900' }}>{saving ? 'Saving…' : 'Save task'}</Text></TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" style={styles.cancel} onPress={() => setModal(false)} disabled={saving}><Text style={{ color: Colors.t2, fontWeight: '800' }}>Close</Text></TouchableOpacity>
+            {(!editingTask && permissions.canCreate || !!editingTask && (permissions.canEdit || permissions.statusOnly)) &&
+              <TouchableOpacity accessibilityRole="button" accessibilityLabel={editingTask ? 'Save task changes' : 'Save new task'} style={styles.save} onPress={() => void save()} disabled={saving}><Text style={{ color: Colors.ink, fontWeight: '900' }}>{saving ? 'Saving…' : editingTask ? 'Save changes' : 'Save task'}</Text></TouchableOpacity>}
           </View>
+          {!!editingTask && permissions.canDelete && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Delete this task" disabled={saving} onPress={removeTask} style={styles.deleteAction}><Text style={styles.deleteText}>Delete task permanently</Text></TouchableOpacity>}
         </View>
       </View>
     </Modal>
@@ -251,6 +316,7 @@ const styles = StyleSheet.create({
   priority: { fontSize: 8.5, fontWeight: '900', textTransform: 'uppercase' },
   meta: { color: Colors.t2, fontSize: 9.8, marginTop: 5 },
   desc: { color: Colors.t3, fontSize: 9.8, lineHeight: 14, marginTop: 5 },
+  openHint: { color: Colors.amber, fontSize: 10, fontWeight: '800', marginTop: 7 },
   empty: { color: Colors.t3, textAlign: 'center', marginTop: 40 },
   back: { flex: 1, backgroundColor: 'rgba(2,8,18,.78)', justifyContent: 'flex-end' },
   modal: { backgroundColor: Colors.ink2, padding: 20, borderTopLeftRadius: 22, borderTopRightRadius: 22, maxHeight: '92%', borderTopWidth: 1, borderColor: Colors.hair },
@@ -267,6 +333,8 @@ const styles = StyleSheet.create({
   chipText: { color: Colors.t2, fontSize: 10.5 },
   chipTextOn: { color: Colors.amber, fontWeight: '900' },
   actions: { flexDirection: 'row', gap: 10, marginTop: 8 },
+  deleteAction: { marginTop: 12, padding: 10, alignItems: 'center' },
+  deleteText: { color: Colors.red, fontWeight: '800', fontSize: 12 },
   cancel: { flex: 1, padding: 13, borderRadius: 11, borderWidth: 1, borderColor: Colors.hair, alignItems: 'center' },
   save: { flex: 1, padding: 13, borderRadius: 11, backgroundColor: Colors.amber, alignItems: 'center' },
 });
