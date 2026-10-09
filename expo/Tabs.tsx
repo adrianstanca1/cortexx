@@ -86,11 +86,11 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   }, [selectedProject, tab]);
 
   const content = selectedProject ? (
-    <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} />
+    <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} onOpenWeb={onOpenWeb} />
   ) : tab === 'overview' ? (
     <OverviewScreen user={user} onNavigate={setTab} onOpenWeb={onOpenWeb} onLogout={onLogout} />
   ) : tab === 'projects' ? (
-    <ProjectsScreen onLogout={onLogout} onSelect={setSelectedProject} />
+    <ProjectsScreen user={user} onLogout={onLogout} onSelect={setSelectedProject} onOpenWeb={onOpenWeb} />
   ) : tab === 'tasks' ? (
     <TasksScreen onLogout={onLogout} />
   ) : tab === 'field' ? (
