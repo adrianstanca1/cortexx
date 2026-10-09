@@ -8,10 +8,8 @@ import TicketsScreen from './TicketsScreen';
 import ProfileScreen from './ProfileScreen';
 import TasksScreen from './TasksScreen';
 import SnagsScreen from './SnagsScreen';
-import CisPaymentsScreen from './CisPaymentsScreen';
 import TimesheetsScreen from './TimesheetsScreen';
 import DiaryScreen from './DiaryScreen';
-import NotificationsScreen from './NotificationsScreen';
 import OverviewScreen from './OverviewScreen';
 import CheckInScreen from './CheckInScreen';
 import FieldReadinessScreen from './FieldReadinessScreen';
@@ -129,7 +127,7 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
       { key: 'amount', label: 'Amount (£)', type: 'number', required: true }, { key: 'status', label: 'Status' }, { key: 'dueDate', label: 'Due date' },
     ]} rowTitle={(i) => i.number || 'Invoice'} rowSub={(i) => `${i.clientName || 'Client'} · £${i.amount ?? '—'} · ${i.status || 'draft'}`} onLogout={onLogout} />
   ) : tab === 'cis' ? (
-    <CisPaymentsScreen onLogout={onLogout} />
+    <WebWorkspaceScreen path="/cis300" onBack={() => setTab('more')} onLogout={onLogout} />
   ) : tab === 'quotes' ? (
     <CollectionScreen name="quotes" title="Quotes" readOnly onOpenFullWorkspace={() => onOpenWeb('/quotes')} fields={[
       { key: 'number', label: 'Quote number', required: true }, { key: 'customerName', label: 'Customer' },
@@ -138,7 +136,7 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   ) : tab === 'tickets' ? (
     <TicketsScreen />
   ) : tab === 'notifications' ? (
-    <NotificationsScreen onLogout={onLogout} />
+    <WebWorkspaceScreen path="/inbox" onBack={() => setTab('more')} onLogout={onLogout} />
   ) : tab === 'profile' ? (
     <ProfileScreen onLogout={onLogout} onWorkspaceChanged={onWorkspaceChanged} />
   ) : (

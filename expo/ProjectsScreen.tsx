@@ -7,6 +7,11 @@ type Project = {
   id: string;
   name: string;
   client?: string;
+  clientName?: string;
+  address?: string;
+  budget?: number | string;
+  progress?: number;
+  endDate?: string;
   value?: number | string;
   pct?: number;
   status?: string;
@@ -34,8 +39,8 @@ export default function ProjectsScreen({ onSelect, onLogout }: { onSelect: (id: 
 
   const stats = useMemo(() => {
     const active = items.filter(p => ['active', 'in_progress', 'progress'].includes(String(p.status || '').toLowerCase())).length;
-    const close = items.filter(p => Number(p.pct || 0) >= 80 && Number(p.pct || 0) < 100).length;
-    const complete = items.filter(p => ['complete', 'completed', 'done'].includes(String(p.status || '').toLowerCase()) || Number(p.pct || 0) >= 100).length;
+    const close = items.filter(p => Number(p.progress ?? p.pct ?? 0) >= 80 && Number(p.progress ?? p.pct ?? 0) < 100).length;
+    const complete = items.filter(p => ['complete', 'completed', 'done'].includes(String(p.status || '').toLowerCase()) || Number(p.progress ?? p.pct ?? 0) >= 100).length;
     return { active, close, complete };
   }, [items]);
 
@@ -67,7 +72,8 @@ export default function ProjectsScreen({ onSelect, onLogout }: { onSelect: (id: 
         contentContainerStyle={{ paddingBottom: 24 }}
         renderItem={({ item, index }) => {
           const statusTone = StatusColor[item.status || ''] || Colors.t3;
-          const pct = typeof item.pct === 'number' ? Math.max(0, Math.min(100, item.pct)) : null;
+          const rawProgress = item.progress ?? item.pct;
+          const pct = typeof rawProgress === 'number' ? Math.max(0, Math.min(100, rawProgress)) : null;
           return (
             <TouchableOpacity style={styles.card} onPress={() => onSelect(item.id)}>
               <View style={styles.cardTop}>
@@ -80,11 +86,11 @@ export default function ProjectsScreen({ onSelect, onLogout }: { onSelect: (id: 
               </View>
 
               <Text style={styles.name}>{item.name}</Text>
-              <Text style={styles.meta}>{item.client || '—'}{item.addr ? ` · ${item.addr}` : ''}</Text>
+              <Text style={styles.meta}>{item.clientName || item.client || '—'}{item.address || item.addr ? ` · ${item.address || item.addr}` : ''}</Text>
 
               <View style={styles.valueRow}>
                 <Text style={styles.valueLabel}>CONTRACT</Text>
-                <Text style={styles.val}>{fmtMoney(item.value)}</Text>
+                <Text style={styles.val}>{fmtMoney(item.budget ?? item.value)}</Text>
               </View>
 
               {pct !== null ? (

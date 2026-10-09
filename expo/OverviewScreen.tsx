@@ -30,7 +30,8 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
     setLoading(true); setErr('');
     try {
       const finance = isFinanceAdmin(user);
-      const [projects, tasks, snags, entries, safety, member, invoices] = await Promise.all([
+      // One failed optional endpoint must not take down the whole home screen.
+      const results = await Promise.allSettled([
         getProjects(),
         getCollection('tasks', 200),
         getCollection('snags', 200),
@@ -39,30 +40,35 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
         getCurrentTeamMember(),
         finance ? getCollection('invoices', 200) : Promise.resolve([]),
       ]);
-      const visibleProjects = new Set((projects as any[]).map(p => p.id));
-      const visibleSnags = (snags as any[]).filter(s => !s.projectId || visibleProjects.has(s.projectId));
-      const visibleSafety = (safety as any[]).filter(i => !i.projectId || visibleProjects.has(i.projectId));
-      const visibleEntries = (entries as any[]).filter(e => {
-        if (String(user.role || '').toLowerCase() === 'operative') return !member || e.memberId === member.id;
+      if (results.some(r => r.status === 'rejected' && r.reason?.message === 'unauthorized')) throw new Error('unauthorized');
+      const [projects, tasks, snags, entries, safety, member, invoices] = results.map(r => r.status === 'fulfilled' ? r.value : null);
+      const unavailable = (i: number) => results[i].status === 'rejected';
+      const failed = results.reduce((n, r) => n + Number(r.status === 'rejected'), 0);
+      const visibleProjects = new Set(((projects || []) as any[]).map(p => p.id));
+      const visibleSnags = ((snags || []) as any[]).filter(s => !s.projectId || visibleProjects.has(s.projectId));
+      const visibleSafety = ((safety || []) as any[]).filter(i => !i.projectId || visibleProjects.has(i.projectId));
+      const visibleEntries = ((entries || []) as any[]).filter(e => {
+        if (String(user.role || '').toLowerCase() === 'operative') return !!member && e.memberId === member.id;
         return !e.projectId || visibleProjects.has(e.projectId);
       });
-      const openTasks = (tasks as any[]).filter(t => !['done', 'closed', 'complete'].includes(String(t.status || '').toLowerCase())).length;
+      const openTasks = ((tasks || []) as any[]).filter(t => !['done', 'closed', 'complete'].includes(String(t.status || '').toLowerCase())).length;
       const openSnags = visibleSnags.filter(s => !String(s.status || '').match(/close|done|fixed/i)).length;
       const openSafety = visibleSafety.filter(i => String(i.status || '').toLowerCase() !== 'closed').length;
       const weekStart = Date.now() - 7 * 864e5;
       const weekHours = visibleEntries.filter(t => t.date && new Date(t.date).getTime() >= weekStart).reduce((sum, t) => sum + (Number(t.hours) || 0), 0);
       const next: Stat[] = [
-        { key: 'projects', label: 'Projects', value: String((projects as any[]).length), tone: 'blue', code: 'PJ' },
-        { key: 'tasks', label: 'Open work', value: String(openTasks), sub: `${(tasks as any[]).length} loaded`, tone: openTasks ? 'amber' : 'green', code: 'WK' },
-        { key: 'snags', label: 'Open snags', value: String(openSnags), sub: `${visibleSnags.length} records`, tone: openSnags ? 'amber' : 'green', code: 'QA' },
-        { key: 'timesheets', label: 'Hours / 7d', value: weekHours.toFixed(1), sub: 'field time', tone: 'blue', code: 'TM' },
-        { key: 'safety', label: 'Safety open', value: String(openSafety), sub: `${visibleSafety.length} records`, tone: openSafety ? 'red' : 'green', code: 'HS' },
+        { key: 'projects', label: 'Projects', value: unavailable(0) ? '—' : String((projects as any[]).length), tone: 'blue', code: 'PJ' },
+        { key: 'tasks', label: 'Open work', value: unavailable(1) ? '—' : String(openTasks), sub: unavailable(1) ? 'Data unavailable' : `${(tasks as any[]).length} loaded`, tone: openTasks ? 'amber' : 'green', code: 'WK' },
+        { key: 'snags', label: 'Open snags', value: unavailable(2) || unavailable(0) ? '—' : String(openSnags), sub: unavailable(2) || unavailable(0) ? 'Data unavailable' : `${visibleSnags.length} records`, tone: openSnags ? 'amber' : 'green', code: 'QA' },
+        { key: 'timesheets', label: 'Hours / 7d', value: unavailable(3) || (String(user.role || '').toLowerCase() === 'operative' && unavailable(5)) ? '—' : weekHours.toFixed(1), sub: 'field time', tone: 'blue', code: 'TM' },
+        { key: 'safety', label: 'Safety open', value: unavailable(4) || unavailable(0) ? '—' : String(openSafety), sub: unavailable(4) || unavailable(0) ? 'Data unavailable' : `${visibleSafety.length} records`, tone: openSafety ? 'red' : 'green', code: 'HS' },
         { key: 'checkin', label: 'Attendance', value: '→', sub: 'check in / out', tone: 'green', code: 'GPS' },
       ];
       if (finance) {
-        const outstanding = (invoices as any[]).filter(i => String(i.status || '').toLowerCase() !== 'paid').length;
-        next.splice(2, 0, { key: 'invoices', label: 'Outstanding', value: String(outstanding), sub: `${(invoices as any[]).length} invoices`, tone: outstanding ? 'red' : 'green', code: '£' });
+        const outstanding = ((invoices || []) as any[]).filter(i => String(i.status || '').toLowerCase() !== 'paid').length;
+        next.splice(2, 0, { key: 'invoices', label: 'Outstanding', value: unavailable(6) ? '—' : String(outstanding), sub: unavailable(6) ? 'Data unavailable' : `${(invoices as any[]).length} invoices`, tone: outstanding ? 'red' : 'green', code: '£' });
       }
+      if (failed) setErr(`${failed} data source${failed === 1 ? '' : 's'} unavailable. Pull down to retry; other modules remain accessible.`);
       setStats(next);
       liveRef.current = Math.max(0, liveRef.current - eventsBeforeRefresh);
       setLive(liveRef.current);

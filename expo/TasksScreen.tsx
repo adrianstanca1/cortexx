@@ -44,14 +44,20 @@ export default function TasksScreen({ onLogout }: { onLogout: () => void }) {
   const load = async () => {
     setLoading(true); setErr('');
     try {
-      const [t, p, m] = await Promise.all([
+      // A restricted/unavailable team lookup must not hide tasks the user can access.
+      const results = await Promise.allSettled([
         getCollection('tasks', 200),
         getProjects(),
         getCollection('team', 500),
       ]);
+      const authFailure = results.find(r => r.status === 'rejected' && r.reason?.message === 'unauthorized');
+      if (authFailure) throw new Error('unauthorized');
+      const [t, p, m] = results.map(r => r.status === 'fulfilled' ? r.value : []);
       setItems((t || []) as Task[]);
       setProjects(p || []);
       setTeam(m || []);
+      const failed = results.reduce((count, r) => count + Number(r.status === 'rejected'), 0);
+      if (failed) setErr(`${failed} work data source${failed === 1 ? '' : 's'} unavailable. Some information may be missing; pull to retry.`);
     } catch (e: any) {
       setErr(e?.message || 'Failed');
       if (e?.message === 'unauthorized') onLogout();

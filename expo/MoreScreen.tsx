@@ -15,8 +15,6 @@ const NATIVE: Array<{ route: AppRoute; title: string; sub: string; finance?: boo
   { route: 'safety', title: 'Safety', sub: 'Site hazards and incidents' },
   { route: 'invoices', title: 'Invoice list', sub: 'Live company finance records', finance: true },
   { route: 'quotes', title: 'Quote list', sub: 'Live company quotations', finance: true },
-  { route: 'cis', title: 'CIS payments', sub: 'Subcontractor payment records', finance: true },
-  { route: 'notifications', title: 'Notifications', sub: 'Live updates' },
   { route: 'profile', title: 'Profile and company', sub: 'Account, security and workspace switch' },
 ];
 
