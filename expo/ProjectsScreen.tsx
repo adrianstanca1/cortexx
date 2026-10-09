@@ -1,7 +1,7 @@
 import React, { useEffect, useMemo, useState } from 'react';
-import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator } from 'react-native';
+import { View, Text, FlatList, TouchableOpacity, StyleSheet, RefreshControl, ActivityIndicator, Alert, Modal, ScrollView, TextInput } from 'react-native';
 import { Colors, StatusColor } from './theme';
-import { getProjects } from './api';
+import { apiPost, getProjects, type AuthUser } from './api';
 
 type Project = {
   id: string;
@@ -19,10 +19,42 @@ type Project = {
   due?: string;
 };
 
-export default function ProjectsScreen({ onSelect, onLogout }: { onSelect: (id: string) => void; onLogout: () => void }) {
+export default function ProjectsScreen({ user, onSelect, onLogout, onOpenWeb }: { user: AuthUser; onSelect: (id: string) => void; onLogout: () => void; onOpenWeb: (path: string) => void }) {
   const [items, setItems] = useState<Project[]>([]);
   const [loading, setLoading] = useState(true);
   const [err, setErr] = useState('');
+  const [createVisible, setCreateVisible] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [form, setForm] = useState({ name: '', clientName: '', address: '', postcode: '', budget: '' });
+  // Match server withRoute RBAC: only owners/company admins can create projects.
+  const membershipRole = String(user.organizationRole || user.organizations?.[0]?.role || '').toLowerCase();
+  const canCreateProject = membershipRole === 'owner' || membershipRole === 'admin';
+
+  const createProject = async () => {
+    if (!canCreateProject || saving) return;
+    const name = form.name.trim();
+    if (!name) { Alert.alert('Project name required', 'Enter a project name.'); return; }
+    const budget = form.budget.trim() ? Number(form.budget.trim()) : 0;
+    if (!Number.isFinite(budget) || budget < 0) { Alert.alert('Invalid budget', 'Enter a valid non-negative amount.'); return; }
+    setSaving(true);
+    try {
+      const project = await apiPost('/api/projects', {
+        name, clientName: form.clientName.trim(), address: form.address.trim(),
+        postcode: form.postcode.trim(), budget, status: 'active', progress: 0,
+      });
+      setCreateVisible(false);
+      setForm({ name: '', clientName: '', address: '', postcode: '', budget: '' });
+      if (project?.id) {
+        setItems(current => [project, ...current.filter(item => item.id !== project.id)]);
+        onSelect(project.id);
+      } else {
+        await load();
+      }
+    } catch (e: any) {
+      if (e?.message === 'unauthorized') onLogout();
+      else Alert.alert('Could not create project', e?.message || 'Please try again online.');
+    } finally { setSaving(false); }
+  };
 
   const load = async () => {
     setLoading(true); setErr('');
@@ -54,7 +86,9 @@ export default function ProjectsScreen({ onSelect, onLogout }: { onSelect: (id: 
           <Text style={styles.h1}>Projects</Text>
           <Text style={styles.sub}>{items.length} total · {stats.active} active · {stats.close} near completion</Text>
         </View>
-        <TouchableOpacity style={styles.account} onPress={onLogout}><Text style={styles.accountText}>OUT</Text></TouchableOpacity>
+        {canCreateProject && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Create a project" style={styles.create} onPress={() => setCreateVisible(true)}>
+          <Text style={styles.createText}>+ Project</Text>
+        </TouchableOpacity>}
       </View>
 
       <View style={styles.metrics}>
@@ -102,8 +136,37 @@ export default function ProjectsScreen({ onSelect, onLogout }: { onSelect: (id: 
             </TouchableOpacity>
           );
         }}
-        ListEmptyComponent={!err ? <Text style={styles.empty}>No projects yet.</Text> : null}
+        ListEmptyComponent={!err ? <View style={{ gap: 10 }}>
+          <Text style={styles.empty}>No projects yet.</Text>
+          {canCreateProject && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Create your first project" style={styles.create} onPress={() => setCreateVisible(true)}><Text style={styles.createText}>+ Create first project</Text></TouchableOpacity>}
+        </View> : null}
       />
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open complete project management" style={styles.webAction} onPress={() => onOpenWeb('/projects')}>
+        <Text style={styles.webActionText}>Full project management · planning, team, documents →</Text>
+      </TouchableOpacity>
+      <Modal visible={createVisible && canCreateProject} animationType="slide" transparent onRequestClose={() => { if (!saving) setCreateVisible(false); }}>
+        <View style={styles.modalBack}>
+          <ScrollView style={styles.modal} keyboardShouldPersistTaps="handled" contentContainerStyle={{ gap: 12 }}>
+            <Text style={styles.modalTitle}>Create project</Text>
+            <Text style={styles.modalSub}>Create a new project for your current company.</Text>
+            {([
+              ['name', 'Project name *'], ['clientName', 'Client name'], ['address', 'Site address'],
+              ['postcode', 'Postcode'], ['budget', 'Budget (£)'],
+            ] as const).map(([field, label]) => <View key={field}>
+              <Text style={styles.formLabel}>{label}</Text>
+              <TextInput accessibilityLabel={label} style={styles.formInput} value={form[field]}
+                keyboardType={field === 'budget' ? 'decimal-pad' : 'default'}
+                editable={!saving} onChangeText={value => setForm(old => ({ ...old, [field]: value }))} />
+            </View>)}
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Save new project" disabled={saving} style={styles.create} onPress={() => void createProject()}>
+              <Text style={styles.createText}>{saving ? 'Creating…' : 'Create project'}</Text>
+            </TouchableOpacity>
+            <TouchableOpacity accessibilityRole="button" accessibilityLabel="Cancel creating project" disabled={saving} style={styles.cancel} onPress={() => setCreateVisible(false)}>
+              <Text style={styles.cancelText}>Cancel</Text>
+            </TouchableOpacity>
+          </ScrollView>
+        </View>
+      </Modal>
     </View>
   );
 }
@@ -151,4 +214,16 @@ const styles = StyleSheet.create({
   barFill: { height: 5, borderRadius: 99 },
   empty: { color: Colors.t3, textAlign: 'center', marginTop: 40 },
   err: { color: Colors.red, marginBottom: 12 },
+  create: { backgroundColor: Colors.amber, paddingVertical: 12, paddingHorizontal: 14, borderRadius: 12, alignItems: 'center', justifyContent: 'center' },
+  createText: { color: Colors.ink, fontSize: 12, fontWeight: '900' },
+  webAction: { backgroundColor: Colors.ink2, borderColor: Colors.amber + '55', borderWidth: 1, borderRadius: 12, padding: 14, marginTop: 7 },
+  webActionText: { color: Colors.amber, textAlign: 'center', fontWeight: '800', fontSize: 12 },
+  modalBack: { flex: 1, backgroundColor: '#000a', justifyContent: 'center', padding: 18 },
+  modal: { maxHeight: '88%', backgroundColor: Colors.ink2, borderRadius: 16, borderWidth: 1, borderColor: Colors.hair, padding: 20 },
+  modalTitle: { color: Colors.t1, fontSize: 23, fontWeight: '900' },
+  modalSub: { color: Colors.t2, fontSize: 12 },
+  formLabel: { color: Colors.t2, fontSize: 12, fontWeight: '800', marginBottom: 5 },
+  formInput: { color: Colors.t1, backgroundColor: Colors.ink3, borderRadius: 10, borderColor: Colors.hair, borderWidth: 1, fontSize: 15, padding: 10 },
+  cancel: { padding: 10, alignItems: 'center' },
+  cancelText: { color: Colors.t2, fontWeight: '800' },
 });
