@@ -26,3 +26,13 @@ test('mobile dashboard and work queue survive independent endpoint failures', ()
   assert.match(home, /value: unavailable\(0\) \? '—'/);
   assert.match(home, /throw new Error\('unauthorized'\)/);
 });
+test('native navigation does not open removed CIS and notification API endpoints', () => {
+  const menu = src('MoreScreen.tsx');
+  const tabs = src('Tabs.tsx');
+  assert.doesNotMatch(menu, /route: 'cis'/);
+  assert.doesNotMatch(menu, /route: 'notifications'/);
+  assert.match(tabs, /tab === 'cis'[\s\S]*?<WebWorkspaceScreen path="\/cis300"/);
+  assert.match(tabs, /tab === 'notifications'[\s\S]*?<WebWorkspaceScreen path="\/inbox"/);
+  assert.doesNotMatch(tabs, /<CisPaymentsScreen/);
+  assert.doesNotMatch(tabs, /<NotificationsScreen/);
+});
