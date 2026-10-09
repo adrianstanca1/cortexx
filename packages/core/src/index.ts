@@ -137,7 +137,7 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
     },
     async logout() { await store.clear(); },
     async getMe(): Promise<AuthUser | null> { try { const d = await apiGet('/api/auth/me'); return (d && (d.user || d)) as AuthUser; } catch { return null; } },
-    async getProjects(): Promise<any[]> { const d = await apiGet('/api/projects?limit=100'); return Array.isArray(d) ? d : d.rows || d.projects || []; },
+    async getProjects(): Promise<any[]> { const d = await apiGet('/api/projects?take=100'); return Array.isArray(d) ? d : d.rows || d.projects || []; },
     async getCollection(name: string, limit = 100): Promise<any[]> {
       try {
         const d = await apiGet(`/api/${name}?limit=${limit}&take=${limit}`);
