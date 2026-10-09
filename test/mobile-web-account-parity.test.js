@@ -50,7 +50,7 @@ test('native offline cache cannot return another user or company data', () => {
   const core = read('packages/core/src/index.ts')
   const client = read('expo/api.ts')
   assert.match(core, /export function setOfflineScope\(/)
-  assert.match(core, /'_cache_' \+ _offlineScope|cb_cache_' \+ _offlineScope/)
+  assert.match(core, /cb_cache_' \+ scope/); assert.match(core, /scope !== _offlineScope/)
   assert.match(core, /w\.scope !== _offlineScope/)
   assert.match(client, /setOfflineScope\(body\.user\.id \+ '_' \+ /)
   assert.match(client, /setOfflineScope\(user\.id \+ '_' \+ /)
