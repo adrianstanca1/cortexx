@@ -1,0 +1,164 @@
+name: Cortexx iOS — Local macOS Build & TestFlight
+
+on:
+  workflow_dispatch:
+    inputs:
+      what_to_test:
+        description: Internal TestFlight release notes
+        required: false
+        default: Cortexx native task management and mobile parity improvements
+
+permissions:
+  contents: read
+
+# This fallback is manual only. Do not create an implicit paid macOS build on push.
+concurrency:
+  group: cortexx-ios-local-testflight
+  cancel-in-progress: false
+
+jobs:
+  local-ios-testflight:
+    if: github.ref == 'refs/heads/main'
+    name: Sign iOS locally and submit to TestFlight
+    runs-on: macos-26-intel
+    timeout-minutes: 120
+    defaults:
+      run:
+        working-directory: expo
+    steps:
+      - name: Checkout exact release
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Select supported Xcode for Expo SDK 57
+        run: |
+          set -euo pipefail
+          if [ ! -d /Applications/Xcode_26.6.app ]; then
+            echo '::error::Xcode 26.6 is required for Expo SDK 57 on this runner.'
+            exit 1
+          fi
+          sudo xcode-select -s /Applications/Xcode_26.6.app/Contents/Developer
+          xcodebuild -version
+          command -v fastlane
+          command -v pod
+
+      - name: Use Node 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+          cache: npm
+          cache-dependency-path: expo/package-lock.json
+
+      - name: Install iOS app dependencies without lifecycle scripts
+        run: npm ci --ignore-scripts --no-audit --no-fund
+
+      - name: Verify native TypeScript
+        run: npx tsc --noEmit
+
+      - name: Verify existing Cortexx Expo project
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+        run: |
+          set -euo pipefail
+          test -n "$EXPO_TOKEN"
+          npx eas-cli@21.0.1 whoami
+          npx eas-cli@21.0.1 project:info
+
+      # Uses the existing remotely managed distribution certificate and provisioning
+      # profile. This does NOT request a new Apple certificate or profile.
+      - name: Compile and sign IPA on GitHub macOS (no Expo Cloud Build quota)
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          FASTLANE_SKIP_UPDATE_CHECK: '1'
+          COCOAPODS_DISABLE_STATS: 'true'
+          CI: '1'
+        run: |
+          set -euo pipefail
+          npx eas-cli@21.0.1 build \
+            --platform ios \
+            --profile production \
+            --local \
+            --non-interactive \
+            --output "$RUNNER_TEMP/Cortexx.ipa"
+
+      - name: Verify signed release identity and new build number
+        id: ipa
+        run: |
+          set -euo pipefail
+          IPA="$RUNNER_TEMP/Cortexx.ipa"
+          test -s "$IPA"
+          unzip -t "$IPA" >/dev/null
+          unzip -oq "$IPA" 'Payload/*.app/Info.plist' -d "$RUNNER_TEMP/verify"
+          INFO_FILE="$(find "$RUNNER_TEMP/verify" -name Info.plist -print -quit)"
+          test -n "$INFO_FILE"
+          BUNDLE_ID="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleIdentifier' "$INFO_FILE")"
+          BUILD_NUMBER="$(/usr/libexec/PlistBuddy -c 'Print :CFBundleVersion' "$INFO_FILE")"
+          if [ "$BUNDLE_ID" != 'com.cortexbuild.app' ]; then
+            echo '::error::Incorrect iOS bundle identifier; refusing upload.'
+            exit 1
+          fi
+          case "$BUILD_NUMBER" in
+            ''|*[!0-9]*) echo '::error::Invalid numeric iOS build number'; exit 1 ;;
+          esac
+          if [ "$BUILD_NUMBER" -le 32 ]; then
+            echo '::error::This IPA is not newer than TestFlight build 32.'
+            exit 1
+          fi
+          echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
+          echo "Verified Cortexx production IPA, build $BUILD_NUMBER."
+
+      - name: Install Apple-issued App Store Connect team key
+        env:
+          APP_STORE_CONNECT_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+          APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+          APP_STORE_CONNECT_KEY_BASE64: ${{ secrets.APP_STORE_CONNECT_KEY_BASE64 }}
+        run: |
+          set -euo pipefail
+          if [ -z "$APP_STORE_CONNECT_KEY_ID" ] || [ -z "$APP_STORE_CONNECT_ISSUER_ID" ] || [ -z "$APP_STORE_CONNECT_KEY_BASE64" ]; then
+            echo '::error::Required Apple team API key secrets are missing.'
+            exit 1
+          fi
+          umask 077
+          KEY_PATH="$RUNNER_TEMP/AuthKey.p8"
+          printf '%s' "$APP_STORE_CONNECT_KEY_BASE64" | base64 -D > "$KEY_PATH"
+          if ! openssl pkey -in "$KEY_PATH" -noout >/dev/null 2>&1; then
+            echo '::error::Invalid Apple-issued PKCS#8 signing API key.'
+            exit 1
+          fi
+          echo "EXPO_ASC_API_KEY_PATH=$KEY_PATH" >> "$GITHUB_ENV"
+          echo "EXPO_ASC_KEY_ID=$APP_STORE_CONNECT_KEY_ID" >> "$GITHUB_ENV"
+          echo "EXPO_ASC_ISSUER_ID=$APP_STORE_CONNECT_ISSUER_ID" >> "$GITHUB_ENV"
+
+      - name: Configure ephemeral submission profile
+        run: |
+          node <<'NODE'
+          const fs = require('node:fs');
+          const config = JSON.parse(fs.readFileSync('eas.json', 'utf8'));
+          const ios = config.submit?.production?.ios;
+          if (ios?.ascAppId !== '6820322670') throw new Error('Wrong Cortexx App Store Connect app ID');
+          ios.ascApiKeyPath = process.env.EXPO_ASC_API_KEY_PATH;
+          ios.ascApiKeyId = process.env.EXPO_ASC_KEY_ID;
+          ios.ascApiKeyIssuerId = process.env.EXPO_ASC_ISSUER_ID;
+          fs.writeFileSync('eas.json', JSON.stringify(config, null, 2));
+          NODE
+
+      - name: Submit the locally signed IPA to Apple TestFlight
+        env:
+          EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
+          CI: '1'
+        run: |
+          set -euo pipefail
+          npx eas-cli@21.0.1 submit \
+            --platform ios \
+            --profile production \
+            --path "$RUNNER_TEMP/Cortexx.ipa" \
+            --wait \
+            --non-interactive
+          echo "Submitted Cortexx build ${{ steps.ipa.outputs.build_number }} to Apple; processing is asynchronous."
+
+      - name: Remove ephemeral Apple team key and signed IPA
+        if: always()
+        run: |
+          rm -f "$RUNNER_TEMP/AuthKey.p8" "$RUNNER_TEMP/Cortexx.ipa"
+          rm -rf "$RUNNER_TEMP/verify"
