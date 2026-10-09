@@ -19,6 +19,7 @@ import FieldCloseoutScreen from './FieldCloseoutScreen';
 import SafetyScreen from './SafetyScreen';
 import RfisScreen from './RfisScreen';
 import DrawingsScreen from './DrawingsScreen';
+import DocumentsScreen from './DocumentsScreen';
 import PhotosScreen from './PhotosScreen';
 import FieldHubScreen from './FieldHubScreen';
 import MoreScreen from './MoreScreen';
@@ -35,7 +36,7 @@ const MAIN_TABS: Array<{ key: AppRoute; label: string; glyph: string }> = [
   { key: 'more', label: 'Modules', glyph: 'MOD' },
 ];
 const FIELD_ROUTES = new Set<AppRoute>(['field', 'checkin', 'readiness', 'deliveries', 'controls', 'closeout', 'timesheets', 'diary', 'snags', 'safety', 'rfis', 'drawings', 'photos']);
-const MORE_ROUTES = new Set<AppRoute>(['more', 'web', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile']);
+const MORE_ROUTES = new Set<AppRoute>(['more', 'web', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile', 'documents']);
 
 function rootFor(route: AppRoute): AppRoute {
   if (FIELD_ROUTES.has(route)) return 'field';
@@ -117,6 +118,8 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
     <RfisScreen user={user} onLogout={onLogout} />
   ) : tab === 'drawings' ? (
     <DrawingsScreen onLogout={onLogout} />
+  ) : tab === 'documents' ? (
+    <DocumentsScreen user={user} onLogout={onLogout} onOpenWeb={onOpenWeb} />
   ) : tab === 'photos' ? (
     <PhotosScreen onLogout={onLogout} />
   ) : tab === 'web' ? (

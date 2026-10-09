@@ -12,6 +12,7 @@ const NATIVE: Array<{ route: AppRoute; title: string; sub: string; finance?: boo
   { route: 'timesheets', title: 'My timesheets', sub: 'Native hours and submissions' },
   { route: 'photos', title: 'Site photos', sub: 'Capture, gallery and uploads' },
   { route: 'drawings', title: 'Drawings', sub: 'Current drawings and downloads' },
+  { route: 'documents', title: 'Documents', sub: 'Native PDF and image uploads, browsing and sharing' },
   { route: 'safety', title: 'Safety', sub: 'Site hazards and incidents' },
   { route: 'invoices', title: 'Invoice list', sub: 'Live company finance records', finance: true },
   { route: 'quotes', title: 'Quote list', sub: 'Live company quotations', finance: true },
