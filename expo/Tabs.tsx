@@ -52,7 +52,22 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   const [webPath, setWebPath] = React.useState('/apps');
   const onOpenWeb = (path: string) => { setSelectedProject(null); setWebPath(path); setTab('web'); };
   const openProjectTasks = (id: string) => { setTaskProjectId(id); setSelectedProject(null); setTab('tasks'); };
-  const onTabPress = (next: AppRoute) => { if (next === 'tasks') setTaskProjectId(null); setTab(next); };
+  const onNavigate = (next: AppRoute) => {
+    // Modules, Home and Field all lead to the same global work queue. A prior
+    // project-specific filter must not leak into an unrelated navigation.
+    if (next === 'tasks') setTaskProjectId(null);
+    setSelectedProject(null);
+    setTab(next);
+  };
+  React.useEffect(() => {
+    // A user can switch companies without unmounting Tabs. Clear old-project
+    // selection and web module state when the active tenant changes.
+    setSelectedProject(null);
+    setTaskProjectId(null);
+    setWebPath('/apps');
+    setTab('overview');
+  }, [user.organization?.id]);
+  const onTabPress = onNavigate;
 
   React.useEffect(() => {
     setPending(pendingWrites());
@@ -92,13 +107,13 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   const content = selectedProject ? (
     <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} onOpenWeb={onOpenWeb} onOpenTasks={openProjectTasks} />
   ) : tab === 'overview' ? (
-    <OverviewScreen user={user} onNavigate={setTab} onOpenWeb={onOpenWeb} onLogout={onLogout} />
+    <OverviewScreen user={user} onNavigate={onNavigate} onOpenWeb={onOpenWeb} onLogout={onLogout} />
   ) : tab === 'projects' ? (
     <ProjectsScreen user={user} onLogout={onLogout} onSelect={setSelectedProject} onOpenWeb={onOpenWeb} />
   ) : tab === 'tasks' ? (
     <TasksScreen user={user} onLogout={onLogout} projectId={taskProjectId} />
   ) : tab === 'field' ? (
-    <FieldHubScreen user={user} onNavigate={setTab} />
+    <FieldHubScreen user={user} onNavigate={onNavigate} />
   ) : tab === 'checkin' ? (
     <CheckInScreen onLogout={onLogout} />
   ) : tab === 'readiness' ? (
@@ -146,7 +161,7 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   ) : tab === 'profile' ? (
     <ProfileScreen onLogout={onLogout} onWorkspaceChanged={onWorkspaceChanged} />
   ) : (
-    <MoreScreen user={user} onNavigate={setTab} onOpenWeb={onOpenWeb} />
+    <MoreScreen user={user} onNavigate={onNavigate} onOpenWeb={onOpenWeb} />
   );
 
   const activeRoot = rootFor(tab);
