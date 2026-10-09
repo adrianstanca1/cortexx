@@ -32,14 +32,14 @@ export default function FieldHubScreen({ user, onNavigate }: { user: AuthUser; o
     <Text style={styles.h1}>Field</Text>
     <Text style={styles.sub}>The working shift organised around readiness, execution and evidence.</Text>
 
-    <View style={styles.hero}>
-      <View>
-        <Text style={styles.heroLabel}>SHIFT MODE</Text>
-        <Text style={styles.heroTitle}>Ready to work</Text>
-        <Text style={styles.heroSub}>Check readiness first, then move through work and close-out.</Text>
+    <TouchableOpacity accessibilityRole="button" accessibilityLabel="Verify site readiness before starting work" style={styles.hero} onPress={() => onNavigate('readiness')}>
+      <View style={{ flex: 1 }}>
+        <Text style={styles.heroLabel}>SHIFT CHECKS REQUIRED</Text>
+        <Text style={styles.heroTitle}>Verify before work</Text>
+        <Text style={styles.heroSub}>Check live permits, RAMS, hazards and blockers. This overview does not confirm the site is safe to start.</Text>
       </View>
-      <View style={styles.livePill}><Text style={styles.liveText}>● LIVE</Text></View>
-    </View>
+      <View style={styles.livePill}><Text style={styles.liveText}>CHECK →</Text></View>
+    </TouchableOpacity>
 
     <Text style={styles.section}>CORE OPERATIONS</Text>
     <View style={styles.primaryGrid}>
@@ -74,8 +74,8 @@ const styles = StyleSheet.create({
   heroLabel: { color: Colors.t3, fontSize: 9, fontWeight: '900', letterSpacing: 1 },
   heroTitle: { color: Colors.t1, fontSize: 18, fontWeight: '900', marginTop: 4 },
   heroSub: { color: Colors.t2, fontSize: 10.5, lineHeight: 15, marginTop: 4, maxWidth: 230 },
-  livePill: { alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: Colors.green + '12', borderWidth: 1, borderColor: Colors.green + '44' },
-  liveText: { color: Colors.green, fontSize: 8.5, fontWeight: '900', letterSpacing: .7 },
+  livePill: { alignSelf: 'flex-start', borderRadius: 99, paddingHorizontal: 8, paddingVertical: 5, backgroundColor: Colors.orange + '12', borderWidth: 1, borderColor: Colors.orange + '44' },
+  liveText: { color: Colors.orange, fontSize: 8.5, fontWeight: '900', letterSpacing: .7 },
   section: { color: Colors.t3, fontSize: 9.5, fontWeight: '900', letterSpacing: 1.2, marginBottom: 8 },
   primaryGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: 9, marginBottom: 20 },
   primaryCard: { width: '48.5%', minHeight: 138, backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 16, padding: 13 },

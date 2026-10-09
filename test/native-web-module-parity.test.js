@@ -52,3 +52,27 @@ test('full module navigation retains native offline tools and uses one-use web t
   assert.match(web, /onShouldStartLoadWithRequest=\{guardNavigation\}/)
   assert.ok(!web.includes('getToken()'), 'Never inject native bearer token into HTML')
 })
+
+test('native menu covers every real signed-in top-level web page; explicitly exclude only external/legal/reset pages', () => {
+  const fs = require('node:fs')
+  const path = require('node:path')
+  const excluded = new Set(['client-view', 'pricing', 'privacy', 'reset-password', 'terms'])
+  const webPages = fs.readdirSync(path.join(__dirname, '..', 'app')).filter(route =>
+    fs.existsSync(path.join(__dirname, '..', 'app', route, 'page.tsx')) && !excluded.has(route))
+  const declared = new Set(WEB_MODULE_SECTIONS.flatMap(s => s.items.map(i => i.path.slice(1))))
+  assert.equal(declared.size, WEB_MODULE_SECTIONS.reduce((sum, s) => sum + s.items.length, 0),
+    'Every module route must appear exactly once, to avoid a confusing repeated menu')
+  assert.ok(webPages.length >= 90, 'Check that top-level web modules have not been unexpectedly removed')
+  for (const route of webPages) assert.ok(declared.has(route), `Web /${route} is missing from mobile modules`)
+})
+
+test('field hub does not claim the site is cleared to work before checking live readiness', () => {
+  const hub = readFileSync(new URL('../expo/FieldHubScreen.tsx', import.meta.url), 'utf8')
+  const overview = readFileSync(new URL('../expo/OverviewScreen.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(hub, />Ready to work</)
+  assert.doesNotMatch(hub, />● LIVE</)
+  assert.match(hub, /Verify before work/)
+  assert.match(hub, /onPress=\{\(\) => onNavigate\('readiness'\)\}/)
+  assert.match(overview, /CHECK DATA/)
+  assert.match(overview, /Confirm site readiness separately/)
+})
