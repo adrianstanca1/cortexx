@@ -28,7 +28,7 @@ test('finance and company administration modules hide from non-admins', () => {
   for (const items of [operative, pm]) {
     assert.ok(items.some(i => i.path === '/projects'))
     assert.ok(!items.some(i => i.path === '/invoices'))
-    assert.ok(!items.some(i => i.path === '/requisitions'))
+    assert.ok(!items.some(i => i.path === '/quotes'))
   }
   assert.ok(!operative.some(i => i.path === '/workforce'))
   assert.ok(pm.some(i => i.path === '/workforce'))
@@ -124,4 +124,20 @@ test('dashboard only acknowledges pre-refresh stream events after a successful d
   assert.match(overview, /const eventsBeforeRefresh = liveRef\.current/)
   assert.match(overview, /setStats\(next\);\s*liveRef\.current = Math\.max\(0, liveRef\.current - eventsBeforeRefresh\);\s*setLive\(liveRef\.current\)/)
   assert.match(overview, /onStreamEvent\(\(\) => \{ liveRef\.current \+= 1; setLive\(liveRef\.current\); \}\)/)
+})
+
+test('employee-accessible web modules remain discoverable in mobile across member roles', () => {
+  // GET permissions for these modules permit logged-in members on the website;
+  // mobile navigation must not invent stricter role gates than web/API.
+  const memberRoutes = [
+    '/innovation', '/valuations', '/requisitions', '/rfqs', '/pos',
+    '/suppliers', '/customers', '/receipts', '/cost-codes', '/cost-catalog',
+    '/payroll', '/cis300', '/sub-portal', '/claims', '/leads',
+    '/personas', '/currency', '/performance', '/ask', '/smart-parse', '/ai-history',
+  ]
+  for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
+    const routes = new Set(visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' })
+      .flatMap(section => section.items.map(item => item.path)))
+    for (const path of memberRoutes) assert.ok(routes.has(path), `${role} mobile menu missing member-accessible ${path}`)
+  }
 })
