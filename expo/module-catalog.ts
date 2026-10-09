@@ -80,7 +80,7 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Subcontractor invoices', path: '/sub-invoices', description: 'Subcontractor payment administration', role: 'finance' },
     { title: 'Payroll', path: '/payroll', description: 'Payroll administration', role: 'finance' },
     { title: 'CIS 300', path: '/cis300', description: 'Construction industry scheme returns', role: 'finance' },
-    { title: 'Subcontractors', path: '/subs', description: 'Subcontractor register and allocation', role: 'finance' },
+    { title: 'Subcontractors', path: '/subs', description: 'Subcontractor register and allocation' },
     { title: 'Subcontractor portal', path: '/sub-portal', description: 'Subcontractor access and updates', role: 'finance' },
     { title: 'Claims', path: '/claims', description: 'Payment and commercial claims', role: 'finance' },
     { title: 'Leads', path: '/leads', description: 'Business development leads', role: 'finance' },

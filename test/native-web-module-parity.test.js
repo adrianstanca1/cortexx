@@ -111,3 +111,17 @@ test('operatives can discover employee-accessible procedures, materials and safe
     assert.ok(operative.some(item => item.path === path), `Operative is incorrectly denied ${path} in native menu`)
   }
 })
+
+test('employee subcontractor register stays visible in the native menu like the web app', () => {
+  for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
+    const modules = visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' }).flatMap(section => section.items)
+    assert.ok(modules.some(item => item.path === '/subs'), `Subcontractor register missing for ${role}`)
+  }
+})
+
+test('dashboard only acknowledges pre-refresh stream events after a successful data fetch', () => {
+  const overview = readFileSync(new URL('../expo/OverviewScreen.tsx', import.meta.url), 'utf8')
+  assert.match(overview, /const eventsBeforeRefresh = liveRef\.current/)
+  assert.match(overview, /setStats\(next\);\s*liveRef\.current = Math\.max\(0, liveRef\.current - eventsBeforeRefresh\);\s*setLive\(liveRef\.current\)/)
+  assert.match(overview, /onStreamEvent\(\(\) => \{ liveRef\.current \+= 1; setLive\(liveRef\.current\); \}\)/)
+})

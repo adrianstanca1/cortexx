@@ -21,8 +21,12 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
   const [err, setErr] = useState('');
   const [stats, setStats] = useState<Stat[]>([]);
   const [live, setLive] = useState(0);
+  const liveRef = React.useRef(0);
 
   const load = async () => {
+    // Only acknowledge events seen before this fetch started. New events
+    // arriving during refresh still prompt the user to fetch again.
+    const eventsBeforeRefresh = liveRef.current;
     setLoading(true); setErr('');
     try {
       const finance = isFinanceAdmin(user);
@@ -60,6 +64,8 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
         next.splice(2, 0, { key: 'invoices', label: 'Outstanding', value: String(outstanding), sub: `${(invoices as any[]).length} invoices`, tone: outstanding ? 'red' : 'green', code: '£' });
       }
       setStats(next);
+      liveRef.current = Math.max(0, liveRef.current - eventsBeforeRefresh);
+      setLive(liveRef.current);
     } catch (e: any) {
       setErr(e?.message || 'Failed to load');
       if (e?.message === 'unauthorized') onLogout();
@@ -68,7 +74,7 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
 
   useEffect(() => {
     void load();
-    const off = onStreamEvent(() => setLive(n => n + 1));
+    const off = onStreamEvent(() => { liveRef.current += 1; setLive(liveRef.current); });
     return () => off();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
