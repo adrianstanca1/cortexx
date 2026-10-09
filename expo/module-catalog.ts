@@ -40,9 +40,9 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Equipment checks', path: '/equipment-checks', description: 'Pre-use inspection logs' },
     { title: 'Live site status', path: '/live-status', description: 'Current site operational indicators' },
     { title: 'Tomorrow plan', path: '/tomorrow', description: 'Plan the next working shift' },
-    { title: 'Materials', path: '/materials', description: 'Material records and logistics', role: 'manager' },
+    { title: 'Materials', path: '/materials', description: 'Material records and logistics' },
     { title: 'Waste', path: '/waste', description: 'Waste records and reporting' },
-    { title: 'Conflict resolution', path: '/conflicts', description: 'Resolve tracked issues and conflicts', role: 'manager' },
+    { title: 'Conflict resolution', path: '/conflicts', description: 'Resolve tracked issues and conflicts' },
   ]},
   { heading: 'Team and project controls', items: [
     { title: 'Workforce', path: '/workforce', description: 'Crew allocation and labour', role: 'manager' },
@@ -59,7 +59,7 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Holiday requests', path: '/holiday', description: 'Leave and availability' },
     { title: 'Reminders', path: '/reminders', description: 'Tasks and follow-up reminders' },
     { title: 'Apprentice development', path: '/apprentice', description: 'Training and apprentice support' },
-    { title: 'Reviews', path: '/reviews', description: 'Review team and project performance', role: 'manager' },
+    { title: 'Reviews', path: '/reviews', description: 'Review team and project performance' },
     { title: 'Leadership', path: '/leadership', description: 'Leadership dashboard and oversight', role: 'manager' },
   ]},
   { heading: 'Finance and procurement', items: [
@@ -85,7 +85,7 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Claims', path: '/claims', description: 'Payment and commercial claims', role: 'finance' },
     { title: 'Leads', path: '/leads', description: 'Business development leads', role: 'finance' },
     { title: 'Mileage', path: '/mileage', description: 'Travel expenses and mileage' },
-    { title: 'Carbon accounting', path: '/carbon', description: 'Carbon and sustainability reporting', role: 'manager' },
+    { title: 'Carbon accounting', path: '/carbon', description: 'Carbon and sustainability reporting' },
   ]},
   { heading: 'AI and innovation', items: [
     { title: 'Ask Cortex', path: '/ask', description: 'AI construction assistant', role: 'manager' },
@@ -96,9 +96,9 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Improvement hub', path: '/improve-hub', description: 'Ideas, issues and improvements' },
     { title: 'Kaizen board', path: '/kaizen-board', description: 'Continuous improvement' },
     { title: 'Action plans', path: '/action-plans', description: 'Follow-up actions' },
-    { title: 'AI and service bundles', path: '/bundles', description: 'Automation and service bundles', role: 'manager' },
-    { title: 'Process library', path: '/process-library', description: 'Standard operating procedures', role: 'manager' },
-    { title: 'Service catalogue', path: '/service-catalog', description: 'Available company services', role: 'manager' },
+    { title: 'AI and service bundles', path: '/bundles', description: 'Automation and service bundles' },
+    { title: 'Process library', path: '/process-library', description: 'Standard operating procedures' },
+    { title: 'Service catalogue', path: '/service-catalog', description: 'Available company services' },
   ]},
   { heading: 'Administration and tools', items: [
     { title: 'Roles', path: '/roles', description: 'Access control and personas', role: 'finance' },

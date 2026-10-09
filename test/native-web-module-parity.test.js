@@ -104,3 +104,10 @@ test('stream events do not claim displayed metrics were refreshed without refetc
   assert.match(overview, /● NEW EVENT/)
   assert.match(overview, /Pull to refresh displayed counts/)
 })
+
+test('operatives can discover employee-accessible procedures, materials and safety-related modules', () => {
+  const operative = visibleWebModules({ role: 'operative', organizationRole: 'member' }).flatMap(section => section.items)
+  for (const path of ['/process-library', '/service-catalog', '/bundles', '/materials', '/conflicts', '/reviews', '/carbon']) {
+    assert.ok(operative.some(item => item.path === path), `Operative is incorrectly denied ${path} in native menu`)
+  }
+})
