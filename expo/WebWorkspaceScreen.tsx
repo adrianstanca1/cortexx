@@ -14,10 +14,11 @@ export default function WebWorkspaceScreen({ path, onBack, onLogout }: {
   const [loading, setLoading] = useState(true);
   const [revision, setRevision] = useState(0);
   const [currentUrl, setCurrentUrl] = useState('');
+  const [webFailure, setWebFailure] = useState('');
 
   useEffect(() => {
     let alive = true;
-    setTicket(null); setError(''); setLoading(true); setCurrentUrl('');
+    setTicket(null); setError(''); setWebFailure(''); setLoading(true); setCurrentUrl('');
     (async () => {
       try {
         const ticket = await requestWebWorkspaceTicket();
@@ -84,7 +85,15 @@ export default function WebWorkspaceScreen({ path, onBack, onLogout }: {
           setCurrentUrl(state.url);
           if (!state.loading) setLoading(false);
         }}
-        onError={() => { setError('The web module could not load. Check your connection and retry.'); setLoading(false); }}
+        onHttpError={({ nativeEvent }) => {
+          // A failed handoff POST (401/403/5xx) is not a usable web session.
+          // Surface the status instead of silently showing a blank module.
+          if (nativeEvent.statusCode >= 400) {
+            setWebFailure(`Workspace request failed (HTTP ${nativeEvent.statusCode}). Reconnect and retry.`);
+            setLoading(false);
+          }
+        }}
+        onError={() => { setWebFailure('The web module could not load. Check your connection and retry.'); setLoading(false); }}
         startInLoadingState
         renderLoading={() => <ActivityIndicator color={Colors.amber} style={styles.loading} />}
         javaScriptEnabled
@@ -94,6 +103,10 @@ export default function WebWorkspaceScreen({ path, onBack, onLogout }: {
         setSupportMultipleWindows={false}
         style={styles.webView}
       />
+      {webFailure ? <View style={styles.failurePanel}>
+        <Text style={styles.error}>{webFailure}</Text>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Retry web module" style={styles.retry} onPress={() => setRevision(r => r + 1)}><Text style={styles.retryText}>Retry module</Text></TouchableOpacity>
+      </View> : null}
       {loading && <View pointerEvents="none" style={styles.loadingOverlay}><ActivityIndicator color={Colors.amber} /></View>}
       {currentUrl.endsWith('/login') && <Text style={styles.expired}>Session expired? Use ↻ to re-authorise with your mobile account.</Text>}
     </View>}
@@ -112,5 +125,6 @@ const styles = StyleSheet.create({
   error: { color: Colors.red, fontSize: 14, textAlign: 'center' },
   retry: { backgroundColor: Colors.amber, borderRadius: 12, padding: 14 }, retryText: { color: Colors.ink, fontWeight: '900' },
   loading: { flex: 1 }, loadingOverlay: { position: 'absolute', left: 0, right: 0, top: 20, alignItems: 'center' },
+  failurePanel: { position: 'absolute', top: 15, left: 12, right: 12, padding: 16, borderRadius: 12, backgroundColor: Colors.ink2, alignItems: 'center', gap: 12 },
   expired: { color: Colors.orange, textAlign: 'center', fontSize: 11, padding: 8, backgroundColor: Colors.ink2 },
 });
