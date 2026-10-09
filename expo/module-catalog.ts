@@ -45,7 +45,7 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Conflict resolution', path: '/conflicts', description: 'Resolve tracked issues and conflicts' },
   ]},
   { heading: 'Team and project controls', items: [
-    { title: 'Workforce', path: '/workforce', description: 'Crew allocation and labour', role: 'manager' },
+    { title: 'Workforce', path: '/workforce', description: 'Crew allocation and labour' },
     { title: 'Programme', path: '/schedule', description: 'Project scheduling and milestones' },
     { title: 'Equipment', path: '/equipment', description: 'Asset register and assignments' },
     { title: 'Maintenance', path: '/maintenance', description: 'Servicing and asset health' },
@@ -60,7 +60,7 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Reminders', path: '/reminders', description: 'Tasks and follow-up reminders' },
     { title: 'Apprentice development', path: '/apprentice', description: 'Training and apprentice support' },
     { title: 'Reviews', path: '/reviews', description: 'Review team and project performance' },
-    { title: 'Leadership', path: '/leadership', description: 'Leadership dashboard and oversight', role: 'manager' },
+    { title: 'Leadership', path: '/leadership', description: 'Leadership dashboard and oversight' },
   ]},
   { heading: 'Finance and procurement', items: [
     { title: 'Invoices', path: '/invoices', description: 'Invoices and payment progress', role: 'finance' },
@@ -107,7 +107,7 @@ export const WEB_MODULE_SECTIONS: ModuleSection[] = [
     { title: 'Saved views', path: '/saved-views', description: 'Views and filtered lists' },
     { title: 'Goals', path: '/goals', description: 'Objectives and KPIs' },
     { title: 'Performance', path: '/performance', description: 'Performance reporting' },
-    { title: 'Infrastructure', path: '/infrastructure', description: 'Platform system health', role: 'finance' },
+    { title: 'Infrastructure', path: '/infrastructure', description: 'Platform system health' },
     { title: 'Support', path: '/support', description: 'Help and tickets' },
     { title: 'Document templates', path: '/tpl-library', description: 'Reusable construction documents' },
     { title: 'Tags', path: '/tags', description: 'Organize and classify records' },

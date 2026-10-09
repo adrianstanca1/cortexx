@@ -30,7 +30,7 @@ test('finance and company administration modules hide from non-admins', () => {
     assert.ok(!items.some(i => i.path === '/invoices'))
     assert.ok(!items.some(i => i.path === '/quotes'))
   }
-  assert.ok(!operative.some(i => i.path === '/workforce'))
+  assert.ok(operative.some(i => i.path === '/workforce'))
   assert.ok(pm.some(i => i.path === '/workforce'))
   for (const path of ['/invoices', '/requisitions', '/roles', '/suppliers', '/vera-autopilot', '/client-view']) {
     assert.ok(owner.some(i => i.path === path), `Company admin missing ${path}`)
@@ -139,5 +139,16 @@ test('employee-accessible web modules remain discoverable in mobile across membe
     const routes = new Set(visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' })
       .flatMap(section => section.items.map(item => item.path)))
     for (const path of memberRoutes) assert.ok(routes.has(path), `${role} mobile menu missing member-accessible ${path}`)
+  }
+})
+
+test('mobile workers see the same company viewing routes as the web Apps page', () => {
+  // Leadership redirects to the normal dashboard; workforce has its own canEdit
+  // guard; infrastructure GET is currently authorized for logged-in members.
+  const expected = ['/leadership', '/workforce', '/infrastructure']
+  for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
+    const paths = new Set(visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' })
+      .flatMap(section => section.items.map(item => item.path)))
+    for (const path of expected) assert.ok(paths.has(path), `${role} mobile menu missing ${path}`)
   }
 })
