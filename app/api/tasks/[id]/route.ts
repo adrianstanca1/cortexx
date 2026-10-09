@@ -8,7 +8,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import { canManage, canWrite } from '@/lib/rbac'
 import { runWithOrg } from '@/lib/tenancy'
-import { fieldTaskMutationError, visibleTaskById } from '@/lib/task-visibility'
+import { fieldTaskMutationError, taskActionPermissions, visibleTaskById } from '@/lib/task-visibility'
 
 export const dynamic = 'force-dynamic'
 
@@ -48,7 +48,12 @@ export async function GET(_req: NextRequest, { params: paramsP }: RouteParams) {
         include: { project: true, assignee: true, _count: { select: { comments: true } } },
       })
       if (!task) return NextResponse.json({ error: 'Task not found' }, { status: 404 })
-      return NextResponse.json(task)
+      // Permissions are computed for this specific source project, not just
+      // from the user's global role. Mobile must not offer actions the server
+      // would reject on directly-assigned tasks outside project membership.
+      const sourceProjectAssigned = !!task.projectId && await assignedProject(task.projectId, auth)
+      const permissions = taskActionPermissions(auth.role, appRole(auth), sourceProjectAssigned)
+      return NextResponse.json({ ...task, permissions })
     } catch (error) {
       reportError(error)
       return NextResponse.json({ error: 'Failed to fetch task' }, { status: 500 })

@@ -13,6 +13,8 @@ export type TaskForm = {
   assigneeId: string;
 };
 
+export type TaskCapabilities = { canChangeStatus: boolean; canEdit: boolean; canDelete: boolean; canMoveProject: boolean; statusOnly: boolean };
+
 export type TaskEditable = { id: string; title?: string | null; description?: string | null; status?: string | null; priority?: string | null; dueDate?: string | null; projectId?: string | null; assigneeId?: string | null }; 
 
 export function taskPermissions(user: AuthUser) {
@@ -23,11 +25,26 @@ export function taskPermissions(user: AuthUser) {
   return {
     canCreate: canWrite,
     canChangeStatus: canWrite,
-    canEdit: canWrite && persona !== 'operative',
+    canEdit: canWrite && (manager || persona !== 'operative'),
     canDelete: canWrite && (manager || persona === 'project_manager'),
     canMoveProject: canWrite && (manager || persona === 'project_manager'),
     requiresProjectAssignee: !manager,
     statusOnly: canWrite && !manager && persona === 'operative',
+  };
+}
+
+/** Display actions only when BOTH company role and authoritative per-task
+ * server capabilities permit them. Missing flags must fail closed. */
+export function effectiveTaskPermissions(user: AuthUser, taskCapabilities: TaskCapabilities | null | undefined): TaskCapabilities {
+  const account = taskPermissions(user);
+  const canChangeStatus = account.canChangeStatus && !!taskCapabilities?.canChangeStatus;
+  const canEdit = account.canEdit && !!taskCapabilities?.canEdit;
+  return {
+    canChangeStatus,
+    canEdit,
+    canDelete: account.canDelete && !!taskCapabilities?.canDelete,
+    canMoveProject: canEdit && account.canMoveProject && !!taskCapabilities?.canMoveProject,
+    statusOnly: canChangeStatus && !canEdit,
   };
 }
 

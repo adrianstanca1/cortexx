@@ -1,5 +1,5 @@
 import type { Prisma } from '@prisma/client'
-import { canManage } from './rbac'
+import { canManage, canWrite } from './rbac'
 
 /** One visibility predicate shared by task lists and per-task endpoints.
  * Both callers also execute under the active organization tenancy context.
@@ -57,4 +57,28 @@ export function fieldTaskMutationError(input: {
     if (!targetProjectAssigned) return 'Target project must be assigned'
   }
   return null
+}
+
+
+/** Authoritative capabilities for a specific task in the active company.
+ * Read visibility is checked separately; these flags never grant access.
+ * A task assigned directly outside a leader's projects is status-only. */
+export function taskActionPermissions(
+  organizationRole: string | null | undefined,
+  personaRole: string | null | undefined,
+  sourceProjectAssigned: boolean,
+) {
+  const writable = canWrite(organizationRole || '')
+  const admin = canManage(organizationRole || '')
+  const operative = personaRole === 'operative'
+  const leader = personaRole === 'project_manager' || personaRole === 'foreman'
+  const canEdit = writable && (admin || (!operative && (!leader || sourceProjectAssigned)))
+  const canChangeStatus = writable
+  return {
+    canChangeStatus,
+    canEdit,
+    canDelete: writable && (admin || (personaRole === 'project_manager' && sourceProjectAssigned)),
+    canMoveProject: canEdit && (admin || (personaRole === 'project_manager' && sourceProjectAssigned)),
+    statusOnly: canChangeStatus && !canEdit,
+  }
 }
