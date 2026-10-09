@@ -6,21 +6,21 @@
     "development": {
       "developmentClient": true,
       "distribution": "internal",
-      "node": "22",
+      "node": "24",
       "ios": {
         "simulator": true
       }
     },
     "preview": {
       "distribution": "internal",
-      "node": "22",
+      "node": "24",
       "ios": {
         "simulator": true
       }
     },
     "production": {
       "autoIncrement": true,
-      "node": "22",
+      "node": "24",
       "prebuildCommand": "npm install --no-audit --no-fund && cd ios/App && pod install --no-repo-update"
     }
   },

@@ -65,7 +65,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
           cache: npm
           cache-dependency-path: expo/package-lock.json
 
@@ -233,7 +233,7 @@ jobs:
       - name: Set up Node for Expo CLI
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Validate direct upload inputs
         shell: bash
@@ -422,7 +422,7 @@ jobs:
       - name: Set up Node
         uses: actions/setup-node@v4
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Safely initialize version after previous Apple build 19
         run: |
           node <<'NODE'
