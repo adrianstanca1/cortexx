@@ -17,7 +17,7 @@ jobs:
       (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
       (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
     runs-on: ubuntu-latest
-    timeout-minutes: 45
+    timeout-minutes: 80
     permissions:
       contents: read
       actions: read
@@ -45,6 +45,24 @@ jobs:
             exit 1
           fi
 
+      # The production host also serves local LLMs. Building the Next.js image
+      # there can exhaust RAM and interrupt SSH; build it on the CI runner.
+      - name: Build production app and migration images on GitHub
+        timeout-minutes: 30
+        run: |
+          set -euo pipefail
+          docker build --file Dockerfile.construction --target runtime \
+            --label "org.opencontainers.image.revision=$RELEASE_SHA" \
+            --tag cortexbuild-construction-app:latest .
+          docker build --file Dockerfile.construction --target tools \
+            --label "org.opencontainers.image.revision=$RELEASE_SHA" \
+            --tag cortexbuild-construction-tools:latest .
+          command -v zstd >/dev/null || sudo apt-get install -y zstd
+          docker save cortexbuild-construction-app:latest cortexbuild-construction-tools:latest | \
+            zstd -T4 -3 > "$RUNNER_TEMP/cortexx-images.tar.zst"
+          test -s "$RUNNER_TEMP/cortexx-images.tar.zst"
+          echo "Prebuilt image archive ready: $(du -h "$RUNNER_TEMP/cortexx-images.tar.zst" | cut -f1)"
+
       - name: Configure SSH client
         timeout-minutes: 5
         run: |
@@ -69,7 +87,7 @@ jobs:
       - name: Resolve SSH authentication
         run: |
           set -euo pipefail
-          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=15)
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ServerAliveInterval=20 -o ServerAliveCountMax=60)
           if [[ -s ~/.ssh/cortexx_deploy ]] && ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
             echo "CORTEXX_SSH_MODE=key" >> "$GITHUB_ENV"
             echo "SSH key authentication ready."
@@ -86,10 +104,24 @@ jobs:
           echo "::error::Could not authenticate to $VPS_USER@$VPS_HOST."
           exit 1
 
+      - name: Transfer prebuilt production images to VPS
+        timeout-minutes: 15
+        run: |
+          set -euo pipefail
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=20 -o ServerAliveCountMax=60)
+          TARGET="$VPS_USER@$VPS_HOST:/home/administrator/production/cortexx-images-$RELEASE_SHA.tar.zst"
+          if [[ "$CORTEXX_SSH_MODE" == key ]]; then
+            scp "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$RUNNER_TEMP/cortexx-images.tar.zst" "$TARGET"
+          else
+            export SSHPASS="$VPS_PASSWORD"
+            sshpass -e scp "${SSH_BASE[@]}" "$RUNNER_TEMP/cortexx-images.tar.zst" "$TARGET"
+          fi
+          echo "Prebuilt release images transferred."
+
       - name: Deploy isolated construction stack
         run: |
           set -euo pipefail
-          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20)
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=20 -o ServerAliveCountMax=60)
           if [[ "$CORTEXX_SSH_MODE" == key ]]; then
             REMOTE=(ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST")
           else
@@ -100,6 +132,10 @@ jobs:
             set -euo pipefail
             RELEASE_SHA="$1"
             [[ "$RELEASE_SHA" =~ ^[0-9a-f]{40}$ ]]
+            # Emit periodic output even during DB migrations and container checks.
+            (while sleep 30; do echo "Cortexx deployment heartbeat: $(date -u +%H:%M:%S)"; done) &
+            HEARTBEAT_PID=$!
+            trap 'kill "$HEARTBEAT_PID" 2>/dev/null || true' EXIT
             APP_DIR=/home/administrator/production/cortexx
             REPO=https://github.com/adrianstanca1/cortexx.git
             mkdir -p "$(dirname "$APP_DIR")"
@@ -158,11 +194,27 @@ jobs:
             fi
             chmod 600 .env.construction
 
-            docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools browser-gateway
-            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama browser-gateway
+            IMAGE_ARCHIVE="/home/administrator/production/cortexx-images-$RELEASE_SHA.tar.zst"
+            test -s "$IMAGE_ARCHIVE"
+            PREVIOUS_APP_IMAGE="$(docker inspect cortexbuild-construction-app-1 --format '{{.Image}}' 2>/dev/null || true)"
+            if [[ "$PREVIOUS_APP_IMAGE" == sha256:* ]]; then
+              docker tag "$PREVIOUS_APP_IMAGE" "cortexbuild-construction-app:rollback-$(printf '%.12s' "$RELEASE_SHA")"
+            fi
+            zstd --decompress --stdout "$IMAGE_ARCHIVE" | docker load
+            rm -f "$IMAGE_ARCHIVE"
+            for service in app tools; do
+              actual="$(docker image inspect "cortexbuild-construction-$service:latest" --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+              if [[ "$actual" != "$RELEASE_SHA" ]]; then
+                echo "::error::Prebuilt $service image does not match the audited release commit."
+                exit 1
+              fi
+            done
+            # Browser gateway is cached and lightweight; do not rebuild Next.js on this host.
+            docker compose --env-file .env.construction -f docker-compose.construction.yml build browser-gateway
+            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d --no-build db redis ollama browser-gateway
             docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools
             docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools npx tsx scripts/bootstrap-construction.ts
-            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d app
+            docker compose --env-file .env.construction -f docker-compose.construction.yml up -d --no-build --no-deps --force-recreate app
 
             healthy=false
             for n in $(seq 1 45); do
@@ -174,8 +226,19 @@ jobs:
             done
             if [ "$healthy" != true ]; then
               docker compose --env-file .env.construction -f docker-compose.construction.yml logs --tail=180 app
+              if [[ "$PREVIOUS_APP_IMAGE" == sha256:* ]]; then
+                echo "New release unhealthy; restoring previous running image."
+                docker tag "$PREVIOUS_APP_IMAGE" cortexbuild-construction-app:latest
+                docker compose --env-file .env.construction -f docker-compose.construction.yml up -d --no-build --no-deps --force-recreate app || true
+              fi
               exit 1
             fi
+            running_revision="$(docker inspect cortexbuild-construction-app-1 --format '{{ index .Config.Labels "org.opencontainers.image.revision" }}')"
+            if [[ "$running_revision" != "$RELEASE_SHA" ]]; then
+              echo "::error::Running app container does not contain the release commit."
+              exit 1
+            fi
+            echo "Verified live production container revision: $running_revision"
 
             bash ops/install-construction-app-crons.sh
 
