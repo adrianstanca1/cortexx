@@ -27,13 +27,34 @@ let _offlineScope: string | null = null;
 export function setOfflineScope(scope: string | null) { _offlineScope = scope; }
 let _cache: { get: (k: string) => Promise<string | null>; set: (k: string, v: string) => Promise<void> } | null = null;
 export function setOfflineCache(c: typeof _cache) { _cache = c; }
-async function cacheGet(name: string): Promise<any[] | null> {
-  if (!_cache || !_offlineScope) return null;
-  try { const v = await _cache.get('cb_cache_' + _offlineScope + '_' + name); return v ? JSON.parse(v) : null; } catch { return null; }
+const _deniedCache = new Set<string>();
+const _denialEpoch = new Map<string, number>();
+function cacheKey(name: string, scope: string) { return 'cb_cache_' + scope + '_' + name; }
+function denialVersion(name: string, scope: string | null) { return scope ? _denialEpoch.get(cacheKey(name, scope)) || 0 : 0; }
+async function denyCached(name: string, scope: string | null) {
+  if (!scope) return;
+  const key = cacheKey(name, scope);
+  // Guard the current process, including concurrent in-flight loads, then
+  // persist invalidation so revoked rows cannot reappear after an app restart.
+  _deniedCache.add(key);
+  _denialEpoch.set(key, (_denialEpoch.get(key) || 0) + 1);
+  try { await _cache?.set(key, 'null'); } catch { /* keep in-memory denial */ }
 }
-async function cacheSet(name: string, rows: any[]): Promise<void> {
-  if (!_cache || !_offlineScope) return;
-  try { await _cache.set('cb_cache_' + _offlineScope + '_' + name, JSON.stringify(rows)); } catch { /* ignore */ }
+async function cacheGet(name: string, scope = _offlineScope): Promise<any[] | null> {
+  if (!_cache || !scope || scope !== _offlineScope) return null;
+  const key = cacheKey(name, scope);
+  if (_deniedCache.has(key)) return null;
+  try {
+    const value = await _cache.get(key);
+    if (scope !== _offlineScope || _deniedCache.has(key)) return null;
+    if (!value) return null;
+    const rows = JSON.parse(value);
+    return Array.isArray(rows) ? rows : null;
+  } catch { return null; }
+}
+async function cacheSet(name: string, rows: any[], scope = _offlineScope): Promise<void> {
+  if (!_cache || !scope || scope !== _offlineScope) return;
+  try { await _cache.set(cacheKey(name, scope), JSON.stringify(rows)); } catch { /* offline cache optional */ }
 }
 
 export type QueuedWrite = { id: string; method: 'POST' | 'PUT'; collection: string; body: any; rowId?: string; scope?: string };
@@ -118,9 +139,34 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
   const API_URL = opts.apiUrl || API_URL_FALLBACK; const store = opts.tokenStorage || _store;
   const token = async () => await store.get();
   async function apiGet(path: string): Promise<any> {
-    const t = await token(); const r = await fetch(`${API_URL}${path}`, { headers: t ? { authorization: `Bearer ${t}` } : {} });
+    const t = await token();
+    const r = await fetch(`${API_URL}${path}`, { headers: t ? { authorization: `Bearer ${t}` } : {} });
     if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); }
-    if (!r.ok) throw new Error('Request failed'); return r.json();
+    if (!r.ok) {
+      const detail = await r.json().catch(() => ({}));
+      throw httpFailure((detail as any)?.error || 'Request failed', r.status);
+    }
+    return r.json();
+  }
+
+  // The server caps collection pages at 100. Read subsequent pages only when
+  // the response explicitly advertises hasMore; older unpaged routes still work.
+  // Bounded for mobile memory, request rate and accidentally misbehaving servers.
+  async function readPagedCollection(path: string, key: string, maxRows: number): Promise<any[]> {
+    const rows: any[] = [];
+    const target = Math.min(Math.max(1, Math.floor(maxRows)), 1000);
+    let offset = 0;
+    for (let page = 0; page < 10 && rows.length < target; page++) {
+      const take = Math.min(100, target - rows.length);
+      const separator = path.includes('?') ? '&' : '?';
+      const data = await apiGet(`${path}${separator}take=${take}&skip=${offset}`);
+      const slice = Array.isArray(data) ? data : (data?.rows ?? data?.[key]);
+      if (!Array.isArray(slice)) throw httpFailure(`Unexpected ${key} response`, 502);
+      rows.push(...slice);
+      offset += slice.length;
+      if (!data?.hasMore || !slice.length) break;
+    }
+    return rows;
   }
   async function apiPost(path: string, body: any): Promise<any> {
     const t = await token(); const r = await fetch(`${API_URL}${path}`, { method: 'POST', headers: { 'content-type': 'application/json', ...(t ? { authorization: `Bearer ${t}` } : {}) }, body: JSON.stringify(body) });
@@ -137,19 +183,56 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
     },
     async logout() { await store.clear(); },
     async getMe(): Promise<AuthUser | null> { try { const d = await apiGet('/api/auth/me'); return (d && (d.user || d)) as AuthUser; } catch { return null; } },
-    async getProjects(): Promise<any[]> { const d = await apiGet('/api/projects?take=100'); return Array.isArray(d) ? d : d.rows || d.projects || []; },
-    async getCollection(name: string, limit = 100): Promise<any[]> {
+    async getProjects(): Promise<any[]> {
+      const scope = _offlineScope;
+      const version = denialVersion('projects', scope);
       try {
-        const d = await apiGet(`/api/${name}?limit=${limit}&take=${limit}`);
-        const responseKey: Record<string, string> = {
-          timeentries: 'entries', checkins: 'checkins', safety: 'incidents', team: 'team', documents: 'documents', receipts: 'receipts', 'equipment-checks': 'checks', 'field-constraints': 'constraints', 'field-handovers': 'handovers', 'field-production': 'logs',
-        };
-        const key = responseKey[name] || name;
-        const rows = Array.isArray(d) ? d : d.rows || d[key] || [];
-        await cacheSet(name, rows);
+        const rows = await readPagedCollection('/api/projects', 'projects', 1000);
+        if (scope !== _offlineScope) throw new Error('Workspace changed during project loading');
+        if (version !== denialVersion('projects', scope)) throw httpFailure('Project access changed during loading', 403);
+        await cacheSet('projects', rows, scope);
+        if (scope !== _offlineScope) throw new Error('Workspace changed during project loading');
+        if (version !== denialVersion('projects', scope)) {
+          await denyCached('projects', scope);
+          throw httpFailure('Project access changed during loading', 403);
+        }
+        if (scope) _deniedCache.delete(cacheKey('projects', scope));
         return rows;
+      } catch (error: any) {
+        if (error?.message === 'unauthorized' || error?.httpStatus === 403) await denyCached('projects', scope);
+        if (error?.message === 'unauthorized' || isHttpFailure(error) || scope !== _offlineScope) throw error;
+        const cached = await cacheGet('projects', scope);
+        if (cached) return cached;
+        throw error;
       }
-      catch (e: any) { if (e?.message === 'unauthorized') throw e; const cached = await cacheGet(name); if (cached) return cached; throw e; }
+    },
+    async getCollection(name: string, limit = 100): Promise<any[]> {
+      const scope = _offlineScope;
+      const version = denialVersion(name, scope);
+      const responseKey: Record<string, string> = {
+        timeentries: 'entries', checkins: 'checkins', safety: 'incidents', team: 'team',
+        documents: 'documents', receipts: 'receipts', 'equipment-checks': 'checks',
+        'field-constraints': 'constraints', 'field-handovers': 'handovers', 'field-production': 'logs',
+      };
+      try {
+        const rows = await readPagedCollection(`/api/${encodeURIComponent(name)}`, responseKey[name] || name, limit);
+        if (scope !== _offlineScope) throw new Error('Workspace changed during collection loading');
+        if (version !== denialVersion(name, scope)) throw httpFailure('Collection access changed during loading', 403);
+        await cacheSet(name, rows, scope);
+        if (scope !== _offlineScope) throw new Error('Workspace changed during collection loading');
+        if (version !== denialVersion(name, scope)) {
+          await denyCached(name, scope);
+          throw httpFailure('Collection access changed during loading', 403);
+        }
+        if (scope) _deniedCache.delete(cacheKey(name, scope));
+        return rows;
+      } catch (error: any) {
+        if (error?.message === 'unauthorized' || error?.httpStatus === 403) await denyCached(name, scope);
+        if (error?.message === 'unauthorized' || isHttpFailure(error) || scope !== _offlineScope) throw error;
+        const cached = await cacheGet(name, scope);
+        if (cached) return cached.slice(0, Math.min(1000, Math.max(1, Math.floor(limit))));
+        throw error;
+      }
     },
     postCollection(name: string, body: any): Promise<any> { return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body, scope: _offlineScope || undefined }); return { id, _queued: true, ...body }; }); },
     async putCollection(name: string, id: string, body: any): Promise<any> {
