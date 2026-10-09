@@ -27,14 +27,34 @@ let _offlineScope: string | null = null;
 export function setOfflineScope(scope: string | null) { _offlineScope = scope; }
 let _cache: { get: (k: string) => Promise<string | null>; set: (k: string, v: string) => Promise<void> } | null = null;
 export function setOfflineCache(c: typeof _cache) { _cache = c; }
+const _deniedCache = new Set<string>();
+const _denialEpoch = new Map<string, number>();
+function cacheKey(name: string, scope: string) { return 'cb_cache_' + scope + '_' + name; }
+function denialVersion(name: string, scope: string | null) { return scope ? _denialEpoch.get(cacheKey(name, scope)) || 0 : 0; }
+async function denyCached(name: string, scope: string | null) {
+  if (!scope) return;
+  const key = cacheKey(name, scope);
+  // Guard the current process, including concurrent in-flight loads, then
+  // persist invalidation so revoked rows cannot reappear after an app restart.
+  _deniedCache.add(key);
+  _denialEpoch.set(key, (_denialEpoch.get(key) || 0) + 1);
+  try { await _cache?.set(key, 'null'); } catch { /* keep in-memory denial */ }
+}
 async function cacheGet(name: string, scope = _offlineScope): Promise<any[] | null> {
   if (!_cache || !scope || scope !== _offlineScope) return null;
-  try { const v = await _cache.get('cb_cache_' + scope + '_' + name); return v ? JSON.parse(v) : null; } catch { return null; }
+  const key = cacheKey(name, scope);
+  if (_deniedCache.has(key)) return null;
+  try {
+    const value = await _cache.get(key);
+    if (scope !== _offlineScope || _deniedCache.has(key)) return null;
+    if (!value) return null;
+    const rows = JSON.parse(value);
+    return Array.isArray(rows) ? rows : null;
+  } catch { return null; }
 }
 async function cacheSet(name: string, rows: any[], scope = _offlineScope): Promise<void> {
-  // A request that finishes after a company switch must never populate the new company's cache.
   if (!_cache || !scope || scope !== _offlineScope) return;
-  try { await _cache.set('cb_cache_' + scope + '_' + name, JSON.stringify(rows)); } catch { /* ignore */ }
+  try { await _cache.set(cacheKey(name, scope), JSON.stringify(rows)); } catch { /* offline cache optional */ }
 }
 
 export type QueuedWrite = { id: string; method: 'POST' | 'PUT'; collection: string; body: any; rowId?: string; scope?: string };
@@ -140,7 +160,7 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
       const take = Math.min(100, target - rows.length);
       const separator = path.includes('?') ? '&' : '?';
       const data = await apiGet(`${path}${separator}take=${take}&skip=${offset}`);
-      const slice = Array.isArray(data) ? data : (data?.rows ?? data?.[key] ?? []);
+      const slice = Array.isArray(data) ? data : (data?.rows ?? data?.[key]);
       if (!Array.isArray(slice)) throw httpFailure(`Unexpected ${key} response`, 502);
       rows.push(...slice);
       offset += slice.length;
@@ -165,12 +185,21 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
     async getMe(): Promise<AuthUser | null> { try { const d = await apiGet('/api/auth/me'); return (d && (d.user || d)) as AuthUser; } catch { return null; } },
     async getProjects(): Promise<any[]> {
       const scope = _offlineScope;
+      const version = denialVersion('projects', scope);
       try {
         const rows = await readPagedCollection('/api/projects', 'projects', 1000);
         if (scope !== _offlineScope) throw new Error('Workspace changed during project loading');
+        if (version !== denialVersion('projects', scope)) throw httpFailure('Project access changed during loading', 403);
         await cacheSet('projects', rows, scope);
+        if (scope !== _offlineScope) throw new Error('Workspace changed during project loading');
+        if (version !== denialVersion('projects', scope)) {
+          await denyCached('projects', scope);
+          throw httpFailure('Project access changed during loading', 403);
+        }
+        if (scope) _deniedCache.delete(cacheKey('projects', scope));
         return rows;
       } catch (error: any) {
+        if (error?.message === 'unauthorized' || error?.httpStatus === 403) await denyCached('projects', scope);
         if (error?.message === 'unauthorized' || isHttpFailure(error) || scope !== _offlineScope) throw error;
         const cached = await cacheGet('projects', scope);
         if (cached) return cached;
@@ -179,6 +208,7 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
     },
     async getCollection(name: string, limit = 100): Promise<any[]> {
       const scope = _offlineScope;
+      const version = denialVersion(name, scope);
       const responseKey: Record<string, string> = {
         timeentries: 'entries', checkins: 'checkins', safety: 'incidents', team: 'team',
         documents: 'documents', receipts: 'receipts', 'equipment-checks': 'checks',
@@ -187,13 +217,20 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
       try {
         const rows = await readPagedCollection(`/api/${encodeURIComponent(name)}`, responseKey[name] || name, limit);
         if (scope !== _offlineScope) throw new Error('Workspace changed during collection loading');
+        if (version !== denialVersion(name, scope)) throw httpFailure('Collection access changed during loading', 403);
         await cacheSet(name, rows, scope);
+        if (scope !== _offlineScope) throw new Error('Workspace changed during collection loading');
+        if (version !== denialVersion(name, scope)) {
+          await denyCached(name, scope);
+          throw httpFailure('Collection access changed during loading', 403);
+        }
+        if (scope) _deniedCache.delete(cacheKey(name, scope));
         return rows;
       } catch (error: any) {
-        // Never display cached restricted data after a server explicitly rejects a role.
+        if (error?.message === 'unauthorized' || error?.httpStatus === 403) await denyCached(name, scope);
         if (error?.message === 'unauthorized' || isHttpFailure(error) || scope !== _offlineScope) throw error;
         const cached = await cacheGet(name, scope);
-        if (cached) return cached;
+        if (cached) return cached.slice(0, Math.min(1000, Math.max(1, Math.floor(limit))));
         throw error;
       }
     },
