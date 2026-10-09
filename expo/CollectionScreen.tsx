@@ -8,7 +8,7 @@ import { getCollection, postCollection, clearToken } from './api';
 
 // field config: { key, label, type?: 'text'|'number'|'textarea', required? }
 export default function CollectionScreen({
-  name, title, fields, rowTitle, rowSub, onLogout, readOnly,
+  name, title, fields, rowTitle, rowSub, onLogout, readOnly, onOpenFullWorkspace,
 }: {
   name: string; title: string;
   fields: { key: string; label: string; type?: 'text' | 'number'; required?: boolean }[];
@@ -16,6 +16,7 @@ export default function CollectionScreen({
   rowSub?: (item: any) => string | null;
   onLogout: () => void;
   readOnly?: boolean;
+  onOpenFullWorkspace?: () => void;
 }) {
   const [items, setItems] = useState<any[]>([]);
   const [loading, setLoading] = useState(true);
@@ -64,13 +65,20 @@ export default function CollectionScreen({
     <View style={styles.wrap}>
       <View style={styles.header}>
         <Text style={styles.h1}>{title}</Text>
-        {!readOnly ? <TouchableOpacity onPress={openAdd}><Text style={styles.addBtn}>+ New</Text></TouchableOpacity> : null}
+        {!readOnly ? <TouchableOpacity onPress={openAdd}><Text style={styles.addBtn}>+ New</Text></TouchableOpacity> : onOpenFullWorkspace ? (
+          <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Manage ${title} in full workspace`} onPress={onOpenFullWorkspace}>
+            <Text style={styles.addBtn}>Manage ↗</Text>
+          </TouchableOpacity>
+        ) : null}
       </View>
+      {readOnly && onOpenFullWorkspace ? <TouchableOpacity accessibilityRole="button" accessibilityLabel={`Create and edit ${title} in full workspace`} style={styles.workspaceBanner} onPress={onOpenFullWorkspace}>
+        <Text style={styles.workspaceText}>Create, edit, approve and export in the full workspace →</Text>
+      </TouchableOpacity> : null}
       {err ? <Text style={styles.err}>{err}</Text> : null}
       {offline ? <View style={styles.offlineBar}><Text style={styles.offlineText}>⚠ No signal — showing last saved data</Text></View> : null}
       <FlatList
         data={items}
-        keyExtractor={(it) => it.id || Math.random().toString()}
+        keyExtractor={(it, index) => String(it.id ?? `${name}-${index}`)}
         refreshControl={<RefreshControl tintColor={Colors.amber} onRefresh={load} refreshing={loading} />}
         contentContainerStyle={{ paddingBottom: 20 }}
         renderItem={({ item }) => (
@@ -79,7 +87,7 @@ export default function CollectionScreen({
             {rowSub && rowSub(item) ? <Text style={styles.meta}>{rowSub(item)}</Text> : null}
           </View>
         )}
-        ListEmptyComponent={!err ? <Text style={styles.empty}>Nothing here yet. Tap + New.</Text> : null}
+        ListEmptyComponent={!err ? <Text style={styles.empty}>{readOnly ? 'No records available. Use the full workspace to create one.' : 'Nothing here yet. Tap + New.'}</Text> : null}
       />
 
       <Modal visible={modal} animationType="slide" transparent>
@@ -122,6 +130,8 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 14 },
   h1: { color: Colors.t1, fontSize: 24, fontWeight: '700' },
   addBtn: { color: Colors.amber, fontSize: 15, fontWeight: '700' },
+  workspaceBanner: { borderWidth: 1, borderColor: Colors.amber + '55', backgroundColor: Colors.amber + '12', borderRadius: 12, padding: 12, marginBottom: 14 },
+  workspaceText: { color: Colors.amber, fontWeight: '800', fontSize: 12 },
   card: { backgroundColor: Colors.ink3, borderWidth: 1, borderColor: Colors.hair, borderRadius: 12, padding: 14, marginBottom: 10 },
   name: { color: Colors.t1, fontSize: 16, fontWeight: '600' },
   meta: { color: Colors.t2, fontSize: 13, marginTop: 2 },

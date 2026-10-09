@@ -124,14 +124,14 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   ) : tab === 'web' ? (
     <WebWorkspaceScreen path={webPath} onBack={() => setTab('more')} onLogout={onLogout} />
   ) : tab === 'invoices' ? (
-    <CollectionScreen name="invoices" title="Invoices" readOnly fields={[
+    <CollectionScreen name="invoices" title="Invoices" readOnly onOpenFullWorkspace={() => onOpenWeb('/invoices')} fields={[
       { key: 'number', label: 'Invoice number', required: true }, { key: 'clientName', label: 'Client' },
       { key: 'amount', label: 'Amount (£)', type: 'number', required: true }, { key: 'status', label: 'Status' }, { key: 'dueDate', label: 'Due date' },
     ]} rowTitle={(i) => i.number || 'Invoice'} rowSub={(i) => `${i.clientName || 'Client'} · £${i.amount ?? '—'} · ${i.status || 'draft'}`} onLogout={onLogout} />
   ) : tab === 'cis' ? (
     <CisPaymentsScreen onLogout={onLogout} />
   ) : tab === 'quotes' ? (
-    <CollectionScreen name="quotes" title="Quotes" readOnly fields={[
+    <CollectionScreen name="quotes" title="Quotes" readOnly onOpenFullWorkspace={() => onOpenWeb('/quotes')} fields={[
       { key: 'number', label: 'Quote number', required: true }, { key: 'customerName', label: 'Customer' },
       { key: 'total', label: 'Total (£)', type: 'number' }, { key: 'status', label: 'Status' },
     ]} rowTitle={(i) => i.number || i.title || 'Quote'} rowSub={(i) => `${i.customerName || 'Customer'} · £${i.total ?? '—'} · ${i.status || 'draft'}`} onLogout={onLogout} />
