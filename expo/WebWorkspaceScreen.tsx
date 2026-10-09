@@ -36,6 +36,13 @@ export default function WebWorkspaceScreen({ path, onBack, onLogout }: {
   // eslint-disable-next-line react-hooks/exhaustive-deps -- session handoff regenerates only for path/retry changes
   }, [path, revision]);
 
+  // Safari uses the user's already-working web session when the embedded WKWebView fails.
+  // Open only an internal app route; never send the native bearer or one-use ticket to a URL.
+  const openInSafari = () => {
+    const safePath = /^\/[a-zA-Z0-9/_-]+$/.test(path) && !path.startsWith('//') ? path : '/apps';
+    void Linking.openURL(`${API_URL}${safePath}`).catch(() => setError('Could not open the workspace in Safari.'));
+  };
+
   const allowedHost = new URL(API_URL).host.toLowerCase();
   const guardNavigation = (request: { url: string; navigationType?: string }) => {
     try {
@@ -56,6 +63,9 @@ export default function WebWorkspaceScreen({ path, onBack, onLogout }: {
         <Text style={styles.backText}>‹ Modules</Text>
       </TouchableOpacity>
       <Text style={styles.title} numberOfLines={1}>Cortex Construct · Full workspace</Text>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open current module in Safari" onPress={openInSafari} style={styles.back}>
+        <Text style={styles.backText}>Safari ↗</Text>
+      </TouchableOpacity>
       <TouchableOpacity accessibilityRole="button" accessibilityLabel="Reload web workspace" onPress={() => setRevision(r => r + 1)} style={styles.back}>
         <Text style={styles.backText}>↻</Text>
       </TouchableOpacity>
@@ -64,6 +74,7 @@ export default function WebWorkspaceScreen({ path, onBack, onLogout }: {
     {error ? <ScrollView contentContainerStyle={styles.center}>
       <Text style={styles.error}>{error}</Text>
       <TouchableOpacity accessibilityRole="button" style={styles.retry} onPress={() => setRevision(r => r + 1)}><Text style={styles.retryText}>Retry securely</Text></TouchableOpacity>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open failed module in Safari" onPress={openInSafari}><Text style={styles.safari}>Open this module in Safari ↗</Text></TouchableOpacity>
     </ScrollView> : !ticket ? <View style={styles.center}>
       <ActivityIndicator color={Colors.amber} />
       <Text style={styles.sub}>Connecting to your web workspace…</Text>
@@ -106,9 +117,10 @@ export default function WebWorkspaceScreen({ path, onBack, onLogout }: {
       {webFailure ? <View style={styles.failurePanel}>
         <Text style={styles.error}>{webFailure}</Text>
         <TouchableOpacity accessibilityRole="button" accessibilityLabel="Retry web module" style={styles.retry} onPress={() => setRevision(r => r + 1)}><Text style={styles.retryText}>Retry module</Text></TouchableOpacity>
+        <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open failed module in Safari" onPress={openInSafari}><Text style={styles.safari}>Open in Safari ↗</Text></TouchableOpacity>
       </View> : null}
       {loading && <View pointerEvents="none" style={styles.loadingOverlay}><ActivityIndicator color={Colors.amber} /></View>}
-      {currentUrl.endsWith('/login') && <Text style={styles.expired}>Session expired? Use ↻ to re-authorise with your mobile account.</Text>}
+      {currentUrl.endsWith('/login') && <Text style={styles.expired}>WebView sign-in did not complete. Tap ↻ to retry, or Safari ↗ to use your browser session.</Text>}
     </View>}
   </View>;
 }
@@ -126,5 +138,6 @@ const styles = StyleSheet.create({
   retry: { backgroundColor: Colors.amber, borderRadius: 12, padding: 14 }, retryText: { color: Colors.ink, fontWeight: '900' },
   loading: { flex: 1 }, loadingOverlay: { position: 'absolute', left: 0, right: 0, top: 20, alignItems: 'center' },
   failurePanel: { position: 'absolute', top: 15, left: 12, right: 12, padding: 16, borderRadius: 12, backgroundColor: Colors.ink2, alignItems: 'center', gap: 12 },
+  safari: { color: Colors.amber, fontSize: 13, fontWeight: '800', padding: 10, textAlign: 'center' },
   expired: { color: Colors.orange, textAlign: 'center', fontSize: 11, padding: 8, backgroundColor: Colors.ink2 },
 });

@@ -15,3 +15,11 @@ test('web module HTTP and transport failures show actionable retry', () => {
   assert.match(screen, /setWebFailure\(/);
   assert.match(screen, /accessibilityLabel="Retry web module"/);
 });
+
+test('failed embedded workspace has a secure browser fallback without leaking a ticket', () => {
+  const screen = source('WebWorkspaceScreen.tsx');
+  assert.match(screen, /accessibilityLabel="Open current module in Safari"/);
+  assert.match(screen, /accessibilityLabel="Open failed module in Safari"/);
+  assert.match(screen, /Linking\.openURL\(`\$\{API_URL\}\$\{safePath\}`\)/);
+  assert.doesNotMatch(screen, /Linking\.openURL\([^\n]*ticket/);
+});
