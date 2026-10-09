@@ -8,6 +8,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import { canManage, canWrite } from '@/lib/rbac'
 import { runWithOrg } from '@/lib/tenancy'
+import { fieldTaskMutationError, visibleTaskById } from '@/lib/task-visibility'
 
 export const dynamic = 'force-dynamic'
 
@@ -18,15 +19,7 @@ function appRole(auth: OrgAuth): string { return (auth.session.user as { role?: 
 function email(auth: OrgAuth): string { return (auth.session.user as { email?: string | null })?.email?.trim() || '' }
 
 function taskAccessWhere(id: string, auth: OrgAuth): Prisma.TaskWhereInput {
-  if (canManage(auth.role || '')) return { id }
-  const role = appRole(auth)
-  const mail = email(auth)
-  if (!mail) return { id: '__no_accessible_task__' }
-  if (role === 'project_manager' || role === 'foreman') {
-    return { id, project: { assignments: { some: { member: { email: { equals: mail, mode: 'insensitive' } } } } } }
-  }
-  if (role === 'operative') return { id, assignee: { email: { equals: mail, mode: 'insensitive' } } }
-  return { id }
+  return visibleTaskById(id, auth.role, appRole(auth), email(auth))
 }
 
 async function assignedProject(projectId: string, auth: OrgAuth): Promise<boolean> {
@@ -82,9 +75,24 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
       }
       const targetProjectId = body.projectId !== undefined ? body.projectId : existing.projectId
       if (!canManage(auth.role || '') && (role === 'project_manager' || role === 'foreman')) {
-        if (!targetProjectId || !(await assignedProject(String(targetProjectId), auth))) return NextResponse.json({ error: 'Target project is not assigned' }, { status: 403 })
-        if (role === 'foreman' && body.projectId !== undefined && body.projectId !== existing.projectId) return NextResponse.json({ error: 'Foremen cannot move tasks between projects' }, { status: 403 })
-        if (body.assigneeId && !(await assigneeBelongsToProject(String(body.assigneeId), String(targetProjectId)))) return NextResponse.json({ error: 'Assignee must belong to the selected project' }, { status: 400 })
+        // Authorization to edit belongs to the ORIGINAL project, never to the
+        // target project supplied by an untrusted mutation body.
+        const sourceProjectAssigned = !!existing.projectId && await assignedProject(existing.projectId, auth)
+        const requestedMove = body.projectId !== undefined && body.projectId !== existing.projectId
+        const targetProjectAssigned = requestedMove
+          ? !!targetProjectId && await assignedProject(String(targetProjectId), auth)
+          : sourceProjectAssigned
+        const denied = fieldTaskMutationError({
+          personaRole: role,
+          sourceProjectId: existing.projectId,
+          sourceProjectAssigned,
+          targetProjectAssigned,
+          body,
+        })
+        if (denied) return NextResponse.json({ error: denied }, { status: 403 })
+        if (body.assigneeId && !(await assigneeBelongsToProject(String(body.assigneeId), String(targetProjectId)))) {
+          return NextResponse.json({ error: 'Assignee must belong to the selected project' }, { status: 400 })
+        }
       }
       if (body.title !== undefined && !String(body.title).trim()) return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
       if (body.dueTime !== undefined && body.dueTime !== null && !/^([01]\d|2[0-3]):[0-5]\d$/.test(String(body.dueTime))) {
@@ -136,6 +144,9 @@ export async function DELETE(req: NextRequest, { params: paramsP }: RouteParams)
       if (!canManage(auth.role || '') && role !== 'project_manager') return NextResponse.json({ error: 'Company Admin or Project Manager permission required to delete tasks' }, { status: 403 })
       const task = await prisma.task.findFirst({ where: taskAccessWhere(params.id, auth), select: { title: true, projectId: true } })
       if (!task) return NextResponse.json({ error: 'Task not found or not assigned' }, { status: 404 })
+      if (!canManage(auth.role || '') && !(task.projectId && await assignedProject(task.projectId, auth))) {
+        return NextResponse.json({ error: 'Only tasks in assigned projects can be deleted' }, { status: 403 })
+      }
       await prisma.$transaction(async tx => {
         await tx.task.delete({ where: { id: params.id } })
         await syncTaskProjectProgress(tx, [task.projectId], auth.orgId)
