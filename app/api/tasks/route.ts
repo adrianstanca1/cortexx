@@ -15,7 +15,7 @@ export const dynamic = 'force-dynamic'
 
 const MAX_TAKE = 100
 
-async function GET_impl(req: NextRequest, session: { user?: { email?: string | null; role?: string } }) {
+async function GET_impl(req: NextRequest, organizationId: string, session: { user?: { email?: string | null; role?: string } }) {
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
@@ -35,7 +35,7 @@ async function GET_impl(req: NextRequest, session: { user?: { email?: string | n
       : operativeScoped
         ? (email ? { assignee: { email: { equals: email, mode: 'insensitive' } } } : { id: '__no_assigned_task__' })
         : {}
-    const where: Prisma.TaskWhereInput = { ...(projectId && { projectId }), ...(status && { status }), ...personaWhere }
+    const where: Prisma.TaskWhereInput = { organizationId, ...(projectId && { projectId }), ...(status && { status }), ...personaWhere }
     const [tasks, total] = await Promise.all([
       prisma.task.findMany({
         where,
@@ -72,22 +72,30 @@ async function POST_impl(req: NextRequest, userId: string, organizationId: strin
     const email = session.user?.email?.trim() || ''
     const fieldRole = ['project_manager', 'foreman', 'operative'].includes(appRole)
     const projectId = body.projectId || null
+    if (projectId) {
+      const project = await prisma.project.findFirst({ where: { id: projectId, organizationId }, select: { id: true } })
+      if (!project) return NextResponse.json({ error: 'Project not found in active organization' }, { status: 403 })
+    }
+    if (body.assigneeId) {
+      const member = await prisma.teamMember.findFirst({ where: { id: body.assigneeId, organizationId }, select: { id: true } })
+      if (!member) return NextResponse.json({ error: 'Assignee not found in active organization' }, { status: 403 })
+    }
     let assigneeId = body.assigneeId || null
     if (!canManage(orgRole || '') && fieldRole) {
       if (!projectId || !email) return NextResponse.json({ error: 'Assigned project is required for field task creation' }, { status: 403 })
       const assignedProject = await prisma.project.findFirst({
-        where: { id: projectId, assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } },
+        where: { id: projectId, organizationId, assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } },
         select: { id: true },
       })
       if (!assignedProject) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 403 })
 
       if (appRole === 'operative') {
-        const self = await prisma.teamMember.findFirst({ where: { email: { equals: email, mode: 'insensitive' } }, select: { id: true } })
+        const self = await prisma.teamMember.findFirst({ where: { organizationId, email: { equals: email, mode: 'insensitive' } }, select: { id: true } })
         if (!self) return NextResponse.json({ error: 'Linked team member required' }, { status: 403 })
         if (assigneeId && assigneeId !== self.id) return NextResponse.json({ error: 'Operatives can only create tasks for themselves' }, { status: 403 })
         assigneeId = self.id
       } else if (assigneeId) {
-        const projectMember = await prisma.teamMember.findFirst({ where: { id: assigneeId, assignments: { some: { projectId } } }, select: { id: true } })
+        const projectMember = await prisma.teamMember.findFirst({ where: { id: assigneeId, organizationId, assignments: { some: { projectId } } }, select: { id: true } })
         if (!projectMember) return NextResponse.json({ error: 'Assignee must belong to the selected project' }, { status: 400 })
       }
     }
@@ -95,6 +103,7 @@ async function POST_impl(req: NextRequest, userId: string, organizationId: strin
     const task = await prisma.$transaction(async tx => {
       const created = await tx.task.create({
         data: {
+          organizationId,
           title: body.title.trim(),
           description: body.description?.trim() || null,
           dueDate: body.dueDate ? new Date(body.dueDate) : null,
@@ -149,5 +158,5 @@ async function POST_impl(req: NextRequest, userId: string, organizationId: strin
   }
 }
 
-export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
+export const GET = withRoute(({ req, orgId, session }) => GET_impl(req, orgId!, session), { permission: 'read' })
 export const POST = withRoute(({ req, userId, orgId, role, session }) => POST_impl(req, userId, orgId!, role, session), { permission: 'write' })
