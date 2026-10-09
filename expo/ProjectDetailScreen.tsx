@@ -6,34 +6,36 @@ import { apiGet } from './api';
 export default function ProjectDetailScreen({ id, onBack }: { id: string; onBack: () => void }) {
   const [p, setP] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
-      try { setP(await apiGet(`/api/projects/${id}`)); } catch {}
+      setLoading(true); setError(''); setP(null);
+      try { const response = await apiGet(`/api/projects/${id}`); setP(response?.project || response); }
+      catch (e: any) { setError(e?.message || 'Unable to load project details.'); }
       finally { setLoading(false); }
     })();
   }, [id]);
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.amber} /></View>;
-  if (!p) return <View style={styles.wrap}><Text style={styles.err}>Project not found.</Text>
+  if (!p) return <View style={styles.wrap}><Text style={styles.err}>{error || 'Project not found.'}</Text>
     <TouchableOpacity style={styles.back} onPress={onBack}><Text style={styles.backText}>← Back</Text></TouchableOpacity></View>;
 
   return (
     <ScrollView style={styles.wrap}>
       <TouchableOpacity style={styles.back} onPress={onBack}><Text style={styles.backText}>← Projects</Text></TouchableOpacity>
       <Text style={styles.name}>{p.name}</Text>
-      <Text style={styles.meta}>{p.client || '—'}{p.addr ? ` · ${p.addr}` : ''}</Text>
+      <Text style={styles.meta}>{p.clientName || p.client || '—'}{p.address || p.addr ? ` · ${p.address || p.addr}` : ''}</Text>
 
       <View style={styles.grid}>
-        <Stat label="Value" value={fmtMoney(p.value)} />
-        <Stat label="Complete" value={`${p.pct ?? 0}%`} />
+        <Stat label="Value" value={fmtMoney(p.budget ?? p.value)} />
+        <Stat label="Complete" value={`${p.progress ?? p.pct ?? 0}%`} />
         <Stat label="Status" value={p.status || '—'} />
-        <Stat label="Due" value={fmtDate(p.due)} />
+        <Stat label="Due" value={fmtDate(p.endDate || p.due)} />
       </View>
 
-      {typeof p.pct === 'number' ? (
-        <View style={styles.bar}><View style={[styles.barFill, { width: `${Math.min(100, p.pct)}%` }]} /></View>
+      {typeof (p.progress ?? p.pct) === 'number' ? (
+        <View style={styles.bar}><View style={[styles.barFill, { width: `${Math.max(0, Math.min(100, p.progress ?? p.pct))}%` }]} /></View>
       ) : null}
 
       <View style={styles.section}>
