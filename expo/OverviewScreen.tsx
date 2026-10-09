@@ -21,8 +21,12 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
   const [err, setErr] = useState('');
   const [stats, setStats] = useState<Stat[]>([]);
   const [live, setLive] = useState(0);
+  const liveRef = React.useRef(0);
 
   const load = async () => {
+    // Only acknowledge events seen before this fetch started. New events
+    // arriving during refresh still prompt the user to fetch again.
+    const eventsBeforeRefresh = liveRef.current;
     setLoading(true); setErr('');
     try {
       const finance = isFinanceAdmin(user);
@@ -60,6 +64,8 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
         next.splice(2, 0, { key: 'invoices', label: 'Outstanding', value: String(outstanding), sub: `${(invoices as any[]).length} invoices`, tone: outstanding ? 'red' : 'green', code: '£' });
       }
       setStats(next);
+      liveRef.current = Math.max(0, liveRef.current - eventsBeforeRefresh);
+      setLive(liveRef.current);
     } catch (e: any) {
       setErr(e?.message || 'Failed to load');
       if (e?.message === 'unauthorized') onLogout();
@@ -68,7 +74,7 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
 
   useEffect(() => {
     void load();
-    const off = onStreamEvent(() => setLive(n => n + 1));
+    const off = onStreamEvent(() => { liveRef.current += 1; setLive(liveRef.current); });
     return () => off();
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
@@ -87,14 +93,14 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
         <Text style={styles.h1}>Today</Text>
         <Text style={styles.persona}>{user.name || user.email} · {persona}</Text>
       </View>
-      <View style={styles.liveDot}><Text style={styles.liveText}>● LIVE</Text></View>
+      <View style={styles.liveDot}><Text style={[styles.liveText, err ? { color: Colors.orange } : null]}>{err ? '⚠ CHECK DATA' : live > 0 ? '● NEW EVENT' : '● DATA LOADED'}</Text></View>
     </View>
 
     <View style={styles.hero}>
       <View style={{ flex: 1 }}>
         <Text style={styles.heroLabel}>WORKSPACE STATUS</Text>
         <Text style={styles.heroTitle}>{err ? 'Needs attention' : 'Operational'}</Text>
-        <Text style={styles.heroSub}>{live > 0 ? `${live} live update${live > 1 ? 's' : ''} received since open.` : 'Live site data, work and commercial controls are connected.'}</Text>
+        <Text style={styles.heroSub}>{live > 0 ? `${live} live event${live > 1 ? 's' : ''} received. Pull to refresh displayed counts. Confirm site readiness separately before starting work.` : 'Last retrieved records are shown. Confirm site readiness separately before starting work.'}</Text>
       </View>
       <TouchableOpacity style={styles.heroAction} onPress={() => onNavigate('field')}>
         <Text style={styles.heroActionText}>FIELD</Text>

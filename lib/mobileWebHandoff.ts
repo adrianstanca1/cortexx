@@ -29,6 +29,7 @@ export function parseTicketIdentifier(value: string): { userId: string; orgId: s
 // Deliberately restrict the entry point to real web workspace screens.
 const ALLOWED_WEB_ROUTES = new Set([
   'dashboard', 'apps', 'innovation', 'projects', 'tasks', 'team', 'capture',
+  'bundles', 'help', 'status',
   'inbox', 'activity', 'search', 'reports', 'documents', 'settings',
   'equipment', 'maintenance', 'training', 'workforce', 'schedule',
   'safety', 'rams', 'permits', 'inspections', 'observations', 'risks',
@@ -41,7 +42,7 @@ const ALLOWED_WEB_ROUTES = new Set([
   'improve-hub', 'kaizen-board', 'process-library', 'action-plans',
   'ai-history', 'ask', 'vera-ceo', 'vera-autopilot', 'infrastructure',
   'service-catalog', 'smart-parse', 'currency', 'mileage', 'developer-api',
-  'carbon', 'waste', 'client-view', 'sub-portal', 'leadership', 'support', 'reviews', 'timesheets', 'snags', 'my-day', 'tomorrow', 'conflicts', 'apprentice', 'action-plans', 'toolbox-talks', 'live-status',
+  'carbon', 'waste', 'client-view', 'sub-portal', 'leadership', 'support', 'reviews', 'timesheets', 'snags', 'my-day', 'tomorrow', 'conflicts', 'apprentice', 'toolbox-talks', 'live-status',
 ])
 
 export function safeMobileWebPath(raw: unknown): string {

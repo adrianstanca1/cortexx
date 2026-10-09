@@ -28,11 +28,11 @@ test('finance and company administration modules hide from non-admins', () => {
   for (const items of [operative, pm]) {
     assert.ok(items.some(i => i.path === '/projects'))
     assert.ok(!items.some(i => i.path === '/invoices'))
-    assert.ok(!items.some(i => i.path === '/requisitions'))
+    assert.ok(!items.some(i => i.path === '/quotes'))
   }
-  assert.ok(!operative.some(i => i.path === '/workforce'))
+  assert.ok(operative.some(i => i.path === '/workforce'))
   assert.ok(pm.some(i => i.path === '/workforce'))
-  for (const path of ['/invoices', '/requisitions', '/roles', '/suppliers', '/vera-autopilot']) {
+  for (const path of ['/invoices', '/requisitions', '/roles', '/suppliers', '/vera-autopilot', '/client-view']) {
     assert.ok(owner.some(i => i.path === path), `Company admin missing ${path}`)
   }
 })
@@ -51,4 +51,104 @@ test('full module navigation retains native offline tools and uses one-use web t
   assert.match(web, /thirdPartyCookiesEnabled=\{false\}/)
   assert.match(web, /onShouldStartLoadWithRequest=\{guardNavigation\}/)
   assert.ok(!web.includes('getToken()'), 'Never inject native bearer token into HTML')
+})
+
+test('native menu covers every real signed-in top-level web page; explicitly exclude only external/legal/reset pages', () => {
+  const fs = require('node:fs')
+  const path = require('node:path')
+  const excluded = new Set(['onboarding', 'pricing', 'privacy', 'reset-password', 'terms'])
+  const webPages = fs.readdirSync(path.join(__dirname, '..', 'app')).filter(route =>
+    fs.existsSync(path.join(__dirname, '..', 'app', route, 'page.tsx')) && !excluded.has(route))
+  const declared = new Set(WEB_MODULE_SECTIONS.flatMap(s => s.items.map(i => i.path.slice(1))))
+  assert.equal(declared.size, WEB_MODULE_SECTIONS.reduce((sum, s) => sum + s.items.length, 0),
+    'Every module route must appear exactly once, to avoid a confusing repeated menu')
+  assert.ok(webPages.length >= 90, 'Check that top-level web modules have not been unexpectedly removed')
+  for (const route of webPages) assert.ok(declared.has(route), `Web /${route} is missing from mobile modules`)
+})
+
+test('field hub does not claim the site is cleared to work before checking live readiness', () => {
+  const hub = readFileSync(new URL('../expo/FieldHubScreen.tsx', import.meta.url), 'utf8')
+  const overview = readFileSync(new URL('../expo/OverviewScreen.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(hub, />Ready to work</)
+  assert.doesNotMatch(hub, />● LIVE</)
+  assert.match(hub, /Verify before work/)
+  assert.match(hub, /onPress=\{\(\) => onNavigate\('readiness'\)\}/)
+  assert.match(overview, /CHECK DATA/)
+  assert.match(overview, /Confirm site readiness separately/)
+})
+
+test('signed-in admin receives client share management, not a dead onboarding shortcut', () => {
+  const admin = visibleWebModules({ role: 'company_admin', organizationRole: 'owner' }).flatMap(section => section.items)
+  const operative = visibleWebModules({ role: 'operative', organizationRole: 'member' }).flatMap(section => section.items)
+  assert.ok(admin.some(item => item.path === '/client-view'))
+  assert.ok(!operative.some(item => item.path === '/client-view'))
+  assert.ok(!admin.some(item => item.path === '/onboarding'))
+})
+
+test('overview safety caveat is shown after live updates as well as before any updates', () => {
+  const overview = readFileSync(new URL('../expo/OverviewScreen.tsx', import.meta.url), 'utf8')
+  const caveat = 'Confirm site readiness separately before starting work.'
+  assert.equal(overview.split(caveat).length - 1, 2)
+})
+
+test('mileage access matches web workspace visibility for field operatives and managers', () => {
+  for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
+    const modules = visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' }).flatMap(section => section.items)
+    assert.ok(modules.some(item => item.path === '/mileage'), `Mileage missing for ${role}`)
+  }
+})
+
+test('stream events do not claim displayed metrics were refreshed without refetch', () => {
+  const overview = readFileSync(new URL('../expo/OverviewScreen.tsx', import.meta.url), 'utf8')
+  assert.doesNotMatch(overview, /● UPDATED/)
+  assert.match(overview, /● NEW EVENT/)
+  assert.match(overview, /Pull to refresh displayed counts/)
+})
+
+test('operatives can discover employee-accessible procedures, materials and safety-related modules', () => {
+  const operative = visibleWebModules({ role: 'operative', organizationRole: 'member' }).flatMap(section => section.items)
+  for (const path of ['/process-library', '/service-catalog', '/bundles', '/materials', '/conflicts', '/reviews', '/carbon']) {
+    assert.ok(operative.some(item => item.path === path), `Operative is incorrectly denied ${path} in native menu`)
+  }
+})
+
+test('employee subcontractor register stays visible in the native menu like the web app', () => {
+  for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
+    const modules = visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' }).flatMap(section => section.items)
+    assert.ok(modules.some(item => item.path === '/subs'), `Subcontractor register missing for ${role}`)
+  }
+})
+
+test('dashboard only acknowledges pre-refresh stream events after a successful data fetch', () => {
+  const overview = readFileSync(new URL('../expo/OverviewScreen.tsx', import.meta.url), 'utf8')
+  assert.match(overview, /const eventsBeforeRefresh = liveRef\.current/)
+  assert.match(overview, /setStats\(next\);\s*liveRef\.current = Math\.max\(0, liveRef\.current - eventsBeforeRefresh\);\s*setLive\(liveRef\.current\)/)
+  assert.match(overview, /onStreamEvent\(\(\) => \{ liveRef\.current \+= 1; setLive\(liveRef\.current\); \}\)/)
+})
+
+test('employee-accessible web modules remain discoverable in mobile across member roles', () => {
+  // GET permissions for these modules permit logged-in members on the website;
+  // mobile navigation must not invent stricter role gates than web/API.
+  const memberRoutes = [
+    '/innovation', '/valuations', '/requisitions', '/rfqs', '/pos',
+    '/suppliers', '/customers', '/receipts', '/cost-codes', '/cost-catalog',
+    '/payroll', '/cis300', '/sub-portal', '/claims', '/leads',
+    '/personas', '/currency', '/performance', '/ask', '/smart-parse', '/ai-history', '/developer-api',
+  ]
+  for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
+    const routes = new Set(visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' })
+      .flatMap(section => section.items.map(item => item.path)))
+    for (const path of memberRoutes) assert.ok(routes.has(path), `${role} mobile menu missing member-accessible ${path}`)
+  }
+})
+
+test('mobile workers see the same company viewing routes as the web Apps page', () => {
+  // Leadership redirects to the normal dashboard; workforce has its own canEdit
+  // guard; infrastructure GET is currently authorized for logged-in members.
+  const expected = ['/leadership', '/workforce', '/infrastructure']
+  for (const role of ['operative', 'foreman', 'project_manager', 'company_admin']) {
+    const paths = new Set(visibleWebModules({ role, organizationRole: role === 'company_admin' ? 'owner' : 'member' })
+      .flatMap(section => section.items.map(item => item.path)))
+    for (const path of expected) assert.ok(paths.has(path), `${role} mobile menu missing ${path}`)
+  }
 })
