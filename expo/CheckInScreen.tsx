@@ -2,7 +2,8 @@ import React, { useEffect, useMemo, useState } from 'react';
 import { View, Text, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, RefreshControl, ScrollView } from 'react-native';
 import * as Location from 'expo-location';
 import { Colors } from './theme';
-import { getCollection, getProjects, getCurrentTeamMember, postCollection, putCollection } from './api';
+import { apiGet, getCollection, getProjects, getCurrentTeamMember, postCollection, putCollection } from './api';
+import { selectActiveCheckIn } from './checkin-active';
 
 type CheckIn = { id: string; memberId: string; projectId: string; checkedInAt: string; checkedOutAt?: string | null; project?: { name?: string }; member?: { name?: string } };
 
@@ -19,17 +20,31 @@ export default function CheckInScreen({ onLogout }: { onLogout: () => void }) {
   const [member, setMember] = useState<any | null>(null);
   const [projects, setProjects] = useState<any[]>([]);
   const [rows, setRows] = useState<CheckIn[]>([]);
+  const [verifiedActive, setVerifiedActive] = useState<CheckIn | null | undefined>(undefined);
   const [selectedProject, setSelectedProject] = useState('');
   const [loading, setLoading] = useState(true);
   const [working, setWorking] = useState(false);
   const [err, setErr] = useState('');
 
   const load = async () => {
-    setLoading(true); setErr('');
+    setLoading(true); setErr(''); setVerifiedActive(undefined);
     try {
       const [m, p, c] = await Promise.all([getCurrentTeamMember(), getProjects(), getCollection('checkins', 100)]);
       setMember(m); setProjects(p || []); setRows((c || []) as CheckIn[]);
       if (!selectedProject && p?.[0]?.id) setSelectedProject(p[0].id);
+      // A long attendance history can evict an earlier open check-in from the
+      // first 100 records. Always ask the server for THIS member's active entry.
+      if (m?.id) {
+        try {
+          const activeResponse = await apiGet(`/api/checkins?activeOnly=true&memberId=${encodeURIComponent(m.id)}&take=1`);
+          if (!Array.isArray(activeResponse?.checkins)) throw new Error('Unexpected active attendance response');
+          setVerifiedActive(activeResponse.checkins[0] || null);
+        } catch (e: any) {
+          if (e?.message === 'unauthorized') throw e;
+          setVerifiedActive(undefined);
+          setErr('Active attendance could not be verified online. Showing available history; refresh to retry.');
+        }
+      } else setVerifiedActive(null);
     } catch (e: any) {
       setErr(e?.message || 'Failed to load check-in data');
       if (e?.message === 'unauthorized') onLogout();
@@ -37,7 +52,7 @@ export default function CheckInScreen({ onLogout }: { onLogout: () => void }) {
   };
   useEffect(() => { load(); }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  const active = useMemo(() => member ? rows.find(r => r.memberId === member.id && !r.checkedOutAt) : undefined, [rows, member]);
+  const active = useMemo(() => selectActiveCheckIn(rows, member?.id, verifiedActive), [rows, member, verifiedActive]);
 
   const checkIn = async () => {
     if (!member) { Alert.alert('Team profile needed', 'Your login email is not linked to a team member yet. Ask your Company Admin to link it.'); return; }
