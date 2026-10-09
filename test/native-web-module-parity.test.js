@@ -32,7 +32,7 @@ test('finance and company administration modules hide from non-admins', () => {
   }
   assert.ok(!operative.some(i => i.path === '/workforce'))
   assert.ok(pm.some(i => i.path === '/workforce'))
-  for (const path of ['/invoices', '/requisitions', '/roles', '/suppliers', '/vera-autopilot']) {
+  for (const path of ['/invoices', '/requisitions', '/roles', '/suppliers', '/vera-autopilot', '/client-view']) {
     assert.ok(owner.some(i => i.path === path), `Company admin missing ${path}`)
   }
 })
@@ -56,7 +56,7 @@ test('full module navigation retains native offline tools and uses one-use web t
 test('native menu covers every real signed-in top-level web page; explicitly exclude only external/legal/reset pages', () => {
   const fs = require('node:fs')
   const path = require('node:path')
-  const excluded = new Set(['client-view', 'pricing', 'privacy', 'reset-password', 'terms'])
+  const excluded = new Set(['onboarding', 'pricing', 'privacy', 'reset-password', 'terms'])
   const webPages = fs.readdirSync(path.join(__dirname, '..', 'app')).filter(route =>
     fs.existsSync(path.join(__dirname, '..', 'app', route, 'page.tsx')) && !excluded.has(route))
   const declared = new Set(WEB_MODULE_SECTIONS.flatMap(s => s.items.map(i => i.path.slice(1))))
@@ -75,4 +75,18 @@ test('field hub does not claim the site is cleared to work before checking live 
   assert.match(hub, /onPress=\{\(\) => onNavigate\('readiness'\)\}/)
   assert.match(overview, /CHECK DATA/)
   assert.match(overview, /Confirm site readiness separately/)
+})
+
+test('signed-in admin receives client share management, not a dead onboarding shortcut', () => {
+  const admin = visibleWebModules({ role: 'company_admin', organizationRole: 'owner' }).flatMap(section => section.items)
+  const operative = visibleWebModules({ role: 'operative', organizationRole: 'member' }).flatMap(section => section.items)
+  assert.ok(admin.some(item => item.path === '/client-view'))
+  assert.ok(!operative.some(item => item.path === '/client-view'))
+  assert.ok(!admin.some(item => item.path === '/onboarding'))
+})
+
+test('overview safety caveat is shown after live updates as well as before any updates', () => {
+  const overview = readFileSync(new URL('../expo/OverviewScreen.tsx', import.meta.url), 'utf8')
+  const caveat = 'Confirm site readiness separately before starting work.'
+  assert.equal(overview.split(caveat).length - 1, 2)
 })

@@ -94,7 +94,7 @@ export default function OverviewScreen({ user, onNavigate, onOpenWeb, onLogout }
       <View style={{ flex: 1 }}>
         <Text style={styles.heroLabel}>WORKSPACE STATUS</Text>
         <Text style={styles.heroTitle}>{err ? 'Needs attention' : 'Operational'}</Text>
-        <Text style={styles.heroSub}>{live > 0 ? `${live} live update${live > 1 ? 's' : ''} received since open.` : 'Last retrieved records are shown. Confirm site readiness separately before starting work.'}</Text>
+        <Text style={styles.heroSub}>{live > 0 ? `${live} live update${live > 1 ? 's' : ''} received since open. Confirm site readiness separately before starting work.` : 'Last retrieved records are shown. Confirm site readiness separately before starting work.'}</Text>
       </View>
       <TouchableOpacity style={styles.heroAction} onPress={() => onNavigate('field')}>
         <Text style={styles.heroActionText}>FIELD</Text>
