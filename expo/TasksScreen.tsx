@@ -5,7 +5,7 @@ import {
 } from 'react-native';
 import { Colors } from './theme';
 import { apiDelete, apiGet, getCollection, postCollection, putCollection, getProjects, type AuthUser } from './api';
-import { eligibleAssignees, emptyTaskForm, formFromTask, taskFormError, taskPayload, taskPermissions } from './task-management';
+import { effectiveTaskPermissions, eligibleAssignees, emptyTaskForm, formFromTask, taskFormError, taskPayload, taskPermissions, type TaskCapabilities } from './task-management';
 
 const PRIO: Record<string,string> = {
   low: Colors.green,
@@ -25,6 +25,7 @@ type Task = {
   assigneeId?: string | null;
   project?: { name?: string } | null;
   assignee?: { name?: string } | null;
+  permissions?: TaskCapabilities;
 };
 
 type Filter = 'open' | 'today' | 'done' | 'all';
@@ -43,6 +44,7 @@ export default function TasksScreen({ user, onLogout, projectId }: { user: AuthU
   const [assigneeSearch, setAssigneeSearch] = useState('');
   const [filter, setFilter] = useState<Filter>('open');
   const [form, setForm] = useState(() => emptyTaskForm(projectId || ''));
+  const detailPermissions = effectiveTaskPermissions(user, editingTask?.permissions);
 
   const load = async () => {
     setLoading(true); setErr('');
@@ -126,7 +128,7 @@ export default function TasksScreen({ user, onLogout, projectId }: { user: AuthU
   };
 
   const removeTask = () => {
-    if (!editingTask || !permissions.canDelete || saving) return;
+    if (!editingTask || !detailPermissions.canDelete || saving) return;
     const task = editingTask;
     Alert.alert('Delete task?', `Delete “${task.title}”? This cannot be undone.`, [
       { text: 'Cancel', style: 'cancel' },
@@ -149,8 +151,8 @@ export default function TasksScreen({ user, onLogout, projectId }: { user: AuthU
 
   const save = async () => {
     if (saving) return;
-    const statusOnly = !!editingTask && permissions.statusOnly;
-    if ((!editingTask && !permissions.canCreate) || (editingTask && !permissions.canEdit && !statusOnly)) return;
+    const statusOnly = !!editingTask && detailPermissions.statusOnly;
+    if ((!editingTask && !permissions.canCreate) || (editingTask && !detailPermissions.canEdit && !statusOnly)) return;
     const problem = taskFormError(form, statusOnly);
     if (problem) { Alert.alert('Check task', problem); return; }
     setSaving(true);
@@ -243,12 +245,12 @@ export default function TasksScreen({ user, onLogout, projectId }: { user: AuthU
             <TouchableOpacity onPress={() => setModal(false)} style={styles.close}><Text style={styles.closeText}>×</Text></TouchableOpacity>
           </View>
           <ScrollView>
-            <Field label="Status"><Chips values={['todo','in_progress','blocked','done']} value={form.status} onPick={v => { if (permissions.canChangeStatus) setForm(old => ({ ...old, status: v })); }} /></Field>
-            {!editingTask || permissions.canEdit ? <>
+            <Field label="Status"><Chips values={['todo','in_progress','blocked','done']} value={form.status} onPick={v => { if (editingTask ? detailPermissions.canChangeStatus : permissions.canChangeStatus) setForm(old => ({ ...old, status: v })); }} /></Field>
+            {!editingTask || detailPermissions.canEdit ? <>
               <Field label="Title *"><Input value={form.title} onChange={v => setForm(old => ({ ...old, title: v }))} placeholder="Install east elevation panel" /></Field>
               <Field label="Description"><Input value={form.description} onChange={v => setForm(old => ({ ...old, description: v }))} placeholder="Details / location" /></Field>
               <Field label="Priority"><Chips values={['low','medium','high','critical']} value={form.priority} onPick={v => setForm(old => ({ ...old, priority: v }))} /></Field>
-              {!editingTask || permissions.canMoveProject ? <Field label="Project"><Chips values={projects.map(p => p.id)} label={id => projects.find(p => p.id === id)?.name || id} value={form.projectId} onPick={v => setForm(old => ({ ...old, projectId: v, assigneeId: old.projectId === v ? old.assigneeId : '' }))} /></Field> : <Text style={styles.meta}>Project: {projects.find(p => p.id === form.projectId)?.name || 'Unassigned'} · cannot move tasks between projects</Text>}
+              {!editingTask || detailPermissions.canMoveProject ? <Field label="Project"><Chips values={projects.map(p => p.id)} label={id => projects.find(p => p.id === id)?.name || id} value={form.projectId} onPick={v => setForm(old => ({ ...old, projectId: v, assigneeId: old.projectId === v ? old.assigneeId : '' }))} /></Field> : <Text style={styles.meta}>Project: {projects.find(p => p.id === form.projectId)?.name || 'Unassigned'} · cannot move tasks between projects</Text>}
               <Field label="Assignee">
                 <TextInput accessibilityLabel="Find team member" style={styles.input} value={assigneeSearch} placeholder="Search team by name" placeholderTextColor={Colors.t3} onChangeText={setAssigneeSearch} />
                 <Chips values={eligibleAssignees(team, form.projectId, user).filter(m => String(m.name || '').toLowerCase().includes(assigneeSearch.toLowerCase()) || m.id === form.assigneeId).slice(0,50).map(m => m.id)} label={id => team.find(m => m.id === id)?.name || id} value={form.assigneeId} onPick={v => setForm(old => ({ ...old, assigneeId: old.assigneeId === v ? '' : v }))} />
@@ -259,15 +261,15 @@ export default function TasksScreen({ user, onLogout, projectId }: { user: AuthU
               <Text style={styles.meta}>Title: {form.title}</Text>
               <Text style={styles.meta}>Project: {projects.find(p => p.id === form.projectId)?.name || 'Unassigned'}</Text>
               <Text style={styles.meta}>Description: {form.description || '—'}</Text>
-              <Text style={styles.meta}>Only task status can be changed for this role.</Text>
+              <Text style={styles.meta}>Only task status is available for this task and your permissions.</Text>
             </>}
           </ScrollView>
           <View style={styles.actions}>
             <TouchableOpacity accessibilityRole="button" style={styles.cancel} onPress={() => setModal(false)} disabled={saving}><Text style={{ color: Colors.t2, fontWeight: '800' }}>Close</Text></TouchableOpacity>
-            {(!editingTask && permissions.canCreate || !!editingTask && (permissions.canEdit || permissions.statusOnly)) &&
+            {(!editingTask && permissions.canCreate || !!editingTask && (detailPermissions.canEdit || detailPermissions.statusOnly)) &&
               <TouchableOpacity accessibilityRole="button" accessibilityLabel={editingTask ? 'Save task changes' : 'Save new task'} style={styles.save} onPress={() => void save()} disabled={saving}><Text style={{ color: Colors.ink, fontWeight: '900' }}>{saving ? 'Saving…' : editingTask ? 'Save changes' : 'Save task'}</Text></TouchableOpacity>}
           </View>
-          {!!editingTask && permissions.canDelete && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Delete this task" disabled={saving} onPress={removeTask} style={styles.deleteAction}><Text style={styles.deleteText}>Delete task permanently</Text></TouchableOpacity>}
+          {!!editingTask && detailPermissions.canDelete && <TouchableOpacity accessibilityRole="button" accessibilityLabel="Delete this task" disabled={saving} onPress={removeTask} style={styles.deleteAction}><Text style={styles.deleteText}>Delete task permanently</Text></TouchableOpacity>}
         </View>
       </View>
     </Modal>
