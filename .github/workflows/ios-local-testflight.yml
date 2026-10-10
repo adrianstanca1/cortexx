@@ -77,6 +77,9 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           FASTLANE_SKIP_UPDATE_CHECK: '1'
+          # React Native 0.86 / Xcode 26 startup can exceed Fastlane's 3s default.
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: '30'
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: '5'
           COCOAPODS_DISABLE_STATS: 'true'
           CI: '1'
         run: |
