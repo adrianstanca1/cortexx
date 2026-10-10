@@ -10,6 +10,7 @@ on:
 
 permissions:
   contents: read
+  actions: read
 
 # This fallback is manual only. Do not create an implicit paid macOS build on push.
 concurrency:
@@ -50,6 +51,11 @@ jobs:
           cache: npm
           cache-dependency-path: expo/package-lock.json
 
+      - name: Verify matching backend deployment before costly iOS build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node ../scripts/verify-ios-backend-release.cjs
+
       - name: Install iOS app dependencies without lifecycle scripts
         run: npm ci --ignore-scripts --no-audit --no-fund
 
@@ -71,6 +77,9 @@ jobs:
         env:
           EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
           FASTLANE_SKIP_UPDATE_CHECK: '1'
+          # React Native 0.86 / Xcode 26 startup can exceed Fastlane's 3s default.
+          FASTLANE_XCODEBUILD_SETTINGS_TIMEOUT: '30'
+          FASTLANE_XCODEBUILD_SETTINGS_RETRIES: '5'
           COCOAPODS_DISABLE_STATS: 'true'
           CI: '1'
         run: |
@@ -107,6 +116,13 @@ jobs:
           fi
           echo "build_number=$BUILD_NUMBER" >> "$GITHUB_OUTPUT"
           echo "Verified Cortexx production IPA, build $BUILD_NUMBER."
+
+      # A backend can go down during the long macOS build. Recheck the exact
+      # deployed commit and live health just before uploading the signed IPA.
+      - name: Revalidate live backend before Apple upload
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: node ../scripts/verify-ios-backend-release.cjs
 
       - name: Install Apple-issued App Store Connect team key
         env:
