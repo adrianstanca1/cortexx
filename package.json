@@ -63,7 +63,7 @@
     "@aws-sdk/s3-request-presigner": "^3.1147.0",
     "@capacitor/android": "^8.5.3",
     "@capacitor/core": "^8.5.3",
-    "@capacitor/ios": "^8.5.0",
+    "@capacitor/ios": "^8.5.3",
     "@prisma/adapter-pg": "^7.10.1",
     "@prisma/client": "^7.10.1",
     "@sentry/nextjs": "^11.5.0",
