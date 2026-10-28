@@ -25,7 +25,6 @@
         "NSPhotoLibraryUsageDescription": "Cortex Construct accesses selected photos to attach evidence to projects and site records.",
         "NSPhotoLibraryAddUsageDescription": "Cortex Construct saves exported reports and project evidence when you choose to save them.",
         "NSLocationWhenInUseUsageDescription": "Cortex Construct uses your location to tag site check-ins and progress photos when you choose to record them.",
-        "NSFaceIDUsageDescription": "Use Face ID to protect access to your Cortex Construct sign-in session.",
         "NSMicrophoneUsageDescription": "Cortex Construct uses the microphone when you record voice notes for site records."
       }
     },
@@ -40,12 +39,7 @@
       "bundler": "metro"
     },
     "plugins": [
-      [
-        "expo-secure-store",
-        {
-          "faceIDPermission": "Allow Cortex Construct to use Face ID to protect your sign-in session."
-        }
-      ],
+      "expo-secure-store",
       "expo-status-bar",
       "expo-sharing",
       [
