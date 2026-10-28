@@ -40,7 +40,8 @@
           "faceID": true
         }
       ],
-      "expo-status-bar"
+      "expo-status-bar",
+      "expo-sharing"
     ],
     "extra": {
       "apiUrl": "https://cortexbuildpro.tech",
