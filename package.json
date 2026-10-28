@@ -42,7 +42,6 @@
     "precompile:check": "node build-dist.js --check",
     "vault:decrypt": "./scripts/decrypt-env.sh",
     "vault:load": "./scripts/load-env.sh",
-    "postinstall": "DATABASE_URL=${DATABASE_URL:-postgresql://placeholder:placeholder@localhost:5432/placeholder} prisma generate && (npm run precompile --silent || true)",
     "ios:add": "npx cap add ios",
     "ios:sync": "npx cap copy && npx cap sync ios",
     "ios:open": "npx cap open ios",
@@ -115,7 +114,7 @@
     "typescript": "^5.9.3"
   },
   "overrides": {
-    "postcss": "^8.5.29",
+    "postcss": "$postcss",
     "@hono/node-server": "^2.0.8",
     "mysql2": "3.24.4",
     "deepmerge-ts": "8.0.2",
