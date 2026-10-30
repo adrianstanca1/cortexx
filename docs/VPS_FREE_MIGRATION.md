@@ -9,7 +9,7 @@ The repository is `adrianstanca1/cortexx`, default branch `main`. It is a monore
 - Express API: `server/index.js`, raw SQL schema in `server/db/schema.sql`, JWT/magic-link auth, multi-tenant collections, SSE and integration routes.
 - Current Docker Compose also includes PostgreSQL, Ollama, Caddy, Next admin and Next app. The local Ollama dependency is not suitable for a small free cloud instance; retain local/browser inference and configurable external providers as optional paths.
 
-The previous workflow `.github/workflows/deploy-vps.yml` targeted `85.190.100.68` and SSH credentials. That target is no longer available. Its trigger has been disabled in this branch; no VPS SSH attempt should run.
+The previous workflow `.github/workflows/deploy-vps.yml` targeted `85.190.100.68` and SSH credentials. That target is no longer available. Its trigger is disabled in this migration branch. The protected `main` branch rejected a direct workflow update because all required status checks must pass through a pull request; therefore the retirement takes effect on `main` only after this PR is merged. Do not dispatch the old workflow manually.
 
 ## Hosting resources inspected
 
@@ -81,3 +81,6 @@ This branch intentionally records the safe migration plan and disables the retir
 - The Neon connector is connected; organization plan is `free`. Project `cortex` has a ready, populated `production` branch and Prisma-style tables plus Neon Auth tables. This database was inspected read-only only. The connection credential was not copied into repository files, chat output or hosting settings.
 - The separate Property Passport Render Postgres instance was inspected only and remains untouched; it expires 21 November 2026.
 - No Render service, Neon project, DNS record, storage bucket, billing account, or production database was created or modified by this audit.
+
+
+**Protected-branch note:** A direct update to `.github/workflows/deploy-vps.yml` on `main` was rejected by branch protection (8 required status checks). The tombstone remains in PR #433 until CI passes and the PR is merged; do not claim the main-branch workflow is disabled yet.
