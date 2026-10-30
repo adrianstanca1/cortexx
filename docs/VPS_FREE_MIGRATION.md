@@ -23,9 +23,9 @@ Render metrics were queried for the five active free web services. Metrics were 
 
 ### Neon
 
-The connected Neon organization is on the Free plan. It contains a project named `cortex` in `aws-eu-west-2`. Its only branch, `production`, is archived; the branch contains a Cortex-shaped Prisma schema, but its compute is inactive. This branch must be treated as historical data, not as the active production database. Do not restore, overwrite, or migrate it as part of this change.
+The connected Neon organization is on the Free plan. It contains a project named `cortex` in `aws-eu-west-2` (`crimson-fire-14717428`). Live inspection on 2026-10-30 shows one `production` branch (`br-spring-block-abc7o4nu`) in `ready` state, marked primary/default, with approximately 37 MB logical data. The database contains a populated Cortex-shaped Prisma schema (User, Organization, Project, Invoice, payroll, safety and other business tables) plus Neon Auth tables. It is **not archived** and must be treated as existing potentially important data. Do not restore, overwrite, reinitialize, or apply the Express raw-SQL schema to it.
 
-A separate older Neon project is also present. Before using either existing project, confirm its ownership and data purpose. A fresh, dedicated Cortexx database should be created only after the schema choice is settled and the user approves the database provisioning/migration step. The Express API uses `server/db/schema.sql`; the Next.js app uses Prisma migrations. The repository explicitly documents drift between these two models. A database cutover cannot safely run both migration systems without reconciliation.
+A second Neon project also exists in the account. Before using either existing project, confirm its ownership and data purpose. The Express API uses `server/db/schema.sql`; the Next.js app uses Prisma migrations. The repository explicitly documents drift between these two models. A database cutover cannot safely run both migration systems without reconciliation. No new project or database has been provisioned.
 
 ### Google Cloud Run
 
@@ -66,9 +66,18 @@ The target should be staged and verified, not deployed as a blind one-click migr
 ## Current blockers
 
 - No verified Cloudflare account connection or DNS authority was available during this audit.
-- Render's remaining workspace free hours could not be confirmed from the available metrics.
-- Neon project `cortex` has an archived branch; no live Cortexx Neon database has been provisioned.
+- Render's remaining workspace free hours could not be confirmed from the available metrics; sampled service metrics returned no usable instance-count history. Five active free web services are already present, so do not add a Cortexx service until the workspace usage dashboard is checked.
+- The existing Neon `cortex` production branch is populated (approximately 37 MB) and is not a blank destination. No data has been changed. No new isolated Express API database has been provisioned.
+- The actual production database and uploads on the unavailable VPS have not been exported; without that source backup, migration cannot be safely completed.
 - The Express API and Next.js app are distinct runtimes; no combined production image or end-to-end test has been built for a free host.
 - The raw SQL and Prisma data models need reconciliation before database cutover.
 
 This branch intentionally records the safe migration plan and disables the retired VPS deploy trigger. It does not claim that Cortexx has been migrated or deployed.
+
+
+## Verified account update (30 October 2026)
+
+- Render workspace `My Workspace` (`tea-d1bg1k8dl3ps73elu94g`) contains active free services for Jarvis Mobile, Jarvis Gateway and three FacelessVideoGen deployments. Legacy CortexBuild services are suspended and point to the old `cortexbuild-ultimate` repository. The connected workspace's current monthly free-hour balance is not available through the metrics endpoint.
+- The Neon connector is connected; organization plan is `free`. Project `cortex` has a ready, populated `production` branch and Prisma-style tables plus Neon Auth tables. This database was inspected read-only only. The connection credential was not copied into repository files, chat output or hosting settings.
+- The separate Property Passport Render Postgres instance was inspected only and remains untouched; it expires 21 November 2026.
+- No Render service, Neon project, DNS record, storage bucket, billing account, or production database was created or modified by this audit.
