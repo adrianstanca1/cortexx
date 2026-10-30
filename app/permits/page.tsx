@@ -145,7 +145,7 @@ export default function PermitsPage() {
               {permits.length} permits · {permits.filter(p => p.status === 'active').length} active
             </p>
           </div>
-          <button type="button" onClick={openAdd} aria-label="Add permit" style={{ background: '#b45309', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} style={{ background: '#b45309', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Raise</span>
           </button>
