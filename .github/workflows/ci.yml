@@ -130,7 +130,9 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:16-alpine
+        # Official PostgreSQL Docker Hub image via Google-hosted mirror.
+        # Avoid unauthenticated docker.io pull limits on hosted CI runners.
+        image: mirror.gcr.io/library/postgres:16-alpine
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: cortexx_test
@@ -192,7 +194,9 @@ jobs:
             shard: ''
     services:
       postgres:
-        image: postgres:16-alpine
+        # Official PostgreSQL Docker Hub image via Google-hosted mirror.
+        # Avoid unauthenticated docker.io pull limits on hosted CI runners.
+        image: mirror.gcr.io/library/postgres:16-alpine
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: cortexx_e2e
@@ -264,7 +268,9 @@ jobs:
     timeout-minutes: 20
     services:
       postgres:
-        image: postgres:16-alpine
+        # Official PostgreSQL Docker Hub image via Google-hosted mirror.
+        # Avoid unauthenticated docker.io pull limits on hosted CI runners.
+        image: mirror.gcr.io/library/postgres:16-alpine
         env:
           POSTGRES_PASSWORD: test
           POSTGRES_DB: cortexx_a11y

@@ -1,6 +1,7 @@
 import { syncTaskProjectProgress } from '@/lib/task-progress'
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
+import { taskVisibilityWhere } from '@/lib/task-visibility'
 
 import { prisma } from '@/lib/db'
 import { actorName } from '@/lib/requireAuth'
@@ -15,7 +16,7 @@ export const dynamic = 'force-dynamic'
 
 const MAX_TAKE = 100
 
-async function GET_impl(req: NextRequest, organizationId: string, session: { user?: { email?: string | null; role?: string } }) {
+async function GET_impl(req: NextRequest, organizationId: string, organizationRole: string | null, session: { user?: { email?: string | null; role?: string } }) {
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
@@ -25,22 +26,13 @@ async function GET_impl(req: NextRequest, organizationId: string, session: { use
 
     const appRole = session.user?.role || ''
     const email = session.user?.email?.trim() || ''
-    const assignmentScoped = ['project_manager', 'foreman'].includes(appRole)
-    const operativeScoped = appRole === 'operative'
-    const personaWhere: Prisma.TaskWhereInput = assignmentScoped
-      ? (email ? { OR: [
-          { project: { assignments: { some: { member: { email: { equals: email, mode: 'insensitive' } } } } } },
-          { assignee: { email: { equals: email, mode: 'insensitive' } } },
-        ] } : { id: '__no_assigned_task__' })
-      : operativeScoped
-        ? (email ? { assignee: { email: { equals: email, mode: 'insensitive' } } } : { id: '__no_assigned_task__' })
-        : {}
+    const personaWhere = taskVisibilityWhere(organizationRole, appRole, email)
     const where: Prisma.TaskWhereInput = { organizationId, ...(projectId && { projectId }), ...(status && { status }), ...personaWhere }
     const [tasks, total] = await Promise.all([
       prisma.task.findMany({
         where,
         include: { project: true, assignee: true, _count: { select: { comments: true } } },
-        orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }],
+        orderBy: [{ priority: 'desc' }, { dueDate: 'asc' }, { id: 'asc' }],
         take,
         skip,
       }),
@@ -158,5 +150,5 @@ async function POST_impl(req: NextRequest, userId: string, organizationId: strin
   }
 }
 
-export const GET = withRoute(({ req, orgId, session }) => GET_impl(req, orgId!, session), { permission: 'read' })
+export const GET = withRoute(({ req, orgId, role, session }) => GET_impl(req, orgId!, role, session), { permission: 'read' })
 export const POST = withRoute(({ req, userId, orgId, role, session }) => POST_impl(req, userId, orgId!, role, session), { permission: 'write' })

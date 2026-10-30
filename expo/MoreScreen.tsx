@@ -12,11 +12,10 @@ const NATIVE: Array<{ route: AppRoute; title: string; sub: string; finance?: boo
   { route: 'timesheets', title: 'My timesheets', sub: 'Native hours and submissions' },
   { route: 'photos', title: 'Site photos', sub: 'Capture, gallery and uploads' },
   { route: 'drawings', title: 'Drawings', sub: 'Current drawings and downloads' },
+  { route: 'documents', title: 'Documents', sub: 'Native PDF and image uploads, browsing and sharing' },
   { route: 'safety', title: 'Safety', sub: 'Site hazards and incidents' },
   { route: 'invoices', title: 'Invoice list', sub: 'Live company finance records', finance: true },
   { route: 'quotes', title: 'Quote list', sub: 'Live company quotations', finance: true },
-  { route: 'cis', title: 'CIS payments', sub: 'Subcontractor payment records', finance: true },
-  { route: 'notifications', title: 'Notifications', sub: 'Live updates' },
   { route: 'profile', title: 'Profile and company', sub: 'Account, security and workspace switch' },
 ];
 
@@ -24,7 +23,7 @@ export default function MoreScreen({ user, onNavigate, onOpenWeb }: {
   user: AuthUser; onNavigate: (route: AppRoute) => void; onOpenWeb: (path: string) => void;
 }) {
   const [query, setQuery] = useState('');
-  const [showNative, setShowNative] = useState(false);
+  const [showNative, setShowNative] = useState(true);
   const roles = { role: user.role, organizationRole: user.organizationRole || user.organizations?.[0]?.role };
   const sections = visibleWebModules(roles);
   const canFinance = ['owner', 'admin'].includes(String(roles.organizationRole).toLowerCase()) || ['company_admin', 'platform_admin', 'super_admin'].includes(String(roles.role).toLowerCase());
@@ -45,7 +44,7 @@ export default function MoreScreen({ user, onNavigate, onOpenWeb }: {
     </View>
     <TextInput style={styles.search} placeholder="Search every module…" placeholderTextColor={Colors.t3} autoCapitalize="none" value={query} onChangeText={setQuery} accessibilityLabel="Search modules" />
     <View style={styles.countRow}>
-      <Text style={styles.count}>{total} live web modules</Text>
+      <Text style={styles.count}>{total} web modules · {native.length} native tools</Text>
       <TouchableOpacity accessibilityRole="button" onPress={() => setShowNative(!showNative)}>
         <Text style={styles.toggle}>{showNative ? 'Hide' : 'Show'} native tools</Text>
       </TouchableOpacity>

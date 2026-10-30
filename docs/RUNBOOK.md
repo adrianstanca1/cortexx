@@ -30,11 +30,13 @@ Do not use the retired `/opt/cortexx`, host-Postgres or PM2 procedures for this 
    - updates `/home/administrator/production/cortexx`;
    - creates `.env.construction` only if missing;
    - generates a missing `CRON_SECRET` without printing it;
-   - builds the app/tools images;
+   - builds the app and migration images on the GitHub runner, away from the RAM-constrained production host;
+   - transfers a compressed image archive over authenticated SSH and verifies immutable commit labels;
+   - rebuilds the lightweight browser gateway only on VPS while preserving existing tenant volumes;
    - starts PostgreSQL, Redis and Ollama;
    - runs Prisma migrations and bootstrap;
-   - starts the app;
-   - waits for `/api/health`;
+   - recreates the app from the prebuilt release image without building on the VPS;
+   - waits for `/api/health` and verifies the running container's commit, restoring the previous app image if unhealthy;
    - installs the app-maintenance cron schedule;
    - verifies public ingress.
 5. Keep the previous healthy app image tagged before a manual production cutover.

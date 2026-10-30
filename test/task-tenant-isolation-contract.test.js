@@ -8,7 +8,7 @@ test('task list and count are scoped to the active organization', () => {
   assert.match(route, /const where: Prisma\.TaskWhereInput = \{ organizationId,/)
   assert.match(route, /prisma\.task\.findMany\(\{\s*where,/)
   assert.match(route, /prisma\.task\.count\(\{ where \}\)/)
-  assert.match(route, /GET_impl\(req, orgId!, session\)/)
+  assert.match(route, /GET_impl\(req, orgId!, role, session\)/)
 })
 
 test('task creation rejects cross-company project and assignee IDs for all roles', () => {

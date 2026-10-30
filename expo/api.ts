@@ -130,6 +130,20 @@ export const postCollection = (name: string, body: any) => api.postCollection(na
 export const putCollection = (name: string, id: string, body: any) => api.putCollection(name, id, body);
 export const apiGet = (path: string) => api.apiGet(path);
 export const apiPost = (path: string, body: any) => api.apiPost(path, body);
+/** Online-only destructive operation. Never queue deletes for later replay. */
+export async function apiDelete(path: string): Promise<void> {
+  if (!/^\/api\/tasks\/[A-Za-z0-9_-]+$/.test(path)) throw new Error('Invalid task URL');
+  const token = await getToken();
+  if (!token) throw new Error('unauthorized');
+  const response = await fetch(`${API_URL}${path}`, {
+    method: 'DELETE',
+    headers: { Authorization: `Bearer ${token}`, accept: 'application/json' },
+  });
+  const body = await response.json().catch(() => ({}));
+  if (response.status === 401) { await clearToken(); throw new Error('unauthorized'); }
+  if (!response.ok) throw new Error(body?.error || 'Could not delete task');
+}
+
 // A short-lived, single-use ticket lets the embedded web module use the exact
 // existing web account and active company without copying passwords or JWTs.
 export async function requestWebWorkspaceTicket(): Promise<string> {

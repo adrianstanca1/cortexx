@@ -70,5 +70,7 @@ test('canonical construction deployment isolates the gateway from backend servic
   assert.match(gatewayBlock, /networks:\s*\n\s*- browser_control/)
   assert.doesNotMatch(gatewayBlock, /REDIS_URL|condition: service_healthy/)
   assert.match(deploy, /BROWSER_GATEWAY_INTERNAL_TOKEN/)
-  assert.match(deploy, /build app tools browser-gateway/)
+  assert.match(deploy, /build browser-gateway/)
+  assert.doesNotMatch(deploy, /build app tools browser-gateway/)
+  assert.match(deploy, /Prebuilt release images transferred/)
 })

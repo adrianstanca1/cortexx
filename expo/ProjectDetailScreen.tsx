@@ -3,37 +3,41 @@ import { View, Text, ScrollView, StyleSheet, ActivityIndicator, TouchableOpacity
 import { Colors } from './theme';
 import { apiGet } from './api';
 
-export default function ProjectDetailScreen({ id, onBack }: { id: string; onBack: () => void }) {
+export default function ProjectDetailScreen({ id, onBack, onOpenWeb, onOpenTasks }: { id: string; onBack: () => void; onOpenWeb: (path: string) => void; onOpenTasks: (id: string) => void }) {
   const [p, setP] = useState<any>(null);
   const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
   useEffect(() => {
     (async () => {
-      setLoading(true);
-      try { setP(await apiGet(`/api/projects/${id}`)); } catch {}
+      setLoading(true); setError(''); setP(null);
+      try { const response = await apiGet(`/api/projects/${id}`); setP(response?.project || response); }
+      catch (e: any) { setError(e?.message || 'Unable to load project details.'); }
       finally { setLoading(false); }
     })();
   }, [id]);
 
   if (loading) return <View style={styles.center}><ActivityIndicator color={Colors.amber} /></View>;
-  if (!p) return <View style={styles.wrap}><Text style={styles.err}>Project not found.</Text>
+  if (!p) return <View style={styles.wrap}><Text style={styles.err}>{error || 'Project not found.'}</Text>
     <TouchableOpacity style={styles.back} onPress={onBack}><Text style={styles.backText}>← Back</Text></TouchableOpacity></View>;
 
   return (
     <ScrollView style={styles.wrap}>
       <TouchableOpacity style={styles.back} onPress={onBack}><Text style={styles.backText}>← Projects</Text></TouchableOpacity>
       <Text style={styles.name}>{p.name}</Text>
-      <Text style={styles.meta}>{p.client || '—'}{p.addr ? ` · ${p.addr}` : ''}</Text>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open project tasks in the iOS app" style={styles.taskButton} onPress={() => onOpenTasks(id)}><Text style={styles.taskText}>Manage project tasks directly in app →</Text></TouchableOpacity>
+      <TouchableOpacity accessibilityRole="button" accessibilityLabel="Open complete project workspace" style={styles.webButton} onPress={() => onOpenWeb(`/projects/${encodeURIComponent(id)}`)}><Text style={styles.webText}>Open full project · tasks, team, finance, documents →</Text></TouchableOpacity>
+      <Text style={styles.meta}>{p.clientName || p.client || '—'}{p.address || p.addr ? ` · ${p.address || p.addr}` : ''}</Text>
 
       <View style={styles.grid}>
-        <Stat label="Value" value={fmtMoney(p.value)} />
-        <Stat label="Complete" value={`${p.pct ?? 0}%`} />
+        <Stat label="Value" value={fmtMoney(p.budget ?? p.value)} />
+        <Stat label="Complete" value={`${p.progress ?? p.pct ?? 0}%`} />
         <Stat label="Status" value={p.status || '—'} />
-        <Stat label="Due" value={fmtDate(p.due)} />
+        <Stat label="Due" value={fmtDate(p.endDate || p.due)} />
       </View>
 
-      {typeof p.pct === 'number' ? (
-        <View style={styles.bar}><View style={[styles.barFill, { width: `${Math.min(100, p.pct)}%` }]} /></View>
+      {typeof (p.progress ?? p.pct) === 'number' ? (
+        <View style={styles.bar}><View style={[styles.barFill, { width: `${Math.max(0, Math.min(100, p.progress ?? p.pct))}%` }]} /></View>
       ) : null}
 
       <View style={styles.section}>
@@ -81,4 +85,8 @@ const styles = StyleSheet.create({
   h2: { color: Colors.t1, fontSize: 18, fontWeight: '700', marginBottom: 8 },
   body: { color: Colors.t2, fontSize: 15, lineHeight: 22 },
   err: { color: Colors.red, fontSize: 16 },
+  taskButton: { marginTop: 12, backgroundColor: Colors.amber, padding: 13, borderRadius: 12 },
+  taskText: { color: Colors.ink, fontSize: 13, fontWeight: '900', textAlign: 'center' },
+  webButton: { marginTop: 10, marginBottom: 12, backgroundColor: Colors.ink2, borderColor: Colors.hair, borderWidth: 1, padding: 13, borderRadius: 12 },
+  webText: { color: Colors.amber, fontSize: 12, fontWeight: '900', textAlign: 'center' },
 });

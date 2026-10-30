@@ -8,10 +8,8 @@ import TicketsScreen from './TicketsScreen';
 import ProfileScreen from './ProfileScreen';
 import TasksScreen from './TasksScreen';
 import SnagsScreen from './SnagsScreen';
-import CisPaymentsScreen from './CisPaymentsScreen';
 import TimesheetsScreen from './TimesheetsScreen';
 import DiaryScreen from './DiaryScreen';
-import NotificationsScreen from './NotificationsScreen';
 import OverviewScreen from './OverviewScreen';
 import CheckInScreen from './CheckInScreen';
 import FieldReadinessScreen from './FieldReadinessScreen';
@@ -21,6 +19,7 @@ import FieldCloseoutScreen from './FieldCloseoutScreen';
 import SafetyScreen from './SafetyScreen';
 import RfisScreen from './RfisScreen';
 import DrawingsScreen from './DrawingsScreen';
+import DocumentsScreen from './DocumentsScreen';
 import PhotosScreen from './PhotosScreen';
 import FieldHubScreen from './FieldHubScreen';
 import MoreScreen from './MoreScreen';
@@ -37,7 +36,7 @@ const MAIN_TABS: Array<{ key: AppRoute; label: string; glyph: string }> = [
   { key: 'more', label: 'Modules', glyph: 'MOD' },
 ];
 const FIELD_ROUTES = new Set<AppRoute>(['field', 'checkin', 'readiness', 'deliveries', 'controls', 'closeout', 'timesheets', 'diary', 'snags', 'safety', 'rfis', 'drawings', 'photos']);
-const MORE_ROUTES = new Set<AppRoute>(['more', 'web', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile']);
+const MORE_ROUTES = new Set<AppRoute>(['more', 'web', 'invoices', 'cis', 'quotes', 'tickets', 'notifications', 'profile', 'documents']);
 
 function rootFor(route: AppRoute): AppRoute {
   if (FIELD_ROUTES.has(route)) return 'field';
@@ -48,9 +47,27 @@ function rootFor(route: AppRoute): AppRoute {
 export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: AuthUser; onLogout: () => void; onWorkspaceChanged: (user: AuthUser) => void }) {
   const [tab, setTab] = React.useState<AppRoute>('overview');
   const [selectedProject, setSelectedProject] = React.useState<string | null>(null);
+  const [taskProjectId, setTaskProjectId] = React.useState<string | null>(null);
   const [pending, setPending] = React.useState(0);
   const [webPath, setWebPath] = React.useState('/apps');
   const onOpenWeb = (path: string) => { setSelectedProject(null); setWebPath(path); setTab('web'); };
+  const openProjectTasks = (id: string) => { setTaskProjectId(id); setSelectedProject(null); setTab('tasks'); };
+  const onNavigate = (next: AppRoute) => {
+    // Modules, Home and Field all lead to the same global work queue. A prior
+    // project-specific filter must not leak into an unrelated navigation.
+    if (next === 'tasks') setTaskProjectId(null);
+    setSelectedProject(null);
+    setTab(next);
+  };
+  React.useEffect(() => {
+    // A user can switch companies without unmounting Tabs. Clear old-project
+    // selection and web module state when the active tenant changes.
+    setSelectedProject(null);
+    setTaskProjectId(null);
+    setWebPath('/apps');
+    setTab('overview');
+  }, [user.organization?.id]);
+  const onTabPress = onNavigate;
 
   React.useEffect(() => {
     setPending(pendingWrites());
@@ -88,15 +105,15 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   }, [selectedProject, tab]);
 
   const content = selectedProject ? (
-    <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} />
+    <ProjectDetailScreen id={selectedProject} onBack={() => setSelectedProject(null)} onOpenWeb={onOpenWeb} onOpenTasks={openProjectTasks} />
   ) : tab === 'overview' ? (
-    <OverviewScreen user={user} onNavigate={setTab} onOpenWeb={onOpenWeb} onLogout={onLogout} />
+    <OverviewScreen user={user} onNavigate={onNavigate} onOpenWeb={onOpenWeb} onLogout={onLogout} />
   ) : tab === 'projects' ? (
-    <ProjectsScreen onLogout={onLogout} onSelect={setSelectedProject} />
+    <ProjectsScreen user={user} onLogout={onLogout} onSelect={setSelectedProject} onOpenWeb={onOpenWeb} />
   ) : tab === 'tasks' ? (
-    <TasksScreen onLogout={onLogout} />
+    <TasksScreen user={user} onLogout={onLogout} projectId={taskProjectId} />
   ) : tab === 'field' ? (
-    <FieldHubScreen user={user} onNavigate={setTab} />
+    <FieldHubScreen user={user} onNavigate={onNavigate} />
   ) : tab === 'checkin' ? (
     <CheckInScreen onLogout={onLogout} />
   ) : tab === 'readiness' ? (
@@ -119,6 +136,8 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
     <RfisScreen user={user} onLogout={onLogout} />
   ) : tab === 'drawings' ? (
     <DrawingsScreen onLogout={onLogout} />
+  ) : tab === 'documents' ? (
+    <DocumentsScreen user={user} onLogout={onLogout} onOpenWeb={onOpenWeb} />
   ) : tab === 'photos' ? (
     <PhotosScreen onLogout={onLogout} />
   ) : tab === 'web' ? (
@@ -129,7 +148,7 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
       { key: 'amount', label: 'Amount (£)', type: 'number', required: true }, { key: 'status', label: 'Status' }, { key: 'dueDate', label: 'Due date' },
     ]} rowTitle={(i) => i.number || 'Invoice'} rowSub={(i) => `${i.clientName || 'Client'} · £${i.amount ?? '—'} · ${i.status || 'draft'}`} onLogout={onLogout} />
   ) : tab === 'cis' ? (
-    <CisPaymentsScreen onLogout={onLogout} />
+    <WebWorkspaceScreen path="/cis300" onBack={() => setTab('more')} onLogout={onLogout} />
   ) : tab === 'quotes' ? (
     <CollectionScreen name="quotes" title="Quotes" readOnly onOpenFullWorkspace={() => onOpenWeb('/quotes')} fields={[
       { key: 'number', label: 'Quote number', required: true }, { key: 'customerName', label: 'Customer' },
@@ -138,11 +157,11 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
   ) : tab === 'tickets' ? (
     <TicketsScreen />
   ) : tab === 'notifications' ? (
-    <NotificationsScreen onLogout={onLogout} />
+    <WebWorkspaceScreen path="/inbox" onBack={() => setTab('more')} onLogout={onLogout} />
   ) : tab === 'profile' ? (
     <ProfileScreen onLogout={onLogout} onWorkspaceChanged={onWorkspaceChanged} />
   ) : (
-    <MoreScreen user={user} onNavigate={setTab} onOpenWeb={onOpenWeb} />
+    <MoreScreen user={user} onNavigate={onNavigate} onOpenWeb={onOpenWeb} />
   );
 
   const activeRoot = rootFor(tab);
@@ -151,7 +170,7 @@ export default function Tabs({ user, onLogout, onWorkspaceChanged }: { user: Aut
     {!selectedProject && <View style={styles.tabBar}>
       {MAIN_TABS.map(t => {
         const active = activeRoot === t.key;
-        return <TouchableOpacity key={t.key} style={[styles.tabBtn, active && styles.tabBtnActive]} onPress={() => setTab(t.key)}>
+        return <TouchableOpacity key={t.key} style={[styles.tabBtn, active && styles.tabBtnActive]} onPress={() => onTabPress(t.key)}>
           <View style={[styles.glyphBox, active && styles.glyphBoxActive]}><Text style={[styles.glyph, active && styles.tabActive]}>{t.glyph}</Text></View>
           <Text style={[styles.tabLabel, active && styles.tabActive]}>{t.label}</Text>
         </TouchableOpacity>;
