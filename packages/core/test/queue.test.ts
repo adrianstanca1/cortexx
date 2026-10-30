@@ -1,6 +1,6 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import { createApiClient, flushQueue, setQueueStore, pendingWrites, legacyPendingWrites, exportLegacyWrites, discardLegacyWrites, onQueueChange, setOfflineCache, setOfflineScope } from '../src/index.ts';
+import { createApiClient, flushQueue, setQueueStore, pendingWrites, legacyPendingWrites, exportLegacyWrites, discardLegacyWrites, onQueueChange, setOfflineCache, setOfflineScope, setTokenStorage } from '../src/index.ts';
 
 // In-memory fakes standing in for expo-secure-store + AsyncStorage.
 function memStore(map = new Map<string, string>()) {
@@ -208,5 +208,47 @@ test('a failed shared replay unlocks later retries', async () => {
     globalThis.fetch = originalFetch;
     setQueueStore(null, []);
     setOfflineScope(null);
+  }
+});
+
+
+test('workspace changes during token lookup cannot enqueue or replay writes across tenants', async () => {
+  const oldFetch = globalThis.fetch;
+  let releaseToken!: (value: string) => void;
+  const tokenGate = new Promise<string>((resolve) => { releaseToken = resolve; });
+  let reads = 0;
+  let releaseReplayToken!: (value: string) => void;
+  const replayTokenGate = new Promise<string>((resolve) => { releaseReplayToken = resolve; });
+  const tokenStorage = { get: () => (++reads === 1 ? tokenGate : replayTokenGate), set: () => {}, clear: () => {} };
+  const api = createApiClient({ apiUrl: 'https://example.com', tokenStorage });
+  setTokenStorage(tokenStorage);
+  let fetchCalls = 0;
+  try {
+    setQueueStore(null, []);
+    setOfflineScope('userA_orgA');
+    globalThis.fetch = async () => { fetchCalls++; throw new Error('network down'); };
+    const post = api.postCollection('snags', { title: 'must stay in A' });
+    await Promise.resolve();
+    setOfflineScope('userB_orgB');
+    releaseToken('token-A');
+    await assert.rejects(post, /Workspace changed/);
+    assert.strictEqual(pendingWrites(), 0, 'old workspace write must not be queued for the new workspace');
+
+    const callsBeforeReplay = fetchCalls;
+    setQueueStore(null, [{ id: 'queued-A', method: 'POST', collection: 'snags', body: { title: 'A' }, scope: 'userA_orgA' }]);
+    setOfflineScope('userA_orgA');
+    const replayPromise = flushQueue({ apiUrl: 'https://example.com' });
+    await Promise.resolve();
+    setOfflineScope('userB_orgB');
+    releaseReplayToken('token-A');
+    const replay = await replayPromise;
+    assert.strictEqual(replay.ok, 0);
+    assert.strictEqual(fetchCalls, callsBeforeReplay, 'replay must re-check scope after awaiting token storage');
+    assert.strictEqual(pendingWrites(), 1);
+  } finally {
+    globalThis.fetch = oldFetch;
+    setQueueStore(null, []);
+    setOfflineScope(null);
+    setTokenStorage(memStore());
   }
 });

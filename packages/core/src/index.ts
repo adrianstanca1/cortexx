@@ -102,7 +102,10 @@ async function replayQueue(opts?: { apiUrl?: string; token?: string | null }): P
     // them for manual recovery rather than injecting into another tenant.
     if (!_offlineScope || !w.scope || w.scope !== _offlineScope) { failed++; continue; }
     const headers: Record<string, string> = { 'content-type': 'application/json' };
-    const t = opts?.token ?? await _store.get(); if (t) headers.authorization = `Bearer ${t}`;
+    const t = opts?.token ?? await _store.get();
+    // Re-check after async token lookup to prevent cross-workspace replay.
+    if (!_offlineScope || w.scope !== _offlineScope) { failed++; continue; }
+    if (t) headers.authorization = `Bearer ${t}`;
     const r = await fetch(`${API_URL}/api/${w.collection}${w.rowId ? '/' + w.rowId : ''}`, { method: w.method, headers, body: JSON.stringify(w.body) });
     if (r.ok) { await dequeue(w.id); ok++; } else failed++;
   } catch { failed++; }
@@ -253,11 +256,14 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
         throw error;
       }
     },
-    postCollection(name: string, body: any): Promise<any> { return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; if (!_offlineScope) throw new Error('Offline save is unavailable until your company workspace is verified. Reconnect and try again.'); const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body, scope: _offlineScope }); return { id, _queued: true, ...body }; }); },
+    postCollection(name: string, body: any): Promise<any> { const scope = _offlineScope; return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; if (!scope) throw new Error('Offline save is unavailable until your company workspace is verified. Reconnect and try again.'); if (scope !== _offlineScope) throw new Error('Workspace changed while saving. Reconnect and retry in the active company.'); const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body, scope }); return { id, _queued: true, ...body }; }); },
     async putCollection(name: string, id: string, body: any): Promise<any> {
-      const t = await token(); const headers: Record<string, string> = { 'content-type': 'application/json' }; if (t) headers.authorization = `Bearer ${t}`;
+      const scope = _offlineScope;
+      const t = await token();
+      if (scope !== _offlineScope) throw new Error('Workspace changed while saving. Reconnect and retry in the active company.');
+      const headers: Record<string, string> = { 'content-type': 'application/json' }; if (t) headers.authorization = `Bearer ${t}`;
       try { const r = await fetch(`${API_URL}/api/${name}/${id}`, { method: 'PUT', headers, body: JSON.stringify(body) }); if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); } if (!r.ok) { const e = await r.json().catch(() => ({})); throw httpFailure((e as any).error || 'Update failed', r.status); } return r.json(); }
-      catch (e: any) { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; if (!_offlineScope) throw new Error('Offline save is unavailable until your company workspace is verified. Reconnect and try again.'); const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body, scope: _offlineScope }); return { id, _queued: true, ...body }; }
+      catch (e: any) { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; if (!scope) throw new Error('Offline save is unavailable until your company workspace is verified. Reconnect and try again.'); if (scope !== _offlineScope) throw new Error('Workspace changed while saving. Reconnect and retry in the active company.'); const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body, scope }); return { id, _queued: true, ...body }; }
     },
     apiGet, apiPost, onQueueChange, pendingWrites, legacyPendingWrites, exportLegacyWrites, discardLegacyWrites, flushQueue, startStream, stopStream, onStreamEvent,
   };

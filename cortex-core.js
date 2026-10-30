@@ -336,6 +336,10 @@ var CortexCore = (() => {
       }
       const headers = { "content-type": "application/json" };
       const t = (_a = opts == null ? void 0 : opts.token) != null ? _a : await _store.get();
+      if (!_offlineScope || w.scope !== _offlineScope) {
+        failed++;
+        continue;
+      }
       if (t) headers.authorization = `Bearer ${t}`;
       const r = await fetch(`${API_URL}/api/${w.collection}${w.rowId ? "/" + w.rowId : ""}`, { method: w.method, headers, body: JSON.stringify(w.body) });
       if (r.ok) {
@@ -549,16 +553,20 @@ var CortexCore = (() => {
         }
       },
       postCollection(name, body) {
+        const scope = _offlineScope;
         return apiPost(`/api/${name}`, body).catch(async (e) => {
           if ((e == null ? void 0 : e.message) === "unauthorized" || isHttpFailure(e)) throw e;
-          if (!_offlineScope) throw new Error("Offline save is unavailable until your company workspace is verified. Reconnect and try again.");
+          if (!scope) throw new Error("Offline save is unavailable until your company workspace is verified. Reconnect and try again.");
+          if (scope !== _offlineScope) throw new Error("Workspace changed while saving. Reconnect and retry in the active company.");
           const id = "cw_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-          await enqueue({ id, method: "POST", collection: name, body, scope: _offlineScope });
+          await enqueue({ id, method: "POST", collection: name, body, scope });
           return { id, _queued: true, ...body };
         });
       },
       async putCollection(name, id, body) {
+        const scope = _offlineScope;
         const t = await token();
+        if (scope !== _offlineScope) throw new Error("Workspace changed while saving. Reconnect and retry in the active company.");
         const headers = { "content-type": "application/json" };
         if (t) headers.authorization = `Bearer ${t}`;
         try {
@@ -574,9 +582,10 @@ var CortexCore = (() => {
           return r.json();
         } catch (e) {
           if ((e == null ? void 0 : e.message) === "unauthorized" || isHttpFailure(e)) throw e;
-          if (!_offlineScope) throw new Error("Offline save is unavailable until your company workspace is verified. Reconnect and try again.");
+          if (!scope) throw new Error("Offline save is unavailable until your company workspace is verified. Reconnect and try again.");
+          if (scope !== _offlineScope) throw new Error("Workspace changed while saving. Reconnect and retry in the active company.");
           const qid = "cw_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-          await enqueue({ id: qid, method: "PUT", collection: name, rowId: id, body, scope: _offlineScope });
+          await enqueue({ id: qid, method: "PUT", collection: name, rowId: id, body, scope });
           return { id, _queued: true, ...body };
         }
       },
