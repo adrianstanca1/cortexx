@@ -2,7 +2,7 @@
 # (primarily /api/cron/*, which the Express API does not implement).
 # Uses the pre-built .next/standalone bundle and generates the Prisma client
 # inside the image so the native engine matches the Alpine container.
-FROM node:22-alpine
+FROM node:24-alpine
 
 # curl is used by the docker healthcheck.
 RUN apk add --no-cache curl

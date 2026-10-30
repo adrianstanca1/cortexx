@@ -1,10 +1,10 @@
 import React, { useEffect, useState } from 'react';
 import {
-  View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Linking,
+  View, Text, TextInput, TouchableOpacity, StyleSheet, ScrollView, Alert, Linking, Share,
 } from 'react-native';
 import * as Constants from 'expo-constants';
 import { Colors, API_URL } from './theme';
-import { getMe, switchWorkspace, changePassword, getToken, startStream, pendingWrites, type AuthUser } from './api';
+import { getMe, switchWorkspace, changePassword, getToken, startStream, pendingWrites, legacyPendingWrites, exportLegacyWrites, discardLegacyWrites, onQueueChange, type AuthUser } from './api';
 
 const LINKS = [
   { key: 'privacy', label: 'Privacy Policy', url: 'https://cortexbuildpro.tech/privacy' },
@@ -21,6 +21,13 @@ export default function ProfileScreen({ onLogout, onWorkspaceChanged }: { onLogo
   const [nextPassword, setNextPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
   const [changingPassword, setChangingPassword] = useState(false);
+  const [legacyCount, setLegacyCount] = useState(legacyPendingWrites());
+
+  useEffect(() => {
+    const refreshLegacyCount = () => setLegacyCount(legacyPendingWrites());
+    refreshLegacyCount();
+    return onQueueChange(refreshLegacyCount);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -75,6 +82,24 @@ export default function ProfileScreen({ onLogout, onWorkspaceChanged }: { onLogo
     Linking.openURL(url).catch(() => Alert.alert('Link', 'Could not open ' + url));
   };
 
+  const shareLegacyBackup = async () => {
+    try {
+      const result = await Share.share({ title: 'Cortex offline recovery backup', message: exportLegacyWrites() });
+      if (result.action === Share.sharedAction) Alert.alert('Backup shared', 'Keep this backup somewhere safe before discarding the legacy items.');
+    } catch {
+      Alert.alert('Unable to share backup', 'The legacy items have not been changed. Try again or keep them on this device.');
+    }
+  };
+
+  const confirmDiscardLegacy = () => Alert.alert(
+    'Discard legacy offline items?',
+    'These older changes have no verified company workspace and cannot be synced safely. Share a recovery backup first. This discard cannot be undone.',
+    [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Discard items', style: 'destructive', onPress: () => { void discardLegacyWrites().then((count) => Alert.alert('Legacy items discarded', `${count} unscoped item${count === 1 ? '' : 's'} removed from this device.`)); } },
+    ],
+  );
+
   const appVersion =
     (Constants as any).expoConfig?.version ||
     (Constants as any).manifest?.version ||
@@ -102,6 +127,21 @@ export default function ProfileScreen({ onLogout, onWorkspaceChanged }: { onLogo
           <Text style={styles.sub}>Not signed in</Text>
         )}
       </View>
+
+      {legacyCount > 0 && (
+        <View style={[styles.card, { borderColor: Colors.amber }]}>
+          <Text style={[styles.label, { color: Colors.amber }]}>Legacy offline changes need review</Text>
+          <Text style={styles.value}>{legacyCount} unassigned item{legacyCount === 1 ? '' : 's'}</Text>
+          <Text style={styles.sub}>These older changes have no verified company workspace. They are quarantined and will not be sent to another company. Share a recovery backup, then discard them to unblock workspace switching and sign-out.</Text>
+          <TouchableOpacity accessibilityRole="button" style={styles.changeBtn} onPress={() => void shareLegacyBackup()}>
+            <Text style={styles.changeBtnText}>Share recovery backup</Text>
+          </TouchableOpacity>
+          <TouchableOpacity accessibilityRole="button" style={styles.rowBtn} onPress={confirmDiscardLegacy}>
+            <Text style={[styles.rowLabel, { color: Colors.red }]}>Discard legacy items</Text>
+            <Text style={styles.rowArrow}>›</Text>
+          </TouchableOpacity>
+        </View>
+      )}
 
       <Text style={styles.section}>Company workspace</Text>
       <Text style={styles.sub}>Your web and mobile accounts share these company memberships and permissions.</Text>

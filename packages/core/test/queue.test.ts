@@ -1,6 +1,6 @@
 import { test, describe, beforeEach } from 'node:test';
 import assert from 'node:assert';
-import { createApiClient, flushQueue, setQueueStore, pendingWrites, onQueueChange, setOfflineCache, setOfflineScope } from '../src/index.ts';
+import { createApiClient, flushQueue, setQueueStore, pendingWrites, legacyPendingWrites, exportLegacyWrites, discardLegacyWrites, onQueueChange, setOfflineCache, setOfflineScope, setTokenStorage } from '../src/index.ts';
 
 // In-memory fakes standing in for expo-secure-store + AsyncStorage.
 function memStore(map = new Map<string, string>()) {
@@ -81,19 +81,76 @@ test('offline writes cannot replay under another company or account', async () =
   }
 });
 
-test('legacy offline writes without tenant context are not silently replayed', async () => {
-  setQueueStore(null, [{ id: 'old', method: 'POST', collection: 'snags', body: { title: 'old' } }]);
+test('legacy offline writes stay quarantined, can be exported and require explicit discard', async () => {
+  setQueueStore(null, [
+    { id: 'old', method: 'POST', collection: 'snags', body: { title: 'old' } },
+    { id: 'other-scope', method: 'POST', collection: 'tasks', body: { title: 'other tenant' }, scope: 'otherUser_otherOrg' },
+  ]);
   setOfflineScope('newUser_newOrg');
   const oldFetch = globalThis.fetch;
   try {
-    globalThis.fetch = async () => { throw new Error('legacy write should not send'); };
+    globalThis.fetch = async () => { throw new Error('quarantined writes must never send'); };
     const res = await flushQueue({ token: 'PLACEHOLDER_TOKEN', apiUrl: 'https://example.com' });
     assert.strictEqual(res.ok, 0);
-    assert.strictEqual(res.failed, 1);
-    assert.strictEqual(pendingWrites(), 1);
+    assert.strictEqual(res.failed, 2);
+    assert.strictEqual(pendingWrites(), 2);
+    assert.strictEqual(legacyPendingWrites(), 1);
+    const backup = JSON.parse(exportLegacyWrites());
+    assert.strictEqual(backup.format, 'cortex-legacy-offline-queue');
+    assert.deepStrictEqual(backup.entries.map((entry: any) => entry.id), ['old']);
+    const discarded = await discardLegacyWrites();
+    assert.strictEqual(discarded, 1);
+    assert.strictEqual(legacyPendingWrites(), 0);
+    assert.strictEqual(pendingWrites(), 1, 'valid writes for another workspace remain quarantined');
   } finally {
     globalThis.fetch = oldFetch;
     setQueueStore(null, []);
+    setOfflineScope(null);
+  }
+});
+
+test('new offline writes are rejected until a verified company scope exists', async () => {
+  const oldFetch = globalThis.fetch;
+  const api = createApiClient({ apiUrl: 'https://example.com', tokenStorage: memStore() });
+  try {
+    setQueueStore(null, []);
+    setOfflineScope(null);
+    globalThis.fetch = async () => { throw new Error('offline'); };
+    await assert.rejects(api.postCollection('snags', { title: 'unscoped' }), /workspace is verified/);
+    await assert.rejects(api.putCollection('snags', 'row-1', { title: 'unscoped update' }), /workspace is verified/);
+    assert.strictEqual(pendingWrites(), 0);
+    assert.strictEqual(legacyPendingWrites(), 0);
+  } finally {
+    globalThis.fetch = oldFetch;
+    setQueueStore(null, []);
+    setOfflineScope(null);
+  }
+});
+
+test('scoped cached collections are used for server errors but not authorization failures', async () => {
+  const oldFetch = globalThis.fetch;
+  const scope = 'userA_orgA';
+  const cache = memStore(new Map([
+    [`cb_cache_${scope}_projects`, JSON.stringify([{ id: 'project-a' }])],
+    [`cb_cache_${scope}_snags`, JSON.stringify([{ id: 'snag-a' }])],
+  ]));
+  const api = createApiClient({ apiUrl: 'https://example.com', tokenStorage: memStore() });
+  try {
+    setOfflineScope(scope);
+    setOfflineCache(cache);
+    globalThis.fetch = async () => new Response(JSON.stringify({ error: 'temporarily unavailable' }), { status: 503 });
+    assert.deepStrictEqual(await api.getProjects(), [{ id: 'project-a' }]);
+    assert.deepStrictEqual(await api.getCollection('snags'), [{ id: 'snag-a' }]);
+
+    for (const status of [401, 403]) {
+      globalThis.fetch = async () => new Response(JSON.stringify({ error: 'denied' }), { status });
+      await assert.rejects(api.getCollection('snags'));
+      assert.strictEqual(await cache.get(`cb_cache_${scope}_snags`), 'null', `HTTP ${status} must invalidate the scoped cache`);
+    }
+  } finally {
+    globalThis.fetch = oldFetch;
+    setQueueStore(null, []);
+    setOfflineCache(null);
     setOfflineScope(null);
   }
 });
@@ -151,5 +208,47 @@ test('a failed shared replay unlocks later retries', async () => {
     globalThis.fetch = originalFetch;
     setQueueStore(null, []);
     setOfflineScope(null);
+  }
+});
+
+
+test('workspace changes during token lookup cannot enqueue or replay writes across tenants', async () => {
+  const oldFetch = globalThis.fetch;
+  let releaseToken!: (value: string) => void;
+  const tokenGate = new Promise<string>((resolve) => { releaseToken = resolve; });
+  let reads = 0;
+  let releaseReplayToken!: (value: string) => void;
+  const replayTokenGate = new Promise<string>((resolve) => { releaseReplayToken = resolve; });
+  const tokenStorage = { get: () => (++reads === 1 ? tokenGate : replayTokenGate), set: () => {}, clear: () => {} };
+  const api = createApiClient({ apiUrl: 'https://example.com', tokenStorage });
+  setTokenStorage(tokenStorage);
+  let fetchCalls = 0;
+  try {
+    setQueueStore(null, []);
+    setOfflineScope('userA_orgA');
+    globalThis.fetch = async () => { fetchCalls++; throw new Error('network down'); };
+    const post = api.postCollection('snags', { title: 'must stay in A' });
+    await Promise.resolve();
+    setOfflineScope('userB_orgB');
+    releaseToken('token-A');
+    await assert.rejects(post, /Workspace changed/);
+    assert.strictEqual(pendingWrites(), 0, 'old workspace write must not be queued for the new workspace');
+
+    const callsBeforeReplay = fetchCalls;
+    setQueueStore(null, [{ id: 'queued-A', method: 'POST', collection: 'snags', body: { title: 'A' }, scope: 'userA_orgA' }]);
+    setOfflineScope('userA_orgA');
+    const replayPromise = flushQueue({ apiUrl: 'https://example.com' });
+    await Promise.resolve();
+    setOfflineScope('userB_orgB');
+    releaseReplayToken('token-A');
+    const replay = await replayPromise;
+    assert.strictEqual(replay.ok, 0);
+    assert.strictEqual(fetchCalls, callsBeforeReplay, 'replay must re-check scope after awaiting token storage');
+    assert.strictEqual(pendingWrites(), 1);
+  } finally {
+    globalThis.fetch = oldFetch;
+    setQueueStore(null, []);
+    setOfflineScope(null);
+    setTokenStorage(memStore());
   }
 });

@@ -27,12 +27,16 @@ var CortexCore = (() => {
     assertCapability: () => assertCapability,
     capabilitiesFor: () => capabilitiesFor,
     createApiClient: () => createApiClient,
+    discardLegacyWrites: () => discardLegacyWrites,
+    exportLegacyWrites: () => exportLegacyWrites,
     flushQueue: () => flushQueue,
     hasCapability: () => hasCapability,
+    legacyPendingWrites: () => legacyPendingWrites,
     onQueueChange: () => onQueueChange,
     onStreamEvent: () => onStreamEvent,
     pendingWrites: () => pendingWrites,
     setOfflineCache: () => setOfflineCache,
+    setOfflineScope: () => setOfflineScope,
     setQueueStore: () => setQueueStore,
     setTokenStorage: () => setTokenStorage,
     startStream: () => startStream,
@@ -206,23 +210,50 @@ var CortexCore = (() => {
   function setTokenStorage(store) {
     _store = store;
   }
+  var _offlineScope = null;
+  function setOfflineScope(scope) {
+    _offlineScope = scope;
+  }
   var _cache = null;
   function setOfflineCache(c) {
     _cache = c;
   }
-  async function cacheGet(name) {
-    if (!_cache) return null;
+  var _deniedCache = /* @__PURE__ */ new Set();
+  var _denialEpoch = /* @__PURE__ */ new Map();
+  function cacheKey(name, scope) {
+    return "cb_cache_" + scope + "_" + name;
+  }
+  function denialVersion(name, scope) {
+    return scope ? _denialEpoch.get(cacheKey(name, scope)) || 0 : 0;
+  }
+  async function denyCached(name, scope) {
+    if (!scope) return;
+    const key = cacheKey(name, scope);
+    _deniedCache.add(key);
+    _denialEpoch.set(key, (_denialEpoch.get(key) || 0) + 1);
     try {
-      const v = await _cache.get("cb_cache_" + name);
-      return v ? JSON.parse(v) : null;
+      await (_cache == null ? void 0 : _cache.set(key, "null"));
+    } catch {
+    }
+  }
+  async function cacheGet(name, scope = _offlineScope) {
+    if (!_cache || !scope || scope !== _offlineScope) return null;
+    const key = cacheKey(name, scope);
+    if (_deniedCache.has(key)) return null;
+    try {
+      const value = await _cache.get(key);
+      if (scope !== _offlineScope || _deniedCache.has(key)) return null;
+      if (!value) return null;
+      const rows = JSON.parse(value);
+      return Array.isArray(rows) ? rows : null;
     } catch {
       return null;
     }
   }
-  async function cacheSet(name, rows) {
-    if (!_cache) return;
+  async function cacheSet(name, rows, scope = _offlineScope) {
+    if (!_cache || !scope || scope !== _offlineScope) return;
     try {
-      await _cache.set("cb_cache_" + name, JSON.stringify(rows));
+      await _cache.set(cacheKey(name, scope), JSON.stringify(rows));
     } catch {
     }
   }
@@ -248,6 +279,25 @@ var CortexCore = (() => {
   function pendingWrites() {
     return _queue.length;
   }
+  function isScopedWrite(write) {
+    return typeof write.scope === "string" && write.scope.trim().length > 0;
+  }
+  function legacyPendingWrites() {
+    return _queue.filter((write) => !isScopedWrite(write)).length;
+  }
+  function exportLegacyWrites() {
+    return JSON.stringify({ format: "cortex-legacy-offline-queue", version: 1, exportedAt: (/* @__PURE__ */ new Date()).toISOString(), entries: _queue.filter((write) => !isScopedWrite(write)) }, null, 2);
+  }
+  async function discardLegacyWrites() {
+    const before = _queue.length;
+    _queue = _queue.filter(isScopedWrite);
+    const discarded = before - _queue.length;
+    if (discarded) {
+      await queuePersist();
+      notifyQueue();
+    }
+    return discarded;
+  }
   async function queuePersist() {
     if (_queueStore) try {
       await _queueStore.set("cb_queue", JSON.stringify(_queue));
@@ -264,15 +314,32 @@ var CortexCore = (() => {
     await queuePersist();
     notifyQueue();
   }
-  async function flushQueue(opts) {
+  var _flushInFlight = null;
+  function flushQueue(opts) {
+    if (_flushInFlight) return _flushInFlight;
+    const run = replayQueue(opts).finally(() => {
+      if (_flushInFlight === run) _flushInFlight = null;
+    });
+    _flushInFlight = run;
+    return run;
+  }
+  async function replayQueue(opts) {
     var _a;
     const snapshot = [..._queue];
     let ok = 0;
     let failed = 0;
     const API_URL = (opts == null ? void 0 : opts.apiUrl) || API_URL_FALLBACK;
     for (const w of snapshot) try {
+      if (!_offlineScope || !w.scope || w.scope !== _offlineScope) {
+        failed++;
+        continue;
+      }
       const headers = { "content-type": "application/json" };
       const t = (_a = opts == null ? void 0 : opts.token) != null ? _a : await _store.get();
+      if (!_offlineScope || w.scope !== _offlineScope) {
+        failed++;
+        continue;
+      }
       if (t) headers.authorization = `Bearer ${t}`;
       const r = await fetch(`${API_URL}/api/${w.collection}${w.rowId ? "/" + w.rowId : ""}`, { method: w.method, headers, body: JSON.stringify(w.body) });
       if (r.ok) {
@@ -360,8 +427,32 @@ var CortexCore = (() => {
         await store.clear();
         throw new Error("unauthorized");
       }
-      if (!r.ok) throw new Error("Request failed");
+      if (!r.ok) {
+        const detail = await r.json().catch(() => ({}));
+        throw httpFailure((detail == null ? void 0 : detail.error) || "Request failed", r.status);
+      }
       return r.json();
+    }
+    async function readPagedCollection(path, key, maxRows) {
+      var _a;
+      const rows = [];
+      const target = Math.min(Math.max(1, Math.floor(maxRows)), 1e3);
+      let offset = 0;
+      for (let page = 0; page < 10 && rows.length < target; page++) {
+        const take = Math.min(100, target - rows.length);
+        const separator = path.includes("?") ? "&" : "?";
+        const data = await apiGet(`${path}${separator}take=${take}&skip=${offset}`);
+        const slice = Array.isArray(data) ? data : (_a = data == null ? void 0 : data.rows) != null ? _a : data == null ? void 0 : data[key];
+        if (!Array.isArray(slice)) {
+          const error = httpFailure(`Unexpected ${key} response`, 502);
+          error.invalidResponse = true;
+          throw error;
+        }
+        rows.push(...slice);
+        offset += slice.length;
+        if (!(data == null ? void 0 : data.hasMore) || !slice.length) break;
+      }
+      return rows;
     }
     async function apiPost(path, body) {
       const t = await token();
@@ -404,45 +495,78 @@ var CortexCore = (() => {
         }
       },
       async getProjects() {
-        const d = await apiGet("/api/projects?limit=100");
-        return Array.isArray(d) ? d : d.rows || d.projects || [];
+        const scope = _offlineScope;
+        const version = denialVersion("projects", scope);
+        try {
+          const rows = await readPagedCollection("/api/projects", "projects", 1e3);
+          if (scope !== _offlineScope) throw new Error("Workspace changed during project loading");
+          if (version !== denialVersion("projects", scope)) throw httpFailure("Project access changed during loading", 403);
+          await cacheSet("projects", rows, scope);
+          if (scope !== _offlineScope) throw new Error("Workspace changed during project loading");
+          if (version !== denialVersion("projects", scope)) {
+            await denyCached("projects", scope);
+            throw httpFailure("Project access changed during loading", 403);
+          }
+          if (scope) _deniedCache.delete(cacheKey("projects", scope));
+          return rows;
+        } catch (error) {
+          if ((error == null ? void 0 : error.message) === "unauthorized" || (error == null ? void 0 : error.httpStatus) === 403) await denyCached("projects", scope);
+          if ((error == null ? void 0 : error.message) === "unauthorized" || isHttpFailure(error) && ((error.httpStatus || 0) < 500 || error.invalidResponse === true) || scope !== _offlineScope) throw error;
+          const cached = await cacheGet("projects", scope);
+          if (cached) return cached;
+          throw error;
+        }
       },
       async getCollection(name, limit = 100) {
+        const scope = _offlineScope;
+        const version = denialVersion(name, scope);
+        const responseKey = {
+          timeentries: "entries",
+          checkins: "checkins",
+          safety: "incidents",
+          team: "team",
+          documents: "documents",
+          receipts: "receipts",
+          "equipment-checks": "checks",
+          "field-constraints": "constraints",
+          "field-handovers": "handovers",
+          "field-production": "logs"
+        };
         try {
-          const d = await apiGet(`/api/${name}?limit=${limit}&take=${limit}`);
-          const responseKey = {
-            timeentries: "entries",
-            checkins: "checkins",
-            safety: "incidents",
-            team: "team",
-            documents: "documents",
-            receipts: "receipts",
-            "equipment-checks": "checks",
-            "field-constraints": "constraints",
-            "field-handovers": "handovers",
-            "field-production": "logs"
-          };
-          const key = responseKey[name] || name;
-          const rows = Array.isArray(d) ? d : d.rows || d[key] || [];
-          await cacheSet(name, rows);
+          const rows = await readPagedCollection(`/api/${encodeURIComponent(name)}`, responseKey[name] || name, limit);
+          if (scope !== _offlineScope) throw new Error("Workspace changed during collection loading");
+          if (version !== denialVersion(name, scope)) throw httpFailure("Collection access changed during loading", 403);
+          await cacheSet(name, rows, scope);
+          if (scope !== _offlineScope) throw new Error("Workspace changed during collection loading");
+          if (version !== denialVersion(name, scope)) {
+            await denyCached(name, scope);
+            throw httpFailure("Collection access changed during loading", 403);
+          }
+          if (scope) _deniedCache.delete(cacheKey(name, scope));
           return rows;
-        } catch (e) {
-          if ((e == null ? void 0 : e.message) === "unauthorized") throw e;
-          const cached = await cacheGet(name);
-          if (cached) return cached;
-          throw e;
+        } catch (error) {
+          if ((error == null ? void 0 : error.message) === "unauthorized" || (error == null ? void 0 : error.httpStatus) === 403) await denyCached(name, scope);
+          if ((error == null ? void 0 : error.message) === "unauthorized" || isHttpFailure(error) && ((error.httpStatus || 0) < 500 || error.invalidResponse === true) || scope !== _offlineScope) throw error;
+          const cached = await cacheGet(name, scope);
+          if (cached) return cached.slice(0, Math.min(1e3, Math.max(1, Math.floor(limit))));
+          throw error;
         }
       },
       postCollection(name, body) {
+        const scope = _offlineScope;
         return apiPost(`/api/${name}`, body).catch(async (e) => {
           if ((e == null ? void 0 : e.message) === "unauthorized" || isHttpFailure(e)) throw e;
+          if (!scope) throw new Error("Offline save is unavailable until your company workspace is verified. Reconnect and try again.");
+          if (scope !== _offlineScope) throw new Error("Workspace changed while saving. Reconnect and retry in the active company.");
           const id = "cw_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-          await enqueue({ id, method: "POST", collection: name, body });
+          await enqueue({ id, method: "POST", collection: name, body, scope });
           return { id, _queued: true, ...body };
         });
       },
       async putCollection(name, id, body) {
+        const scope = _offlineScope;
         const t = await token();
+        if (scope !== _offlineScope) throw new Error("Workspace changed while saving. Reconnect and retry in the active company.");
         const headers = { "content-type": "application/json" };
         if (t) headers.authorization = `Bearer ${t}`;
         try {
@@ -458,8 +582,10 @@ var CortexCore = (() => {
           return r.json();
         } catch (e) {
           if ((e == null ? void 0 : e.message) === "unauthorized" || isHttpFailure(e)) throw e;
+          if (!scope) throw new Error("Offline save is unavailable until your company workspace is verified. Reconnect and try again.");
+          if (scope !== _offlineScope) throw new Error("Workspace changed while saving. Reconnect and retry in the active company.");
           const qid = "cw_" + Date.now() + "_" + Math.random().toString(36).slice(2, 8);
-          await enqueue({ id: qid, method: "PUT", collection: name, rowId: id, body });
+          await enqueue({ id: qid, method: "PUT", collection: name, rowId: id, body, scope });
           return { id, _queued: true, ...body };
         }
       },
@@ -467,6 +593,9 @@ var CortexCore = (() => {
       apiPost,
       onQueueChange,
       pendingWrites,
+      legacyPendingWrites,
+      exportLegacyWrites,
+      discardLegacyWrites,
       flushQueue,
       startStream,
       stopStream,
