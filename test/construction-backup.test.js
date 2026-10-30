@@ -56,7 +56,7 @@ test('backup verification workflow retains an encrypted off-site artifact and pr
   assert.match(workflow, /CORTEXX_BACKUP_ENCRYPTION_KEY/);
   assert.match(workflow, /openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000/);
   assert.match(workflow, /openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000/);
-  assert.match(workflow, /actions\/upload-artifact@v4/);
+  assert.match(workflow, /actions\/upload-artifact@v7/);
   assert.match(workflow, /retention-days:\s*30/);
   assert.match(workflow, /pg_restore -U postgres -d restore_drill/);
   assert.match(workflow, /compression-level:\s*0/);
@@ -65,7 +65,7 @@ test('backup verification workflow retains an encrypted off-site artifact and pr
   assert.match(workflow, /grep -q '\^DATABASE_URL=' \"\$VERIFY_DIR\/\.env\.construction\"/);
   assert.match(workflow, /grep -q '\^PASSWORD=' \"\$VERIFY_DIR\/\.owner-credentials\"/);
   assert.match(workflow, /rm -rf \"\$VERIFY_DIR\" \"\$PLAIN\"/);
-  assert.doesNotMatch(workflow, /actions\/upload-artifact@v4[\s\S]{0,500}(\.env\.construction|\.owner-credentials)/);
+  assert.doesNotMatch(workflow, /actions\/upload-artifact@v7[\s\S]{0,500}(\.env\.construction|\.owner-credentials)/);
   const keyLine = workflow.split('\n').find(line => line.includes('BACKUP_ENCRYPTION_KEY:'));
   assert.equal(keyLine?.trim(), 'BACKUP_ENCRYPTION_KEY: ${{ secrets.CORTEXX_BACKUP_ENCRYPTION_KEY }}');
 });
