@@ -61,7 +61,7 @@ test('Next control route requires platform persona and forwards only through int
   assert.match(route, /platform\.browser\.action/)
 })
 
-test('canonical construction deployment isolates the gateway from backend services', () => {
+test('canonical compose isolates the gateway and retired VPS deployment is inert', () => {
   assert.match(compose, /browser-gateway:/)
   assert.match(compose, /BROWSER_GATEWAY_INTERNAL_TOKEN/)
   assert.match(compose, /cap_drop:\s*\n\s*- ALL/)
@@ -69,8 +69,7 @@ test('canonical construction deployment isolates the gateway from backend servic
   const gatewayBlock = compose.slice(compose.indexOf('  browser-gateway:'), compose.indexOf('  app:'))
   assert.match(gatewayBlock, /networks:\s*\n\s*- browser_control/)
   assert.doesNotMatch(gatewayBlock, /REDIS_URL|condition: service_healthy/)
-  assert.match(deploy, /BROWSER_GATEWAY_INTERNAL_TOKEN/)
-  assert.match(deploy, /build browser-gateway/)
-  assert.doesNotMatch(deploy, /build app tools browser-gateway/)
-  assert.match(deploy, /Prebuilt release images transferred/)
+  assert.match(deploy, /VPS deployment retired/)
+  assert.match(deploy, /retired:\s*\n\s*if:\s*\$\{\{\s*false\s*\}\}/)
+  assert.doesNotMatch(deploy, /VPS_(HOST|USER|SSH_KEY|PASSWORD)|sshpass|ssh-keyscan|BROWSER_GATEWAY_INTERNAL_TOKEN|Prebuilt release images transferred/)
 })
