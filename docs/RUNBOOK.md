@@ -1,174 +1,51 @@
-# CortexBuild Pro — production runbook
+# Cortexx — operations and migration runbook
 
-Production is the isolated Docker Compose construction stack on the One.com VPS.
+## Current operating state
 
-## Quick reference
+Cortexx is **not yet migrated** from the former VPS. The previous production host and SSH access are unavailable. Do not attempt remote VPS commands or dispatch legacy deployment workflows.
 
-| What | Where |
-|---|---|
-| Production URL | https://cortexbuildpro.tech |
-| GitHub repo | https://github.com/adrianstanca1/cortexx |
-| VPS | One.com · `administrator@85.190.100.68` |
-| Production checkout | `/home/administrator/production/cortexx` |
-| Compose file | `docker-compose.construction.yml` |
-| Env file | `/home/administrator/production/cortexx/.env.construction` (0600) |
-| App container | `cortexbuild-construction-app-1` |
-| Database container | `cortexbuild-construction-db-1` |
-| App loopback | `http://127.0.0.1:3020` |
-| Health | https://cortexbuildpro.tech/api/health |
-| Recovery guide | `docs/CONSTRUCTION_RECOVERY.md` |
+- Repository: https://github.com/adrianstanca1/cortexx
+- Production domain: https://cortexbuildpro.tech
+- Migration plan: [VPS-free migration](VPS_FREE_MIGRATION.md)
+- Migration PR: https://github.com/adrianstanca1/cortexx/pull/433
 
-Do not use the retired `/opt/cortexx`, host-Postgres or PM2 procedures for this production deployment.
+The existing production domain and all historical databases must remain unchanged until staging is fully verified and a controlled cutover is approved.
 
-## Release flow
+## Required release gates
 
-1. Open a PR against `main`.
-2. CI must pass the build/typecheck, integration, iOS, audit/security and browser/PWA matrix.
-3. `.github/workflows/deploy-vps.yml` deploys the exact successful `main` SHA.
-4. The deploy workflow:
-   - verifies the exact SHA passed CI;
-   - updates `/home/administrator/production/cortexx`;
-   - creates `.env.construction` only if missing;
-   - generates a missing `CRON_SECRET` without printing it;
-   - builds the app and migration images on the GitHub runner, away from the RAM-constrained production host;
-   - transfers a compressed image archive over authenticated SSH and verifies immutable commit labels;
-   - rebuilds the lightweight browser gateway only on VPS while preserving existing tenant volumes;
-   - starts PostgreSQL, Redis and Ollama;
-   - runs Prisma migrations and bootstrap;
-   - recreates the app from the prebuilt release image without building on the VPS;
-   - waits for `/api/health` and verifies the running container's commit, restoring the previous app image if unhealthy;
-   - installs the app-maintenance cron schedule;
-   - verifies public ingress.
-5. Keep the previous healthy app image tagged before a manual production cutover.
+1. CI checks pass on the exact commit intended for release.
+2. The authoritative production database and uploads are identified and exported from a verified source backup.
+3. The Express raw-SQL schema and Next.js Prisma migration model are reconciled and tested against an isolated destination.
+4. Free hosting capacity, database quotas, object storage and DNS authority are confirmed before provisioning.
+5. Staging verifies authentication, tenant isolation, projects, tasks, timesheets, documents, offline sync, portal, webhooks, realtime/SSE, cron and mobile API compatibility.
+6. Backup restore and rollback are tested before any production DNS change.
 
-## Production environment
+## Database and data safety
 
-Required runtime keys live in the 0600 `.env.construction` file.
+- The Neon project named `cortex` is existing populated data and is not the Cortexx migration target. Do not overwrite or reinitialize it.
+- The separate Neon project `cortexx-vps-free` is an isolated empty destination. Its compute is suspended. It has no imported schema or production data.
+- Never apply schema migrations to a production database until a verified backup and restore path exists.
+- Do not assume the former VPS database or uploads have been recovered.
 
-| Key | Purpose |
-|---|---|
-| `POSTGRES_PASSWORD` | PostgreSQL container password |
-| `DATABASE_URL` | `postgresql://construction:…@db:5432/construction?schema=public` |
-| `NEXTAUTH_SECRET` / `AUTH_SECRET` | Auth.js signing/encryption |
-| `JWT_SECRET` | Mobile/native bearer authentication |
-| `CRON_SECRET` | Bearer secret for `POST /api/cron/*` |
-| `NEXTAUTH_URL` / `AUTH_URL` | `https://cortexbuildpro.tech` |
-| `REDIS_URL` | `redis://redis:6379` |
-| `OLLAMA_BASE_URL` | `http://ollama:11434` |
-| `VAPID_*` | Optional web-push delivery |
-| `RESEND_API_KEY` / `EMAIL_FROM` | Optional transactional email |
-| `STRIPE_*` | Optional billing |
+## Cost and hosting safety
 
-Never put secret values in workflow-dispatch inputs, GitHub issue text, logs or chat messages. For local-only production secrets such as `CRON_SECRET`, update the protected env file on the VPS and recreate the app container.
+- Free-only resources are permitted; no paid plan, billing account, paid storage, or upgrade without explicit approval.
+- Render free capacity must be checked in the workspace dashboard before adding services.
+- Cloud Run remains disabled because it requires an active billing account and may incur charges.
+- Treat provider quota alerts as alerts, not hard spending caps.
+- Do not store persistent user uploads on ephemeral application filesystems.
 
-## App maintenance cron jobs
+## Legacy workflow retirement
 
-Install/update from a reviewed production checkout:
+The former `.github/workflows/deploy-vps.yml`, `.github/workflows/db-rescue.yml`, and `.github/workflows/vps-exec.yml` workflows are being retired in the migration PR. They must remain inert; do not add VPS credentials or restore their SSH operations.
 
-```bash
-bash ops/install-construction-app-crons.sh
-```
+## Cutover and rollback
 
-The installer preserves unrelated user cron entries and installs:
+Do not change production DNS, the existing database, storage bucket, or production services during preparation. Cutover is a separate gated operation after:
+- source backup integrity is verified;
+- schema and data restore comparisons pass;
+- staging end-to-end checks pass;
+- domain and TLS control are confirmed;
+- a rollback plan is tested.
 
-| Server time | Job |
-|---|---|
-| 06:00 daily | overdue invoices |
-| 06:30 daily | permit / RAMS / certification / document expiry warnings (14-day horizon) |
-| 03:00 Sunday | prune stale push subscriptions |
-
-Cron invokes `$HOME/bin/construction-app-cron.sh`. The wrapper reads `CRON_SECRET` from the protected production env at runtime, so the bearer token is not stored in crontab.
-
-Manual smoke:
-
-```bash
-$HOME/bin/construction-app-cron.sh overdue-invoices
-$HOME/bin/construction-app-cron.sh expiry-warnings
-$HOME/bin/construction-app-cron.sh prune-push
-```
-
-Logs: `$HOME/logs/construction-app-cron.log`.
-
-### Bounded load smoke gate
-
-Run this against a local server or an approved staging deployment before a release:
-
-```bash
-npm run load:smoke
-LOAD_TEST_URL=https://staging.example.test/api/health npm run load:smoke
-```
-
-The dependency-free runner sends 30 requests with concurrency 5 and fails on a
-p95 latency above 1,000 ms or an error rate above 1%. Configure the bounds with
-`LOAD_TEST_REQUESTS`, `LOAD_TEST_CONCURRENCY`, `LOAD_TEST_TIMEOUT_MS`,
-`LOAD_TEST_MAX_P95_MS`, and `LOAD_TEST_MAX_ERROR_RATE`. It defaults to
-`http://127.0.0.1:3000/api/health` and refuses to target the CortexBuild Pro
-production hostname unless `ALLOW_PRODUCTION_LOAD_TEST=1` is deliberately set
-for an approved run.
-
-For shared staging, run the `Staging load smoke` GitHub Actions workflow and
-provide its health URL. The workflow uses the same thresholds, has a five-minute
-job limit, serializes runs, and retains the production-host safeguard.
-
-## Backup and restore verification
-
-Install/update:
-
-```bash
-bash ops/install-construction-backups.sh
-```
-
-Current schedule:
-- 02:15 daily — database + uploads backup.
-- 02:45 Sunday — isolated restore verification.
-
-Managed backups are under `$HOME/backups/construction`. The verifier checks checksums, restores into an isolated PostgreSQL container, reads canonical table counts, extracts uploads, then removes the disposable restore resources.
-
-See `docs/CONSTRUCTION_RECOVERY.md` for the tested recovery procedure and current limits. Local restore verification and a 30-day encrypted GitHub Actions artifact are implemented. Optional PostgreSQL WAL archiving and isolated PITR tooling are documented in `docs/CONSTRUCTION_PITR.md`; production activation and encrypted off-site WAL verification remain separate operator work.
-
-## Safe database rescue
-
-Use the manual `DB Rescue — One.com construction stack` workflow. Supported actions are intentionally non-destructive:
-- `inspect`
-- `migrate-status`
-- `migrate-deploy`
-
-The retired workflows that deleted Prisma migration rows or manipulated host Postgres/PM2 are intentionally removed.
-
-## Ad-hoc diagnostics
-
-Use `.github/workflows/vps-exec.yml` only for commands safe to appear in workflow logs. Prefer aggregate counts and health/status commands. Do not print credentials or row-level PII.
-
-Useful commands on the VPS:
-
-```bash
-cd /home/administrator/production/cortexx
-docker compose --env-file .env.construction -f docker-compose.construction.yml ps
-docker logs --since 15m cortexbuild-construction-app-1
-curl -fsS http://127.0.0.1:3020/api/health
-docker system df
-```
-
-## Rollback
-
-For an app-only regression:
-1. Keep the current database unchanged.
-2. Re-tag the previously preserved healthy app image as `cortexbuild-construction-app:latest`.
-3. Recreate only the app service with `docker compose … up -d --no-deps app`.
-4. Verify `/api/health`, auth boundaries and browser smoke.
-
-For a database-affecting incident, restore into an isolated replacement stack first. Do not overwrite the live database until the restore is verified and a controlled cutover is planned.
-
-## Release verification checklist
-
-Before calling a production release complete:
-- repo clean and synchronized with `origin/main`;
-- no open release PRs;
-- CI matrix green;
-- production container healthy with zero unexpected restarts;
-- `/api/health` database/app/disk/memory checks green;
-- unauthenticated protected APIs return 401;
-- public login renders without browser/page errors;
-- production dependency audit has no known runtime vulnerabilities;
-- latest construction backup verifies successfully;
-- recent app logs contain no fatal/unhandled/Prisma runtime errors.
+If any gate fails, leave production routing unchanged and continue operating from the current state.
