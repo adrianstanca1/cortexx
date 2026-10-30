@@ -1,166 +1,17 @@
-name: VPS Exec
-# Ad-hoc SSH bridge: run an arbitrary shell command on the production VPS
-# and dump stdout/stderr to the workflow log. Triggered only by
-# workflow_dispatch — repo write access is the auth gate.
-#
-# ⚠️  PII / SECRET HANDLING ⚠️
-# The repo is public. The 'command' input is logged at trigger time and
-# the SSH output is mirrored to the public `vps-exec-logs` branch. A
-# best-effort redaction filter masks emails, JWTs, bearer tokens, and
-# Postgres URLs before push, but the safest pattern is to NEVER select
-# rows from PII tables (User, TeamMember, Customer, Subcontractor,
-# AuditEvent) — query counts only:
-#     SELECT COUNT(*) FROM "User"       ← safe
-#     SELECT email FROM "User"           ← LEAKS to public history
-# Use repo/env secrets, not the `command` input, for any credential.
+name: VPS Exec retired — VPS-free migration in progress
 
+# Retired because the former VPS and SSH access are unavailable. This workflow
+# is intentionally inert. Do not add SSH credentials or re-enable it as part of
+# the VPS-free migration.
 on:
   workflow_dispatch:
-    inputs:
-      command:
-        description: 'Shell command to run on the VPS (executed via `bash -c`).'
-        required: true
-        type: string
-      timeout_s:
-        description: 'Kill the command after N seconds (default 300, max 1800).'
-        required: false
-        type: string
-        default: '300'
 
-concurrency:
-  group: vps-exec
-  cancel-in-progress: false
+permissions:
+  contents: read
 
 jobs:
-  exec:
+  retired:
+    if: ${{ false }}
     runs-on: ubuntu-latest
-    timeout-minutes: 35
-    permissions:
-      contents: write
     steps:
-      - name: Setup SSH
-        run: |
-          mkdir -p ~/.ssh
-          echo "${{ secrets.VPS_SSH_PRIVATE_KEY }}" > ~/.ssh/cortexx_deploy
-          chmod 600 ~/.ssh/cortexx_deploy
-          ssh-keyscan -H 85.190.100.68 >> ~/.ssh/known_hosts 2>/dev/null || true
-
-      - name: Run command on VPS
-        id: ssh
-        env:
-          CMD: ${{ inputs.command }}
-          TIMEOUT_S: ${{ inputs.timeout_s }}
-          VPS_PASSWORD: ${{ secrets.VPS_ROOT_PASSWORD }}
-        run: |
-          # Clamp timeout
-          t=${TIMEOUT_S:-300}
-          if ! [[ "$t" =~ ^[0-9]+$ ]] || [ "$t" -lt 1 ]; then t=300; fi
-          if [ "$t" -gt 1800 ]; then t=1800; fi
-
-          echo "::group::VPS command"
-          printf '%s\n' "$CMD"
-          echo "::endgroup::"
-          # Pass VPS password for fallback auth
-          export VPS_PASSWORD="${VPS_PASSWORD}"
-          
-          set +e
-          # Try SSH key first
-          if ssh -o StrictHostKeyChecking=no -o ConnectTimeout=5 -o IdentitiesOnly=yes -i ~/.ssh/cortexx_deploy administrator@85.190.100.68 "echo OK" 2>/dev/null; then
-            echo "SSH key accepted — using key auth"
-            SSH_CMD="ssh -o StrictHostKeyChecking=no -o ConnectTimeout=${t} -o IdentitiesOnly=yes -i ~/.ssh/cortexx_deploy administrator@85.190.100.68"
-          else
-            echo "SSH key rejected — falling back to password auth"
-            sudo apt-get update -qq 2>/dev/null || true
-            sudo apt-get install -y -qq sshpass 2>/dev/null || true
-            export SSHPASS="$VPS_PASSWORD"
-            SSH_CMD="sshpass -e ssh -o StrictHostKeyChecking=no -o ConnectTimeout=${t} -o PubkeyAuthentication=no administrator@85.190.100.68"
-          fi
-          $SSH_CMD "timeout --signal=KILL ${t}s bash -lc \"\$(cat)\"" <<< "$CMD" > /tmp/vps-out.txt 2>&1
-          rc=$?
-          set -e
-
-          # Echo to job log for humans
-          cat /tmp/vps-out.txt
-          echo "::notice title=VPS exec exit code::$rc"
-          echo "exit_code=$rc" >> "$GITHUB_OUTPUT"
-
-      - name: Checkout (for mirror branch work)
-        if: always()
-        uses: actions/checkout@v7
-        with:
-          fetch-depth: 1
-          token: ${{ github.token }}
-
-      - name: Mirror output to vps-exec-logs branch
-        # Persists every invocation's output to an orphan `vps-exec-logs`
-        # branch as `latest.txt` (always overwritten) + `runs/<id>.txt`
-        # (history). Vanilla git so we don't fight the Contents API's
-        # raw/typed-field quirks. Read side from api.github.com-only
-        # clients:
-        #   gh api repos/<o>/<r>/contents/latest.txt?ref=vps-exec-logs \
-        #     --jq .content | base64 -d
-        if: always()
-        env:
-          GH_TOKEN: ${{ github.token }}
-          CMD: ${{ inputs.command }}
-          RC: ${{ steps.ssh.outputs.exit_code }}
-          RUN_ID: ${{ github.run_id }}
-          BRANCH: vps-exec-logs
-        run: |
-          # Best-effort redaction of common PII / secret shapes before
-          # the payload lands in the public mirror branch. Anything that
-          # the SSH command might unintentionally surface — user emails,
-          # bearer tokens, Postgres URLs with embedded passwords, JWTs —
-          # gets masked. This is defence-in-depth; the primary control is
-          # operator discipline (don't SELECT rows from PII tables).
-          redact() {
-            sed -E \
-              -e 's/[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}/[email-redacted]/g' \
-              -e 's/(postgres(ql)?:\/\/[^:]+:)[^@]+(@)/\1[pw-redacted]\3/g' \
-              -e 's/(Bearer\s+)[A-Za-z0-9._~+\/=-]{20,}/\1[token-redacted]/g' \
-              -e 's/eyJ[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+\.[A-Za-z0-9_-]+/[jwt-redacted]/g' \
-              -e 's/(sk_(live|test)_)[A-Za-z0-9]+/\1[stripe-redacted]/g'
-          }
-
-          # Build payload — capped at 800 kB to stay under GitHub's 1 MB
-          # blob ceiling. Redaction applied to both the echoed command and
-          # the captured output.
-          {
-            echo "run_id: $RUN_ID"
-            echo "exit_code: ${RC:-unknown}"
-            echo "completed_at: $(date -u +%FT%TZ)"
-            echo "command: |"
-            printf '%s\n' "$CMD" | redact | sed 's/^/  /'
-            echo "---"
-            head -c 800000 /tmp/vps-out.txt | redact
-          } > /tmp/payload.txt
-
-          # Work in a clean throwaway dir so we don't mutate the
-          # checkout's main worktree
-          work=$(mktemp -d)
-          cd "$work"
-          git init -q -b "$BRANCH"
-          git config user.email 'cortexx-bot@users.noreply.github.com'
-          git config user.name 'vps-exec bot'
-
-          # Try to seed from the remote branch; if it doesn't exist yet,
-          # we'll create it as an orphan with this run as the first commit
-          if git fetch -q "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "$BRANCH" 2>/dev/null; then
-            git reset -q --hard FETCH_HEAD
-          fi
-
-          mkdir -p runs
-          cp /tmp/payload.txt latest.txt
-          cp /tmp/payload.txt "runs/${RUN_ID}.txt"
-
-          git add -A
-          git commit -q -m "vps-exec run ${RUN_ID} (exit ${RC:-?})"
-          git push -q "https://x-access-token:${GH_TOKEN}@github.com/${{ github.repository }}.git" "HEAD:refs/heads/${BRANCH}"
-
-          echo "::notice title=Output mirror::https://github.com/${{ github.repository }}/blob/${BRANCH}/latest.txt"
-
-      - name: Propagate exit code
-        if: always()
-        env:
-          RC: ${{ steps.ssh.outputs.exit_code }}
-        run: exit "${RC:-1}"
+      - run: echo "VPS remote execution is retired. See docs/VPS_FREE_MIGRATION.md."
