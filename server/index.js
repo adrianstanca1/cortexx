@@ -5,6 +5,7 @@
 
 const express = require('express');
 const { Pool } = require('pg');
+const { createPoolConfig } = require('./db/pool-config');
 const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
@@ -71,7 +72,15 @@ app.use(express.json({ limit: '10mb' }));
 // Optional dep — degrade gracefully if it isn't installed.
 try { app.use(require('cookie-parser')()); } catch (e) { log.warn('[warn] cookie-parser not installed — bank OAuth state check disabled'); }
 
-const pool = new Pool({ connectionString: process.env.DATABASE_URL });
+const pool = new Pool(createPoolConfig());
+// Idle clients can emit errors after a network/database restart. Handle them
+// centrally so a transient socket failure is logged instead of crashing the
+// process; requests can reconnect through pg's normal pool lifecycle.
+if (typeof pool.on === 'function') {
+  pool.on('error', (err) => {
+    log.error('[db] idle pool client error', { message: err.message, code: err.code });
+  });
+}
 // Expose the pool to route modules that read req.app.locals.pool
 // (push, banking, iap, hmrc). Without this they silently fail.
 app.locals.pool = pool;
