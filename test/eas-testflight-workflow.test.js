@@ -43,8 +43,10 @@ test('Node runtime is aligned across root and nested Expo EAS build profiles', (
   assert.equal(rootLock.packages[''].engines.node, rootPackage.engines.node)
   assert.equal(expoLock.packages[''].dependencies.expo, expoPackage.dependencies.expo)
   for (const profile of ['development', 'preview', 'production']) {
-    assert.equal(rootEas.build[profile].node, major, `root EAS ${profile} must use Node ${major}`)
-    assert.equal(expoEas.build[profile].node, major, `Expo EAS ${profile} must use Node ${major}`)
+    assert.match(rootEas.build[profile].node, /^\d+\.\d+\.\d+$/, `root EAS ${profile} must use a complete Node semver`)
+    assert.equal(rootEas.build[profile].node.match(/^(\d+)/)?.[1], major, `root EAS ${profile} must use Node ${major}`)
+    assert.match(expoEas.build[profile].node, /^\d+\.\d+\.\d+$/, `Expo EAS ${profile} must use a complete Node semver`)
+    assert.equal(expoEas.build[profile].node.match(/^(\d+)/)?.[1], major, `Expo EAS ${profile} must use Node ${major}`)
   }
   const browserPackage = JSON.parse(fs.readFileSync('browser-gateway/package.json', 'utf8'))
   const browserLock = JSON.parse(fs.readFileSync('browser-gateway/package-lock.json', 'utf8'))
