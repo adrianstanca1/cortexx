@@ -1,11 +1,8 @@
 name: Deploy CortexBuild Pro — One.com VPS
 
 on:
+  # Legacy VPS deployment is manual-only until a host and SSH access are explicitly restored.
   workflow_dispatch:
-  workflow_run:
-    workflows: [CI]
-    branches: [main]
-    types: [completed]
 
 concurrency:
   group: cortexbuild-production
@@ -13,9 +10,7 @@ concurrency:
 
 jobs:
   deploy:
-    if: >-
-      (github.event_name == 'workflow_run' && github.event.workflow_run.conclusion == 'success') ||
-      (github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main')
+    if: github.event_name == 'workflow_dispatch' && github.ref == 'refs/heads/main'
     runs-on: ubuntu-latest
     timeout-minutes: 80
     permissions:
