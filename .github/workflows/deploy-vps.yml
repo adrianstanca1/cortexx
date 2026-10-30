@@ -76,7 +76,7 @@ jobs:
           timeout 30s ssh-keyscan -T 5 -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 600 ~/.ssh/known_hosts
           if [[ -n "${VPS_SSH_KEY:-}" ]]; then
-            printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/cortexx_deploy
+            printf '%s\n' "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/cortexx_deploy
             chmod 600 ~/.ssh/cortexx_deploy
           fi
           if [[ -n "${VPS_PASSWORD:-}" ]]; then
@@ -87,21 +87,32 @@ jobs:
       - name: Resolve SSH authentication
         run: |
           set -euo pipefail
-          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ServerAliveInterval=20 -o ServerAliveCountMax=60)
-          if [[ -s ~/.ssh/cortexx_deploy ]] && ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
-            echo "CORTEXX_SSH_MODE=key" >> "$GITHUB_ENV"
-            echo "SSH key authentication ready."
-            exit 0
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o ServerAliveInterval=20 -o ServerAliveCountMax=60 -o IdentitiesOnly=yes)
+          CANDIDATES=(administrator root)
+          KEY_VALID=false
+          if [[ -s ~/.ssh/cortexx_deploy ]] && ssh-keygen -y -f ~/.ssh/cortexx_deploy >/dev/null 2>&1; then
+            KEY_VALID=true
           fi
-          if [[ -n "${VPS_PASSWORD:-}" ]]; then
-            export SSHPASS="$VPS_PASSWORD"
-            if sshpass -e ssh "${SSH_BASE[@]}" "$VPS_USER@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
-              echo "CORTEXX_SSH_MODE=password" >> "$GITHUB_ENV"
-              echo "SSH password authentication ready."
+          for candidate in "${CANDIDATES[@]}"; do
+            if [[ "$KEY_VALID" == true ]] && ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+              echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
+              echo "CORTEXX_SSH_MODE=key" >> "$GITHUB_ENV"
+              echo "SSH key authentication ready for the $candidate account."
               exit 0
             fi
+          done
+          if [[ -n "${VPS_PASSWORD:-}" ]]; then
+            export SSHPASS="$VPS_PASSWORD"
+            for candidate in "${CANDIDATES[@]}"; do
+              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+                echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
+                echo "CORTEXX_SSH_MODE=password" >> "$GITHUB_ENV"
+                echo "SSH password authentication ready for the $candidate account."
+                exit 0
+              fi
+            done
           fi
-          echo "::error::Could not authenticate to $VPS_USER@$VPS_HOST."
+          echo "::error::SSH authentication failed for both administrator and root accounts. Check the authorized key and account credentials on the VPS."
           exit 1
 
       - name: Transfer prebuilt production images to VPS
