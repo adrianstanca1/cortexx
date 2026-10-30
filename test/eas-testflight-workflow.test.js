@@ -31,6 +31,29 @@ test('EAS production versioning persists remotely across CI releases', () => {
   assert.equal(eas.build.production.autoIncrement, true)
 })
 
+test('Node runtime is aligned across root and nested Expo EAS build profiles', () => {
+  const rootPackage = JSON.parse(fs.readFileSync('package.json', 'utf8'))
+  const rootLock = JSON.parse(fs.readFileSync('package-lock.json', 'utf8'))
+  const rootEas = JSON.parse(fs.readFileSync('eas.json', 'utf8'))
+  const expoPackage = JSON.parse(fs.readFileSync('expo/package.json', 'utf8'))
+  const expoLock = JSON.parse(fs.readFileSync('expo/package-lock.json', 'utf8'))
+  const expoEas = JSON.parse(fs.readFileSync('expo/eas.json', 'utf8'))
+  const major = rootPackage.engines.node.match(/^(\d+)/)?.[1]
+  assert.ok(major, 'root package must declare a Node major version')
+  assert.equal(rootLock.packages[''].engines.node, rootPackage.engines.node)
+  assert.equal(expoLock.packages[''].dependencies.expo, expoPackage.dependencies.expo)
+  for (const profile of ['development', 'preview', 'production']) {
+    assert.match(rootEas.build[profile].node, /^\d+\.\d+\.\d+$/, `root EAS ${profile} must use a complete Node semver`)
+    assert.equal(rootEas.build[profile].node.match(/^(\d+)/)?.[1], major, `root EAS ${profile} must use Node ${major}`)
+    assert.match(expoEas.build[profile].node, /^\d+\.\d+\.\d+$/, `Expo EAS ${profile} must use a complete Node semver`)
+    assert.equal(expoEas.build[profile].node.match(/^(\d+)/)?.[1], major, `Expo EAS ${profile} must use Node ${major}`)
+  }
+  const browserPackage = JSON.parse(fs.readFileSync('browser-gateway/package.json', 'utf8'))
+  const browserLock = JSON.parse(fs.readFileSync('browser-gateway/package-lock.json', 'utf8'))
+  assert.equal(browserPackage.engines.node, rootPackage.engines.node)
+  assert.equal(browserLock.packages[''].engines.node, rootPackage.engines.node)
+})
+
 test('workflow waits for the exact TestFlight submission, not only the build', () => {
   assert.doesNotMatch(workflow, /--auto-submit-with-profile/)
   assert.match(workflow, /id: build/)

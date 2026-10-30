@@ -20,7 +20,12 @@
         "applinks:cortexbuildpro.tech"
       ],
       "infoPlist": {
-        "ITSAppUsesNonExemptEncryption": false
+        "ITSAppUsesNonExemptEncryption": false,
+        "NSCameraUsageDescription": "Cortex Construct uses the camera to capture site photos and evidence for construction records.",
+        "NSPhotoLibraryUsageDescription": "Cortex Construct accesses selected photos to attach evidence to projects and site records.",
+        "NSPhotoLibraryAddUsageDescription": "Cortex Construct saves exported reports and project evidence when you choose to save them.",
+        "NSLocationWhenInUseUsageDescription": "Cortex Construct uses your location to tag site check-ins and progress photos when you choose to record them.",
+        "NSMicrophoneUsageDescription": "Cortex Construct uses the microphone when you record voice notes for site records."
       }
     },
     "android": {
@@ -34,13 +39,23 @@
       "bundler": "metro"
     },
     "plugins": [
+      "expo-secure-store",
+      "expo-status-bar",
+      "expo-sharing",
       [
-        "expo-secure-store",
+        "expo-image-picker",
         {
-          "faceID": true
+          "photosPermission": "Allow Cortex Construct to attach selected site photos and evidence to construction records.",
+          "cameraPermission": "Allow Cortex Construct to capture site photos and evidence.",
+          "microphonePermission": "Allow Cortex Construct to record voice notes for site records."
         }
       ],
-      "expo-status-bar"
+      [
+        "expo-location",
+        {
+          "locationWhenInUsePermission": "Allow Cortex Construct to tag site check-ins and progress photos with location when you choose to record them."
+        }
+      ]
     ],
     "extra": {
       "apiUrl": "https://cortexbuildpro.tech",
@@ -48,6 +63,7 @@
         "projectId": "76a768f6-ab7d-4c25-b71d-4b978a32ef61"
       }
     },
-    "owner": "adrianstanca"
+    "owner": "adrianstanca",
+    "icon": "./assets/icon.png"
   }
 }
