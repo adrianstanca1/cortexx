@@ -61,7 +61,7 @@ jobs:
           if [[ -n "${VPS_PASSWORD:-}" ]]; then
             export SSHPASS="$VPS_PASSWORD"
             for candidate in "${CANDIDATES[@]}"; do
-              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=keyboard-interactive,password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
                 echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
                 echo "CORTEXX_SSH_MODE=password" >> "$GITHUB_ENV"
                 echo "SSH password authentication ready for the $candidate account."
@@ -105,9 +105,18 @@ jobs:
                 docker run --rm --network cortexbuild-construction_default --env-file .env.construction -v "$PWD/prisma:/app/prisma:ro" cortexbuild-construction-tools npx prisma migrate status
                 ;;
               migrate-deploy)
-                git fetch origin main --quiet
-                test -z "$(git status --porcelain --untracked-files=no)"
-                test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+                if [[ "$EUID" -eq 0 ]]; then
+                  checkout_owner="$(stat -c '%U' "$app_dir")"
+                  checkout_home="$(getent passwd "$checkout_owner" | cut -d: -f6)"
+                  [[ -n "$checkout_home" ]] || { echo "Cannot resolve checkout owner home." >&2; exit 1; }
+                  runuser -u "$checkout_owner" -- env HOME="$checkout_home" git -C "$app_dir" fetch origin main --quiet
+                  test -z "$(runuser -u "$checkout_owner" -- env HOME="$checkout_home" git -C "$app_dir" status --porcelain --untracked-files=no)"
+                  test "$(runuser -u "$checkout_owner" -- env HOME="$checkout_home" git -C "$app_dir" rev-parse HEAD)" = "$(runuser -u "$checkout_owner" -- env HOME="$checkout_home" git -C "$app_dir" rev-parse origin/main)"
+                else
+                  git fetch origin main --quiet
+                  test -z "$(git status --porcelain --untracked-files=no)"
+                  test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+                fi
                 "${compose[@]}" --profile tools build tools
                 docker run --rm --network cortexbuild-construction_default --env-file .env.construction -v "$PWD/prisma:/app/prisma:ro" cortexbuild-construction-tools npx prisma migrate deploy
                 ;;

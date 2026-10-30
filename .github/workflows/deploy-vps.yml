@@ -104,7 +104,7 @@ jobs:
           if [[ -n "${VPS_PASSWORD:-}" ]]; then
             export SSHPASS="$VPS_PASSWORD"
             for candidate in "${CANDIDATES[@]}"; do
-              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=keyboard-interactive,password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
                 echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
                 echo "CORTEXX_SSH_MODE=password" >> "$GITHUB_ENV"
                 echo "SSH password authentication ready for the $candidate account."
@@ -149,22 +149,39 @@ jobs:
             trap 'kill "$HEARTBEAT_PID" 2>/dev/null || true' EXIT
             APP_DIR=/home/administrator/production/cortexx
             REPO=https://github.com/adrianstanca1/cortexx.git
-            mkdir -p "$(dirname "$APP_DIR")"
-            if [ ! -d "$APP_DIR/.git" ]; then
-              git clone "$REPO" "$APP_DIR"
+            APP_GIT_USER=root
+            if [[ "$EUID" -eq 0 ]]; then
+              if [[ -d "$APP_DIR/.git" ]]; then
+                APP_GIT_USER="$(stat -c '%U' "$APP_DIR")"
+              elif id administrator >/dev/null 2>&1; then
+                APP_GIT_USER=administrator
+                install -d -o administrator -g administrator -m 0750 "$(dirname "$APP_DIR")"
+              fi
             fi
-            cd "$APP_DIR"
-            git fetch origin --prune
-            if [ -n "$(git status --porcelain --untracked-files=no)" ]; then
+            if [[ "$EUID" -eq 0 && "$APP_GIT_USER" != root ]]; then
+              APP_HOME="$(getent passwd "$APP_GIT_USER" | cut -d: -f6)"
+              [[ -n "$APP_HOME" ]] || { echo "Cannot resolve home directory for checkout owner $APP_GIT_USER." >&2; exit 1; }
+              run_app() {
+                runuser -u "$APP_GIT_USER" -- env HOME="$APP_HOME" USER="$APP_GIT_USER" LOGNAME="$APP_GIT_USER" "$@"
+              }
+            else
+              run_app() { "$@"; }
+            fi
+            if [ ! -d "$APP_DIR/.git" ]; then
+              run_app git clone "$REPO" "$APP_DIR"
+            fi
+            run_app git -C "$APP_DIR" fetch origin --prune
+            if [ -n "$(run_app git -C "$APP_DIR" status --porcelain --untracked-files=no)" ]; then
               echo "Deployment checkout has local edits; preserve and review them before deploying." >&2
               exit 1
             fi
-            if [ "$(git rev-parse origin/main)" != "$RELEASE_SHA" ]; then
+            if [ "$(run_app git -C "$APP_DIR" rev-parse origin/main)" != "$RELEASE_SHA" ]; then
               echo "Release superseded by a newer main commit; skipping stale deployment."
               exit 0
             fi
-            git reset --hard "$RELEASE_SHA"
-            echo "Deploying $(git rev-parse --short HEAD)"
+            run_app git -C "$APP_DIR" reset --hard "$RELEASE_SHA"
+            cd "$APP_DIR"
+            echo "Deploying $(run_app git -C "$APP_DIR" rev-parse --short HEAD)"
 
             umask 077
             if [ ! -f .env.construction ]; then
@@ -204,6 +221,9 @@ jobs:
               printf 'BROWSER_GATEWAY_INTERNAL_TOKEN=%s\n' "$(openssl rand -hex 48)" >> .env.construction
             fi
             chmod 600 .env.construction
+            if [[ "$EUID" -eq 0 ]] && id administrator >/dev/null 2>&1; then
+              chown administrator:administrator .env.construction .owner-credentials
+            fi
 
             IMAGE_ARCHIVE="/home/administrator/production/cortexx-images-$RELEASE_SHA.tar.zst"
             test -s "$IMAGE_ARCHIVE"
@@ -251,7 +271,15 @@ jobs:
             fi
             echo "Verified live production container revision: $running_revision"
 
-            bash ops/install-construction-app-crons.sh
+            if [[ "$EUID" -eq 0 ]]; then
+              id administrator >/dev/null 2>&1 || { echo "Administrator account is required to install the application cron jobs safely." >&2; exit 1; }
+              runuser -u administrator -- env HOME=/home/administrator \
+                CORTEXX_REPO="$APP_DIR" CORTEXX_ENV_FILE="$APP_DIR/.env.construction" \
+                bash "$APP_DIR/ops/install-construction-app-crons.sh"
+            else
+              CORTEXX_REPO="$APP_DIR" CORTEXX_ENV_FILE="$APP_DIR/.env.construction" \
+                bash ops/install-construction-app-crons.sh
+            fi
 
             INGRESS=/home/administrator/video-lab/Caddyfile.viral-shorts
             if [ ! -f "$INGRESS" ]; then

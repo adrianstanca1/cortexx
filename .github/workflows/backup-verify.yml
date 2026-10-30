@@ -62,7 +62,7 @@ jobs:
           if [[ -n "${VPS_PASSWORD:-}" ]]; then
             export SSHPASS="$VPS_PASSWORD"
             for candidate in "${CANDIDATES[@]}"; do
-              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=keyboard-interactive,password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
                 echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
                 echo "CORTEXX_SSH_MODE=password" >> "$GITHUB_ENV"
                 echo "SSH password authentication ready for the $candidate account."
@@ -83,7 +83,7 @@ jobs:
             export SSHPASS="$VPS_PASSWORD"
             REMOTE=(sshpass -e ssh "${SSH_BASE[@]}" "$VPS_USER@$VPS_HOST")
           fi
-          "${REMOTE[@]}" 'bash "$HOME/bin/construction-verify-latest.sh"' 2>&1 | tee /tmp/construction-verify.log
+          "${REMOTE[@]}" 'BACKUP_DIR=/home/administrator/backups/construction bash /home/administrator/bin/construction-verify-latest.sh' 2>&1 | tee /tmp/construction-verify.log
           {
             echo '## Construction backup restore verified'
             echo '```'
@@ -108,7 +108,7 @@ jobs:
           mkdir -p /tmp/cortexx-offsite
           ARCHIVE="/tmp/cortexx-offsite/construction-backup-${GITHUB_RUN_ID}.tar.gz.enc"
           "${REMOTE[@]}" 'set -euo pipefail
-            BACKUP_DIR="${BACKUP_DIR:-$HOME/backups/construction}"
+            BACKUP_DIR=/home/administrator/backups/construction
             marker="$BACKUP_DIR/.last-local-success"
             [[ -s "$marker" ]] || { echo "No successful backup marker" >&2; exit 1; }
             backup="$(realpath "$(cat "$marker")")"
