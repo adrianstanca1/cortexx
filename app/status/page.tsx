@@ -17,6 +17,7 @@ interface HealthCheck {
   ms?: number
   error?: string
   free_gb?: number
+  ephemeral?: boolean
   rss_mb?: number
 }
 
@@ -152,6 +153,7 @@ export default function StatusPage() {
                 <div style={{ fontSize: 11, color: 'var(--t2)', marginTop: 2 }}>
                   {c.ok ? 'Operational' : c.error || 'Failed'}
                   {typeof c.ms === 'number' && ` · ${c.ms}ms`}
+                  {c.ephemeral && ' · ephemeral serverless storage'}
                   {typeof c.free_gb === 'number' && ` · ${c.free_gb}GB free`}
                   {typeof c.rss_mb === 'number' && ` · ${c.rss_mb}MB RSS`}
                 </div>

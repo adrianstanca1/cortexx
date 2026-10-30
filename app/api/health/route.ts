@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server'
 import { statfs } from 'node:fs/promises'
 import { prisma } from '@/lib/db'
+import { evaluateDiskCapacity } from '@/lib/health-disk.mjs'
 
 export const dynamic = 'force-dynamic'
 
@@ -9,6 +10,7 @@ interface Check {
   ms?: number
   error?: string
   free_gb?: number
+  ephemeral?: boolean
   rss_mb?: number
 }
 
@@ -29,8 +31,7 @@ export async function GET() {
   try {
     const stats = await statfs(process.cwd())
     const freeBytes = Number(stats.bavail) * Number(stats.bsize)
-    const freeGb = freeBytes / 1024 ** 3
-    checks.disk = { ok: freeGb > 1, free_gb: Math.round(freeGb * 100) / 100 }
+    checks.disk = evaluateDiskCapacity(freeBytes)
   } catch {
     checks.disk = { ok: true } // best-effort; don't fail health on disk-stat unavailable
   }
