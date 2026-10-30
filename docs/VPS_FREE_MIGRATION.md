@@ -84,3 +84,21 @@ This branch intentionally records the safe migration plan and disables the retir
 
 
 **Protected-branch note:** A direct update to `.github/workflows/deploy-vps.yml` on `main` was rejected by branch protection (8 required status checks). The tombstone remains in PR #433 until CI passes and the PR is merged; do not claim the main-branch workflow is disabled yet.
+
+
+## Dedicated Cortexx database provisioned (30 October 2026)
+
+A new isolated Neon Free project has been created for Cortexx:
+- Project: `cortexx-vps-free` (`flat-breeze-66564481`)
+- Region: `aws-eu-west-2` (EU / London-adjacent region)
+- PostgreSQL: 17
+- Database: `cortexx`, owner `cortexx_owner`
+- Branch: `production` (`br-gentle-math-zajczdl4`)
+- Compute: 0.25 CU minimum and maximum.
+- The new database was verified empty (zero user tables, zero table data).
+- The Neon endpoint was suspended immediately after verification; the latest endpoint inspection reported `idle`. This avoids leaving a compute active while source backup/schema work is pending.
+- Neon did not permit setting a custom 300-second suspend interval on this account. The endpoint is currently explicitly suspended rather than relying on an assumed auto-suspend policy.
+- No connection string or privileged database password has been fetched, printed, committed, or placed into hosting environment variables.
+- No SQL schema, seed data, customer records, or production export has been imported.
+
+This project is an isolated **destination only**. It is not yet a functioning application database and must not be connected to production until the canonical schema has been installed and validated, the authoritative source has been identified, and a verified backup/restore comparison is complete. The existing unrelated Neon `cortex` project remains untouched.
