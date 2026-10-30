@@ -1,8 +1,10 @@
 'use strict'
 
 function boundedInteger(value, fallback, min, max) {
-  if (value === undefined || value === null || value === '') return fallback
-  const parsed = Number(value)
+  if (value === undefined || value === null) return fallback
+  const normalized = typeof value === 'string' ? value.trim() : value
+  if (normalized === '') return fallback
+  const parsed = Number(normalized)
   if (!Number.isSafeInteger(parsed)) return fallback
   return Math.min(max, Math.max(min, parsed))
 }

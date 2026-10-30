@@ -42,8 +42,22 @@ test('invalid and extreme pool settings fall back or clamp safely', () => {
   assert.equal(config.maxUses, 100)
 })
 
-test('boundedInteger rejects non-integer values', () => {
+test('boundedInteger rejects non-integer values and treats whitespace as unset', () => {
   assert.equal(boundedInteger('2.5', 7, 1, 10), 7)
+  assert.equal(boundedInteger('   ', 7, 1, 10), 7)
   assert.equal(boundedInteger('0', 7, 1, 10), 1)
   assert.equal(boundedInteger('99', 7, 1, 10), 10)
+})
+
+test('whitespace-only pool environment values use safe defaults', () => {
+  const config = createPoolConfig({
+    PG_POOL_MAX: '   ',
+    PG_IDLE_TIMEOUT_MS: '\t',
+    PG_CONNECT_TIMEOUT_MS: '  ',
+    PG_POOL_MAX_USES: '\n',
+  })
+  assert.equal(config.max, 10)
+  assert.equal(config.idleTimeoutMillis, 30000)
+  assert.equal(config.connectionTimeoutMillis, 5000)
+  assert.equal(config.maxUses, 7500)
 })

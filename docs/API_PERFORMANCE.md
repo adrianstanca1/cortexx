@@ -10,7 +10,7 @@ centralised in `server/db/pool-config.js` and applied by `server/index.js`.
 | `PG_POOL_MAX` | 10 | 1–30 | Maximum concurrent PostgreSQL clients per API instance |
 | `PG_IDLE_TIMEOUT_MS` | 30000 | 1000–120000 | Close idle clients after this duration |
 | `PG_CONNECT_TIMEOUT_MS` | 5000 | 1000–30000 | Bound connection acquisition time |
-| `PG_POOL_MAX_USES` | 7500 | 100–1000000 | Recycle clients after this many queries |
+| `PG_POOL_MAX_USES` | 7500 | 100–1000000 | Recycle clients after this many client releases (a release may follow multiple queries) |
 
 TCP keepalive is enabled with a 10-second initial delay. Invalid values fall
 back to safe defaults; out-of-range integers are clamped.
