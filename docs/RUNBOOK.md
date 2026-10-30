@@ -41,7 +41,7 @@ The former `.github/workflows/deploy-vps.yml`, `.github/workflows/db-rescue.yml`
 
 ## Cutover and rollback
 
-No production DNS, existing database, storage bucket, or production service is to be changed as part of preparation. Cutover is a separate gated operation after:
+Do not change production DNS, the existing database, storage bucket, or production services during preparation. Cutover is a separate gated operation after:
 - source backup integrity is verified;
 - schema and data restore comparisons pass;
 - staging end-to-end checks pass;
