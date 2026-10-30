@@ -60,15 +60,25 @@ Secrets must be set in the hosting provider's secret/environment-variable interf
 - R2: S3-compatible endpoint, bucket, access key and secret key, with least-privilege credentials.
 - Optional LLM: runtime/base/model/key only when the user has explicitly selected a provider.
 
+## Account and resource inspection (30 October 2026)
+
+- GitHub repository `adrianstanca1/cortexx` is accessible; default branch is `main`. The existing migration branch contains two preparation commits and is ahead of `main` by two commits.
+- Render workspace `My Workspace` is connected. It currently contains five active free web services for Jarvis and FacelessVideoGen plus suspended legacy CortexBuild services. Sampled Render metrics returned no usable instance-count series, so the remaining workspace-wide 750-hour allowance could not be established. No Cortexx Render service was created.
+- The Neon connector is now connected. The free Neon organization already contains a project named `cortex` in `aws-eu-west-2`, with a production branch and approximately 37 MB of logical data. Its database contains a populated Prisma-style Cortex schema (including User, Organization, Project, invoices, payroll, safety and other business tables) plus Neon Auth tables. This is potentially important existing Cortex data and is **not** a blank migration target. It has not been modified, migrated, or used as the destination for the separate Express raw-SQL schema. Do not overwrite it or apply `server/db/schema.sql` to it.
+- The separate Property Passport Render Postgres instance remains untouched and expires on 21 November 2026.
+- No Cloudflare account/DNS/R2 access is connected here.
+- The actual current production database and uploads on the unavailable VPS have not been exported or inspected. No data migration has been run.
+- Google Cloud billing is not enabled by this migration and must remain untouched without approval.
+
 ## Current blockers
 
-- No VPS or SSH access is available; the legacy automatic deploy trigger is disabled.
-- Render workspace free-hour usage is not exposed by the connected metrics result; the dashboard's Monthly Included Usage must be checked before adding services.
-- No Cortexx-specific Render services exist.
-- No Neon project is connected yet. The Neon connector must be connected before a destination database can be created and verified.
+- No VPS or SSH access is available; the legacy automatic deploy trigger is disabled on the migration branch.
+- Render workspace free-hour usage is not exposed by the connected metrics result; the dashboard's Monthly Included Usage must be checked before adding any free web service.
+- No Cortexx-specific Render service exists. A new free web service is not provisioned until workspace capacity and the required split API/Next.js runtime design are verified.
+- The connected Neon `cortex` project is populated and must be treated as existing data, not a fresh destination. The Express API's `server/db/schema.sql` is a different raw-SQL model from the populated Prisma schema; they must remain isolated unless a reviewed compatibility migration proves otherwise.
 - No Cloudflare account/DNS/R2 access is connected here.
-- Production database and uploads have not been exported or inspected. No data migration has been run.
-- Google Cloud billing is not enabled by this migration and must remain untouched without approval.
+- Production database and uploads on the former VPS have not been exported or inspected; this prevents a safe production data migration or DNS cutover.
+- Google Cloud requires an active billing account even for Free Tier services. Billing, Artifact Registry and Cloud Run have not been enabled and must remain untouched without separate approval.
 
 ## Acceptance criteria
 
