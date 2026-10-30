@@ -76,9 +76,11 @@ const pool = new Pool(createPoolConfig());
 // Idle clients can emit errors after a network/database restart. Handle them
 // centrally so a transient socket failure is logged instead of crashing the
 // process; requests can reconnect through pg's normal pool lifecycle.
-pool.on('error', (err) => {
-  log.error('[db] idle pool client error', { message: err.message, code: err.code });
-});
+if (typeof pool.on === 'function') {
+  pool.on('error', (err) => {
+    log.error('[db] idle pool client error', { message: err.message, code: err.code });
+  });
+}
 // Expose the pool to route modules that read req.app.locals.pool
 // (push, banking, iap, hmrc). Without this they silently fail.
 app.locals.pool = pool;
