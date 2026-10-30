@@ -52,6 +52,6 @@ test('native offline cache cannot return another user or company data', () => {
   assert.match(core, /export function setOfflineScope\(/)
   assert.match(core, /cb_cache_' \+ scope/); assert.match(core, /scope !== _offlineScope/)
   assert.match(core, /w\.scope !== _offlineScope/)
-  assert.match(client, /setOfflineScope\(body\.user\.id \+ '_' \+ /)
-  assert.match(client, /setOfflineScope\(user\.id \+ '_' \+ /)
+  assert.match(client, /const organizationId = body\.user\.organization\?\.id \|\| body\.user\.organizations\?\.\[0\]\?\.id/); assert.match(client, /setOfflineScope\(organizationId \? `\$\{body\.user\.id\}_\$\{organizationId\}` : null\)/)
+  assert.match(client, /const organizationId = user\.organization\?\.id \|\| active\?\.id/); assert.match(client, /setOfflineScope\(organizationId \? `\$\{user\.id\}_\$\{organizationId\}` : null\)/)
 })

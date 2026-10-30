@@ -65,6 +65,21 @@ export function setQueueStore(s: typeof _queueStore, onLoad?: QueuedWrite[]) { _
 function notifyQueue() { _queueListeners.forEach((l) => l()); }
 export function onQueueChange(cb: () => void): () => void { _queueListeners.push(cb); return () => { _queueListeners = _queueListeners.filter((l) => l !== cb); }; }
 export function pendingWrites(): number { return _queue.length; }
+function isScopedWrite(write: QueuedWrite): boolean { return typeof write.scope === 'string' && write.scope.trim().length > 0; }
+/** Legacy writes without a verified account+workspace scope are quarantined and never replayed. */
+export function legacyPendingWrites(): number { return _queue.filter((write) => !isScopedWrite(write)).length; }
+/** Export quarantined legacy writes so a user can retain/review them before explicit discard. */
+export function exportLegacyWrites(): string {
+  return JSON.stringify({ format: 'cortex-legacy-offline-queue', version: 1, exportedAt: new Date().toISOString(), entries: _queue.filter((write) => !isScopedWrite(write)) }, null, 2);
+}
+/** Discard only unscoped legacy entries; valid entries for another workspace remain quarantined. */
+export async function discardLegacyWrites(): Promise<number> {
+  const before = _queue.length;
+  _queue = _queue.filter(isScopedWrite);
+  const discarded = before - _queue.length;
+  if (discarded) { await queuePersist(); notifyQueue(); }
+  return discarded;
+}
 async function queuePersist() { if (_queueStore) try { await _queueStore.set('cb_queue', JSON.stringify(_queue)); } catch { /* ignore */ } }
 async function enqueue(w: QueuedWrite) { _queue.push(w); await queuePersist(); notifyQueue(); }
 async function dequeue(id: string) { _queue = _queue.filter((w) => w.id !== id); await queuePersist(); notifyQueue(); }
@@ -87,7 +102,10 @@ async function replayQueue(opts?: { apiUrl?: string; token?: string | null }): P
     // them for manual recovery rather than injecting into another tenant.
     if (!_offlineScope || !w.scope || w.scope !== _offlineScope) { failed++; continue; }
     const headers: Record<string, string> = { 'content-type': 'application/json' };
-    const t = opts?.token ?? await _store.get(); if (t) headers.authorization = `Bearer ${t}`;
+    const t = opts?.token ?? await _store.get();
+    // Re-check after async token lookup to prevent cross-workspace replay.
+    if (!_offlineScope || w.scope !== _offlineScope) { failed++; continue; }
+    if (t) headers.authorization = `Bearer ${t}`;
     const r = await fetch(`${API_URL}/api/${w.collection}${w.rowId ? '/' + w.rowId : ''}`, { method: w.method, headers, body: JSON.stringify(w.body) });
     if (r.ok) { await dequeue(w.id); ok++; } else failed++;
   } catch { failed++; }
@@ -161,7 +179,11 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
       const separator = path.includes('?') ? '&' : '?';
       const data = await apiGet(`${path}${separator}take=${take}&skip=${offset}`);
       const slice = Array.isArray(data) ? data : (data?.rows ?? data?.[key]);
-      if (!Array.isArray(slice)) throw httpFailure(`Unexpected ${key} response`, 502);
+      if (!Array.isArray(slice)) {
+        const error = httpFailure(`Unexpected ${key} response`, 502) as Error & { invalidResponse?: boolean };
+        error.invalidResponse = true;
+        throw error;
+      }
       rows.push(...slice);
       offset += slice.length;
       if (!data?.hasMore || !slice.length) break;
@@ -200,7 +222,7 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
         return rows;
       } catch (error: any) {
         if (error?.message === 'unauthorized' || error?.httpStatus === 403) await denyCached('projects', scope);
-        if (error?.message === 'unauthorized' || isHttpFailure(error) || scope !== _offlineScope) throw error;
+        if (error?.message === 'unauthorized' || (isHttpFailure(error) && ((error.httpStatus || 0) < 500 || error.invalidResponse === true)) || scope !== _offlineScope) throw error;
         const cached = await cacheGet('projects', scope);
         if (cached) return cached;
         throw error;
@@ -228,19 +250,22 @@ export function createApiClient(opts: Partial<ApiClientOptions> = {}) {
         return rows;
       } catch (error: any) {
         if (error?.message === 'unauthorized' || error?.httpStatus === 403) await denyCached(name, scope);
-        if (error?.message === 'unauthorized' || isHttpFailure(error) || scope !== _offlineScope) throw error;
+        if (error?.message === 'unauthorized' || (isHttpFailure(error) && ((error.httpStatus || 0) < 500 || error.invalidResponse === true)) || scope !== _offlineScope) throw error;
         const cached = await cacheGet(name, scope);
         if (cached) return cached.slice(0, Math.min(1000, Math.max(1, Math.floor(limit))));
         throw error;
       }
     },
-    postCollection(name: string, body: any): Promise<any> { return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body, scope: _offlineScope || undefined }); return { id, _queued: true, ...body }; }); },
+    postCollection(name: string, body: any): Promise<any> { const scope = _offlineScope; return apiPost(`/api/${name}`, body).catch(async (e: any) => { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; if (!scope) throw new Error('Offline save is unavailable until your company workspace is verified. Reconnect and try again.'); if (scope !== _offlineScope) throw new Error('Workspace changed while saving. Reconnect and retry in the active company.'); const id = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id, method: 'POST', collection: name, body, scope }); return { id, _queued: true, ...body }; }); },
     async putCollection(name: string, id: string, body: any): Promise<any> {
-      const t = await token(); const headers: Record<string, string> = { 'content-type': 'application/json' }; if (t) headers.authorization = `Bearer ${t}`;
+      const scope = _offlineScope;
+      const t = await token();
+      if (scope !== _offlineScope) throw new Error('Workspace changed while saving. Reconnect and retry in the active company.');
+      const headers: Record<string, string> = { 'content-type': 'application/json' }; if (t) headers.authorization = `Bearer ${t}`;
       try { const r = await fetch(`${API_URL}/api/${name}/${id}`, { method: 'PUT', headers, body: JSON.stringify(body) }); if (r.status === 401) { await store.clear(); throw new Error('unauthorized'); } if (!r.ok) { const e = await r.json().catch(() => ({})); throw httpFailure((e as any).error || 'Update failed', r.status); } return r.json(); }
-      catch (e: any) { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body, scope: _offlineScope || undefined }); return { id, _queued: true, ...body }; }
+      catch (e: any) { if (e?.message === 'unauthorized' || isHttpFailure(e)) throw e; if (!scope) throw new Error('Offline save is unavailable until your company workspace is verified. Reconnect and try again.'); if (scope !== _offlineScope) throw new Error('Workspace changed while saving. Reconnect and retry in the active company.'); const qid = 'cw_' + Date.now() + '_' + Math.random().toString(36).slice(2, 8); await enqueue({ id: qid, method: 'PUT', collection: name, rowId: id, body, scope }); return { id, _queued: true, ...body }; }
     },
-    apiGet, apiPost, onQueueChange, pendingWrites, flushQueue, startStream, stopStream, onStreamEvent,
+    apiGet, apiPost, onQueueChange, pendingWrites, legacyPendingWrites, exportLegacyWrites, discardLegacyWrites, flushQueue, startStream, stopStream, onStreamEvent,
   };
 }
 

@@ -53,7 +53,8 @@ async function persistSession(body: AuthResponse): Promise<AuthResponse> {
   if (!body?.token || !body?.user?.id) throw new Error('Invalid sign-in response.');
   await api.setToken(body.token);
   if ((await api.getToken()) !== body.token) throw new Error('Unable to save your secure session. Please try again.');
-  setOfflineScope(body.user.id + '_' + (body.user.organization?.id || ''));
+  const organizationId = body.user.organization?.id || body.user.organizations?.[0]?.id;
+  setOfflineScope(organizationId ? `${body.user.id}_${organizationId}` : null);
   return body;
 }
 
@@ -109,8 +110,9 @@ export async function getMe(): Promise<AuthUser | null> {
     const body = await api.apiGet('/api/mobile/auth/me');
     const user = (body?.user || null) as AuthUser | null;
     if (!user) return null;
-    setOfflineScope(user.id + '_' + (user.organization?.id || user.organizations?.[0]?.id || ''));
     const active = user.organizations?.[0];
+    const organizationId = user.organization?.id || active?.id;
+    setOfflineScope(organizationId ? `${user.id}_${organizationId}` : null);
     return {
       ...user,
       organizationRole: user.organizationRole || active?.role,
@@ -166,6 +168,9 @@ export async function apiPatch(path: string, body: any) {
 }
 export const onQueueChange = api.onQueueChange;
 export const pendingWrites = api.pendingWrites;
+export const legacyPendingWrites = api.legacyPendingWrites;
+export const exportLegacyWrites = api.exportLegacyWrites;
+export const discardLegacyWrites = api.discardLegacyWrites;
 export const flushQueue = api.flushQueue;
 export const startStream = api.startStream;
 export const stopStream = api.stopStream;

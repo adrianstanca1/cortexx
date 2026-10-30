@@ -63,9 +63,9 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
           cache: npm
           cache-dependency-path: expo/package-lock.json
 
@@ -231,9 +231,9 @@ jobs:
           persist-credentials: false
 
       - name: Set up Node for Expo CLI
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
 
       - name: Validate direct upload inputs
         shell: bash
@@ -420,9 +420,9 @@ jobs:
       EXPO_TOKEN: ${{ secrets.EXPO_TOKEN }}
     steps:
       - name: Set up Node
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v7
         with:
-          node-version: "22"
+          node-version: "24"
       - name: Safely initialize version after previous Apple build 19
         run: |
           node <<'NODE'
