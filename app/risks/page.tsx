@@ -171,7 +171,7 @@ export default function RisksPage() {
               {risks.filter(r => r.status === 'open').length} open · {risks.filter(r => r.score >= 15 && r.status !== 'closed').length} high
             </p>
           </div>
-          <button type="button" onClick={openAdd} aria-label="Add risk" style={{ background: '#dc2626', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Log risk" style={{ background: '#dc2626', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#fff" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#fff', fontWeight: 600 }}>Log</span>
           </button>

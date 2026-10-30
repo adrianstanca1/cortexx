@@ -115,7 +115,7 @@ export default function Exec({ data }: ExecProps) {
           <div style={{ fontFamily: SF, fontSize: 12, color: T.t2, marginTop: 2 }}>{dateStr} · Wk {week}</div>
         </div>
         <button type="button"
-          aria-label={inboxCount > 0 ? `Inbox (${inboxCount})` : 'Inbox'}
+          aria-label={inboxCount > 0 ? `Inbox ${inboxCount > 99 ? '99+' : inboxCount}` : 'Inbox'}
           onClick={() => router.push('/inbox')}
           style={{ position: 'relative', width: 36, height: 36, borderRadius: 10, background: T.bg2, border: `0.5px solid ${T.hair}`, display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
         >

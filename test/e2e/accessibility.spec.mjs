@@ -67,7 +67,7 @@ test('critical creation dialogs have no WCAG A/AA violations', async ({ page }) 
     { route: '/timesheets', open: ['button', 'Add entry'] },
     { route: '/snags', open: ['button', 'Add snag'] },
     { route: '/safety', open: ['button', 'Log incident'] },
-    { route: '/inspections', open: ['button', 'Add inspection'] },
+    { route: '/inspections', open: ['button', 'Schedule inspection'] },
   ]
   const findings = []
   for (const item of dialogs) {

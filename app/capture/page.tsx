@@ -335,7 +335,7 @@ function CaptureContent() {
       <div style={{ padding: '16px 20px 16px 60px', display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.07)' }}>
         <div>
           <h1 style={{ fontSize: 20, fontWeight: 700, color: 'var(--t1)', fontFamily: 'var(--font-system)', letterSpacing: '-0.02em' }}>Capture</h1>
-          <button type="button" onClick={() => setShowProjectPicker(!showProjectPicker)} aria-label="Change project" style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
+          <button type="button" onClick={() => setShowProjectPicker(!showProjectPicker)} aria-label={`Change project: ${activeProject?.name || 'Select project'}`} style={{ background: 'none', border: 'none', padding: 0, cursor: 'pointer', display: 'flex', alignItems: 'center', gap: 4, marginTop: 2 }}>
             <IcPin size={11} color="var(--t3)" />
             <span style={{ fontSize: 12, color: activeProject ? 'var(--t2)' : 'var(--t3)', fontFamily: 'var(--font-system)' }}>
               {activeProject?.name || 'Select project'}

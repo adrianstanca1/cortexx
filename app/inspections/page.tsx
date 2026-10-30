@@ -233,7 +233,7 @@ export default function InspectionsPage() {
               {inspections.length} total · {inspections.filter(i => i.status === 'failed').length} failed
             </p>
           </div>
-          <button type="button" onClick={openAdd} aria-label="Add inspection" style={{ background: '#10b981', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
+          <button type="button" onClick={openAdd} aria-label="Schedule inspection" style={{ background: '#10b981', border: 'none', borderRadius: 10, padding: '8px 12px', display: 'flex', alignItems: 'center', gap: 6, cursor: 'pointer' }}>
             <IcPlus size={14} color="#090b0d" />
             <span style={{ fontFamily: SF, fontSize: 13, color: '#090b0d', fontWeight: 700 }}>Schedule</span>
           </button>
