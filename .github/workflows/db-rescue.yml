@@ -23,26 +23,69 @@ jobs:
     env:
       VPS_HOST: 85.190.100.68
       VPS_USER: administrator
+      VPS_PASSWORD: ${{ secrets.VPS_ROOT_PASSWORD }}
     steps:
       - name: Configure SSH
         env:
           VPS_SSH_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
         run: |
           set -euo pipefail
-          test -n "$VPS_SSH_KEY"
           mkdir -p ~/.ssh
           chmod 700 ~/.ssh
-          printf '%s\n' "$VPS_SSH_KEY" > ~/.ssh/cortexx_rescue
-          chmod 600 ~/.ssh/cortexx_rescue
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null
+          if [[ -n "${VPS_SSH_KEY:-}" ]]; then
+            printf '%s\n' "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/cortexx_rescue
+            chmod 600 ~/.ssh/cortexx_rescue
+          fi
+          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
           chmod 600 ~/.ssh/known_hosts
+          if [[ -n "${VPS_PASSWORD:-}" ]]; then
+            sudo apt-get update -qq
+            sudo apt-get install -y -qq sshpass
+          fi
+
+      - name: Resolve SSH authentication
+        run: |
+          set -euo pipefail
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o IdentitiesOnly=yes)
+          CANDIDATES=(administrator root)
+          KEY_VALID=false
+          if [[ -s ~/.ssh/cortexx_rescue ]] && ssh-keygen -y -f ~/.ssh/cortexx_rescue >/dev/null 2>&1; then KEY_VALID=true; fi
+          for candidate in "${CANDIDATES[@]}"; do
+            if [[ "$KEY_VALID" == true ]] && ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_rescue "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+              echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
+              echo "CORTEXX_SSH_MODE=key" >> "$GITHUB_ENV"
+              echo "SSH key authentication ready for the $candidate account."
+              exit 0
+            fi
+          done
+          if [[ -n "${VPS_PASSWORD:-}" ]]; then
+            export SSHPASS="$VPS_PASSWORD"
+            for candidate in "${CANDIDATES[@]}"; do
+              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=keyboard-interactive,password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+                echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
+                echo "CORTEXX_SSH_MODE=password" >> "$GITHUB_ENV"
+                echo "SSH password authentication ready for the $candidate account."
+                exit 0
+              fi
+            done
+          fi
+          echo "::error::SSH authentication failed for both administrator and root accounts."
+          exit 1
 
       - name: Run safe rescue action
         env:
           ACTION: ${{ inputs.action }}
+          VPS_PASSWORD: ${{ secrets.VPS_ROOT_PASSWORD }}
         run: |
           set -euo pipefail
-          ssh -o StrictHostKeyChecking=yes -o ConnectTimeout=20 -i ~/.ssh/cortexx_rescue "$VPS_USER@$VPS_HOST" "bash -s -- '$ACTION'" <<'REMOTE'
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20)
+          if [[ "$CORTEXX_SSH_MODE" == key ]]; then
+            REMOTE=(ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_rescue "$VPS_USER@$VPS_HOST")
+          else
+            export SSHPASS="$VPS_PASSWORD"
+            REMOTE=(sshpass -e ssh "${SSH_BASE[@]}" "$VPS_USER@$VPS_HOST")
+          fi
+          "${REMOTE[@]}" "bash -s -- '$ACTION'" <<'REMOTE'
             set -euo pipefail
             action="$1"
             app_dir=/home/administrator/production/cortexx
@@ -62,9 +105,18 @@ jobs:
                 docker run --rm --network cortexbuild-construction_default --env-file .env.construction -v "$PWD/prisma:/app/prisma:ro" cortexbuild-construction-tools npx prisma migrate status
                 ;;
               migrate-deploy)
-                git fetch origin main --quiet
-                test -z "$(git status --porcelain --untracked-files=no)"
-                test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+                if [[ "$EUID" -eq 0 ]]; then
+                  checkout_owner="$(stat -c '%U' "$app_dir")"
+                  checkout_home="$(getent passwd "$checkout_owner" | cut -d: -f6)"
+                  [[ -n "$checkout_home" ]] || { echo "Cannot resolve checkout owner home." >&2; exit 1; }
+                  runuser -u "$checkout_owner" -- env HOME="$checkout_home" git -C "$app_dir" fetch origin main --quiet
+                  test -z "$(runuser -u "$checkout_owner" -- env HOME="$checkout_home" git -C "$app_dir" status --porcelain --untracked-files=no)"
+                  test "$(runuser -u "$checkout_owner" -- env HOME="$checkout_home" git -C "$app_dir" rev-parse HEAD)" = "$(runuser -u "$checkout_owner" -- env HOME="$checkout_home" git -C "$app_dir" rev-parse origin/main)"
+                else
+                  git fetch origin main --quiet
+                  test -z "$(git status --porcelain --untracked-files=no)"
+                  test "$(git rev-parse HEAD)" = "$(git rev-parse origin/main)"
+                fi
                 "${compose[@]}" --profile tools build tools
                 docker run --rm --network cortexbuild-construction_default --env-file .env.construction -v "$PWD/prisma:/app/prisma:ro" cortexbuild-construction-tools npx prisma migrate deploy
                 ;;
