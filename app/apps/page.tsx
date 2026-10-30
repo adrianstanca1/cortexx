@@ -319,7 +319,7 @@ export default function AppsPage() {
                   <Link
                     key={m.href}
                     href={m.href}
-                    aria-label={m.label}
+                    aria-label={`${m.label}${showBadge ? ` ${badge}` : ''}${m.ai ? ' AI' : ''}`}
                     style={{
                       position: 'relative',
                       background: 'var(--bg1)', borderRadius: 12,

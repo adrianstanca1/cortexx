@@ -126,7 +126,7 @@ export default function DashboardSwitcher() {
           <Link href="/activity" aria-label="Activity feed" className="command-icon-btn"><IcClock size={16} /></Link>
           <Link href="/reports" aria-label="Reports" className="command-icon-btn"><IcReceipt size={16} /></Link>
           <Link href="/documents" aria-label="Documents" className="command-icon-btn"><IcDoc size={16} /></Link>
-          <Link href="/inbox" aria-label={inboxCount > 0 ? `Inbox (${inboxCount})` : 'Inbox'} className="command-icon-btn" style={{ position: 'relative' }}>
+          <Link href="/inbox" aria-label={inboxCount > 0 ? `Inbox ${inboxCount > 99 ? '99+' : inboxCount}` : 'Inbox'} className="command-icon-btn" style={{ position: 'relative' }}>
             <IcBell size={16} color={inboxCount > 0 ? 'var(--accent)' : 'currentColor'} />
             {inboxCount > 0 && <span style={{
               position: 'absolute', top: -5, right: -5, minWidth: 17, height: 17,
