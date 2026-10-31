@@ -19,6 +19,7 @@ function fixture(t) {
   const create = () => {
     mkdirSync(backup);
     writeFileSync(join(backup, 'database.dump'), 'test');
+    writeFileSync(join(backup, 'SHA256SUMS'), '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  database.dump\n');
     writeFileSync(join(backups, '.last-local-success'), backup + '\n');
   };
   return { backups, backup, create, run };
@@ -32,7 +33,16 @@ test('fresh backup is passed to isolated restore', t => {
   const f = fixture(t); f.create(); const r = f.run();
   assert.equal(r.status, 0, r.stderr); assert.match(r.stdout, /RESTORE:/);
 });
-test('stale backup fails before restore', t => {
+
+test('tampered backup fails checksum verification before restore', t => {
+  const f = fixture(t); f.create();
+  writeFileSync(join(f.backup, 'database.dump'), 'tampered');
+  const r = f.run();
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /checksum verification failed/);
+  assert.doesNotMatch(r.stdout, /RESTORE:/);
+});
+\ntest('stale backup fails before restore', t => {
   const f = fixture(t); f.create(); const old = new Date(Date.now() - 37 * 3600 * 1000);
   utimesSync(join(f.backup, 'database.dump'), old, old);
   const r = f.run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /stale/); assert.doesNotMatch(r.stdout, /RESTORE:/);
