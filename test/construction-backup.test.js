@@ -19,7 +19,8 @@ function fixture(t) {
   const create = () => {
     mkdirSync(backup);
     writeFileSync(join(backup, 'database.dump'), 'test');
-    writeFileSync(join(backup, 'SHA256SUMS'), '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  database.dump\n');
+    writeFileSync(join(backup, 'uploads.tar.gz'), 'test');
+    writeFileSync(join(backup, 'SHA256SUMS'), '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  database.dump\n9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  uploads.tar.gz\n');
     writeFileSync(join(backups, '.last-local-success'), backup + '\n');
   };
   return { backups, backup, create, run };
@@ -74,9 +75,10 @@ test('future timestamp fails before restore', t => {
 test('marker outside managed backups fails before restore', t => {
   const f = fixture(t); f.create();
   const outside = join(dirname(f.backups), 'construction-outside');
-  mkdirSync(outside); writeFileSync(join(outside, 'database.dump'), 'test');
+  mkdirSync(outside);
+  writeFileSync(join(outside, 'database.dump'), 'test');
   writeFileSync(join(outside, 'uploads.tar.gz'), 'test');
-  writeFileSync(join(outside, 'SHA256SUMS'), '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  database.dump\\n9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  uploads.tar.gz\\n');
+  writeFileSync(join(outside, 'SHA256SUMS'), '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  database.dump\n9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  uploads.tar.gz\n');
   writeFileSync(join(f.backups, '.last-local-success'), outside + '\n');
   const r = f.run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /outside the managed/); assert.doesNotMatch(r.stdout, /RESTORE:/);
 });
