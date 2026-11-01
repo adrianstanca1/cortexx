@@ -92,6 +92,9 @@ test('backup verification workflow retains an encrypted off-site artifact and pr
   assert.match(workflow, /actions\/upload-artifact@v7/);
   assert.match(workflow, /retention-days:\s*30/);
   assert.match(workflow, /pg_restore -U postgres -d restore_drill/);
+  assert.match(workflow, /sha256sum --strict --check SHA256SUMS/);
+  assert.match(workflow, /Backup checksum manifest must contain exactly/);
+  assert.match(workflow, /restored-uploads/);
   assert.match(workflow, /compression-level:\s*0/);
   assert.match(workflow, /\.env\.construction \.owner-credentials/);
   assert.match(workflow, /Recovered \$secret permissions are not 600/);
