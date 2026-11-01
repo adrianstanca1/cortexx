@@ -16,13 +16,7 @@ age=$(( $(date +%s) - $(stat -c %Y "$backup/database.dump") ))
 printf 'Latest construction backup is %s seconds old.\n' "$age"
 # Require exactly one checksum entry for each required payload; reject omissions and malformed lines.
 mapfile -t checksum_entries < "$backup/SHA256SUMS"
-if [[ "${#checksum_entries[@]}" -ne 2 ]] || ! grep -Eq '^([[:xdigit:]]{64})  database\.dump
-echo 'Backup checksums verified.'
-bash "$(dirname "$0")/construction-restore-drill.sh" "$backup"
- "$backup/SHA256SUMS" || ! grep -Eq '^([[:xdigit:]]{64})  uploads\.tar\.gz
-echo 'Backup checksums verified.'
-bash "$(dirname "$0")/construction-restore-drill.sh" "$backup"
- "$backup/SHA256SUMS"; then
+if [[ "${#checksum_entries[@]}" -ne 2 ]] || ! grep -Eq '^[[:xdigit:]]{64}  database\.dump$' "$backup/SHA256SUMS" || ! grep -Eq '^[[:xdigit:]]{64}  uploads\.tar\.gz$' "$backup/SHA256SUMS"; then
   echo 'Backup checksum manifest must contain exactly database.dump and uploads.tar.gz' >&2
   exit 1
 fi
