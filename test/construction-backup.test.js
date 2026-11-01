@@ -42,7 +42,8 @@ test('tampered backup fails checksum verification before restore', t => {
   assert.match(r.stderr, /checksum verification failed/);
   assert.doesNotMatch(r.stdout, /RESTORE:/);
 });
-\ntest('stale backup fails before restore', t => {
+
+test('stale backup fails before restore', t => {
   const f = fixture(t); f.create(); const old = new Date(Date.now() - 37 * 3600 * 1000);
   utimesSync(join(f.backup, 'database.dump'), old, old);
   const r = f.run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /stale/); assert.doesNotMatch(r.stdout, /RESTORE:/);
