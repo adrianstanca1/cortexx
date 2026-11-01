@@ -154,7 +154,13 @@ jobs:
           grep -q '^PASSWORD=' "$VERIFY_DIR/.owner-credentials"
           BACKUP="${BACKUPS[0]}"
           mapfile -t CHECKSUM_ENTRIES < "$BACKUP/SHA256SUMS"
-          if [[ "${#CHECKSUM_ENTRIES[@]}" -ne 2 ]] || ! grep -Eq '^[[:xdigit:]]{64}  database\\.dump
+          if [[ "${#CHECKSUM_ENTRIES[@]}" -ne 2 ]] ||
+             ! grep -Eq '^[[:xdigit:]]{64}  database\.dump$' "$BACKUP/SHA256SUMS" ||
+             ! grep -Eq '^[[:xdigit:]]{64}  uploads\.tar\.gz$' "$BACKUP/SHA256SUMS"; then
+            echo "::error::Backup checksum manifest must contain exactly database.dump and uploads.tar.gz."
+            exit 1
+          fi
+          (cd "$BACKUP" && sha256sum --strict --check SHA256SUMS)
           gzip -t "$BACKUP/uploads.tar.gz"
           IMAGE="$(cat "$BACKUP/postgres-image.txt")"
           [[ "$IMAGE" == postgres:* ]] || { echo "::error::Unexpected PostgreSQL image in backup."; exit 1; }
