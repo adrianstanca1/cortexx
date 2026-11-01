@@ -19,6 +19,8 @@ function fixture(t) {
   const create = () => {
     mkdirSync(backup);
     writeFileSync(join(backup, 'database.dump'), 'test');
+    writeFileSync(join(backup, 'uploads.tar.gz'), 'test');
+    writeFileSync(join(backup, 'SHA256SUMS'), '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  database.dump\n9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  uploads.tar.gz\n');
     writeFileSync(join(backups, '.last-local-success'), backup + '\n');
   };
   return { backups, backup, create, run };
@@ -32,6 +34,34 @@ test('fresh backup is passed to isolated restore', t => {
   const f = fixture(t); f.create(); const r = f.run();
   assert.equal(r.status, 0, r.stderr); assert.match(r.stdout, /RESTORE:/);
 });
+
+test('tampered backup fails checksum verification before restore', t => {
+  const f = fixture(t); f.create();
+  writeFileSync(join(f.backup, 'database.dump'), 'tampered');
+  const r = f.run();
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /checksum verification failed/);
+  assert.doesNotMatch(r.stdout, /RESTORE:/);
+});
+
+test('manifest missing a required payload checksum fails before restore', t => {
+  const f = fixture(t); f.create();
+  writeFileSync(join(f.backup, 'SHA256SUMS'), '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  database.dump\\n');
+  const r = f.run();
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /checksum manifest must contain exactly/);
+  assert.doesNotMatch(r.stdout, /RESTORE:/);
+});
+
+test('malformed checksum manifest fails before restore', t => {
+  const f = fixture(t); f.create();
+  writeFileSync(join(f.backup, 'SHA256SUMS'), readFileSync(join(f.backup, 'SHA256SUMS'), 'utf8') + 'malformed entry\\n');
+  const r = f.run();
+  assert.notEqual(r.status, 0);
+  assert.match(r.stderr, /checksum manifest must contain exactly/);
+  assert.doesNotMatch(r.stdout, /RESTORE:/);
+});
+
 test('stale backup fails before restore', t => {
   const f = fixture(t); f.create(); const old = new Date(Date.now() - 37 * 3600 * 1000);
   utimesSync(join(f.backup, 'database.dump'), old, old);
@@ -45,7 +75,10 @@ test('future timestamp fails before restore', t => {
 test('marker outside managed backups fails before restore', t => {
   const f = fixture(t); f.create();
   const outside = join(dirname(f.backups), 'construction-outside');
-  mkdirSync(outside); writeFileSync(join(outside, 'database.dump'), 'test');
+  mkdirSync(outside);
+  writeFileSync(join(outside, 'database.dump'), 'test');
+  writeFileSync(join(outside, 'uploads.tar.gz'), 'test');
+  writeFileSync(join(outside, 'SHA256SUMS'), '9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  database.dump\n9f86d081884c7d659a2feaa0c55ad015a3bf4f1b2b0b822cd15d6c15b0f00a08  uploads.tar.gz\n');
   writeFileSync(join(f.backups, '.last-local-success'), outside + '\n');
   const r = f.run(); assert.notEqual(r.status, 0); assert.match(r.stderr, /outside the managed/); assert.doesNotMatch(r.stdout, /RESTORE:/);
 });
@@ -59,6 +92,9 @@ test('backup verification workflow retains an encrypted off-site artifact and pr
   assert.match(workflow, /actions\/upload-artifact@v7/);
   assert.match(workflow, /retention-days:\s*30/);
   assert.match(workflow, /pg_restore -U postgres -d restore_drill/);
+  assert.match(workflow, /sha256sum --strict --check SHA256SUMS/);
+  assert.match(workflow, /Backup checksum manifest must contain exactly/);
+  assert.match(workflow, /restored-uploads/);
   assert.match(workflow, /compression-level:\s*0/);
   assert.match(workflow, /\.env\.construction \.owner-credentials/);
   assert.match(workflow, /Recovered \$secret permissions are not 600/);

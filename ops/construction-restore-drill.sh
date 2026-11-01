@@ -3,7 +3,13 @@
 set -euo pipefail
 umask 077
 backup=$(realpath "${1:?Usage: construction-restore-drill.sh BACKUP_DIRECTORY}")
-(cd "$backup" && sha256sum -c SHA256SUMS)
+[[ -f "$backup/database.dump" && -f "$backup/uploads.tar.gz" && -f "$backup/SHA256SUMS" ]] || { echo 'Backup payload or checksum manifest is missing' >&2; exit 1; }
+mapfile -t checksum_entries < "$backup/SHA256SUMS"
+if [[ "${#checksum_entries[@]}" -ne 2 ]] || ! grep -Eq '^[[:xdigit:]]{64}  database\.dump$' "$backup/SHA256SUMS" || ! grep -Eq '^[[:xdigit:]]{64}  uploads\.tar\.gz$' "$backup/SHA256SUMS"; then
+  echo 'Backup checksum manifest must contain exactly database.dump and uploads.tar.gz' >&2
+  exit 1
+fi
+(cd "$backup" && sha256sum --strict --check SHA256SUMS)
 image=$(cat "$backup/postgres-image.txt")
 [[ "$image" == postgres:* ]] || { echo 'Unexpected PostgreSQL image' >&2; exit 1; }
 name="cortexx-restore-drill-$(date +%s)-$$"
