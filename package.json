@@ -72,7 +72,7 @@
     "@types/web-push": "^3.6.4",
     "bcryptjs": "^3.0.3",
     "ioredis": "^6.0.0",
-    "jose": "^6.2.12",
+    "jose": "^6.2.14",
     "next": "^16.4.3",
     "next-auth": "^5.0.0-beta.32",
     "pdfkit": "^0.20.2",
