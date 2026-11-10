@@ -40,6 +40,9 @@ jobs:
             echo "ios_changed=true" >> "$GITHUB_OUTPUT"
           elif git diff --name-only "$base" "$head" | grep -Eq '^(ios/|expo/|agent-os/|packages/core/|.github/workflows/ios-build.yml$)'; then
             echo "ios_changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --unified=0 "$base" "$head" -- package.json package-lock.json | grep -Eq '^[+-].*(@capacitor/|@ionic/|@expo/|expo-|"expo"|react-native|@react-native/|metro|@babel/|babel-preset-expo)'; then
+            echo "ios_changed=true" >> "$GITHUB_OUTPUT"
+            echo "Detected a native-affecting dependency change in root package manifests."
           else
             echo "ios_changed=false" >> "$GITHUB_OUTPUT"
           fi
