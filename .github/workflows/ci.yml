@@ -23,6 +23,9 @@ jobs:
     timeout-minutes: 20
     steps:
       - uses: actions/checkout@v7
+      - name: Validate GitHub workflow YAML syntax
+        run: |
+          ruby -e 'require "yaml"; Dir.glob(".github/workflows/*.{yml,yaml}").sort.each { |path| YAML.parse_file(path); puts "valid YAML: #{path}" }'
       - uses: actions/setup-node@v7
         with:
           node-version: ${{ env.NODE_VERSION }}
