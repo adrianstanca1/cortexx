@@ -28,7 +28,7 @@ concurrency:
 jobs:
   build:
     name: Build, Archive & Upload
-    runs-on: macos-14
+    runs-on: macos-15
     timeout-minutes: 60
     env:
       XCODE_SCHEME: App
