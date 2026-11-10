@@ -11,6 +11,39 @@ concurrency:
   cancel-in-progress: true
 
 jobs:
+  # Decide whether this change can affect a native iOS build. The native
+  # macOS preflight is expensive and unrelated server/dependency changes
+  # should not be blocked by an unavailable macOS runner.
+  changes:
+    runs-on: ubuntu-latest
+    outputs:
+      ios_changed: ${{ steps.filter.outputs.ios_changed }}
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - id: filter
+        shell: bash
+        run: |
+          if [[ "${{ github.event_name }}" == "pull_request" ]]; then
+            base="${{ github.event.pull_request.base.sha }}"
+            head="${{ github.event.pull_request.head.sha }}"
+          elif [[ "${{ github.event_name }}" == "push" ]]; then
+            base="${{ github.event.before }}"
+            head="${{ github.sha }}"
+          else
+            echo "ios_changed=true" >> "$GITHUB_OUTPUT"
+            exit 0
+          fi
+
+          if [[ -z "$base" || "$base" =~ ^0+$ ]]; then
+            echo "ios_changed=true" >> "$GITHUB_OUTPUT"
+          elif git diff --name-only "$base" "$head" | grep -Eq '^(ios/|expo/|agent-os/|packages/core/|.github/workflows/ios-build.yml$)'; then
+            echo "ios_changed=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "ios_changed=false" >> "$GITHUB_OUTPUT"
+          fi
+
   # ── Shared core / Expo RN typecheck + unit tests (Linux, no Mac) ──
   apps:
     runs-on: ubuntu-latest
@@ -101,6 +134,8 @@ jobs:
 
   # ── Native iOS build pre-flight (needs macOS — validates Pods + xcodebuild) ──
   ios-build:
+    needs: changes
+    if: needs.changes.outputs.ios_changed == 'true'
     runs-on: macos-14
     steps:
       - uses: actions/checkout@v7
