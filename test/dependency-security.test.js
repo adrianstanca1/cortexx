@@ -21,7 +21,11 @@ test('security overrides pin patched uuid in root and iOS tooling', () => {
   assert.equal(rootPkg.overrides?.compression, '1.8.2')
   assert.equal(serverPkg.overrides?.['proxy-addr'], '2.0.8')
   assert.equal(iosPkg.overrides?.uuid, '11.1.1')
-  assert.equal(rootLock.packages?.['node_modules/uuid']?.version, '11.1.1')
+  const rootUuidEntries = Object.entries(rootLock.packages ?? {})
+    .filter(([packagePath]) => packagePath === 'node_modules/uuid' || packagePath.endsWith('/node_modules/uuid'))
+  for (const [packagePath, entry] of rootUuidEntries) {
+    assert.equal(entry.version, '11.1.1', `root lock ${packagePath} must use patched uuid`)
+  }
   assert.equal(rootLock.packages?.['node_modules/sharp']?.version, '0.35.5')
   assert.equal(rootLock.packages?.['node_modules/source-map-js']?.version, '1.2.2')
   assert.equal(rootLock.packages?.['node_modules/proxy-addr']?.version, '2.0.8')
