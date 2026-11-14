@@ -2,58 +2,84 @@ name: Health Monitor
 
 on:
   schedule:
-    - cron: '*/15 * * * *' # every 15 minutes
+    - cron: '*/15 * * * *'
   workflow_dispatch:
+
+permissions:
+  issues: write
+
+concurrency:
+  group: production-health-monitor
+  cancel-in-progress: true
 
 jobs:
   health:
     runs-on: ubuntu-latest
-    permissions:
-      issues: write
+    timeout-minutes: 5
     steps:
-      - name: Check production health
+      - name: Check production health and critical pages
         id: check
+        shell: bash
         run: |
-          set +e
-          RESPONSE=$(curl -s --max-time 15 https://cortexbuildpro.tech/api/health)
-          STATUS=$(curl -s -o /dev/null --max-time 15 -w "%{http_code}" https://cortexbuildpro.tech/api/health)
-          echo "HTTP $STATUS"
-          echo "Response: $RESPONSE"
-          echo "status_code=$STATUS" >> $GITHUB_OUTPUT
-          echo "response=$RESPONSE" >> $GITHUB_OUTPUT
+          set -uo pipefail
+          BASE='https://cortexbuildpro.tech'
+          HEALTH_BODY="$(mktemp)"
+          trap 'rm -f "$HEALTH_BODY"' EXIT
 
-          # Check each main page
+          HEALTH_STATUS="$(curl -sS -L --connect-timeout 10 --max-time 20 -o "$HEALTH_BODY" -w '%{http_code}' "$BASE/api/health" || true)"
+          echo "Health endpoint HTTP $HEALTH_STATUS"
+          echo "health_status=$HEALTH_STATUS" >> "$GITHUB_OUTPUT"
+          if [[ "$HEALTH_STATUS" == "200" ]]; then
+            echo 'Health endpoint returned HTTP 200.'
+          else
+            echo "::error::Health endpoint returned HTTP $HEALTH_STATUS"
+          fi
+
+          FAILED=0
           for path in / /dashboard /projects /tasks /team; do
-            CODE=$(curl -s -o /dev/null --max-time 15 -w "%{http_code}" "https://cortexbuildpro.tech$path")
-            echo "$path → $CODE"
-            if [ "$CODE" != "200" ] && [ "$CODE" != "307" ] && [ "$CODE" != "308" ]; then
-              echo "::warning::Page $path returned $CODE"
+            CODE="$(curl -sS -L --connect-timeout 10 --max-time 20 -o /dev/null -w '%{http_code}' "$BASE$path" || true)"
+            echo "$path -> $CODE"
+            if [[ "$CODE" != "200" && "$CODE" != "307" && "$CODE" != "308" ]]; then
+              echo "::warning::Page $path returned HTTP $CODE"
+              FAILED=1
             fi
           done
+          echo "pages_failed=$FAILED" >> "$GITHUB_OUTPUT"
 
-      - name: Open issue if production is down
-        if: steps.check.outputs.status_code != '200'
+      - name: Open or update outage issue
+        if: steps.check.outputs.health_status != '200' || steps.check.outputs.pages_failed == '1'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
+          HEALTH_STATUS: ${{ steps.check.outputs.health_status }}
         run: |
-          # Only file one issue at a time
-          EXISTING=$(gh issue list --repo ${{ github.repository }} --label "outage" --state open --json number --jq '.[0].number' || echo "")
-          if [ -z "$EXISTING" ]; then
-            gh issue create --repo ${{ github.repository }} \
-              --title "🔴 Production health check failed" \
-              --body "Health endpoint returned HTTP ${{ steps.check.outputs.status_code }}.\n\nResponse: ${{ steps.check.outputs.response }}\n\nRun: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}" \
-              --label "outage" || true
+          set -euo pipefail
+          EXISTING="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search '"Production health check failed" in:title' --json number --jq '.[0].number // empty')"
+          BODY="Production health check failed. Health endpoint HTTP: $HEALTH_STATUS. One or more critical pages may also have failed.\n\nRun: $RUN_URL"
+          if [[ -z "$EXISTING" ]]; then
+            gh issue create --repo "$GITHUB_REPOSITORY" --title "Production health check failed" --body "$BODY"
           else
-            gh issue comment $EXISTING --body "Still failing at $(date -u +%Y-%m-%dT%H:%M:%SZ) — HTTP ${{ steps.check.outputs.status_code }}" || true
+            gh issue comment "$EXISTING" --body "$BODY"
           fi
 
-      - name: Auto-close outage issue if healthy
-        if: steps.check.outputs.status_code == '200'
+      - name: Close outage issue after recovery
+        if: steps.check.outputs.health_status == '200' && steps.check.outputs.pages_failed == '0'
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
-          EXISTING=$(gh issue list --repo ${{ github.repository }} --label "outage" --state open --json number --jq '.[0].number' || echo "")
-          if [ -n "$EXISTING" ]; then
-            gh issue comment $EXISTING --body "✓ Service recovered at $(date -u +%Y-%m-%dT%H:%M:%SZ)" || true
-            gh issue close $EXISTING || true
+          set -euo pipefail
+          EXISTING="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search '"Production health check failed" in:title' --json number --jq '.[0].number // empty')"
+          if [[ -n "$EXISTING" ]]; then
+            gh issue comment "$EXISTING" --body "Production health checks recovered at $(date -u +%Y-%m-%dT%H:%M:%SZ)."
+            gh issue close "$EXISTING"
           fi
+
+      - name: Fail workflow if production is unhealthy
+        if: always()
+        env:
+          HEALTH_STATUS: ${{ steps.check.outputs.health_status }}
+          PAGES_FAILED: ${{ steps.check.outputs.pages_failed }}
+        run: |
+          set -euo pipefail
+          [[ "$HEALTH_STATUS" == "200" ]] || { echo "::error::Production health endpoint is unhealthy (HTTP $HEALTH_STATUS)."; exit 1; }
+          [[ "$PAGES_FAILED" == "0" ]] || { echo "::error::One or more critical production pages are unhealthy."; exit 1; }
