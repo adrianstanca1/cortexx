@@ -21,6 +21,8 @@ The host is a replacement target, **not yet verified as provisioned or deployed*
 
 ## Current operating state and migration boundary
 
+Migration plan: [VPS-free migration](VPS_FREE_MIGRATION.md).
+
 The previous host documented in older workflows/runbooks was `85.190.100.68`. It is not the new host. Do not run legacy SSH workflows or backup automation against either host until its target and credentials have been explicitly reconciled.
 
 The existing production domain, authoritative database, uploads and customer records must remain unchanged until a verified source backup has been restored and validated on the replacement. A new empty database is not production data.
