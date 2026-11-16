@@ -27,6 +27,8 @@ The previous host documented in older workflows/runbooks was `85.190.100.68`. It
 
 The existing production domain, authoritative database, uploads and customer records must remain unchanged until a verified source backup has been restored and validated on the replacement. A new empty database is not production data.
 
+**Do not change production DNS** or alter the existing database, uploads or customer records during preparation. Cutover is a separate operation after the backup, restore, staging, acceptance and rollback gates pass.
+
 ## Release architecture
 
 The intended application release uses:
