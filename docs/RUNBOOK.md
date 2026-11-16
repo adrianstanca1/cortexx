@@ -54,7 +54,7 @@ Do not use historical `docker-compose.yml`, `docker-compose.prod.yml`, `deploy.s
 8. Run migrations and construction bootstrap against the isolated restored database, then verify health, authentication, tenant isolation, projects, tasks, timesheets, documents/uploads, portal, webhooks, SSE/realtime, cron, offline sync, PWA install and mobile API compatibility.
 9. Verify a fresh database + uploads backup and complete an isolated restore drill on the new host. Confirm off-site backup and recovery-key retention.
 10. Preserve the prior production environment and its last known-good backup/image for rollback. Schedule a separate maintenance-window cutover only after all gates pass.
-11. Change DNS only after the replacement is healthy and validated. Verify TLS, domain routing, public health and user workflows. Keep rollback routing ready.
+11. At the maintenance-window cutover, freeze writes on the source host, take a final coordinated database and uploads sync/delta backup, restore it on the replacement and verify reconciliation. Only then change DNS. Verify TLS, domain routing, public health and user workflows. Keep rollback routing ready.
 
 ## Backup and rollback rules
 
