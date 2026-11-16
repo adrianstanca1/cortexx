@@ -17,7 +17,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 5
     steps:
-      - name: Check production health and critical pages
+      - name: Check production API readiness
         id: check
         shell: bash
         run: |
@@ -26,60 +26,71 @@ jobs:
           HEALTH_BODY="$(mktemp)"
           trap 'rm -f "$HEALTH_BODY"' EXIT
 
-          HEALTH_STATUS="$(curl -sS -L --connect-timeout 10 --max-time 20 -o "$HEALTH_BODY" -w '%{http_code}' "$BASE/api/health" || true)"
-          echo "Health endpoint HTTP $HEALTH_STATUS"
-          echo "health_status=$HEALTH_STATUS" >> "$GITHUB_OUTPUT"
-          if [[ "$HEALTH_STATUS" == "200" ]]; then
-            echo 'Health endpoint returned HTTP 200.'
-          else
-            echo "::error::Health endpoint returned HTTP $HEALTH_STATUS"
+          set +e
+          HEALTH_STATUS="$(curl -sS --connect-timeout 10 --max-time 20 -o "$HEALTH_BODY" -w '%{http_code}' "$BASE/api/health")"
+          CURL_EXIT=$?
+          set -e
+          if [[ "$CURL_EXIT" -ne 0 ]]; then
+            echo "::error::Health probe transfer failed (curl exit $CURL_EXIT)."
+            HEALTH_STATUS='000'
           fi
 
-          FAILED=0
-          for path in / /dashboard /projects /tasks /team; do
-            CODE="$(curl -sS -L --connect-timeout 10 --max-time 20 -o /dev/null -w '%{http_code}' "$BASE$path" || true)"
-            echo "$path -> $CODE"
-            if [[ "$CODE" != "200" && "$CODE" != "307" && "$CODE" != "308" ]]; then
-              echo "::warning::Page $path returned HTTP $CODE"
-              FAILED=1
+          # Do not follow redirects: only the endpoint itself may satisfy readiness.
+          if [[ "$HEALTH_STATUS" == '200' ]]; then
+            if ! node scripts/check-construction-health.cjs < "$HEALTH_BODY"; then
+              echo "::error::Response did not match the CortexBuild construction readiness contract."
+              HEALTH_STATUS='invalid'
             fi
-          done
-          echo "pages_failed=$FAILED" >> "$GITHUB_OUTPUT"
+          fi
+          echo "Health endpoint result: $HEALTH_STATUS"
+          echo "health_status=$HEALTH_STATUS" >> "$GITHUB_OUTPUT"
+
+          # Only the public homepage is checked without authentication. Protected
+          # routes are intentionally excluded until a dedicated synthetic account
+          # and secret are provisioned; a login redirect is not page availability.
+          set +e
+          HOME_STATUS="$(curl -sS --connect-timeout 10 --max-time 20 -o /dev/null -w '%{http_code}' https://cortexbuildpro.tech/)"
+          HOME_CURL_EXIT=$?
+          set -e
+          if [[ "$HOME_CURL_EXIT" -ne 0 ]]; then HOME_STATUS='000'; fi
+          echo "Public homepage HTTP $HOME_STATUS"
+          echo "home_status=$HOME_STATUS" >> "$GITHUB_OUTPUT"
 
       - name: Open or update outage issue
-        if: steps.check.outputs.health_status != '200' || steps.check.outputs.pages_failed == '1'
+        if: steps.check.outputs.health_status != '200' || (steps.check.outputs.home_status != '200' && steps.check.outputs.home_status != '301' && steps.check.outputs.home_status != '302' && steps.check.outputs.home_status != '307' && steps.check.outputs.home_status != '308')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           RUN_URL: ${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}
           HEALTH_STATUS: ${{ steps.check.outputs.health_status }}
+          HOME_STATUS: ${{ steps.check.outputs.home_status }}
         run: |
           set -euo pipefail
           EXISTING="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search '"Production health check failed" in:title' --json number --jq '.[0].number // empty')"
-          BODY="Production health check failed. Health endpoint HTTP: $HEALTH_STATUS. One or more critical pages may also have failed.\n\nRun: $RUN_URL"
+          BODY="Production health check failed. API readiness: $HEALTH_STATUS; public homepage: $HOME_STATUS.\n\nRun: $RUN_URL"
           if [[ -z "$EXISTING" ]]; then
             gh issue create --repo "$GITHUB_REPOSITORY" --title "Production health check failed" --body "$BODY"
           else
-            gh issue comment "$EXISTING" --body "$BODY"
+            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "$BODY"
           fi
 
       - name: Close outage issue after recovery
-        if: steps.check.outputs.health_status == '200' && steps.check.outputs.pages_failed == '0'
+        if: steps.check.outputs.health_status == '200' && (steps.check.outputs.home_status == '200' || steps.check.outputs.home_status == '301' || steps.check.outputs.home_status == '302' || steps.check.outputs.home_status == '307' || steps.check.outputs.home_status == '308')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |
           set -euo pipefail
           EXISTING="$(gh issue list --repo "$GITHUB_REPOSITORY" --state open --search '"Production health check failed" in:title' --json number --jq '.[0].number // empty')"
           if [[ -n "$EXISTING" ]]; then
-            gh issue comment "$EXISTING" --body "Production health checks recovered at $(date -u +%Y-%m-%dT%H:%M:%SZ)."
-            gh issue close "$EXISTING"
+            gh issue comment "$EXISTING" --repo "$GITHUB_REPOSITORY" --body "Production API readiness and public homepage recovered at $(date -u +%Y-%m-%dT%H:%M:%SZ)."
+            gh issue close "$EXISTING" --repo "$GITHUB_REPOSITORY"
           fi
 
       - name: Fail workflow if production is unhealthy
         if: always()
         env:
           HEALTH_STATUS: ${{ steps.check.outputs.health_status }}
-          PAGES_FAILED: ${{ steps.check.outputs.pages_failed }}
+          HOME_STATUS: ${{ steps.check.outputs.home_status }}
         run: |
           set -euo pipefail
-          [[ "$HEALTH_STATUS" == "200" ]] || { echo "::error::Production health endpoint is unhealthy (HTTP $HEALTH_STATUS)."; exit 1; }
-          [[ "$PAGES_FAILED" == "0" ]] || { echo "::error::One or more critical production pages are unhealthy."; exit 1; }
+          [[ "$HEALTH_STATUS" == '200' ]] || { echo "::error::Production API readiness failed ($HEALTH_STATUS)."; exit 1; }
+          [[ "$HOME_STATUS" == '200' || "$HOME_STATUS" == '301' || "$HOME_STATUS" == '302' || "$HOME_STATUS" == '307' || "$HOME_STATUS" == '308' ]] || { echo "::error::Public homepage failed ($HOME_STATUS)."; exit 1; }
