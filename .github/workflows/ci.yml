@@ -117,7 +117,6 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     timeout-minutes: 10
-    continue-on-error: true
     steps:
       - uses: actions/checkout@v7
       - uses: actions/setup-node@v7
@@ -126,7 +125,9 @@ jobs:
           cache: npm
       - run: npm ci --ignore-scripts
       - name: Security audit (high+)
-        run: npm audit --audit-level=high --omit=dev || echo "::warning::Audit found high-severity production dependency issues"
+        # High/critical production dependency vulnerabilities are a blocking CI gate.
+        # Moderate development-tool advisories are tracked separately and do not ship at runtime.
+        run: npm audit --audit-level=high --omit=dev
 
   integration-tests:
     runs-on: ubuntu-latest
