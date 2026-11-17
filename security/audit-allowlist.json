@@ -1,0 +1,9 @@
+[
+  {
+    "ghsa": "GHSA-fc5q-39xc-vjpf",
+    "package": "picomatch",
+    "reason": "No patched release exists (advisory patched_versions is null) as of 2026-11-17. @sentry/nextjs pulls picomatch through @rollup/plugin-commonjs; npm's only suggested fix is a breaking downgrade of @sentry/nextjs. Re-check when upstream publishes a fix.",
+    "reviewedAt": "2026-11-17",
+    "reviewDue": "2026-12-17"
+  }
+]

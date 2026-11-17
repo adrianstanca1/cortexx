@@ -126,8 +126,13 @@ jobs:
       - run: npm ci --ignore-scripts
       - name: Security audit (high+)
         # High/critical production dependency vulnerabilities are a blocking CI gate.
-        # Moderate development-tool advisories are tracked separately and do not ship at runtime.
-        run: npm audit --audit-level=high --omit=dev
+        # The gate reads npm's JSON report and accepts only documented, review-dated
+        # waivers in security/audit-allowlist.json; a new root advisory fails even
+        # when it arrives through an already-waived dependency tree.
+        run: |
+          set -euo pipefail
+          npm audit --omit=dev --json > /tmp/cortexx-audit.json || true
+          node scripts/audit-gate.mjs /tmp/cortexx-audit.json security/audit-allowlist.json
 
   integration-tests:
     runs-on: ubuntu-latest
