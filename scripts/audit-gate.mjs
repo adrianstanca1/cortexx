@@ -13,6 +13,10 @@ if (!reportPath || !allowPath) {
 
 const report = JSON.parse(readFileSync(reportPath, "utf8"))
 const allowlist = JSON.parse(readFileSync(allowPath, "utf8"))
+if (!report || typeof report !== "object" || report.error || !report.metadata || !report.vulnerabilities) {
+  console.error("audit: npm audit did not produce a valid report; refusing to pass")
+  process.exit(1)
+}
 const today = new Date().toISOString().slice(0, 10)
 const active = allowlist.filter((entry) => entry.reviewDue >= today)
 const allowed = new Set(active.map((entry) => entry.ghsa))
@@ -28,7 +32,14 @@ if (findings.length === 0) {
 const advisories = new Set()
 for (const [, value] of findings) {
   for (const via of value.via || []) {
-    if (via && typeof via === "object" && via.url) {
+    // `via` carries every advisory for the package, including lower-severity
+    // ones. Only the high/critical advisories are in scope for this gate.
+    if (
+      via &&
+      typeof via === "object" &&
+      via.url &&
+      ["high", "critical"].includes(via.severity)
+    ) {
       advisories.add(String(via.url).split("/").pop())
     }
   }
