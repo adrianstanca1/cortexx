@@ -12,7 +12,8 @@
  * (so users can opt-in once an admin sets the keys), but sendPush() is
  * a no-op and logs a warning.
  */
-import webpush from 'web-push'
+// web-push 4 exports only named members; there is no default export.
+import * as webpush from 'web-push'
 import { prisma } from './db'
 
 const PUBLIC = process.env.VAPID_PUBLIC_KEY || process.env.NEXT_PUBLIC_VAPID_PUBLIC_KEY
