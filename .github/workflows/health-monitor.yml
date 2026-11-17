@@ -15,6 +15,12 @@ concurrency:
 
 jobs:
   health:
+    # Production is retired while the VPS-free migration is blocked on a verified
+    # source-data restore (see issues #368 and #473). Set the repository variable
+    # PRODUCTION_RETIRED=true to stop red scheduled runs; the outage remains
+    # visible and tracked in those issues. Remove the variable to resume probing
+    # after the cutover.
+    if: vars.PRODUCTION_RETIRED != 'true'
     runs-on: ubuntu-latest
     timeout-minutes: 5
     env:
