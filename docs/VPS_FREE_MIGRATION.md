@@ -1,6 +1,6 @@
 # Cortexx VPS-free migration
 
-## Current state (audited 30 October 2026)
+## Current state (updated 14 November 2026)
 
 Repository: `adrianstanca1/cortexx`, default branch `main`.
 
@@ -11,7 +11,7 @@ Cortexx is a monorepo containing:
 - Native/mobile app and shared packages.
 - Docker Compose dependencies including PostgreSQL, Redis, Caddy and Ollama.
 
-The former VPS at `85.190.100.68` and its SSH access are unavailable. The old deployment, DB rescue and arbitrary remote-execution workflows are being retired in this PR. They must remain inert; do not dispatch them or reintroduce VPS secrets.
+The former host at `85.190.100.68` is not the replacement target. The user has designated one.com `cloud-server-10717540` at `85.190.122.27` (Ubuntu 26.04, 16 vCPU, 32 GB RAM, 800 GB) as the new production replacement. The provider screenshot confirms its control-panel state only; no SSH access, server inventory, data restore or application deployment has yet been verified. Legacy workflows remain inert until a reviewed replacement deployment workflow is implemented and tested.
 
 ## Hosting inventory and decisions
 
@@ -70,7 +70,7 @@ No verified Cloudflare account/DNS authority or R2 bucket access was available d
 
 ## Current blockers
 
-- The source database and uploads from the former VPS have not been exported or independently verified. No production data migration can be completed safely without this.
+- The source database and uploads from the former host have not been exported or independently verified. The new one.com host is a replacement target only; no production data migration can be completed safely without a verified source backup.
 - Raw SQL and Prisma data models are separate and require reconciliation.
 - Render free-hour headroom is unknown.
 - DNS authority and Cloudflare/R2 access are unverified.
