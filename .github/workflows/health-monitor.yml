@@ -32,6 +32,11 @@ jobs:
       - name: Check production API readiness
         id: check
         shell: bash
+        env:
+          # The scheduled monitor runs from the default branch, which can be ahead of
+          # the deployed release. Do not require an exact version match here; the
+          # deployment healthcheck still enforces it.
+          CHECK_HEALTH_IGNORE_VERSION: '1'
         run: |
           set -uo pipefail
           BASE='https://cortexbuildpro.tech'
@@ -91,7 +96,7 @@ jobs:
           fi
 
       - name: Close outage issue after recovery
-        if: (steps.check.outputs.health_status == '200' || steps.check.outputs.health_status == 'skipped') && (steps.check.outputs.home_status == '200' || steps.check.outputs.home_status == '301' || steps.check.outputs.home_status == '302' || steps.check.outputs.home_status == '307' || steps.check.outputs.home_status == '308')
+        if: steps.check.outputs.health_status == '200' && (steps.check.outputs.home_status == '200' || steps.check.outputs.home_status == '301' || steps.check.outputs.home_status == '302' || steps.check.outputs.home_status == '307' || steps.check.outputs.home_status == '308')
         env:
           GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
         run: |

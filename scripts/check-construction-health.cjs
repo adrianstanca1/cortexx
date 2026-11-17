@@ -1,7 +1,10 @@
 // Accept only the construction API readiness contract, not another app's 200.
+// Deployment verification compares the version too; the scheduled monitor can run
+// from a default branch that is ahead of the deployed release, so it opts out.
 const { version } = require('../package.json');
 function checkHealth(value) {
-  return !!value && value.status === 'ok' && value.version === version &&
+  const requireVersion = process.env.CHECK_HEALTH_IGNORE_VERSION !== '1';
+  return !!value && value.status === 'ok' && (!requireVersion || value.version === version) &&
     value.service === 'cortexbuild-construction' && value.checks?.database?.ok === true &&
     Number.isFinite(Date.parse(value.timestamp));
 }
