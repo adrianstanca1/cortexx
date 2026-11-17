@@ -81,7 +81,7 @@
     "react-dom": "^19.3.1",
     "speakeasy": "^2.0.0",
     "stripe": "^23.1.0",
-    "web-push": "^3.6.7",
+    "web-push": "^4.0.0",
     "web-vitals": "^6.2.3"
   },
   "devDependencies": {
