@@ -1,9 +1,9 @@
 FROM node:24-alpine
 RUN apk add --no-cache chromium ca-certificates font-noto nss
 WORKDIR /app
-COPY package.json package-lock.json ./
+COPY --chown=node:node package.json package-lock.json ./
 RUN npm ci --omit=dev --ignore-scripts
-COPY server.js network-policy.js ./
+COPY --chown=node:node server.js network-policy.js ./
 ENV NODE_ENV=production PORT=3002 PUPPETEER_EXECUTABLE_PATH=/usr/bin/chromium-browser
 USER node
 EXPOSE 3002
