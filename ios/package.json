@@ -7,7 +7,7 @@
   "scripts": {
     "postinstall": "node ./scripts/postinstall.mjs",
     "build:web": "node ./scripts/build-web.mjs",
-    "build:ios": "npm run build:web && npm run cap:sync",
+    "build:ios": "npm run build:web && npm run cap:sync && cd App && pod install",
     "cap:init": "cap init Cortexx com.cortexbuild.app --web-dir www",
     "cap:add:ios": "cap add ios",
     "cap:sync": "cap sync ios",

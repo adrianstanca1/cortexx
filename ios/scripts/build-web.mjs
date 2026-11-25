@@ -24,6 +24,7 @@ const OUT        = path.join(IOS_DIR, 'www');
 // What we ship inside the app bundle.
 const INCLUDE = [
   'Cortexx.html',
+  'cortex-core.js',
   'manifest.json',
   'sw.js',
   'icon.svg',
