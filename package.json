@@ -123,6 +123,7 @@
     "sharp": "0.35.5",
     "source-map-js": "1.2.2",
     "proxy-addr": "2.0.8",
-    "compression": "1.8.2"
+    "compression": "1.8.2",
+    "effect": "3.22.1"
   }
 }
