@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import ModuleShell from '@/components/ui/ModuleShell'
 import ModuleRecordModal from '@/components/ui/ModuleRecordModal'
 
@@ -12,8 +12,12 @@ export default function PayrollRunPage() {
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<Row | null>(null)
   const [canManageFinancials, setCanManageFinancials] = useState(false)
+  // Bumped on every revocation so responses that resolve after a 403
+  // cannot restore revoked state (stale-response guard).
+  const accessGeneration = useRef(0)
 
   const revokeFinancialAccess = (message = 'Financial admin permission required') => {
+    accessGeneration.current += 1
     setCanManageFinancials(false)
     setRows([])
     setSelected(null)
@@ -21,6 +25,7 @@ export default function PayrollRunPage() {
   }
 
   useEffect(() => {
+    const generation = accessGeneration.current
     fetch('/api/payroll')
       .then(r => {
         if (!r.ok) {
@@ -30,16 +35,18 @@ export default function PayrollRunPage() {
         return r.json()
       })
       .then(d => {
+        if (accessGeneration.current !== generation) return
         setCanManageFinancials(true)
         setRows(d.items || [])
       })
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed'))
+      .catch(e => { if (accessGeneration.current === generation) setError(e instanceof Error ? e.message : 'Failed') })
       .finally(() => setLoading(false))
   }, [])
 
   const create = async () => {
     const value = window.prompt('New payroll — short label')
     if (!value) return
+    const generation = accessGeneration.current
     const res = await fetch('/api/payroll', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -52,6 +59,7 @@ export default function PayrollRunPage() {
       return
     }
     const created = await res.json()
+    if (accessGeneration.current !== generation) return
     setRows(prev => [created.item, ...prev])
     // Open the edit modal on the new record so the user can fill in
     // the remaining fields without having to find + click the row.
@@ -94,8 +102,8 @@ export default function PayrollRunPage() {
         record={canManageFinancials ? selected : null}
         onClose={() => setSelected(null)}
         onForbidden={() => revokeFinancialAccess()}
-        onSaved={next => setRows(prev => prev.map(r => r.id === next.id ? next : r))}
-        onDeleted={id => setRows(prev => prev.filter(r => r.id !== id))}
+        onSaved={next => { if (canManageFinancials) setRows(prev => prev.map(r => r.id === next.id ? next : r)) }}
+        onDeleted={id => { if (canManageFinancials) setRows(prev => prev.filter(r => r.id !== id)) }}
       />
     </ModuleShell>
   )

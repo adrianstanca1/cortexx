@@ -175,11 +175,16 @@ test('financial pages hide controls and clear data when access is denied', () =>
   assert.match(payroll, /if \(res\.status === 403\) revokeFinancialAccess/)
   assert.match(payroll, /const revokeFinancialAccess = \(message = 'Financial admin permission required'\) => \{[\s\S]*?setRows\(\[\]\)[\s\S]*?setSelected\(null\)/)
   assert.match(payroll, /onForbidden=\{\(\) => revokeFinancialAccess\(\)\}/)
+  assert.match(payroll, /accessGeneration\.current \+= 1/)
+  assert.match(payroll, /if \(accessGeneration\.current !== generation\) return/)
+  assert.match(payroll, /onSaved=\{next => \{ if \(canManageFinancials\) setRows/)
 
   assert.match(cis300, /\{canManageFinancials && \(/)
   assert.match(cis300, /if \(!canManageFinancials\) return/)
   assert.match(cis300, /if \(res\.status === 403\) revokeFinancialAccess/)
   assert.match(cis300, /const revokeFinancialAccess = \(message = 'Financial admin permission required'\) => \{[\s\S]*?setRows\(\[\]\)/)
+  assert.match(cis300, /accessGeneration\.current \+= 1/)
+  assert.match(cis300, /if \(accessGeneration\.current !== generation\) return/)
   assert.match(modal, /if \(res\.status === 403\) onForbidden\?\.\(\)/)
 })
 
