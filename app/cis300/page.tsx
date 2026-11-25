@@ -1,6 +1,6 @@
 'use client'
 
-import { useEffect, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { useRouter } from 'next/navigation'
 import ModuleShell from '@/components/ui/ModuleShell'
 
@@ -65,14 +65,19 @@ export default function Cis300Page() {
   const [taxMonthInput, setTaxMonthInput] = useState<string>(() => toInputValue(currentTaxMonth()))
   const [computing, setComputing] = useState(false)
   const [canManageFinancials, setCanManageFinancials] = useState(false)
+  // Bumped on every revocation so responses that resolve after a 403
+  // cannot restore revoked state (stale-response guard).
+  const accessGeneration = useRef(0)
 
   const revokeFinancialAccess = (message = 'Financial admin permission required') => {
+    accessGeneration.current += 1
     setCanManageFinancials(false)
     setRows([])
     setError(message)
   }
 
   useEffect(() => {
+    const generation = accessGeneration.current
     fetch('/api/cis300')
       .then(r => {
         if (!r.ok) {
@@ -82,10 +87,11 @@ export default function Cis300Page() {
         return r.json()
       })
       .then(d => {
+        if (accessGeneration.current !== generation) return
         setCanManageFinancials(true)
         setRows(d.items || [])
       })
-      .catch(e => setError(e instanceof Error ? e.message : 'Failed'))
+      .catch(e => { if (accessGeneration.current === generation) setError(e instanceof Error ? e.message : 'Failed') })
       .finally(() => setLoading(false))
   }, [])
 
@@ -96,6 +102,7 @@ export default function Cis300Page() {
       return
     }
     setComputing(true)
+    const generation = accessGeneration.current
     try {
       const res = await fetch('/api/cis300', {
         method: 'POST',
@@ -109,6 +116,7 @@ export default function Cis300Page() {
         return
       }
       const { item } = await res.json()
+      if (accessGeneration.current !== generation) return
       setRows(prev => {
         const filtered = prev.filter(r => r.id !== item.id)
         return [item, ...filtered].sort((a, b) => b.taxMonth.localeCompare(a.taxMonth))
