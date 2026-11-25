@@ -1,6 +1,7 @@
-import { NextRequest } from 'next/server'
+import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
+import { canManage } from '@/lib/rbac'
 
 export const dynamic = 'force-dynamic'
 
@@ -34,8 +35,9 @@ interface LineItem {
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof Response) return auth
+  const auth = await requireOrg()
+  if (auth instanceof NextResponse) return auth
+  if (!auth.role || !canManage(auth.role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   const { id } = await params
   const item = await prisma.cis300Return.findUnique({ where: { id } })
   if (!item) {
