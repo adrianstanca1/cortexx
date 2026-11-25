@@ -1,5 +1,7 @@
 # Cortexx — The Construction OS
 
+> Historical PWA guide. Its old Hostinger deployment instructions are retired; use the root [`DEPLOY_cortexbuildpro.md`](../../DEPLOY_cortexbuildpro.md) and [`docs/RUNBOOK.md`](../RUNBOOK.md) for the One.com replacement VPS.
+
 The construction OS that thinks with you. Built for UK SMB contractors.
 
 [![PWA](https://img.shields.io/badge/PWA-ready-2563eb)](manifest.json)

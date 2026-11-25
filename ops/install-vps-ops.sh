@@ -16,6 +16,9 @@
 #      those files belong to Hostinger's agent and it may rewrite them.
 
 set -uo pipefail
+printf '%s\n' 'This legacy Hostinger operations helper is retired. Use docs/RUNBOOK.md for the One.com Compose stack.' >&2
+exit 2
+
 export PATH="/usr/local/bin:/usr/bin:/bin:/usr/sbin:/sbin"
 RAW="https://raw.githubusercontent.com/adrianstanca1/cortexx/main"
 fail=0

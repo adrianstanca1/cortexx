@@ -2,23 +2,21 @@
 /**
  * prisma-drift-check.mjs
  *
- * Enforces the CortexBuild Pro canonical-data-model discipline:
- *   - server/db/schema.sql  (raw SQL) IS the source of truth for what the
- *     production Express API persists at cortexbuildpro.tech via /api/:collection.
- *   - prisma/schema.prisma is the Next.js admin's typed client and MUST stay
- *     aligned with that SQL, OR be explicitly justified.
+ * Checks a limited set of cross-schema naming/reference heuristics:
+ *   - server/db/schema.sql is the data schema for the legacy Express API.
+ *   - prisma/schema.prisma and its migrations define the Next.js application's
+ *     data model; that is the intended production stack. The two schemas are
+ *     separate and this script only applies best-effort name/reference checks.
  *
  * This check catches two classes of drift that are safe to fail CI on:
- *   1. A raw-SQL table with NO Prisma model at all  ->  Next.js admin cannot
- *      read/write a table the backend actually persists.
- *   2. A Prisma model with NO raw-SQL table AND no usage anywhere in the
- *      repo (app/ components/ server/ lib/)  ->  a true orphan that will
- *      silently fail if anything ever queries it.
+ *   1. A raw-SQL table with no name-matching Prisma model (except allowlisted
+ *      tables) -> a schema-name difference to review, not proof of a runtime bug.
+ *   2. A Prisma model with no raw-SQL table AND no usage anywhere in the repo
+ *      (app/ components/ server/ lib/) -> a likely unused model to review.
  *
- * It does NOT fail on models whose names simply diverge (camelCase vs
- * snake_case, singular vs plural) — that is a convention mismatch, not a
- * missing-table bug. The 34 real tables back 79 of the 82 Prisma models;
- * the remaining 3 are documented convention/legacy names.
+ * It does NOT establish that these schemas describe the same database, nor that
+ * a SQL table and Prisma model are semantically compatible. Names and counts are
+ * printed as heuristic signals for review, not as a migration or readiness gate.
  *
  * Exit codes: 0 = aligned, 1 = drift detected.
  * No dependencies — pure Node (>=18) stdlib.
@@ -100,9 +98,9 @@ function main() {
   const used = collectRepoIdentifiers();
 
   // ── allowlists (keeps CI green + catches NET-NEW drift) ──────────────────
-  // INTENTIONAL_NO_MODEL: tables intentionally Prisma-free (generic /api/:collection
-  // JSONB namespace or system/auth material served by purpose-built routes the
-  // Next.js admin never touches).
+  // INTENTIONAL_NO_MODEL: raw-SQL tables explicitly excluded from the current
+  // name-match heuristic. This legacy allowlist is not a production compatibility
+  // contract and must be reviewed when either API/data model changes.
   const INTENTIONAL_NO_MODEL = new Set([
     'documents_store', 'documents_meta', 'ai_history', 'audit_log', 'photos',
     'portal_tokens', 'portal_messages', 'magic_links', 'site_maps', 'sync_log',
@@ -111,8 +109,8 @@ function main() {
     'change_orders', 'subs', 'notifications', 'activity_log', 'bank_connections',
     'iap_entitlements', 'hmrc_submissions', 'api_connections',
   ]);
-  // KNOWN_GAPS: real tables that SHOULD have a Prisma model but don't yet.
-  // Tracked in docs/DATA_MODEL_DRIFT.md — TODO: add `model Workspace`.
+  // KNOWN_GAPS: raw-SQL tables excluded from the name-match heuristic pending
+  // revalidation of the historical mapping in docs/DATA_MODEL_DRIFT.md.
   const KNOWN_GAPS = new Set(['workspaces']);
   // Prisma models intentionally unmapped (next-auth v5 convention names kept for
   // future Email-provider wiring; legacy; documented, not queried yet).
@@ -146,10 +144,10 @@ function main() {
   if (problems.length) {
     console.error('\n❌ DATA-MODEL DRIFT DETECTED:');
     for (const p of problems) console.error('  - ' + p);
-    console.error('\nFix: add a Prisma model for the missing table, or remove the orphan model, or align schema.sql.');
+    console.error('\nReview schema ownership and mappings before changing either schema or its allowlists.');
     process.exit(1);
   }
-  console.error('\n✅ Prisma schema is aligned with raw SQL (no missing tables, no orphan models).');
+  console.error('\n✅ SQL/Prisma drift heuristics passed (no unallowlisted missing-table or orphan findings).');
   process.exit(0);
 }
 

@@ -1,4 +1,6 @@
-# Cortexx — VPS Deploy Runbook
+# Cortexx — Legacy VPS Deploy Runbook
+
+> **Retired instructions.** This guide describes the former static/Express VPS deployment and must not be used for the replacement server. Use [`DEPLOY_cortexbuildpro.md`](DEPLOY_cortexbuildpro.md) and [`docs/RUNBOOK.md`](docs/RUNBOOK.md) for the One.com VPS at `85.190.122.27`.
 
 End-to-end checklist to get the **frontend + API + Postgres + AI webhooks** live on
 a single Linux VPS (tested shape: Hostinger/Ubuntu 22.04, 1 vCPU / 2 GB is enough).

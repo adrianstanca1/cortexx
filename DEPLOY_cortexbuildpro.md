@@ -1,71 +1,47 @@
-# CortexBuild Pro — production deployment
+# CortexBuild Pro — replacement VPS rebuild
 
-Production is the Next.js 16 standalone application at <https://cortexbuildpro.tech>, running in an isolated Docker Compose stack on the One.com VPS.
+The designated server is the One.com Cloud Server at `85.190.122.27` (`cloud-server-10717540`), logging in as `administrator`. The previous Hostinger VPS is retired and is not a deployment, backup, or recovery target.
 
-| Item | Production value |
+| Item | Replacement value |
 |---|---|
 | Repository | `https://github.com/adrianstanca1/cortexx` |
 | Branch | `main` |
-| VPS | `administrator@85.190.100.68` |
+| Host | `administrator@85.190.122.27` |
 | Checkout | `/home/administrator/production/cortexx` |
 | Compose file | `docker-compose.construction.yml` |
 | Protected environment | `.env.construction` (mode 0600) |
-| Loopback app endpoint | `http://127.0.0.1:3020` |
+| App loopback endpoint | `http://127.0.0.1:3020` |
 | Public health endpoint | `https://cortexbuildpro.tech/api/health` |
 
-Do not use the retired `/opt/cortexx`, static HTML/Express, nginx, host-Postgres or PM2 deployment instructions. `docker-compose.yml`, `docker-compose.prod.yml`, `deploy.sh` and `deploy/backup.sh` describe historical stacks and are not the production path.
+## Current deployment state
 
-## Normal release path
+PR #476 records the replacement Compose stack healthy, including its app, database, cache and browser gateway. This is staging only: the source database/uploads backup has not been transferred or restored there, and `cortexbuildpro.tech` still points to the retired host. Do not treat this as production acceptance or change DNS.
 
-1. Merge a reviewed PR to `main` only after the complete CI matrix passes.
-2. `.github/workflows/deploy-vps.yml` starts after successful CI and pins the exact successful `main` SHA.
-3. The workflow updates the protected VPS checkout, builds `Dockerfile.construction`, starts PostgreSQL/Redis/Ollama, applies Prisma migrations, runs the construction bootstrap, starts the Next.js app and waits for the health contract.
-4. It installs the reviewed maintenance schedule, validates and reloads the shared Caddy ingress, then checks the public application and health endpoint.
+## Rebuild the app on the replacement VPS
 
-Deployment refuses a dirty production checkout, a superseded SHA, an unverified CI commit, an unhealthy app or an unexpected ingress target. Prefer this workflow to an interactive server deployment because these release guards are part of the production contract.
+The supported rebuild is `.github/workflows/deploy-vps.yml`. It is manual-only and will run only from the current `main` tip when the repository variable `VPS_REBUILD_ENABLED` is set to `true`.
 
-Required GitHub Actions secrets are `VPS_SSH_PRIVATE_KEY` or `VPS_ROOT_PASSWORD`. Runtime secrets stay only in `/home/administrator/production/cortexx/.env.construction`; never copy their values into workflow inputs, issue text, logs or chat.
+Before enabling it, configure these GitHub repository secrets using a fresh, key-only deploy identity and the host key verified through the One.com console:
 
-## Inspect production
+- `REPLACEMENT_VPS_SSH_PRIVATE_KEY`
+- `REPLACEMENT_VPS_KNOWN_HOSTS`
 
-Connect to the VPS and run read-only checks from the production checkout:
+Do not reuse a former-host key, trust a runtime `ssh-keyscan`, or paste credentials into chat. Dispatch only after CI passes for the exact `main` SHA. The workflow refuses a dirty server checkout and any Prisma schema/migration change; it preserves the current app and gateway images, rebuilds and restarts those two services only, and checks the local health contract. A failed health check triggers an image rollback attempt.
+
+The workflow does not restore production data, run migrations or bootstrap, restart the database, or change DNS. For schema or migration changes, restore and validate the reported source backup in isolation first and follow [`docs/RUNBOOK.md`](docs/RUNBOOK.md). Rebuilds are not permission to cut over production traffic.
+
+## Read-only checks on the replacement VPS
 
 ```bash
-ssh administrator@85.190.100.68
+ssh administrator@85.190.122.27
 cd /home/administrator/production/cortexx
 git status --short --branch
 docker compose --env-file .env.construction -f docker-compose.construction.yml ps
-docker logs --since 15m cortexbuild-construction-app-1
 curl -fsS http://127.0.0.1:3020/api/health
-curl -fsS https://cortexbuildpro.tech/api/health
 ```
 
-The public health payload must satisfy `scripts/check-construction-health.cjs`. Also verify login routing and the release checklist in `docs/RUNBOOK.md`; a green health endpoint alone is not full workflow validation.
+Never print `.env.construction` or owner credentials. The public HTTPS endpoint remains a separate cutover check and must not be used to infer readiness while DNS still points to the retired host.
 
-## Manual recovery deployment
+## Data, backups and cutover
 
-Use the GitHub deployment workflow whenever it is available. If an authorised operator must recover the stack manually, first confirm that the checkout is clean, the selected SHA is the intended `origin/main` release and that the same SHA has passed CI. Preserve the currently healthy app image before replacement.
-
-The deployment sequence used by automation is:
-
-```bash
-cd /home/administrator/production/cortexx
-docker compose --env-file .env.construction -f docker-compose.construction.yml build app tools
-docker compose --env-file .env.construction -f docker-compose.construction.yml up -d db redis ollama
-docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools
-docker compose --env-file .env.construction -f docker-compose.construction.yml --profile tools run --rm --interactive=false tools npx tsx scripts/bootstrap-construction.ts
-docker compose --env-file .env.construction -f docker-compose.construction.yml up -d app
-curl -fsS http://127.0.0.1:3020/api/health | node scripts/check-construction-health.cjs
-```
-
-Do not blindly edit or reload the shared ingress. Follow the guarded ingress and public-verification steps in `.github/workflows/deploy-vps.yml`, or stop and restore service through the documented rollback procedure.
-
-## Backups, rollback and troubleshooting
-
-- Production backups and restore drills are installed with `bash ops/install-construction-backups.sh` and documented in `docs/CONSTRUCTION_RECOVERY.md`.
-- Application maintenance schedules are installed with `bash ops/install-construction-app-crons.sh`.
-- For an app-only regression, retain the database, restore the previously preserved healthy app image and recreate only the `app` service.
-- For a database-affecting incident, restore into an isolated replacement stack and validate it before any traffic switch. Never overwrite the live database as an initial recovery step.
-- Use the manual `DB Rescue — One.com construction stack` workflow only for its non-destructive `inspect`, `migrate-status` and `migrate-deploy` actions.
-
-Full operations reference: [`docs/RUNBOOK.md`](docs/RUNBOOK.md). Recovery procedure and current RPO limits: [`docs/CONSTRUCTION_RECOVERY.md`](docs/CONSTRUCTION_RECOVERY.md).
+The owner reports that a verified database-and-uploads backup is ready, but it has not been securely transferred or independently restored on the replacement. Complete the isolated restore, data-integrity comparisons, workflow acceptance, fresh backup/restore drill and rollback rehearsal in [`docs/RUNBOOK.md`](docs/RUNBOOK.md) before any maintenance-window cutover. Keep the former production data untouched until the replacement is accepted.

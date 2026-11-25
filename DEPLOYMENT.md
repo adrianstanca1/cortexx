@@ -1,7 +1,9 @@
-# CortexBuild Pro — Deployment Guide
+# CortexBuild Pro — Legacy PWA Deployment Notes
 
-## Current Status
-✅ **Production Ready**
+> **Superseded.** This document describes the old static PWA deployment, not the designated Next.js Compose stack on the One.com replacement VPS. Use [`DEPLOY_cortexbuildpro.md`](DEPLOY_cortexbuildpro.md) and [`docs/RUNBOOK.md`](docs/RUNBOOK.md) for current operations.
+
+## Historical status
+This report's old readiness claims, module counts and URLs are not current production evidence.
 
 - **App:** Cortexx.html (loads precompiled dist/ by default)
 - **Modules:** 98 modules compiled and synced

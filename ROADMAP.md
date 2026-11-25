@@ -79,7 +79,7 @@ This is the **single source of truth** for what's done, what's in-flight, and wh
 | | Item | Owner | Notes |
 |---|---|---|---|
 | 🚧 | Push to GitHub (`adrianstanca1/cortexx-pwa`) | Adrian | Repo created but empty; needs `git push` from local clone |
-| 🚧 | Deploy to `cortexbuildpro.tech` | Adrian | `deploy.sh` ready for Hostinger VPS; or one-click via Vercel |
+| 🚧 | Rebuild on the One.com replacement VPS | Adrian | Stack is staging-healthy; manual app rebuild is gated, and data restore, acceptance and cutover remain outstanding |
 | 🚧 | iOS Archive + TestFlight upload | Adrian | Needs a Mac; runbook in `ios/README.md` |
 | 🚧 | App Store Connect submission | Adrian | Listing copy in `app-store/metadata.txt`; runbook in `app-store/SUBMISSION.md` |
 

@@ -1,18 +1,164 @@
-name: VPS deployment retired — VPS-free migration in progress
+name: Rebuild replacement VPS (manual)
 
-# The previous production target required a VPS and SSH credentials that are
-# no longer available. Keep this file as an explicit tombstone so no CI event
-# can attempt the retired deployment. Do not re-enable until a replacement
-# architecture has been reviewed and approved.
 on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
+concurrency:
+  group: replacement-vps-rebuild
+  cancel-in-progress: false
+
 jobs:
-  retired:
-    if: ${{ false }}
+  rebuild:
+    # Manual app-only rebuild on the designated One.com host. The repository
+    # variable is an explicit operator gate; this workflow never changes DNS,
+    # restores production data, or applies Prisma migrations.
+    if: github.ref == 'refs/heads/main' && vars.VPS_REBUILD_ENABLED == 'true'
     runs-on: ubuntu-latest
+    timeout-minutes: 45
+    env:
+      VPS_HOST: 85.190.122.27
+      VPS_USER: administrator
+      VPS_SSH_PRIVATE_KEY: ${{ secrets.REPLACEMENT_VPS_SSH_PRIVATE_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.REPLACEMENT_VPS_KNOWN_HOSTS }}
+      DEPLOY_SHA: ${{ github.sha }}
     steps:
-      - run: echo "VPS deployment is retired. See docs/VPS_FREE_MIGRATION.md."
+      - name: Check out the dispatched main revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Require a successful CI run for the dispatched main SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          CI_RUN_COUNT="$(
+            gh api "repos/$GH_REPO/actions/workflows/ci.yml/runs?head_sha=$DEPLOY_SHA&per_page=100" |
+              jq --arg sha "$DEPLOY_SHA" '[.workflow_runs[] | select(.event == "push" and .head_branch == "main" and .head_sha == $sha and .status == "completed" and .conclusion == "success")] | length'
+          )"
+          if [[ "$CI_RUN_COUNT" -lt 1 ]]; then
+            echo "::error::No successful CI workflow run exists for dispatched main SHA $DEPLOY_SHA."
+            exit 1
+          fi
+
+      - name: Configure verified SSH access
+        run: |
+          set -euo pipefail
+          if [[ -z "${VPS_SSH_PRIVATE_KEY:-}" || -z "${VPS_KNOWN_HOSTS:-}" ]]; then
+            echo "::error::Configure the replacement VPS SSH key and verified known-hosts entry in repository secrets."
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/replacement_vps
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/replacement_vps ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/replacement_vps >/dev/null
+          ssh-keygen -F "$VPS_HOST" -f ~/.ssh/known_hosts >/dev/null || {
+            echo "::error::The verified known-hosts secret has no entry for $VPS_HOST."
+            exit 1
+          }
+
+      - name: Rebuild the app and browser gateway without touching data or DNS
+        run: |
+          set -euo pipefail
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=20 -i ~/.ssh/replacement_vps \
+            "$VPS_USER@$VPS_HOST" "bash -s -- '$DEPLOY_SHA'" <<'REMOTE'
+          set -euo pipefail
+          DEPLOY_SHA="$1"
+          CHECKOUT=/home/administrator/production/cortexx
+          cd "$CHECKOUT"
+
+          [[ -s .env.construction ]] || { echo "Missing protected .env.construction" >&2; exit 1; }
+          [[ "$(stat -c '%a' .env.construction)" == 600 ]] || { echo ".env.construction must have mode 0600" >&2; exit 1; }
+          [[ -z "$(git status --porcelain)" ]] || { echo "Refusing to rebuild a dirty VPS checkout" >&2; exit 1; }
+          case "$(git remote get-url origin)" in
+            https://github.com/adrianstanca1/cortexx|https://github.com/adrianstanca1/cortexx.git|git@github.com:adrianstanca1/cortexx.git) ;;
+            *) echo "VPS checkout origin is not the canonical repository" >&2; exit 1 ;;
+          esac
+
+          CURRENT_SHA="$(git rev-parse HEAD)"
+          git fetch --quiet origin main
+          [[ "$(git rev-parse origin/main)" == "$DEPLOY_SHA" ]] || {
+            echo "Dispatched SHA is no longer the exact main tip; dispatch again from current main" >&2
+            exit 1
+          }
+          git cat-file -e "$DEPLOY_SHA^{commit}"
+          if ! git diff --quiet "$CURRENT_SHA" "$DEPLOY_SHA" -- prisma/schema.prisma prisma/migrations; then
+            echo "This app-only rebuild refuses Prisma schema or migration changes; complete the reviewed restore/migration procedure first" >&2
+            exit 1
+          fi
+
+          EXPECTED_VERSION="$(git show "$DEPLOY_SHA:package.json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')"
+          ROLLBACK_TAG="rollback-${CURRENT_SHA:0:12}"
+          COMPOSE=(docker compose --env-file .env.construction -f docker-compose.construction.yml)
+          APP_CID="$("${COMPOSE[@]}" ps -q app)"
+          GATEWAY_CID="$("${COMPOSE[@]}" ps -q browser-gateway)"
+          [[ -n "$APP_CID" && -n "$GATEWAY_CID" ]] || { echo "Current app and gateway must both be running to preserve rollback images" >&2; exit 1; }
+          docker tag "$(docker inspect --format '{{.Image}}' "$APP_CID")" "cortexbuild-construction-app:$ROLLBACK_TAG"
+          docker tag "$(docker inspect --format '{{.Image}}' "$GATEWAY_CID")" "cortexbuild-construction-browser-gateway:$ROLLBACK_TAG"
+
+          git checkout --detach "$DEPLOY_SHA"
+          COMPOSE=(docker compose --env-file .env.construction -f docker-compose.construction.yml)
+          "${COMPOSE[@]}" config --quiet
+          CORTEXX_IMAGE_TAG="$DEPLOY_SHA" "${COMPOSE[@]}" build app browser-gateway
+
+          rollback() {
+            echo "Reverting app and browser gateway to $ROLLBACK_TAG" >&2
+            CORTEXX_IMAGE_TAG="$ROLLBACK_TAG" "${COMPOSE[@]}" up -d --no-deps --pull never app browser-gateway || true
+          }
+          if ! CORTEXX_IMAGE_TAG="$DEPLOY_SHA" "${COMPOSE[@]}" up -d --no-deps app browser-gateway; then
+            rollback
+            exit 1
+          fi
+
+          HEALTH_FILE="$(mktemp)"
+          HEALTHY=false
+          for attempt in $(seq 1 30); do
+            if curl -fsS --max-time 8 http://127.0.0.1:3020/api/health -o "$HEALTH_FILE"; then
+              if python3 - "$HEALTH_FILE" "$EXPECTED_VERSION" <<'PY'
+          import json, sys
+          from datetime import datetime
+          try:
+              with open(sys.argv[1], encoding="utf-8") as source:
+                  health = json.load(source)
+              ready = (
+                  health.get("status") == "ok"
+                  and health.get("service") == "cortexbuild-construction"
+                  and health.get("version") == sys.argv[2]
+                  and (health.get("checks") or {}).get("database", {}).get("ok") is True
+                  and bool(health.get("timestamp"))
+              )
+              if not ready:
+                  raise ValueError("readiness contract or deployed version did not match")
+          except Exception as error:
+              print(f"Replacement VPS readiness check failed: {error}", file=sys.stderr)
+              sys.exit(1)
+          PY
+              then
+                HEALTHY=true
+                break
+              fi
+            fi
+            sleep 5
+          done
+          rm -f "$HEALTH_FILE"
+          if [[ "$HEALTHY" != true ]]; then
+            rollback
+            echo "::error::New app did not pass the local health contract; rollback was attempted." >&2
+            exit 1
+          fi
+
+          "${COMPOSE[@]}" ps
+          {
+            echo "Rebuilt replacement VPS app at $DEPLOY_SHA (version $EXPECTED_VERSION)."
+            echo "Rollback images retained with tag $ROLLBACK_TAG."
+            echo "No database migrations, source-data restore, or DNS changes were performed."
+          } >> "$GITHUB_STEP_SUMMARY"
+          REMOTE

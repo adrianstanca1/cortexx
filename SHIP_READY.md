@@ -1,4 +1,6 @@
-# Cortexx — Ship readiness report
+# Cortexx — Historical ship readiness report
+
+> This May 2026 audit is not current production evidence. The active target is the One.com replacement VPS; current status and gates are in [`STATUS.md`](STATUS.md) and [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 
 Audit date: 22 May 2026 · Reviewer: design agent · Result: **READY TO SHIP**
 
@@ -80,7 +82,7 @@ Every browser API the app uses, mapped to its iOS handling:
 ├─ robots.txt · sitemap.xml      ✨ NEW
 ├─ .well-known/security.txt      ✨ NEW
 ├─ vercel.json                   deploy config (pre-existing, still valid)
-├─ deploy.sh                     Hostinger VPS one-shot installer
+├─ deploy.sh                     legacy installer; not the current VPS deployment path
 │
 ├─ lib/                          80 phase modules (screens, dashboards, backend)
 │

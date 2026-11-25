@@ -1,8 +1,8 @@
-name: DB Rescue retired — VPS-free migration in progress
+name: DB Rescue retired — replacement VPS migration in progress
 
-# Retired because the former VPS and SSH access are unavailable. This workflow
-# is intentionally inert. Do not add SSH credentials or re-enable it as part of
-# the VPS-free migration.
+# Keep this legacy, broad database-rescue workflow inert. The new VPS rebuild
+# workflow is app-only; source-data restore and schema changes remain governed by
+# docs/RUNBOOK.md and must be validated in isolation before a separate recovery path.
 on:
   workflow_dispatch:
 
@@ -14,4 +14,4 @@ jobs:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "DB rescue is retired. See docs/VPS_FREE_MIGRATION.md."
+      - run: echo "Legacy DB rescue remains disabled. See docs/VPS_REPLACEMENT_MIGRATION.md."
