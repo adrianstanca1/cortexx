@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
+import { canManage } from '@/lib/rbac'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
@@ -8,8 +9,9 @@ import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
+  if (!auth.role || !canManage(auth.role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
   const { id } = await params
   try {
     const item = await prisma.payrollRun.findUnique({ where: { id } })
@@ -22,9 +24,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!auth.role || !canManage(auth.role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
   const { id } = await params
   try {
@@ -51,15 +54,16 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
+  const auth = await requireOrg()
   if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+  if (!auth.role || !canManage(auth.role)) return NextResponse.json({ error: 'Financial admin permission required' }, { status: 403 })
+  const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
   const { id } = await params
   try {
     await prisma.payrollRun.delete({ where: { id } })
     await auditLog({
-      userId: (auth.user as { id?: string }).id,
+      userId: auth.userId,
       action: 'payroll.delete',
       resourceType: 'payrollRun',
       resourceId: id,

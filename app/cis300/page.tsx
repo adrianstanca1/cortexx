@@ -64,16 +64,33 @@ export default function Cis300Page() {
   const [error, setError] = useState<string | null>(null)
   const [taxMonthInput, setTaxMonthInput] = useState<string>(() => toInputValue(currentTaxMonth()))
   const [computing, setComputing] = useState(false)
+  const [canManageFinancials, setCanManageFinancials] = useState(false)
+
+  const revokeFinancialAccess = (message = 'Financial admin permission required') => {
+    setCanManageFinancials(false)
+    setRows([])
+    setError(message)
+  }
 
   useEffect(() => {
     fetch('/api/cis300')
-      .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error || 'Failed') }))
-      .then(d => setRows(d.items || []))
+      .then(r => {
+        if (!r.ok) {
+          if (r.status === 403) revokeFinancialAccess()
+          return r.json().then(d => { throw new Error(d.error || 'Failed') })
+        }
+        return r.json()
+      })
+      .then(d => {
+        setCanManageFinancials(true)
+        setRows(d.items || [])
+      })
       .catch(e => setError(e instanceof Error ? e.message : 'Failed'))
       .finally(() => setLoading(false))
   }, [])
 
   const compute = async () => {
+    if (!canManageFinancials) return
     if (!taxMonthInput) {
       window.alert('Pick a tax month first')
       return
@@ -87,6 +104,7 @@ export default function Cis300Page() {
       })
       if (!res.ok) {
         const d = await res.json().catch(() => ({}))
+        if (res.status === 403) revokeFinancialAccess(d.error || 'Financial admin permission required')
         window.alert(d.error || 'Failed to compute')
         return
       }
@@ -102,66 +120,70 @@ export default function Cis300Page() {
 
   return (
     <ModuleShell title="CIS300 returns" tagline="Monthly returns to HMRC">
-      {/* Tax-month picker + compute button */}
-      <div
-        style={{
-          display: 'flex',
-          gap: 8,
-          alignItems: 'center',
-          flexWrap: 'wrap',
-          marginBottom: 20,
-          padding: 12,
-          background: 'var(--surface-raised)',
-          borderRadius: 10,
-          border: '0.5px solid rgba(255,255,255,0.07)',
-        }}
-      >
-        <label
-          style={{
-            fontSize: 12,
-            color: 'var(--t2)',
-            fontFamily: 'var(--font-system)',
-            display: 'flex',
-            flexDirection: 'column',
-            gap: 4,
-          }}
-        >
-          <span>Tax month (date is normalised to the 6th)</span>
-          <input
-            type="date"
-            value={taxMonthInput}
-            onChange={e => setTaxMonthInput(e.target.value)}
+      {canManageFinancials && (
+        <>
+          {/* Tax-month picker + compute button */}
+          <div
             style={{
-              padding: '6px 10px',
-              borderRadius: 8,
-              border: '1px solid rgba(255,255,255,0.1)',
-              background: 'var(--bg1)',
-              color: 'var(--t1)',
-              fontFamily: 'var(--font-system)',
-              fontSize: 13,
+              display: 'flex',
+              gap: 8,
+              alignItems: 'center',
+              flexWrap: 'wrap',
+              marginBottom: 20,
+              padding: 12,
+              background: 'var(--surface-raised)',
+              borderRadius: 10,
+              border: '0.5px solid rgba(255,255,255,0.07)',
             }}
-          />
-        </label>
-        <button type="button"
-          onClick={compute}
-          disabled={computing}
-          style={{
-            marginTop: 18,
-            padding: '8px 16px',
-            borderRadius: 10,
-            border: 'none',
-            background: '#10b981',
-            color: 'var(--bg1)',
-            fontFamily: 'var(--font-system)',
-            fontSize: 13,
-            fontWeight: 700,
-            cursor: computing ? 'not-allowed' : 'pointer',
-            opacity: computing ? 0.6 : 1,
-          }}
-        >
-          {computing ? 'Computing…' : 'Compute return'}
-        </button>
-      </div>
+          >
+            <label
+              style={{
+                fontSize: 12,
+                color: 'var(--t2)',
+                fontFamily: 'var(--font-system)',
+                display: 'flex',
+                flexDirection: 'column',
+                gap: 4,
+              }}
+            >
+              <span>Tax month (date is normalised to the 6th)</span>
+              <input
+                type="date"
+                value={taxMonthInput}
+                onChange={e => setTaxMonthInput(e.target.value)}
+                style={{
+                  padding: '6px 10px',
+                  borderRadius: 8,
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  background: 'var(--bg1)',
+                  color: 'var(--t1)',
+                  fontFamily: 'var(--font-system)',
+                  fontSize: 13,
+                }}
+              />
+            </label>
+            <button type="button"
+              onClick={compute}
+              disabled={computing || !canManageFinancials}
+              style={{
+                marginTop: 18,
+                padding: '8px 16px',
+                borderRadius: 10,
+                border: 'none',
+                background: '#10b981',
+                color: 'var(--bg1)',
+                fontFamily: 'var(--font-system)',
+                fontSize: 13,
+                fontWeight: 700,
+                cursor: computing ? 'not-allowed' : 'pointer',
+                opacity: computing ? 0.6 : 1,
+              }}
+            >
+              {computing ? 'Computing…' : 'Compute return'}
+            </button>
+          </div>
+        </>
+      )}
 
       {loading ? (
         <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
