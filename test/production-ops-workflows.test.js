@@ -24,6 +24,8 @@ test('replacement VPS rebuild is manual, fail-closed, and app-only', () => {
   assert.match(deploy, /prisma\/schema\.prisma prisma\/migrations/)
   assert.match(deploy, /rollback-/)
   assert.match(deploy, /--no-build --pull never/)
+  assert.match(deploy, /wait_for_gateway_health/)
+  assert.match(deploy, /\.State\.Health\.Status/)
   assert.match(deploy, /wait_for_health "\$CURRENT_VERSION"/)
   const remoteScript = deploy.match(/<<'REMOTE'[^\n]*\n([\s\S]*?)^\s+REMOTE$/m)?.[1] || ''
   assert.ok(remoteScript, 'the remote deployment script is present')

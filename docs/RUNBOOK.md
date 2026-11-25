@@ -39,7 +39,7 @@ The intended application release uses:
 - Next.js construction application on loopback port 3020.
 - Persistent Docker volumes for database, uploads and service data.
 - Existing reviewed health contract `scripts/check-construction-health.cjs`.
-- Manual, app-only rebuild workflow `.github/workflows/deploy-vps.yml`, gated by `VPS_REBUILD_ENABLED=true` and the protected GitHub environment `replacement-vps`. Require trusted reviewers, restrict environment deployments to `main`, and keep the rebuild SSH key and verified known-hosts entry in environment secrets only. The workflow rejects schema/migration changes, restores the prior Compose configuration and images on a failed health check, and does not restore data, run migrations, or change DNS.
+- Manual, app-only rebuild workflow `.github/workflows/deploy-vps.yml`, gated by `VPS_REBUILD_ENABLED=true` and the protected GitHub environment `replacement-vps`. Require trusted reviewers, restrict environment deployments to `main`, and keep the rebuild SSH key and verified known-hosts entry in environment secrets only. The workflow rejects schema/migration changes, restores the prior Compose configuration and images on a failed health check, verifies both the browser gateway and app readiness, and does not restore data, run migrations, or change DNS.
 
 Do not use historical `docker-compose.yml`, `docker-compose.prod.yml`, `deploy.sh`, static HTML/Express, PM2 or host-Postgres procedures as the production path.
 

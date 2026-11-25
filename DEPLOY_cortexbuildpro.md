@@ -26,7 +26,7 @@ Before enabling it, configure the `replacement-vps` environment with required tr
 - `REPLACEMENT_VPS_REBUILD_SSH_PRIVATE_KEY`
 - `REPLACEMENT_VPS_REBUILD_KNOWN_HOSTS`
 
-Do not reuse a former-host key, trust a runtime `ssh-keyscan`, or paste credentials into chat. Dispatch only after CI passes for the exact `main` SHA. The workflow refuses a dirty server checkout and any Prisma schema/migration change; it preserves the current app and gateway images, rebuilds and restarts those two services only, and checks the local health contract. A failed rebuild restores the previous Compose configuration and image tags and verifies the previous health contract.
+Do not reuse a former-host key, trust a runtime `ssh-keyscan`, or paste credentials into chat. Dispatch only after CI passes for the exact `main` SHA. The workflow refuses a dirty server checkout and any Prisma schema/migration change; it preserves the current app and gateway images, rebuilds and restarts those two services only, and checks both the browser-gateway container health and the app's local health contract. A failed rebuild restores the previous Compose configuration and image tags and verifies both previous health contracts.
 
 The workflow does not restore production data, run migrations or bootstrap, restart the database, or change DNS. For schema or migration changes, restore and validate the reported source backup in isolation first and follow [`docs/RUNBOOK.md`](docs/RUNBOOK.md). Rebuilds are not permission to cut over production traffic.
 

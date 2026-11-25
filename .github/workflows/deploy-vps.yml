@@ -166,6 +166,22 @@ jobs:
             return 1
           }
 
+          wait_for_gateway_health() {
+            for attempt in $(seq 1 30); do
+              local gateway_cid gateway_state
+              gateway_cid="$("${COMPOSE[@]}" ps -q browser-gateway)"
+              if [[ -n "$gateway_cid" ]]; then
+                gateway_state="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$gateway_cid" 2>/dev/null || true)"
+                if [[ "$gateway_state" == healthy ]]; then
+                  return 0
+                fi
+              fi
+              sleep 5
+            done
+            echo "Browser gateway did not become healthy before the timeout" >&2
+            return 1
+          }
+
           rollback() {
             echo "Reverting app and browser gateway to $ROLLBACK_TAG with the previous Compose configuration" >&2
             git checkout --detach "$CURRENT_SHA" || return 1
@@ -178,6 +194,8 @@ jobs:
           EOF
             local rollback_compose=(docker compose --project-directory "$CHECKOUT" --env-file "$CHECKOUT/.env.construction" -f "$PREVIOUS_COMPOSE" -f "$ROLLBACK_OVERRIDE")
             CORTEXX_IMAGE_TAG="$ROLLBACK_TAG" "${rollback_compose[@]}" up -d --no-deps --no-build --pull never app browser-gateway || return 1
+            COMPOSE=("${rollback_compose[@]}")
+            wait_for_gateway_health || { echo "Previous gateway did not pass its restored health check" >&2; return 1; }
             wait_for_health "$CURRENT_VERSION" || { echo "Previous app did not pass its restored health contract" >&2; return 1; }
             "${rollback_compose[@]}" ps || return 1
             echo "Previous app and gateway were restored and passed readiness" >&2
@@ -186,6 +204,12 @@ jobs:
           if ! CORTEXX_IMAGE_TAG="$DEPLOY_SHA" "${COMPOSE[@]}" up -d --no-deps --pull never app browser-gateway; then
             if ! rollback; then
               echo "::error::Replacement failed and rollback could not be verified." >&2
+            fi
+            exit 1
+          fi
+          if ! wait_for_gateway_health; then
+            if ! rollback; then
+              echo "::error::New gateway failed health checks and rollback could not be verified." >&2
             fi
             exit 1
           fi
