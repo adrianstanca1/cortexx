@@ -20,15 +20,17 @@ jobs:
     # verification before production cutover without probing the retired host.
     # A historical GitHub run failed SSH authentication against the retired host;
     # this job now targets the One.com replacement and requires its dedicated verified key.
-    if: vars.REPLACEMENT_VPS_BACKUP_VERIFY_ENABLED == 'true'
+    if: github.ref == 'refs/heads/main' && vars.REPLACEMENT_VPS_BACKUP_VERIFY_ENABLED == 'true'
     runs-on: ubuntu-latest
+    environment:
+      name: replacement-vps-backup-verify
     timeout-minutes: 30
     env:
       VPS_HOST: 85.190.122.27
       VPS_USER: administrator
-      VPS_SSH_KEY: ${{ secrets.REPLACEMENT_VPS_SSH_PRIVATE_KEY }}
-      VPS_KNOWN_HOSTS: ${{ secrets.REPLACEMENT_VPS_KNOWN_HOSTS }}
-      BACKUP_ENCRYPTION_KEY: ${{ secrets.CORTEXX_BACKUP_ENCRYPTION_KEY }}
+      VPS_SSH_KEY: ${{ secrets.REPLACEMENT_VPS_BACKUP_VERIFY_SSH_PRIVATE_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.REPLACEMENT_VPS_BACKUP_VERIFY_KNOWN_HOSTS }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.REPLACEMENT_VPS_BACKUP_ENCRYPTION_KEY }}
     steps:
       - name: Configure verified SSH client
         run: |
@@ -75,7 +77,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "${BACKUP_ENCRYPTION_KEY:-}" ]]; then
-            echo "::error::CORTEXX_BACKUP_ENCRYPTION_KEY is not configured."
+            echo "::error::REPLACEMENT_VPS_BACKUP_ENCRYPTION_KEY is not configured in the protected backup-verify environment."
             exit 1
           fi
           SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o IdentitiesOnly=yes -o BatchMode=yes -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no)

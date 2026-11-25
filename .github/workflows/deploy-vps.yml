@@ -18,12 +18,14 @@ jobs:
     # restores production data, or applies Prisma migrations.
     if: github.ref == 'refs/heads/main' && vars.VPS_REBUILD_ENABLED == 'true'
     runs-on: ubuntu-latest
+    environment:
+      name: replacement-vps
     timeout-minutes: 45
     env:
       VPS_HOST: 85.190.122.27
       VPS_USER: administrator
-      VPS_SSH_PRIVATE_KEY: ${{ secrets.REPLACEMENT_VPS_SSH_PRIVATE_KEY }}
-      VPS_KNOWN_HOSTS: ${{ secrets.REPLACEMENT_VPS_KNOWN_HOSTS }}
+      VPS_SSH_PRIVATE_KEY: ${{ secrets.REPLACEMENT_VPS_REBUILD_SSH_PRIVATE_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.REPLACEMENT_VPS_REBUILD_KNOWN_HOSTS }}
       DEPLOY_SHA: ${{ github.sha }}
     steps:
       - name: Check out the dispatched main revision
@@ -51,7 +53,7 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "${VPS_SSH_PRIVATE_KEY:-}" || -z "${VPS_KNOWN_HOSTS:-}" ]]; then
-            echo "::error::Configure the replacement VPS SSH key and verified known-hosts entry in repository secrets."
+            echo "::error::Configure the replacement VPS SSH key and verified known-hosts entry in the protected replacement-vps environment secrets."
             exit 1
           fi
           install -m 700 -d ~/.ssh
@@ -67,9 +69,13 @@ jobs:
       - name: Rebuild the app and browser gateway without touching data or DNS
         run: |
           set -euo pipefail
+          EXPECTED_VERSION="$(jq -r '.version' package.json)"
+          REMOTE_LOG="$(mktemp)"
+          trap 'rm -f "$REMOTE_LOG"' EXIT
+          set +e
           ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
             -o ConnectTimeout=20 -i ~/.ssh/replacement_vps \
-            "$VPS_USER@$VPS_HOST" "bash -s -- '$DEPLOY_SHA'" <<'REMOTE'
+            "$VPS_USER@$VPS_HOST" "bash -s -- '$DEPLOY_SHA'" <<'REMOTE' | tee "$REMOTE_LOG"
           set -euo pipefail
           DEPLOY_SHA="$1"
           CHECKOUT=/home/administrator/production/cortexx
@@ -84,6 +90,7 @@ jobs:
           esac
 
           CURRENT_SHA="$(git rev-parse HEAD)"
+          CURRENT_VERSION="$(git show "$CURRENT_SHA:package.json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')"
           git fetch --quiet origin main
           [[ "$(git rev-parse origin/main)" == "$DEPLOY_SHA" ]] || {
             echo "Dispatched SHA is no longer the exact main tip; dispatch again from current main" >&2
@@ -97,7 +104,23 @@ jobs:
 
           EXPECTED_VERSION="$(git show "$DEPLOY_SHA:package.json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')"
           ROLLBACK_TAG="rollback-${CURRENT_SHA:0:12}"
-          COMPOSE=(docker compose --env-file .env.construction -f docker-compose.construction.yml)
+          ROLLBACK_DIR="$(mktemp -d)"
+          PREVIOUS_COMPOSE="$ROLLBACK_DIR/docker-compose.construction.yml"
+          ROLLBACK_OVERRIDE="$ROLLBACK_DIR/rollback-images.yml"
+          git show "$CURRENT_SHA:docker-compose.construction.yml" > "$PREVIOUS_COMPOSE"
+          DEPLOY_FINISHED=false
+          cleanup() {
+            local exit_code=$?
+            trap - EXIT
+            if [[ "$DEPLOY_FINISHED" != true ]]; then
+              git checkout --detach "$CURRENT_SHA" >/dev/null 2>&1 || echo "Could not restore VPS checkout to $CURRENT_SHA" >&2
+            fi
+            rm -rf "$ROLLBACK_DIR"
+            exit "$exit_code"
+          }
+          trap cleanup EXIT
+
+          COMPOSE=(docker compose --project-directory "$CHECKOUT" --env-file "$CHECKOUT/.env.construction" -f "$CHECKOUT/docker-compose.construction.yml")
           APP_CID="$("${COMPOSE[@]}" ps -q app)"
           GATEWAY_CID="$("${COMPOSE[@]}" ps -q browser-gateway)"
           [[ -n "$APP_CID" && -n "$GATEWAY_CID" ]] || { echo "Current app and gateway must both be running to preserve rollback images" >&2; exit 1; }
@@ -105,26 +128,18 @@ jobs:
           docker tag "$(docker inspect --format '{{.Image}}' "$GATEWAY_CID")" "cortexbuild-construction-browser-gateway:$ROLLBACK_TAG"
 
           git checkout --detach "$DEPLOY_SHA"
-          COMPOSE=(docker compose --env-file .env.construction -f docker-compose.construction.yml)
+          COMPOSE=(docker compose --project-directory "$CHECKOUT" --env-file "$CHECKOUT/.env.construction" -f "$CHECKOUT/docker-compose.construction.yml")
           "${COMPOSE[@]}" config --quiet
           CORTEXX_IMAGE_TAG="$DEPLOY_SHA" "${COMPOSE[@]}" build app browser-gateway
 
-          rollback() {
-            echo "Reverting app and browser gateway to $ROLLBACK_TAG" >&2
-            CORTEXX_IMAGE_TAG="$ROLLBACK_TAG" "${COMPOSE[@]}" up -d --no-deps --pull never app browser-gateway || true
-          }
-          if ! CORTEXX_IMAGE_TAG="$DEPLOY_SHA" "${COMPOSE[@]}" up -d --no-deps app browser-gateway; then
-            rollback
-            exit 1
-          fi
-
-          HEALTH_FILE="$(mktemp)"
-          HEALTHY=false
-          for attempt in $(seq 1 30); do
-            if curl -fsS --max-time 8 http://127.0.0.1:3020/api/health -o "$HEALTH_FILE"; then
-              if python3 - "$HEALTH_FILE" "$EXPECTED_VERSION" <<'PY'
+          wait_for_health() {
+            local expected_version="$1"
+            local health_file
+            health_file="$(mktemp)"
+            for attempt in $(seq 1 30); do
+              if curl -fsS --max-time 8 http://127.0.0.1:3020/api/health -o "$health_file" &&
+                python3 - "$health_file" "$expected_version" <<'PY'
           import json, sys
-          from datetime import datetime
           try:
               with open(sys.argv[1], encoding="utf-8") as source:
                   health = json.load(source)
@@ -142,23 +157,61 @@ jobs:
               sys.exit(1)
           PY
               then
-                HEALTHY=true
-                break
+                rm -f "$health_file"
+                return 0
               fi
+              sleep 5
+            done
+            rm -f "$health_file"
+            return 1
+          }
+
+          rollback() {
+            echo "Reverting app and browser gateway to $ROLLBACK_TAG with the previous Compose configuration" >&2
+            git checkout --detach "$CURRENT_SHA" || return 1
+            cat > "$ROLLBACK_OVERRIDE" <<EOF
+          services:
+            app:
+              image: cortexbuild-construction-app:$ROLLBACK_TAG
+            browser-gateway:
+              image: cortexbuild-construction-browser-gateway:$ROLLBACK_TAG
+          EOF
+            local rollback_compose=(docker compose --project-directory "$CHECKOUT" --env-file "$CHECKOUT/.env.construction" -f "$PREVIOUS_COMPOSE" -f "$ROLLBACK_OVERRIDE")
+            CORTEXX_IMAGE_TAG="$ROLLBACK_TAG" "${rollback_compose[@]}" up -d --no-deps --no-build --pull never app browser-gateway || return 1
+            wait_for_health "$CURRENT_VERSION" || { echo "Previous app did not pass its restored health contract" >&2; return 1; }
+            "${rollback_compose[@]}" ps || return 1
+            echo "Previous app and gateway were restored and passed readiness" >&2
+          }
+
+          if ! CORTEXX_IMAGE_TAG="$DEPLOY_SHA" "${COMPOSE[@]}" up -d --no-deps --pull never app browser-gateway; then
+            if ! rollback; then
+              echo "::error::Replacement failed and rollback could not be verified." >&2
             fi
-            sleep 5
-          done
-          rm -f "$HEALTH_FILE"
-          if [[ "$HEALTHY" != true ]]; then
-            rollback
-            echo "::error::New app did not pass the local health contract; rollback was attempted." >&2
+            exit 1
+          fi
+          if ! wait_for_health "$EXPECTED_VERSION"; then
+            if ! rollback; then
+              echo "::error::New app failed health checks and rollback could not be verified." >&2
+            fi
             exit 1
           fi
 
-          "${COMPOSE[@]}" ps
+          DEPLOY_FINISHED=true
+          "${COMPOSE[@]}" ps || true
+          echo "ROLLBACK_TAG=$ROLLBACK_TAG"
+          REMOTE
+          SSH_STATUS=${PIPESTATUS[0]}
+          set -e
+          if [[ "$SSH_STATUS" -ne 0 ]]; then
+            exit "$SSH_STATUS"
+          fi
+          ROLLBACK_TAG="$(sed -n 's/^ROLLBACK_TAG=//p' "$REMOTE_LOG" | tail -n 1)"
+          if [[ -z "$ROLLBACK_TAG" ]]; then
+            echo "::error::Remote rebuild returned success without a rollback tag." >&2
+            exit 1
+          fi
           {
             echo "Rebuilt replacement VPS app at $DEPLOY_SHA (version $EXPECTED_VERSION)."
             echo "Rollback images retained with tag $ROLLBACK_TAG."
             echo "No database migrations, source-data restore, or DNS changes were performed."
           } >> "$GITHUB_STEP_SUMMARY"
-          REMOTE

@@ -40,8 +40,11 @@ successful runs are not evidence of a current backup or restore chain. See
 
 Historically, a successful encrypted archive was retained as a private GitHub
 Actions artifact for 30 days, using AES-256-CBC with PBKDF2 (200,000 iterations);
-the key stayed in the `CORTEXX_BACKUP_ENCRYPTION_KEY` GitHub secret and was not
-included in the artifact.
+the key was not included in the artifact. The replacement workflow uses the
+`replacement-vps-backup-verify` GitHub environment, restricted to `main`, with
+SSH and encryption credentials stored as environment secrets rather than
+repository secrets. Remove any legacy repository-scoped backup secrets before
+enabling verification.
 
 For disaster recovery, restore into an isolated replacement stack first, verify
 organisation/project/evidence access and migrations, then switch traffic during

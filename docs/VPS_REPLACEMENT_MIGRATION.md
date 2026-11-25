@@ -17,9 +17,9 @@ PR #476 records the replacement stack healthy after fixing browser-gateway start
 
 ## Rebuild path
 
-`.github/workflows/deploy-vps.yml` is the manual app-only rebuild path for the replacement VPS. It is restricted to `main`, requires the `VPS_REBUILD_ENABLED=true` repository variable and dedicated replacement-host SSH key/known-hosts secrets, and verifies the host key rather than scanning it at runtime. It checks out the exact current `main` SHA remotely, refuses dirty checkouts and Prisma schema/migration changes, tags the running images for rollback, builds and restarts only the app and browser gateway, then verifies the local health contract.
+`.github/workflows/deploy-vps.yml` is the manual app-only rebuild path for the replacement VPS. It is restricted to `main`, requires the `VPS_REBUILD_ENABLED=true` repository variable and the protected GitHub environment `replacement-vps`. Configure that environment with required trusted reviewers, limit its deployment branches to `main`, and store `REPLACEMENT_VPS_REBUILD_SSH_PRIVATE_KEY` and `REPLACEMENT_VPS_REBUILD_KNOWN_HOSTS` as environment secrets only—not repository secrets. The workflow verifies the host key rather than scanning it at runtime. It checks out the exact current `main` SHA remotely, refuses dirty checkouts and Prisma schema/migration changes, tags the running images for rollback, builds and restarts only the app and browser gateway, then verifies the local health contract. A failed rebuild restores the previous Compose configuration and image tags, then verifies the old health contract.
 
-The workflow does **not** restore source data, run migrations/bootstrap, touch database volumes, or change public DNS. Run it only after the exact `main` commit has passed CI. For schema or migration changes, follow the restore and acceptance gates in [`RUNBOOK.md`](RUNBOOK.md) first. The workflow remains unavailable until its repository secrets and operator gate are configured; never paste SSH material into chat or the repository.
+The workflow does **not** restore source data, run migrations/bootstrap, touch database volumes, or change public DNS. Run it only after the exact `main` commit has passed CI. For schema or migration changes, follow the restore and acceptance gates in [`RUNBOOK.md`](RUNBOOK.md) first. The workflow remains unavailable until the protected environment, its environment-scoped secrets and the operator gate are configured; never paste SSH material into chat or the repository.
 
 ## Hosting alternatives reviewed (not selected)
 
@@ -47,4 +47,4 @@ Neon and Render were investigated during an earlier zero-spend review, but neith
 - Secure backup transfer and isolated restore validation are outstanding.
 - End-to-end acceptance, a fresh replacement backup/restore drill and a tested rollback remain outstanding.
 - DNS/TLS still targets the retired host; no production cutover is approved by these staging records.
-- Backup Verify is redirected locally to the replacement host but stays separately disabled until the new host backup chain and credentials are validated; the old GitHub SSH failure is historical.
+- Backup Verify stays separately disabled until the new host backup chain and credentials are validated. Before enabling it, restrict the `replacement-vps-backup-verify` GitHub environment to `main` and store its SSH key, verified known-hosts entry and encryption key as environment secrets only; remove any legacy repository-scoped backup secrets. The old GitHub SSH failure against the retired host is historical.
