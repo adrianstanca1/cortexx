@@ -43,7 +43,7 @@ export default function PrivacyPage() {
 
       <h2>3 · Cortex AI and third-party processors</h2>
       <p>When you ask Cortex AI a question, draft a chase email, run an AI estimator, scan a receipt with vision OCR, or use any other AI feature, the text or image of that request is sent via our backend to <strong>Anthropic, PBC</strong> (the makers of Claude). Anthropic processes the request and returns an answer. Anthropic do not train on data sent through our API contract (see Anthropic&apos;s data privacy commitments at anthropic.com/legal/api).</p>
-      <p>We use <strong>Vercel</strong> (or our own UK-hosted infrastructure on Hostinger VPS) to serve the app. Neither receives a copy of your business data — only the static app code and your IP address at the time of request.</p>
+      <p>The production application is hosted on our company-managed <strong>One.com Cloud Server</strong>; Vercel may host preview deployments. These providers process connection metadata and, where applicable, application data needed to deliver the service.</p>
       <p>For payments (Pro / Enterprise tiers), we use <strong>Stripe</strong>. Stripe receives your name, email, billing address and card details directly. We never see card numbers.</p>
 
       <h2>4 · Permissions we ask for, and why</h2>

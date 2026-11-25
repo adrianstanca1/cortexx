@@ -15,74 +15,56 @@ concurrency:
 
 jobs:
   verify:
+    # Verify backups only after the replacement host's backup and restore chain is
+    # installed and independently validated. This separate gate allows staging
+    # verification before production cutover without probing the retired host.
+    # A historical GitHub run failed SSH authentication against the retired host;
+    # this job now targets the One.com replacement and requires its dedicated verified key.
+    if: github.ref == 'refs/heads/main' && vars.REPLACEMENT_VPS_BACKUP_VERIFY_ENABLED == 'true'
     runs-on: ubuntu-latest
+    environment:
+      name: replacement-vps-backup-verify
     timeout-minutes: 30
     env:
-      VPS_HOST: 85.190.100.68
+      VPS_HOST: 85.190.122.27
       VPS_USER: administrator
-      VPS_SSH_KEY: ${{ secrets.VPS_SSH_PRIVATE_KEY }}
-      VPS_PASSWORD: ${{ secrets.VPS_ROOT_PASSWORD }}
-      BACKUP_ENCRYPTION_KEY: ${{ secrets.CORTEXX_BACKUP_ENCRYPTION_KEY }}
+      VPS_SSH_KEY: ${{ secrets.REPLACEMENT_VPS_BACKUP_VERIFY_SSH_PRIVATE_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.REPLACEMENT_VPS_BACKUP_VERIFY_KNOWN_HOSTS }}
+      BACKUP_ENCRYPTION_KEY: ${{ secrets.REPLACEMENT_VPS_BACKUP_ENCRYPTION_KEY }}
     steps:
-      - name: Configure SSH client
+      - name: Configure verified SSH client
         run: |
           set -euo pipefail
-          if [[ -z "${VPS_SSH_KEY:-}" && -z "${VPS_PASSWORD:-}" ]]; then
-            echo "::error::Configure VPS_SSH_PRIVATE_KEY or VPS_ROOT_PASSWORD."
+          if [[ -z "${VPS_SSH_KEY:-}" || -z "${VPS_KNOWN_HOSTS:-}" ]]; then
+            echo "::error::Configure the replacement VPS SSH key and verified known-hosts entry."
             exit 1
           fi
-          mkdir -p ~/.ssh
-          chmod 700 ~/.ssh
-          ssh-keyscan -H "$VPS_HOST" >> ~/.ssh/known_hosts 2>/dev/null || true
-          chmod 600 ~/.ssh/known_hosts
-          if [[ -n "${VPS_SSH_KEY:-}" ]]; then
-            printf '%s\n' "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/cortexx_deploy
-            chmod 600 ~/.ssh/cortexx_deploy
-          fi
-          if [[ -n "${VPS_PASSWORD:-}" ]]; then
-            sudo apt-get update -qq
-            sudo apt-get install -y -qq sshpass
-          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_KEY" | tr -d '\r' > ~/.ssh/cortexx_deploy
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/cortexx_deploy ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/cortexx_deploy >/dev/null
+          ssh-keygen -F "$VPS_HOST" -f ~/.ssh/known_hosts >/dev/null || {
+            echo "::error::The verified known-hosts secret has no entry for $VPS_HOST."
+            exit 1
+          }
 
-      - name: Resolve SSH authentication
+      - name: Resolve replacement VPS SSH authentication
         run: |
           set -euo pipefail
-          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o IdentitiesOnly=yes)
-          CANDIDATES=(administrator root)
-          KEY_VALID=false
-          if [[ -s ~/.ssh/cortexx_deploy ]] && ssh-keygen -y -f ~/.ssh/cortexx_deploy >/dev/null 2>&1; then KEY_VALID=true; fi
-          for candidate in "${CANDIDATES[@]}"; do
-            if [[ "$KEY_VALID" == true ]] && ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
-              echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
-              echo "CORTEXX_SSH_MODE=key" >> "$GITHUB_ENV"
-              echo "SSH key authentication ready for the $candidate account."
-              exit 0
-            fi
-          done
-          if [[ -n "${VPS_PASSWORD:-}" ]]; then
-            export SSHPASS="$VPS_PASSWORD"
-            for candidate in "${CANDIDATES[@]}"; do
-              if sshpass -e ssh "${SSH_BASE[@]}" -o PubkeyAuthentication=no -o PreferredAuthentications=keyboard-interactive,password "$candidate@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
-                echo "VPS_USER=$candidate" >> "$GITHUB_ENV"
-                echo "CORTEXX_SSH_MODE=password" >> "$GITHUB_ENV"
-                echo "SSH password authentication ready for the $candidate account."
-                exit 0
-              fi
-            done
-          fi
-          echo "::error::SSH authentication failed for both administrator and root accounts."
-          exit 1
-
-      - name: Verify latest construction backup on current VPS
-        run: |
-          set -euo pipefail
-          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3)
-          if [[ "$CORTEXX_SSH_MODE" == key ]]; then
-            REMOTE=(ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST")
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=15 -o IdentitiesOnly=yes -o BatchMode=yes -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no)
+          if ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST" 'echo SSH_OK' >/dev/null 2>&1; then
+            echo "Verified key authentication for the replacement VPS administrator account."
           else
-            export SSHPASS="$VPS_PASSWORD"
-            REMOTE=(sshpass -e ssh "${SSH_BASE[@]}" "$VPS_USER@$VPS_HOST")
+            echo "::error::SSH authentication failed for administrator on the replacement VPS."
+            exit 1
           fi
+
+      - name: Verify latest construction backup on replacement VPS
+        run: |
+          set -euo pipefail
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o IdentitiesOnly=yes -o BatchMode=yes -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no)
+          REMOTE=(ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST")
           "${REMOTE[@]}" 'BACKUP_DIR=/home/administrator/backups/construction bash /home/administrator/bin/construction-verify-latest.sh' 2>&1 | tee /tmp/construction-verify.log
           {
             echo '## Construction backup restore verified'
@@ -95,16 +77,11 @@ jobs:
         run: |
           set -euo pipefail
           if [[ -z "${BACKUP_ENCRYPTION_KEY:-}" ]]; then
-            echo "::error::CORTEXX_BACKUP_ENCRYPTION_KEY is not configured."
+            echo "::error::REPLACEMENT_VPS_BACKUP_ENCRYPTION_KEY is not configured in the protected backup-verify environment."
             exit 1
           fi
-          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3)
-          if [[ "$CORTEXX_SSH_MODE" == key ]]; then
-            REMOTE=(ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST")
-          else
-            export SSHPASS="$VPS_PASSWORD"
-            REMOTE=(sshpass -e ssh "${SSH_BASE[@]}" "$VPS_USER@$VPS_HOST")
-          fi
+          SSH_BASE=(-o StrictHostKeyChecking=yes -o ConnectTimeout=20 -o ServerAliveInterval=30 -o ServerAliveCountMax=3 -o IdentitiesOnly=yes -o BatchMode=yes -o PreferredAuthentications=publickey -o PasswordAuthentication=no -o KbdInteractiveAuthentication=no)
+          REMOTE=(ssh "${SSH_BASE[@]}" -i ~/.ssh/cortexx_deploy "$VPS_USER@$VPS_HOST")
           mkdir -p /tmp/cortexx-offsite
           ARCHIVE="/tmp/cortexx-offsite/construction-backup-${GITHUB_RUN_ID}.tar.gz.enc"
           "${REMOTE[@]}" 'set -euo pipefail

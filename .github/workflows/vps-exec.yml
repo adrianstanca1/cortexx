@@ -1,8 +1,7 @@
-name: VPS Exec retired — VPS-free migration in progress
+name: VPS Exec retired — replacement VPS uses reviewed rebuild workflow
 
-# Retired because the former VPS and SSH access are unavailable. This workflow
-# is intentionally inert. Do not add SSH credentials or re-enable it as part of
-# the VPS-free migration.
+# Keep arbitrary remote shell execution disabled. The only current SSH workflow
+# is the gated, app-only replacement VPS rebuild in deploy-vps.yml.
 on:
   workflow_dispatch:
 
@@ -14,4 +13,4 @@ jobs:
     if: ${{ false }}
     runs-on: ubuntu-latest
     steps:
-      - run: echo "VPS remote execution is retired. See docs/VPS_FREE_MIGRATION.md."
+      - run: echo "Arbitrary VPS execution is disabled. Use the reviewed rebuild workflow."

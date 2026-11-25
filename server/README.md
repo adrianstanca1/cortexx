@@ -89,7 +89,7 @@ node index.js
 4. Run the migration: `npm run migrate`
 5. Deploy
 
-**Your Hostinger VPS:**
+**Legacy Express/PM2 deployment example — retired:** The production target is the Next.js Compose stack on the One.com replacement VPS. Do not run this legacy example on that host; use [`docs/RUNBOOK.md`](../docs/RUNBOOK.md).
 ```sh
 apt install -y postgresql nodejs npm
 sudo -u postgres createdb cortexx

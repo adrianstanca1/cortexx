@@ -84,9 +84,23 @@ test('marker outside managed backups fails before restore', t => {
 });
 
 
-test('backup verification workflow retains an encrypted off-site artifact and proves it can restore', () => {
+test('backup verification targets the gated replacement VPS with a verified key', () => {
   const workflow = readFileSync(resolve('.github/workflows/backup-verify.yml'), 'utf8');
-  assert.match(workflow, /CORTEXX_BACKUP_ENCRYPTION_KEY/);
+  assert.match(workflow, /VPS_HOST: 85\.190\.122\.27/);
+  assert.match(workflow, /environment:\s*\n\s+name:\s*replacement-vps-backup-verify/);
+  assert.match(workflow, /github\.ref == 'refs\/heads\/main'/);
+  assert.match(workflow, /REPLACEMENT_VPS_BACKUP_VERIFY_SSH_PRIVATE_KEY/);
+  assert.match(workflow, /REPLACEMENT_VPS_BACKUP_VERIFY_KNOWN_HOSTS/);
+  assert.match(workflow, /REPLACEMENT_VPS_BACKUP_ENCRYPTION_KEY/);
+  assert.doesNotMatch(workflow, /secrets\.REPLACEMENT_VPS_SSH_PRIVATE_KEY|secrets\.REPLACEMENT_VPS_KNOWN_HOSTS|secrets\.CORTEXX_BACKUP_ENCRYPTION_KEY/);
+  assert.match(workflow, /BatchMode=yes/);
+  assert.match(workflow, /PreferredAuthentications=publickey/);
+  assert.match(workflow, /PasswordAuthentication=no/);
+  assert.match(workflow, /KbdInteractiveAuthentication=no/);
+  assert.match(workflow, /vars\.REPLACEMENT_VPS_BACKUP_VERIFY_ENABLED == 'true'/);
+  assert.doesNotMatch(workflow, /85\.190\.100\.68|VPS_ROOT_PASSWORD|sshpass|ssh-keyscan/);
+  assert.doesNotMatch(workflow, /VPS_PASSWORD|SSHPASS|CORTEXX_SSH_MODE|PreferredAuthentications\s*=\s*password|PubkeyAuthentication\s*=\s*no|PasswordAuthentication\s*=\s*yes/i);
+  assert.match(workflow, /REPLACEMENT_VPS_BACKUP_ENCRYPTION_KEY/);
   assert.match(workflow, /openssl enc -aes-256-cbc -salt -pbkdf2 -iter 200000/);
   assert.match(workflow, /openssl enc -d -aes-256-cbc -pbkdf2 -iter 200000/);
   assert.match(workflow, /actions\/upload-artifact@v7/);
@@ -103,5 +117,5 @@ test('backup verification workflow retains an encrypted off-site artifact and pr
   assert.match(workflow, /rm -rf \"\$VERIFY_DIR\" \"\$PLAIN\"/);
   assert.doesNotMatch(workflow, /actions\/upload-artifact@v7[\s\S]{0,500}(\.env\.construction|\.owner-credentials)/);
   const keyLine = workflow.split('\n').find(line => line.includes('BACKUP_ENCRYPTION_KEY:'));
-  assert.equal(keyLine?.trim(), 'BACKUP_ENCRYPTION_KEY: ${{ secrets.CORTEXX_BACKUP_ENCRYPTION_KEY }}');
+  assert.equal(keyLine?.trim(), 'BACKUP_ENCRYPTION_KEY: ${{ secrets.REPLACEMENT_VPS_BACKUP_ENCRYPTION_KEY }}');
 });

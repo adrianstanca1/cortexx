@@ -17,13 +17,13 @@ The user has designated the new one.com Cloud Server as the production replaceme
 - Intended app loopback endpoint: `http://127.0.0.1:3020`
 - Public health endpoint: `https://cortexbuildpro.tech/api/health`
 
-The host is a replacement target, **not yet verified as provisioned or deployed**. The provider screenshot confirms the server identity and plan only. No SSH session, package inventory, firewall state, DNS change, data restore or application deployment has yet been verified on this host.
+The host has since been provisioned and the intended stack started on it. PR #476 fixed the browser-gateway container-start failure that stack exposed and records the gateway, database, cache and application healthy with Prisma migrations applied and `/api/health` OK. That is **staging evidence only**: DNS for `cortexbuildpro.tech` still resolves to the retired former host, and no source database or uploads have been restored here. The owner reports that a verified backup is ready; it still needs secure transfer and isolated restore validation. The acceptance gates below remain unpassed.
 
 ## Current operating state and migration boundary
 
-Migration plan: [VPS-free migration](VPS_FREE_MIGRATION.md).
+Replacement notes: [One.com VPS replacement migration](VPS_REPLACEMENT_MIGRATION.md).
 
-The previous host documented in older workflows/runbooks was `85.190.100.68`. It is not the new host. Do not run legacy SSH workflows or backup automation against either host until its target and credentials have been explicitly reconciled.
+The previous host at `85.190.100.68` is retired. The only rebuild target is the One.com host `85.190.122.27`; use the manual, fail-closed app rebuild in `.github/workflows/deploy-vps.yml`. Do not run legacy SSH workflows or point backup automation at the former host.
 
 The existing production domain, authoritative database, uploads and customer records must remain unchanged until a verified source backup has been restored and validated on the replacement. A new empty database is not production data.
 
@@ -39,6 +39,7 @@ The intended application release uses:
 - Next.js construction application on loopback port 3020.
 - Persistent Docker volumes for database, uploads and service data.
 - Existing reviewed health contract `scripts/check-construction-health.cjs`.
+- Manual, app-only rebuild workflow `.github/workflows/deploy-vps.yml`, gated by `VPS_REBUILD_ENABLED=true` and the protected GitHub environment `replacement-vps`. Require trusted reviewers, restrict environment deployments to `main`, and keep the rebuild SSH key and verified known-hosts entry in environment secrets only. The workflow rejects schema/migration changes, restores the prior Compose configuration and images on a failed health check, verifies both the browser gateway and app readiness, and does not restore data, run migrations, or change DNS.
 
 Do not use historical `docker-compose.yml`, `docker-compose.prod.yml`, `deploy.sh`, static HTML/Express, PM2 or host-Postgres procedures as the production path.
 

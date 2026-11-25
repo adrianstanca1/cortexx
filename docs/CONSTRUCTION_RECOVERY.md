@@ -27,14 +27,24 @@ are deliberately separate indicators. Logs are under `$HOME/logs`.
 Restore drills use a disposable PostgreSQL container without external networking
 or published ports. They verify checksums, restore with exit-on-error, check
 that the canonical User/Organization/Project/Task/Document and migration tables are readable, extract uploads and remove the disposable container and its
-volume. No production database is dropped or replaced. Review the weekly log;
-the daily GitHub Backup Verify workflow checks the current VPS, exports the
-latest successful backup as encrypted ciphertext, validates that archive with a
-second disposable PostgreSQL restore, and opens or updates a recovery issue on
-failure. A successful archive is retained as a private GitHub Actions artifact
-for 30 days. It uses AES-256-CBC with PBKDF2 (200,000 iterations); the key stays
-in the `CORTEXX_BACKUP_ENCRYPTION_KEY` GitHub secret and is not included in the
-artifact.
+volume. No production database is dropped or replaced.
+
+**Current operations status (24 November 2026):** Health Monitor remains in
+maintenance mode. GitHub's recorded Backup Verify failure was SSH authentication
+against the retired host `85.190.100.68`. The local workflow now targets the
+One.com replacement and stays disabled behind
+`REPLACEMENT_VPS_BACKUP_VERIFY_ENABLED=true` until its SSH identity, scheduled
+backup, and isolated restore chain are configured and validated. Historical
+successful runs are not evidence of a current backup or restore chain. See
+[`RUNBOOK.md`](RUNBOOK.md).
+
+Historically, a successful encrypted archive was retained as a private GitHub
+Actions artifact for 30 days, using AES-256-CBC with PBKDF2 (200,000 iterations);
+the key was not included in the artifact. The replacement workflow uses the
+`replacement-vps-backup-verify` GitHub environment, restricted to `main`, with
+SSH and encryption credentials stored as environment secrets rather than
+repository secrets. Remove any legacy repository-scoped backup secrets before
+enabling verification.
 
 For disaster recovery, restore into an isolated replacement stack first, verify
 organisation/project/evidence access and migrations, then switch traffic during

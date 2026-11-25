@@ -1,12 +1,12 @@
 # Cortexx — The Construction OS that thinks with you
 
-UK SMB contractor management with an autonomous AI CEO (**Vera**). One product, **three deployment targets**, **one shared backend** (`/api/*` on **cortexbuildpro.tech**).
+UK SMB contractor management with an autonomous AI CEO (**Vera**). One product, **three client targets**, a staged Next.js production stack, and a legacy Express API.
 
-[![Version](https://img.shields.io/badge/version-1.4.0-2563eb)](CHANGELOG.md)
+[![Version](https://img.shields.io/badge/version-1.7.6-2563eb)](CHANGELOG.md)
 [![PWA](https://img.shields.io/badge/PWA-offline--first-2563eb)](manifest.json)
 [![iOS](https://img.shields.io/badge/iOS-Capacitor%208.4-1a73e8)](ios/README.md)
 [![Expo](https://img.shields.io/badge/Expo-SDK%2057-000)](expo/DEPLOY-IOS.md)
-[![Tests](https://img.shields.io/badge/tests-234%20passing-10b981)](test/)
+[![CI](https://github.com/adrianstanca1/cortexx/actions/workflows/ci.yml/badge.svg)](https://github.com/adrianstanca1/cortexx/actions/workflows/ci.yml)
 
 ![Cortexx](icon.svg)
 
@@ -14,50 +14,56 @@ UK SMB contractor management with an autonomous AI CEO (**Vera**). One product, 
 
 ## What Cortexx is today
 
-Cortexx (product name **CortexBuild Pro**) is a UK SMB construction-management platform deployed live at **cortexbuildpro.tech**. It is a **monorepo** with three client stacks that all talk to one Express + PostgreSQL backend, sharing an API contract via `@cortexbuild/core` (`packages/core`). See [`MONOREPO.md`](MONOREPO.md) for the layout.
+Cortexx (product name **CortexBuild Pro**) is a UK SMB construction-management platform whose production domain is **cortexbuildpro.tech**. It is a monorepo with three client stacks and two API implementations: the Next.js app (`app/api/`) and a legacy Express API (`server/`). The designated production stack is the isolated Next.js Compose deployment; see [`MONOREPO.md`](MONOREPO.md) for the repository layout.
 
-### Three deployment targets, one backend
+> **The public domain does not serve HTTPS (verified 24 November 2026).** `https://cortexbuildpro.tech` fails at the TLS handshake; its A record still resolves to `85.190.100.68`, the retired host. The replacement stack at `85.190.122.27` has staging health evidence only. The verified source-data restore, acceptance and cutover remain outstanding. PR #476's CI matrix passed, but GitHub still shows a historical Backup Verify SSH failure against the retired host. Local changes now target the new VPS with a gated app-only rebuild; they are not active on `main` yet. Details: [`STATUS.md`](STATUS.md), [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
+
+### Three deployment targets
 
 | # | Target | Path | Stack | Role |
 |---|--------|------|-------|------|
-| 1 | **Offline PWA** | `Cortexx.html` + `lib/` → `dist/` | Vanilla JS, Babel-in-browser (no bundler) | Offline-first, local-first, `<1s` cold start, private Ollama LLM |
-| 2 | **Web admin** | `app/`, `components/`, `prisma/` | Next.js 16, React 19, next-auth v5, Prisma 7, Tailwind v4 | Server + web admin dashboard |
-| 3 | **Native (iOS + Android)** | `expo/`, `ios/` | Expo SDK 57 / Capacitor 8.4 | Native app shell |
+| 1 | **Offline PWA** | `Cortexx.html` + `lib/` → `dist/` | Vanilla JS, Babel-in-browser (no bundler) | Offline-first, local-first, private Ollama LLM |
+| 2 | **Web app and admin** | `app/`, `components/`, `prisma/` | Next.js 16, React 19, next-auth v5, Prisma 7, Tailwind v4 | Designated production server stack; currently staged, not accepted |
+| 3 | **Native (iOS + Android)** | `expo/`, `ios/` | Expo SDK 57 / Capacitor 8.4 | Native clients |
 
-All three consume the same `/api/*` endpoints. Business data in the PWA lives on-device (localStorage + IndexedDB) and syncs to the backend optionally.
+The clients do not currently have one verified, interchangeable live backend. PWA/native clients were built against the Express API contract; the Next.js app has its own route handlers and Prisma data model. `@cortexbuild/core` (`packages/core`) shares API types/helpers in parts of the repo, but compatibility of every workflow with the replacement stack remains an acceptance gate. PWA business data is also held locally in localStorage and IndexedDB and syncs optionally.
 
 ---
 
-## Backend (`server/`)
+## Legacy Express API (`server/`)
 
-Express + PostgreSQL. `server/index.js` is the single entry; route modules live in `server/routes/`.
+Express + PostgreSQL. `server/index.js` is the entry point; route modules live in `server/routes/`.
+
+> This is **not the production runtime**. The designated production target is the isolated Next.js Compose stack in `docker-compose.construction.yml`; it is staged, not accepted. The retired Express/static deployment is not the current production path. See [`STATUS.md`](STATUS.md) and [`docs/RUNBOOK.md`](docs/RUNBOOK.md).
 
 - **Multi-tenant** via `workspace_id`
 - **Auth**: JWT (Bearer) + magic-link
 - **Realtime**: Server-Sent Events (SSE) per workspace
 - **LLM**: **Ollama** local inference — no external API keys
-- **Data model**: a **raw SQL schema** (`server/db/schema.sql`, applied at volume init via docker-compose). Prisma's `schema.prisma` is a *parallel* model for the Next.js stack — **not** the source of truth for the Express API. See [`docs/DATA_MODEL_DRIFT.md`](docs/DATA_MODEL_DRIFT.md).
+- **Data model**: `server/db/schema.sql` defines the legacy Express API's raw-SQL schema. The Next.js app uses Prisma models and migrations; these are separate data-model authorities. See [`docs/DATA_MODEL_DRIFT.md`](docs/DATA_MODEL_DRIFT.md).
 
-**Route modules** (`server/routes/`): `banking` (TrueLayer open-banking), `hmrc` (CIS300), `iap` (Stripe / StoreKit), `llm`, `payments`, `push`, `sync`, `portal`, `ledger`, `intelligence`, `agents`.
+**Route modules** (`server/routes/`): `banking` (TrueLayer open-banking), `hmrc` (CIS300), `iap` (Stripe / StoreKit), `llm`, `payments`, `push`, `sync`, `portal`, `ledger`, `intelligence`, `agents`, plus the operator surface `admin`, `admin-features`, `admin-ai` and `api-connections`.
 
-Deployment brings up four services via `docker-compose.yml`: `db` (Postgres 16), `api` (Express), `ollama` (local LLM), and `web` (Caddy static host + reverse proxy; config in `Caddyfile`).
+The historical Express deployment used `docker-compose.yml`: `db` (Postgres 16), `api` (Express), `ollama` (local LLM), and `web` (Caddy static host + reverse proxy). The designated replacement stack is `docker-compose.construction.yml`.
 
 ---
 
-## By the numbers (v1.4.0, grep-verified)
+## Repository counts (reviewed 24 November 2026)
+
+> Canonical release: **v1.7.6**, chosen to match the latest `CHANGELOG.md` entry. Root package, lockfile and production Compose version metadata are aligned to this release; older deployment records remain historical.
 
 | Area | Count |
 |------|-------|
-| SPA screen/logic modules (`lib/*.jsx|js` → `dist/*.js`) | **113** precompiled modules; phase modules through **phase 118** |
+| SPA screen/logic modules (`lib/*.jsx` / `lib/*.js` → `dist/*.js`) | **135** modules; phase modules through **phase 120** |
 | Dashboard layouts | **15** (`dashboards.jsx` + `dashboards-v2…v5.jsx`) |
-| Next.js pages (`app/**/page.tsx`) | **110+** |
-| Expo native app | thin shell — **5 core screens** + collection-driven tabs (SDK 57 / Capacitor 8), shares `@cortexbuild/core` |
-| Backend route modules | **11** (`server/routes/`) |
-| Backend data model | **34 SQL tables** (`schema.sql`) vs **82 Prisma models** (drift — see below) |
+| Next.js pages (`app/**/page.tsx`) | **131** |
+| Expo native app | **26 screens** (`expo/*Screen.tsx`) behind a tabbed shell (SDK 57 / Capacitor 8), sharing `@cortexbuild/core` |
+| Backend route modules | **15** (`server/routes/`) |
+| Backend data model | **36 legacy Express SQL tables** (49 including its migrations) and **112 Next.js Prisma models**; separate schemas, not directly comparable ([details](docs/DATA_MODEL_DRIFT.md)) |
 | AI leadership team | **Vera** autonomous CEO + 5-person leadership team |
-| Test suite | **234 passing** (`npm test`) |
+| Test suite | **871** `test()` declarations (grep count over `test/*.test.js`, `test/*.ts` and `packages/core/test`, 24 Nov 2026; CI reports the pass total), plus the PostgreSQL integration suite and six browser shards |
 
-> Honesty note: the native `expo/` app is currently a lean shell (login, projects, project detail, tickets, a generic collection screen + tabbed nav) sharing the cross-app API contract — not a full mirror of the 113-module PWA. The PWA is the feature-complete client.
+> Honesty note: the native `expo/` app covers 26 screens (login, projects, overview, tasks, tickets, check-in, photos, documents, drawings, RFIs, deliveries, timesheets, safety, snags, profile, field hub/controls/readiness/closeout) sharing the cross-app API contract — broad, but not a full mirror of the 135-module PWA. The PWA is the feature-complete client.
 
 ---
 
@@ -86,22 +92,20 @@ Node **>=22**, npm **>=10**.
 npm run build              # next build && precompile (rebuilds dist/ from lib/)
 npm run precompile         # node build-dist.js — rebuild dist/ from lib/
 node build-dist.js --check # byte-verify dist/ vs lib/ sync, exit 1 on drift
-npm test                   # node --test test/*.test.js  (234 passing)
+npm test                   # node --test test/*.test.js
 ```
 
-`build-dist.js` is the **single** SPA builder: `lib/*.jsx` → Babel → `dist/*.js`; `lib/*.js` copied verbatim; `.ts`/other server-only files are **not** emitted. `postinstall` runs `precompile`, so `npm install` rebuilds `dist/` automatically. **After editing any `lib/*.js|jsx`, run `node build-dist.js` and commit the updated `dist/`** — otherwise prod serves stale code.
+`build-dist.js` is the SPA builder: `lib/*.jsx` → Babel → `dist/*.js`; `lib/*.js` copied verbatim; `.ts`/other server-only files are **not** emitted. `postinstall` runs `precompile`, so `npm install` rebuilds `dist/` automatically. After editing `lib/*.js` or `lib/*.jsx`, rebuild and verify the corresponding PWA distribution assets before release; this legacy/static path is not the designated production server stack.
 
 ---
 
 ## Deploy
 
-The stack is **self-hosted** via Docker Compose on a VPS (Postgres + Express + Ollama + Caddy). It is **not** a static-only site.
+The designated production target is the isolated Next.js stack in `docker-compose.construction.yml` on the one.com replacement host. It is running as a staging stack, not yet accepted; `cortexbuildpro.tech` still fails TLS and the production data restore/cutover are outstanding. Do not follow the legacy Express/Caddy/Traefik instructions below as the live production path.
 
-- Architecture, secrets, gotchas: [`CLAUDE.md`](CLAUDE.md) § **Deployment**
-- VPS runbooks: [`DEPLOY_VPS.md`](DEPLOY_VPS.md), [`DEPLOY_cortexbuildpro.md`](DEPLOY_cortexbuildpro.md), [`DEPLOYMENT.md`](DEPLOYMENT.md), [`DEPLOY_NOW.md`](DEPLOY_NOW.md)
-- Ops (systemd, backups, restore): [`deploy/README.md`](deploy/README.md), [`docs/RUNBOOK.md`](docs/RUNBOOK.md)
-
-Traefik owns host ports 80/443; the `web` Caddy service joins Traefik via docker-provider labels and must **not** publish 80/443 itself (see `CLAUDE.md`).
+- Current state and cutover gates: [`STATUS.md`](STATUS.md), [`docs/RUNBOOK.md`](docs/RUNBOOK.md), [`docs/VPS_REPLACEMENT_MIGRATION.md`](docs/VPS_REPLACEMENT_MIGRATION.md)
+- Historical deployment references: [`DEPLOY_VPS.md`](DEPLOY_VPS.md), [`DEPLOY_cortexbuildpro.md`](DEPLOY_cortexbuildpro.md), [`DEPLOYMENT.md`](DEPLOYMENT.md), [`deploy/README.md`](deploy/README.md)
+- Backup and restore limits: [`docs/CONSTRUCTION_RECOVERY.md`](docs/CONSTRUCTION_RECOVERY.md)
 
 ---
 

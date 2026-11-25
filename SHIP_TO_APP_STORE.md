@@ -30,7 +30,7 @@ Everything you need to take the existing web app, wrap it as a native iOS binary
 │   ├─ screenshots-generator.html  ← 5 hero artboards at exact 1320×2868
 │   └─ screenshots/README.md ← how to capture & upload screenshots
 │
-└─ deploy.sh                 ← optional — deploys the PWA to a Hostinger/Nginx VPS
+└─ deploy.sh                 ← legacy PWA helper; current VPS operations are in DEPLOY_cortexbuildpro.md
 ```
 
 ## The shortest path from here to a public App Store listing

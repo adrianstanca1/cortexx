@@ -61,15 +61,17 @@ test('Next control route requires platform persona and forwards only through int
   assert.match(route, /platform\.browser\.action/)
 })
 
-test('canonical compose isolates the gateway and retired VPS deployment is inert', () => {
+test('canonical compose isolates the gateway and replacement VPS deployment is guarded', () => {
   assert.match(compose, /browser-gateway:/)
   assert.match(compose, /BROWSER_GATEWAY_INTERNAL_TOKEN/)
   assert.match(compose, /cap_drop:\s*\n\s*- ALL/)
   assert.match(compose, /browser_control:/)
   const gatewayBlock = compose.slice(compose.indexOf('  browser-gateway:'), compose.indexOf('  app:'))
   assert.match(gatewayBlock, /networks:\s*\n\s*- browser_control/)
+  assert.match(gatewayBlock, /healthcheck:/)
   assert.doesNotMatch(gatewayBlock, /REDIS_URL|condition: service_healthy/)
-  assert.match(deploy, /VPS deployment retired/)
-  assert.match(deploy, /retired:\s*\n\s*if:\s*\$\{\{\s*false\s*\}\}/)
-  assert.doesNotMatch(deploy, /VPS_(HOST|USER|SSH_KEY|PASSWORD)|sshpass|ssh-keyscan|BROWSER_GATEWAY_INTERNAL_TOKEN|Prebuilt release images transferred/)
+  assert.match(deploy, /VPS_REBUILD_ENABLED == 'true'/)
+  assert.match(deploy, /environment:\s*\n\s+name:\s*replacement-vps/)
+  assert.match(deploy, /wait_for_gateway_health/)
+  assert.doesNotMatch(deploy, /VPS_ROOT_PASSWORD|sshpass|ssh-keyscan|BROWSER_GATEWAY_INTERNAL_TOKEN|Prebuilt release images transferred/)
 })

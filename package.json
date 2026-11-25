@@ -1,6 +1,6 @@
 {
   "name": "cortexx",
-  "version": "1.5.0",
+  "version": "1.7.6",
   "description": "The construction OS that thinks with you. UK SMB construction management with autonomous AI CEO.",
   "private": true,
   "workspaces": [
@@ -123,6 +123,7 @@
     "sharp": "0.35.5",
     "source-map-js": "1.2.2",
     "proxy-addr": "2.0.8",
-    "compression": "1.8.2"
+    "compression": "1.8.2",
+    "effect": "3.22.1"
   }
 }

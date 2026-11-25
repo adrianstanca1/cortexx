@@ -36,6 +36,7 @@ services:
       timeout: 5s
       retries: 12
   browser-gateway:
+    image: cortexbuild-construction-browser-gateway:${CORTEXX_IMAGE_TAG:-latest}
     build:
       context: ./browser-gateway
       dockerfile: Dockerfile
@@ -64,6 +65,7 @@ services:
       retries: 5
       start_period: 20s
   app:
+    image: cortexbuild-construction-app:${CORTEXX_IMAGE_TAG:-latest}
     build:
       context: .
       dockerfile: Dockerfile.construction
@@ -90,7 +92,7 @@ services:
       BROWSER_GATEWAY_INTERNAL_TOKEN: ${BROWSER_GATEWAY_INTERNAL_TOKEN:?Set a generated browser gateway token}
       OLLAMA_BASE_URL: http://ollama:11434
       UPLOAD_DIR: /app/uploads
-      npm_package_version: 1.5.0
+      npm_package_version: 1.7.6
     depends_on:
       db:
         condition: service_healthy

@@ -1,4 +1,6 @@
-# Cortexx — Deploy now
+# Cortexx — Legacy PWA deployment options
+
+> Archived May 2026 instructions. The Hostinger lane is retired; the designated server is the One.com replacement VPS. See the root [`DEPLOY_cortexbuildpro.md`](../../DEPLOY_cortexbuildpro.md) and [`docs/RUNBOOK.md`](../RUNBOOK.md). Do not run the old VPS commands.
 
 Pick a lane. All three put your app online.
 

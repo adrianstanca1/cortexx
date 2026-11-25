@@ -1,18 +1,241 @@
-name: VPS deployment retired — VPS-free migration in progress
+name: Rebuild replacement VPS (manual)
 
-# The previous production target required a VPS and SSH credentials that are
-# no longer available. Keep this file as an explicit tombstone so no CI event
-# can attempt the retired deployment. Do not re-enable until a replacement
-# architecture has been reviewed and approved.
 on:
   workflow_dispatch:
 
 permissions:
+  actions: read
   contents: read
 
+concurrency:
+  group: replacement-vps-rebuild
+  cancel-in-progress: false
+
 jobs:
-  retired:
-    if: ${{ false }}
+  rebuild:
+    # Manual app-only rebuild on the designated One.com host. The repository
+    # variable is an explicit operator gate; this workflow never changes DNS,
+    # restores production data, or applies Prisma migrations.
+    if: github.ref == 'refs/heads/main' && vars.VPS_REBUILD_ENABLED == 'true'
     runs-on: ubuntu-latest
+    environment:
+      name: replacement-vps
+    timeout-minutes: 45
+    env:
+      VPS_HOST: 85.190.122.27
+      VPS_USER: administrator
+      VPS_SSH_PRIVATE_KEY: ${{ secrets.REPLACEMENT_VPS_REBUILD_SSH_PRIVATE_KEY }}
+      VPS_KNOWN_HOSTS: ${{ secrets.REPLACEMENT_VPS_REBUILD_KNOWN_HOSTS }}
+      DEPLOY_SHA: ${{ github.sha }}
     steps:
-      - run: echo "VPS deployment is retired. See docs/VPS_FREE_MIGRATION.md."
+      - name: Check out the dispatched main revision
+        uses: actions/checkout@v7
+        with:
+          ref: ${{ github.sha }}
+          persist-credentials: false
+
+      - name: Require a successful CI run for the dispatched main SHA
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: |
+          set -euo pipefail
+          CI_RUN_COUNT="$(
+            gh api "repos/$GH_REPO/actions/workflows/ci.yml/runs?head_sha=$DEPLOY_SHA&per_page=100" |
+              jq --arg sha "$DEPLOY_SHA" '[.workflow_runs[] | select(.event == "push" and .head_branch == "main" and .head_sha == $sha and .status == "completed" and .conclusion == "success")] | length'
+          )"
+          if [[ "$CI_RUN_COUNT" -lt 1 ]]; then
+            echo "::error::No successful CI workflow run exists for dispatched main SHA $DEPLOY_SHA."
+            exit 1
+          fi
+
+      - name: Configure verified SSH access
+        run: |
+          set -euo pipefail
+          if [[ -z "${VPS_SSH_PRIVATE_KEY:-}" || -z "${VPS_KNOWN_HOSTS:-}" ]]; then
+            echo "::error::Configure the replacement VPS SSH key and verified known-hosts entry in the protected replacement-vps environment secrets."
+            exit 1
+          fi
+          install -m 700 -d ~/.ssh
+          printf '%s\n' "$VPS_SSH_PRIVATE_KEY" | tr -d '\r' > ~/.ssh/replacement_vps
+          printf '%s\n' "$VPS_KNOWN_HOSTS" > ~/.ssh/known_hosts
+          chmod 600 ~/.ssh/replacement_vps ~/.ssh/known_hosts
+          ssh-keygen -y -f ~/.ssh/replacement_vps >/dev/null
+          ssh-keygen -F "$VPS_HOST" -f ~/.ssh/known_hosts >/dev/null || {
+            echo "::error::The verified known-hosts secret has no entry for $VPS_HOST."
+            exit 1
+          }
+
+      - name: Rebuild the app and browser gateway without touching data or DNS
+        run: |
+          set -euo pipefail
+          EXPECTED_VERSION="$(jq -r '.version' package.json)"
+          REMOTE_LOG="$(mktemp)"
+          trap 'rm -f "$REMOTE_LOG"' EXIT
+          set +e
+          ssh -o BatchMode=yes -o IdentitiesOnly=yes -o StrictHostKeyChecking=yes \
+            -o ConnectTimeout=20 -i ~/.ssh/replacement_vps \
+            "$VPS_USER@$VPS_HOST" "bash -s -- '$DEPLOY_SHA'" <<'REMOTE' | tee "$REMOTE_LOG"
+          set -euo pipefail
+          DEPLOY_SHA="$1"
+          CHECKOUT=/home/administrator/production/cortexx
+          cd "$CHECKOUT"
+
+          [[ -s .env.construction ]] || { echo "Missing protected .env.construction" >&2; exit 1; }
+          [[ "$(stat -c '%a' .env.construction)" == 600 ]] || { echo ".env.construction must have mode 0600" >&2; exit 1; }
+          [[ -z "$(git status --porcelain)" ]] || { echo "Refusing to rebuild a dirty VPS checkout" >&2; exit 1; }
+          case "$(git remote get-url origin)" in
+            https://github.com/adrianstanca1/cortexx|https://github.com/adrianstanca1/cortexx.git|git@github.com:adrianstanca1/cortexx.git) ;;
+            *) echo "VPS checkout origin is not the canonical repository" >&2; exit 1 ;;
+          esac
+
+          CURRENT_SHA="$(git rev-parse HEAD)"
+          CURRENT_VERSION="$(git show "$CURRENT_SHA:package.json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')"
+          git fetch --quiet origin main
+          [[ "$(git rev-parse origin/main)" == "$DEPLOY_SHA" ]] || {
+            echo "Dispatched SHA is no longer the exact main tip; dispatch again from current main" >&2
+            exit 1
+          }
+          git cat-file -e "$DEPLOY_SHA^{commit}"
+          if ! git diff --quiet "$CURRENT_SHA" "$DEPLOY_SHA" -- prisma/schema.prisma prisma/migrations; then
+            echo "This app-only rebuild refuses Prisma schema or migration changes; complete the reviewed restore/migration procedure first" >&2
+            exit 1
+          fi
+
+          EXPECTED_VERSION="$(git show "$DEPLOY_SHA:package.json" | python3 -c 'import json,sys; print(json.load(sys.stdin)["version"])')"
+          ROLLBACK_TAG="rollback-${CURRENT_SHA:0:12}"
+          ROLLBACK_DIR="$(mktemp -d)"
+          PREVIOUS_COMPOSE="$ROLLBACK_DIR/docker-compose.construction.yml"
+          ROLLBACK_OVERRIDE="$ROLLBACK_DIR/rollback-images.yml"
+          git show "$CURRENT_SHA:docker-compose.construction.yml" > "$PREVIOUS_COMPOSE"
+          DEPLOY_FINISHED=false
+          cleanup() {
+            local exit_code=$?
+            trap - EXIT
+            if [[ "$DEPLOY_FINISHED" != true ]]; then
+              git checkout --detach "$CURRENT_SHA" >/dev/null 2>&1 || echo "Could not restore VPS checkout to $CURRENT_SHA" >&2
+            fi
+            rm -rf "$ROLLBACK_DIR"
+            exit "$exit_code"
+          }
+          trap cleanup EXIT
+
+          COMPOSE=(docker compose --project-directory "$CHECKOUT" --env-file "$CHECKOUT/.env.construction" -f "$CHECKOUT/docker-compose.construction.yml")
+          APP_CID="$("${COMPOSE[@]}" ps -q app)"
+          GATEWAY_CID="$("${COMPOSE[@]}" ps -q browser-gateway)"
+          [[ -n "$APP_CID" && -n "$GATEWAY_CID" ]] || { echo "Current app and gateway must both be running to preserve rollback images" >&2; exit 1; }
+          docker tag "$(docker inspect --format '{{.Image}}' "$APP_CID")" "cortexbuild-construction-app:$ROLLBACK_TAG"
+          docker tag "$(docker inspect --format '{{.Image}}' "$GATEWAY_CID")" "cortexbuild-construction-browser-gateway:$ROLLBACK_TAG"
+
+          git checkout --detach "$DEPLOY_SHA"
+          COMPOSE=(docker compose --project-directory "$CHECKOUT" --env-file "$CHECKOUT/.env.construction" -f "$CHECKOUT/docker-compose.construction.yml")
+          "${COMPOSE[@]}" config --quiet
+          CORTEXX_IMAGE_TAG="$DEPLOY_SHA" "${COMPOSE[@]}" build app browser-gateway
+
+          wait_for_health() {
+            local expected_version="$1"
+            local health_file
+            health_file="$(mktemp)"
+            for attempt in $(seq 1 30); do
+              if curl -fsS --max-time 8 http://127.0.0.1:3020/api/health -o "$health_file" &&
+                python3 - "$health_file" "$expected_version" <<'PY'
+          import json, sys
+          try:
+              with open(sys.argv[1], encoding="utf-8") as source:
+                  health = json.load(source)
+              ready = (
+                  health.get("status") == "ok"
+                  and health.get("service") == "cortexbuild-construction"
+                  and health.get("version") == sys.argv[2]
+                  and (health.get("checks") or {}).get("database", {}).get("ok") is True
+                  and bool(health.get("timestamp"))
+              )
+              if not ready:
+                  raise ValueError("readiness contract or deployed version did not match")
+          except Exception as error:
+              print(f"Replacement VPS readiness check failed: {error}", file=sys.stderr)
+              sys.exit(1)
+          PY
+              then
+                rm -f "$health_file"
+                return 0
+              fi
+              sleep 5
+            done
+            rm -f "$health_file"
+            return 1
+          }
+
+          wait_for_gateway_health() {
+            for attempt in $(seq 1 30); do
+              local gateway_cid gateway_state
+              gateway_cid="$("${COMPOSE[@]}" ps -q browser-gateway)"
+              if [[ -n "$gateway_cid" ]]; then
+                gateway_state="$(docker inspect --format '{{if .State.Health}}{{.State.Health.Status}}{{else}}none{{end}}' "$gateway_cid" 2>/dev/null || true)"
+                if [[ "$gateway_state" == healthy ]]; then
+                  return 0
+                fi
+              fi
+              sleep 5
+            done
+            echo "Browser gateway did not become healthy before the timeout" >&2
+            return 1
+          }
+
+          rollback() {
+            echo "Reverting app and browser gateway to $ROLLBACK_TAG with the previous Compose configuration" >&2
+            git checkout --detach "$CURRENT_SHA" || return 1
+            cat > "$ROLLBACK_OVERRIDE" <<EOF
+          services:
+            app:
+              image: cortexbuild-construction-app:$ROLLBACK_TAG
+            browser-gateway:
+              image: cortexbuild-construction-browser-gateway:$ROLLBACK_TAG
+          EOF
+            local rollback_compose=(docker compose --project-directory "$CHECKOUT" --env-file "$CHECKOUT/.env.construction" -f "$PREVIOUS_COMPOSE" -f "$ROLLBACK_OVERRIDE")
+            CORTEXX_IMAGE_TAG="$ROLLBACK_TAG" "${rollback_compose[@]}" up -d --no-deps --no-build --pull never app browser-gateway || return 1
+            COMPOSE=("${rollback_compose[@]}")
+            wait_for_gateway_health || { echo "Previous gateway did not pass its restored health check" >&2; return 1; }
+            wait_for_health "$CURRENT_VERSION" || { echo "Previous app did not pass its restored health contract" >&2; return 1; }
+            "${rollback_compose[@]}" ps || return 1
+            echo "Previous app and gateway were restored and passed readiness" >&2
+          }
+
+          if ! CORTEXX_IMAGE_TAG="$DEPLOY_SHA" "${COMPOSE[@]}" up -d --no-deps --pull never app browser-gateway; then
+            if ! rollback; then
+              echo "::error::Replacement failed and rollback could not be verified." >&2
+            fi
+            exit 1
+          fi
+          if ! wait_for_gateway_health; then
+            if ! rollback; then
+              echo "::error::New gateway failed health checks and rollback could not be verified." >&2
+            fi
+            exit 1
+          fi
+          if ! wait_for_health "$EXPECTED_VERSION"; then
+            if ! rollback; then
+              echo "::error::New app failed health checks and rollback could not be verified." >&2
+            fi
+            exit 1
+          fi
+
+          DEPLOY_FINISHED=true
+          "${COMPOSE[@]}" ps || true
+          echo "ROLLBACK_TAG=$ROLLBACK_TAG"
+          REMOTE
+          SSH_STATUS=${PIPESTATUS[0]}
+          set -e
+          if [[ "$SSH_STATUS" -ne 0 ]]; then
+            exit "$SSH_STATUS"
+          fi
+          ROLLBACK_TAG="$(sed -n 's/^ROLLBACK_TAG=//p' "$REMOTE_LOG" | tail -n 1)"
+          if [[ -z "$ROLLBACK_TAG" ]]; then
+            echo "::error::Remote rebuild returned success without a rollback tag." >&2
+            exit 1
+          fi
+          {
+            echo "Rebuilt replacement VPS app at $DEPLOY_SHA (version $EXPECTED_VERSION)."
+            echo "Rollback images retained with tag $ROLLBACK_TAG."
+            echo "No database migrations, source-data restore, or DNS changes were performed."
+          } >> "$GITHUB_STEP_SUMMARY"
