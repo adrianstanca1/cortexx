@@ -58,9 +58,10 @@ interface Props {
   onClose: () => void
   onSaved: (next: Row) => void
   onDeleted: (id: string) => void
+  onForbidden?: () => void
 }
 
-export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDeleted }: Props) {
+export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDeleted, onForbidden }: Props) {
   const [edits, setEdits] = useState<Record<string, string>>({})
   const [saving, setSaving] = useState(false)
   const [error, setError] = useState<string | null>(null)
@@ -92,6 +93,7 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
       })
       if (!res.ok) {
         const d = await res.json().catch(() => ({}))
+        if (res.status === 403) onForbidden?.()
         throw new Error(d.error || `HTTP ${res.status}`)
       }
       const d = await res.json()
@@ -109,7 +111,10 @@ export default function ModuleRecordModal({ slug, record, onClose, onSaved, onDe
     setSaving(true)
     try {
       const res = await fetch(`/api/${slug}/${record.id}`, { method: 'DELETE' })
-      if (!res.ok) throw new Error('Delete failed')
+      if (!res.ok) {
+        if (res.status === 403) onForbidden?.()
+        throw new Error('Delete failed')
+      }
       onDeleted(record.id)
       onClose()
     } catch (e) {

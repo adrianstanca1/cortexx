@@ -11,11 +11,28 @@ export default function PayrollRunPage() {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
   const [selected, setSelected] = useState<Row | null>(null)
+  const [canManageFinancials, setCanManageFinancials] = useState(false)
+
+  const revokeFinancialAccess = (message = 'Financial admin permission required') => {
+    setCanManageFinancials(false)
+    setRows([])
+    setSelected(null)
+    setError(message)
+  }
 
   useEffect(() => {
     fetch('/api/payroll')
-      .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error || 'Failed') }))
-      .then(d => setRows(d.items || []))
+      .then(r => {
+        if (!r.ok) {
+          if (r.status === 403) revokeFinancialAccess()
+          return r.json().then(d => { throw new Error(d.error || 'Failed') })
+        }
+        return r.json()
+      })
+      .then(d => {
+        setCanManageFinancials(true)
+        setRows(d.items || [])
+      })
       .catch(e => setError(e instanceof Error ? e.message : 'Failed'))
       .finally(() => setLoading(false))
   }, [])
@@ -30,6 +47,7 @@ export default function PayrollRunPage() {
     })
     if (!res.ok) {
       const d = await res.json().catch(() => ({}))
+      if (res.status === 403) revokeFinancialAccess(d.error || 'Financial admin permission required')
       window.alert(d.error || 'Failed to create')
       return
     }
@@ -44,7 +62,7 @@ export default function PayrollRunPage() {
     <ModuleShell
       title="Payroll"
       tagline="PAYE + CIS submission helper"
-      action={{ label: 'New', onClick: create }}
+      action={canManageFinancials ? { label: 'New', onClick: create } : null}
     >
       {loading ? (
         <div style={{ color: 'var(--t3)', fontSize: 13, fontFamily: 'var(--font-system)' }}>Loading…</div>
@@ -73,8 +91,9 @@ export default function PayrollRunPage() {
 
       <ModuleRecordModal
         slug="payroll"
-        record={selected}
+        record={canManageFinancials ? selected : null}
         onClose={() => setSelected(null)}
+        onForbidden={() => revokeFinancialAccess()}
         onSaved={next => setRows(prev => prev.map(r => r.id === next.id ? next : r))}
         onDeleted={id => setRows(prev => prev.filter(r => r.id !== id))}
       />

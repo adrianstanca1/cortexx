@@ -153,6 +153,36 @@ test('unauthenticated requests and requests without an organization fail before 
   }
 })
 
+test('compatibility-mode users without an organization are denied before financial access', async () => {
+  const f = fixture('admin', {
+    auth: { session: { user: {} }, userId: 'user-1', orgId: null, role: null },
+  })
+  for (const name of routes) {
+    assert.equal((await f[name].GET(getRequest())).status, 403, `${name} GET without organization`)
+    assert.equal((await f[name].POST(postRequest({ taxMonth: '2026-11-06' }))).status, 403, `${name} POST without organization`)
+  }
+  assert.equal(f.calls.length, 0)
+  assert.equal(f.rateCalls.length, 0)
+})
+
+test('financial pages hide controls and clear data when access is denied', () => {
+  const payroll = fs.readFileSync('app/payroll/page.tsx', 'utf8')
+  const cis300 = fs.readFileSync('app/cis300/page.tsx', 'utf8')
+  const modal = fs.readFileSync('components/ui/ModuleRecordModal.tsx', 'utf8')
+
+  assert.match(payroll, /action=\{canManageFinancials \? \{ label: 'New', onClick: create \} : null\}/)
+  assert.match(payroll, /record=\{canManageFinancials \? selected : null\}/)
+  assert.match(payroll, /if \(res\.status === 403\) revokeFinancialAccess/)
+  assert.match(payroll, /const revokeFinancialAccess = \(message = 'Financial admin permission required'\) => \{[\s\S]*?setRows\(\[\]\)[\s\S]*?setSelected\(null\)/)
+  assert.match(payroll, /onForbidden=\{\(\) => revokeFinancialAccess\(\)\}/)
+
+  assert.match(cis300, /\{canManageFinancials && \(/)
+  assert.match(cis300, /if \(!canManageFinancials\) return/)
+  assert.match(cis300, /if \(res\.status === 403\) revokeFinancialAccess/)
+  assert.match(cis300, /const revokeFinancialAccess = \(message = 'Financial admin permission required'\) => \{[\s\S]*?setRows\(\[\]\)/)
+  assert.match(modal, /if \(res\.status === 403\) onForbidden\?\.\(\)/)
+})
+
 test('financial write endpoints still apply rate limits after authorization', async () => {
   const f = fixture('admin', { limited: true })
   assert.equal((await f.payroll.POST(postRequest({}))).status, 429)
