@@ -166,15 +166,22 @@
       try {
         const r = await fetch(url, { mode: 'cors', cache: 'force-cache' });
         if (!r.ok) throw new Error('HTTP ' + r.status);
+        const type = (r.headers.get('content-type') || '').toLowerCase();
         const code = await r.text();
         if (!code || code.length < 100) throw new Error('empty body');
+        // Caddy serves this app with `try_files {path} /landing.html
+        // /Cortexx.html`, so a missing script — e.g. ./vendor/ on the web
+        // deployment, which only the native bundle ships — comes back as
+        // landing-page HTML with a 200. Executing that throws a syntax error
+        // and kills the boot, so insist the body really is JavaScript.
+        if (type.includes('text/html') || /^\s*</.test(code)) throw new Error('not JavaScript');
         const s = document.createElement('script');
         s.textContent = code;
         document.head.appendChild(s);
         return;
       } catch (e) { lastErr = e; /* try next CDN silently */ }
     }
-    throw new Error('All CDNs failed for ' + urls[0] + ': ' + (lastErr && lastErr.message));
+    throw new Error('No script source available for ' + urls[0] + ': ' + (lastErr && lastErr.message));
   }
   // Build the fallback URL list for an npm UMD asset across 3 CDNs.
   // jsDelivr first (most reliable global CDN), then unpkg, then cdnjs.
