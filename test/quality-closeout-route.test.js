@@ -43,11 +43,11 @@ function snagHandler(prisma, authorizeUploadReference = async () => null) {
 }
 
 function inspectionHandler(prisma, authorizeUploadReference = async () => null) {
-  const auth = { user: { id: 'u1', email: 'pm@example.com', role: 'project_manager' } }
+  const auth = { orgId: 'org1', userId: 'u1', role: 'member', session: { user: { id: 'u1', email: 'pm@example.com', role: 'project_manager' } } }
   return compile('app/api/inspections/[id]/route.ts', {
     'next/server': { NextResponse },
     '@/lib/db': { prisma },
-    '@/lib/requireAuth': { requireAuth: async () => auth, actorName: () => 'Site PM' },
+    '@/lib/requireAuth': { requireOrg: async () => auth, actorName: () => 'Site PM' },
     '@/lib/audit': { auditLog: () => {}, requestMeta: () => ({}) },
     '@/lib/upload-provenance': { authorizeUploadReference },
     '@/lib/field-controls': controls,

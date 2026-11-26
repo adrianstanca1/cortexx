@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import { authorizeUploadReference } from '@/lib/upload-provenance'
@@ -12,8 +12,9 @@ const ALLOWED_STATUS = new Set(['open', 'resolved'])
 
 export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const body = await req.json()
     const existing = await prisma.observation.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true, photoUrl: true } })
@@ -74,8 +75,9 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     await prisma.observation.delete({ where: { id: params.id } })
     auditLog({

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import {
@@ -15,8 +15,9 @@ import { chat, buildSystemPrompt } from '@/lib/llm'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
   if (__limited) return __limited
 

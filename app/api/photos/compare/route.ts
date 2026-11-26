@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { downloadToTemp } from '@/lib/storage'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 
@@ -82,8 +82,9 @@ async function loadImageBase64(doc: { url: string | null; mimeType: string | nul
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   // 'vision' profile (5/min/user, Redis-backed) supersedes the prior
   // in-process Map (which was per-pm2-worker → 8× too loose).
   const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)

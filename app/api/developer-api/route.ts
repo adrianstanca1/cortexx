@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import crypto from 'node:crypto'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { canManage } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
@@ -26,8 +26,9 @@ const SAFE_SELECT = {
 } as const
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const sp = req.nextUrl.searchParams
     const take = Math.min(parseInt(sp.get('take') || '50') || 50, MAX_TAKE)
@@ -46,8 +47,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   // Issuing an API key is admin-only — it grants programmatic access
   // to org data with the issuer's scopes.
   const role = getCurrentOrg()?.role

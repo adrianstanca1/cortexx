@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
@@ -11,8 +11,9 @@ export const dynamic = 'force-dynamic'
  * Project lat/lng/onSiteCount.
  */
 export async function GET(_req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const [activeCheckins, projects, team] = await Promise.all([
       prisma.siteCheckIn.findMany({
