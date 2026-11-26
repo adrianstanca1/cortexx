@@ -7,6 +7,14 @@
  * now wrap their write handlers in `withRoute({ permission: 'write' })`,
  * so a viewer gets 403 on writes while a member (and above) can write.
  *
+ * One exception: POST /api/projects keeps its admin-only gate. Project
+ * creation was admin-only on main (inner canManage gate) and the e2e
+ * contract (role-journeys + mobile-api) asserts 403 with "Company admin
+ * permission required" for PM / foreman / operative. withRoute's generic
+ * 'Forbidden' cannot carry that message, so the gate stays inside the
+ * handler — the same pattern as the programme routes, which keep their
+ * canPlanProgramme gates inside withRoute('write') handlers.
+ *
  * The mock `withRoute` in this file mirrors the real wrapper in
  * lib/withRoute.ts: org check first (400 when requireOrg and no org),
  * then the permission check, then the handler — but the permission
@@ -192,6 +200,7 @@ function loadRoute(relPath, prisma) {
       actorName: session => session?.user?.name || 'User',
     },
     '@/lib/withRoute': { withRoute: mockWithRoute },
+    '@/lib/rbac': rbac,
     '@/lib/errors': { reportError: () => {} },
     '@/lib/rateLimit': { enforceRateLimit: async () => null },
     '@/lib/tenancy': { getCurrentOrg: () => ({ organizationId: 'org-1' }) },
@@ -230,13 +239,18 @@ test('group 3A routes all wrap writes in withRoute with permission write', () =>
   }
 })
 
-test('projects POST is fixed from read to write and has no admin-only gate', () => {
+test('projects POST is wrapped at write but keeps its admin-only create gate', () => {
   const src = fs.readFileSync(path.join(__dirname, '..', 'app/api/projects/route.ts'), 'utf8')
   const post = src.match(/export const POST = withRoute\([\s\S]*?\{ permission: '(read|write|manage)'/)
   assert.ok(post, 'projects POST should be a withRoute export with a permission')
   assert.equal(post[1], 'write', 'projects POST should be permission write')
-  assert.ok(!src.includes('Company admin permission required to create projects'),
-    'the inner admin-only project-create gate should be gone')
+  // The withRoute level is 'write' (viewers are blocked by the wrapper),
+  // but creation itself stays admin-only: the inner canManage gate is what
+  // returns the "Company admin permission required" 403 the e2e contract
+  // asserts for PM / foreman / operative. Removing it widened creation to
+  // every member and broke 4 browser-e2e tests (PR #496, CI 45893319864).
+  assert.ok(src.includes('Company admin permission required to create projects'),
+    'projects POST should keep its admin-only create gate and message')
 })
 
 test('training writes require an org, training reads stay open', () => {
@@ -316,19 +330,27 @@ test('risks PATCH: viewer gets 403; member can update the title', async () => {
   assert.equal(ok.body.title, 'New title')
 })
 
-test('projects POST: viewer gets 403; member can now create a project', async () => {
+test('projects POST: viewer and member get 403; only admin can create a project', async () => {
+  const calls = []
   const prisma = {
     project: {
-      create: async ({ data }) => ({ id: 'proj-1', name: data.name }),
+      create: async ({ data }) => {
+        calls.push(data.name)
+        return { id: 'proj-1', name: data.name }
+      },
     },
     activity: { create: async () => ({}) },
   }
   const route = loadRoute('app/api/projects/route.ts', prisma)
-  const denied = await route.POST(fakeReq('http://localhost/api/projects', { name: 'New build' }, ctxFor('viewer')))
-  assert.equal(denied.status, 403)
-  const ok = await route.POST(fakeReq('http://localhost/api/projects', { name: 'New build' }, ctxFor('member')))
-  assert.equal(ok.status, 201)
-  assert.equal(ok.body.name, 'New build')
+  const viewer = await route.POST(fakeReq('http://localhost/api/projects', { name: 'New build' }, ctxFor('viewer')))
+  assert.equal(viewer.status, 403)
+  const member = await route.POST(fakeReq('http://localhost/api/projects', { name: 'New build' }, ctxFor('member')))
+  assert.equal(member.status, 403)
+  assert.match(member.body.error, /company admin permission required/i)
+  const admin = await route.POST(fakeReq('http://localhost/api/projects', { name: 'New build' }, ctxFor('admin')))
+  assert.equal(admin.status, 201)
+  assert.equal(admin.body.name, 'New build')
+  assert.deepEqual(calls, ['New build'], 'only the admin call should reach the database')
 })
 
 test('training POST: org-less user gets 400; member with an org can create', async () => {

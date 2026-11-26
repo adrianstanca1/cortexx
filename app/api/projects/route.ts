@@ -5,6 +5,7 @@ import { prisma } from '@/lib/db'
 import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { canManage } from '@/lib/rbac'
 
 import { withRoute } from '@/lib/withRoute'
 
@@ -48,6 +49,15 @@ async function GET_impl(req: NextRequest, session: { user?: { email?: string | n
 }
 
 async function POST_impl(req: NextRequest, userId: string, role: string | null, session: { user?: { name?: string | null; email?: string | null } }) {
+  // Project creation stays admin-only (owner/admin), as on main and as the
+  // e2e contract requires (role-journeys + mobile-api assert 403 with
+  // "Company admin permission required"). withRoute's generic 'Forbidden'
+  // cannot carry that message, so the gate lives here — same pattern as
+  // the programme routes, which keep their canPlanProgramme gates inside
+  // withRoute('write') handlers.
+  if (!role || !canManage(role)) {
+    return NextResponse.json({ error: 'Company admin permission required to create projects' }, { status: 403 })
+  }
   const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
 
