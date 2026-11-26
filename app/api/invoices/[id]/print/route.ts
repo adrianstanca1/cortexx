@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
@@ -21,8 +21,9 @@ function esc(s: string | null | undefined): string {
  */
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof Response) return auth
+  const org = await requireOrg()
+  if (org instanceof Response) return org
+  const auth = org.session
   try {
     const inv = await prisma.invoice.findUnique({
       where: { id: params.id },

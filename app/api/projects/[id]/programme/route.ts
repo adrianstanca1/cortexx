@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
@@ -22,8 +22,9 @@ function parseDate(value: unknown) {
 
 export async function GET(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const project = await prisma.project.findFirst({
       where: programmeProjectWhere(id, auth),
@@ -63,8 +64,9 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const { id } = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   if (!canPlanProgramme(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
   const userId = (auth.user as { id?: string }).id || ''
   const limited = await enforceRateLimit(req, 'write', userId)
