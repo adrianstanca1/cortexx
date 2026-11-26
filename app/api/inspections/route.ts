@@ -4,6 +4,7 @@ import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import controls from '@/lib/field-controls'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -69,11 +70,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -112,7 +110,7 @@ export async function POST(req: NextRequest) {
         pointType,
         status: 'draft',
         checklistItems: checklistItems as unknown as object,
-        conductedBy: actorName(auth),
+        conductedBy: actorName(session),
         scheduledAt: (scheduledAt ?? null) as Date | null,
         location: controls.cleanText(body.location, 160) || null,
         drawingId,
@@ -131,7 +129,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'human',
         action: `scheduled ${type} inspection: ${inspection.title}`,
         iconType: 'check',
@@ -143,4 +141,5 @@ export async function POST(req: NextRequest) {
     console.error('[inspections] POST failed:', error)
     return NextResponse.json({ error: 'Failed to create inspection' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

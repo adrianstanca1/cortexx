@@ -149,9 +149,14 @@ function fakeReq(url, jsonBody) {
 test('group 1 routes all use requireOrg and none still call requireAuth', () => {
   for (const rel of GROUP1_ROUTES) {
     const src = fs.readFileSync(path.join(__dirname, '..', rel), 'utf8')
-    assert.ok(src.includes('requireOrg'), `${rel} should call requireOrg`)
+    // Batch 3 (RBAC) moved some write handlers from requireOrg() to
+    // withRoute({ permission: 'write' }); either is an org gate.
+    assert.ok(src.includes('requireOrg') || src.includes('withRoute'),
+      `${rel} should gate on an org (requireOrg or withRoute)`)
     assert.ok(!src.includes('await requireAuth()'), `${rel} should not call requireAuth`)
-    assert.ok(src.includes('const auth = org.session'), `${rel} should unwrap org.session`)
+    if (src.includes('requireOrg')) {
+      assert.ok(src.includes('const auth = org.session'), `${rel} should unwrap org.session`)
+    }
   }
 })
 

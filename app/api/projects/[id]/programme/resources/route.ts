@@ -5,7 +5,9 @@ import { reportError } from '@/lib/errors'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
+import { canWrite } from '@/lib/rbac'
 import resourceLoad from '@/lib/programme-resources'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const { buildResourceLoad } = resourceLoad
@@ -53,7 +55,12 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
       allocations,
       catalog: { team: team.map(row => row.member), equipment, materials },
       summary: buildResourceLoad({ activities, allocations }),
-      permissions: { plan: canPlanProgramme(session) },
+      // The flag drives the resources page's Load / Remove controls, so it
+      // must reflect what the caller can actually write: Batch 3 made
+      // viewers read-only on all writes (withRoute 'write' = member+),
+      // while the persona check alone would still promise planning to an
+      // assigned viewer with a Project Manager persona.
+      permissions: { plan: canWrite(auth.role || '') && canPlanProgramme(session) },
     })
   } catch (error) {
     reportError(error)
@@ -61,13 +68,12 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   }
 }
 
-export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const { id } = await paramsP
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
-  const session = auth.session
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
+  const { id } = params
   if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'write', auth.userId || '')
+  const limited = await enforceRateLimit(req, 'write', userId || '')
   if (limited) return limited
   try {
     const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, session), select: { id: true } })
@@ -76,7 +82,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     const activityId = String(body.activityId || '').trim()
     const resourceType = String(body.resourceType || '').trim()
     if (!activityId || !RESOURCE_TYPES.has(resourceType)) return NextResponse.json({ error: 'A programme activity and valid resource type are required' }, { status: 400 })
-    const activity = await prisma.programmeActivity.findFirst({ where: { id: activityId, projectId: id, organizationId: auth.orgId }, select: { id: true, title: true, plannedStart: true } })
+    const activity = await prisma.programmeActivity.findFirst({ where: { id: activityId, projectId: id, organizationId: orgId }, select: { id: true, title: true, plannedStart: true } })
     if (!activity) return NextResponse.json({ error: 'Programme activity not found' }, { status: 404 })
 
     let quantity = positiveNumber(body.quantity)
@@ -93,9 +99,9 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     if (resourceType === 'labour') {
       teamMemberId = body.teamMemberId ? String(body.teamMemberId) : null
       if (teamMemberId) {
-        const member = await prisma.teamMember.findFirst({ where: { id: teamMemberId, organizationId: auth.orgId, assignments: { some: { projectId: id } } }, select: { id: true, name: true } })
+        const member = await prisma.teamMember.findFirst({ where: { id: teamMemberId, organizationId: orgId, assignments: { some: { projectId: id } } }, select: { id: true, name: true } })
         if (!member) return NextResponse.json({ error: 'Labour resource must be assigned to this project' }, { status: 400 })
-        const duplicate = await prisma.programmeResourceAllocation.findFirst({ where: { activityId, teamMemberId, resourceType: 'labour', organizationId: auth.orgId }, select: { id: true } })
+        const duplicate = await prisma.programmeResourceAllocation.findFirst({ where: { activityId, teamMemberId, resourceType: 'labour', organizationId: orgId }, select: { id: true } })
         if (duplicate) return NextResponse.json({ error: 'This person is already allocated to the activity' }, { status: 409 })
         label = member.name
         quantity = 1
@@ -108,9 +114,9 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     } else if (resourceType === 'equipment') {
       equipmentId = body.equipmentId ? String(body.equipmentId) : null
       if (equipmentId) {
-        const equipment = await prisma.equipment.findFirst({ where: { id: equipmentId, archivedAt: null, organizationId: auth.orgId }, select: { id: true, name: true } })
+        const equipment = await prisma.equipment.findFirst({ where: { id: equipmentId, archivedAt: null, organizationId: orgId }, select: { id: true, name: true } })
         if (!equipment) return NextResponse.json({ error: 'Equipment not found or archived' }, { status: 400 })
-        const duplicate = await prisma.programmeResourceAllocation.findFirst({ where: { activityId, equipmentId, resourceType: 'equipment', organizationId: auth.orgId }, select: { id: true } })
+        const duplicate = await prisma.programmeResourceAllocation.findFirst({ where: { activityId, equipmentId, resourceType: 'equipment', organizationId: orgId }, select: { id: true } })
         if (duplicate) return NextResponse.json({ error: 'This equipment is already allocated to the activity' }, { status: 409 })
         label = equipment.name
         quantity = 1
@@ -123,7 +129,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     } else {
       materialId = body.materialId ? String(body.materialId) : null
       if (materialId) {
-        const material = await prisma.material.findFirst({ where: { id: materialId, archivedAt: null, organizationId: auth.orgId }, select: { id: true, name: true, unit: true } })
+        const material = await prisma.material.findFirst({ where: { id: materialId, archivedAt: null, organizationId: orgId }, select: { id: true, name: true, unit: true } })
         if (!material) return NextResponse.json({ error: 'Material not found or archived' }, { status: 400 })
         label = material.name
         unit = material.unit
@@ -135,13 +141,14 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
       projectId: id, activityId, resourceType, teamMemberId, equipmentId, materialId, label,
       quantity, unit, hoursPerDay, needBy: needBy instanceof Date ? needBy : null,
       notes: String(body.notes || '').trim().slice(0, 1000) || null,
-      organizationId: auth.orgId,
+      organizationId: orgId,
     }, include: { teamMember: true, equipment: true, material: true, activity: { select: { id: true, title: true, plannedStart: true, plannedEnd: true } } } })
     auditLog({ action: 'programme.resource.create', resourceType: 'ProgrammeResourceAllocation', resourceId: created.id, metadata: { projectId: id, activityId, resourceType, quantity, unit }, ...requestMeta(req) })
-    prisma.activity.create({ data: { projectId: id, organizationId: auth.orgId, actorName: actorName(session), actorType: 'human', action: `loaded ${resourceType} onto ${activity.title}`, iconType: 'check' } }).catch(() => {})
+    prisma.activity.create({ data: { projectId: id, organizationId: orgId, actorName: actorName(session), actorType: 'human', action: `loaded ${resourceType} onto ${activity.title}`, iconType: 'check' } }).catch(() => {})
     return NextResponse.json(created, { status: 201 })
   } catch (error) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to allocate programme resource' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

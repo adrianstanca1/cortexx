@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
@@ -16,7 +16,7 @@ function parseDate(value: unknown): Date {
 }
 
 export const GET = withRoute(async ({ req }) => {
-  const id = req.nextUrl.pathname.split('/').pop()
+  const id = decodePathSegment(req.nextUrl.pathname.split('/').pop())
   if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
 
   const cert = await prisma.certification.findUnique({
@@ -34,7 +34,7 @@ export const GET = withRoute(async ({ req }) => {
 
 export const PUT = withRoute(
   async ({ req, userId }) => {
-    const id = req.nextUrl.pathname.split('/').pop()
+    const id = decodePathSegment(req.nextUrl.pathname.split('/').pop())
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
     const limited = await enforceRateLimit(req, 'write', userId)
     if (limited) return limited
@@ -120,12 +120,12 @@ export const PUT = withRoute(
       return NextResponse.json({ error: 'Failed to update certification' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'write' }
+  { requireOrg: true, permission: 'write' }
 )
 
 export const DELETE = withRoute(
   async ({ req, userId }) => {
-    const id = req.nextUrl.pathname.split('/').pop()
+    const id = decodePathSegment(req.nextUrl.pathname.split('/').pop())
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
     const limited = await enforceRateLimit(req, 'write', userId)
     if (limited) return limited
@@ -148,5 +148,5 @@ export const DELETE = withRoute(
       return NextResponse.json({ error: 'Failed to delete certification' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'write' }
+  { requireOrg: true, permission: 'write' }
 )

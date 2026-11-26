@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,11 +13,9 @@ function parseDate(v: unknown): Date | null | undefined {
   const d = new Date(v as string); return isNaN(d.getTime()) ? undefined : d
 }
 
-export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const existing = await prisma.toolboxTalk.findUnique({ where: { id: params.id } })
@@ -56,7 +55,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       prisma.activity.create({
         data: {
           projectId: talk.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(session),
           actorType: 'human',
           action: `signed off toolbox talk: ${talk.topic}`,
           iconType: 'check',
@@ -68,13 +67,12 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     console.error('[toolbox-talks/:id] PATCH failed:', error)
     return NextResponse.json({ error: 'Failed to update toolbox talk' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const talk = await prisma.toolboxTalk.findUnique({ where: { id: params.id } })
     if (!talk) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -90,4 +88,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     console.error('[toolbox-talks/:id] DELETE failed:', error)
     return NextResponse.json({ error: 'Failed to delete toolbox talk' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

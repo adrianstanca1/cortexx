@@ -1,11 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { authorizeUploadReference } from '@/lib/upload-provenance'
 import controls from '@/lib/field-controls'
 import qualityCloseout from '@/lib/quality-closeout'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -38,11 +39,9 @@ function parseDate(v: unknown): Date | null | undefined {
   const d = new Date(v as string); return isNaN(d.getTime()) ? undefined : d
 }
 
-export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const existing = await prisma.inspection.findUnique({ where: { id: params.id } })
@@ -83,10 +82,10 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
           return NextResponse.json({ error: 'Evidence photo or signed evidence is required before releasing this QA point' }, { status: 409 })
         }
         if (existing.pointType === 'witness') {
-          data.witnessedBy = controls.cleanText(body.releasedBy, 120) || actorName(auth)
+          data.witnessedBy = controls.cleanText(body.releasedBy, 120) || actorName(session)
           data.witnessedAt = existing.witnessedAt || new Date()
         } else {
-          data.releasedBy = controls.cleanText(body.releasedBy, 120) || actorName(auth)
+          data.releasedBy = controls.cleanText(body.releasedBy, 120) || actorName(session)
           data.releasedAt = existing.releasedAt || new Date()
         }
       } else if (body.releaseStatus === 'rejected') {
@@ -106,7 +105,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
         const readiness = inspectionPassReadiness({ previousStatus: existing.status, checklistItems, evidence: releaseEvidence })
         if (!readiness.ready) return NextResponse.json({ error: 'Inspection is not ready to pass', missing: readiness.missing }, { status: 409 })
         if (readiness.isFailureCloseout) {
-          data.closeoutVerifiedBy = actorName(auth)
+          data.closeoutVerifiedBy = actorName(session)
           data.closeoutVerifiedAt = new Date()
         }
       }
@@ -140,7 +139,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       prisma.activity.create({
         data: {
           projectId: inspection.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(session),
           actorType: 'human',
           action: `${inspection.pointType} point ${inspection.title}: ${existing.releaseStatus} → ${String(data.releaseStatus)}`,
           detail: inspection.drawing ? `Drawing ${inspection.drawing.number}${inspection.drawingRevision ? ` · Rev ${inspection.drawingRevision.revision}` : ''}` : undefined,
@@ -153,7 +152,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       prisma.activity.create({
         data: {
           projectId: inspection.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(session),
           actorType: 'human',
           action: `inspection ${inspection.title}: ${existing.status} → ${data.status}`,
           iconType: data.status === 'failed' ? 'alert' : 'check',
@@ -165,13 +164,12 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     console.error('[inspections/:id] PATCH failed:', error)
     return NextResponse.json({ error: 'Failed to update inspection' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const i = await prisma.inspection.findUnique({ where: { id: params.id } })
     if (!i) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -191,4 +189,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     console.error('[inspections/:id] DELETE failed:', error)
     return NextResponse.json({ error: 'Failed to delete inspection' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })
