@@ -3,6 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -51,11 +52,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -97,4 +95,5 @@ export async function POST(req: NextRequest) {
     console.error('[maintenance] POST failed:', error)
     return NextResponse.json({ error: 'Failed to create maintenance schedule' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

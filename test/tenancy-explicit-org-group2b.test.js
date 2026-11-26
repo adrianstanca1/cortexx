@@ -183,6 +183,12 @@ function routeMocks({ orgResult, prisma }) {
       requireOrg: async () => orgResult,
       actorName: session => session?.user?.name || 'User',
     },
+    // Batch 3 wrapped the write handlers of some 2B routes in withRoute.
+    // The mock mirrors lib/withRoute.ts gate order (org check, then
+    // permission check, then the handler), using the REAL permission
+    // helpers from lib/rbac.ts. GET handlers still use requireOrg
+    // (mocked via orgResult), so this only fires for writes.
+    '@/lib/withRoute': { withRoute: mockWithRoute },
     '@/lib/errors': { reportError: () => {} },
     '@/lib/rateLimit': { enforceRateLimit: async () => null },
     '@/lib/tenancy': {
@@ -193,12 +199,45 @@ function routeMocks({ orgResult, prisma }) {
   }
 }
 
-function fakeReq(url, jsonBody) {
+// Real permission helpers from lib/rbac.ts (no imports of its own).
+const rbac = loadRoute('lib/rbac.ts', {})
+const { canWrite, canManage } = rbac
+
+function mockWithRoute(handler, { requireOrg = true, permission = 'read' } = {}) {
+  return async req => {
+    const ctx = req.__ctx
+    if (requireOrg && (!ctx || !ctx.orgId)) {
+      return MockResponse.json({ error: 'Organisation context required' }, { status: 400 })
+    }
+    if (permission === 'write' && (!ctx.role || !canWrite(ctx.role))) {
+      return MockResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (permission === 'manage' && (!ctx.role || !canManage(ctx.role))) {
+      return MockResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    return handler({ ...ctx, req })
+  }
+}
+
+function ctxFor(role, orgId = 'org-1') {
+  return {
+    session: SESSION,
+    userId: 'user-1',
+    orgId,
+    orgSlug: 'org',
+    orgName: 'Org',
+    role,
+    personaRole: 'admin',
+  }
+}
+
+function fakeReq(url, jsonBody, ctx) {
   return {
     url,
-    nextUrl: { searchParams: new URL(url).searchParams },
+    nextUrl: { pathname: new URL(url).pathname, searchParams: new URL(url).searchParams },
     json: async () => jsonBody || {},
     signal: { addEventListener: () => {} },
+    __ctx: ctx,
   }
 }
 
@@ -254,7 +293,7 @@ test('waste GET: user with an org gets 200 and the waste entries', async () => {
   assert.equal(res.body.hasMore, false)
 })
 
-test('waste POST: org-less user gets 403 NO_ORG and no entry is created', async () => {
+test('waste POST: org-less user gets 400, viewer gets 403, no entry is created', async () => {
   const calls = []
   const prisma = {
     wasteEntry: {
@@ -265,10 +304,16 @@ test('waste POST: org-less user gets 403 NO_ORG and no entry is created', async 
     },
   }
   const route = loadRoute('app/api/waste/route.ts', routeMocks({ orgResult: orgLessResult(), prisma }))
-  const res = await route.POST(fakeReq('http://localhost/api/waste', { wasteType: 'concrete', weightKg: 120 }))
-  assert.equal(res.status, 403)
-  assert.equal(res.body.code, 'NO_ORG')
-  assert.deepEqual(calls, [])
+  // Batch 3 wrapped this write in withRoute({ permission: 'write' }), so
+  // the org/role gate now runs in the wrapper instead of requireOrg():
+  // no org -> 400, viewer -> 403, member -> 201.
+  const noOrg = await route.POST(fakeReq('http://localhost/api/waste', { wasteType: 'concrete', weightKg: 120 }, ctxFor('member', null)))
+  assert.equal(noOrg.status, 400)
+  const viewer = await route.POST(fakeReq('http://localhost/api/waste', { wasteType: 'concrete', weightKg: 120 }, ctxFor('viewer')))
+  assert.equal(viewer.status, 403)
+  const member = await route.POST(fakeReq('http://localhost/api/waste', { wasteType: 'concrete', weightKg: 120 }, ctxFor('member')))
+  assert.equal(member.status, 201)
+  assert.deepEqual(calls, ['wasteEntry.create'])
 })
 
 test('meetings GET: org-less user gets 403 NO_ORG and no DB call', async () => {

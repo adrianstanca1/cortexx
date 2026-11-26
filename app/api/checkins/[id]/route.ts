@@ -1,20 +1,18 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
-import { runWithOrg } from '@/lib/tenancy'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 type RouteParams = { params: Promise<{ id: string }> }
 
-export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'write', auth.userId)
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
-  const params = await paramsP
-  return runWithOrg({ organizationId: auth.orgId, userId: auth.userId ?? null, role: auth.role }, async () => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
     try {
       const body = await req.json()
       const existing = await prisma.siteCheckIn.findUnique({
@@ -38,21 +36,18 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
         return ci
       })
       prisma.activity.create({
-        data: { projectId: existing.projectId, actorName: actorName(auth.session), actorType: 'human', action: `checked out: ${existing.member?.name || 'member'}`, iconType: 'check' },
+        data: { projectId: existing.projectId, actorName: actorName(session), actorType: 'human', action: `checked out: ${existing.member?.name || 'member'}`, iconType: 'check' },
       }).catch(() => {})
       return NextResponse.json(updated)
     } catch (error) {
       reportError(error)
       return NextResponse.json({ error: 'Failed to check out' }, { status: 500 })
     }
-  })
-}
+}, { permission: 'write' })
 
-export async function DELETE(_req: NextRequest, { params: paramsP }: RouteParams) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
-  const params = await paramsP
-  return runWithOrg({ organizationId: auth.orgId, userId: auth.userId ?? null, role: auth.role }, async () => {
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
     try {
       const existing = await prisma.siteCheckIn.findUnique({ where: { id: params.id }, select: { memberId: true, projectId: true, checkedOutAt: true } })
       if (!existing) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -69,5 +64,4 @@ export async function DELETE(_req: NextRequest, { params: paramsP }: RouteParams
       reportError(error)
       return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
     }
-  })
-}
+}, { permission: 'write' })

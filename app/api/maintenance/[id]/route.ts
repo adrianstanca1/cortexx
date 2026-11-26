@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -19,11 +20,9 @@ function addDays(d: Date, n: number): Date {
   const x = new Date(d); x.setDate(x.getDate() + n); return x
 }
 
-export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const existing = await prisma.maintenanceSchedule.findUnique({ where: { id: params.id } })
@@ -106,13 +105,12 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     console.error('[maintenance/:id] PATCH failed:', error)
     return NextResponse.json({ error: 'Failed to update maintenance schedule' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const s = await prisma.maintenanceSchedule.findUnique({ where: { id: params.id } })
     if (!s) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -128,4 +126,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     console.error('[maintenance/:id] DELETE failed:', error)
     return NextResponse.json({ error: 'Failed to delete maintenance schedule' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

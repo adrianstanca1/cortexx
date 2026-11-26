@@ -130,5 +130,5 @@ export const POST = withRoute(
       return NextResponse.json({ error: 'Failed to create certification' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'write' }
+  { requireOrg: true, permission: 'write' }
 )

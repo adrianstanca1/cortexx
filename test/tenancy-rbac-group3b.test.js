@@ -18,7 +18,10 @@
  * withRoute — those routes verify membership on the client-supplied
  * `organizationId`, not the session's active org. Instead the inner gate
  * was tightened from `canManage` (admin+) to `isOwner` (owner only), per
- * the approved matrix.
+ * the approved matrix. The settings page passes a separate owner-derived
+ * `canManageBilling` flag to `BillingSection`, so admins no longer see
+ * billing controls the endpoints would reject; `canManage` stays the
+ * member-administration flag.
  *
  * The mock `withRoute` in this file mirrors the real wrapper in
  * lib/withRoute.ts: org check first (400 when requireOrg and no org),
@@ -267,6 +270,29 @@ test('billing is tightened to owner-only, not wrapped in withRoute', () => {
     assert.ok(src.includes('Only owners can manage billing'), `${rel} should say only owners can manage billing`)
     assert.ok(!src.includes('canManage'), `${rel} should no longer use canManage`)
   }
+})
+
+test('BillingSection gates billing controls on an owner-only flag, not canManage', () => {
+  // Devin on #497: the checkout/portal endpoints are owner-only, but
+  // BillingSection showed both controls to admins because it used the
+  // member-management canManage flag (admins + owners). The settings
+  // page now passes a separate owner-derived flag for the billing
+  // controls and keeps canManage for member administration.
+  const src = fs.readFileSync(path.join(__dirname, '..', 'app/settings/organization/page.tsx'), 'utf8')
+  assert.ok(src.includes('canManageBilling={activeOrg.role === \'owner\'}'),
+    'settings should pass an owner-derived billing flag to BillingSection')
+  const section = src.slice(src.indexOf('function BillingSection'))
+  assert.ok(section.includes('canManageBilling: boolean'),
+    'BillingSection should take a canManageBilling prop')
+  assert.ok(section.includes("canManageBilling && plan.key !== 'enterprise'"),
+    'plan checkout buttons should be gated on canManageBilling')
+  assert.ok(section.includes('canManageBilling && (\n        <button'),
+    'the portal button should be gated on canManageBilling')
+  assert.ok(!/canManage[^B]/.test(section.replace(/canManageBilling/g, '')),
+    'BillingSection should not use the member-management canManage flag')
+  // canManage is still the member-administration flag on the same page.
+  assert.ok(src.includes('{canManage && ('),
+    'member administration should still be gated on canManage')
 })
 
 test('withRoute forwards framework-decoded params to handlers', () => {

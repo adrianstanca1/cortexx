@@ -8,6 +8,7 @@ import { runWithOrg } from '@/lib/tenancy'
 import { authorizeUploadReference } from '@/lib/upload-provenance'
 import controls from '@/lib/field-controls'
 import qualityCloseout from '@/lib/quality-closeout'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const ALLOWED_STATUS = new Set(['open', 'in_progress', 'closed'])
@@ -30,13 +31,11 @@ export async function GET(_req: NextRequest, { params: paramsP }: RouteParams) {
   })
 }
 
-export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'write', auth.userId)
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
-  const params = await paramsP
-  return scope(auth, async () => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
     try {
       const body = await req.json()
       const existing = await prisma.snag.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true, photoUrl: true, resolution: true, closeoutEvidence: true, closedAt: true, closedBy: true, closeoutVerifiedAt: true } })
@@ -69,7 +68,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
       }
       if (body.title !== undefined && !String(body.title).trim()) return NextResponse.json({ error: 'Title cannot be empty' }, { status: 400 })
       if (body.photoUrl !== undefined && body.photoUrl && body.photoUrl !== existing.photoUrl) {
-        const uploadError = await authorizeUploadReference(body.photoUrl, { userId: auth.userId, personaRole: auth.personaRole })
+        const uploadError = await authorizeUploadReference(body.photoUrl, { userId: userId, personaRole: personaRole })
         if (uploadError) return uploadError
       }
       const snag = await prisma.snag.update({
@@ -85,14 +84,14 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
           ...(body.closeoutEvidence !== undefined && { closeoutEvidence: closeoutEvidence as unknown as object }),
           ...dueDateUpdate,
           closedAt: justClosed ? new Date() : reopened ? null : undefined,
-          closedBy: justClosed ? actorName(auth.session) : reopened ? null : undefined,
+          closedBy: justClosed ? actorName(session) : reopened ? null : undefined,
           closeoutVerifiedAt: justClosed ? new Date() : reopened ? null : undefined,
         },
         include: { project: { select: { id: true, name: true } } },
       })
       if (justClosed || reopened) {
         prisma.activity.create({
-          data: { projectId: snag.projectId, actorName: actorName(auth.session), actorType: 'human', action: justClosed ? `closed snag: ${snag.title}` : `reopened snag: ${snag.title}`, detail: justClosed ? resolution : undefined, iconType: 'alert' },
+          data: { projectId: snag.projectId, actorName: actorName(session), actorType: 'human', action: justClosed ? `closed snag: ${snag.title}` : `reopened snag: ${snag.title}`, detail: justClosed ? resolution : undefined, iconType: 'alert' },
         }).catch(() => {})
       }
       return NextResponse.json(snag)
@@ -100,14 +99,11 @@ export async function PUT(req: NextRequest, { params: paramsP }: RouteParams) {
       reportError(error)
       return NextResponse.json({ error: 'Failed to update snag' }, { status: 500 })
     }
-  })
-}
+}, { permission: 'write' })
 
-export async function DELETE(req: NextRequest, { params: paramsP }: RouteParams) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
-  const params = await paramsP
-  return scope(auth, async () => {
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
     try {
       const snag = await prisma.snag.findUnique({ where: { id: params.id }, select: { projectId: true, title: true, status: true, closeoutVerifiedAt: true } })
       if (!snag) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -115,7 +111,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: RouteParams)
       await prisma.snag.delete({ where: { id: params.id } })
       auditLog({ action: 'snag.delete', resourceType: 'Snag', resourceId: params.id, ...requestMeta(req) })
       prisma.activity.create({
-        data: { projectId: snag.projectId, actorName: actorName(auth.session), actorType: 'human', action: `deleted snag: ${snag.title}`, iconType: 'trash' },
+        data: { projectId: snag.projectId, actorName: actorName(session), actorType: 'human', action: `deleted snag: ${snag.title}`, iconType: 'trash' },
       }).catch(() => {})
       return NextResponse.json({ success: true })
     } catch (error) {
@@ -123,5 +119,4 @@ export async function DELETE(req: NextRequest, { params: paramsP }: RouteParams)
       reportError(error)
       return NextResponse.json({ error: 'Failed to delete snag' }, { status: 500 })
     }
-  })
-}
+}, { permission: 'write' })

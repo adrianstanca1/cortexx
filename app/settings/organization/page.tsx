@@ -155,7 +155,10 @@ export default function OrganizationSettingsPage() {
       </p>
 
       {/* Billing */}
-      <BillingSection organizationId={activeOrg.id} canManage={canManage} />
+      {/* Billing controls are owner-only (the checkout/portal endpoints
+          enforce isOwner): pass a separate owner-derived flag, not the
+          member-management canManage (admins + owners) used below. */}
+      <BillingSection organizationId={activeOrg.id} canManageBilling={activeOrg.role === 'owner'} />
 
       {/* Quick links */}
       {canManage && (
@@ -338,7 +341,7 @@ interface OrgBilling {
   memberCount: number
 }
 
-function BillingSection({ organizationId, canManage }: { organizationId: string; canManage: boolean }) {
+function BillingSection({ organizationId, canManageBilling }: { organizationId: string; canManageBilling: boolean }) {
   const [busy, setBusy] = useState<string | null>(null)
   const [msg, setMsg] = useState<string | null>(null)
   const [plans, setPlans] = useState<PlanRow[]>([])
@@ -461,7 +464,7 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
             <ul style={{ margin: 0, padding: 0, listStyle: 'none', fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t2)' }}>
               {plan.features.slice(0, 5).map(f => <li key={f} style={{ marginBottom: 2 }}>• {f}</li>)}
             </ul>
-            {canManage && plan.key !== 'enterprise' && (
+            {canManageBilling && plan.key !== 'enterprise' && (
               <button type="button"
                 onClick={() => {
                   if (memberOverflow) {
@@ -480,7 +483,7 @@ function BillingSection({ organizationId, canManage }: { organizationId: string;
           )
         })}
       </div>
-      {canManage && (
+      {canManageBilling && (
         <button type="button"
           onClick={openPortal}
           disabled={!!busy}
