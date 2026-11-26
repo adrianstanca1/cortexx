@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { downloadToTemp } from '@/lib/storage'
 import { chat, isLlmEmpty, isLlmUnavailable, LLM_CONFIG } from '@/lib/llm'
@@ -26,8 +26,9 @@ async function markFailure(documentId: string, code: string, message: string) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
   if (limited) return limited
 

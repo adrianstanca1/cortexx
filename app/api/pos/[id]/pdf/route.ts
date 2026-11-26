@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import PDFDocument from 'pdfkit'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,8 +32,9 @@ const STATUS_COLOR: Record<string, string> = {
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
 
   const po = await prisma.purchaseOrder.findUnique({
     where: { id: params.id },
