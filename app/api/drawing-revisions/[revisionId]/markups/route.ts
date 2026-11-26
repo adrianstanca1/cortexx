@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
+import { withRoute } from '@/lib/withRoute'
 import { programmeProjectWhere } from '@/lib/programme-access'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
@@ -67,9 +68,10 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ revi
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ revisionId: string }> }) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const auth = { session, userId, orgId, orgSlug, orgName, role, personaRole }
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { revisionId: __segments[2] }
   const { revisionId } = await params
   try {
     const revision = await accessibleRevision(revisionId, auth)
@@ -135,4 +137,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rev
     reportError(error)
     return NextResponse.json({ error: 'Failed to create drawing markup' }, { status: 500 })
   }
-}
+}, { permission: 'write' })

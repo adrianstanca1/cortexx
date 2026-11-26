@@ -4,6 +4,7 @@ import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -25,11 +26,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   const { id } = await params
   try {
@@ -50,19 +50,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     reportError(error)
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   const { id } = await params
   try {
     await prisma.conversation.delete({ where: { id } })
     auditLog({
-      userId: (auth.user as { id?: string }).id,
+      userId: (session.user as { id?: string }).id,
       action: 'conversations.delete',
       resourceType: 'conversation',
       resourceId: id,
@@ -74,4 +74,5 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

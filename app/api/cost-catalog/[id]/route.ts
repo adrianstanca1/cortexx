@@ -1,18 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireOrg } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 const COMMON_UNITS = new Set(['item', 'hour', 'day', 'm', 'm²', 'm³', 'kg', 'tonne', 'l', 'visit'])
 
-export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     if (body.description !== undefined && !String(body.description).trim()) {
@@ -38,13 +36,12 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     reportError(error)
     return NextResponse.json({ error: 'Failed to update item' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
   try {
     await prisma.costItem.delete({ where: { id: params.id } })
     auditLog({
@@ -58,4 +55,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete item' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

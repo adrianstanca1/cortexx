@@ -158,17 +158,56 @@ function routeMocks({ orgResult, prisma }) {
       requireOrg: async () => orgResult,
       actorName: session => session?.user?.name || 'User',
     },
+    // Batch 3 wrapped the write handlers of some 2A routes in withRoute.
+    // The mock mirrors lib/withRoute.ts gate order (org check, then
+    // permission check, then the handler), using the REAL permission
+    // helpers from lib/rbac.ts. GET handlers still use requireOrg
+    // (mocked via orgResult), so this only fires for writes.
+    '@/lib/withRoute': { withRoute: mockWithRoute },
     '@/lib/errors': { reportError: () => {} },
     '@/lib/rateLimit': { enforceRateLimit: async () => null },
     '@/lib/tenancy': { getCurrentOrg: () => ({ organizationId: 'org-1' }) },
   }
 }
 
-function fakeReq(url, jsonBody) {
+// Real permission helpers from lib/rbac.ts (no imports of its own).
+const rbac = loadRoute('lib/rbac.ts', {})
+const { canWrite, canManage } = rbac
+
+function mockWithRoute(handler, { requireOrg = true, permission = 'read' } = {}) {
+  return async req => {
+    const ctx = req.__ctx
+    if (requireOrg && (!ctx || !ctx.orgId)) {
+      return MockResponse.json({ error: 'Organisation context required' }, { status: 400 })
+    }
+    if (permission === 'write' && (!ctx.role || !canWrite(ctx.role))) {
+      return MockResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (permission === 'manage' && (!ctx.role || !canManage(ctx.role))) {
+      return MockResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    return handler({ ...ctx, req })
+  }
+}
+
+function ctxFor(role, orgId = 'org-1') {
+  return {
+    session: SESSION,
+    userId: 'user-1',
+    orgId,
+    orgSlug: 'org',
+    orgName: 'Org',
+    role,
+    personaRole: 'admin',
+  }
+}
+
+function fakeReq(url, jsonBody, ctx) {
   return {
     url,
-    nextUrl: { searchParams: new URL(url).searchParams },
+    nextUrl: { pathname: new URL(url).pathname, searchParams: new URL(url).searchParams },
     json: async () => jsonBody || {},
+    __ctx: ctx,
   }
 }
 
@@ -176,9 +215,14 @@ test('group 2A routes all use requireOrg and none still call requireAuth', () =>
   assert.equal(GROUP2A_ROUTES.length, 45, 'group 2A covers 45 routes')
   for (const rel of GROUP2A_ROUTES) {
     const src = fs.readFileSync(path.join(__dirname, '..', rel), 'utf8')
-    assert.ok(src.includes('requireOrg'), `${rel} should call requireOrg`)
+    // Batch 3 (RBAC) moved some write handlers from requireOrg() to
+    // withRoute({ permission: 'write' }); either is an org gate.
+    assert.ok(src.includes('requireOrg') || src.includes('withRoute'),
+      `${rel} should gate on an org (requireOrg or withRoute)`)
     assert.ok(!src.includes('await requireAuth()'), `${rel} should not call requireAuth`)
-    assert.ok(src.includes('const auth = org.session'), `${rel} should unwrap org.session`)
+    if (src.includes('requireOrg')) {
+      assert.ok(src.includes('const auth = org.session'), `${rel} should unwrap org.session`)
+    }
     assert.ok(!src.includes("@/lib/requireOrg"), `${rel} must import from '@/lib/requireAuth', not '@/lib/requireOrg'`)
   }
 })
@@ -219,7 +263,7 @@ test('tags GET: user with an org gets 200 and the tags', async () => {
   assert.equal(res.body.hasMore, false)
 })
 
-test('tags POST: org-less user gets 403 NO_ORG and no tag is created', async () => {
+test('tags POST: org-less user gets 400, viewer gets 403, no tag is created', async () => {
   const calls = []
   const prisma = {
     tag: {
@@ -230,10 +274,16 @@ test('tags POST: org-less user gets 403 NO_ORG and no tag is created', async () 
     },
   }
   const route = loadRoute('app/api/tags/route.ts', routeMocks({ orgResult: orgLessResult(), prisma }))
-  const res = await route.POST(fakeReq('http://localhost/api/tags', { name: 'Urgent' }))
-  assert.equal(res.status, 403)
-  assert.equal(res.body.code, 'NO_ORG')
-  assert.deepEqual(calls, [])
+  // Batch 3 wrapped this write in withRoute({ permission: 'write' }), so
+  // the org/role gate now runs in the wrapper instead of requireOrg():
+  // no org -> 400, viewer -> 403, member -> 201.
+  const noOrg = await route.POST(fakeReq('http://localhost/api/tags', { name: 'Urgent' }, ctxFor('member', null)))
+  assert.equal(noOrg.status, 400)
+  const viewer = await route.POST(fakeReq('http://localhost/api/tags', { name: 'Urgent' }, ctxFor('viewer')))
+  assert.equal(viewer.status, 403)
+  const member = await route.POST(fakeReq('http://localhost/api/tags', { name: 'Urgent' }, ctxFor('member')))
+  assert.equal(member.status, 201)
+  assert.deepEqual(calls, ['tag.create'])
 })
 
 test('leads GET: org-less user gets 403 NO_ORG and no DB call', async () => {
@@ -299,7 +349,7 @@ test('materials GET: org-less user gets 403 NO_ORG and no DB call', async () => 
   assert.deepEqual(calls, [])
 })
 
-test('bookmarks POST: org-less user gets 403 NO_ORG and no project lookup happens', async () => {
+test('bookmarks POST: org-less user gets 400, viewer gets 403, no project lookup happens', async () => {
   const calls = []
   const prisma = {
     project: {
@@ -308,12 +358,19 @@ test('bookmarks POST: org-less user gets 403 NO_ORG and no project lookup happen
         return { id: 'proj-1' }
       },
     },
+    projectBookmark: {
+      upsert: async () => ({ id: 'bm-1', project: { id: 'proj-1', name: 'Site' } }),
+    },
   }
   const route = loadRoute('app/api/bookmarks/route.ts', routeMocks({ orgResult: orgLessResult(), prisma }))
-  const res = await route.POST(fakeReq('http://localhost/api/bookmarks', { projectId: 'proj-1' }))
-  assert.equal(res.status, 403)
-  assert.equal(res.body.code, 'NO_ORG')
-  assert.deepEqual(calls, [])
+  // Batch 3 wrapped this write in withRoute({ permission: 'write' }).
+  const noOrg = await route.POST(fakeReq('http://localhost/api/bookmarks', { projectId: 'proj-1' }, ctxFor('member', null)))
+  assert.equal(noOrg.status, 400)
+  const viewer = await route.POST(fakeReq('http://localhost/api/bookmarks', { projectId: 'proj-1' }, ctxFor('viewer')))
+  assert.equal(viewer.status, 403)
+  const member = await route.POST(fakeReq('http://localhost/api/bookmarks', { projectId: 'proj-1' }, ctxFor('member')))
+  assert.equal(member.status, 200)
+  assert.deepEqual(calls, ['project.findFirst'])
 })
 
 test('goals GET: user with an org gets 200 and the goals', async () => {

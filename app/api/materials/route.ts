@@ -4,6 +4,7 @@ import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { reportError } from '@/lib/errors'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -65,11 +66,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -102,4 +100,5 @@ export async function POST(req: NextRequest) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to create material' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
+import { withRoute } from '@/lib/withRoute'
 import { programmeProjectWhere } from '@/lib/programme-access'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
@@ -30,9 +31,10 @@ async function accessibleMarkup(markupId: string, auth: Exclude<Awaited<ReturnTy
   return project ? markup : null
 }
 
-export async function PATCH(req: NextRequest, { params }: { params: Promise<{ markupId: string }> }) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
+export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const auth = { session, userId, orgId, orgSlug, orgName, role, personaRole }
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { markupId: __segments[2] }
   const { markupId } = await params
   try {
     const existing = await accessibleMarkup(markupId, auth)
@@ -98,11 +100,11 @@ export async function PATCH(req: NextRequest, { params }: { params: Promise<{ ma
     reportError(error)
     return NextResponse.json({ error: 'Failed to update drawing markup' }, { status: 500 })
   }
-}
-
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ markupId: string }> }) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
+}, { permission: 'write' })
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const auth = { session, userId, orgId, orgSlug, orgName, role, personaRole }
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { markupId: __segments[2] }
   const { markupId } = await params
   try {
     const existing = await accessibleMarkup(markupId, auth)
@@ -138,4 +140,4 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ m
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete drawing markup' }, { status: 500 })
   }
-}
+}, { permission: 'write' })

@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireAuth } from '@/lib/requireAuth'
-import { canManage } from '@/lib/rbac'
+import { isOwner } from '@/lib/rbac'
 import { getStripe, isBillingConfigured } from '@/lib/billing'
 
 export const dynamic = 'force-dynamic'
@@ -32,7 +32,7 @@ export async function POST(req: NextRequest) {
     include: { organization: true },
   })
   if (!membership) return NextResponse.json({ error: 'Not a member' }, { status: 403 })
-  if (!canManage(membership.role)) return NextResponse.json({ error: 'Only admins can manage billing' }, { status: 403 })
+  if (!isOwner(membership.role)) return NextResponse.json({ error: 'Only owners can manage billing' }, { status: 403 })
 
   const customerId = membership.organization.stripeCustomerId
   if (!customerId) return NextResponse.json({ error: 'No Stripe customer for this workspace yet' }, { status: 404 })

@@ -206,9 +206,14 @@ test('group 2B routes all use requireOrg and none still call requireAuth', () =>
   assert.equal(GROUP2B_ROUTES.length, 52, 'group 2B covers 52 routes')
   for (const rel of GROUP2B_ROUTES) {
     const src = fs.readFileSync(path.join(__dirname, '..', rel), 'utf8')
-    assert.ok(src.includes('requireOrg'), `${rel} should call requireOrg`)
+    // Batch 3 (RBAC) moved some write handlers from requireOrg() to
+    // withRoute({ permission: 'write' }); either is an org gate.
+    assert.ok(src.includes('requireOrg') || src.includes('withRoute'),
+      `${rel} should gate on an org (requireOrg or withRoute)`)
     assert.ok(!src.includes('await requireAuth()'), `${rel} should not call requireAuth`)
-    assert.ok(src.includes('org.session'), `${rel} should unwrap org.session`)
+    if (src.includes('requireOrg')) {
+      assert.ok(src.includes('org.session'), `${rel} should unwrap org.session`)
+    }
     assert.ok(!src.includes("@/lib/requireOrg"), `${rel} must import from '@/lib/requireAuth', not '@/lib/requireOrg'`)
   }
 })
