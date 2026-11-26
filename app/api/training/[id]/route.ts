@@ -120,7 +120,7 @@ export const PUT = withRoute(
       return NextResponse.json({ error: 'Failed to update certification' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'write' }
+  { requireOrg: true, permission: 'write' }
 )
 
 export const DELETE = withRoute(
@@ -148,5 +148,5 @@ export const DELETE = withRoute(
       return NextResponse.json({ error: 'Failed to delete certification' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'write' }
+  { requireOrg: true, permission: 'write' }
 )

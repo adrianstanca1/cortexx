@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
+import { withRoute } from '@/lib/withRoute'
 export const dynamic = 'force-dynamic'
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
@@ -21,18 +22,16 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   }
 }
 
-export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const text = String(body.body || '').trim().slice(0, 2000)
     if (!text) {
       return NextResponse.json({ error: 'Comment body is required' }, { status: 400 })
     }
-    const authorId = (auth.user as { id?: string }).id || 'unknown'
+    const authorId = (session.user as { id?: string }).id || 'unknown'
 
     // Look up task to find projectId for activity log
     const task = await prisma.task.findUnique({ where: { id: params.id }, select: { projectId: true, title: true } })
@@ -43,7 +42,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
         taskId: params.id,
         projectId: task.projectId,
         authorId,
-        authorName: actorName(auth),
+        authorName: actorName(session),
         body: text,
       },
     })
@@ -52,7 +51,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
       prisma.activity.create({
         data: {
           projectId: task.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(session),
           actorType: 'human',
           action: `commented on: ${task.title}`,
           detail: text.slice(0, 100),
@@ -66,4 +65,5 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     reportError(error)
     return NextResponse.json({ error: 'Failed to add comment' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

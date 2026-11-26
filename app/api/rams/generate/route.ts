@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import {
@@ -11,14 +11,12 @@ import {
   fillTemplate,
 } from '@/lib/rams-templates'
 import { chat, buildSystemPrompt } from '@/lib/llm'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
-export async function POST(req: NextRequest) {
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
 
   try {
@@ -37,7 +35,7 @@ export async function POST(req: NextRequest) {
     }
     const template = RAMS_TEMPLATES[templateKey]
     const workDescription = String(body.workDescription || '').trim()
-    const preparedBy = actorName(auth)
+    const preparedBy = actorName(session)
     const ctx = buildTemplateContext(project, workDescription, preparedBy)
     const draft = fillTemplate(template, ctx)
 
@@ -94,4 +92,5 @@ export async function POST(req: NextRequest) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to generate RAMS' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

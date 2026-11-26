@@ -5,7 +5,6 @@ import { prisma } from '@/lib/db'
 import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
-import { canManage } from '@/lib/rbac'
 
 import { withRoute } from '@/lib/withRoute'
 
@@ -49,9 +48,6 @@ async function GET_impl(req: NextRequest, session: { user?: { email?: string | n
 }
 
 async function POST_impl(req: NextRequest, userId: string, role: string | null, session: { user?: { name?: string | null; email?: string | null } }) {
-  if (!role || !canManage(role)) {
-    return NextResponse.json({ error: 'Company admin permission required to create projects' }, { status: 403 })
-  }
   const __limited = await enforceRateLimit(req, 'write', userId)
   if (__limited) return __limited
 
@@ -106,4 +102,4 @@ async function POST_impl(req: NextRequest, userId: string, role: string | null, 
 }
 
 export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
-export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, role, session), { permission: 'read' })
+export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, role, session), { permission: 'write' })

@@ -39,6 +39,10 @@ function snagHandler(prisma, authorizeUploadReference = async () => null) {
     '@/lib/upload-provenance': { authorizeUploadReference },
     '@/lib/field-controls': controls,
     '@/lib/quality-closeout': qualityCloseout,
+    // Batch 3 wrapped this write in withRoute; the mock injects the same
+    // member ctx the mocked requireOrg used to return (these tests cover
+    // closeout logic, not RBAC — see test/tenancy-rbac-group3a.test.js).
+    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session: auth.session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: auth.session.user.role }) },
   })
 }
 
@@ -52,6 +56,8 @@ function inspectionHandler(prisma, authorizeUploadReference = async () => null) 
     '@/lib/upload-provenance': { authorizeUploadReference },
     '@/lib/field-controls': controls,
     '@/lib/quality-closeout': qualityCloseout,
+    // Batch 3 wrapped this write in withRoute; see snagHandler above.
+    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session: auth.session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: auth.session.user.role }) },
   })
 }
 
@@ -78,7 +84,7 @@ function snagFixture(overrides = {}) {
 test('snag cannot close without resolution and trusted evidence', async () => {
   const fx = snagFixture()
   const { PUT } = snagHandler(fx.prisma)
-  const response = await PUT({ json: async () => ({ status: 'closed' }) }, { params: Promise.resolve({ id: 's1' }) })
+  const response = await PUT({ json: async () => ({ status: 'closed' }), nextUrl: { pathname: '/api/snags/s1' } })
   assert.equal(response.status, 409)
   assert.deepEqual(Array.from(response.body.missing), ['resolution', 'closeout_evidence'])
   assert.equal(fx.getUpdated(), null)
@@ -91,7 +97,7 @@ test('snag closes with auditable rectification evidence and actor', async () => 
     status: 'closed',
     resolution: 'Re-fixed panel and torque checked fasteners',
     closeoutEvidence: { photoUrls: ['/api/uploads/fixed.jpg'] },
-  }) }, { params: Promise.resolve({ id: 's1' }) })
+  }), nextUrl: { pathname: '/api/snags/s1' } })
   assert.equal(response.status, 200)
   assert.equal(response.body.status, 'closed')
   assert.equal(response.body.closedBy, 'Site PM')
@@ -103,7 +109,7 @@ test('snag closes with auditable rectification evidence and actor', async () => 
 test('closed snag is retained for audit instead of being deleted', async () => {
   const fx = snagFixture({ status: 'closed', closeoutVerifiedAt: new Date() })
   const { DELETE } = snagHandler(fx.prisma)
-  const response = await DELETE({}, { params: Promise.resolve({ id: 's1' }) })
+  const response = await DELETE({ nextUrl: { pathname: '/api/snags/s1' } })
   assert.equal(response.status, 409)
 })
 
@@ -132,7 +138,7 @@ function inspectionFixture(overrides = {}) {
 test('failed inspection requires verification evidence before passing', async () => {
   const fx = inspectionFixture()
   const { PATCH } = inspectionHandler(fx.prisma)
-  const response = await PATCH({ json: async () => ({ status: 'passed' }) }, { params: Promise.resolve({ id: 'i1' }) })
+  const response = await PATCH({ json: async () => ({ status: 'passed' }), nextUrl: { pathname: '/api/inspections/i1' } })
   assert.equal(response.status, 409)
   assert.deepEqual(Array.from(response.body.missing), ['verification_evidence'])
   assert.equal(fx.getUpdated(), null)
@@ -141,7 +147,7 @@ test('failed inspection requires verification evidence before passing', async ()
 test('failed inspection can pass with evidence and records verification actor/time', async () => {
   const fx = inspectionFixture()
   const { PATCH } = inspectionHandler(fx.prisma)
-  const response = await PATCH({ json: async () => ({ status: 'passed', evidence: { photoUrls: ['/api/uploads/rework.jpg'] } }) }, { params: Promise.resolve({ id: 'i1' }) })
+  const response = await PATCH({ json: async () => ({ status: 'passed', evidence: { photoUrls: ['/api/uploads/rework.jpg'] } }), nextUrl: { pathname: '/api/inspections/i1' } })
   assert.equal(response.status, 200)
   assert.equal(response.body.status, 'passed')
   assert.equal(response.body.closeoutVerifiedBy, 'Site PM')
@@ -151,7 +157,7 @@ test('failed inspection can pass with evidence and records verification actor/ti
 test('inspection cannot pass while checklist contains a failed item', async () => {
   const fx = inspectionFixture({ status: 'in_progress', overallResult: null, completedAt: null, checklistItems: [{ id: '1', label: 'Panel fixed', result: 'fail' }] })
   const { PATCH } = inspectionHandler(fx.prisma)
-  const response = await PATCH({ json: async () => ({ status: 'passed' }) }, { params: Promise.resolve({ id: 'i1' }) })
+  const response = await PATCH({ json: async () => ({ status: 'passed' }), nextUrl: { pathname: '/api/inspections/i1' } })
   assert.equal(response.status, 409)
   assert.deepEqual(Array.from(response.body.missing), ['failed_checklist_items'])
 })
@@ -159,7 +165,7 @@ test('inspection cannot pass while checklist contains a failed item', async () =
 test('completed inspection is retained for audit', async () => {
   const fx = inspectionFixture({ status: 'passed', overallResult: 'pass' })
   const { DELETE } = inspectionHandler(fx.prisma)
-  const response = await DELETE({}, { params: Promise.resolve({ id: 'i1' }) })
+  const response = await DELETE({ nextUrl: { pathname: '/api/inspections/i1' } })
   assert.equal(response.status, 409)
 })
 
@@ -171,7 +177,7 @@ test('snag closeout rejects local evidence without tenant upload provenance', as
   const response = await PUT({ json: async () => ({
     resolution: 'Rectification completed',
     closeoutEvidence: { photoUrls: ['/api/uploads/foreign.jpg'] },
-  }) }, { params: Promise.resolve({ id: 's1' }) })
+  }), nextUrl: { pathname: '/api/snags/s1' } })
   assert.equal(response.status, 400)
   assert.equal(fx.getUpdated(), null)
 })
@@ -183,7 +189,7 @@ test('inspection verification rejects local evidence without tenant upload prove
   const response = await PATCH({ json: async () => ({
     status: 'passed',
     evidence: { photoUrls: ['/api/uploads/foreign.jpg'] },
-  }) }, { params: Promise.resolve({ id: 'i1' }) })
+  }), nextUrl: { pathname: '/api/inspections/i1' } })
   assert.equal(response.status, 400)
   assert.equal(fx.getUpdated(), null)
 })

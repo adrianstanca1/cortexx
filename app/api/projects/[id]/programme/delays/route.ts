@@ -7,6 +7,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
 import changeControl from '@/lib/programme-change-control'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const { normalizeDelayDays } = changeControl
@@ -39,17 +40,15 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   }
 }
 
-export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const { id } = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  if (!canPlanProgramme(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
-  const userId = (auth.user as { id?: string }).id || ''
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
+  const { id } = params
+  if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
   try {
-    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
     const body = await req.json()
     const title = String(body.title || '').trim().slice(0, 220)
@@ -67,7 +66,6 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
       const activity = await prisma.programmeActivity.findFirst({ where: { id: activityId, projectId: id }, select: { id: true } })
       if (!activity) return NextResponse.json({ error: 'Programme activity not found' }, { status: 400 })
     }
-    const orgId = getCurrentOrg()?.organizationId
     if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
     const delay = await prisma.programmeDelayEvent.create({ data: {
       projectId: id,
@@ -89,4 +87,5 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     reportError(error)
     return NextResponse.json({ error: 'Failed to create delay event' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

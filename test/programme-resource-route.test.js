@@ -19,6 +19,10 @@ function loadRoute({ role = 'project_manager', prisma }) {
     '@/lib/audit': { auditLog: () => {}, requestMeta: () => ({}) },
     '@/lib/programme-access': { canPlanProgramme: a => ['project_manager', 'company_admin'].includes(a.user.role), programmeProjectWhere: id => ({ id }) },
     '@/lib/programme-resources': resources,
+    // Batch 3 wrapped POST in withRoute; the mock injects the same ctx
+    // the mocked requireOrg used to return (RBAC gating itself is covered
+    // in test/tenancy-rbac-group3a.test.js).
+    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: session.user.role }) },
   }
   const source = fs.readFileSync('app/api/projects/[id]/programme/resources/route.ts', 'utf8')
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true, target: ts.ScriptTarget.ES2020 } }).outputText
@@ -49,7 +53,7 @@ function fixture() {
   return { prisma, state }
 }
 
-const request = body => ({ headers: { get: () => null }, json: async () => body })
+const request = body => ({ headers: { get: () => null }, json: async () => body, nextUrl: { pathname: '/api/projects/p1/programme/resources' } })
 const params = { params: Promise.resolve({ id: 'p1' }) }
 
 test('Foreman cannot mutate programme resource loading', async () => {
@@ -112,8 +116,11 @@ test('named equipment lookup is explicitly restricted to active organization', a
 
 test('resource mutation routes require organization context and explicit organization filters', () => {
   const source = fs.readFileSync('app/api/projects/[id]/programme/resources/[resourceId]/route.ts', 'utf8')
-  assert.match(source, /requireOrg/)
-  assert.match(source, /organizationId: auth\.orgId/)
-  assert.match(source, /programmeResourceAllocation\.update\(\{ where: \{ id: resourceId, organizationId: auth\.orgId \}/)
-  assert.match(source, /deleteMany\(\{ where: \{ id: resourceId, projectId: id, organizationId: auth\.orgId \}/)
+  // Batch 3 wrapped the writes in withRoute({ permission: 'write' }); the
+  // org id now comes from the withRoute ctx instead of requireOrg().
+  assert.match(source, /withRoute/)
+  assert.match(source, /permission: 'write'/)
+  assert.match(source, /organizationId: orgId/)
+  assert.match(source, /programmeResourceAllocation\.update\(\{ where: \{ id: resourceId, organizationId: orgId \}/)
+  assert.match(source, /deleteMany\(\{ where: \{ id: resourceId, projectId: id, organizationId: orgId \}/)
 })

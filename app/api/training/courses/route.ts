@@ -70,5 +70,5 @@ export const POST = withRoute(
       return NextResponse.json({ error: 'Failed to create course' }, { status: 500 })
     }
   },
-  { requireOrg: false, permission: 'manage' }
+  { requireOrg: true, permission: 'manage' }
 )

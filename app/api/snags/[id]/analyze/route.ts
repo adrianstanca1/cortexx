@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 import { downloadToTemp } from '@/lib/storage'
 import { enforceRateLimit } from '@/lib/rateLimit'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -66,16 +67,14 @@ function parseVisionResponse(raw: string): AnalysisResult {
   return { defects, summary, notes }
 }
 
-export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
   // Use the Redis-backed 'vision' profile (5/min/user) so the limit
   // works correctly under pm2 cluster mode. The previous per-route
   // in-process Map was per-worker, so 8 workers × 3/min = 24/min in
   // practice — too loose for a GPU-saturating endpoint.
-  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  const limited = await enforceRateLimit(req, 'vision', (session.user as { id?: string }).id)
   if (limited) return limited
 
   const snag = await prisma.snag.findUnique({
@@ -153,7 +152,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     prisma.activity.create({
       data: {
         projectId: snag.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'ai',
         action: `analysed snag photo: ${snag.title}`,
         detail: `${analysis.defects.length} defect${analysis.defects.length === 1 ? '' : 's'} flagged`,
@@ -181,4 +180,5 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
       { status: 422 }
     )
   }
-}
+
+}, { permission: 'write' })

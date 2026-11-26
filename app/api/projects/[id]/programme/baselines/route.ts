@@ -7,6 +7,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
 import { commitProgrammeBaseline } from '@/lib/programme-change-control-server'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -37,17 +38,15 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
   }
 }
 
-export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const { id } = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  if (!canPlanProgramme(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
-  const userId = (auth.user as { id?: string }).id || ''
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
+  const { id } = params
+  if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
   try {
-    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
     const body = await req.json()
     const reason = String(body.reason || '').trim().slice(0, 1000)
@@ -55,7 +54,6 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     const label = String(body.label || '').trim().slice(0, 160) || null
     const effectiveAt = parseDate(body.effectiveAt)
     if (effectiveAt === null) return NextResponse.json({ error: 'Invalid effective date' }, { status: 400 })
-    const orgId = getCurrentOrg()?.organizationId
     if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
     const baseline = await prisma.$transaction(tx => commitProgrammeBaseline(tx, {
       projectId: id,
@@ -73,4 +71,5 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     reportError(error)
     return NextResponse.json({ error: 'Failed to create programme baseline' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

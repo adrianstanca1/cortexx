@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -32,11 +33,9 @@ function parseDate(v: unknown): Date | null | undefined {
   const d = new Date(v as string); return isNaN(d.getTime()) ? undefined : d
 }
 
-export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const existing = await prisma.meeting.findUnique({ where: { id: params.id } })
@@ -71,7 +70,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       prisma.activity.create({
         data: {
           projectId: meeting.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(session),
           actorType: 'human',
           action: `completed meeting: ${meeting.title}`,
           iconType: 'check',
@@ -83,13 +82,12 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     console.error('[meetings/:id] PATCH failed:', error)
     return NextResponse.json({ error: 'Failed to update meeting' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
   try {
     const m = await prisma.meeting.findUnique({ where: { id: params.id } })
     if (!m) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -105,4 +103,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     console.error('[meetings/:id] DELETE failed:', error)
     return NextResponse.json({ error: 'Failed to delete meeting' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

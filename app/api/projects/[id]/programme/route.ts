@@ -9,6 +9,7 @@ import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
 import programme from '@/lib/programme'
 import { syncProjectProgrammeProgress } from '@/lib/programme-server'
 import { lockProgrammeProject } from '@/lib/programme-change-control-server'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const { programmeSummary } = programme
@@ -62,17 +63,15 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
   }
 }
 
-export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const { id } = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  if (!canPlanProgramme(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
-  const userId = (auth.user as { id?: string }).id || ''
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
+  const { id } = params
+  if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
   try {
-    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
     const body = await req.json()
     const title = String(body.title || '').trim().slice(0, 220)
@@ -90,7 +89,6 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
       const member = await prisma.teamMember.findFirst({ where: { id: responsibleMemberId, assignments: { some: { projectId: id } } }, select: { id: true } })
       if (!member) return NextResponse.json({ error: 'Responsible person must be assigned to this project' }, { status: 400 })
     }
-    const orgId = getCurrentOrg()?.organizationId
     if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 403 })
     const activity = await prisma.$transaction(async tx => {
       await lockProgrammeProject(tx, id)
@@ -120,11 +118,12 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
       return created
     })
     auditLog({ action: 'programme.activity.create', resourceType: 'ProgrammeActivity', resourceId: activity.id, metadata: { projectId: id, title }, ...requestMeta(req) })
-    prisma.activity.create({ data: { projectId: id, actorName: actorName(auth), actorType: 'human', action: `added programme activity: ${title}`, iconType: 'clock' } }).catch(() => {})
+    prisma.activity.create({ data: { projectId: id, actorName: actorName(session), actorType: 'human', action: `added programme activity: ${title}`, iconType: 'clock' } }).catch(() => {})
     return NextResponse.json(activity, { status: 201 })
   } catch (error) {
     if (error instanceof Error && error.message === 'BASELINE_RANGE_INVALID') return NextResponse.json({ error: 'Baseline end must be on or after baseline start' }, { status: 400 })
     reportError(error)
     return NextResponse.json({ error: 'Failed to create programme activity' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

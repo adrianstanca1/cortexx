@@ -1,20 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { withRoute } from '@/lib/withRoute'
 export const dynamic = 'force-dynamic'
 
 /**
  * POST  → archive (sets archivedAt = now)
  * DELETE → unarchive (sets archivedAt = null)
  */
-export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
+  const limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (limited) return limited
   try {
     const project = await prisma.project.update({
@@ -24,7 +23,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     prisma.activity.create({
       data: {
         projectId: project.id,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'human',
         action: `archived project ${project.name}`,
         iconType: 'pin',
@@ -35,13 +34,12 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     reportError(error)
     return NextResponse.json({ error: 'Failed to archive' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2] }
   try {
     const project = await prisma.project.update({
       where: { id: params.id },
@@ -50,7 +48,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     prisma.activity.create({
       data: {
         projectId: project.id,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'human',
         action: `unarchived project ${project.name}`,
         iconType: 'pin',
@@ -61,4 +59,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     reportError(error)
     return NextResponse.json({ error: 'Failed to unarchive' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

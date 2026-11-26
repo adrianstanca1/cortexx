@@ -1,11 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
 import changeControl from '@/lib/programme-change-control'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const { canTransitionDelayStatus, normalizeDelayDays } = changeControl
@@ -19,17 +19,15 @@ function parsedDate(value: unknown) {
   return Number.isNaN(date.getTime()) ? 'invalid' : date
 }
 
-export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string; delayId: string }> }) {
-  const { id, delayId } = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  if (!canPlanProgramme(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
-  const userId = (auth.user as { id?: string }).id || ''
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2], delayId: __segments[5] }
+  const { id, delayId } = params
+  if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
   try {
-    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
     const existing = await prisma.programmeDelayEvent.findFirst({ where: { id: delayId, projectId: id } })
     if (!existing) return NextResponse.json({ error: 'Delay event not found' }, { status: 404 })
@@ -99,18 +97,18 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     reportError(error)
     return NextResponse.json({ error: 'Failed to update delay event' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string; delayId: string }> }) {
-  const { id, delayId } = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
-  if (!canPlanProgramme(auth)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id || '')
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const params = { id: __segments[2], delayId: __segments[5] }
+  const { id, delayId } = params
+  if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id || '')
   if (limited) return limited
   try {
-    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
+    const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, session), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })
     const existing = await prisma.programmeDelayEvent.findFirst({ where: { id: delayId, projectId: id } })
     if (!existing) return NextResponse.json({ error: 'Delay event not found' }, { status: 404 })
@@ -123,4 +121,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete delay event' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })
