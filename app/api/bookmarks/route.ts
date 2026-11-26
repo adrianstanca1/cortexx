@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 
@@ -11,8 +11,9 @@ export const dynamic = 'force-dynamic'
  * user with multiple orgs sees the right pins in the active workspace.
  */
 export async function GET() {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const userId = (auth.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user' }, { status: 401 })
   const bookmarks = await prisma.projectBookmark.findMany({
@@ -24,8 +25,9 @@ export async function GET() {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const userId = (auth.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user' }, { status: 401 })
   const limited = await enforceRateLimit(req, 'write', userId)
@@ -65,8 +67,9 @@ export async function POST(req: NextRequest) {
 }
 
 export async function DELETE(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const userId = (auth.user as { id?: string }).id
   if (!userId) return NextResponse.json({ error: 'No user' }, { status: 401 })
   const limited = await enforceRateLimit(req, 'write', userId)

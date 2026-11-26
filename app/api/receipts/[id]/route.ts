@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import { canManage, canWrite } from '@/lib/rbac'
@@ -22,8 +22,9 @@ function numeric(value: unknown, nullable = true) {
 }
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const { id } = await params
     const receipt = await prisma.expenseReceipt.findUnique({
@@ -39,8 +40,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const role = getCurrentOrg()?.role
   if (role && !canWrite(role)) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
@@ -148,8 +150,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const role = getCurrentOrg()?.role
   if (role && !canManage(role)) return NextResponse.json({ error: 'Admin permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)

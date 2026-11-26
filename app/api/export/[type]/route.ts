@@ -1,6 +1,6 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
@@ -23,8 +23,9 @@ function toCSV(headers: string[], rows: Array<Record<string, unknown>>): string 
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ type: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof Response) return auth
+  const org = await requireOrg()
+  if (org instanceof Response) return org
+  const auth = org.session
 
   let csv: string
   let filename: string
