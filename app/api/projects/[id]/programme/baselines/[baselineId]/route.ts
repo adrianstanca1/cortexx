@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { reportError } from '@/lib/errors'
 import { programmeProjectWhere } from '@/lib/programme-access'
 
@@ -8,8 +8,9 @@ export const dynamic = 'force-dynamic'
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string; baselineId: string }> }) {
   const { id, baselineId } = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const project = await prisma.project.findFirst({ where: programmeProjectWhere(id, auth), select: { id: true } })
     if (!project) return NextResponse.json({ error: 'Project not found or not assigned' }, { status: 404 })

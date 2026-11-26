@@ -6,6 +6,16 @@ import { reportError } from '@/lib/errors'
 export const dynamic = 'force-dynamic'
 
 export async function POST(req: NextRequest) {
+  // Production guard (issue #322, Batch 1): the seed endpoint is a local-dev
+  // tool. It wipes and reseeds data across ALL tenants, so it must never run
+  // in production. Return 404 — the same as a missing route — so the
+  // endpoint does not even reveal that it exists. This check runs first,
+  // before the ALLOW_SEED / SEED_TOKEN gates, so no production configuration
+  // can re-enable it.
+  if (process.env.NODE_ENV === 'production') {
+    return NextResponse.json({ error: 'Not found' }, { status: 404 })
+  }
+
   // Gate: requires ALLOW_SEED=true env var AND a matching Bearer token
   if (process.env.ALLOW_SEED !== 'true') {
     return NextResponse.json({ error: 'Seed endpoint disabled' }, { status: 403 })

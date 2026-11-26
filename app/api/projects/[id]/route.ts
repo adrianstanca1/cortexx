@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
@@ -31,8 +31,9 @@ function isCompanyAdmin(): boolean {
 
 export async function GET(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     // Cap every include to a reasonable hard limit. A long-running
     // project with thousands of tasks/docs/invoices would otherwise
@@ -60,8 +61,9 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 
 export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
   if (limited) return limited
   if (!canOperationallyEditProject(auth)) {
@@ -117,8 +119,9 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   if (!isCompanyAdmin()) {
     return NextResponse.json({ error: 'Company admin permission required to delete projects' }, { status: 403 })
   }
