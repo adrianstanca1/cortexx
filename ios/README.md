@@ -138,12 +138,13 @@ Apple's first review usually comes back in 24–48 hours.
 | Biometric unlock             | `capacitor-native-biometric` (3rd party) | n/a |
 | Offline storage              | (already native: `localStorage` + IndexedDB inside WKWebView) | — |
 
-> **Fully offline boot:** `npm run build:web` downloads React, React-DOM and Babel
-> into `www/vendor/` and rewrites `index.html` to load them locally, so the packaged
-> app launches with no network. The app then transforms `lib/*.jsx` in-WebView via the
-> vendored Babel — no build step, no CDN dependency at runtime. (If you'd rather ship
-> the precompiled `dist/` path and skip in-WebView Babel entirely, run
-> `npx babel lib --out-dir dist …` first and append `?prod` to the WebView start URL.)
+> **Fully offline boot:** `npm run build:web` precompiles `dist/` from `lib/` (when the
+> repo-root Babel toolchain is installed), copies `dist/` and `lib/` into `ios/www/`, and
+> vendors React and Babel into `ios/www/vendor/`. `Cortexx.html` asks for `./vendor/<file>`
+> before any CDN, so the packaged app launches with no network. On Xcode Cloud, which only
+> installs the iOS-local dependency graph, the bundle ships `lib/` and the WebView transforms
+> the JSX with the vendored Babel. The build fails rather than shipping a bundle without its
+> runtime — a missing runtime is exactly what a black screen on launch looks like.
 
 The web code already detects which APIs are available and degrades gracefully — you don't have to rewrite anything.
 
@@ -152,6 +153,7 @@ The web code already detects which APIs are available and degrades gracefully �
 ## 5 · Common pitfalls
 
 - **White screen on launch** → almost always means `www/index.html` is missing. Run `npm run build:web` and check `ios/www/` has files.
+- **Black screen on launch (simulator or device)** → the WebView never got a window or never got a runtime. Check `SceneDelegate.swift` is in the App target (Info.plist routes the window through it), and that `ios/www/` contains `index.html`, `dist/` (or `lib/`), and `vendor/` with `react.production.min.js`.
 - **Camera prompt crashes the app** → you forgot `NSCameraUsageDescription` in Info.plist. Add it from `Info.plist.additions.xml`.
 - **"This app cannot be installed because its integrity could not be verified"** → signing certificate problem. Xcode → Window → Devices and Simulators → unpair iPhone → re-trust.
 - **Upload to App Store Connect fails with ITMS-90683** → missing privacy manifest. Make sure `PrivacyInfo.xcprivacy` is in the Xcode target.

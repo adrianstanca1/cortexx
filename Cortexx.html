@@ -183,6 +183,10 @@
     'https://unpkg.com/' + unpkgPath,
     'https://cdnjs.cloudflare.com/ajax/libs/' + cdnjsPath,
   ]);
+  // The native (Capacitor) bundle ships these libraries in ./vendor/ — a
+  // packaged app has to boot with no network. On the web/PWA deployment that
+  // folder does not exist, the fetch 404s, and the CDN list above is used.
+  const localFirst = (file, urls) => ['./vendor/' + file, ...urls];
   function injectLocal(src, kind) {
     return new Promise((res, rej) => {
       const s = document.createElement('script');
@@ -215,36 +219,36 @@
     // (~155 KB lighter, faster renders — no dev-mode invariant checks).
     if (DEV_MODE) {
       await injectExternalFallback(
-        cdnSet('react@18.3.1/umd/react.development.js',
+        localFirst('react.development.js', cdnSet('react@18.3.1/umd/react.development.js',
                'react@18.3.1/umd/react.development.js',
-               'react/18.3.1/umd/react.development.js'),
+               'react/18.3.1/umd/react.development.js')),
         'sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L'
       );
       await injectExternalFallback(
-        cdnSet('react-dom@18.3.1/umd/react-dom.development.js',
+        localFirst('react-dom.development.js', cdnSet('react-dom@18.3.1/umd/react-dom.development.js',
                'react-dom@18.3.1/umd/react-dom.development.js',
-               'react-dom/18.3.1/umd/react-dom.development.js'),
+               'react-dom/18.3.1/umd/react-dom.development.js')),
         'sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm'
       );
     } else {
       await injectExternalFallback(
-        cdnSet('react@18.3.1/umd/react.production.min.js',
+        localFirst('react.production.min.js', cdnSet('react@18.3.1/umd/react.production.min.js',
                'react@18.3.1/umd/react.production.min.js',
-               'react/18.3.1/umd/react.production.min.js'),
+               'react/18.3.1/umd/react.production.min.js')),
         'sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z'
       );
       await injectExternalFallback(
-        cdnSet('react-dom@18.3.1/umd/react-dom.production.min.js',
+        localFirst('react-dom.production.min.js', cdnSet('react-dom@18.3.1/umd/react-dom.production.min.js',
                'react-dom@18.3.1/umd/react-dom.production.min.js',
-               'react-dom/18.3.1/umd/react-dom.production.min.js'),
+               'react-dom/18.3.1/umd/react-dom.production.min.js')),
         'sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1'
       );
     }
     if (DEV_MODE) {
       await injectExternalFallback(
-        cdnSet('@babel/standalone@7.29.0/babel.min.js',
+        localFirst('babel.min.js', cdnSet('@babel/standalone@7.29.0/babel.min.js',
                '@babel/standalone@7.29.0/babel.min.js',
-               'babel-standalone/7.29.0/babel.min.js'),
+               'babel-standalone/7.29.0/babel.min.js')),
         'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y'
       );
     }
@@ -256,14 +260,10 @@
     // But FETCHING is independent — kick off all network requests
     // simultaneously, then execute them in order as each one resolves.
     // This collapses ~85 × 200ms serial waterfall into one round-trip-time.
-    // Modules that don't have precompiled dist/ files — always load from lib/.
-    // Add new phases here until npm run precompile catches them.
-    const LIB_ONLY = new Set([
-      'screens-phase100','screens-phase101','screens-phase102','screens-phase103',
-      'screens-phase106','screens-phase107','screens-phase108','screens-phase109',
-      'screens-phase110','screens-phase111',
-    ]);
-
+    // Every module ships precompiled in dist/ (build-dist.js compiles every
+    // lib/*.jsx). Only ?dev=1 loads raw .jsx, which is the one path that needs
+    // runtime Babel — keeping prod free of it means a packaged app never has to
+    // pull Babel over the network to boot.
     const prefetch = new Map();
     for (const name of MODULES) {
       const isPlain = PLAIN_JS.has(name);
@@ -271,7 +271,7 @@
       const libJS = `lib/${name}.js`;
       const libJSX = `lib/${name}.jsx`;
       prefetch.set(name, (async () => {
-        if (DEV_MODE || LIB_ONLY.has(name)) {
+        if (DEV_MODE) {
           const url = isPlain ? libJS : libJSX;
           const r = await fetch(url);
           if (!r.ok) throw new Error(url + ' HTTP ' + r.status);
@@ -320,8 +320,8 @@
             // JSX: lazy-load Babel once, transform synchronously
             if (!window.Babel) {
               await injectExternalFallback(
-                cdnSet('@babel/standalone@7.29.0/babel.min.js',
-                       '@babel/standalone@7.29.0/babel.min.js'),
+                localFirst('babel.min.js', cdnSet('@babel/standalone@7.29.0/babel.min.js',
+                       '@babel/standalone@7.29.0/babel.min.js')),
                 'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y'
               );
             }
@@ -338,8 +338,8 @@
         if (!window.Babel) {
           try {
             await injectExternalFallback(
-              cdnSet('@babel/standalone@7.29.0/babel.min.js',
-                     '@babel/standalone@7.29.0/babel.min.js'),
+              localFirst('babel.min.js', cdnSet('@babel/standalone@7.29.0/babel.min.js',
+                     '@babel/standalone@7.29.0/babel.min.js')),
               'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y'
             );
           } catch (babelErr) {
