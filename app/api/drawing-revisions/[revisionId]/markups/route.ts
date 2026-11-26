@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
 import { withRoute } from '@/lib/withRoute'
-import { programmeProjectWhere } from '@/lib/programme-access'
+import { programmeProjectWhere, type ProgrammeActor } from '@/lib/programme-access'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
@@ -19,7 +19,7 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-async function accessibleRevision(revisionId: string, auth: Awaited<ReturnType<typeof requireOrg>>) {
+async function accessibleRevision(revisionId: string, auth: { session: ProgrammeActor }) {
   if (auth instanceof NextResponse) return null
   const revision = await prisma.drawingRevision.findFirst({
     where: { id: revisionId },
@@ -68,10 +68,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ revi
   }
 }
 
-export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   const auth = { session, userId, orgId, orgSlug, orgName, role, personaRole }
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { revisionId: __segments[2] }
   const { revisionId } = await params
   try {
     const revision = await accessibleRevision(revisionId, auth)

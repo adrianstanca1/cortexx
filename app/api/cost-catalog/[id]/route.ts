@@ -8,9 +8,7 @@ export const dynamic = 'force-dynamic'
 
 const COMMON_UNITS = new Set(['item', 'hour', 'day', 'm', 'm²', 'm³', 'kg', 'tonne', 'l', 'visit'])
 
-export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     const body = await req.json()
     if (body.description !== undefined && !String(body.description).trim()) {
@@ -39,9 +37,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 
 }, { permission: 'write' })
 
-export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     await prisma.costItem.delete({ where: { id: params.id } })
     auditLog({

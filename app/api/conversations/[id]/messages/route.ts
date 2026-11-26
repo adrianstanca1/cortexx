@@ -59,9 +59,7 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   const { id } = await params

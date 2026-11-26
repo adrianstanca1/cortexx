@@ -110,9 +110,7 @@ async function loadRevImage(rev: { fileUrl: string | null; mimeType: string | nu
   }
 }
 
-export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   const limited = await enforceRateLimit(req, 'vision', userId)
   if (limited) return limited
 

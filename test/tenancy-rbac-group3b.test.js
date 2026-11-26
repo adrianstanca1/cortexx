@@ -151,6 +151,17 @@ const drawingMarkup = loadModule('lib/drawing-markup.ts', { './rbac': rbac })
 // Mock withRoute mirroring lib/withRoute.ts gate order: org check, then
 // permission check, then the handler. The test supplies the auth context
 // on the request as __ctx (what the real wrapper derives from the session).
+// The mock also forwards decoded route params on ctx.params, mirroring
+// Next.js: the real wrapper awaits the route's params promise and passes
+// the decoded object, so handlers never parse ids from the raw pathname.
+function decodedParams(req) {
+  const segment = req.nextUrl?.pathname.split('/').filter(Boolean)[2]
+  if (segment === undefined) return {}
+  let value = segment
+  try { value = decodeURIComponent(segment) } catch { /* keep the raw segment on malformed encoding */ }
+  return { id: value, markupId: value, revisionId: value }
+}
+
 function mockWithRoute(handler, { requireOrg = true, permission = 'read' } = {}) {
   return async req => {
     const ctx = req.__ctx
@@ -163,7 +174,7 @@ function mockWithRoute(handler, { requireOrg = true, permission = 'read' } = {})
     if (permission === 'manage' && (!ctx.role || !canManage(ctx.role))) {
       return MockResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-    return handler({ ...ctx, req })
+    return handler({ ...ctx, req, params: decodedParams(req) })
   }
 }
 
@@ -256,6 +267,46 @@ test('billing is tightened to owner-only, not wrapped in withRoute', () => {
     assert.ok(src.includes('Only owners can manage billing'), `${rel} should say only owners can manage billing`)
     assert.ok(!src.includes('canManage'), `${rel} should no longer use canManage`)
   }
+})
+
+test('withRoute forwards framework-decoded params to handlers', () => {
+  const src = fs.readFileSync(path.join(__dirname, '..', 'lib/withRoute.ts'), 'utf8')
+  assert.ok(src.includes('params: Record<string, string>'),
+    'HandlerContext should carry the decoded params')
+  assert.ok(src.includes('await context?.params'),
+    'withRoute should await the route params promise')
+})
+
+test('group 3B write handlers read ids from decoded params, never from the raw pathname', () => {
+  // CodeRabbit on #496: handlers that parsed the id out of
+  // req.nextUrl.pathname received the still-percent-encoded segment, so
+  // /api/tags/%63123 passed '%63123' to Prisma instead of 'c123' and
+  // 404d. Handlers now read the framework-decoded params from the
+  // withRoute ctx instead.
+  for (const rel of GROUP3B_ROUTES) {
+    const src = fs.readFileSync(path.join(__dirname, '..', rel), 'utf8')
+    assert.ok(!src.includes('__segments'), `${rel} should not parse ids from the pathname`)
+    assert.ok(!src.includes('nextUrl.pathname'), `${rel} should not read nextUrl.pathname`)
+  }
+})
+
+test('percent-encoded route id is decoded before the Prisma call', async () => {
+  const seen = []
+  const prisma = {
+    tag: {
+      update: async ({ where, data }) => {
+        seen.push(where.id)
+        return { id: where.id, name: 'Urgent' }
+      },
+    },
+  }
+  const route = loadRoute('app/api/tags/[id]/route.ts', prisma)
+  // %63 is 'c': the id the client asked for is 'c123', not '%63123'.
+  const res = await route.PUT(
+    fakeReq('http://localhost/api/tags/%63123', { name: 'Urgent' }, ctxFor('member')),
+  )
+  assert.equal(res.status, 200)
+  assert.deepEqual(seen, ['c123'])
 })
 
 test('tags POST: viewer gets 403 and nothing is created; member can create', async () => {

@@ -8,9 +8,7 @@ export const dynamic = 'force-dynamic'
 
 const ALLOWED_STATUS = new Set(['new', 'qualified', 'proposing', 'won', 'lost'])
 
-export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     const body = await req.json()
     const existing = await prisma.lead.findUnique({ where: { id: params.id }, select: { status: true, convertedAt: true } })
@@ -50,9 +48,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 
 }, { permission: 'write' })
 
-export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     await prisma.lead.delete({ where: { id: params.id } })
     auditLog({
@@ -70,9 +66,7 @@ export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, o
 }, { permission: 'write' })
 
 // POST converts a Lead into a Customer (status → won + creates Customer)
-export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     const { searchParams } = new URL(req.url)
     if (searchParams.get('action') !== 'convert') {

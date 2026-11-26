@@ -1,8 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { withRoute } from '@/lib/withRoute'
-import { programmeProjectWhere } from '@/lib/programme-access'
+import { programmeProjectWhere, type ProgrammeActor } from '@/lib/programme-access'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
@@ -19,7 +19,7 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-async function accessibleMarkup(markupId: string, auth: Exclude<Awaited<ReturnType<typeof requireOrg>>, NextResponse>) {
+async function accessibleMarkup(markupId: string, auth: { session: ProgrammeActor }) {
   const markup = await prisma.drawingMarkup.findFirst({
     where: { id: markupId },
   })
@@ -31,10 +31,8 @@ async function accessibleMarkup(markupId: string, auth: Exclude<Awaited<ReturnTy
   return project ? markup : null
 }
 
-export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   const auth = { session, userId, orgId, orgSlug, orgName, role, personaRole }
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { markupId: __segments[2] }
   const { markupId } = await params
   try {
     const existing = await accessibleMarkup(markupId, auth)
@@ -101,10 +99,8 @@ export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, or
     return NextResponse.json({ error: 'Failed to update drawing markup' }, { status: 500 })
   }
 }, { permission: 'write' })
-export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   const auth = { session, userId, orgId, orgSlug, orgName, role, personaRole }
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { markupId: __segments[2] }
   const { markupId } = await params
   try {
     const existing = await accessibleMarkup(markupId, auth)

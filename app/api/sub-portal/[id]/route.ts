@@ -23,9 +23,7 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   const { id } = await params
@@ -50,9 +48,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 
 }, { permission: 'write' })
 
-export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   const { id } = await params

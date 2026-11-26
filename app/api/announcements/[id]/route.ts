@@ -8,9 +8,7 @@ export const dynamic = 'force-dynamic'
 
 const ALLOWED_TYPE = new Set(['general', 'safety', 'urgent', 'update'])
 
-export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     const body = await req.json()
     const data: Record<string, unknown> = {}
@@ -40,9 +38,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 
 }, { permission: 'write' })
 
-export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     await prisma.announcement.delete({ where: { id: params.id } })
     auditLog({

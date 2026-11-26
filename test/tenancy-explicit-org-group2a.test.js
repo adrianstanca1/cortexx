@@ -174,6 +174,18 @@ function routeMocks({ orgResult, prisma }) {
 const rbac = loadRoute('lib/rbac.ts', {})
 const { canWrite, canManage } = rbac
 
+// Next.js decodes dynamic route params before the handler sees them; the
+// mock mirrors that by decoding the request's id segment, so handlers
+// under test read decoded ids from ctx.params. Malformed encodings keep
+// the raw segment (they can never match a real id, so the lookup 404s).
+function decodedParams(req) {
+  const segment = req.nextUrl?.pathname.split('/').filter(Boolean)[2]
+  if (segment === undefined) return {}
+  let value = segment
+  try { value = decodeURIComponent(segment) } catch { /* keep the raw segment on malformed encoding */ }
+  return { id: value, markupId: value, revisionId: value }
+}
+
 function mockWithRoute(handler, { requireOrg = true, permission = 'read' } = {}) {
   return async req => {
     const ctx = req.__ctx
@@ -186,7 +198,7 @@ function mockWithRoute(handler, { requireOrg = true, permission = 'read' } = {})
     if (permission === 'manage' && (!ctx.role || !canManage(ctx.role))) {
       return MockResponse.json({ error: 'Forbidden' }, { status: 403 })
     }
-    return handler({ ...ctx, req })
+    return handler({ ...ctx, req, params: decodedParams(req) })
   }
 }
 

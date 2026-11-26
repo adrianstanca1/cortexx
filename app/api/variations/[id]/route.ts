@@ -9,9 +9,7 @@ export const dynamic = 'force-dynamic'
 
 const ALLOWED_STATUS = new Set(['draft', 'submitted', 'approved', 'rejected'])
 
-export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     const body = await req.json()
     const existing = await prisma.variation.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, number: true, title: true, costImpact: true, daysImpact: true } })
@@ -77,9 +75,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 
 }, { permission: 'write' })
 
-export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
-  const params = { id: __segments[2] }
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     const v = await prisma.variation.findUnique({ where: { id: params.id }, select: { projectId: true, number: true, title: true } })
     if (!v) return NextResponse.json({ error: 'Not found' }, { status: 404 })
