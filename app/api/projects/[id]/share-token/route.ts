@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { randomBytes } from 'node:crypto'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { canManage } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { reportError } from '@/lib/errors'
@@ -31,8 +31,9 @@ function generateToken(len = 16): string {
 // POST = create a share token if missing, or rotate the existing one
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const roleGate = requireManageRole()
   if (roleGate) return roleGate
   try {
@@ -83,8 +84,9 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
 
 export async function DELETE(_req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const roleGate = requireManageRole()
   if (roleGate) return roleGate
   try {

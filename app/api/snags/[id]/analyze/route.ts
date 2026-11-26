@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 import { downloadToTemp } from '@/lib/storage'
 import { enforceRateLimit } from '@/lib/rateLimit'
@@ -68,8 +68,9 @@ function parseVisionResponse(raw: string): AnalysisResult {
 
 export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   // Use the Redis-backed 'vision' profile (5/min/user) so the limit
   // works correctly under pm2 cluster mode. The previous per-route
   // in-process Map was per-worker, so 8 workers × 3/min = 24/min in
