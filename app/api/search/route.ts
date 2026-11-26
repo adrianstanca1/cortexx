@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 
@@ -19,8 +19,9 @@ export const dynamic = 'force-dynamic'
  * implicit where to include organizationId.
  */
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   // 19 parallel ILIKE queries per call — search-as-you-type from a few
   // users would otherwise saturate Postgres on a large tenant. 'read'
   // profile is 240/min/user, plenty for normal use but trips on a
