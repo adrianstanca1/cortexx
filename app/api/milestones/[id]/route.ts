@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 
 export const dynamic = 'force-dynamic'
@@ -10,8 +10,9 @@ const ALLOWED_STATUS = new Set(['planned', 'in_progress', 'complete', 'slipped']
 
 export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const body = await req.json()
     const existing = await prisma.milestone.findUnique({ where: { id: params.id } })
@@ -68,8 +69,9 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const m = await prisma.milestone.findUnique({ where: { id: params.id } })
     if (!m) return NextResponse.json({ error: 'Not found' }, { status: 404 })

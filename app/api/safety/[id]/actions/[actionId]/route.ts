@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { canWrite } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
@@ -12,8 +12,9 @@ export const dynamic = 'force-dynamic'
 const STATUSES = new Set(['open', 'in_progress', 'complete'])
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string; actionId: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const role = getCurrentOrg()?.role
   if (role && !canWrite(role)) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
@@ -76,8 +77,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string; actionId: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const role = getCurrentOrg()?.role
   if (role && !canWrite(role)) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)

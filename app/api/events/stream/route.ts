@@ -1,7 +1,7 @@
 import { NextRequest } from 'next/server'
 import { prisma } from '@/lib/db'
 import type { SessionOrgMembership } from '@/lib/auth'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { getCurrentOrg, setOrgContext, runWithOrg, type OrgRequestContext } from '@/lib/tenancy'
 
 export const dynamic = 'force-dynamic'
@@ -14,8 +14,9 @@ let active = 0
 
 
 export async function GET(req: NextRequest) {
-  const session = await requireAuth()
-  if (session instanceof Response) return session
+  const org = await requireOrg()
+  if (org instanceof Response) return org
+  const session = org.session
   if (!session?.user) return new Response('Unauthorized', { status: 401 })
   if (active >= MAX_CONCURRENT) {
     return new Response('Too many concurrent streams; try again shortly', { status: 503 })
