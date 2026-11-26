@@ -131,9 +131,16 @@ jobs:
         run: |
           npm ci --no-audit --no-fund
           npm run build:web
-      - name: Assert index.html produced
+      - name: Assert the bundle can actually boot
         working-directory: ios
-        run: test -f www/index.html || (echo "www/index.html missing" && exit 1)
+        run: |
+          test -f www/index.html || { echo "www/index.html missing" && exit 1; }
+          # The shell serves from the bundle: without its runtime the app
+          # launches to a black screen with no JS error to show for it.
+          for f in react.production.min.js react-dom.production.min.js babel.min.js; do
+            test -f "www/vendor/$f" || { echo "www/vendor/$f missing" && exit 1; }
+          done
+          test -d www/dist || test -d www/lib || { echo "no app modules in the bundle" && exit 1; }
 
   # ── Native iOS build pre-flight (needs macOS — validates Pods + xcodebuild) ──
   ios-build:
@@ -148,6 +155,14 @@ jobs:
         run: |
           npm install --no-audit --no-fund
           cd ios && npm install --no-audit --no-fund
+      # Compiling the shell is not enough: the app is only usable if the web
+      # bundle it serves was built and synced into App/App/public. Building it
+      # here fails the job when the bundle cannot boot (missing dist/ or runtime).
+      - name: Build and sync the Capacitor web bundle
+        working-directory: ios
+        run: |
+          npm run build:web
+          npx cap sync ios
       - name: pod install (Capacitor App)
         working-directory: ios/App
         run: pod install --no-repo-update

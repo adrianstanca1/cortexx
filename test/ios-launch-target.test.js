@@ -73,3 +73,24 @@ test('build-web vendors the production runtime and refuses an unbootable bundle'
   assert.match(buildWeb, /build-dist\.js/, 'build-web must precompile dist/ when the root toolchain is available')
   assert.match(buildWeb, /web bundle is not bootable/, 'build-web must fail instead of shipping a bundle with no runtime')
 })
+
+
+// CI compiles the shell happily with no web assets at all, which is how the
+// black screen shipped with every check green. These pin the guard.
+const ciVerify = fs.readFileSync(path.join(REPO, '.github', 'workflows', 'ci-verify.yml'), 'utf8')
+
+test('macOS iOS build job builds and syncs the web bundle before compiling', () => {
+  const iosBuild = ciVerify.slice(ciVerify.indexOf('  ios-build:'))
+  const buildAt = iosBuild.indexOf('npm run build:web')
+  const syncAt = iosBuild.indexOf('npx cap sync ios')
+  const xcodeAt = iosBuild.indexOf('xcodebuild')
+  assert.ok(buildAt > -1, 'ios-build must run npm run build:web')
+  assert.ok(syncAt > buildAt, 'ios-build must sync the bundle into the app shell')
+  assert.ok(xcodeAt > syncAt, 'the bundle must be in place before xcodebuild runs')
+})
+
+test('the Capacitor bundle job asserts the runtime was vendored', () => {
+  const job = ciVerify.slice(ciVerify.indexOf('  capacitor-web:'), ciVerify.indexOf('  ios-build:'))
+  assert.match(job, /www\/vendor\/\$f/, 'a bundle with no vendored React cannot boot and must fail the job')
+  assert.match(job, /www\/dist|www\/lib/)
+})
