@@ -7,7 +7,7 @@ import { auditLog, requestMeta } from '@/lib/audit'
 import { getCurrentOrg } from '@/lib/tenancy'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
 import { commitProgrammeBaseline } from '@/lib/programme-change-control-server'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -39,7 +39,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 }
 
 export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
   const { id } = params
   if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })

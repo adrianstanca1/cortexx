@@ -3,7 +3,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -33,7 +33,7 @@ function formatDocType(type: string): string {
 }
 
 export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
   try {
     const body = await req.json()
@@ -141,7 +141,7 @@ export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, or
 }, { permission: 'write' })
 
 export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
   try {
     const doc = await prisma.rams.findUnique({ where: { id: params.id } })

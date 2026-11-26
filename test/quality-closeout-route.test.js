@@ -10,6 +10,18 @@ class NextResponse {
   static json(body, options = {}) { return { body, status: options.status || 200 } }
 }
 
+// Mirrors the real decodePathSegment in lib/withRoute.ts: handlers parse
+// their id out of the (percent-encoded) pathname, so the segment is
+// decoded exactly once; malformed encodings fall back to the raw segment.
+function decodePathSegment(segment) {
+  if (segment === undefined) return undefined
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return segment
+  }
+}
+
 function compile(file, mocks) {
   const code = ts.transpileModule(fs.readFileSync(file, 'utf8'), {
     compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true, target: ts.ScriptTarget.ES2020 },
@@ -42,7 +54,7 @@ function snagHandler(prisma, authorizeUploadReference = async () => null) {
     // Batch 3 wrapped this write in withRoute; the mock injects the same
     // member ctx the mocked requireOrg used to return (these tests cover
     // closeout logic, not RBAC — see test/tenancy-rbac-group3a.test.js).
-    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session: auth.session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: auth.session.user.role }) },
+    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session: auth.session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: auth.session.user.role }), decodePathSegment },
   })
 }
 
@@ -57,7 +69,7 @@ function inspectionHandler(prisma, authorizeUploadReference = async () => null) 
     '@/lib/field-controls': controls,
     '@/lib/quality-closeout': qualityCloseout,
     // Batch 3 wrapped this write in withRoute; see snagHandler above.
-    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session: auth.session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: auth.session.user.role }) },
+    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session: auth.session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: auth.session.user.role }), decodePathSegment },
   })
 }
 

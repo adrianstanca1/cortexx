@@ -5,12 +5,12 @@ import { reportError } from '@/lib/errors'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
 import { lockProgrammeProject } from '@/lib/programme-change-control-server'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2], dependencyId: __segments[5] }
   const { id, dependencyId } = params
   if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })

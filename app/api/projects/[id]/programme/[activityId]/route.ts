@@ -7,7 +7,7 @@ import { getCurrentOrg } from '@/lib/tenancy'
 import { canPlanProgramme, canUpdateProgrammeProgress, programmeProjectWhere } from '@/lib/programme-access'
 import { syncProjectProgrammeProgress } from '@/lib/programme-server'
 import { lockProgrammeProject } from '@/lib/programme-change-control-server'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const STATUSES = new Set(['not_started', 'in_progress', 'complete', 'blocked'])
@@ -21,7 +21,7 @@ function parsedDate(value: unknown) {
 }
 
 export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2], activityId: __segments[4] }
   const { id, activityId } = params
   if (!canUpdateProgrammeProgress(session)) return NextResponse.json({ error: 'Programme update permission required' }, { status: 403 })
@@ -132,7 +132,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 }, { permission: 'write' })
 
 export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2], activityId: __segments[4] }
   const { id, activityId } = params
   if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })

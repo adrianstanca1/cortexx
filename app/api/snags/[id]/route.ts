@@ -8,7 +8,7 @@ import { runWithOrg } from '@/lib/tenancy'
 import { authorizeUploadReference } from '@/lib/upload-provenance'
 import controls from '@/lib/field-controls'
 import qualityCloseout from '@/lib/quality-closeout'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const ALLOWED_STATUS = new Set(['open', 'in_progress', 'closed'])
@@ -34,7 +34,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: RouteParams) {
 export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
   const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
     try {
       const body = await req.json()
@@ -102,7 +102,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 }, { permission: 'write' })
 
 export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
     try {
       const snag = await prisma.snag.findUnique({ where: { id: params.id }, select: { projectId: true, title: true, status: true, closeoutVerifiedAt: true } })

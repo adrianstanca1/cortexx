@@ -4,7 +4,7 @@ import { reportError } from '@/lib/errors'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -14,7 +14,7 @@ function positiveNumber(value: unknown, max = 100000) {
 }
 
 export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2], resourceId: __segments[5] }
   const { id, resourceId } = params
   if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })
@@ -65,7 +65,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 }, { permission: 'write' })
 
 export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2], resourceId: __segments[5] }
   const { id, resourceId } = params
   if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })

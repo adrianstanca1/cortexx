@@ -35,6 +35,28 @@ interface RouteOptions {
 }
 
 /**
+ * Decode one path segment taken from `req.nextUrl.pathname`.
+ *
+ * Next.js decodes dynamic route parameters for the framework `params`
+ * argument, but `nextUrl.pathname` keeps percent-encoding — so a handler
+ * that parses its id out of the pathname must decode the segment exactly
+ * once, or an encoded id (e.g. `/api/risks/%63123`) reaches Prisma as
+ * `%63123` and 404s instead of matching `c123`. Malformed encodings fall
+ * back to the raw segment so the lookup 404s instead of throwing.
+ *
+ * Generic over the input so `string` stays `string` (and `undefined`
+ * stays `undefined`): decoding never changes whether a segment is present.
+ */
+export function decodePathSegment<T extends string | undefined>(segment: T): T {
+  if (segment === undefined) return segment
+  try {
+    return decodeURIComponent(segment) as T
+  } catch {
+    return segment
+  }
+}
+
+/**
  * Wraps an API route with auth/org context and RBAC checks.
  * Returns consistent 401/403 JSON responses and provides a typed
  * context object to the handler.

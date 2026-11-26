@@ -5,6 +5,30 @@ const vm = require('node:vm')
 const ts = require('typescript')
 const resources = require('../lib/programme-resources')
 
+// Real permission helpers from lib/rbac.ts (no imports of its own), so the
+// programme flags use the real write threshold (member+) instead of a
+// re-implemented rank check.
+const rbac = (() => {
+  const code = ts.transpileModule(fs.readFileSync('lib/rbac.ts', 'utf8'), {
+    compilerOptions: { module: ts.ModuleKind.CommonJS, target: ts.ScriptTarget.ES2020 },
+  }).outputText
+  const m = { exports: {} }
+  vm.runInNewContext(code, { module: m, exports: m.exports, require: () => { throw new Error('lib/rbac.ts has no imports') } })
+  return m.exports
+})()
+
+// Mirrors the real decodePathSegment in lib/withRoute.ts: handlers parse
+// their id out of the (percent-encoded) pathname, so the segment is
+// decoded exactly once; malformed encodings fall back to the raw segment.
+function decodePathSegment(segment) {
+  if (segment === undefined) return undefined
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return segment
+  }
+}
+
 class NextResponse { static json(body, options = {}) { return { body, status: options.status || 200 } } }
 
 function loadRoute({ role = 'project_manager', prisma }) {
@@ -19,10 +43,11 @@ function loadRoute({ role = 'project_manager', prisma }) {
     '@/lib/audit': { auditLog: () => {}, requestMeta: () => ({}) },
     '@/lib/programme-access': { canPlanProgramme: a => ['project_manager', 'company_admin'].includes(a.user.role), programmeProjectWhere: id => ({ id }) },
     '@/lib/programme-resources': resources,
+    '@/lib/rbac': rbac,
     // Batch 3 wrapped POST in withRoute; the mock injects the same ctx
     // the mocked requireOrg used to return (RBAC gating itself is covered
     // in test/tenancy-rbac-group3a.test.js).
-    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: session.user.role }) },
+    '@/lib/withRoute': { withRoute: handler => async req => handler({ req, session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: session.user.role }), decodePathSegment },
   }
   const source = fs.readFileSync('app/api/projects/[id]/programme/resources/route.ts', 'utf8')
   const code = ts.transpileModule(source, { compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true, target: ts.ScriptTarget.ES2020 } }).outputText

@@ -5,7 +5,7 @@ import { actorName } from '@/lib/requireAuth'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
 import { downloadToTemp } from '@/lib/storage'
 import { enforceRateLimit } from '@/lib/rateLimit'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -68,7 +68,7 @@ function parseVisionResponse(raw: string): AnalysisResult {
 }
 
 export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
   // Use the Redis-backed 'vision' profile (5/min/user) so the limit
   // works correctly under pm2 cluster mode. The previous per-route

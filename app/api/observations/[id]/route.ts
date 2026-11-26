@@ -4,7 +4,7 @@ import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import { authorizeUploadReference } from '@/lib/upload-provenance'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,7 +12,7 @@ const ALLOWED_TYPE = new Set(['positive', 'improvement', 'unsafe', 'near_miss'])
 const ALLOWED_STATUS = new Set(['open', 'resolved'])
 
 export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
   try {
     const body = await req.json()
@@ -74,7 +74,7 @@ export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgN
 }, { permission: 'write' })
 
 export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
   try {
     await prisma.observation.delete({ where: { id: params.id } })

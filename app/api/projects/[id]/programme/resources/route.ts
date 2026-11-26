@@ -5,8 +5,9 @@ import { reportError } from '@/lib/errors'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
+import { canWrite } from '@/lib/rbac'
 import resourceLoad from '@/lib/programme-resources'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const { buildResourceLoad } = resourceLoad
@@ -54,7 +55,12 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
       allocations,
       catalog: { team: team.map(row => row.member), equipment, materials },
       summary: buildResourceLoad({ activities, allocations }),
-      permissions: { plan: canPlanProgramme(session) },
+      // The flag drives the resources page's Load / Remove controls, so it
+      // must reflect what the caller can actually write: Batch 3 made
+      // viewers read-only on all writes (withRoute 'write' = member+),
+      // while the persona check alone would still promise planning to an
+      // assigned viewer with a Project Manager persona.
+      permissions: { plan: canWrite(auth.role || '') && canPlanProgramme(session) },
     })
   } catch (error) {
     reportError(error)
@@ -63,7 +69,7 @@ export async function GET(_req: NextRequest, { params: paramsP }: { params: Prom
 }
 
 export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
   const { id } = params
   if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })

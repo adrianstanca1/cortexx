@@ -5,11 +5,12 @@ import { reportError } from '@/lib/errors'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { getCurrentOrg } from '@/lib/tenancy'
-import { canPlanProgramme, programmeProjectWhere } from '@/lib/programme-access'
+import { canPlanProgramme, canUpdateProgrammeProgress, programmeProjectWhere } from '@/lib/programme-access'
+import { canWrite } from '@/lib/rbac'
 import programme from '@/lib/programme'
 import { syncProjectProgrammeProgress } from '@/lib/programme-server'
 import { lockProgrammeProject } from '@/lib/programme-change-control-server'
-import { withRoute } from '@/lib/withRoute'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 const { programmeSummary } = programme
@@ -26,6 +27,12 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
   const org = await requireOrg()
   if (org instanceof NextResponse) return org
   const auth = org.session
+  // The flags below drive the programme page's edit controls, so they must
+  // reflect what the caller can actually write: Batch 3 made viewers
+  // read-only on all writes (withRoute 'write' = member+), while the
+  // persona checks alone would still promise edits to an assigned viewer
+  // with a Foreman / Project Manager persona.
+  const canWriteProgramme = canWrite(org.role || '')
   try {
     const project = await prisma.project.findFirst({
       where: programmeProjectWhere(id, auth),
@@ -56,7 +63,7 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
     ])
     const lookaheadDays = Math.max(1, Math.min(84, Number(req.nextUrl.searchParams.get('days')) || 21))
     const summary = programmeSummary(activities, dependencies, { lookaheadDays })
-    return NextResponse.json({ project, activities, dependencies, team: team.map(a => a.member), summary, baselines, delays, baselineLocked: baselines.length > 0, latestBaseline: baselines[0] || null, permissions: { plan: canPlanProgramme(auth), progress: auth.user?.role === 'foreman' || canPlanProgramme(auth) } })
+    return NextResponse.json({ project, activities, dependencies, team: team.map(a => a.member), summary, baselines, delays, baselineLocked: baselines.length > 0, latestBaseline: baselines[0] || null, permissions: { plan: canWriteProgramme && canPlanProgramme(auth), progress: canWriteProgramme && canUpdateProgrammeProgress(auth) } })
   } catch (error) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to load project programme' }, { status: 500 })
@@ -64,7 +71,7 @@ export async function GET(req: NextRequest, { params: paramsP }: { params: Promi
 }
 
 export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
-  const __segments = req.nextUrl.pathname.split('/').filter(Boolean)
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
   const params = { id: __segments[2] }
   const { id } = params
   if (!canPlanProgramme(session)) return NextResponse.json({ error: 'Company Admin or Project Manager permission required' }, { status: 403 })

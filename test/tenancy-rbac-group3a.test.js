@@ -151,6 +151,18 @@ function loadModule(relPath, mocks) {
 const rbac = loadModule('lib/rbac.ts', {})
 const { canWrite, canManage } = rbac
 
+// Mirrors the real decodePathSegment in lib/withRoute.ts: handlers parse
+// their id out of the (percent-encoded) pathname, so the segment is
+// decoded exactly once; malformed encodings fall back to the raw segment.
+function decodePathSegment(segment) {
+  if (segment === undefined) return undefined
+  try {
+    return decodeURIComponent(segment)
+  } catch {
+    return segment
+  }
+}
+
 // Mock withRoute mirroring lib/withRoute.ts gate order: org check, then
 // permission check, then the handler. The test supplies the auth context
 // on the request as __ctx (what the real wrapper derives from the session).
@@ -199,7 +211,7 @@ function loadRoute(relPath, prisma) {
       requireOrg: async () => { throw new Error('requireOrg must not be called in a withRoute write handler') },
       actorName: session => session?.user?.name || 'User',
     },
-    '@/lib/withRoute': { withRoute: mockWithRoute },
+    '@/lib/withRoute': { withRoute: mockWithRoute, decodePathSegment },
     '@/lib/rbac': rbac,
     '@/lib/errors': { reportError: () => {} },
     '@/lib/rateLimit': { enforceRateLimit: async () => null },
@@ -381,4 +393,176 @@ test('training GET: reads stay open without an org', async () => {
   const res = await route.GET(fakeReq('http://localhost/api/training', null, ctxFor('member', null)))
   assert.equal(res.status, 200)
   assert.equal(res.body.counts.total, 0)
+})
+
+test('pathname-derived route ids are decoded exactly once', () => {
+  // CodeRabbit review on PR #496: withRoute handlers parse their id out of
+  // req.nextUrl.pathname, which keeps percent-encoding while the framework
+  // params are decoded — /api/risks/%63123 used to reach Prisma as '%63123'
+  // and 404 instead of matching 'c123'. Every extraction site must decode.
+  for (const rel of GROUP3A_ROUTES) {
+    const src = fs.readFileSync(path.join(__dirname, '..', rel), 'utf8')
+    for (const m of src.matchAll(/const __segments = req\.nextUrl\.pathname\.split\('\/'\)\.filter\(Boolean\)(.*)/g)) {
+      assert.ok(m[1].startsWith('.map(decodePathSegment)'),
+        `${rel} must decode its path segments exactly once`)
+    }
+    assert.ok(!/const id = req\.nextUrl\.pathname\.split\('\/'\)\.pop\(\)/.test(src),
+      `${rel} must decode a .pop() path id instead of using it raw`)
+  }
+})
+
+test('risks PATCH: a percent-encoded id is decoded before the Prisma lookup', async () => {
+  let seenWhere = null
+  const prisma = {
+    risk: {
+      findUnique: async ({ where }) => {
+        seenWhere = where
+        return { id: 'c123', title: 'Old', status: 'open', likelihood: 2, impact: 2 }
+      },
+      update: async ({ where, data }) => ({ id: 'c123', title: data.title || 'Old', status: 'open' }),
+    },
+    activity: { create: async () => ({}) },
+  }
+  const route = loadRoute('app/api/risks/[id]/route.ts', prisma)
+  const res = await route.PATCH(fakeReq('http://localhost/api/risks/%63123', { title: 'New title' }, ctxFor('member')))
+  assert.equal(res.status, 200)
+  assert.equal(seenWhere.id, 'c123')
+})
+
+test('holiday PUT: a percent-encoded id is decoded before the Prisma update', async () => {
+  let seenWhere = null
+  const prisma = {
+    leaveRequest: {
+      update: async ({ where, data }) => {
+        seenWhere = where
+        return { id: 'c123', ...data }
+      },
+    },
+  }
+  const route = loadRoute('app/api/holiday/[id]/route.ts', prisma)
+  const res = await route.PUT(fakeReq('http://localhost/api/holiday/%63123', { status: 'approved' }, ctxFor('member')))
+  assert.equal(res.status, 200)
+  assert.equal(seenWhere.id, 'c123')
+})
+
+test('risks PATCH: a malformed percent-encoding falls back to the raw id and 404s', async () => {
+  let seenWhere = null
+  const prisma = {
+    risk: {
+      findUnique: async ({ where }) => {
+        seenWhere = where
+        return null
+      },
+      update: async () => { throw new Error('must not be called') },
+    },
+    activity: { create: async () => ({}) },
+  }
+  const route = loadRoute('app/api/risks/[id]/route.ts', prisma)
+  const res = await route.PATCH(fakeReq('http://localhost/api/risks/%ZZ', { title: 'New' }, ctxFor('member')))
+  assert.equal(res.status, 404)
+  assert.equal(seenWhere.id, '%ZZ')
+})
+
+// Loader for the programme GETs, which are plain requireOrg handlers (not
+// withRoute writes) and return the permission flags the programme pages use
+// to show edit controls. requireOrg is mocked to return a controlled
+// workspace role + persona session, and the REAL lib/programme-access is
+// used so the flag logic is tested, not re-implemented. The tenancy mock
+// must agree with the requireOrg mock on the workspace role, mirroring
+// production where requireOrg sets the org context.
+function loadProgrammeGet(relPath, workspaceRole, persona, prisma) {
+  const session = {
+    user: { id: 'user-1', name: 'Test User', email: 'test@example.com', role: persona },
+  }
+  const programmeAccess = loadModule('lib/programme-access.ts', {
+    './rbac': rbac,
+    './tenancy': { getCurrentOrg: () => ({ organizationId: 'org-1', userId: 'user-1', role: workspaceRole }) },
+    '@prisma/client': { Prisma: {} },
+  })
+  return loadModule(relPath, {
+    'next/server': { NextResponse: MockResponse },
+    '@prisma/client': { Prisma: {} },
+    '@/lib/db': { prisma },
+    '@/lib/requireAuth': {
+      requireOrg: async () => ({ session, userId: 'user-1', orgId: 'org-1', orgSlug: 'org', orgName: 'Org', role: workspaceRole, personaRole: persona }),
+      actorName: s => s?.user?.name || 'User',
+    },
+    '@/lib/withRoute': { withRoute: mockWithRoute, decodePathSegment },
+    '@/lib/rbac': rbac,
+    '@/lib/errors': { reportError: () => {} },
+    '@/lib/rateLimit': { enforceRateLimit: async () => null },
+    '@/lib/tenancy': { getCurrentOrg: () => ({ organizationId: 'org-1', userId: 'user-1', role: workspaceRole }) },
+    '@/lib/audit': { auditLog: async () => {}, requestMeta: () => ({}) },
+    '@/lib/programme-access': programmeAccess,
+    '@/lib/programme': { __esModule: true, default: { programmeSummary: () => ({}) } },
+    '@/lib/programme-resources': { __esModule: true, default: { buildResourceLoad: () => ({}) } },
+    '@/lib/programme-server': { syncProjectProgrammeProgress: async () => {} },
+    '@/lib/programme-change-control-server': { lockProgrammeProject: async () => {} },
+  })
+}
+
+const programmePrisma = {
+  project: { findFirst: async () => ({ id: 'p1', name: 'Project', startDate: null, endDate: null, progress: 0 }) },
+  programmeActivity: { findMany: async () => [] },
+  programmeDependency: { findMany: async () => [] },
+  assignment: { findMany: async () => [] },
+  programmeBaselineRevision: { findMany: async () => [] },
+  programmeDelayEvent: { findMany: async () => [] },
+}
+
+const resourcesPrisma = {
+  project: { findFirst: async () => ({ id: 'p1', name: 'Project' }) },
+  programmeActivity: { findMany: async () => [] },
+  programmeResourceAllocation: { findMany: async () => [] },
+  assignment: { findMany: async () => [] },
+  equipment: { findMany: async () => [] },
+  material: { findMany: async () => [] },
+}
+
+test('programme GET flags: viewers are not promised edits they cannot make', async () => {
+  // Devin review on PR #496: the flags used to come from the persona checks
+  // alone, so an assigned viewer with a Foreman / Project Manager persona
+  // saw the progress selector and planning controls, but the converted
+  // writes 403 (withRoute 'write' = member+). The flags now combine the
+  // workspace write threshold with the persona checks.
+  const cases = [
+    // [workspace role, persona, expected flags]
+    ['viewer', 'foreman', { plan: false, progress: false }],
+    ['viewer', 'project_manager', { plan: false, progress: false }],
+    ['member', 'foreman', { plan: false, progress: true }],
+    ['member', 'project_manager', { plan: true, progress: true }],
+    ['admin', 'operative', { plan: true, progress: true }],
+  ]
+  for (const [workspaceRole, persona, expected] of cases) {
+    const route = loadProgrammeGet('app/api/projects/[id]/programme/route.ts', workspaceRole, persona, programmePrisma)
+    const res = await route.GET(
+      fakeReq('http://localhost/api/projects/p1/programme', null, ctxFor(workspaceRole)),
+      { params: Promise.resolve({ id: 'p1' }) },
+    )
+    assert.equal(res.status, 200, `${workspaceRole}/${persona} should load the programme`)
+    // Compare field by field: the permissions object is built inside the
+    // vm, so its prototype differs from this realm's Object.prototype
+    // and deepStrictEqual would fail on identical contents.
+    assert.equal(res.body.permissions.plan, expected.plan, `${workspaceRole}/${persona} plan flag`)
+    assert.equal(res.body.permissions.progress, expected.progress, `${workspaceRole}/${persona} progress flag`)
+  }
+})
+
+test('programme resources GET flags: viewers are not promised planning', async () => {
+  const cases = [
+    // [workspace role, persona, expected plan flag]
+    ['viewer', 'project_manager', false],
+    ['member', 'project_manager', true],
+    ['member', 'operative', false],
+    ['admin', 'operative', true],
+  ]
+  for (const [workspaceRole, persona, expectedPlan] of cases) {
+    const route = loadProgrammeGet('app/api/projects/[id]/programme/resources/route.ts', workspaceRole, persona, resourcesPrisma)
+    const res = await route.GET(
+      fakeReq('http://localhost/api/projects/p1/programme/resources', null, ctxFor(workspaceRole)),
+      { params: Promise.resolve({ id: 'p1' }) },
+    )
+    assert.equal(res.status, 200, `${workspaceRole}/${persona} should load resources`)
+    assert.equal(res.body.permissions.plan, expectedPlan, `${workspaceRole}/${persona} plan flag`)
+  }
 })
