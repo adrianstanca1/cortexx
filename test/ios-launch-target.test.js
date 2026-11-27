@@ -129,3 +129,15 @@ test('the module prefetch rejects HTML from dist so the lib fallback runs', () =
 test('build-web refuses an HTML vendor download instead of packaging it', () => {
   assert.match(buildWeb, /HTML instead of JavaScript/)
 })
+
+
+test('vendored libraries are pinned to a digest before they are packaged', () => {
+  // Substituted bytes would otherwise ship inside every installation of a
+  // release; the digests are the same ones Cortexx.html declares as SRI.
+  assert.match(buildWeb, /const VENDOR_DIGESTS = \{/)
+  for (const file of ['react.production.min.js', 'react-dom.production.min.js', 'babel.min.js']) {
+    assert.match(buildWeb, new RegExp(`'${file.replace(/\./g, '\\.')}': 'sha384-[A-Za-z0-9+/=]+'`))
+  }
+  assert.match(buildWeb, /createHash\('sha384'\)/)
+  assert.match(buildWeb, /digest mismatch/)
+})

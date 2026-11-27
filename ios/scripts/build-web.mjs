@@ -16,6 +16,7 @@
 
 import { promises as fs, existsSync, readdirSync, statSync } from 'node:fs';
 import path from 'node:path';
+import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 
@@ -67,6 +68,18 @@ const VENDOR = [
 ];
 
 const log = (...a) => console.log('▶', ...a);
+
+// SHA-384 of each pinned release, in SRI form. These are the same digests
+// Cortexx.html has always declared in its integrity attributes; enforcing them
+// while packaging means a hijacked or broken mirror cannot put substituted
+// bytes inside every installation of a release.
+const VENDOR_DIGESTS = {
+  'react.production.min.js': 'sha384-DGyLxAyjq0f9SPpVevD6IgztCFlnMF6oW/XQGmfe+IsZ8TqEiDrcHkMLKI6fiB/Z',
+  'react-dom.production.min.js': 'sha384-gTGxhz21lVGYNMcdJOyq01Edg0jhn/c22nsx0kyqP0TxaV5WVdsSH1fSDUf5YJj1',
+  'babel.min.js': 'sha384-m08KidiNqLdpJqLq95G/LEi8Qvjl/xUYll3QILypMoQ65QorJ9Lvtp2RXYGBFj1y',
+  'react.development.js': 'sha384-hD6/rw4ppMLGNu3tX5cjIb+uRZ7UkRJ6BPkLpg4hAu/6onKUg4lLsHAs9EBPT82L',
+  'react-dom.development.js': 'sha384-u6aeetuaXnQ38mYT8rp6sbXaQe3NL9t+IBXmnYxwkUI2Hw4bsp2Wvmx4yRQF1uAm',
+};
 
 async function rmrf(p) {
   if (!existsSync(p)) return;
@@ -161,6 +174,11 @@ async function main() {
         // that would ship a runtime the app rejects at boot, so the same guard
         // the loader applies is applied before the bytes are written.
         if (type.includes('text/html') || /^\s*</.test(code)) throw new Error('HTML instead of JavaScript');
+        const expected = VENDOR_DIGESTS[v.file];
+        if (expected) {
+          const actual = 'sha384-' + createHash('sha384').update(code, 'utf8').digest('base64');
+          if (actual !== expected) throw new Error('digest mismatch (got ' + actual + ')');
+        }
         await fs.writeFile(path.join(vendorDir, v.file), code);
         log('vendor', v.file, '(' + Math.round(code.length / 1024) + ' KB)');
         saved = true;
