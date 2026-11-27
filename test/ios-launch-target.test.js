@@ -168,3 +168,13 @@ test('the bundle check only requires Babel for a lib/ build', () => {
   assert.match(job, /if \[ -d www\/lib \]; then/, 'Babel is only a lib/ build requirement')
   assert.match(job, /babel\.min\.js missing for a lib\/ build/)
 })
+
+
+test('a dist-only bundle must contain every module the loader requests', () => {
+  // With no lib/ fallback in the app, "dist/ has enough files" is not proof:
+  // one stale build would silently drop a screen. The build reads MODULES from
+  // Cortexx.html and requires each one.
+  assert.match(buildWeb, /function loaderModules\(\)/)
+  assert.match(buildWeb, /const MODULES = \[/)
+  assert.match(buildWeb, /dist\/ is missing ' \+ absent\.length \+ ' module\(s\) the loader requests/)
+})

@@ -14,7 +14,7 @@
 //
 // Run from the ios/ folder:  npm run build:web
 
-import { promises as fs, existsSync, readdirSync, statSync } from 'node:fs';
+import { promises as fs, existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import path from 'node:path';
 import { createHash } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
@@ -149,6 +149,20 @@ function ensureDist() {
   return 0;
 }
 
+// The modules Cortexx.html asks for at boot, read from its MODULES array. Since
+// a dist-only bundle ships no lib/ fallback, the build has to prove every one of
+// them is present — a dist/ that is simply "big enough" is not proof.
+function loaderModules() {
+  let html;
+  try { html = readFileSync(path.join(ROOT, 'Cortexx.html'), 'utf8'); }
+  catch { return []; }
+  const start = html.indexOf('const MODULES = [');
+  if (start < 0) return [];
+  const end = html.indexOf('];', start);
+  if (end < 0) return [];
+  return [...html.slice(start, end).matchAll(/'([a-z0-9-]+)'/g)].map(m => m[1]);
+}
+
 async function main() {
   const distModules = ensureDist();
   const withDist = distModules > 0;
@@ -241,7 +255,15 @@ async function main() {
   if (!existsSync(destHtml)) problems.push('index.html was not produced');
   if (withDist) {
     // The loader resolves dist/<name>.js first and lib/ is no longer shipped, so
-    // the entry module has to be there.
+    // every module it requests has to be there — otherwise the app silently
+    // loses that screen with no fallback left.
+    const requested = loaderModules();
+    if (requested.length === 0) problems.push('could not read the module list from Cortexx.html');
+    const absent = requested.filter(name => !existsSync(path.join(OUT, 'dist', name + '.js')));
+    if (absent.length) {
+      problems.push('dist/ is missing ' + absent.length + ' module(s) the loader requests: '
+        + absent.slice(0, 5).join(', ') + (absent.length > 5 ? ', …' : ''));
+    }
     if (!existsSync(path.join(OUT, 'dist', 'boot.js'))) problems.push('dist/boot.js missing from the bundle');
   } else {
     const libDir = path.join(OUT, 'lib');
