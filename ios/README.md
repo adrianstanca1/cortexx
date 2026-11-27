@@ -139,12 +139,12 @@ Apple's first review usually comes back in 24–48 hours.
 | Offline storage              | (already native: `localStorage` + IndexedDB inside WKWebView) | — |
 
 > **Fully offline boot:** `npm run build:web` precompiles `dist/` from `lib/` (when the
-> repo-root Babel toolchain is installed), copies `dist/` and `lib/` into `ios/www/`, and
-> vendors React and Babel into `ios/www/vendor/`. `Cortexx.html` asks for `./vendor/<file>`
-> before any CDN, so the packaged app launches with no network. On Xcode Cloud, which only
-> installs the iOS-local dependency graph, the bundle ships `lib/` and the WebView transforms
-> the JSX with the vendored Babel. The build fails rather than shipping a bundle without its
-> runtime — a missing runtime is exactly what a black screen on launch looks like.
+> repo-root Babel toolchain is installed), copies **only the tree the app executes** —
+> `dist/` when it is complete, `lib/` when it is not — and vendors the runtime into
+> `ios/www/vendor/`: the two minified React files always, Babel and development React
+> only for a `lib/` build. `Cortexx.html` asks for `./vendor/<file>` before any CDN, so
+> the packaged app launches with no network, and the build fails rather than shipping a
+> bundle without its runtime or its `boot` module.
 
 The web code already detects which APIs are available and degrades gracefully — you don't have to rewrite anything.
 

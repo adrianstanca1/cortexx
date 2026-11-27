@@ -25,7 +25,8 @@ const IOS_DIR    = path.resolve(__dirname, '..');
 const ROOT       = path.resolve(IOS_DIR, '..');
 const OUT        = path.join(IOS_DIR, 'www');
 
-// What we ship inside the app bundle.
+// What we ship inside the app bundle, beyond the module tree. dist/ or lib/ is
+// added below: the app executes one of them, never both.
 const INCLUDE = [
   'Cortexx.html',
   'cortex-core.js',
@@ -35,15 +36,13 @@ const INCLUDE = [
   'icon-192.png',
   'icon-512.png',
   'apple-touch-icon.png',
-  'lib',
-  'dist',
 ];
 
 // Runtime libraries the loader looks for in ./vendor/ before any CDN (see the
 // localFirst() calls in Cortexx.html). Production boot needs the two minified
-// React files; the development copies and Babel cover ?dev=1 and the .jsx
-// fallback. Each entry lists the same bytes on two CDNs so one outage can't
-// leave the bundle without its runtime.
+// React files. The others only matter when the bundle ships raw .jsx, which is
+// 4.3 MB of Babel and development React that a normal build never executes.
+// Each entry lists the same bytes on two CDNs so one outage can't break a build.
 const VENDOR = [
   { file: 'react.production.min.js', required: true, urls: [
     'https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.production.min.js',
@@ -53,21 +52,39 @@ const VENDOR = [
     'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.production.min.js',
     'https://unpkg.com/react-dom@18.3.1/umd/react-dom.production.min.js',
   ] },
-  { file: 'babel.min.js', required: true, urls: [
+  { file: 'babel.min.js', required: true, needsSources: true, urls: [
     'https://cdn.jsdelivr.net/npm/@babel/standalone@7.29.0/babel.min.js',
     'https://unpkg.com/@babel/standalone@7.29.0/babel.min.js',
   ] },
-  { file: 'react.development.js', required: false, urls: [
+  { file: 'react.development.js', required: false, needsSources: true, urls: [
     'https://cdn.jsdelivr.net/npm/react@18.3.1/umd/react.development.js',
     'https://unpkg.com/react@18.3.1/umd/react.development.js',
   ] },
-  { file: 'react-dom.development.js', required: false, urls: [
+  { file: 'react-dom.development.js', required: false, needsSources: true, urls: [
     'https://cdn.jsdelivr.net/npm/react-dom@18.3.1/umd/react-dom.development.js',
     'https://unpkg.com/react-dom@18.3.1/umd/react-dom.development.js',
   ] },
 ];
 
 const log = (...a) => console.log('▶', ...a);
+
+// Sizes of the libraries a dist-only build leaves out, so the log reports the
+// real saving rather than a hand-waved one.
+const VENDOR_SIZES = {
+  'babel.min.js': 3137752,
+  'react.development.js': 109931,
+  'react-dom.development.js': 1080227,
+};
+
+async function dirSize(p) {
+  if (!existsSync(p)) return 0;
+  let total = 0;
+  for (const entry of await fs.readdir(p, { withFileTypes: true })) {
+    const full = path.join(p, entry.name);
+    total += entry.isDirectory() ? await dirSize(full) : (await fs.stat(full)).size;
+  }
+  return total;
+}
 
 // SHA-384 of each pinned release, in SRI form. These are the same digests
 // Cortexx.html has always declared in its integrity attributes; enforcing them
@@ -134,12 +151,18 @@ function ensureDist() {
 
 async function main() {
   const distModules = ensureDist();
+  const withDist = distModules > 0;
+
+  // The app executes exactly one module tree. Shipping both copied 2.1 MB of
+  // .jsx sources that only the ?dev=1 path (and the no-dist fallback) reads.
+  const include = [...INCLUDE, ...(withDist ? ['dist'] : ['lib'])];
+  if (withDist) log('shipping dist/ only — lib/ sources are for ?dev=1 and the no-dist fallback');
 
   log('Wiping', OUT);
   await rmrf(OUT);
   await fs.mkdir(OUT, { recursive: true });
 
-  for (const name of INCLUDE) {
+  for (const name of include) {
     const src = path.join(ROOT, name);
     if (!existsSync(src)) { log('skip (missing):', name); continue; }
     const dest = path.join(OUT, name);
@@ -161,7 +184,14 @@ async function main() {
   await fs.mkdir(vendorDir, { recursive: true });
   const missing = [];
   let vendored = 0;
+  let skippedBytes = 0;
+  const vendorList = VENDOR.filter(v => !v.needsSources || !withDist);
   for (const v of VENDOR) {
+    if (!vendorList.includes(v)) {
+      skippedBytes += VENDOR_SIZES[v.file] || 0;
+      log('skip vendor', v.file, '(only needed when shipping lib/)');
+      continue;
+    }
     let saved = false;
     for (const url of v.urls) {
       try {
@@ -205,20 +235,29 @@ async function main() {
   await fs.writeFile(destHtml, html);
   log('patched index.html (SW off)');
 
-  // Never hand Xcode a bundle that cannot boot: a missing dist/ *and* missing
-  // vendored React is exactly what a black screen on launch looks like.
+  // Never hand Xcode a bundle that cannot boot: a missing module tree *or*
+  // missing vendored React is exactly what a black screen on launch looks like.
   const problems = missing.map(f => 'vendor/' + f + ' could not be downloaded');
   if (!existsSync(destHtml)) problems.push('index.html was not produced');
-  if (distModules === 0) {
+  if (withDist) {
+    // The loader resolves dist/<name>.js first and lib/ is no longer shipped, so
+    // the entry module has to be there.
+    if (!existsSync(path.join(OUT, 'dist', 'boot.js'))) problems.push('dist/boot.js missing from the bundle');
+  } else {
     const libDir = path.join(OUT, 'lib');
     const sources = existsSync(libDir) ? readdirSync(libDir).filter(f => /\.jsx?$/.test(f)).length : 0;
     if (sources === 0) problems.push('neither dist/ nor lib/ modules reached the bundle');
+    if (!existsSync(path.join(OUT, 'lib', 'boot.jsx'))) problems.push('lib/boot.jsx missing from the bundle');
   }
   if (problems.length) {
     throw new Error('web bundle is not bootable:\n  - ' + problems.join('\n  - '));
   }
-  log('verified: ' + (distModules > 0 ? distModules + ' precompiled modules' : 'lib/ sources + vendored Babel')
+
+  const sizeMb = (await dirSize(OUT)) / (1024 * 1024);
+  log('verified: ' + (withDist ? distModules + ' precompiled modules' : 'lib/ sources + vendored Babel')
     + ' + ' + vendored + ' vendored libraries');
+  log('bundle: ' + sizeMb.toFixed(1) + ' MB'
+    + (skippedBytes ? ' (' + (skippedBytes / (1024 * 1024)).toFixed(1) + ' MB of lib/ + Babel left out)' : ''));
 
   log('Done →', OUT);
 }

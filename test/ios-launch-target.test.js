@@ -141,3 +141,21 @@ test('vendored libraries are pinned to a digest before they are packaged', () =>
   assert.match(buildWeb, /createHash\('sha384'\)/)
   assert.match(buildWeb, /digest mismatch/)
 })
+
+
+test('the packaged bundle ships one module tree and only the runtime it executes', () => {
+  // dist/ is what runs; lib/ is the ?dev=1 source path and the no-dist fallback.
+  // Shipping both doubled the bundle and pulled in 3.1 MB of Babel the app never
+  // executes, so the choice is now explicit and asserted.
+  assert.match(buildWeb, /const withDist = distModules > 0/)
+  assert.match(buildWeb, /\.\.\.\(withDist \? \['dist'\] : \['lib'\]\)/)
+  assert.match(buildWeb, /needsSources: true/, 'Babel and development React only matter for the lib/ build')
+
+  const include = buildWeb.slice(buildWeb.indexOf('const INCLUDE = ['), buildWeb.indexOf('// Runtime libraries'))
+  assert.doesNotMatch(include, /'lib'/, 'lib/ must not be copied unconditionally')
+  assert.doesNotMatch(include, /'dist'/, 'dist/ must not be copied unconditionally')
+
+  // A dist-only build has to prove the entry module is present, since lib/ is no
+  // longer there to fall back to.
+  assert.match(buildWeb, /dist\/boot\.js missing from the bundle/)
+})
