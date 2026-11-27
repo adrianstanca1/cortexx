@@ -284,15 +284,19 @@
           if (!r.ok) throw new Error(url + ' HTTP ' + r.status);
           return { url, text: await r.text() };
         }
-        // Prod: dist first, then lib fallback
-        try {
-          const r = await fetch(distURL);
-          if (r.ok) return { url: distURL, text: await r.text() };
-        } catch (e) {}
-        const fb = isPlain ? libJS : libJSX;
-        const r2 = await fetch(fb);
-        if (!r2.ok) throw new Error(fb + ' HTTP ' + r2.status);
-        return { url: fb, text: await r2.text() };
+        // Prod: dist first, then lib fallback. A host with try_files fallback
+        // answers a module that is missing with HTML and a 200, so a response
+        // only counts when its body really is JavaScript — otherwise the HTML
+        // would be injected as a script and the module lost.
+        for (const candidate of [distURL, isPlain ? libJS : libJSX]) {
+          const res = await fetch(candidate).catch(() => null);
+          if (!res || !res.ok) continue;
+          const text = await res.text();
+          const type = (res.headers.get('content-type') || '').toLowerCase();
+          if (type.includes('text/html') || /^\s*</.test(text)) continue;
+          return { url: candidate, text };
+        }
+        throw new Error((isPlain ? libJS : libJSX) + ' could not be loaded');
       })());
     }
 
@@ -319,6 +323,7 @@
             const r = await fetch(libURL);
             if (!r.ok) throw new Error(libURL + ' HTTP ' + r.status);
             text = await r.text();
+            if (/^\s*</.test(text)) throw new Error(libURL + ' is not JavaScript');
           } catch (e2) {
             console.error('[cortexx] failed to load', name, e2.message);
             continue;

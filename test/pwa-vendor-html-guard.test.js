@@ -53,7 +53,11 @@ test('an HTML 200 for a missing script is refused, not executed', async () => {
 })
 
 test('an HTML body is refused even when the content type claims otherwise', async () => {
-  const { inject, appended } = withFetch(async () => response('<!doctype html><html></html>', 'application/octet-stream'))
+  // Longer than the loader's 100-character floor, so this reaches the
+  // leading-'<' check rather than being rejected as an empty body.
+  const body = `<!doctype html><html><body>${'<div>x</div>'.repeat(20)}</body></html>`
+  assert.ok(body.length > 100)
+  const { inject, appended } = withFetch(async () => response(body, 'application/octet-stream'))
   await assert.rejects(() => inject(['./vendor/react.production.min.js']))
   assert.equal(appended.length, 0)
 })

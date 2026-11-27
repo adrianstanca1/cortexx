@@ -141,6 +141,8 @@ jobs:
             test -f "www/vendor/$f" || { echo "www/vendor/$f missing" && exit 1; }
           done
           test -d www/dist || test -d www/lib || { echo "no app modules in the bundle" && exit 1; }
+          # lib/ can be non-empty yet still lack the module that renders the app.
+          test -f www/dist/boot.js || test -f www/lib/boot.jsx || { echo "boot module missing from the bundle" && exit 1; }
 
   # ── Native iOS build pre-flight (needs macOS — validates Pods + xcodebuild) ──
   ios-build:

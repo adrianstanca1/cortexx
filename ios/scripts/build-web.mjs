@@ -154,8 +154,13 @@ async function main() {
       try {
         const res = await fetch(url);
         if (!res.ok) throw new Error('HTTP ' + res.status);
+        const type = (res.headers.get('content-type') || '').toLowerCase();
         const code = await res.text();
         if (code.length < 1000) throw new Error('body too small (' + code.length + ' bytes)');
+        // A CDN or intercepting proxy can answer with a 200 HTML page. Packing
+        // that would ship a runtime the app rejects at boot, so the same guard
+        // the loader applies is applied before the bytes are written.
+        if (type.includes('text/html') || /^\s*</.test(code)) throw new Error('HTML instead of JavaScript');
         await fs.writeFile(path.join(vendorDir, v.file), code);
         log('vendor', v.file, '(' + Math.round(code.length / 1024) + ' KB)');
         saved = true;

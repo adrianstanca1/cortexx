@@ -94,3 +94,38 @@ test('the Capacitor bundle job asserts the runtime was vendored', () => {
   assert.match(job, /www\/vendor\/\$f/, 'a bundle with no vendored React cannot boot and must fail the job')
   assert.match(job, /www\/dist|www\/lib/)
 })
+
+
+// ── Link delivery ────────────────────────────────────────────────────────────
+// Adding SceneDelegate.swift to the target made UIKit route every link here,
+// so these handlers went from dead code to the only path into the app.
+const sceneDelegate = fs.readFileSync(path.join(IOS_APP, 'App', 'SceneDelegate.swift'), 'utf8')
+
+test('links are forwarded through Capacitor\'s open-URL contract', () => {
+  // The App plugin observes CapacitorOpenURLNotification and
+  // CapacitorOpenUniversalLinkNotification; a custom notification name reaches
+  // no observer, so warm links used to be dropped silently.
+  assert.doesNotMatch(sceneDelegate, /CAPNotificationOpenURL/, 'that name is not one Capacitor observes')
+  assert.match(sceneDelegate, /ApplicationDelegateProxy\.shared\.application\(UIApplication\.shared, open:/)
+  assert.match(sceneDelegate, /ApplicationDelegateProxy\.shared\.application\(\s*UIApplication\.shared,\s*continue: userActivity/)
+})
+
+test('launch links are captured and delivered once the bridge exists', () => {
+  assert.match(sceneDelegate, /connectionOptions\.urlContexts/, 'a cortexx:// launch arrives here, not in the app delegate')
+  assert.match(sceneDelegate, /connectionOptions\.userActivities/, 'a universal-link launch arrives here too')
+  assert.match(sceneDelegate, /func sceneDidBecomeActive/, 'delivery waits for the bridge rather than posting into the void')
+  assert.match(sceneDelegate, /deliveredLaunchLinks/, 'launch links must be delivered exactly once')
+})
+
+test('the module prefetch rejects HTML from dist so the lib fallback runs', () => {
+  const start = indexHtml.indexOf('Prod: dist first')
+  const end = indexHtml.indexOf('// Inject already-fetched text')
+  assert.ok(start > -1 && end > start, 'could not delimit the prefetch block')
+  const prefetch = indexHtml.slice(start, end)
+  assert.match(prefetch, /text\/html/, 'a try_files host answers a missing module with HTML and a 200')
+  assert.match(prefetch, /\^\\s\*</, 'the leading-< check catches a mislabelled fallback page')
+})
+
+test('build-web refuses an HTML vendor download instead of packaging it', () => {
+  assert.match(buildWeb, /HTML instead of JavaScript/)
+})
