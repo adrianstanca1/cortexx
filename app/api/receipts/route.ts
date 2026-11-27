@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import { canWrite } from '@/lib/rbac'
@@ -12,8 +12,9 @@ const MAX_TAKE = 100
 const STATUSES = new Set(['pending', 'extracted', 'needs_review', 'approved', 'reconciled'])
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const sp = req.nextUrl.searchParams
     const projectId = sp.get('projectId') || undefined
@@ -61,8 +62,9 @@ export async function GET(req: NextRequest) {
 }
 
 export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const role = getCurrentOrg()?.role
   if (role && !canWrite(role)) return NextResponse.json({ error: 'Write permission required' }, { status: 403 })
   const limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)

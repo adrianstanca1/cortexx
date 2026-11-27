@@ -2,9 +2,10 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { downloadToTemp } from '@/lib/storage'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -81,12 +82,10 @@ async function loadImageBase64(doc: { url: string | null; mimeType: string | nul
   }
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
   // 'vision' profile (5/min/user, Redis-backed) supersedes the prior
   // in-process Map (which was per-pm2-worker → 8× too loose).
-  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+  const limited = await enforceRateLimit(req, 'vision', (session.user as { id?: string }).id)
   if (limited) return limited
 
   let body: { aId?: unknown; bId?: unknown }
@@ -149,7 +148,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId: earlier.projectId || later.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'ai',
         action: `compared photos: ${earlier.name} ↔ ${later.name}`,
         detail: `${result.progress} · ${result.changes.length} change${result.changes.length === 1 ? '' : 's'}`,
@@ -179,4 +178,5 @@ export async function POST(req: NextRequest) {
       { status: 422 }
     )
   }
-}
+
+}, { permission: 'write' })

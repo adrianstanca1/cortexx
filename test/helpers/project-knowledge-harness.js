@@ -84,6 +84,15 @@ function handler(fixture, options = {}) {
   const modules = {
     'next/server': { NextResponse }, '@/lib/db': { prisma: fixture.db },
     '@/lib/requireAuth': { requireOrg: async () => auth },
+    // Batch 3 wrapped the ask route's POST in withRoute; the mock
+    // injects the same ctx the mocked requireOrg used to return (these
+    // tests cover knowledge scoping, not RBAC — see
+    // test/tenancy-rbac-group3b.test.js). The bundles route is not
+    // withRoute-wrapped and ignores this mock.
+    '@/lib/withRoute': { withRoute: fn => async req => {
+      if (!auth.orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 400 })
+      return fn({ req, session: auth.session, userId: auth.userId, orgId: auth.orgId, orgSlug: 'org', orgName: 'Org', role: auth.role, personaRole: auth.personaRole })
+    } },
     '@/lib/rateLimit': { enforceRateLimit: async () => options.limited || null, rateLimit: async () => ({ ok: true }) },
     '@/lib/audit': { auditLog: args => audits.push(args), requestMeta: () => ({ ipAddress: null, userAgent: null }) },
     '@/lib/project-knowledge': fixture.knowledge,

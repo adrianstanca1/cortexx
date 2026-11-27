@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { canManage } from '@/lib/rbac'
 import { getCurrentOrg } from '@/lib/tenancy'
@@ -10,8 +10,9 @@ export const dynamic = 'force-dynamic'
 
 export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
   const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const authorId = (auth.user as { id?: string }).id
     // Authorization is per-org, not global. Previously read session.user.role

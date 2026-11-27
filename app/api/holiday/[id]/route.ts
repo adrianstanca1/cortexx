@@ -1,15 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const { id } = await params
   try {
     const item = await prisma.leaveRequest.findUnique({ where: { id } })
@@ -21,10 +23,10 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
   }
 }
 
-export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   const { id } = await params
   try {
@@ -48,18 +50,19 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
     reportError(error)
     return NextResponse.json({ error: 'Failed to update' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   const { id } = await params
   try {
     await prisma.leaveRequest.delete({ where: { id } })
     await auditLog({
-      userId: (auth.user as { id?: string }).id,
+      userId: (session.user as { id?: string }).id,
       action: 'holiday.delete',
       resourceType: 'leaveRequest',
       resourceId: id,
@@ -71,4 +74,5 @@ export async function DELETE(req: NextRequest, { params }: { params: Promise<{ i
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

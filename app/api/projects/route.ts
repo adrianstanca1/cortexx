@@ -49,6 +49,12 @@ async function GET_impl(req: NextRequest, session: { user?: { email?: string | n
 }
 
 async function POST_impl(req: NextRequest, userId: string, role: string | null, session: { user?: { name?: string | null; email?: string | null } }) {
+  // Project creation stays admin-only (owner/admin), as on main and as the
+  // e2e contract requires (role-journeys + mobile-api assert 403 with
+  // "Company admin permission required"). withRoute's generic 'Forbidden'
+  // cannot carry that message, so the gate lives here — same pattern as
+  // the programme routes, which keep their canPlanProgramme gates inside
+  // withRoute('write') handlers.
   if (!role || !canManage(role)) {
     return NextResponse.json({ error: 'Company admin permission required to create projects' }, { status: 403 })
   }
@@ -106,4 +112,4 @@ async function POST_impl(req: NextRequest, userId: string, role: string | null, 
 }
 
 export const GET = withRoute(({ req, session }) => GET_impl(req, session), { permission: 'read' })
-export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, role, session), { permission: 'read' })
+export const POST = withRoute(({ req, userId, role, session }) => POST_impl(req, userId, role, session), { permission: 'write' })

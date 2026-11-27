@@ -26,12 +26,48 @@ interface HandlerContext {
   orgId: string | null
   orgSlug: string | null
   orgName: string | null
+  /**
+   * Framework-decoded dynamic route params, forwarded from the route
+   * handler's second argument. Next.js decodes each segment, so handlers
+   * must read ids from here — never re-parse req.nextUrl.pathname, whose
+   * segments stay percent-encoded (a request for /api/tags/%63123 would
+   * otherwise pass '%63123' to Prisma instead of 'c123').
+   *
+   * Typed as plain strings: every route wrapped in withRoute today uses
+   * single-segment params, which are always strings. (Next.js types
+   * params as string | string[] to cover catch-all routes; the wrapper
+   * narrows at the one boundary below rather than forcing every handler
+   * to narrow. A future catch-all route must not rely on withRoute params.)
+   */
+  params: Record<string, string>
 }
 
 interface RouteOptions {
   requireOrg?: boolean
   /** Minimum role required. read = any authenticated user, write = member+, manage = admin+ */
   permission?: 'read' | 'write' | 'manage'
+}
+
+/**
+ * Decode one path segment taken from `req.nextUrl.pathname`.
+ *
+ * Next.js decodes dynamic route parameters for the framework `params`
+ * argument, but `nextUrl.pathname` keeps percent-encoding — so a handler
+ * that parses its id out of the pathname must decode the segment exactly
+ * once, or an encoded id (e.g. `/api/risks/%63123`) reaches Prisma as
+ * `%63123` and 404s instead of matching `c123`. Malformed encodings fall
+ * back to the raw segment so the lookup 404s instead of throwing.
+ *
+ * Generic over the input so `string` stays `string` (and `undefined`
+ * stays `undefined`): decoding never changes whether a segment is present.
+ */
+export function decodePathSegment<T extends string | undefined>(segment: T): T {
+  if (segment === undefined) return segment
+  try {
+    return decodeURIComponent(segment) as T
+  } catch {
+    return segment
+  }
 }
 
 /**
@@ -43,7 +79,7 @@ export function withRoute(
   handler: (ctx: HandlerContext) => Promise<Response | NextResponse> | Response | NextResponse,
   { requireOrg = true, permission = 'read' }: RouteOptions = {}
 ) {
-  return async (req: NextRequest): Promise<Response | NextResponse> => {
+  return async (req: NextRequest, context?: { params?: Promise<Record<string, string | string[]>> }): Promise<Response | NextResponse> => {
     const session = await requireAuth()
     if (session instanceof NextResponse) {
       return session
@@ -86,7 +122,11 @@ export function withRoute(
     }
 
     try {
-      const invoke = () => handler({ req, session: session as RouteSession, userId, role, personaRole, orgId, orgSlug, orgName })
+      // Next.js 15 passes params as a promise; await it once here so
+      // handlers always see the decoded object ({} when absent). The cast
+      // is the single-segment narrowing documented on HandlerContext.
+      const params = ((await context?.params) ?? {}) as Record<string, string>
+      const invoke = () => handler({ req, session: session as RouteSession, userId, role, personaRole, orgId, orgSlug, orgName, params })
       return orgId
         ? await runWithOrg({ organizationId: orgId, userId, role }, invoke)
         : await invoke()

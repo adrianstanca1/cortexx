@@ -1,17 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_STATUS = new Set(['planned', 'in_progress', 'complete', 'slipped'])
 
-export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const existing = await prisma.milestone.findUnique({ where: { id: params.id } })
@@ -52,7 +52,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       prisma.activity.create({
         data: {
           projectId: milestone.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(session),
           actorType: 'human',
           action: `completed milestone: ${milestone.title}`,
           iconType: 'check',
@@ -64,12 +64,12 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     console.error('[milestones/:id] PATCH failed:', error)
     return NextResponse.json({ error: 'Failed to update milestone' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const m = await prisma.milestone.findUnique({ where: { id: params.id } })
     if (!m) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -85,4 +85,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     console.error('[milestones/:id] DELETE failed:', error)
     return NextResponse.json({ error: 'Failed to delete milestone' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

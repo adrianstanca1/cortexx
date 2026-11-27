@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -31,10 +32,9 @@ function formatDocType(type: string): string {
   return type === 'rams' ? 'RAMS' : type.replace(/_/g, ' ')
 }
 
-export async function PATCH(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+export const PATCH = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const existing = await prisma.rams.findUnique({ where: { id: params.id } })
@@ -91,7 +91,7 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
       include: { project: { select: { id: true, name: true } } },
     })
 
-    const actor = actorName(auth)
+    const actor = actorName(session)
     const meta: Record<string, string | null | undefined> = { fromStatus: existing.status, toStatus: doc.status }
 
     if (data.reviewedBy && !existing.reviewedBy) {
@@ -137,12 +137,12 @@ export async function PATCH(req: NextRequest, { params: paramsP }: { params: Pro
     console.error('[rams/:id] PATCH failed:', error)
     return NextResponse.json({ error: 'Failed to update RAMS doc' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const doc = await prisma.rams.findUnique({ where: { id: params.id } })
     if (!doc) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -158,4 +158,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     console.error('[rams/:id] DELETE failed:', error)
     return NextResponse.json({ error: 'Failed to delete RAMS doc' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

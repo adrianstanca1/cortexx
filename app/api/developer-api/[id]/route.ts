@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog } from '@/lib/audit'
 import { canManage } from '@/lib/rbac'
@@ -23,8 +23,9 @@ const SAFE_SELECT = {
 } as const
 
 export async function GET(_req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const { id } = await params
   try {
     const item = await prisma.apiKey.findUnique({ where: { id }, select: SAFE_SELECT })
@@ -37,8 +38,9 @@ export async function GET(_req: NextRequest, { params }: { params: Promise<{ id:
 }
 
 export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const role = getCurrentOrg()?.role
   if (!role || !canManage(role)) {
     return NextResponse.json({ error: 'Forbidden — admin role required' }, { status: 403 })
@@ -68,8 +70,9 @@ export async function PUT(req: NextRequest, { params }: { params: Promise<{ id: 
 }
 
 export async function DELETE(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const role = getCurrentOrg()?.role
   if (!role || !canManage(role)) {
     return NextResponse.json({ error: 'Forbidden — admin role required' }, { status: 403 })

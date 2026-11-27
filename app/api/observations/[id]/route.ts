@@ -1,19 +1,19 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 import { authorizeUploadReference } from '@/lib/upload-provenance'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_TYPE = new Set(['positive', 'improvement', 'unsafe', 'near_miss'])
 const ALLOWED_STATUS = new Set(['open', 'resolved'])
 
-export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const existing = await prisma.observation.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, title: true, photoUrl: true } })
@@ -31,8 +31,8 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
 
     if (body.photoUrl !== undefined && body.photoUrl && body.photoUrl !== existing.photoUrl) {
       const uploadError = await authorizeUploadReference(body.photoUrl, {
-        userId: (auth.user as { id?: string }).id,
-        personaRole: (auth.user as { role?: string }).role,
+        userId: (session.user as { id?: string }).id,
+        personaRole: (session.user as { role?: string }).role,
       })
       if (uploadError) return uploadError
     }
@@ -57,7 +57,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       prisma.activity.create({
         data: {
           projectId: observation.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(session),
           actorType: 'human',
           action: justResolved ? `resolved observation: ${observation.title}` : `reopened observation: ${observation.title}`,
           iconType: 'check',
@@ -70,12 +70,12 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     reportError(error)
     return NextResponse.json({ error: 'Failed to update observation' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     await prisma.observation.delete({ where: { id: params.id } })
     auditLog({
@@ -89,4 +89,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete observation' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

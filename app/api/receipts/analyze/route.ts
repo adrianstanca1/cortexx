@@ -2,11 +2,12 @@ import { NextRequest, NextResponse } from 'next/server'
 import { readFile } from 'node:fs/promises'
 import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { downloadToTemp } from '@/lib/storage'
 import { chat, isLlmEmpty, isLlmUnavailable, LLM_CONFIG } from '@/lib/llm'
 import receiptVision from '@/lib/receipt-vision'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
@@ -25,10 +26,8 @@ async function markFailure(documentId: string, code: string, message: string) {
   }).catch(() => {})
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'vision', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const limited = await enforceRateLimit(req, 'vision', (session.user as { id?: string }).id)
   if (limited) return limited
 
   let body: { documentId?: unknown }
@@ -128,7 +127,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId: document.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'ai',
         action: `scanned receipt${extraction.vendor ? `: ${extraction.vendor}` : ''}`,
         detail: `${extraction.totalAmount === null ? 'amount unclear' : `£${extraction.totalAmount.toFixed(2)}`} · ${Math.round(extraction.confidence * 100)}% confidence · review required`,
@@ -150,4 +149,5 @@ export async function POST(req: NextRequest) {
     await markFailure(documentId, 'OCR_PARSE_FAILED', message)
     return NextResponse.json({ error: message, code: 'OCR_PARSE_FAILED', receiptId: receipt.id }, { status: 422 })
   }
-}
+
+}, { permission: 'write' })

@@ -1,10 +1,11 @@
 import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import { createActivity } from '@/lib/activity'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -16,8 +17,9 @@ function sanitize(s: string, maxLen = 500): string {
 }
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const { searchParams } = new URL(req.url)
     const take = Math.min(parseInt(searchParams.get('take') || '20') || 20, MAX_TAKE)
@@ -55,10 +57,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -69,7 +69,7 @@ export async function POST(req: NextRequest) {
     // The Prisma broadcast extension auto-notifies sibling tabs.
     const activity = await createActivity({
       projectId: body.projectId || null,
-      actorName: sanitize(actorName(auth), 100),
+      actorName: sanitize(actorName(session), 100),
       actorType: body.actorType === 'ai' ? 'ai' : 'human',
       action: sanitize(body.action, 200),
       detail: body.detail ? sanitize(body.detail) : null,
@@ -80,4 +80,5 @@ export async function POST(req: NextRequest) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to create activity' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

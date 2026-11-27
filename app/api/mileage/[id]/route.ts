@@ -1,17 +1,16 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { withRoute, decodePathSegment } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_VEHICLE = new Set(['car', 'van', 'motorbike'])
 
-export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     const body = await req.json()
     const existing = await prisma.mileageEntry.findUnique({
@@ -68,12 +67,12 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     reportError(error)
     return NextResponse.json({ error: 'Failed to update mileage entry' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __segments = req.nextUrl.pathname.split('/').filter(Boolean).map(decodePathSegment)
+  const params = { id: __segments[2] }
   try {
     await prisma.mileageEntry.delete({ where: { id: params.id } })
     auditLog({
@@ -87,4 +86,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

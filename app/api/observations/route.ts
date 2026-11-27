@@ -1,9 +1,10 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth, actorName } from '@/lib/requireAuth'
+import { requireOrg, actorName } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
 import { authorizeUploadReference } from '@/lib/upload-provenance'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -12,8 +13,9 @@ const ALLOWED_TYPE = new Set(['positive', 'improvement', 'unsafe', 'near_miss'])
 const ALLOWED_STATUS = new Set(['open', 'resolved'])
 
 export async function GET(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   try {
     const { searchParams } = new URL(req.url)
     const projectId = searchParams.get('projectId')
@@ -43,10 +45,8 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   try {
     const body = await req.json()
@@ -61,8 +61,8 @@ export async function POST(req: NextRequest) {
     const type = ALLOWED_TYPE.has(body.type) ? body.type : 'positive'
     if (typeof body.photoUrl === 'string' && body.photoUrl) {
       const uploadError = await authorizeUploadReference(body.photoUrl, {
-        userId: (auth.user as { id?: string }).id,
-        personaRole: (auth.user as { role?: string }).role,
+        userId: (session.user as { id?: string }).id,
+        personaRole: (session.user as { role?: string }).role,
       })
       if (uploadError) return uploadError
     }
@@ -74,7 +74,7 @@ export async function POST(req: NextRequest) {
         title,
         description: body.description?.toString().trim() || null,
         location: body.location?.toString().trim() || null,
-        reportedBy: body.reportedBy?.toString().trim() || actorName(auth),
+        reportedBy: body.reportedBy?.toString().trim() || actorName(session),
         photoUrl: typeof body.photoUrl === 'string' && body.photoUrl ? body.photoUrl : null,
         status: 'open',
       },
@@ -84,7 +84,7 @@ export async function POST(req: NextRequest) {
     prisma.activity.create({
       data: {
         projectId,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'human',
         action: `logged ${type.replace('_', ' ')} observation: ${title}`,
         iconType: type === 'unsafe' || type === 'near_miss' ? 'alert' : 'check',
@@ -96,4 +96,5 @@ export async function POST(req: NextRequest) {
     reportError(error)
     return NextResponse.json({ error: 'Failed to create observation' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

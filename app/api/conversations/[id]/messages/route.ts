@@ -1,8 +1,9 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireAuth } from '@/lib/requireAuth'
+import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -11,8 +12,9 @@ const MAX_TAKE = 500
 const MAX_BODY_CHARS = 4000
 
 export async function GET(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
+  const org = await requireOrg()
+  if (org instanceof NextResponse) return org
+  const auth = org.session
   const { id } = await params
   try {
     const sp = req.nextUrl.searchParams
@@ -57,10 +59,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ id: 
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ id: string }> }) {
-  const auth = await requireAuth()
-  if (auth instanceof NextResponse) return auth
-  const __limited = await enforceRateLimit(req, 'write', (auth.user as { id?: string }).id)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
+  const __limited = await enforceRateLimit(req, 'write', (session.user as { id?: string }).id)
   if (__limited) return __limited
   const { id } = await params
   try {
@@ -77,7 +77,7 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     })
     if (!conversation) return NextResponse.json({ error: 'Not found' }, { status: 404 })
 
-    const user = auth.user as { id?: string; name?: string | null; email?: string | null }
+    const user = session.user as { id?: string; name?: string | null; email?: string | null }
     const authorId = user.id || 'unknown'
     const authorName = user.name || user.email || 'Unknown'
 
@@ -106,4 +106,5 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ id:
     reportError(error)
     return NextResponse.json({ error: 'Failed to post' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

@@ -135,23 +135,80 @@ function routeMocks({ orgResult, prisma }) {
     '@/lib/errors': { reportError: () => {} },
     '@/lib/rateLimit': { enforceRateLimit: async () => null },
     '@/lib/audit': { auditLog: async () => {}, requestMeta: () => ({}) },
+    // Batch 3 wrapped the write handlers of some group-1 routes in
+    // withRoute. The mock mirrors lib/withRoute.ts gate order (org check,
+    // then permission check, then the handler), using the REAL permission
+    // helpers from lib/rbac.ts. GET handlers still use requireOrg
+    // (mocked via orgResult), so this only fires for writes.
+    '@/lib/withRoute': { withRoute: mockWithRoute },
     pdfkit: { default: class PDFDocument {} },
   }
 }
 
-function fakeReq(url, jsonBody) {
+// Real permission helpers from lib/rbac.ts (no imports of its own).
+const rbac = loadRoute('lib/rbac.ts', {})
+const { canWrite, canManage } = rbac
+
+// Next.js decodes dynamic route params before the handler sees them; the
+// mock mirrors that by decoding the request's id segment, so handlers
+// under test read decoded ids from ctx.params. Malformed encodings keep
+// the raw segment (they can never match a real id, so the lookup 404s).
+function decodedParams(req) {
+  const segment = req.nextUrl?.pathname.split('/').filter(Boolean)[2]
+  if (segment === undefined) return {}
+  let value = segment
+  try { value = decodeURIComponent(segment) } catch { /* keep the raw segment on malformed encoding */ }
+  return { id: value, markupId: value, revisionId: value }
+}
+
+function mockWithRoute(handler, { requireOrg = true, permission = 'read' } = {}) {
+  return async req => {
+    const ctx = req.__ctx
+    if (requireOrg && (!ctx || !ctx.orgId)) {
+      return MockResponse.json({ error: 'Organisation context required' }, { status: 400 })
+    }
+    if (permission === 'write' && (!ctx.role || !canWrite(ctx.role))) {
+      return MockResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    if (permission === 'manage' && (!ctx.role || !canManage(ctx.role))) {
+      return MockResponse.json({ error: 'Forbidden' }, { status: 403 })
+    }
+    return handler({ ...ctx, req, params: decodedParams(req) })
+  }
+}
+
+function ctxFor(role, orgId = 'org-1') {
+  return {
+    session: SESSION,
+    userId: 'user-1',
+    orgId,
+    orgSlug: 'org',
+    orgName: 'Org',
+    role,
+    personaRole: 'admin',
+  }
+}
+
+function fakeReq(url, jsonBody, ctx) {
   return {
     url,
+    nextUrl: { pathname: new URL(url).pathname, searchParams: new URL(url).searchParams },
     json: async () => jsonBody || {},
+    __ctx: ctx,
   }
 }
 
 test('group 1 routes all use requireOrg and none still call requireAuth', () => {
   for (const rel of GROUP1_ROUTES) {
     const src = fs.readFileSync(path.join(__dirname, '..', rel), 'utf8')
-    assert.ok(src.includes('requireOrg'), `${rel} should call requireOrg`)
+    // Batch 3 (RBAC) moved some write handlers from requireOrg() to
+    // withRoute({ permission: 'write' }); either is an org gate.
+    assert.ok(src.includes('requireOrg') || src.includes('withRoute'),
+      `${rel} should gate on an org (requireOrg or withRoute)`)
     assert.ok(!src.includes('await requireAuth()'), `${rel} should not call requireAuth`)
-    assert.ok(src.includes('const auth = org.session'), `${rel} should unwrap org.session`)
+    if (src.includes('requireOrg')) {
+      assert.ok(src.includes('const auth = org.session'), `${rel} should unwrap org.session`)
+    }
   }
 })
 
@@ -219,7 +276,7 @@ test('customers GET: user with an org gets 200 and the customers', async () => {
   assert.equal(res.body.customers[0].name, 'Acme')
 })
 
-test('customers POST: org-less user gets 403 NO_ORG and no customer is created', async () => {
+test('customers POST: org-less user gets 400, viewer gets 403, no customer is created', async () => {
   const calls = []
   const prisma = {
     customer: {
@@ -230,10 +287,14 @@ test('customers POST: org-less user gets 403 NO_ORG and no customer is created',
     },
   }
   const route = loadRoute('app/api/customers/route.ts', routeMocks({ orgResult: orgLessResult(), prisma }))
-  const res = await route.POST(fakeReq('http://localhost/api/customers', { name: 'Acme' }))
-  assert.equal(res.status, 403)
-  assert.equal(res.body.code, 'NO_ORG')
-  assert.deepEqual(calls, [])
+  // Batch 3 wrapped this write in withRoute({ permission: 'write' }).
+  const noOrg = await route.POST(fakeReq('http://localhost/api/customers', { name: 'Acme' }, ctxFor('member', null)))
+  assert.equal(noOrg.status, 400)
+  const viewer = await route.POST(fakeReq('http://localhost/api/customers', { name: 'Acme' }, ctxFor('viewer')))
+  assert.equal(viewer.status, 403)
+  const member = await route.POST(fakeReq('http://localhost/api/customers', { name: 'Acme' }, ctxFor('member')))
+  assert.equal(member.status, 201)
+  assert.deepEqual(calls, ['customer.create'])
 })
 
 test('invoices print GET: org-less user gets 403 NO_ORG and no DB call', async () => {
