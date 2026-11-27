@@ -3,6 +3,7 @@
 import { useEffect, useState } from 'react'
 import Link from 'next/link'
 import { IcChevL } from '@/components/ui/Icons'
+import { loadActiveOrganization, loadAuditLog, type OrganizationSummary } from '@/lib/orgSettingsClient'
 
 interface AuditEvent {
   id: string
@@ -16,8 +17,7 @@ interface AuditEvent {
 }
 
 export default function AuditLogPage() {
-  type SessionOrg = { id: string; slug: string; name: string; role: string; active?: boolean }
-  const [activeOrg, setActiveOrg] = useState<SessionOrg | null>(null)
+  const [activeOrg, setActiveOrg] = useState<OrganizationSummary | null>(null)
   const [orgLoading, setOrgLoading] = useState(true)
   const [events, setEvents] = useState<AuditEvent[]>([])
   const [total, setTotal] = useState(0)
@@ -30,12 +30,9 @@ export default function AuditLogPage() {
 
   useEffect(() => {
     let cancelled = false
-    fetch('/api/orgs')
-      .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error || 'Failed to load workspaces') }))
-      .then(data => {
-        if (cancelled) return
-        const orgs = (data?.organizations || []) as SessionOrg[]
-        setActiveOrg(orgs.find(org => org.active) || orgs[0] || null)
+    loadActiveOrganization()
+      .then(organization => {
+        if (!cancelled) setActiveOrg(organization)
       })
       .catch(e => { if (!cancelled) setError(e instanceof Error ? e.message : 'Failed to load workspaces') })
       .finally(() => { if (!cancelled) setOrgLoading(false) })
@@ -47,11 +44,7 @@ export default function AuditLogPage() {
     let cancelled = false
     setLoading(true)
     setError(null)
-    const params = new URLSearchParams()
-    if (filter) params.set('action', filter)
-    params.set('take', String(PAGE_SIZE))
-    fetch(`/api/orgs/${activeOrg.id}/audit-log?${params.toString()}`)
-      .then(r => r.ok ? r.json() : r.json().then(d => { throw new Error(d.error || 'Failed') }))
+    loadAuditLog<AuditEvent>(activeOrg.id, { action: filter || undefined, take: PAGE_SIZE })
       .then(data => {
         if (cancelled) return
         setEvents(data.events || [])
@@ -66,14 +59,12 @@ export default function AuditLogPage() {
   const loadMore = async () => {
     if (!activeOrg || loadingMore) return
     setLoadingMore(true)
-    const params = new URLSearchParams()
-    if (filter) params.set('action', filter)
-    params.set('take', String(PAGE_SIZE))
-    params.set('skip', String(events.length))
     try {
-      const r = await fetch(`/api/orgs/${activeOrg.id}/audit-log?${params.toString()}`)
-      const data = await r.json()
-      if (!r.ok) throw new Error(data.error || 'Failed')
+      const data = await loadAuditLog<AuditEvent>(activeOrg.id, {
+        action: filter || undefined,
+        take: PAGE_SIZE,
+        skip: events.length,
+      })
       setEvents(prev => [...prev, ...(data.events || [])])
       setHasMore(data.hasMore || false)
     } catch (e) {

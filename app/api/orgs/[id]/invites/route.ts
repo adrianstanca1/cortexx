@@ -157,22 +157,30 @@ export async function DELETE(req: NextRequest, { params }: RouteParams) {
   })
   if (!invite) return NextResponse.json({ error: 'Pending invite not found' }, { status: 404 })
 
-  // The conditional delete is the state transition: if acceptance wins this
-  // race, it affects zero rows and the accepted membership is left untouched.
-  const deleted = await prisma.organizationInvite.deleteMany({
-    where: { id: invite.id, organizationId, acceptedAt: null },
-  })
-  if (deleted.count === 0) return NextResponse.json({ error: 'Pending invite not found' }, { status: 404 })
+  // Delete and audit atomically: an audit-write failure rolls back the revoke.
+  // The conditional delete also lets a concurrent acceptance win safely.
+  const metadata = { email: invite.email, role: invite.role, personaRole: invite.personaRole }
+  const meta = requestMeta(req)
+  const revoked = await prisma.$transaction(async tx => {
+    const deleted = await tx.organizationInvite.deleteMany({
+      where: { id: invite.id, organizationId, acceptedAt: null },
+    })
+    if (deleted.count === 0) return false
 
-  auditLog({
-    organizationId,
-    userId,
-    action: 'invite.revoke',
-    resourceType: 'OrganizationInvite',
-    resourceId: invite.id,
-    metadata: { email: invite.email, role: invite.role, personaRole: invite.personaRole },
-    ...requestMeta(req),
+    await tx.auditEvent.create({
+      data: {
+        organizationId,
+        userId,
+        action: 'invite.revoke',
+        resourceType: 'OrganizationInvite',
+        resourceId: invite.id,
+        metadata,
+        ...meta,
+      },
+    })
+    return true
   })
+  if (!revoked) return NextResponse.json({ error: 'Pending invite not found' }, { status: 404 })
 
   return NextResponse.json({ ok: true })
 }
