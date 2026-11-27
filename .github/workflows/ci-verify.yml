@@ -137,10 +137,15 @@ jobs:
           test -f www/index.html || { echo "www/index.html missing" && exit 1; }
           # The shell serves from the bundle: without its runtime the app
           # launches to a black screen with no JS error to show for it.
-          for f in react.production.min.js react-dom.production.min.js babel.min.js; do
+          for f in react.production.min.js react-dom.production.min.js; do
             test -f "www/vendor/$f" || { echo "www/vendor/$f missing" && exit 1; }
           done
           test -d www/dist || test -d www/lib || { echo "no app modules in the bundle" && exit 1; }
+          # A lib/ build transforms .jsx in-WebView, so it needs Babel; a dist/
+          # build executes precompiled code and must not carry it.
+          if [ -d www/lib ]; then
+            test -f www/vendor/babel.min.js || { echo "www/vendor/babel.min.js missing for a lib/ build" && exit 1; }
+          fi
           # lib/ can be non-empty yet still lack the module that renders the app.
           test -f www/dist/boot.js || test -f www/lib/boot.jsx || { echo "boot module missing from the bundle" && exit 1; }
 

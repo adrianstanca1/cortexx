@@ -159,3 +159,12 @@ test('the packaged bundle ships one module tree and only the runtime it executes
   // longer there to fall back to.
   assert.match(buildWeb, /dist\/boot\.js missing from the bundle/)
 })
+
+
+test('the bundle check only requires Babel for a lib/ build', () => {
+  // A dist-only build executes precompiled code; demanding Babel there was the
+  // stale half of this check and failed the job as soon as the bundle was slimmed.
+  const job = ciVerify.slice(ciVerify.indexOf('  capacitor-web:'), ciVerify.indexOf('  ios-build:'))
+  assert.match(job, /if \[ -d www\/lib \]; then/, 'Babel is only a lib/ build requirement')
+  assert.match(job, /babel\.min\.js missing for a lib\/ build/)
+})
