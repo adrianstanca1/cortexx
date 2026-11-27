@@ -1,7 +1,8 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
 import { requireOrg, actorName } from '@/lib/requireAuth'
-import { programmeProjectWhere } from '@/lib/programme-access'
+import { withRoute } from '@/lib/withRoute'
+import { programmeProjectWhere, type ProgrammeActor } from '@/lib/programme-access'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
@@ -18,7 +19,7 @@ import {
 
 export const dynamic = 'force-dynamic'
 
-async function accessibleRevision(revisionId: string, auth: Awaited<ReturnType<typeof requireOrg>>) {
+async function accessibleRevision(revisionId: string, auth: { session: ProgrammeActor }) {
   if (auth instanceof NextResponse) return null
   const revision = await prisma.drawingRevision.findFirst({
     where: { id: revisionId },
@@ -67,9 +68,8 @@ export async function GET(req: NextRequest, { params }: { params: Promise<{ revi
   }
 }
 
-export async function POST(req: NextRequest, { params }: { params: Promise<{ revisionId: string }> }) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
+  const auth = { session, userId, orgId, orgSlug, orgName, role, personaRole }
   const { revisionId } = await params
   try {
     const revision = await accessibleRevision(revisionId, auth)
@@ -135,4 +135,4 @@ export async function POST(req: NextRequest, { params }: { params: Promise<{ rev
     reportError(error)
     return NextResponse.json({ error: 'Failed to create drawing markup' }, { status: 500 })
   }
-}
+}, { permission: 'write' })

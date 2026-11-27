@@ -3,6 +3,7 @@ import { prisma } from '@/lib/db'
 import { requireOrg } from '@/lib/requireAuth'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { reportError } from '@/lib/errors'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
@@ -44,19 +45,18 @@ export async function GET(req: NextRequest) {
   }
 }
 
-export async function DELETE(req: NextRequest) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
-  if (!auth.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
-  if (!auth.orgId) return NextResponse.json({ error: 'No organization', code: 'NO_ORG' }, { status: 403 })
-  const limited = await enforceRateLimit(req, 'write', auth.userId)
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  if (!userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
+  if (!orgId) return NextResponse.json({ error: 'No organization', code: 'NO_ORG' }, { status: 403 })
+  const limited = await enforceRateLimit(req, 'write', userId)
   if (limited) return limited
 
   try {
-    const result = await prisma.aiHistory.deleteMany({ where: { userId: auth.userId } })
+    const result = await prisma.aiHistory.deleteMany({ where: { userId: userId } })
     return NextResponse.json({ deleted: result.count })
   } catch (error) {
     reportError(error, { context: 'ai.history.clear' })
     return NextResponse.json({ error: 'Failed to clear AI history' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

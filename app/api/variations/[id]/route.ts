@@ -1,18 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { auditLog, requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 
 const ALLOWED_STATUS = new Set(['draft', 'submitted', 'approved', 'rejected'])
 
-export async function PUT(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+export const PUT = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     const body = await req.json()
     const existing = await prisma.variation.findUnique({ where: { id: params.id }, select: { status: true, projectId: true, number: true, title: true, costImpact: true, daysImpact: true } })
@@ -62,7 +59,7 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
       prisma.activity.create({
         data: {
           projectId: variation.projectId,
-          actorName: actorName(auth),
+          actorName: actorName(session),
           actorType: 'human',
           action: `${verb} ${variation.number}: ${variation.title}`,
           iconType: 'wrench',
@@ -75,13 +72,10 @@ export async function PUT(req: NextRequest, { params: paramsP }: { params: Promi
     reportError(error)
     return NextResponse.json({ error: 'Failed to update variation' }, { status: 500 })
   }
-}
 
-export async function DELETE(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const org = await requireOrg()
-  if (org instanceof NextResponse) return org
-  const auth = org.session
+}, { permission: 'write' })
+
+export const DELETE = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
   try {
     const v = await prisma.variation.findUnique({ where: { id: params.id }, select: { projectId: true, number: true, title: true } })
     if (!v) return NextResponse.json({ error: 'Not found' }, { status: 404 })
@@ -95,7 +89,7 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     prisma.activity.create({
       data: {
         projectId: v.projectId,
-        actorName: actorName(auth),
+        actorName: actorName(session),
         actorType: 'human',
         action: `deleted ${v.number}: ${v.title}`,
         iconType: 'trash',
@@ -106,4 +100,5 @@ export async function DELETE(req: NextRequest, { params: paramsP }: { params: Pr
     reportError(error)
     return NextResponse.json({ error: 'Failed to delete variation' }, { status: 500 })
   }
-}
+
+}, { permission: 'write' })

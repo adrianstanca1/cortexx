@@ -3,9 +3,10 @@ import { readFile } from 'node:fs/promises'
 import { downloadToTemp } from '@/lib/storage'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { prisma } from '@/lib/db'
-import { requireOrg, actorName } from '@/lib/requireAuth'
+import { actorName } from '@/lib/requireAuth'
 import { programmeProjectScope } from '@/lib/programme-access'
 import { chat, isLlmUnavailable, isLlmEmpty, LLM_CONFIG } from '@/lib/llm'
+import { withRoute } from '@/lib/withRoute'
 
 export const dynamic = 'force-dynamic'
 // Node-only: vision-model invocation + node:fs/promises + storage adapter.
@@ -109,11 +110,8 @@ async function loadRevImage(rev: { fileUrl: string | null; mimeType: string | nu
   }
 }
 
-export async function POST(req: NextRequest, { params: paramsP }: { params: Promise<{ id: string }> }) {
-  const params = await paramsP
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
-  const limited = await enforceRateLimit(req, 'vision', auth.userId)
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole, params }) => {
+  const limited = await enforceRateLimit(req, 'vision', userId)
   if (limited) return limited
 
   let body: { aRev?: unknown; bRev?: unknown }
@@ -124,7 +122,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
   if (aRev === bRev) return NextResponse.json({ error: 'aRev and bRev must be different revisions' }, { status: 400 })
 
   const drawing = await prisma.drawing.findFirst({
-    where: { id: params.id, project: { is: programmeProjectScope(auth.session) } },
+    where: { id: params.id, project: { is: programmeProjectScope(session) } },
     include: { project: { select: { id: true, name: true } }, revisions: true },
   })
   if (!drawing) return NextResponse.json({ error: 'Drawing not found' }, { status: 404 })
@@ -176,7 +174,7 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
     prisma.activity.create({
       data: {
         projectId: drawing.projectId,
-        actorName: actorName(auth.session),
+        actorName: actorName(session),
         actorType: 'ai',
         action: `compared drawing revisions: ${drawing.number} ${earlier.revision} → ${later.revision}`,
         detail: `${result.changes.length} change${result.changes.length === 1 ? '' : 's'} · ${result.designIntent}${result.reviewRecommended ? ' · review recommended' : ''}`,
@@ -207,4 +205,5 @@ export async function POST(req: NextRequest, { params: paramsP }: { params: Prom
       { status: 422 }
     )
   }
-}
+
+}, { permission: 'write' })

@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 
 import { prisma } from '@/lib/db'
 import { requireOrg } from '@/lib/requireAuth'
+import { withRoute } from '@/lib/withRoute'
 import { enforceRateLimit } from '@/lib/rateLimit'
 import { rateLimit } from '@/lib/rateLimit'
 import { auditLog, requestMeta } from '@/lib/audit'
@@ -34,15 +35,13 @@ export async function GET() {
   }, { headers: { 'Cache-Control': 'private, no-store' } })
 }
 
-export async function POST(req: NextRequest) {
-  const auth = await requireOrg()
-  if (auth instanceof NextResponse) return auth
+export const POST = withRoute(async ({ req, session, userId, orgId, orgSlug, orgName, role, personaRole }) => {
+  const auth = { session, userId, orgId, orgSlug, orgName, role, personaRole }
   if (!auth.userId) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 })
   if (!auth.orgId) return NextResponse.json({ error: 'No organization', code: 'NO_ORG' }, { status: 403 })
   const __limited = await enforceRateLimit(req, 'write', auth.userId)
   if (__limited) return __limited
 
-  const userId = auth.userId
   const rl = await rateLimit(`ask:${userId}`, RATE_LIMIT_MAX, RATE_LIMIT_WINDOW_MS)
   if (!rl.ok) {
     return NextResponse.json(
@@ -130,4 +129,4 @@ export async function POST(req: NextRequest) {
     console.error('[ask] unexpected error:', error)
     return NextResponse.json({ error: 'Failed to process your message' }, { status: 500 })
   }
-}
+}, { permission: 'write' })
