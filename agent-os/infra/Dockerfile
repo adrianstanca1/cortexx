@@ -1,4 +1,4 @@
-FROM node:24-alpine AS build
+FROM node:26-alpine AS build
 WORKDIR /app
 COPY package.json tsconfig.json ./
 COPY types ./types
@@ -7,7 +7,7 @@ COPY apps/api ./apps/api
 COPY apps/cli ./apps/cli
 COPY tests ./tests
 RUN npx tsc -p tsconfig.json
-FROM node:24-alpine
+FROM node:26-alpine
 WORKDIR /app
 ENV NODE_ENV=production PORT=4310
 COPY --from=build /app/dist ./dist

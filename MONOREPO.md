@@ -53,6 +53,6 @@ npm run monorepo:typecheck
   `dist/*.js` and loaded as global `<script>` tags. `packages/core` is duplicated into the
   SPA's global scope via `window.CortexCore` only where needed; the SPA's own `lib/` remains
   the source for its screens.
-- Node 22+ required (Capacitor CLI v8, Next.js 16).
+- Node 26.x LTS required (Capacitor CLI v8, Next.js 16).
 - Do not add `expo` to the root `workspaces` array — npm hoisting breaks Expo's
   `node_modules/expo/AppEntry.js` entry resolution.

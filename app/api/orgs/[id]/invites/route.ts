@@ -128,3 +128,51 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
   return NextResponse.json({ invite: { id: invite.id, email, role, personaRole, expiresAt, acceptUrl } }, { status: 201 })
 }
+
+/** DELETE — revoke a pending invite (admin+ only). */
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  const session = await requireAuth()
+  if (session instanceof NextResponse) return session
+  const userId = (session.user as { id?: string }).id
+  if (!userId) return NextResponse.json({ error: 'No user id' }, { status: 401 })
+  const limited = await enforceRateLimit(req, 'write', userId)
+  if (limited) return limited
+  const { id: organizationId } = await params
+
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId, organizationId } },
+    select: { role: true },
+  })
+  if (!membership || !canManage(membership.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const body = await req.json().catch(() => null) as { inviteId?: unknown } | null
+  const inviteId = typeof body?.inviteId === 'string' ? body.inviteId.trim() : ''
+  if (!inviteId) return NextResponse.json({ error: 'Invite id is required' }, { status: 400 })
+
+  const invite = await prisma.organizationInvite.findFirst({
+    where: { id: inviteId, organizationId, acceptedAt: null },
+    select: { id: true, email: true, role: true, personaRole: true },
+  })
+  if (!invite) return NextResponse.json({ error: 'Pending invite not found' }, { status: 404 })
+
+  // The conditional delete is the state transition: if acceptance wins this
+  // race, it affects zero rows and the accepted membership is left untouched.
+  const deleted = await prisma.organizationInvite.deleteMany({
+    where: { id: invite.id, organizationId, acceptedAt: null },
+  })
+  if (deleted.count === 0) return NextResponse.json({ error: 'Pending invite not found' }, { status: 404 })
+
+  auditLog({
+    organizationId,
+    userId,
+    action: 'invite.revoke',
+    resourceType: 'OrganizationInvite',
+    resourceId: invite.id,
+    metadata: { email: invite.email, role: invite.role, personaRole: invite.personaRole },
+    ...requestMeta(req),
+  })
+
+  return NextResponse.json({ ok: true })
+}

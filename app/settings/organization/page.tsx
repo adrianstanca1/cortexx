@@ -39,6 +39,7 @@ export default function OrganizationSettingsPage() {
   const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
   const [invitePersona, setInvitePersona] = useState<(typeof ASSIGNABLE_PERSONAS)[number]>('operative')
   const [inviteBusy, setInviteBusy] = useState(false)
+  const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null)
   const [inviteMsg, setInviteMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -55,21 +56,29 @@ export default function OrganizationSettingsPage() {
   const load = useCallback(async () => {
     if (!activeOrg) return
     setLoading(true)
+    setError(null)
     try {
+      const canRequestInvites = activeOrg.role === 'owner' || activeOrg.role === 'admin'
       const [mRes, iRes] = await Promise.all([
         fetch(`/api/orgs/${activeOrg.id}/members`),
-        fetch(`/api/orgs/${activeOrg.id}/invites`),
+        canRequestInvites ? fetch(`/api/orgs/${activeOrg.id}/invites`) : Promise.resolve(null),
       ])
-      if (mRes.ok) {
-        const data = await mRes.json()
-        setMembers(data.members || [])
-        setCanManage(data.canManage || false)
+      if (!mRes.ok) {
+        const data = await mRes.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to load members')
       }
-      if (iRes.ok) {
+      const memberData = await mRes.json()
+      setMembers(memberData.members || [])
+      setCanManage(memberData.canManage || false)
+
+      if (iRes?.ok) {
         const data = await iRes.json()
         setInvites(data.invites || [])
-      } else if (iRes.status === 403) {
+      } else if (!iRes || iRes.status === 403) {
         setInvites([])
+      } else {
+        const data = await iRes.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to load invites')
       }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load')
@@ -100,6 +109,27 @@ export default function OrganizationSettingsPage() {
       setInviteMsg(err instanceof Error ? err.message : 'Failed')
     } finally {
       setInviteBusy(false)
+    }
+  }
+
+  const revokeInvite = async (invite: Invite) => {
+    if (!activeOrg || !window.confirm(`Revoke the invite for ${invite.email}?`)) return
+    setRevokingInviteId(invite.id)
+    setInviteMsg(null)
+    try {
+      const res = await fetch(`/api/orgs/${activeOrg.id}/invites`, {
+        method: 'DELETE',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ inviteId: invite.id }),
+      })
+      const data = await res.json().catch(() => ({}))
+      if (!res.ok) throw new Error(data.error || 'Failed to revoke invite')
+      setInviteMsg(`Invite to ${invite.email} revoked`)
+      await load()
+    } catch (err) {
+      setInviteMsg(err instanceof Error ? err.message : 'Failed to revoke invite')
+    } finally {
+      setRevokingInviteId(null)
     }
   }
 
@@ -267,7 +297,7 @@ export default function OrganizationSettingsPage() {
             </button>
           </form>
           {inviteMsg && (
-            <div role="status" style={{ marginTop: 10, fontFamily: 'var(--font-system)', fontSize: 12, color: inviteMsg.startsWith('Invite sent') ? '#10b981' : '#ef4444' }}>
+            <div role="status" style={{ marginTop: 10, fontFamily: 'var(--font-system)', fontSize: 12, color: inviteMsg.startsWith('Invite sent') || inviteMsg.startsWith('Invite to') ? '#10b981' : '#ef4444' }}>
               {inviteMsg}
             </div>
           )}
@@ -277,11 +307,20 @@ export default function OrganizationSettingsPage() {
               <div style={{ ...labelStyle, marginTop: 18 }}>Pending invites ({invites.length})</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
                 {invites.map(i => (
-                  <div key={i.id} style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)' }}>{i.email}</div>
+                  <div key={i.id} style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{i.email}</div>
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)' }}>{personaLabel(i.personaRole || 'operative')} · {i.role} access · expires {new Date(i.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                     </div>
+                    <button
+                      type="button"
+                      aria-label={`Revoke invite for ${i.email}`}
+                      disabled={revokingInviteId !== null}
+                      onClick={() => revokeInvite(i)}
+                      style={{ flexShrink: 0, background: 'transparent', border: 'none', color: '#f87171', cursor: revokingInviteId !== null ? 'default' : 'pointer', fontFamily: 'var(--font-system)', fontSize: 12, padding: '6px 8px', opacity: revokingInviteId !== null ? 0.5 : 1 }}
+                    >
+                      {revokingInviteId === i.id ? 'Revoking…' : 'Revoke'}
+                    </button>
                   </div>
                 ))}
               </div>

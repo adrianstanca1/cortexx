@@ -22,7 +22,7 @@
     "web-push": "^3.6.7"
   },
   "engines": {
-    "node": ">=18"
+    "node": "26.x"
   },
   "overrides": {
     "proxy-addr": "2.0.8"

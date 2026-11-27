@@ -82,7 +82,7 @@ npm run dev
 cd expo && npm install && npx expo start
 ```
 
-Node **>=22**, npm **>=10**.
+Node **26.x LTS**, npm **>=10**.
 
 ---
 
