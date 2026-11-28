@@ -41,6 +41,7 @@ export const PATCH = withRoute(
   async ({ req, userId, orgId, params }) => {
     const id = courseIdFrom(req, params as Record<string, string>)
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+    if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 400 })
     const limited = await enforceRateLimit(req, 'write', userId)
     if (limited) return limited
 
@@ -113,6 +114,7 @@ export const DELETE = withRoute(
   async ({ req, userId, orgId, params }) => {
     const id = courseIdFrom(req, params as Record<string, string>)
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
+    if (!orgId) return NextResponse.json({ error: 'Organisation context required' }, { status: 400 })
     const limited = await enforceRateLimit(req, 'write', userId)
     if (limited) return limited
 
