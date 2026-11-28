@@ -1,13 +1,16 @@
 import type { MetadataRoute } from 'next'
 
-const SITE_URL = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.tech'
+export const dynamic = 'force-dynamic'
+
+const FALLBACK_SITE_URL = 'https://cortexbuildpro.tech'
 
 /**
- * Generates /robots.txt at build time. Allows the marketing surface
+ * Generates /robots.txt at request time. Allows the marketing surface
  * (/, /marketing, /pricing, /help) and blocks every authenticated area
  * and the API. Pointed at the matching /sitemap.xml.
  */
 export default function robots(): MetadataRoute.Robots {
+  const SITE_URL = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || FALLBACK_SITE_URL).replace(/\/$/, '')
   return {
     rules: [
       {

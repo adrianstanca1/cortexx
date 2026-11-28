@@ -6,6 +6,7 @@ import TabBar from '@/components/ui/TabBar'
 import Toast from '@/components/ui/Toast'
 import SegmentedControl from '@/components/ui/SegmentedControl'
 import CertificationDialog from '@/components/training/CertificationDialog'
+import CourseDialog from '@/components/training/CourseDialog'
 import { IcHardhat, IcChevL, IcPlus, IcTrash, IcEdit } from '@/components/ui/Icons'
 import type { Certification, TrainingCourse } from '@/lib/types'
 
@@ -48,6 +49,9 @@ export default function TrainingPage() {
   const [dialogOpen, setDialogOpen] = useState(false)
   const [editing, setEditing] = useState<Certification | null>(null)
   const [confirmDelete, setConfirmDelete] = useState<string | null>(null)
+  const [courseDialogOpen, setCourseDialogOpen] = useState(false)
+  const [editingCourse, setEditingCourse] = useState<TrainingCourse | null>(null)
+  const [courseConfirmDelete, setCourseConfirmDelete] = useState<string | null>(null)
 
   const load = useCallback(() => {
     setLoading(true)
@@ -109,6 +113,43 @@ export default function TrainingPage() {
     load()
   }
 
+  const saveCourse = async (data: Partial<TrainingCourse>) => {
+    const url = data.id ? `/api/training/courses/${data.id}` : '/api/training/courses'
+    const res = await fetch(url, {
+      method: data.id ? 'PATCH' : 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(data),
+    })
+    if (!res.ok) {
+      const j = await res.json().catch(() => ({}))
+      throw new Error(j.error || 'Save failed')
+    }
+    setCourseDialogOpen(false)
+    setEditingCourse(null)
+    load()
+    setToast({ msg: data.id ? 'Course updated' : 'Course added' })
+  }
+
+  const removeCourse = async (id: string) => {
+    if (courseConfirmDelete !== id) {
+      setCourseConfirmDelete(id)
+      setTimeout(() => setCourseConfirmDelete(curr => curr === id ? null : curr), 3000)
+      return
+    }
+    setCourseConfirmDelete(null)
+    try {
+      const res = await fetch(`/api/training/courses/${id}`, { method: 'DELETE' })
+      if (!res.ok) {
+        const j = await res.json().catch(() => ({}))
+        throw new Error(j.error || 'Delete failed')
+      }
+      load()
+      setToast({ msg: 'Course removed' })
+    } catch (e) {
+      setToast({ msg: e instanceof Error ? e.message : 'Delete failed', type: 'error' })
+    }
+  }
+
   const filtered = certs.filter(c => {
     const statusOk = statusFilter === 'all' || c.statusBucket === statusFilter
     const categoryOk = categoryFilter === 'all' || c.category === categoryFilter
@@ -138,6 +179,14 @@ export default function TrainingPage() {
           <button type="button" onClick={openCreate} aria-label="Add certification" style={{ width: 36, height: 36, borderRadius: 10, background: '#f59e0b', border: 'none', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
             <IcPlus size={18} color="#fff" />
           </button>
+          <button
+            type="button"
+            onClick={() => { setEditingCourse(null); setCourseDialogOpen(true) }}
+            aria-label="Add course"
+            style={{ padding: '8px 12px', borderRadius: 10, background: 'rgba(255,255,255,0.08)', border: '0.5px solid rgba(255,255,255,0.12)', color: 'var(--t1)', fontFamily: SF, fontSize: 12, fontWeight: 700, cursor: 'pointer' }}
+          >
+            + Course
+          </button>
         </div>
 
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: 8, marginBottom: 12 }}>
@@ -156,6 +205,34 @@ export default function TrainingPage() {
           size="sm"
           ariaLabel="Filter by category"
         />
+
+        {courses.length > 0 && (
+          <div style={{ marginTop: 12 }}>
+            <div style={{ fontFamily: SF, fontSize: 10, fontWeight: 700, color: 'var(--t3)', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Course catalog ({courses.length})</div>
+            <div style={{ display: 'flex', gap: 6, overflowX: 'auto', paddingBottom: 4 }}>
+              {courses.map(course => (
+                <div key={course.id} style={{ flexShrink: 0, display: 'flex', alignItems: 'center', gap: 6, padding: '6px 8px', borderRadius: 8, background: 'rgba(255,255,255,0.05)', border: '0.5px solid rgba(255,255,255,0.08)' }}>
+                  <button
+                    type="button"
+                    onClick={() => { setEditingCourse(course); setCourseDialogOpen(true) }}
+                    aria-label={`Edit course ${course.name}`}
+                    style={{ background: 'none', border: 'none', color: 'var(--t1)', fontFamily: SF, fontSize: 11, cursor: 'pointer', padding: 0 }}
+                  >
+                    {course.name}{course.code ? ` (${course.code})` : ''}
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => removeCourse(course.id)}
+                    aria-label={courseConfirmDelete === course.id ? `Confirm delete course ${course.name}` : `Delete course ${course.name}`}
+                    style={{ background: 'none', border: 'none', color: '#ef4444', fontFamily: SF, fontSize: 10, fontWeight: 700, cursor: 'pointer', padding: 0 }}
+                  >
+                    {courseConfirmDelete === course.id ? 'Sure?' : '×'}
+                  </button>
+                </div>
+              ))}
+            </div>
+          </div>
+        )}
       </div>
 
       {loading ? (
@@ -212,6 +289,13 @@ export default function TrainingPage() {
         initial={editing}
         team={team}
         courses={courses}
+      />
+
+      <CourseDialog
+        open={courseDialogOpen}
+        onClose={() => { setCourseDialogOpen(false); setEditingCourse(null) }}
+        onSave={saveCourse}
+        initial={editingCourse}
       />
     </div>
   )

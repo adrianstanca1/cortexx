@@ -1,7 +1,7 @@
 node_modules
 **/node_modules
-.next
-**/.next
+.next/cache
+**/.next/cache
 .git
 .github
 .env

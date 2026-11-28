@@ -1,5 +1,11 @@
 # CortexBuild Pro — Changelog
 
+## Unreleased — Backend and training catalog completion
+
+### Added
+- **Training course catalog management** — `/api/training/courses/[id]` now supports GET, PATCH (metadata, validity days and archive state) and DELETE, with admin-only mutations, rate limiting, decoded route ids and audit records. The `/training` page can create, edit and delete catalog courses, and links certifications to them through the shared dialog.
+- **Route behavior coverage** — `test/training-catalog.test.js` exercises the new course handlers and certification filtering through transpiled route modules with mocked Prisma calls, verifying validation, id scoping, archive filtering, status enrichment and audit events.
+
 ## v1.7.6 — 13 Jul 2026 — Role pack actions, document library, equipment scheduling and RAMS sign-off
 
 ### Added

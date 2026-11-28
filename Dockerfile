@@ -10,11 +10,11 @@ RUN npm ci --ignore-scripts --no-audit --no-fund
 COPY . .
 
 # Prisma generation and Next's build need configuration, but must not connect
-# to or bake credentials for any real database or production host.
+# to or bake credentials for any real database or production host. Public URLs
+# are intentionally left unset: the app falls back to its canonical site URL
+# for metadata/sitemap, and runtime auth uses the request host (AUTH_TRUST_HOST).
 ENV DATABASE_URL=postgresql://build:build@127.0.0.1:5432/build \
-    NEXTAUTH_SECRET=build-placeholder-not-used-at-runtime \
-    NEXTAUTH_URL=http://localhost:8080 \
-    NEXT_PUBLIC_SITE_URL=http://localhost:8080
+    NEXTAUTH_SECRET=build-placeholder-not-used-at-runtime
 RUN npx prisma generate && npm run build
 
 FROM node:26-bookworm-slim AS runtime
