@@ -7,7 +7,7 @@ import WebVitalsReporter from '@/components/WebVitalsReporter'
 import OfflineUploadManager from '@/components/OfflineUploadManager'
 import './globals.css'
 
-const SITE_URL = process.env.NEXT_PUBLIC_SITE_URL || 'https://cortexbuildpro.tech'
+const SITE_URL = (process.env.NEXT_PUBLIC_SITE_URL || 'https://cortexbuildpro.tech').replace(/\/$/, '')
 const DESCRIPTION = 'Mobile-first construction management for UK SMEs — projects, tasks, capture, invoices, and a real-time site view.'
 
 export const metadata: Metadata = {

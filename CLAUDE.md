@@ -26,7 +26,7 @@ npm run vault:decrypt       # ./scripts/decrypt-env.sh — decrypt .env.vault to
 docker compose up -d        # bring up db + api + ollama + web (Caddy) on the VPS
 ```
 
-Node >=22, npm >=10. `postinstall` runs `precompile` silently, so `npm install` rebuilds `dist/` automatically.
+Node 26.x LTS, npm >=10. `postinstall` runs `precompile` silently, so `npm install` rebuilds `dist/` automatically.
 
 ## Architecture
 

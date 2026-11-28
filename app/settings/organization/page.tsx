@@ -4,6 +4,7 @@ import { useEffect, useState, useCallback } from 'react'
 import Link from 'next/link'
 import { IcChevL } from '@/components/ui/Icons'
 import { ASSIGNABLE_PERSONAS, personaLabel } from '@/lib/persona'
+import { createInviteRevokeHandler, loadPendingInvites, revokePendingInvite } from '@/lib/orgSettingsClient'
 
 interface Member {
   id: string
@@ -34,11 +35,13 @@ export default function OrganizationSettingsPage() {
   const [canManage, setCanManage] = useState(false)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState<string | null>(null)
+  const [inviteError, setInviteError] = useState<string | null>(null)
 
   const [inviteEmail, setInviteEmail] = useState('')
   const [inviteRole, setInviteRole] = useState<'admin' | 'member' | 'viewer'>('member')
   const [invitePersona, setInvitePersona] = useState<(typeof ASSIGNABLE_PERSONAS)[number]>('operative')
   const [inviteBusy, setInviteBusy] = useState(false)
+  const [revokingInviteId, setRevokingInviteId] = useState<string | null>(null)
   const [inviteMsg, setInviteMsg] = useState<string | null>(null)
 
   useEffect(() => {
@@ -55,22 +58,22 @@ export default function OrganizationSettingsPage() {
   const load = useCallback(async () => {
     if (!activeOrg) return
     setLoading(true)
+    setError(null)
+    setInviteError(null)
     try {
-      const [mRes, iRes] = await Promise.all([
+      const [mRes, inviteResult] = await Promise.all([
         fetch(`/api/orgs/${activeOrg.id}/members`),
-        fetch(`/api/orgs/${activeOrg.id}/invites`),
+        loadPendingInvites(activeOrg.id, activeOrg.role),
       ])
-      if (mRes.ok) {
-        const data = await mRes.json()
-        setMembers(data.members || [])
-        setCanManage(data.canManage || false)
+      setInvites(inviteResult.invites as Invite[])
+      setInviteError(inviteResult.error)
+      if (!mRes.ok) {
+        const data = await mRes.json().catch(() => ({}))
+        throw new Error(data.error || 'Failed to load members')
       }
-      if (iRes.ok) {
-        const data = await iRes.json()
-        setInvites(data.invites || [])
-      } else if (iRes.status === 403) {
-        setInvites([])
-      }
+      const memberData = await mRes.json()
+      setMembers(memberData.members || [])
+      setCanManage(memberData.canManage || false)
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Failed to load')
     } finally {
@@ -100,6 +103,21 @@ export default function OrganizationSettingsPage() {
       setInviteMsg(err instanceof Error ? err.message : 'Failed')
     } finally {
       setInviteBusy(false)
+    }
+  }
+
+  const revokeInvite = async (invite: Invite) => {
+    if (!activeOrg || !window.confirm(`Revoke the invite for ${invite.email}?`)) return
+    setRevokingInviteId(invite.id)
+    setInviteMsg(null)
+    try {
+      await revokePendingInvite(activeOrg.id, invite.id)
+      setInviteMsg(`Invite to ${invite.email} revoked`)
+      await load()
+    } catch (err) {
+      setInviteMsg(err instanceof Error ? err.message : 'Failed to revoke invite')
+    } finally {
+      setRevokingInviteId(null)
     }
   }
 
@@ -267,8 +285,13 @@ export default function OrganizationSettingsPage() {
             </button>
           </form>
           {inviteMsg && (
-            <div role="status" style={{ marginTop: 10, fontFamily: 'var(--font-system)', fontSize: 12, color: inviteMsg.startsWith('Invite sent') ? '#10b981' : '#ef4444' }}>
+            <div role="status" style={{ marginTop: 10, fontFamily: 'var(--font-system)', fontSize: 12, color: inviteMsg.startsWith('Invite sent') || inviteMsg.startsWith('Invite to') ? '#10b981' : '#ef4444' }}>
               {inviteMsg}
+            </div>
+          )}
+          {inviteError && (
+            <div role="alert" style={{ marginTop: 10, fontFamily: 'var(--font-system)', fontSize: 12, color: '#ef4444' }}>
+              {inviteError}
             </div>
           )}
 
@@ -277,11 +300,20 @@ export default function OrganizationSettingsPage() {
               <div style={{ ...labelStyle, marginTop: 18 }}>Pending invites ({invites.length})</div>
               <div style={{ display: 'flex', flexDirection: 'column', gap: 6, marginTop: 8 }}>
                 {invites.map(i => (
-                  <div key={i.id} style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                    <div>
-                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)' }}>{i.email}</div>
+                  <div key={i.id} style={{ padding: '8px 12px', background: 'var(--bg3)', borderRadius: 8, display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: 12 }}>
+                    <div style={{ minWidth: 0 }}>
+                      <div style={{ fontFamily: 'var(--font-system)', fontSize: 13, color: 'var(--t1)', overflow: 'hidden', textOverflow: 'ellipsis' }}>{i.email}</div>
                       <div style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)' }}>{personaLabel(i.personaRole || 'operative')} · {i.role} access · expires {new Date(i.expiresAt).toLocaleDateString('en-GB', { day: 'numeric', month: 'short' })}</div>
                     </div>
+                    <button
+                      type="button"
+                      aria-label={`Revoke invite for ${i.email}`}
+                      disabled={revokingInviteId !== null}
+                      onClick={createInviteRevokeHandler(i, revokeInvite)}
+                      style={{ flexShrink: 0, background: 'transparent', border: 'none', color: '#f87171', cursor: revokingInviteId !== null ? 'default' : 'pointer', fontFamily: 'var(--font-system)', fontSize: 12, padding: '6px 8px', opacity: revokingInviteId !== null ? 0.5 : 1 }}
+                    >
+                      {revokingInviteId === i.id ? 'Revoking…' : 'Revoke'}
+                    </button>
                   </div>
                 ))}
               </div>

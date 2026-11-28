@@ -1,16 +1,22 @@
 import type { MetadataRoute } from 'next'
 
-const SITE_URL = process.env.NEXTAUTH_URL || 'https://cortexbuildpro.tech'
+export const dynamic = 'force-dynamic'
+
+const FALLBACK_SITE_URL = 'https://cortexbuildpro.tech'
 
 const HELP_SLUGS = ['getting-started', 'team-roles', 'ai-tools', 'billing', 'security']
 
 /**
- * Generates /sitemap.xml at build time. Lists only the public surface:
+ * Generates /sitemap.xml at request time. Lists only the public surface:
  * marketing, pricing, help, legal, auth. Everything else is behind
  * auth and isn't crawlable anyway.
  */
 export default function sitemap(): MetadataRoute.Sitemap {
-  const now = new Date()
+  const SITE_URL = (
+    process.env.NEXTAUTH_URL ||
+    (process.env as Record<string, string | undefined>).NEXT_PUBLIC_SITE_URL ||
+    FALLBACK_SITE_URL
+  ).replace(/\/$/, '')
   const base = [
     { url: `${SITE_URL}/`, priority: 1.0, changeFrequency: 'weekly' as const },
     { url: `${SITE_URL}/marketing`, priority: 0.9, changeFrequency: 'weekly' as const },
@@ -26,5 +32,6 @@ export default function sitemap(): MetadataRoute.Sitemap {
     priority: 0.6,
     changeFrequency: 'monthly' as const,
   }))
-  return [...base, ...help].map(entry => ({ ...entry, lastModified: now }))
+  const entries = [...base, ...help]
+  return entries.map(entry => ({ ...entry, lastModified: new Date() }))
 }

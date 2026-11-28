@@ -1,4 +1,4 @@
-FROM node:24-alpine
+FROM node:26-alpine
 RUN apk add --no-cache chromium ca-certificates font-noto nss
 WORKDIR /app
 COPY --chown=node:node package.json package-lock.json ./

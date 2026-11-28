@@ -128,3 +128,59 @@ export async function POST(req: NextRequest, { params }: RouteParams) {
 
   return NextResponse.json({ invite: { id: invite.id, email, role, personaRole, expiresAt, acceptUrl } }, { status: 201 })
 }
+
+/** DELETE — revoke a pending invite (admin+ only). */
+export async function DELETE(req: NextRequest, { params }: RouteParams) {
+  const session = await requireAuth()
+  if (session instanceof NextResponse) return session
+  const userId = (session.user as { id?: string }).id
+  if (!userId) return NextResponse.json({ error: 'No user id' }, { status: 401 })
+  const limited = await enforceRateLimit(req, 'write', userId)
+  if (limited) return limited
+  const { id: organizationId } = await params
+
+  const membership = await prisma.userOrganization.findUnique({
+    where: { userId_organizationId: { userId, organizationId } },
+    select: { role: true },
+  })
+  if (!membership || !canManage(membership.role)) {
+    return NextResponse.json({ error: 'Forbidden' }, { status: 403 })
+  }
+
+  const body = await req.json().catch(() => null) as { inviteId?: unknown } | null
+  const inviteId = typeof body?.inviteId === 'string' ? body.inviteId.trim() : ''
+  if (!inviteId) return NextResponse.json({ error: 'Invite id is required' }, { status: 400 })
+
+  const invite = await prisma.organizationInvite.findFirst({
+    where: { id: inviteId, organizationId, acceptedAt: null },
+    select: { id: true, email: true, role: true, personaRole: true },
+  })
+  if (!invite) return NextResponse.json({ error: 'Pending invite not found' }, { status: 404 })
+
+  // Delete and audit atomically: an audit-write failure rolls back the revoke.
+  // The conditional delete also lets a concurrent acceptance win safely.
+  const metadata = { email: invite.email, role: invite.role, personaRole: invite.personaRole }
+  const meta = requestMeta(req)
+  const revoked = await prisma.$transaction(async tx => {
+    const deleted = await tx.organizationInvite.deleteMany({
+      where: { id: invite.id, organizationId, acceptedAt: null },
+    })
+    if (deleted.count === 0) return false
+
+    await tx.auditEvent.create({
+      data: {
+        organizationId,
+        userId,
+        action: 'invite.revoke',
+        resourceType: 'OrganizationInvite',
+        resourceId: invite.id,
+        metadata,
+        ...meta,
+      },
+    })
+    return true
+  })
+  if (!revoked) return NextResponse.json({ error: 'Pending invite not found' }, { status: 404 })
+
+  return NextResponse.json({ ok: true })
+}

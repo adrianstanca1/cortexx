@@ -222,26 +222,18 @@ export default auth(req => {
   requestHeaders.set('x-nonce', nonce)
   const nextOpts = { request: { headers: requestHeaders } }
 
-  // Signed-out visitors landing on / get the full standalone designer
-  // PWA bundle (the version built in the Claude Design canvas) instead
-  // of the thin server-rendered marketing page. Rewrite (not redirect)
-  // so the URL stays clean as `cortexbuildpro.tech/`. Authenticated
-  // users fall through to app/page.tsx, which bounces to /dashboard.
-  //
-  // NOTE: the rewrite target MUST be an absolute URL (Next 16 middleware
-  // rejects a bare relative path), but its origin must resolve WITHOUT
-  // DNS — otherwise the standalone server fetches the public Host header
-  // (e.g. admin.cortexbuildpro.tech, which has no A record yet) and 500s
-  // with ENOTFOUND. Pointing the origin at the container's own loopback
-  // (127.0.0.1:3000) keeps the rewrite internal; the browser URL is
-  // unchanged (rewrites don't alter the address bar).
+  // Signed-out visitors landing on / get the standalone designer PWA
+  // without changing the browser URL. Base the rewrite on this request's
+  // URL so Next treats it as an internal, same-origin rewrite. A hard-coded
+  // loopback origin is external to preview requests (which may use another
+  // host or port) and makes Next try to proxy to an unavailable server.
   if (pathname === '/' && !req.auth) {
     // On the dedicated admin tenant there is no marketing landing page,
     // so send signed-out visitors straight to the login screen.
     if (process.env.ADMIN_TENANT === 'true') {
       return NextResponse.redirect(new URL('/login', req.url))
     }
-    const rewriteUrl = new URL('/legacy/Cortexx-standalone.html', 'http://127.0.0.1:3000')
+    const rewriteUrl = new URL('/legacy/Cortexx-standalone.html', req.url)
     return withSecurityHeaders(
       NextResponse.rewrite(rewriteUrl, nextOpts),
       nonce,
