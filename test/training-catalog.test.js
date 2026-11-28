@@ -13,22 +13,31 @@ function loadModule(filePath, mocks = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true, target: ts.ScriptTarget.ES2022 },
   }).outputText
   const exports = {}
+  // Use this realm's intrinsics so values created inside the VM share prototypes
+  // with node:assert's deepStrictEqual expectations.
   vm.runInNewContext(code, {
     exports,
+    Object,
+    Array,
+    JSON,
+    Promise,
+    Date,
+    Number,
+    String,
+    Boolean,
+    Set,
+    Map,
+    Error,
+    RegExp,
+    decodeURIComponent,
+    URL,
+    URLSearchParams,
+    console,
+    Buffer,
     require: name => {
       if (!(name in mocks)) throw new Error(`Unexpected import: ${name}`)
       return mocks[name]
     },
-    URL,
-    URLSearchParams,
-    decodeURIComponent,
-    Date,
-    Number,
-    String,
-    Set,
-    Error,
-    console,
-    Buffer,
   })
   return exports
 }
