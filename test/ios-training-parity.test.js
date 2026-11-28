@@ -24,7 +24,7 @@ test('native training entry stays aligned with the course-catalog web workflow',
 test('ios web bundle verifies the precompiled training module', () => {
   const builder = fs.readFileSync(path.join(root, 'ios', 'scripts', 'build-web.mjs'), 'utf8')
   assert.match(builder, /loaderModules\(\)/)
-  assert.match(builder, /dist\/' \+ name \+ '\.js/)
+  assert.match(builder, /'dist'[\s\S]*name \+ '\.js'/)
   assert.match(builder, /dist\/boot\.js/)
   assert.ok(fs.existsSync(path.join(root, 'dist', 'training.js')) || fs.existsSync(path.join(root, 'lib', 'screens-phase120.js')))
 })

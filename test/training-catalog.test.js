@@ -85,7 +85,7 @@ const withRouteMocks = {
 function makePrisma(found = null) {
   const db = {
     trainingCourse: {
-      findUnique: async args => { calls.findUnique.push(args); return found && args.where.organizationId === ORG_ID ? found : null },
+      findUnique: async args => { calls.findUnique.push(args); return found && args.where.id === 'course-1' && args.where.organizationId === ORG_ID ? found : null },
       findMany: async args => { calls.findMany.push(args); return [] },
       create: async args => { calls.create.push(args); return { id: 'course-1', ...args.data } },
       update: async args => { calls.update.push(args); return { id: 'course-1', ...args.data } },
@@ -127,6 +127,10 @@ test('course detail GET binds the decoded id to the active organization', async 
   reset()
   const prisma = makePrisma({ id: 'course-1', name: 'SMSTS' })
   const { GET } = loadCourseDetail(prisma)
+  prisma.trainingCourse.findUnique = async args => {
+    calls.findUnique.push(args)
+    return args.where.id === 'c/123' && args.where.organizationId === ORG_ID ? { id: 'c/123', name: 'Encoded' } : null
+  }
   const missing = await GET(emptyRequest(), params('course-9'))
   assert.equal(missing.status, 404)
   deepEqual(calls.findUnique[0].where, { id: 'course-9', organizationId: ORG_ID })
