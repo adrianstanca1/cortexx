@@ -6,6 +6,7 @@ const path = require('node:path')
 const ts = require('typescript')
 
 const root = path.resolve(__dirname, '..')
+const ORG_ID = 'org-1'
 
 function loadModule(filePath, mocks = {}) {
   const source = fs.readFileSync(path.join(root, filePath), 'utf8')
@@ -13,33 +14,30 @@ function loadModule(filePath, mocks = {}) {
     compilerOptions: { module: ts.ModuleKind.CommonJS, esModuleInterop: true, target: ts.ScriptTarget.ES2022 },
   }).outputText
   const exports = {}
-  // Use this realm's intrinsics so values created inside the VM share prototypes
-  // with node:assert's deepStrictEqual expectations.
   vm.runInNewContext(code, {
     exports,
-    Object,
-    Array,
-    JSON,
-    Promise,
-    Date,
-    Number,
-    String,
-    Boolean,
-    Set,
-    Map,
-    Error,
-    RegExp,
-    decodeURIComponent,
-    URL,
-    URLSearchParams,
-    console,
-    Buffer,
     require: name => {
       if (!(name in mocks)) throw new Error(`Unexpected import: ${name}`)
       return mocks[name]
     },
+    URL,
+    URLSearchParams,
+    decodeURIComponent,
+    Date,
+    Number,
+    String,
+    Set,
+    Error,
+    console,
+    Buffer,
   })
   return exports
+}
+
+// JSON round-trip normalizes VM-realm objects into host-realm values before
+// deepStrictEqual; VM object literals fail prototype identity checks otherwise.
+function deepEqual(actual, expected) {
+  assert.deepEqual(JSON.parse(JSON.stringify(actual)), JSON.parse(JSON.stringify(expected)))
 }
 
 class NextResponse {
@@ -52,12 +50,16 @@ const jsonRequest = body => ({
   headers: { get: () => null },
   json: async () => body,
 })
-
 const emptyRequest = () => ({
   url: 'http://localhost/api/training/courses/course-1',
   nextUrl: { pathname: '/api/training/courses/course-1' },
   headers: { get: () => null },
 })
+
+let calls
+function reset() {
+  calls = { audit: [], findUnique: [], findMany: [], create: [], update: [], delete: [], transactions: 0 }
+}
 
 const withRouteMocks = {
   'next/server': { NextResponse },
@@ -66,7 +68,7 @@ const withRouteMocks = {
       req,
       params: ctx?.params ? await ctx.params : {},
       userId: 'user-1',
-      orgId: 'org-1',
+      orgId: ORG_ID,
       role: 'admin',
       session: { user: { id: 'user-1' } },
     }),
@@ -76,37 +78,25 @@ const withRouteMocks = {
     },
   },
   '@/lib/rateLimit': { enforceRateLimit: async () => null },
-  '@/lib/audit': { auditLog: (...args) => calls.audit.push(args), requestMeta: () => ({ ipAddress: null, userAgent: null }) },
+  '@/lib/audit': { auditLog: () => {}, requestMeta: () => ({ ipAddress: null, userAgent: null }) },
   '@/lib/errors': { reportError: () => {} },
 }
 
-let calls
-
-function coursePrisma(existing = null) {
-  return {
+function makePrisma(found = null) {
+  const db = {
     trainingCourse: {
-      findUnique: async args => { calls.findUnique.push(args); return existing },
-      update: async args => { calls.update.push(args); return { id: 'course-1', ...args.data } },
-      delete: async args => { calls.delete.push(args); return existing },
+      findUnique: async args => { calls.findUnique.push(args); return found && args.where.organizationId === ORG_ID ? found : null },
       findMany: async args => { calls.findMany.push(args); return [] },
       create: async args => { calls.create.push(args); return { id: 'course-1', ...args.data } },
+      update: async args => { calls.update.push(args); return { id: 'course-1', ...args.data } },
+      delete: async args => { calls.delete.push(args); return { id: 'course-1' } },
     },
-    certification: {
-      findUnique: async args => { calls.findUnique.push(args); return existing },
-      findMany: async args => { calls.findMany.push(args); return [] },
-      create: async args => { calls.create.push(args); return { id: 'cert-1', ...args.data } },
-      update: async args => { calls.update.push(args); return { id: 'cert-1', ...args.data } },
-      delete: async args => { calls.delete.push(args); return existing },
-    },
-    teamMember: {
-      findUnique: async args => { calls.findUnique.push(args); return { id: args.where.id } },
-    },
+    certification: { findMany: async args => { calls.findMany.push(args); return [] } },
+    teamMember: { findUnique: async args => ({ id: args.where.id }) },
+    auditEvent: { create: async args => { calls.audit.push(args); return args.data } },
   }
-}
-
-function setup() {
-  calls = { audit: [], findUnique: [], findMany: [], create: [], update: [], delete: [] }
-  return coursePrisma()
+  db.$transaction = async callback => { calls.transactions += 1; return callback(db) }
+  return db
 }
 
 function loadCourseDetail(prisma) {
@@ -116,7 +106,6 @@ function loadCourseDetail(prisma) {
     '@/lib/db': { prisma },
   })
 }
-
 function loadCourseList(prisma) {
   return loadModule('app/api/training/courses/route.ts', {
     ...withRouteMocks,
@@ -124,7 +113,6 @@ function loadCourseList(prisma) {
     '@/lib/db': { prisma },
   })
 }
-
 function loadCertificationList(prisma) {
   return loadModule('app/api/training/route.ts', {
     ...withRouteMocks,
@@ -133,67 +121,63 @@ function loadCertificationList(prisma) {
   })
 }
 
-test('course detail GET looks up the decoded course id and 404s when absent', async () => {
-  const prisma = setup()
-  const { GET } = loadCourseDetail(prisma)
-  const missing = await GET(emptyRequest(), { params: Promise.resolve({ id: 'course-1' }) })
-  assert.equal(missing.status, 404)
-  assert.deepEqual(calls.findUnique[0], { where: { id: 'course-1' } })
+const params = id => ({ params: Promise.resolve({ id }) })
 
-  calls = { audit: [], findUnique: [], findMany: [], create: [], update: [], delete: [] }
-  const found = { id: 'course-1', name: 'SMSTS' }
-  const { GET: GET2 } = loadCourseDetail(coursePrisma(found))
-  const response = await GET2(emptyRequest(), { params: Promise.resolve({ id: 'course-1' }) })
+test('course detail GET binds the decoded id to the active organization', async () => {
+  reset()
+  const prisma = makePrisma({ id: 'course-1', name: 'SMSTS' })
+  const { GET } = loadCourseDetail(prisma)
+  const missing = await GET(emptyRequest(), params('course-9'))
+  assert.equal(missing.status, 404)
+  deepEqual(calls.findUnique[0].where, { id: 'course-9', organizationId: ORG_ID })
+
+  const response = await GET(emptyRequest(), params('c%2F123'))
   assert.equal(response.status, 200)
-  assert.deepEqual(response.body, found)
+  deepEqual(calls.findUnique[1].where, { id: 'c/123', organizationId: ORG_ID })
 })
 
-test('course PATCH validates input, scopes the update by id, and records an audit event', async () => {
-  const prisma = setup()
-  const { PATCH } = loadCourseDetail(prisma)
-  const invalid = await PATCH(jsonRequest({ validityDays: 0 }), { params: Promise.resolve({ id: 'course-1' }) })
-  assert.equal(invalid.status, 400)
+test('course PATCH validates input, atomically scopes the update, and records an audit event', async () => {
+  reset()
+  const { PATCH } = loadCourseDetail(makePrisma({ id: 'course-1' }))
+  assert.equal((await PATCH(jsonRequest({ validityDays: 0 }), params('course-1'))).status, 400)
   assert.equal(calls.update.length, 0)
 
-  const response = await PATCH(jsonRequest({ name: ' SMSTS ', validityDays: 365, archived: true }), { params: Promise.resolve({ id: 'course-1' }) })
+  const response = await PATCH(jsonRequest({ name: ' SMSTS ', validityDays: 365, archived: true }), params('course-1'))
   assert.equal(response.status, 200)
-  assert.deepEqual(calls.update[0].where, { id: 'course-1' })
+  assert.equal(calls.transactions, 1)
+  deepEqual(calls.update[0].where, { id: 'course-1', organizationId: ORG_ID })
   assert.equal(calls.update[0].data.name, 'SMSTS')
   assert.equal(calls.update[0].data.validityDays, 365)
   assert.ok(calls.update[0].data.archivedAt instanceof Date)
   assert.equal(calls.audit.length, 1)
-  assert.deepEqual(calls.audit[0][0], {
-    action: 'trainingCourse.update',
-    resourceType: 'TrainingCourse',
-    resourceId: 'course-1',
-    userId: 'user-1',
-    ipAddress: null,
-    userAgent: null,
-  })
+  assert.equal(calls.audit[0].data.action, 'trainingCourse.update')
+  assert.equal(calls.audit[0].data.organizationId, ORG_ID)
 })
 
-test('course DELETE removes by id and records an audit event', async () => {
-  const prisma = setup()
-  const { DELETE } = loadCourseDetail(prisma)
-  const response = await DELETE(emptyRequest(), { params: Promise.resolve({ id: 'course-1' }) })
-  assert.deepEqual(response.body, { success: true })
-  assert.deepEqual(calls.delete[0], { where: { id: 'course-1' } })
-  assert.equal(calls.audit[0][0].action, 'trainingCourse.delete')
+test('course DELETE removes by org-bound id and audits inside the same transaction', async () => {
+  reset()
+  const { DELETE } = loadCourseDetail(makePrisma({ id: 'course-1' }))
+  const response = await DELETE(emptyRequest(), params('course-1'))
+  deepEqual(response.body, { success: true })
+  assert.equal(calls.transactions, 1)
+  deepEqual(calls.delete[0].where, { id: 'course-1', organizationId: ORG_ID })
+  assert.equal(calls.audit[0].data.action, 'trainingCourse.delete')
 })
 
 test('course list excludes archived courses unless requested', async () => {
-  const prisma = setup()
-  const { GET } = loadCourseList(prisma)
-  await GET({ url: 'http://localhost/api/training/courses', nextUrl: { pathname: '/api/training/courses' }, headers: { get: () => null } }, { params: Promise.resolve({}) })
-  assert.deepEqual(calls.findMany[0].where, { archivedAt: null })
-
-  await GET({ url: 'http://localhost/api/training/courses?archived=true&category=safety', nextUrl: { pathname: '/api/training/courses' }, headers: { get: () => null } }, { params: Promise.resolve({}) })
-  assert.deepEqual(calls.findMany[1].where, { category: 'safety' })
+  reset()
+  const { GET } = loadCourseList(makePrisma())
+  const base = { nextUrl: { pathname: '/api/training/courses' }, headers: { get: () => null } }
+  await GET({ ...base, url: 'http://localhost/api/training/courses' }, { params: Promise.resolve({}) })
+  deepEqual(calls.findMany[0].where, { archivedAt: null })
+  await GET({ ...base, url: 'http://localhost/api/training/courses?archived=true&category=safety' }, { params: Promise.resolve({}) })
+  assert.equal(calls.findMany.length, 2)
+  deepEqual(calls.findMany[1].where, { category: 'safety' })
 })
 
 test('certification list enriches expiry status and applies status/category filters', async () => {
-  calls = { audit: [], findUnique: [], findMany: [], create: [], update: [], delete: [] }
-  const prisma = coursePrisma()
+  reset()
+  const prisma = makePrisma()
   prisma.certification.findMany = async args => {
     calls.findMany.push(args)
     return [
@@ -203,11 +187,7 @@ test('certification list enriches expiry status and applies status/category filt
     ]
   }
   const { GET } = loadCertificationList(prisma)
-  const req = query => ({
-    url: `http://localhost/api/training${query}`,
-    nextUrl: { pathname: '/api/training' },
-    headers: { get: () => null },
-  })
+  const req = query => ({ url: `http://localhost/api/training${query}`, nextUrl: { pathname: '/api/training' }, headers: { get: () => null } })
   const all = await GET(req(''), { params: Promise.resolve({}) })
   assert.equal(all.body.counts.total, 3)
   assert.equal(all.body.counts.expired, 1)
@@ -215,14 +195,6 @@ test('certification list enriches expiry status and applies status/category filt
   assert.equal(all.body.counts.no_expiry, undefined)
 
   const filtered = await GET(req('?status=expired&category=safety'), { params: Promise.resolve({}) })
-  assert.deepEqual(filtered.body.certifications.map(c => c.id), ['cert-expired'])
-  assert.deepEqual(calls.findMany[1].where, { category: 'safety' })
-})
-
-test('routed course id is decoded exactly once before the Prisma lookup', async () => {
-  calls = { audit: [], findUnique: [], findMany: [], create: [], update: [], delete: [] }
-  const { GET } = loadCourseDetail(coursePrisma({ id: 'c/123', name: 'Encoded' }))
-  const response = await GET(emptyRequest(), { params: Promise.resolve({ id: 'c%2F123' }) })
-  assert.equal(response.status, 200)
-  assert.deepEqual(calls.findUnique[0].where, { id: 'c/123' })
+  deepEqual(filtered.body.certifications.map(c => c.id), ['cert-expired'])
+  deepEqual(calls.findMany[1].where, { category: 'safety' })
 })

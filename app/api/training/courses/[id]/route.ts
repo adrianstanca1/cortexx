@@ -3,7 +3,7 @@ import { Prisma } from '@prisma/client'
 import { prisma } from '@/lib/db'
 import { withRoute, decodePathSegment } from '@/lib/withRoute'
 import { enforceRateLimit } from '@/lib/rateLimit'
-import { auditLog, requestMeta } from '@/lib/audit'
+import { requestMeta } from '@/lib/audit'
 import { reportError } from '@/lib/errors'
 
 export const dynamic = 'force-dynamic'
@@ -21,21 +21,24 @@ function parseValidityDays(value: unknown): number | null | undefined {
   return Number.isInteger(days) && days >= 1 ? days : undefined
 }
 
-/** GET — read a single training course in the active organization. */
+/** GET — read a course owned by the active organization. */
 export const GET = withRoute(
-  async ({ req, params }) => {
+  async ({ req, params, orgId }) => {
     const id = courseIdFrom(req, params as Record<string, string>)
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
-    const course = await prisma.trainingCourse.findUnique({ where: { id } })
+    const course = await prisma.trainingCourse.findUnique({
+      where: { id, organizationId: orgId },
+    })
     if (!course) return NextResponse.json({ error: 'Not found' }, { status: 404 })
     return NextResponse.json(course)
   },
-  { requireOrg: false }
+  { requireOrg: true }
 )
 
-/** PATCH — update catalog metadata. Admin+ only. */
+/** PATCH — update catalog metadata. Admin+ only, and the target must belong to
+ *  the active organization regardless of the tenancy-enforcement flag. */
 export const PATCH = withRoute(
-  async ({ req, userId, params }) => {
+  async ({ req, userId, orgId, params }) => {
     const id = courseIdFrom(req, params as Record<string, string>)
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
     const limited = await enforceRateLimit(req, 'write', userId)
@@ -72,14 +75,25 @@ export const PATCH = withRoute(
     }
     if (body.archived !== undefined) data.archivedAt = body.archived ? new Date() : null
 
+    const meta = requestMeta(req)
     try {
-      const course = await prisma.trainingCourse.update({ where: { id }, data })
-      auditLog({
-        action: 'trainingCourse.update',
-        resourceType: 'TrainingCourse',
-        resourceId: id,
-        userId,
-        ...requestMeta(req),
+      // Update and audit event commit together: a failed audit rolls back the edit.
+      const course = await prisma.$transaction(async tx => {
+        const updated = await tx.trainingCourse.update({
+          where: { id, organizationId: orgId },
+          data,
+        })
+        await tx.auditEvent.create({
+          data: {
+            organizationId: orgId,
+            userId,
+            action: 'trainingCourse.update',
+            resourceType: 'TrainingCourse',
+            resourceId: id,
+            ...meta,
+          },
+        })
+        return updated
       })
       return NextResponse.json(course)
     } catch (error) {
@@ -93,24 +107,34 @@ export const PATCH = withRoute(
   { requireOrg: true, permission: 'manage' }
 )
 
-/** DELETE — remove a course. Linked certifications retain their courseId but
- *  Prisma's ON DELETE SET NULL clears the relation. Admin+ only. */
+/** DELETE — remove a course from the active organization. Admin+ only.
+ *  Prisma's ON DELETE SET NULL clears certification links, not the records. */
 export const DELETE = withRoute(
-  async ({ req, userId, params }) => {
+  async ({ req, userId, orgId, params }) => {
     const id = courseIdFrom(req, params as Record<string, string>)
     if (!id) return NextResponse.json({ error: 'ID required' }, { status: 400 })
     const limited = await enforceRateLimit(req, 'write', userId)
     if (limited) return limited
 
+    const meta = requestMeta(req)
     try {
-      await prisma.trainingCourse.delete({ where: { id } })
-      auditLog({
-        action: 'trainingCourse.delete',
-        resourceType: 'TrainingCourse',
-        resourceId: id,
-        userId,
-        ...requestMeta(req),
+      const deleted = await prisma.$transaction(async tx => {
+        const result = await tx.trainingCourse.delete({
+          where: { id, organizationId: orgId },
+        })
+        await tx.auditEvent.create({
+          data: {
+            organizationId: orgId,
+            userId,
+            action: 'trainingCourse.delete',
+            resourceType: 'TrainingCourse',
+            resourceId: id,
+            ...meta,
+          },
+        })
+        return result
       })
+      if (!deleted) return NextResponse.json({ error: 'Not found' }, { status: 404 })
       return NextResponse.json({ success: true })
     } catch (error) {
       reportError(error)

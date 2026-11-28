@@ -69,7 +69,7 @@ export default function CourseDialog({ open, onClose, onSave, initial }: CourseD
     <Modal
       open={open}
       title={initial?.id ? 'Edit course' : 'Add course'}
-      onClose={onClose}
+      onClose={() => { if (!loading) onClose() }}
       footer={
         <div style={{ display: 'flex', justifyContent: 'flex-end', gap: 12, paddingTop: 18 }}>
           <Button variant="ghost" onClick={onClose} disabled={loading}>Cancel</Button>
@@ -87,13 +87,15 @@ export default function CourseDialog({ open, onClose, onSave, initial }: CourseD
       </div>
       <div>
         <div id="course-category-label" style={{ fontFamily: 'var(--font-system)', fontSize: 11, color: 'var(--t3)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 6 }}>Category</div>
-        <SegmentedControl
-          ariaLabelledBy="course-category-label"
-          value={category}
-          onChange={setCategory}
-          options={CATEGORIES}
-          size="sm"
-        />
+        <div style={{ maxWidth: '100%', overflowX: 'auto', paddingBottom: 4 }}>
+          <SegmentedControl
+            ariaLabelledBy="course-category-label"
+            value={category}
+            onChange={setCategory}
+            options={CATEGORIES}
+            size="sm"
+          />
+        </div>
       </div>
       <FormField
         id="course-validity"

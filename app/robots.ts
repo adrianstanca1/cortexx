@@ -10,7 +10,11 @@ const FALLBACK_SITE_URL = 'https://cortexbuildpro.tech'
  * and the API. Pointed at the matching /sitemap.xml.
  */
 export default function robots(): MetadataRoute.Robots {
-  const SITE_URL = (process.env.NEXTAUTH_URL || process.env.NEXT_PUBLIC_SITE_URL || FALLBACK_SITE_URL).replace(/\/$/, '')
+  const SITE_URL = (
+    process.env.NEXTAUTH_URL ||
+    (process.env as Record<string, string | undefined>).NEXT_PUBLIC_SITE_URL ||
+    FALLBACK_SITE_URL
+  ).replace(/\/$/, '')
   return {
     rules: [
       {

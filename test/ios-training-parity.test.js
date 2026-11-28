@@ -16,7 +16,9 @@ test('native training entry stays aligned with the course-catalog web workflow',
   assert.match(handoff, /safeMobileWebPath/)
   assert.match(page, /\/api\/training\/courses/)
   assert.match(courseRoute, /permission: 'manage'/)
-  assert.match(courseRoute, /auditLog/)
+  assert.match(courseRoute, /\$transaction/)
+  assert.match(courseRoute, /auditEvent\.create/)
+  assert.match(courseRoute, /organizationId: orgId/)
 })
 
 test('ios web bundle verifies the precompiled training module', () => {
